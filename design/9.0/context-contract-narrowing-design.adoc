@@ -4,7 +4,8 @@
 
 == Status And Scope
 
-Design direction for follow-up workstreams 1 and 5, approved by Steve.
+Completed for the agreed scope of follow-up workstreams 1 and 5.
+Steve directed closure after implementation, verification, and the factory-input investigation.
 The user-type, binder, and implicit naming context slices are implemented and
 verified. `UserTypeCreationContext` exposes member details and parameters; binder
 contexts no longer expose metadata-building access, and tenant-id binding is an
@@ -136,6 +137,43 @@ The proposal does not assume a new general-purpose replacement context.
 Select an options subset only when a concrete consumer justifies it.  Retain
 integrator compatibility unless a specific integration requires a change.
 
+=== Factory Preparation Investigation
+
+The investigation found six `BootstrapContext` capabilities read by
+`SessionFactoryRuntimeComponentsBuilder`: `TypeConfiguration`, `ModelsContext`,
+`ClassLoaderService`, `ClassLoaderAccess`, `ManagedBeanRegistry`, and
+`ManagedTypeRepresentationResolver`. Both the resolved-settings and legacy-options
+paths transfer all six into `SessionFactoryRuntimeComponents`. The class-loader
+service additionally supports provider discovery and statistics-factory creation.
+Discovery and initialization timing are outside this narrowing investigation.
+
+`SessionFactoryConstructionState` carries the context internally;
+`SessionFactoryConstructionPlanBuilder` forwards it only when runtime components
+must be built. Supplying runtime components bypasses that builder, although the
+construction state still requires a context. The producer request has no direct
+`BootstrapContext` accessor. The final construction plan has no such field, and
+`SessionFactoryImpl` consumes the extracted runtime components. This is not a
+claim that metadata exposes no indirect route to bootstrap state.
+
+The builder does not read scanning configuration, archive descriptors, mutable
+JPA compliance, or the temporary class loader directly. `ClassLoaderAccess`
+remains an existing capability with its own lifecycle, not an immutable value.
+The default bootstrap-context implementation releases temporary resources while
+retaining the capabilities used by construction.
+
+Recommendation: leave these internal inputs unchanged for now. A new six-field
+input would restrict the builder's statically available capabilities, but would
+mostly duplicate the capability portion of `SessionFactoryRuntimeComponents`.
+No current consumer, lifecycle defect, or new SPI requirement found in this
+investigation justifies that additional contract. Passing six individual
+arguments would likewise change plumbing without eliminating a dependency.
+Do not substitute service-registry lookups for the existing context's instances.
+
+Quarkus remains a concrete use case for broader preparation/interpretation
+separation, explicitly deferred by Steve. Revisit this recommendation when that
+work or another concrete consumer establishes a different preparation boundary.
+This finding is a recommendation, not approval of a new implementation slice.
+
 == Compatibility Review Applied To Each Slice
 
 The working specification for each slice must record:
@@ -171,13 +209,14 @@ Start from documented removal intent and demonstrated consumers, approve a
 bounded contract change, and then migrate it.  This takes several decisions
 but makes behavior and compatibility consequences reviewable.
 
-== Direction And Remaining Specification Decisions
+== Closure And Separate Follow-ups
 
-* Completed order: `UserTypeCreationContext`, binder contexts, and implicit
-  naming contexts. Factory preparation remains coordinated separately with Quarkus.
-* Which concrete factory-preparation consumer should lead the next slice?
-* Which known external integrations must be included in that consumer inventory
-  beyond the repository's tests and examples?
+The user-type, binder, implicit naming-input, and normalizer/helper changes are
+implemented and verified. The factory-preparation investigation is complete and
+recommends retaining the current internal inputs. No implementation slice remains
+open under this document.
 
-Subsequent slices require their own working specifications and explicit approval
-before implementation, unless Steve explicitly requests implementation earlier.
+Quarkus-driven preparation separation is deferred. Options decomposition and
+integrator changes remain conditional on concrete consumer requirements.
+Naming-strategy redesign continues independently in
+link:naming-strategy-redesign.adoc[its own design proposal].

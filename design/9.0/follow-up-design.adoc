@@ -141,8 +141,8 @@ decisions so parallel work does not create incompatible representations.
 
 == 1. Bootstrap APIs And Extension Boundaries
 
-The active direction proposal for this workstream and its workstream 5
-compatibility review is
+The completed context-narrowing work for this workstream and its workstream 5
+compatibility review is recorded in
 link:context-contract-narrowing-design.adoc[Context Contract Narrowing].
 It focuses on slimming broad contracts around demonstrated consumer needs;
 conditional extractions below are not automatically implementation commitments.

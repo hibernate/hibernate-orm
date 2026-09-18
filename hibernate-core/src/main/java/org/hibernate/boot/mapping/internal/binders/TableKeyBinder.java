@@ -496,7 +496,8 @@ public class TableKeyBinder {
 				targetColumns,
 				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
-				table.getName()
+				table.getName(),
+			bindingState.getRelationalModelCorrespondences().columnNames()
 		);
 		for ( int i = 0; i < targetColumns.size(); i++ ) {
 			final Column identifierColumn = targetColumns.get( i );
@@ -588,7 +589,8 @@ public class TableKeyBinder {
 				targetColumns,
 				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
-				associationTableBinding.join().getTable().getName()
+				associationTableBinding.join().getTable().getName(),
+			bindingState.getRelationalModelCorrespondences().columnNames()
 		);
 		for ( int i = 0; i < targetColumns.size(); i++ ) {
 			final Column identifierColumn = targetColumns.get( i );
@@ -642,7 +644,8 @@ public class TableKeyBinder {
 				targetColumns,
 				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
-				collectionTableBinding.collection().getRole()
+				collectionTableBinding.collection().getRole(),
+				bindingState.getRelationalModelCorrespondences().columnNames()
 		);
 		for ( int i = 0; i < targetColumns.size(); i++ ) {
 			final JoinColumnOrFormulaSource joinColumnOrFormula = orderedJoinColumns.isEmpty()
@@ -843,7 +846,8 @@ public class TableKeyBinder {
 				referencedOwnerKey.targetColumns(),
 				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
-				sourceRole
+				sourceRole,
+			bindingState.getRelationalModelCorrespondences().columnNames()
 		);
 		for ( int i = 0; i < referencedOwnerKey.targetColumns().size(); i++ ) {
 			final JoinColumn joinColumn = orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i );
@@ -976,9 +980,8 @@ public class TableKeyBinder {
 	}
 
 	private boolean containsColumn(Value value, Identifier referencedColumnName) {
-		final Database database = bindingState.getDatabase();
 		for ( Column column : value.getColumns() ) {
-			if ( column.getNameIdentifier( database ).matches( referencedColumnName ) ) {
+			if ( bindingState.getRelationalModelCorrespondences().columnNames().matches( column, referencedColumnName ) ) {
 				return true;
 			}
 		}
@@ -1046,9 +1049,8 @@ public class TableKeyBinder {
 		if ( columns.size() != referencedColumnNames.size() ) {
 			return false;
 		}
-		final Database database = bindingState.getDatabase();
 		for ( int i = 0; i < columns.size(); i++ ) {
-			if ( !columns.get( i ).getNameIdentifier( database ).matches( referencedColumnNames.get( i ) ) ) {
+			if ( !bindingState.getRelationalModelCorrespondences().columnNames().matches( columns.get( i ), referencedColumnNames.get( i ) ) ) {
 				return false;
 			}
 		}
@@ -1059,13 +1061,12 @@ public class TableKeyBinder {
 		if ( columns.size() != referencedColumnNames.size() ) {
 			return false;
 		}
-		final Database database = bindingState.getDatabase();
 		final boolean[] matchedReferencedColumns = new boolean[referencedColumnNames.size()];
 		for ( Column column : columns ) {
 			boolean matched = false;
 			for ( int i = 0; i < referencedColumnNames.size(); i++ ) {
 				if ( !matchedReferencedColumns[i]
-						&& column.getNameIdentifier( database ).matches( referencedColumnNames.get( i ) ) ) {
+						&& bindingState.getRelationalModelCorrespondences().columnNames().matches( column, referencedColumnNames.get( i ) ) ) {
 					matchedReferencedColumns[i] = true;
 					matched = true;
 					break;

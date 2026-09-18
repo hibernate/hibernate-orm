@@ -4,8 +4,9 @@
 
 == Status
 
-Initial design proposal. No replacement contract or whole-interface deprecation
-has been approved. Steve raised deprecating `ImplicitNamingStrategy` in 8.0 and
+Design proposal with an initial source-level invocation inventory and recorded
+design direction. Exact replacement contracts and whole-interface deprecation
+have not been approved. Steve raised deprecating `ImplicitNamingStrategy` in 8.0 and
 replacing it in 9.0; this document starts that investigation.
 The `ImplicitNamingContext` / `ImplicitNamingDefaults` changes are implemented
 and verified, providing focused inputs for this work. Their completed scope is
@@ -22,9 +23,54 @@ or inconsistent interpretation by callers.
 * Give each decision complete, unambiguous inputs without broad boot access.
 * Distinguish missing names, explicit names, defaults, logical identifiers,
   physical identifiers, and quoting responsibilities.
-* Make extension and migration practical for strategy implementors and subclasses.
-* Preserve existing names by default unless a particular correction is explicitly
-  accepted and documented as a compatibility change.
+* Design extension points around current mapping requirements.
+* Make generated-name behavior deliberate and testable; inventory existing names
+  to understand changes without treating old contracts as requirements.
+
+== Recorded Design Direction
+
+Clean-room design::
+If the redesign proceeds, compatibility with older naming contracts is not a
+requirement. Do not preserve old interfaces, method shapes, source objects,
+protected subclass hooks, invocation quirks, or provide legacy adapters to
+constrain the new design. The current implementation is evidence of use cases
+and pitfalls, not the blueprint for the replacement. This direction does not
+constitute approval of a finished specification or implementation.
+
+Mapping scope after hbm.xml removal::
+Naming strategies originally grew from `hbm.xml`. With that support removed,
+the new design must be based on the supported mapping model, including annotations
+and supported mapping XML. Do not carry forward hbm-specific naming rules or
+legacy strategy variants merely because they existed in the old contract.
+Removal of `hbm.xml` does not mean removal of all XML mapping support.
+
+Complete implicit naming coverage::
+Steve's proposed baseline is that all implicit database-object naming flows
+through the strategy: tables, columns, indexes, constraints, and other generated
+database-object names. Tenant-id, discriminator, and primary-key join columns
+are explicitly included. Existing bypasses do not establish exclusions.
+Inventory additional object kinds, including sequences and generator tables,
+before claiming coverage is complete. This does not yet prescribe a separate
+Java method for each semantic role or define treatment of explicitly supplied names.
+
+Name provenance::
+Inputs must distinguish user-supplied names, mapping defaults, and generated
+names wherever those distinctions affect the decision. A synthesized name must
+not masquerade as a user-supplied identifier. The exact representation and the
+precedence of these sources remain to be designed.
+
+Logical and physical names::
+The stage of referenced names and their quoting state must be unambiguous.
+Steve proposes that the boot model contain only logical names. Physical naming
+would occur when building the runtime model or performing schema tooling. This
+is the proposed pipeline direction; its representation and lifecycle details
+remain to be designed.
+
+Old-contract compatibility and generated database names are distinct questions.
+The clean-room direction settles the former; the default naming rules and any
+resulting schema-name changes must be made explicit in the new specification.
+Do not infer either a blanket name-preservation requirement or permission to
+change every generated name arbitrarily.
 
 == Constraints
 
@@ -33,9 +79,10 @@ package for the context-narrowing slice. Placement and roles for any replacement
 must be decided explicitly. New naming inputs already use
 `org.hibernate.boot.model.naming.spi`.
 
-Interpret names during mapping resolution. Metadata restoration should consume
-resolved names without rerunning strategies. Avoid reflection requirements in
-new naming inputs, consistent with the Quarkus interpretation boundary.
+Resolve implicit logical names during mapping interpretation. The proposed later
+physical-name stage requires a separate lifecycle decision for metadata
+restoration; do not assume it shares the old finalized-name behavior. Quarkus
+preparation work remains deferred.
 
 The physical strategy currently receives `JdbcEnvironment`. Its redesign is an
 open scope decision, not an automatic consequence of replacing the implicit SPI.
@@ -44,13 +91,401 @@ quoting/rendering through `IdentifierHelper` and `Dialect`; the unused
 `NamingStrategyHelper` callback contract has been removed. This redesign should
 define any needed dispatch mechanism from concrete naming requirements.
 
+== Proposed Logical Boot Model And Physical Name Resolution
+
+Steve proposes keeping only logical names in the boot model and applying
+`PhysicalNamingStrategy` when constructing the runtime model or performing
+schema tooling. Under this direction, implicit naming derives logical names
+from mapping facts and other logical names. Explicit names are also represented
+at the logical stage, with their provenance and quoting intent preserved.
+
+This would resolve the implicit strategy's input-stage ambiguity by construction:
+it would not consume names already transformed by the physical strategy.
+Physical-name derivation must not overwrite the logical boot model. The current
+boot model's use of physical identifiers is implementation evidence to inventory,
+not a compatibility constraint on the replacement.
+
+Recommended design consequences, subject to agreement:
+
+* Runtime construction and schema tooling should use one defined physical-name
+  resolution mechanism so the SQL they produce agrees. Whether they share a
+  prepared physical model or resolve equivalent products independently remains open.
+* A resolved physical name must not be fed back through physical naming as though
+  it were logical. Prefer explicit representation of the stage to convention alone.
+* Preserve explicit quoting intent in logical identifiers. Define where dialect
+  rules, keyword quoting, length limits, and collisions are handled, distinguishing
+  identifier resolution from rendering SQL text.
+* Define physical naming for every relevant object kind. The old physical strategy
+  method set must not silently limit the new design's treatment of indexes and
+  constraints.
+* Schema tooling must be able to resolve physical names without constructing a
+  SessionFactory. Define the settings and target database information it requires.
+
+Questions to investigate before specification:
+
+* What representation holds resolved physical names and maps them back to the
+  logical model, including foreign-key references and namespace identity?
+* Should generated constraint names derive solely from logical names and then be
+  physically transformed, or require a separate final-name rule using physical
+  tables/columns? The latter would need an explicit stage outside implicit naming.
+* How are database-dependent identifier collisions and length limits validated?
+* What should metadata restoration retain or recompute under this model? The
+  existing restoration requirements need review before assuming that logical-only
+  archives and finalized physical names have the same lifecycle.
+
+This remains design direction. No change to boot-model storage, physical strategy
+invocation timing, runtime construction, or schema tooling is yet implemented.
+Quarkus preparation work remains deferred.
+
+== Investigation: Physical Names During Boot
+
+Steve requested this investigation before committing to a separate physical
+naming phase. The logical-only boot model above remains a candidate, not a
+requirement. These findings are based on source inspection, not an experimental
+implementation or exhaustive behavioral tests.
+
+=== Where Physical Names Enter
+
+`TableBinder` transforms table/catalog/schema names while building relational
+references. `Namespace` also transforms names when creating tables and sequences.
+`ColumnBinder.finalizeColumnName()` transforms and dialect-renders a logical name
+before it is stored on `org.hibernate.mapping.Column`. These are the current
+entry points, not evidence that their timing is intrinsically required.
+
+=== Consumers And Reasons
+
+[cols="2,4,4",options="header"]
+|===
+|Consumer |Observed dependency |Implication for later resolution
+
+|Column identity and sharing
+|`Table.getColumn()` and `addColumn()` key columns by canonical name. Adding an
+existing column can merge nullability information. Those names are already
+physical at this point.
+|Replacing physical strings with logical strings alone could change which
+columns are treated as the same. A logical model needs explicit relational
+identity/sharing, plus a later physical collision check.
+
+|Referenced-column matching and ordering
+|`SelectableOrderResolver.findTargetColumn()` matches referenced identifiers
+against `Column.getNameIdentifier(database)`. Association binding uses the result
+to establish ordered foreign-key column correspondences.
+|This is structural work, not SQL rendering. Later physical naming requires
+logical/object references for structural binding, or deferring name-based
+matching until physical names are available. The accepted meaning of supplied
+referenced-column names must be specified and tested.
+
+|Logical/physical correspondence and validation
+|`InFlightMetadataCollectorImpl.TableColumnNameBinding` records both directions
+and rejects inconsistent mappings or multiple logical names for one physical
+name. `ColumnNameCorrespondence` maps logical names to physical columns and back.
+|Physical collision checks genuinely require transformed names, but need not
+necessarily happen during initial interpretation. Moving them changes validation
+and failure timing and must precede use of the finalized relational model.
+
+|Further implicit naming
+|Association-table callbacks receive physical table names. Join-column binding
+tries to recover logical target-column names, with a physical-name fallback.
+Constraint naming consumes the existing relational columns.
+|These dependencies are consequences of today's naming contract and mixed model.
+They can be redesigned; they do not independently prove that implicit naming
+requires physical names. Generated constraint-name semantics remain a decision.
+
+|Identifier generators and database metadata
+|`GeneratorBinder.callConfigure()` configures generators, registers exportables,
+and initializes SQL. `SequenceStyleGenerator.validatedIncrementSize()` transforms
+the sequence name to look up its increment in database metadata; the configured
+mismatch policy may adjust the increment. `Namespace.createSequence()` creates a
+sequence with its physical name.
+|Database inspection genuinely needs the database name. Delaying physical naming
+therefore requires separating generator configuration, exportable registration,
+database-dependent validation, and SQL initialization as appropriate. This is
+more than a naming-interface change.
+
+|SQL/DDL preparation during boot
+|`TemporalHelper.temporalTableDdlRequest()` supplies dialect-rendered table and
+row-start/end column names to temporal DDL preparation. Generator initialization
+also consumes `SqlStringGenerationContext`.
+|These consumers genuinely need physical identifiers when producing executable
+SQL, but the work could potentially move to a later preparation stage. Inventory
+stored SQL and extension callbacks before assuming it can simply be delayed.
+
+|Explicit physical references
+|`@Synchronize(logical=false)` deliberately accepts physical table names; custom
+SQL and subselect declarations are also opaque SQL inputs rather than logical
+identifier declarations.
+|A logical mapping representation still needs to retain explicitly physical
+references and SQL fragments as such. They cannot all be converted into logical
+names or sent through the physical strategy again.
+|===
+
+=== Assessment And Next Evidence Needed
+
+A separate phase is not ruled out, but the current `org.hibernate.mapping` model
+already combines mapping structure with physically named relational objects.
+Postponing strategy calls until runtime construction or schema export would leave
+existing boot consumers without the names they currently use.
+
+A possible architecture is logical mapping interpretation followed by relational
+finalization, followed by runtime construction or schema tooling. Physical naming,
+physical collision validation, database-dependent generator checks, and SQL
+preparation would have explicitly ordered places in that architecture. This is
+an alternative to investigate, not an approved new phase.
+
+For the naming redesign now, preserve the distinction between logical and physical
+identity without requiring that physical names all appear at one late point.
+Incremental physical resolution with explicit correspondences remains a viable
+alternative to a separate phase.
+
+The next useful feasibility case is a composite-key association with explicit
+referenced-column names and a physical strategy that changes those names. Trace
+whether the complete association structure can be resolved using logical identities
+alone. Include shared columns and two logical names that transform to one physical
+name. A second case should exercise a sequence increment mismatch, where the
+physical name affects a database check and potentially generator configuration.
+These examples would establish what must move and what can remain incremental.
+
+== Worked Example: Composite-Key Association
+
+The original characterization fixture, now converted to regression coverage, is
+`hibernate-core/src/test/java/org/hibernate/orm/test/namingstrategy/CompositeReferenceNamingTest.java`.
+It documents today's behavior, not acceptance criteria for the replacement.
+
+=== Mapping And Transformation
+
+A target entity has an embedded identifier with logical columns `country` and
+`number`. A physical strategy prefixes every column name with `p_`, preserving
+its quoted flag. The referencing entity declares its join columns in reverse
+order to make name-based pairing observable:
+
+[source,java]
+----
+@JoinColumns({
+    @JoinColumn(name = "target_number", referencedColumnName = "p_number"),
+    @JoinColumn(name = "target_country", referencedColumnName = "p_country")
+})
+----
+
+The intended physical correspondence is:
+
+[cols="2,2,2,2",options="header"]
+|===
+|Local logical name |Local physical name |Target logical name |Target physical name
+|`target_country` |`p_target_country` |`country` |`p_country`
+|`target_number` |`p_target_number` |`number` |`p_number`
+|===
+
+=== Source Path Before The Regression Fix
+
+. Target column binding transforms the identifier column names before the
+  association is bound; target `Column` objects hold `p_country` and `p_number`.
+. `ToOneAttributeBinder.referencesPrimaryKeySources()` matches the supplied
+  referenced names directly against those target columns. No physical naming
+  transformation is applied to the referenced-name strings on this path.
+. Successful matching classifies the association as a primary-key reference.
+  `orderJoinColumnSources()` orders the declarations against target column order.
+. Local `JoinColumn.name` values undergo normal column physical naming.
+  The resulting foreign-key correspondences pair the local and target `Column`
+  objects, independent of the reversed annotation declaration order.
+
+Thus the two attributes of the same annotation currently have different name-stage
+roles: `name` supplies a logical name to transform, while `referencedColumnName`
+selects an already-physical target name in this example.
+
+=== Initial Experimental Results
+
+All three characterization tests passed:
+
+* Physical references `p_number` / `p_country` with prefix naming produce the
+  expected local-to-target column pairs and a primary-key association.
+* Logical references `number` / `country` with prefix naming fail with
+  `Could not resolve non-primary-key association target columns`. They fail the
+  primary-key name match and subsequently fail non-primary-key target resolution.
+* The same logical-reference mapping succeeds with identity physical naming.
+
+The initial characterization validated completed metadata and actual foreign-key
+column correspondences without building a SessionFactory or exercising database
+SQL. Production behavior was unchanged during that investigation; the subsequent
+fix is recorded below.
+
+=== Upstream Verification: Logical Non-PK Reference
+
+Steve supplied a simpler example: `Person.socialSecurityNumber` maps to logical
+column `ssn`, and `Passport.person` uses
+`@JoinColumn(name="person_fk", referencedColumnName="ssn")` on a one-to-one
+association. A strategy prefixes columns with `p_`.
+
+The exact mapping was tested in isolated checkouts of freshly fetched upstream
+branches:
+
+* `main` at `c3ef32170fa`: passed.
+* `8.0` at `747e5b503b5`: passed.
+
+On each branch, metadata construction and validation succeeded. Assertions
+confirmed local column `p_person_fk`, target property column `p_ssn`, a non-PK
+association, and an actual foreign-key mapping from `p_person_fk` to `p_ssn`.
+The test did not build a SessionFactory or execute database SQL.
+
+`AnnotatedJoinColumns` resolves referenced logical names through the metadata
+collector's logical-to-physical column mapping on these upstream branches.
+Therefore the physical-reference requirement observed in the 9.0 composite
+fixture must not be described as established upstream behavior. The evidence
+points to a regression in the new binding path, rather than an inherent need for
+physical reference names in annotations. The subsequent regression fix also runs the exact Person/Passport fixture on
+9.0, as recorded below.
+
+=== Upstream Verification: Composite-Key Reference
+
+The composite fixture was also executed on upstream `main` (`c3ef32170fa`) and
+`8.0` (`747e5b503b5`), using the same target identifier, prefix strategy, and
+reversed join-column declarations. Both branches produced the same results:
+
+[cols="3,1,1,1",options="header"]
+|===
+|Case |main |8.0 |9.0 before regression fix
+|Logical references with prefix naming |Succeeds |Succeeds |Fails
+|Physical references with prefix naming |Fails |Fails |Succeeds
+|Logical references with identity naming |Succeeds |Succeeds |Succeeds
+|===
+
+For successful upstream cases, metadata construction and validation passed.
+Assertions verified primary-key reference classification and actual foreign-key
+column pairs: `p_target_country -> p_country` and `p_target_number -> p_number`
+for prefix naming, with no prefixes for identity naming. The physical-reference
+probe on both branches reported that `p_number` has no mapped target property.
+Three characterization cases ran per branch, with no test failures or skips;
+rejection in the physical-reference probe was captured as an observed result.
+No SessionFactory or database SQL execution was involved.
+
+This confirms that the composite example is a regression in the current 9.0
+binding path. Logical referenced-column semantics are already established by
+working upstream behavior. The redesign must not count this regression as an
+inherent need for physical-name input during association interpretation. Whether
+physical names can be computed later remains a separate architectural question;
+these tests do not implement such a later phase.
+
+=== Referenced-Column Regression Fix
+
+Steve requested fixing the regression before deciding on end-to-end logical and
+physical name types. Reference matching now consults the existing
+`ColumnNameCorrespondence` registry for the target column's logical name rather
+than comparing a logical reference against its physical spelling. This preserves
+the target's resolved physical identity without invoking physical naming again.
+Aliases and quoted-name matching are retained. Synthetic target columns without
+registered correspondences retain their existing source-name matching fallback.
+
+The lookup is used for primary-key classification, join-column ordering,
+non-primary-key property resolution, and foreign-key correspondences, including
+shared association-identifier and collection-key helpers. Physical-to-physical
+comparisons unrelated to source references remain unchanged.
+
+`CompositeReferenceNamingTest` now expects logical references to succeed with
+identity and prefix naming and checks reversed composite-column pairings.
+`LogicalSsnReferenceTest` covers Steve's Person/Passport example and verifies the
+actual non-primary-key foreign key. `QuotedLogicalReferenceTest` covers quoted,
+mixed-case target names and rejects an incorrectly cased quoted reference.
+These tests establish the regression baseline; no logical/physical type split
+or separate physical naming phase is implemented by this fix.
+
+Validation: the naming-strategy, association-binding, identifier-binding, and
+collection-binding regression selection passed 194 tests with no failures, errors,
+or skips, including all six new referenced-name cases.
+
+=== Logical-First Alternative
+
+If `referencedColumnName` is defined to identify a logical column, the declarations
+would instead use `number` and `country`. Mapping interpretation could find the
+target columns by logical identity, establish that both belong to the identifier,
+and record these object correspondences:
+
+* local `target_country` column -> target `country` column;
+* local `target_number` column -> target `number` column.
+
+Physical resolution could then attach the four `p_` identifiers without redoing
+the structural association matching. This example does not inherently require
+physical names to determine the association shape; the current implementation
+requires them because matching and identity use already-physical column names.
+
+This depends on a deliberate semantic decision for referenced names. Preserving
+physical-reference input would require resolving it after physical names exist,
+or a separately represented physical-reference form. Applying the strategy to an
+already-physical reference would produce `p_p_country`, illustrating why the stage
+cannot safely be guessed. Inverting a physical strategy is not generally possible.
+
+Physical validation remains necessary. A strategy could collapse two distinct
+logical identifier columns to the same physical name; logical association pairing
+cannot establish that such a physical model is valid. Likewise, intentional
+shared columns should be represented by shared relational identity, not inferred
+solely from an accidental collision after transformation. These cases remain
+separate feasibility tests.
+
+The example supports a logical-first association model but does not prove that
+all boot processing can defer physical resolution. Generator database checks,
+SQL preparation, quoting, and other association forms remain to be investigated.
+
+== Impact Assessment: Logical And Physical Name Types
+
+A source inventory found 234 Java files referencing the naming `Identifier`:
+165 under production source roots, 67 under test roots, and two elsewhere.
+These files contain approximately 1,730 `Identifier` tokens. This is an inventory
+of direct references, not a predicted edit count: transitive callers and string
+name flows are not captured, and stage-neutral uses may remain unchanged.
+Of the 160 core production files, 86 are in boot, 29 in schema tooling, 13 in
+dialect code, ten in mapping, eight in generators, and fourteen elsewhere.
+
+A wholesale replacement is a substantial cross-cutting redesign. Concrete
+pressure points include:
+
+* `Namespace.createTable(Identifier, Function<Identifier, Table>)` accepts a
+  logical name but passes a physical name to its callback. Its maps use logical
+  keys while resulting tables contain physical names. This is a strong candidate
+  for explicit stage types, not a mechanical type replacement.
+* `QualifiedName` and qualified table/sequence names expose identifiers for all
+  parts. Their callers must distinguish logical qualification from physical
+  database qualification.
+* `IdentifierHelper` combines parsing/quoting with JDBC metadata-name conversion.
+  Some operations are stage-neutral; others specifically consume physical names.
+* `Identifier` defines canonical equality, hashing, ordering, matching, and
+  rendering, and is serializable. Distinct wrappers need deliberate equality and
+  conversion rules; name-keyed collections must keep their intended semantics.
+* `DatabaseIdentifier` already represents names obtained from the database, but
+  extends `Identifier`. It does not distinguish logical from physical names in
+  signatures. Observed database spelling and quoted mapping intent need care.
+* `Column` stores name information as strings and creates identifiers on demand.
+  Merely replacing direct `Identifier` uses would leave ambiguous string paths.
+* Schema extraction, validation, generators, and dialect extension contracts also
+  consume these identifiers. Removing old naming-contract compatibility does not
+  make these adjacent changes cost-free or automatically settle their SPI scope.
+
+Two implementation scopes should be evaluated separately:
+
+Boundary distinction::
+Keep `Identifier` as the common text/quoting value, and use `LogicalName` and
+`PhysicalName` at new strategy and logical/physical correspondence boundaries.
+This is less disruptive, with explicit conversion into existing relational and
+schema code. Type safety ends where a wrapper is unwrapped; it must not be
+advertised as end-to-end protection.
+
+End-to-end distinction::
+Carry the distinct types through relational storage, qualified names, lookup
+maps, helper contracts, schema tools, and generators. This provides stronger
+protection but constitutes a model-wide project with substantial semantic review
+and regression coverage, not a small naming-SPI refinement.
+
+Recommendation: prototype the boundary distinction through one complete column
+reference path before committing to the end-to-end split. Prefer composition to
+simply subclassing `Identifier`: inherited methods returning `Identifier` and
+methods accepting the common base would erase the distinction. No implementation
+or schedule estimate is approved by this assessment.
+
 == Investigation: Invocation And Input Matrix
 
-Inventory each callback and each path that constructs a name directly. Record:
+Inventory all required naming decisions and paths that construct names directly,
+using the old callbacks as one source of evidence rather than a scope limit. Record:
 
 * mapping kind (entity, basic attribute, association, collection, inheritance,
   tenant, any mapping, or constraint);
-* annotation/XML origin, explicit-name handling, and default precedence;
+* annotation/supported mapping XML origin, explicit-name handling, and default precedence;
 * available entity names, attribute paths, table names, and referenced columns;
 * whether each identifier is logical or physical and its quoting state;
 * invocation timing, multiplicity, and subsequent physical transformation;
@@ -65,18 +500,113 @@ those callbacks or in the caller. Neither observation alone establishes a bug.
 Use the matrix to distinguish accidental omissions from intentional exclusions.
 Require reproducible mapping examples for every proposed consistency correction.
 
+== Initial Source Investigation
+
+This is a source-level inventory, not completed behavioral validation. No naming
+algorithm has been changed. Quarkus preparation work is deferred and does not
+expand this investigation's scope.
+
+=== Callback Coverage
+
+The interface declares 16 callbacks. Production call sites were found for 13;
+three have declarations and default implementations but no production calls.
+
+[cols="2,3",options="header"]
+|===
+|Callback group |Observed production path
+|Primary, join, and collection table names
+|`TableBinder`; explicit table names bypass these callbacks.
+|Identifier column
+|`IdentifierMappingMaterializer`.
+|Basic column
+|`BasicValueMappingMaterializer`, `ElementCollectionAttributeBinder`, and
+`ComponentSource`.
+|Join column
+|`ToOneAttributeBinder`, `PluralAssociationAttributeBinder`, and `TableKeyBinder`.
+|Any discriminator and key columns
+|`AnyValueBinder`.
+|Map key and list index columns
+|`CollectionIndexBinder`.
+|Foreign-key name
+|`InFlightMetadataCollectorImpl.secondPassCompileForeignKeys()` and
+`DenormalizedTable.createDenormalizedForeignKeys()`.
+|Unique-key name
+|`UniqueKeyMappingMaterializer` and `CollectionKeyMappingMaterializer`.
+|Index name
+|`IndexMappingMaterializer`.
+|Discriminator, tenant-id, and primary-key join column names
+|No production invocation of the three corresponding callbacks was found.
+|===
+
+=== Concrete Findings
+
+Discriminator naming has an intentional bypass::
+`ColumnBinder.bindDiscriminatorColumn()` supplies `DTYPE` directly when no name
+is given. Its comment explicitly refers to HHH-20613 before routing through the
+strategy. The default strategy instead obtains the effective discriminator
+default. A redesign must decide the intended default and customization rule;
+connecting the existing callback mechanically could change existing names.
+The referenced issue has not been investigated in this pass.
+
+Tenant naming follows basic-value materialization::
+`BasicValueMappingMaterializer.materializeTenantIdBasicValue()` uses the shared
+selectable processing path. The dedicated tenant naming callback has no production
+caller. Decide whether tenant columns need a distinct naming role or should be
+specified as ordinary basic columns; do not retain an apparently supported hook
+that never participates.
+
+Primary-key join naming has no production caller::
+The callback's existence does not establish its coverage. Joined-inheritance,
+secondary-table, and shared-primary-key association cases need separate behavioral
+examples before deciding which belong to this role and how defaults are chosen.
+
+Generated collection-index names are presented as explicit::
+`TableKeyBinder.applyIndexes()` creates `idx_<table>_<column-list-hash>` for an
+unnamed collection-table index, then passes it through `ResolvedIndex.explicit()`.
+`IndexMappingMaterializer` still invokes `determineIndexName()`, but exposes that
+generated name as `getUserProvidedIdentifier()`. The default strategy consequently
+preserves it rather than generating its normal hashed index name. This is a
+concrete mismatch between input provenance and the source contract, even though
+the callback is invoked. Correcting it may change existing generated names.
+
+Explicit-name policy varies by role::
+Table callbacks are bypassed for explicit names, while constraint callbacks
+receive a user-provided identifier and the default strategy elects to preserve
+it. A custom constraint strategy can replace it. Uniformly bypassing callbacks
+would therefore remove existing customization behavior.
+
+Logical/physical identity and quoting need explicit input semantics::
+Join-table inputs use physical table names as strings. Collection-table inputs
+reconstruct an `Identifier` from `owningTable.getName()`, which does not explicitly
+carry the table's quoted flag. Index naming attempts a logical table-name lookup
+and falls back to a physical identifier on `MappingException`. These paths give
+concrete reasons to specify name stage and quoting information. Behavioral tests
+are still needed to establish affected cases and intended outcomes.
+
+=== Recommended Next Design Step
+
+Expand the inventory beyond the old interface to cover all implicit database
+names in the supported mapping model. Use the three uncalled hooks and collection
+index naming as concrete examples of what the new design must express correctly.
+Characterization tests may explain existing behavior, but must not turn legacy
+behavior into acceptance requirements for the replacement.
+
+Next work through representative naming dependencies: a primary table, an
+association table, a join column, and a constraint on those columns. For each,
+show which facts are needed, where each name originated, whether the referenced
+name is logical or physical, and how quoting is carried. Compare possible
+pipeline models before selecting method signatures or source types.
+
+Explicit-name handling and the extension model remain open. Broad implicit
+coverage is the proposed baseline, independent of whether the final Java contract
+uses separate callbacks, typed requests, or composed policies.
+
 == Alternatives And Tradeoffs
 
-Refine the existing role-specific callback interface::
-Keep familiar dispatch and source types, repair invocation rules, and revise
-ambiguous inputs. Lowest migration burden, but may retain historical divisions
-that do not match the desired pipeline.
-
-Replace it with a new role-specific SPI (initial preference)::
-Design callbacks and immutable inputs around the naming decisions found in the
-inventory. Provide a supported default implementation with deliberate subclass
-hooks. Clear migration boundary, but potentially substantial provider changes.
-Do not invent the final method list before the inventory.
+New role-specific SPI::
+Design callbacks and inputs around current naming decisions. Distinct callbacks
+can expose precise facts for each role, but shared naming policies may require
+repeated implementation. The method set is unconstrained by the old interface.
 
 One generic naming request and dispatcher::
 Represent naming kinds through a typed request hierarchy. Centralizes dispatch
@@ -92,10 +622,10 @@ The remaining sequence is:
 . Build the invocation/input matrix and capture inconsistent cases as tests.
 . Agree on responsibility boundaries and choose an extension model.
 . Produce a working specification with exact contracts, precedence, invocation
-  rules, compatibility policy, edge cases, and acceptance tests.
+  rules, default naming behavior, edge cases, and acceptance tests.
 . Obtain explicit approval before implementing the replacement.
 
-== Compatibility And Deprecation
+== Replacement And Deprecation
 
 Decide the 8.0 deprecation message only once the replacement direction and 9.0
 migration expectations are clear. A deprecation with no usable replacement in
@@ -103,30 +633,33 @@ migration expectations are clear. A deprecation with no usable replacement in
 Steve's planned 8.0 deprecations of `ImplicitNameSource.getBuildingContext()`
 and the two context-taking protected JPA helpers remain separate decisions.
 
-Evaluate an adapter against the invocation matrix. It may preserve common
-strategies, but cannot promise compatibility if old callbacks lack information
-or depended on old timing. Include subclasses overriding protected helpers,
-settings-based registration, and bootstrap registration in the migration plan.
-Do not silently accept obsolete overrides while bypassing their dispatch.
+No compatibility adapter or preservation of old subclass hooks is required.
+Migration documentation should explain the new contract and intentional changes;
+it must not dictate the replacement's shape. Provider registration and the
+supported extension model should be designed on their own merits.
 
 == Open Decisions
 
 * Is the redesign limited to implicit naming, or does evidence justify changing
   the physical boundary as well?
-* Which observed bypasses are defects, and which naming decisions should remain
-  outside strategy control?
+* Which additional database-object kinds must be represented to fulfill complete
+  implicit naming coverage?
 * Should explicit names bypass implicit callbacks uniformly, including constraints?
 * Should providers primarily implement an interface, subclass a default strategy,
   or compose smaller policies? Which extension points are supported?
-* Is a legacy adapter worth its semantic limitations, and for how long?
+* How should the proposed logical-only boot model resolve physical names for
+  runtime construction and schema tooling, preserving quoting and stage identity?
+* Which mapping defaults and default naming algorithms should the new design use?
 * Should the entire interface be deprecated in 8.0 before its replacement is
   available, or should that wait for a concrete migration path?
 
 == Acceptance Direction
 
 Compare resolved logical and physical names across representative annotations
-and XML mappings, including associations, collections, inheritance, composite
+and supported mapping XML, including associations, collections, inheritance, composite
 identifiers, tenant columns, any mappings, and constraints. Verify explicit-name
 precedence, defaults, quoting, charset-dependent hashes, callback counts, and
-subclass dispatch. Any changed name needs an intentional compatibility decision.
-Restoration must preserve finalized names without invoking naming strategies.
+the selected extension model. Validate against the new specification; record
+changed generated names without imposing old-contract compatibility.
+Specify restoration behavior for logical and physical names separately under the
+selected model; verify that restoration does not repeat implicit interpretation.

@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.relational.ColumnNameCorrespondence;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.internal.util.StringHelper;
@@ -42,7 +43,8 @@ class SelectableOrderResolver {
 			List<Column> targetColumns,
 			List<String> referencedColumnNames,
 			Database database,
-			String sourceRole) {
+			String sourceRole,
+			ColumnNameCorrespondence columnNames) {
 		validateColumnCounts( localColumns, targetColumns, sourceRole );
 		if ( referencedColumnNames.isEmpty()
 				|| referencedColumnNames.stream().noneMatch( StringHelper::isNotEmpty ) ) {
@@ -61,7 +63,8 @@ class SelectableOrderResolver {
 					targetColumns,
 					database.toIdentifier( referencedColumnName ),
 					database,
-					sourceRole
+					sourceRole,
+				columnNames
 			);
 			correspondences.add( new SelectableCorrespondence(
 					localColumns.get( i ),
@@ -80,7 +83,8 @@ class SelectableOrderResolver {
 			List<Column> targetColumns,
 			List<String> referencedColumnNames,
 			Database database,
-			String sourceRole) {
+			String sourceRole,
+			ColumnNameCorrespondence columnNames) {
 		if ( localColumns.size() != targetColumns.size() ) {
 			return null;
 		}
@@ -98,7 +102,8 @@ class SelectableOrderResolver {
 			final Column referencedColumn = findTargetColumnOrNull(
 					targetColumns,
 					database.toIdentifier( referencedColumnName ),
-					database
+					database,
+				columnNames
 			);
 			if ( referencedColumn == null ) {
 				return null;
@@ -128,9 +133,10 @@ class SelectableOrderResolver {
 			List<Column> targetColumns,
 			Identifier referencedColumnName,
 			Database database,
-			String sourceRole) {
+			String sourceRole,
+			ColumnNameCorrespondence columnNames) {
 		for ( Column targetColumn : targetColumns ) {
-			if ( targetColumn.getNameIdentifier( database ).matches( referencedColumnName ) ) {
+			if ( columnNames.matches( targetColumn, referencedColumnName ) ) {
 				return targetColumn;
 			}
 		}
@@ -142,9 +148,10 @@ class SelectableOrderResolver {
 	private static Column findTargetColumnOrNull(
 			List<Column> targetColumns,
 			Identifier referencedColumnName,
-			Database database) {
+			Database database,
+			ColumnNameCorrespondence columnNames) {
 		for ( Column targetColumn : targetColumns ) {
-			if ( targetColumn.getNameIdentifier( database ).matches( referencedColumnName ) ) {
+			if ( columnNames.matches( targetColumn, referencedColumnName ) ) {
 				return targetColumn;
 			}
 		}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.metamodel.model.domain.NavigableRole;
+
 import jakarta.persistence.Entity;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -60,6 +62,10 @@ public interface EntityMappingType
 		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminable,
 		SoftDeletableModelPart {
 
+	@Nonnull
+	@Override
+	NavigableRole getNavigableRole();
+
 	/**
 	 * The entity name.
 	 * <p>
@@ -70,11 +76,13 @@ public interface EntityMappingType
 	 * @apiNote Different from {@link Entity#name()}, which is just a glorified
 	 * SQM "import" name
 	 */
+	@Nonnull
 	String getEntityName();
 
 	/**
 	 * Describes how the entity is represented in the application's domain model.
 	 */
+	@Nonnull
 	default EntityRepresentationStrategy getRepresentationStrategy() {
 		return getEntityPersister().getRepresentationStrategy();
 	}
@@ -89,6 +97,7 @@ public interface EntityMappingType
 	 * @see #getIdentifierTableDetails
 	 * @see #forEachTableDetails
 	 */
+	@Nonnull
 	TableDetails getMappedTableDetails();
 
 	/**
@@ -97,11 +106,13 @@ public interface EntityMappingType
 	 *
 	 * @see #forEachTableDetails
 	 */
+	@Nonnull
 	TableDetails getIdentifierTableDetails();
 
 	/**
 	 * Access to the Jakarta Persistence style callbacks for this entity.
 	 */
+	@Nonnull
 	default EntityCallbacks<Object> getEntityCallbacks() {
 		return getEntityPersister().getEntityCallbacks();
 	}
@@ -109,23 +120,27 @@ public interface EntityMappingType
 	/**
 	 * Visit details for each table associated with the entity.
 	 */
-	void forEachTableDetails(Consumer<TableDetails> consumer);
+	void forEachTableDetails(@Nonnull Consumer<TableDetails> consumer);
 
+	@Nonnull
 	@Override
 	default EntityMappingType findContainingEntityMapping() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	default JavaType<?> getJavaType() {
 		return getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
 	default EntityMappingType asEntityMappingType() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	default MappingType getPartMappingType() {
 		return this;
@@ -137,18 +152,20 @@ public interface EntityMappingType
 	 * @apiNote "Query space" is simply the table expressions to
 	 * which the entity is mapped; the name is historical.
 	 */
-	void visitQuerySpaces(Consumer<String> querySpaceConsumer);
+	void visitQuerySpaces(@Nonnull Consumer<String> querySpaceConsumer);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Make sure we don't run into possible stack overflows
 
+	@Nullable
 	@Override
-	default ModelPart findSubPart(String name) {
+	default ModelPart findSubPart(@Nonnull String name) {
 		return findSubPart( name, null );
 	}
 
-	default ModelPart findSubTypesSubPart(String name, EntityMappingType treatTargetType) {
+	@Nullable
+	default ModelPart findSubTypesSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		return findSubPart( name, treatTargetType );
 	}
 
@@ -185,6 +202,7 @@ public interface EntityMappingType
 	 * @apiNote This need not be the direct superclass of the entity as it
 	 * is driven by mapping.
 	 */
+	@Nullable
 	default EntityMappingType getSuperMappingType() {
 		return null;
 	}
@@ -194,13 +212,16 @@ public interface EntityMappingType
 	 *
 	 * @see #getSuperMappingType
 	 */
+	@Nullable
 	default String getMappedSuperclass() {
-		return getSuperMappingType().getEntityName();
+		final var superMappingType = getSuperMappingType();
+		return superMappingType == null ? null : superMappingType.getEntityName();
 	}
 
 	/**
 	 * Retrieve mappings for all subtypes
 	 */
+	@Nonnull
 	default Collection<EntityMappingType> getSubMappingTypes() {
 		final var mappingMetamodel = getEntityPersister().getFactory().getMappingMetamodel();
 		final var subclassEntityNames = getSubclassEntityNames();
@@ -215,7 +236,7 @@ public interface EntityMappingType
 	 * Whether the passed entity mapping is the same as or is a supertype of
 	 * this entity mapping
 	 */
-	default boolean isTypeOrSuperType(EntityMappingType targetType) {
+	default boolean isTypeOrSuperType(@Nullable EntityMappingType targetType) {
 		return targetType == this;
 	}
 
@@ -225,7 +246,7 @@ public interface EntityMappingType
 	 *
 	 * @see #isTypeOrSuperType(EntityMappingType)
 	 */
-	default boolean isTypeOrSuperType(ManagedMappingType targetType) {
+	default boolean isTypeOrSuperType(@Nullable ManagedMappingType targetType) {
 		if ( targetType instanceof EntityMappingType entityMappingType ) {
 			return isTypeOrSuperType( entityMappingType );
 		}
@@ -241,6 +262,7 @@ public interface EntityMappingType
 		return getEntityPersister().getSubclassId();
 	}
 
+	@Nonnull
 	default Set<String> getSubclassEntityNames() {
 		return getEntityPersister().getSubclassEntityNames();
 	}
@@ -248,8 +270,10 @@ public interface EntityMappingType
 	/**
 	 * The discriminator value which indicates this entity mapping
 	 */
+	@Nonnull
 	DiscriminatorValue getDiscriminatorValue();
 
+	@Nullable
 	default String getDiscriminatorSQLValue() {
 		final var discriminatorValue = getDiscriminatorValue();
 		if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
@@ -266,6 +290,7 @@ public interface EntityMappingType
 		}
 	}
 
+	@Nonnull
 	default EntityMappingType getRootEntityDescriptor() {
 		final var superMappingType = getSuperMappingType();
 		return superMappingType == null
@@ -298,7 +323,7 @@ public interface EntityMappingType
 	 * @param tableGroup The table group to prune subclass tables for
 	 * @param entityNameUses The entity names under which a table group was used.
 	 */
-	default void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
+	default void pruneForSubclasses(@Nonnull TableGroup tableGroup, @Nonnull Map<String, EntityNameUse> entityNameUses) {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -308,12 +333,14 @@ public interface EntityMappingType
 	 * Mapping details for the entity's identifier.  This is shared across all
 	 * entity mappings within an inheritance hierarchy.
 	 */
+	@Nonnull
 	EntityIdentifierMapping getIdentifierMapping();
 
 	/**
 	 * Mapping details for the entity's identifier.  This is shared across all
 	 * entity mappings within an inheritance hierarchy.
 	 */
+	@Nonnull
 	default EntityIdentifierMapping getIdentifierMappingForJoin() {
 		return getIdentifierMapping();
 	}
@@ -322,6 +349,7 @@ public interface EntityMappingType
 	 * Mapping details for the entity's discriminator.  This is shared across all
 	 * entity mappings within an inheritance hierarchy.
 	 */
+	@Nullable
 	EntityDiscriminatorMapping getDiscriminatorMapping();
 
 	/**
@@ -345,8 +373,9 @@ public interface EntityMappingType
 	 * @see #isConcreteProxy()
 	 * @since 6.6
 	 */
+	@Nonnull
 	@Incubating(since = "5.4")
-	default EntityMappingType resolveConcreteProxyTypeForId(Object id, SharedSessionContractImplementor session) {
+	default EntityMappingType resolveConcreteProxyTypeForId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		return this;
 	}
 
@@ -362,11 +391,13 @@ public interface EntityMappingType
 	 *
 	 * @see #optimisticLockStyle
 	 */
+	@Nullable
 	EntityVersionMapping getVersionMapping();
 
 	/**
 	 * Tenant metadata, or {@code null} for entities without a tenant id.
 	 */
+	@Nullable
 	default TenantIdMapping getTenantIdMapping() {
 		return null;
 	}
@@ -374,6 +405,7 @@ public interface EntityMappingType
 	/**
 	 * The type of optimistic locking, if any, defined for this entity mapping
 	 */
+	@Nonnull
 	default OptimisticLockStyle optimisticLockStyle() {
 		return OptimisticLockStyle.NONE;
 	}
@@ -395,11 +427,13 @@ public interface EntityMappingType
 	/**
 	 * The mapping for the row-id of the entity, if one is defined.
 	 */
+	@Nullable
 	EntityRowIdMapping getRowIdMapping();
 
 	/**
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
+	@Nullable
 	@Incubating(since = "5.4")
 	default SoftDeleteMapping getSoftDeleteMapping() {
 		return null;
@@ -408,6 +442,7 @@ public interface EntityMappingType
 	/**
 	 * Mapping for temporal entity support, or {@code null} if not defined.
 	 */
+	@Nullable
 	@Incubating(since = "5.4")
 	default TemporalMapping getTemporalMapping() {
 		return null;
@@ -416,15 +451,18 @@ public interface EntityMappingType
 	/**
 	 * Mapping for audit support, or {@code null} if not defined.
 	 */
+	@Nullable
 	@Incubating(since = "5.4")
 	default AuditMapping getAuditMapping() {
 		return null;
 	}
 
+	@Nullable
 	default AuxiliaryMapping getAuxiliaryMapping() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	default TableDetails getSoftDeleteTableDetails() {
 		return getIdentifierTableDetails();
@@ -447,6 +485,7 @@ public interface EntityMappingType
 	 * The attributes mapping for this entity, including those
 	 * declared on supertype mappings
 	 */
+	@Nonnull
 	@Override
 	default AttributeMappingsList getAttributeMappings() {
 		return getEntityPersister().getAttributeMappings();
@@ -458,7 +497,7 @@ public interface EntityMappingType
 	 * @see #getAttributeMappings()
 	 */
 	@Override
-	default void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
+	default void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action) {
 		getAttributeMappings().forEach( action );
 	}
 
@@ -466,6 +505,7 @@ public interface EntityMappingType
 	 * Retrieve an attribute mapping by position, relative to
 	 * {@linkplain #getAttributeMappings() all attributes}
 	 */
+	@Nonnull
 	@Override
 	default AttributeMapping getAttributeMapping(int position) {
 		return getEntityPersister().getAttributeMapping( position );
@@ -475,7 +515,8 @@ public interface EntityMappingType
 	 * Find an attribute-mapping, declared on this entity mapping (not super or
 	 * subs), by name
 	 */
-	AttributeMapping findDeclaredAttributeMapping(String name);
+	@Nullable
+	AttributeMapping findDeclaredAttributeMapping(@Nonnull String name);
 
 	/**
 	 * Get the number of attributes defined on this entity mapping - do not access
@@ -488,42 +529,45 @@ public interface EntityMappingType
 	/**
 	 * Get access to the attributes defined on this class - do not access attributes defined on the super
 	 */
+	@Nonnull
 	AttributeMappingsMap getDeclaredAttributeMappings();
 
 	/**
 	 * Visit attributes defined on this class - do not visit attributes defined on the super
 	 */
-	void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action);
+	void visitDeclaredAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action);
 
 	/**
 	 * Visit the mappings, but limited to just attributes defined
 	 * in the targetType or its super-type(s) if any.
 	 */
-	default void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+	default void visitAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
 		getAttributeMappings().forEach( action );
 	}
 
 	/**
 	 * Walk this type's attributes as well as its subtypes
 	 */
-	default void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
+	default void visitSubTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
 		// by default do nothing
 	}
 
 	/**
 	 * Walk this type's attributes as well as its super-type's
 	 */
-	default void visitSuperTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
+	default void visitSuperTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
 		// by default do nothing
 	}
 
-	void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer);
+	void visitConstraintOrderedTables(@Nonnull ConstraintOrderedTableConsumer consumer);
 
+	@Nonnull
 	default String getImportedName() {
 		return getEntityPersister().getImportedName();
 	}
 
-	default RootGraphImplementor<?> createRootGraph(SharedSessionContractImplementor session) {
+	@Nonnull
+	default RootGraphImplementor<?> createRootGraph(@Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getSessionFactory();
 		return getRepresentationStrategy() instanceof EntityRepresentationStrategyMap
 				? factory.createGraphForDynamicEntity( getEntityName() )
@@ -531,7 +575,7 @@ public interface EntityMappingType
 	}
 
 	interface ConstraintOrderedTableConsumer {
-		void consume(String tableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
+		void consume(@Nonnull String tableExpression, @Nonnull Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
 	}
 
 
@@ -542,35 +586,38 @@ public interface EntityMappingType
 	/**
 	 * Access to performing natural-id database selection.  This is per-entity in the hierarchy
 	 */
+	@Nonnull
 	NaturalIdLoader<?> getNaturalIdLoader();
 
 	/**
 	 * Access to performing multi-value natural-id database selection.  This is per-entity in the hierarchy
 	 */
+	@Nonnull
 	MultiNaturalIdLoader<?> getMultiNaturalIdLoader();
 
 	/**
 	 * Load an instance of the persistent class, by a unique key other
 	 * than the primary key.
 	 */
-	Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session);
+	@Nullable
+	Object loadByUniqueKey(@Nonnull String propertyName, @Nonnull Object uniqueKey, @Nonnull SharedSessionContractImplementor session);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Loadable
 
 	@Override
-	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+	default boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return getEntityPersister().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
 	}
 
 	@Override
-	default boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByEntityGraph(@Nonnull LoadQueryInfluencers influencers) {
 		return getEntityPersister().isAffectedByEntityGraph( influencers );
 	}
 
 	@Override
-	default boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByEnabledFetchProfiles(@Nonnull LoadQueryInfluencers influencers) {
 		return getEntityPersister().isAffectedByEnabledFetchProfiles( influencers );
 	}
 
@@ -578,10 +625,12 @@ public interface EntityMappingType
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SQM handling
 
+	@Nullable
 	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy(){
 		return getEntityPersister().getSqmMultiTableMutationStrategy();
 	}
 
+	@Nullable
 	default SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
 		return getEntityPersister().getSqmMultiTableInsertStrategy();
 	}
@@ -590,19 +639,21 @@ public interface EntityMappingType
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SQL AST generation
 
+	@Nonnull
 	@Override
 	default String getSqlAliasStem() {
 		return getEntityPersister().getSqlAliasStem();
 	}
 
+	@Nonnull
 	@Override
 	default TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			@Nullable SqlAstCreationState creationState) {
 		return getEntityPersister().createRootTableGroup(
 				canUseInnerJoins,
 				navigablePath,
@@ -613,26 +664,29 @@ public interface EntityMappingType
 		);
 	}
 
+	@Nonnull
 	default TableReference createPrimaryTableReference(
-			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState) {
+			@Nonnull SqlAliasBase sqlAliasBase,
+			@Nonnull SqlAstCreationState creationState) {
 		throw new UnsupportedMappingException(
 				"Entity mapping does not support primary TableReference creation [" +
 						getClass().getName() + " : " + getEntityName() + "]"
 		);
 	}
 
+	@Nullable
 	default TableReferenceJoin createTableReferenceJoin(
-			String joinTableExpression,
-			SqlAliasBase sqlAliasBase,
-			TableReference lhs,
-			SqlAstCreationState creationState) {
+			@Nonnull String joinTableExpression,
+			@Nonnull SqlAliasBase sqlAliasBase,
+			@Nonnull TableReference lhs,
+			@Nonnull SqlAstCreationState creationState) {
 		throw new UnsupportedMappingException(
 				"Entity mapping does not support primary TableReference join creation [" +
 						getClass().getName() + " : " + getEntityName() + "]"
 		);
 	}
 
+	@Nonnull
 	@Override
 	default JavaType<?> getMappedJavaType() {
 		return getEntityPersister().getMappedJavaType();
@@ -643,6 +697,7 @@ public interface EntityMappingType
 		return getEntityPersister().getNumberOfFetchables();
 	}
 
+	@Nonnull
 	@Override
 	default Fetchable getFetchable(int position) {
 		return getEntityPersister().getFetchable( position );
@@ -650,21 +705,21 @@ public interface EntityMappingType
 
 	@Override
 	default void applyDiscriminator(
-			Consumer<Predicate> predicateConsumer,
-			String alias,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
+			@Nullable Consumer<Predicate> predicateConsumer,
+			@Nullable String alias,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAstCreationState creationState) {
 		getEntityPersister().applyDiscriminator( predicateConsumer, alias, tableGroup, creationState );
 	}
 
 	@Override
 	default void applyFilterRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		getEntityPersister().applyFilterRestrictions(
 				predicateConsumer,
 				tableGroup,
@@ -677,13 +732,13 @@ public interface EntityMappingType
 
 	@Override
 	default void applyBaseRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState) {
+			@Nullable Set<String> treatAsDeclarations,
+			@Nullable SqlAstCreationState creationState) {
 		getEntityPersister().applyBaseRestrictions(
 				predicateConsumer,
 				tableGroup,
@@ -702,10 +757,10 @@ public interface EntityMappingType
 
 	@Override
 	default void applyWhereRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		getEntityPersister().applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
 	}
 
@@ -713,14 +768,17 @@ public interface EntityMappingType
 	 * Safety-net.
 	 */
 	// todo (6.0) : look to remove need for this.  at the very least, move it to an SPI contract
+	@Nonnull
 	@Internal
 	EntityPersister getEntityPersister();
 
+	@Nonnull
 	@Override
 	default String getPartName() {
 		return getEntityName();
 	}
 
+	@Nonnull
 	@Override
 	default String getRootPathName() {
 		return getEntityName();

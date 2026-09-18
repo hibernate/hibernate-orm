@@ -6,6 +6,8 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * Used as part of circularity detection
  * <p>
@@ -16,5 +18,5 @@ import java.util.List;
  *
  * @author Andrea Boriero
  */
-public record AssociationKey(String table, List<String> columns) {
+public record AssociationKey(@Nonnull String table, @Nonnull List<String> columns) {
 }

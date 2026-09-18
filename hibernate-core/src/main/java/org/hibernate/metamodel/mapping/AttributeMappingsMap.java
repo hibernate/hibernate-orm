@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -32,14 +35,17 @@ import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingsMap;
 @Incubating(since = "5.4")
 public interface AttributeMappingsMap {
 
-	void forEachValue(Consumer<? super AttributeMapping> action);
+	void forEachValue(@Nonnull Consumer<? super AttributeMapping> action);
 
 	int size();
 
-	AttributeMapping get(String name);
+	@Nullable
+	AttributeMapping get(@Nonnull String name);
 
+	@Nonnull
 	Iterable<AttributeMapping> valueIterator();
 
+	@Nonnull
 	static Builder builder() {
 		return new Builder();
 	}
@@ -48,9 +54,9 @@ public interface AttributeMappingsMap {
 
 		private Builder(){}
 
-		private LinkedHashMap<String,AttributeMapping> storage;
+		@Nullable private LinkedHashMap<String,AttributeMapping> storage;
 
-		public void put(final String name, final AttributeMapping mapping) {
+		public void put(@Nonnull final String name, @Nonnull final AttributeMapping mapping) {
 			Objects.requireNonNull( name );
 			Objects.requireNonNull( mapping );
 			if ( storage == null ) {
@@ -59,6 +65,7 @@ public interface AttributeMappingsMap {
 			storage.put( name, mapping );
 		}
 
+		@Nonnull
 		public AttributeMappingsMap build() {
 			if ( storage == null ) {
 				return EmptyAttributeMappingsMap.INSTANCE;

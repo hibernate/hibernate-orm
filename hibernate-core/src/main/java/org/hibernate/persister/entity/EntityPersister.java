@@ -168,6 +168,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	SessionFactoryImplementor getFactory();
 
+	@Nonnull
 	@Override
 	default String getSqlAliasStem() {
 		return SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( getEntityName() );
@@ -192,6 +193,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The name of the entity which this persister maps.
 	 */
+	@Nonnull
 	String getEntityName();
 
 	/**
@@ -200,6 +202,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Nullable
 	String getJpaEntityName();
 
+	@Nonnull
 	default String getImportedName() {
 		final String entityName = getJpaEntityName();
 		return entityName == null
@@ -212,8 +215,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * entity has multiple tables. Returns {@code null} to indicate that
 	 * the entity does not have multiple tables.
 	 */
+	@Nullable
 	SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy();
 
+	@Nullable
 	SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy();
 
 	boolean isPolymorphic();
@@ -300,7 +305,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		return (String[]) getQuerySpaces();
 	}
 
-	default void visitQuerySpaces(Consumer<String> querySpaceConsumer) {
+	default void visitQuerySpaces(@Nonnull Consumer<String> querySpaceConsumer) {
 		for ( String space : getSynchronizedQuerySpaces() ) {
 			querySpaceConsumer.accept(space);
 		}
@@ -551,6 +556,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		return new VersionGeneration( getVersionMapping() );
 	}
 
+	@Nonnull
 	@Override
 	default AttributeMapping getAttributeMapping(int position) {
 		return getAttributeMappings().get( position );
@@ -558,12 +564,12 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	@Override
 	default <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( domainValue instanceof Object[] values ) {
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
@@ -596,6 +602,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	boolean hasLazyProperties();
 
+	@Nonnull
 	default NaturalIdLoader<?> getNaturalIdLoader() {
 		throw new UnsupportedOperationException(
 				"EntityPersister implementation '" + getClass().getName()
@@ -603,6 +610,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		);
 	}
 
+	@Nonnull
 	default MultiNaturalIdLoader<?> getMultiNaturalIdLoader() {
 		throw new UnsupportedOperationException(
 				"EntityPersister implementation '" + getClass().getName()
@@ -636,8 +644,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions);
 
+	@Nullable
 	@Override
-	default Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session) {
+	default Object loadByUniqueKey(@Nonnull String propertyName, @Nonnull Object uniqueKey, @Nonnull SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException(
 				"EntityPersister implementation '" + getClass().getName()
 						+ "' does not support 'UniqueKeyLoadable'"
@@ -1120,7 +1129,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	Class<?> getConcreteProxyClass();
 
-	default void setValues(Object object, Object[] values) {
+	default void setValues(@Nonnull Object object, @Nonnull Object[] values) {
 		setPropertyValues( object, values );
 	}
 
@@ -1132,7 +1141,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Deprecated(since = "6.0")
 	void setPropertyValues(Object object, Object[] values);
 
-	default void setValue(Object object, int i, Object value) {
+	default void setValue(@Nonnull Object object, int i, @Nullable Object value) {
 		setPropertyValue( object, i, value );
 	}
 
@@ -1144,7 +1153,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Deprecated(since = "6.0")
 	void setPropertyValue(Object object, int i, Object value);
 
-	default Object[] getValues(Object object) {
+	@Nonnull
+	default Object[] getValues(@Nonnull Object object) {
 		return getPropertyValues( object );
 	}
 
@@ -1154,7 +1164,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Deprecated(since  = "6.0")
 	Object[] getPropertyValues(Object object);
 
-	default Object getValue(Object object, int i) {
+	@Nullable
+	default Object getValue(@Nonnull Object object, int i) {
 		return getPropertyValue( object, i );
 	}
 
@@ -1181,7 +1192,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * It's supposed to be use during the merging process
 	 */
-	default Object getIdentifier(Object entity, MergeContext mergeContext) {
+	default Object getIdentifier(Object entity, @Nullable MergeContext mergeContext) {
 		return getIdentifier( entity, mergeContext.getEventSource() );
 	}
 
@@ -1265,8 +1276,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory);
 
+	@Nonnull
 	EntityRepresentationStrategy getRepresentationStrategy();
 
+	@Nonnull
 	@Override
 	default EntityPersister getEntityMappingType() {
 		return this;
@@ -1274,9 +1287,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	@Override
 	default void addToCacheKey(
-			MutableCacheKeyBuilder cacheKey,
-			Object value,
-			SharedSessionContractImplementor session) {
+			@Nonnull MutableCacheKeyBuilder cacheKey,
+			@Nullable Object value,
+			@Nullable SharedSessionContractImplementor session) {
 		getIdentifierMapping().addToCacheKey( cacheKey, getIdentifier( value, session ), session );
 	}
 

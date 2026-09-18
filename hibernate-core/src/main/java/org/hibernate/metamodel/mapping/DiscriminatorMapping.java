@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.spi.NavigablePath;
@@ -31,6 +34,7 @@ public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModel
 	/**
 	 * Information about the value mappings
 	 */
+	@Nonnull
 	DiscriminatorConverter<?,?> getValueConverter();
 
 	/**
@@ -38,16 +42,19 @@ public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModel
 	 *
 	 * @throws HibernateException if there is value matching the provided one
 	 */
-	default DiscriminatorValueDetails resolveDiscriminatorValue(Object discriminatorValue) {
+	@Nullable
+	default DiscriminatorValueDetails resolveDiscriminatorValue(@Nullable Object discriminatorValue) {
 		return getValueConverter().getDetailsForDiscriminatorValue( discriminatorValue );
 	}
 
+	@Nonnull
 	JdbcMapping getUnderlyingJdbcMapping();
 
 	/**
 	 * The domain Java form, which is either {@code JavaType<Class>} (entity class)
 	 * or {@code JavaType<String>} (entity name).
 	 */
+	@Nonnull
 	default JavaType<?> getDomainJavaType() {
 		return getValueConverter().getDomainJavaType();
 	}
@@ -56,6 +63,7 @@ public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModel
 	 * The relational Java form.  This will typically be some form of integer
 	 * or character value.
 	 */
+	@Nonnull
 	default JavaType<?> getRelationalJavaType() {
 		return getValueConverter().getRelationalJavaType();
 	}
@@ -66,18 +74,20 @@ public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModel
 	 * @param jdbcMappingToUse The JDBC mapping to use.  This allows opting between
 	 * the "domain result type" (aka Class) and the "underlying type" (Integer, String, etc)
 	 */
+	@Nonnull
 	Expression resolveSqlExpression(
-			NavigablePath navigablePath,
-			JdbcMapping jdbcMappingToUse,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState);
+			@Nonnull NavigablePath navigablePath,
+			@Nullable JdbcMapping jdbcMappingToUse,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAstCreationState creationState);
 
+	@Nonnull
 	@Override
 	BasicFetch<?> generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
+			@Nonnull FetchParent fetchParent,
+			@Nonnull NavigablePath fetchablePath,
+			@Nonnull FetchTiming fetchTiming,
 			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState);
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState);
 }

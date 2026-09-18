@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 
 import jakarta.annotation.Nullable;
@@ -126,21 +128,25 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.jdbcMapping = jdbcMapping;
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return table;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return column;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectableName() {
 		return selectablePath.getSelectableName();
 	}
 
+	@Nonnull
 	@Override
 	public SelectablePath getSelectablePath() {
 		return selectablePath;
@@ -206,31 +212,37 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return jdbcMapping.getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return KEY_NAME;
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return anyPart.findContainingEntityMapping();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return jdbcMapping;
@@ -298,34 +310,35 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, domainValue, this );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, jdbcMapping );
 		return getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
@@ -334,34 +347,37 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		return jdbcMapping;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getSingleJdbcMapping() {
 		return jdbcMapping;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return value;
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, jdbcMapping );
 		return 1;
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -375,18 +391,18 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		resolveSqlSelection( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, creationState ), getJdbcMapping() );
 	}
 

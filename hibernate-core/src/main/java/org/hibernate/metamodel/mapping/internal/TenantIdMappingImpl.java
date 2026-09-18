@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -19,19 +22,22 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.generator.EventType.INSERT;
+
 
 /**
  * Cached tenant attribute paths and identifier generation plans.
  */
 public class TenantIdMappingImpl implements TenantIdMapping {
 	private final EntityPersister persister;
-	private final TenantAttribute attribute;
-	private final AttributeMapping tenantAttribute;
-	private final TenantIdGeneration identifierGenerator;
+	@Nullable private final TenantAttribute attribute;
+	@Nullable private final AttributeMapping tenantAttribute;
+	@Nullable private final TenantIdGeneration identifierGenerator;
 	private final List<GenerationPlan> identifierPlans;
-	private final ComponentType identifierType;
+	@Nullable private final ComponentType identifierType;
 
+	@Nullable
 	public static TenantIdMapping create(EntityPersister persister) {
 		final var attribute = findTenantAttribute( persister, persister.getGenerators() );
 		final var identifierGenerator = persister.getGenerator() instanceof TenantIdGeneration generator ? generator : null;
@@ -44,8 +50,8 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 	}
 
 	private TenantIdMappingImpl(
-			EntityPersister persister, TenantAttribute attribute,
-			TenantIdGeneration identifierGenerator, List<GenerationPlan> identifierPlans) {
+			EntityPersister persister, @Nullable TenantAttribute attribute,
+			@Nullable TenantIdGeneration identifierGenerator, List<GenerationPlan> identifierPlans) {
 		this.persister = persister;
 		this.attribute = attribute;
 		tenantAttribute = attribute == null ? null : attribute.leafAttribute();
@@ -54,23 +60,25 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 		identifierType = identifierPlans.isEmpty() ? null : (ComponentType) persister.getIdentifierType();
 	}
 
+	@Nullable
 	@Override
 	public AttributeMapping getAttributeMapping() {
 		return tenantAttribute;
 	}
 
+	@Nullable
 	@Override
-	public Object getTenantIdFromIdentifier(Object id, SharedSessionContractImplementor session) {
+	public Object getTenantIdFromIdentifier(@Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		return identifierGenerator != null ? id
 				: identifierPlans.isEmpty() || id == null ? null
-				: identifierType.getPropertyValue( id, identifierPlans.get( 0 ).getPropertyIndex(), session );
+				: castNonNull( identifierType ).getPropertyValue( id, identifierPlans.get( 0 ).getPropertyIndex(), session );
 	}
 
 	@Override
-	public boolean hasUnassignedIdentifierTenant(Object id, SharedSessionContractImplementor session) {
+	public boolean hasUnassignedIdentifierTenant(@Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		if ( id != null ) {
 			for ( var plan : identifierPlans ) {
-				if ( identifierType.getPropertyValue( id, plan.getPropertyIndex(), session ) == null ) {
+				if ( castNonNull( identifierType ).getPropertyValue( id, plan.getPropertyIndex(), session ) == null ) {
 					return true;
 				}
 			}
@@ -79,7 +87,7 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 	}
 
 	@Override
-	public void validateIdentifier(Object id, SharedSessionContractImplementor session) {
+	public void validateIdentifier(@Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		if ( !session.isRootTenant() ) {
 			if ( identifierGenerator != null ) {
 				identifierGenerator.validateTenantId( session, id );
@@ -87,14 +95,14 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 			else if ( id != null ) {
 				for ( var plan : identifierPlans ) {
 					((TenantIdGeneration) plan.getGenerator()).validateTenantId( session,
-							identifierType.getPropertyValue( id, plan.getPropertyIndex(), session ) );
+							castNonNull( identifierType ).getPropertyValue( id, plan.getPropertyIndex(), session ) );
 				}
 			}
 		}
 	}
 
 	@Override
-	public void validateAssignedValue(Object entity, Object id, SharedSessionContractImplementor session) {
+	public void validateAssignedValue(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		validateIdentifier( id, session );
 		if ( attribute != null ) {
 			attribute.validate( entity, session );
@@ -102,7 +110,7 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 	}
 
 	@Override
-	public void initializeIdentifier(Object entity, SharedSessionContractImplementor session) {
+	public void initializeIdentifier(@Nonnull Object entity, @Nonnull SharedSessionContractImplementor session) {
 		if ( identifierGenerator != null ) {
 			persister.setIdentifier( entity, identifierGenerator.generate(
 					session, entity, persister.getIdentifier( entity, session ), INSERT ), session );
@@ -110,18 +118,18 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 		else if ( !identifierPlans.isEmpty() ) {
 			final Object id = persister.getIdentifier( entity, session );
 			if ( id != null ) {
-				final Object[] values = identifierType.getPropertyValues( id, session );
+				final Object[] values = castNonNull( identifierType ).getPropertyValues( id, session );
 				for ( var plan : identifierPlans ) {
 					final int position = plan.getPropertyIndex();
 					values[position] = plan.getGenerator().generate( session, entity, values[position], INSERT );
 				}
-				persister.setIdentifier( entity, identifierType.replacePropertyValues( id, values, session ), session );
+				persister.setIdentifier( entity, castNonNull( identifierType ).replacePropertyValues( id, values, session ), session );
 			}
 		}
 	}
 
 	@Override
-	public void initialize(Object entity, Object[] state, SharedSessionContractImplementor session) {
+	public void initialize(@Nonnull Object entity, @Nonnull Object[] state, @Nonnull SharedSessionContractImplementor session) {
 		if ( attribute != null ) {
 			final int position = attribute.attribute.getStateArrayPosition();
 			state[position] = attribute.generate( state[position], entity, persister.getPropertyTypes()[position], session );
@@ -129,6 +137,7 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 		}
 	}
 
+	@Nullable
 	private static TenantAttribute findTenantAttribute(ManagedMappingType type, Generator[] generators) {
 		for ( int i = 0; i < generators.length; i++ ) {
 			final var attribute = type.getAttributeMapping( i );
@@ -137,7 +146,7 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 			}
 			else if ( generators[i] instanceof CompositeGenerator composite ) {
 				final var nested = findTenantAttribute(
-						attribute.asEmbeddedAttributeMapping().getEmbeddableTypeDescriptor(),
+						castNonNull( attribute.asEmbeddedAttributeMapping() ).getEmbeddableTypeDescriptor(),
 						composite.generators().toArray( Generator[]::new ) );
 				if ( nested != null ) {
 					return new TenantAttribute( attribute, null, nested );
@@ -147,24 +156,24 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 		return null;
 	}
 
-	private record TenantAttribute(AttributeMapping attribute, TenantIdGeneration generator, TenantAttribute nested) {
+	private record TenantAttribute(AttributeMapping attribute, @Nullable TenantIdGeneration generator, @Nullable TenantAttribute nested) {
 		AttributeMapping leafAttribute() {
 			return nested == null ? attribute : nested.leafAttribute();
 		}
 
-		void validate(Object owner, SharedSessionContractImplementor session) {
+		void validate(@Nullable Object owner, SharedSessionContractImplementor session) {
 			final Object value = owner == null ? null : attribute.getValue( owner );
 			if ( nested == null ) {
-				generator.validateTenantId( session, value );
+				castNonNull( generator ).validateTenantId( session, value );
 			}
 			else {
 				nested.validate( value, session );
 			}
 		}
 
-		Object generate(Object value, Object entity, Type type, SharedSessionContractImplementor session) {
+		Object generate(@Nullable Object value, Object entity, Type type, SharedSessionContractImplementor session) {
 			if ( nested == null ) {
-				return generator.generate( session, entity, value, INSERT );
+				return castNonNull( generator ).generate( session, entity, value, INSERT );
 			}
 			final var componentType = (ComponentType) type;
 			final Object[] values = value == null
@@ -173,7 +182,7 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 			final int position = nested.attribute.getStateArrayPosition();
 			values[position] = nested.generate( values[position], entity, componentType.getSubtypes()[position], session );
 			return value == null
-					? attribute.asEmbeddedAttributeMapping().getEmbeddableTypeDescriptor()
+					? castNonNull( attribute.asEmbeddedAttributeMapping() ).getEmbeddableTypeDescriptor()
 						.getRepresentationStrategy().getInstantiator().instantiate( () -> values )
 					: componentType.replacePropertyValues( value, values, session );
 		}

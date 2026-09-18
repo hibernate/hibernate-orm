@@ -701,6 +701,7 @@ public abstract class AbstractCollectionPersister
 			|| queryCacheLayout == CacheLayout.AUTO && cacheAccessStrategy != null;
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
@@ -1188,13 +1189,13 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void applyBaseRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState) {
+			@Nullable Set<String> treatAsDeclarations,
+			@Nullable SqlAstCreationState creationState) {
 		applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, onlyApplyLoadByKeyFilters, creationState );
 		applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
 	}
@@ -1218,10 +1219,10 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void applyWhereRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		final var tableReference =
 				isManyToMany()
 						? tableGroup.getPrimaryTableReference()
@@ -1253,12 +1254,12 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void applyFilterRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		if ( filterHelper != null ) {
 			filterHelper.applyEnabledFilters(
 					predicateConsumer,
@@ -1281,7 +1282,7 @@ public abstract class AbstractCollectionPersister
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		if ( manyToManyFilterHelper != null || manyToManyWhereTemplate != null ) {
 			if ( manyToManyFilterHelper != null ) {
 				manyToManyFilterHelper.applyEnabledFilters(

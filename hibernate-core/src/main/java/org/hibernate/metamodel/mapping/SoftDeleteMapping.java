@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.annotations.SoftDeleteType;
@@ -28,18 +30,21 @@ public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, 
 	/**
 	 * The soft-delete strategy - how to interpret indicator values
 	 */
+	@Nonnull
 	@Internal // only used in tests!
 	SoftDeleteType getSoftDeleteStrategy();
 
 	/**
 	 * The name of the soft-delete indicator column.
 	 */
+	@Nonnull
 	@Internal // only used in tests!
 	String getColumnName();
 
 	/**
 	 * The name of the table which holds the {@linkplain #getColumnName() indicator column}
 	 */
+	@Nonnull
 	String getTableName();
 
 	/**
@@ -47,14 +52,16 @@ public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, 
 	 *
 	 * @param tableReference Reference for the table containing the soft-delete column
 	 */
-	Assignment createSoftDeleteAssignment(TableReference tableReference);
+	@Nonnull
+	Assignment createSoftDeleteAssignment(@Nonnull TableReference tableReference);
 
 	/**
 	 * Create a SQL AST Predicate for restricting matches to non-deleted rows
 	 *
 	 * @param tableReference Reference for the table containing the soft-delete column
 	 */
-	Predicate createNonDeletedRestriction(TableReference tableReference);
+	@Nonnull
+	Predicate createNonDeletedRestriction(@Nonnull TableReference tableReference);
 
 	/**
 	 * Create a SQL AST Predicate for restricting matches to non-deleted rows
@@ -62,7 +69,8 @@ public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, 
 	 * @param tableReference Reference for the table containing the soft-delete column
 	 * @param expressionResolver Resolver for SQL AST Expressions
 	 */
-	Predicate createNonDeletedRestriction(TableReference tableReference, SqlExpressionResolver expressionResolver);
+	@Nonnull
+	Predicate createNonDeletedRestriction(@Nonnull TableReference tableReference, @Nonnull SqlExpressionResolver expressionResolver);
 
 	/**
 	 * Create a ColumnValueBinding for non-deleted indicator.
@@ -71,7 +79,8 @@ public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, 
 	 *
 	 * @apiNote Generally used as a restriction in a SQL AST
 	 */
-	ColumnValueBinding createNonDeletedValueBinding(ColumnReference softDeleteColumnReference);
+	@Nonnull
+	ColumnValueBinding createNonDeletedValueBinding(@Nonnull ColumnReference softDeleteColumnReference);
 
 	/**
 	 * Create a ColumnValueBinding for deleted indicator.
@@ -80,22 +89,26 @@ public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, 
 	 *
 	 * @apiNote Generally used as an assignment in a SQL AST
 	 */
-	ColumnValueBinding createDeletedValueBinding(ColumnReference softDeleteColumnReference);
+	@Nonnull
+	ColumnValueBinding createDeletedValueBinding(@Nonnull ColumnReference softDeleteColumnReference);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SelectableMapping
 
+	@Nonnull
 	@Override
 	default String getSelectionExpression() {
 		return getColumnName();
 	}
 
+	@Nonnull
 	@Override
 	default String getSelectableName() {
 		return getColumnName();
 	}
 
+	@Nonnull
 	@Override
 	default String getContainingTableExpression() {
 		return getTableName();

@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -26,6 +29,7 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 		return 1;
 	}
 
+	@Nonnull
 	@Override
 	default JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
@@ -34,23 +38,26 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 		return getJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	default JdbcMapping getSingleJdbcMapping() {
 		return getJdbcMapping();
 	}
 
+	@Nonnull
 	JdbcMapping getJdbcMapping();
 
+	@Nullable
 	@Override
-	default Object disassemble(Object value, SharedSessionContractImplementor session) {
+	default Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return getJdbcMapping().convertToRelationalValue( value );
 	}
 
 	@Override
 	default void addToCacheKey(
-			MutableCacheKeyBuilder cacheKey,
-			Object value,
-			SharedSessionContractImplementor session) {
+			@Nonnull MutableCacheKeyBuilder cacheKey,
+			@Nullable Object value,
+			@Nullable SharedSessionContractImplementor session) {
 		addBasicValueToCacheKey( cacheKey, value, getJdbcMapping(), session );
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,6 +36,7 @@ public class FkDomainPathContinuation extends DomainPathContinuation {
 		this.possiblePaths = possiblePaths;
 	}
 
+	@Nonnull
 	@Override
 	public SequencePart resolvePathPart(
 			String name,
@@ -51,10 +54,14 @@ public class FkDomainPathContinuation extends DomainPathContinuation {
 				furtherPaths.add( possiblePath.substring( name.length() + 2 ) );
 			}
 		}
+		final var subPart = ( (ModelPartContainer) referencedModelPart ).findSubPart( name, null );
+		if ( subPart == null ) {
+			throw new PathResolutionException( name );
+		}
 		return new FkDomainPathContinuation(
 				navigablePath.append( name ),
 				this,
-				( (ModelPartContainer) referencedModelPart ).findSubPart( name, null ),
+				subPart,
 				furtherPaths
 		);
 	}

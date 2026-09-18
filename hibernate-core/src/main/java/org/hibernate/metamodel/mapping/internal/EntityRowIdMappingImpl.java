@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 
 import jakarta.annotation.Nullable;
@@ -47,31 +49,37 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 				.resolve( Object.class, factory.getJdbcServices().getDialect().getRowIdSupport().sqlTypeCode() );
 	}
 
+	@Nonnull
 	@Override
 	public String getRowIdName() {
 		return rowIdName;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return rowIdType;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return rowIdType.getJavaTypeDescriptor();
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return rowIdName;
 	}
 
+	@Nullable
 	@Override
 	public NavigableRole getNavigableRole() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return declaringType;
@@ -82,12 +90,13 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
@@ -110,6 +119,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 		);
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
@@ -118,68 +128,72 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 		return getJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getSingleJdbcMapping() {
 		return getJdbcMapping();
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return rowIdType.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		rowIdType.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return rowIdType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nonnull DomainResultCreationState creationState) {
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, domainValue, this );
 		return getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return tableExpression;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return rowIdName;
@@ -245,11 +259,13 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return rowIdType.getJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return rowIdType;

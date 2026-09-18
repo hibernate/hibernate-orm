@@ -37,11 +37,13 @@ public class DiscriminatorTypeImpl<O> extends ConvertedBasicTypeImpl<O> implemen
 		this.underlyingJdbcMapping = underlyingJdbcMapping;
 	}
 
+	@Nonnull
 	@Override
 	public BasicType<?> getUnderlyingJdbcMapping() {
 		return underlyingJdbcMapping;
 	}
 
+	@Nonnull
 	@Override @SuppressWarnings("unchecked")
 	public DiscriminatorConverter<O,?> getValueConverter() {
 		return (DiscriminatorConverter<O,?>) super.getValueConverter();
@@ -58,6 +60,7 @@ public class DiscriminatorTypeImpl<O> extends ConvertedBasicTypeImpl<O> implemen
 		return underlyingJdbcMapping.canDoExtraction();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<O> getExpressibleJavaType() {
 		return domainJavaType;

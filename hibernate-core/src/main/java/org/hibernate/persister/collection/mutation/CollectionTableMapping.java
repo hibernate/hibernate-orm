@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.sql.spi.mutation.TableMapping;
 
 /**
@@ -73,6 +76,7 @@ public class CollectionTableMapping implements TableMapping {
 		return spaces;
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName() {
 		return tableName;
@@ -96,6 +100,7 @@ public class CollectionTableMapping implements TableMapping {
 		return false;
 	}
 
+	@Nullable
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public KeyDetails getKeyDetails() {

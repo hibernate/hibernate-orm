@@ -4,6 +4,9 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.function.Supplier;
 
 import org.hibernate.Internal;
@@ -88,6 +91,7 @@ public class BatchBuilderImpl implements BatchBuilder {
 				new PreparedStatementGroupSingleTable(
 						new JdbcInsertMutation(
 								new TableMapping() {
+									@Nonnull
 									@Override
 									public String getTableName() {
 										return table;
@@ -98,6 +102,7 @@ public class BatchBuilderImpl implements BatchBuilder {
 										return 0;
 									}
 
+									@Nullable
 									@Override
 									public KeyDetails getKeyDetails() {
 										return null;

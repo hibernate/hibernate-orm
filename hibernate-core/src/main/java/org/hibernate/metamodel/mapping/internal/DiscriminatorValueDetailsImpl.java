@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -20,11 +23,13 @@ public class DiscriminatorValueDetailsImpl implements DiscriminatorValueDetails 
 		this.matchedEntityDescriptor = matchedEntityDescriptor;
 	}
 
+	@Nullable
 	@Override
 	public Object getValue() {
 		return value.value();
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getIndicatedEntity() {
 		return matchedEntityDescriptor;

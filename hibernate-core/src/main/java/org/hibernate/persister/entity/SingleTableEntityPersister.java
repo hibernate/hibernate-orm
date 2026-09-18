@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -348,21 +351,25 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return subclassesByDiscriminatorValue;
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getMappedTableDetails() {
 		return getTableMapping( 0 );
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getIdentifierTableDetails() {
 		return getTableMapping( 0 );
 	}
 
+	@Nonnull
 	@Override
 	public DiscriminatorValue getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
+	@Nullable
 	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLValue;
@@ -569,7 +576,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
+	public void pruneForSubclasses(@Nonnull TableGroup tableGroup, @Nonnull Map<String, EntityNameUse> entityNameUses) {
 		if ( needsDiscriminator() || !entityNameUses.isEmpty() ) {// The following optimization is to add the discriminator filter fragment for all treated entity names
 			final var mappingMetamodel = getFactory().getMappingMetamodel();
 			if ( containsTreatUse( entityNameUses, mappingMetamodel ) ) {
@@ -606,7 +613,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
+	public void visitConstraintOrderedTables(@Nonnull ConstraintOrderedTableConsumer consumer) {
 		for ( int i = 0; i < constraintOrderedTableNames.length; i++ ) {
 			final String tableName = constraintOrderedTableNames[i];
 			final int tablePosition = i;

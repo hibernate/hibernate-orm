@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 
 import jakarta.annotation.Nullable;
@@ -38,16 +40,19 @@ public final class MutableSelectableMapping implements SelectableMapping {
 		}
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return tableName;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return columnNames[index];
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return base.getJdbcMapping( index );

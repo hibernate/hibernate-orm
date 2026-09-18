@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 
@@ -22,11 +24,13 @@ public class EmbeddedForeignKeyDescriptorSide implements ForeignKeyDescriptor.Si
 		this.modelPart = modelPart;
 	}
 
+	@Nonnull
 	@Override
 	public ForeignKeyDescriptor.Nature getNature() {
 		return nature;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableValuedModelPart getModelPart() {
 		return modelPart;

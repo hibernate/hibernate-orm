@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.ast.spi.model.builder;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -29,7 +31,7 @@ public interface TableInsertBuilder
 	 * @see org.hibernate.metamodel.mapping.ValuedModelPart#forEachInsertable(SelectableConsumer)
 	 */
 	@Override
-	default void accept(int selectionIndex, SelectableMapping selectableMapping) {
+	default void accept(int selectionIndex, @Nonnull SelectableMapping selectableMapping) {
 		addValueColumn( selectableMapping );
 	}
 }

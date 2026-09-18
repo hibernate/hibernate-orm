@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -45,6 +47,7 @@ public interface AuxiliaryMapping {
 	/// joined inheritance or secondary tables, may use this as the primary table
 	/// and resolve table-specific auxiliary names through
 	/// [#resolveTableName(String)].
+	@Nonnull
 	String getTableName();
 
 	/// Resolves the auxiliary table name corresponding to an original mapped
@@ -53,7 +56,8 @@ public interface AuxiliaryMapping {
 	/// For multi-table inheritance and secondary-table mappings, each source
 	/// table may have its own auxiliary table.  Single-table strategies usually
 	/// return [#getTableName()].
-	default String resolveTableName(String originalTableName) {
+	@Nonnull
+	default String resolveTableName(@Nonnull String originalTableName) {
 		return getTableName();
 	}
 
@@ -62,11 +66,11 @@ public interface AuxiliaryMapping {
 	/// This form is used when table references may be created lazily as SQL AST
 	/// walking discovers which tables are needed for an entity-valued path.
 	void applyPredicate(
-			EntityMappingType associatedEntityMappingType,
-			Consumer<Predicate> predicateConsumer,
-			LazyTableGroup lazyTableGroup,
-			NavigablePath navigablePath,
-			SqlAstCreationState creationState);
+			@Nonnull EntityMappingType associatedEntityMappingType,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull LazyTableGroup lazyTableGroup,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqlAstCreationState creationState);
 
 	/// Applies the auxiliary row restriction to an entity table group.
 	///
@@ -74,28 +78,28 @@ public interface AuxiliaryMapping {
 	/// group to rows visible under the supplied [LoadQueryInfluencers], such as
 	/// non-deleted rows or rows valid for the requested temporal identifier.
 	void applyPredicate(
-			EntityMappingType associatedEntityDescriptor,
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			LoadQueryInfluencers influencers);
+			@Nonnull EntityMappingType associatedEntityDescriptor,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers);
 
 	/// Applies the auxiliary row restriction to a collection table group.
 	///
 	/// This is the collection counterpart to the entity table-group overload and
 	/// is used for state-management rules attached to plural attributes.
 	void applyPredicate(
-			PluralAttributeMapping associatedEntityDescriptor,
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			LoadQueryInfluencers influencers);
+			@Nonnull PluralAttributeMapping associatedEntityDescriptor,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers);
 
 	/// Applies the auxiliary row restriction directly to a table-group join.
 	///
 	/// This form is used when the restriction belongs on the join predicate
 	/// rather than on a surrounding query predicate collector.
-	void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers);
+	void applyPredicate(@Nonnull TableGroupJoin tableGroupJoin, @Nonnull LoadQueryInfluencers loadQueryInfluencers);
 
 	/// Applies the auxiliary row restriction for a resolved root table
 	/// reference.
@@ -104,10 +108,10 @@ public interface AuxiliaryMapping {
 	/// to allocate a predicate collection when the auxiliary mapping actually
 	/// contributes a restriction.
 	void applyPredicate(
-			Supplier<Consumer<Predicate>> predicateCollector,
-			SqlAstCreationState creationState,
-			TableGroup tableGroup,
-			NamedTableReference rootTableReference, EntityMappingType entityMappingType);
+			@Nonnull Supplier<Consumer<Predicate>> predicateCollector,
+			@Nonnull SqlAstCreationState creationState,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull NamedTableReference rootTableReference, @Nonnull EntityMappingType entityMappingType);
 
 	/// Applies the auxiliary restriction to a joined table reference.
 	///
@@ -116,12 +120,12 @@ public interface AuxiliaryMapping {
 	///
 	/// @param originalTableName the original non-auxiliary table name
 	default void applyPredicate(
-			TableReferenceJoin tableReferenceJoin,
-			NamedTableReference primaryTableReference,
-			String originalTableName,
-			EntityMappingType entityMappingType,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			LoadQueryInfluencers influencers) {
+			@Nonnull TableReferenceJoin tableReferenceJoin,
+			@Nonnull NamedTableReference primaryTableReference,
+			@Nonnull String originalTableName,
+			@Nonnull EntityMappingType entityMappingType,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers) {
 	}
 
 	/// Additional select expressions to include in each branch of a
@@ -130,6 +134,7 @@ public interface AuxiliaryMapping {
 	/// Audit mappings use this to expose revision-related columns from union
 	/// branches.  Strategies that do not need extra branch selections return an
 	/// empty list.
+	@Nonnull
 	default List<String> getExtraSelectExpressions() {
 		return List.of();
 	}
@@ -139,6 +144,7 @@ public interface AuxiliaryMapping {
 	///
 	/// This is used when SQL AST table references need to carry an as-of value
 	/// for dialects that support native temporal table syntax.
+	@Nonnull
 	JdbcMapping getJdbcMapping();
 
 	/// Whether this mapping should use its auxiliary table for the supplied
@@ -146,7 +152,7 @@ public interface AuxiliaryMapping {
 	///
 	/// Some strategies use the primary table for current-state queries and an
 	/// auxiliary table only for historical or audit views.
-	boolean useAuxiliaryTable(LoadQueryInfluencers influencers);
+	boolean useAuxiliaryTable(@Nonnull LoadQueryInfluencers influencers);
 
 	/// Whether query plans involving this mapping are affected by the supplied
 	/// influencers.
@@ -154,5 +160,5 @@ public interface AuxiliaryMapping {
 	/// Returning `true` tells load-plan caching that influencer-dependent SQL may
 	/// be required, for example when temporal identifiers or audit revision
 	/// options alter table selection or restrictions.
-	boolean isAffectedByInfluencers(LoadQueryInfluencers influencers);
+	boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers);
 }

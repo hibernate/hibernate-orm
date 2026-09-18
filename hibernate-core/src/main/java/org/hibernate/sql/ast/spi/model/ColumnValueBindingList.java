@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.ast.spi.model;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 
 import jakarta.annotation.Nullable;
@@ -38,7 +40,7 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 	}
 
 	@Override
-	public void consume(int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
+	public void consume(int valueIndex, @Nullable Object value, @Nonnull SelectableMapping jdbcValueMapping) {
 		if ( value == null ) {
 			addNullRestriction( jdbcValueMapping );
 		}

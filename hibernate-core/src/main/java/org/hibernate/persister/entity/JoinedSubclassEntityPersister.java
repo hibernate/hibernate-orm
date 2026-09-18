@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -697,11 +700,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return discriminatorType;
 	}
 
+	@Nonnull
 	@Override
 	public DiscriminatorValue getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
+	@Nullable
 	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLString;
@@ -1177,16 +1182,18 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void forEachTableDetails(Consumer<TableDetails> consumer) {
+	public void forEachTableDetails(@Nonnull Consumer<TableDetails> consumer) {
 		super.forEachTableDetails( consumer );
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getMappedTableDetails() {
 		// Subtract the number of secondary tables (tableSpan - coreTableSpan) and get the last table mapping
 		return getTableMapping( getTableMappings().length - ( tableSpan - coreTableSpan ) - 1 );
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getIdentifierTableDetails() {
 		final var superMappingType = getSuperMappingType();
@@ -1196,7 +1203,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
+	public void pruneForSubclasses(@Nonnull TableGroup tableGroup, @Nonnull Map<String, EntityNameUse> entityNameUses) {
 		final Set<TableReference> retainedTableReferences = new HashSet<>( entityNameUses.size() );
 		final var metamodel = getFactory().getMappingMetamodel();
 		// We can only do this optimization if the table group reports canUseInnerJoins or isRealTableGroup,
@@ -1350,6 +1357,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Nonnull
 	@Override
 	public EntityIdentifierMapping getIdentifierMappingForJoin() {
 		// If the joined subclass has a physical discriminator and has subtypes
@@ -1378,7 +1386,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
+	public void visitConstraintOrderedTables(@Nonnull ConstraintOrderedTableConsumer consumer) {
 		for ( int i = 0; i < constraintOrderedTableNames.length; i++ ) {
 			final String tableName = constraintOrderedTableNames[i];
 			final int tablePosition = i;

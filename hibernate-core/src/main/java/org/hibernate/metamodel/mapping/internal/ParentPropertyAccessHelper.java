@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -22,9 +24,10 @@ final class ParentPropertyAccessHelper {
 	private ParentPropertyAccessHelper() {
 	}
 
+	@Nullable
 	static PropertyAccess parentPropertyAccess(
 			PropertyAccessorService propertyAccessorService,
-			String parentInjectionAttributeName,
+			@Nullable String parentInjectionAttributeName,
 			EmbeddableMappingType embeddableMappingType) {
 		if ( parentInjectionAttributeName == null ) {
 			return null;
@@ -56,11 +59,11 @@ final class ParentPropertyAccessHelper {
 		}
 	}
 
-	private static boolean hasParentAnnotation(Field field) {
+	private static boolean hasParentAnnotation(@Nullable Field field) {
 		return field != null && field.isAnnotationPresent( Parent.class );
 	}
 
-	private static boolean hasParentAnnotation(Method getterMethod) {
+	private static boolean hasParentAnnotation(@Nullable Method getterMethod) {
 		return getterMethod != null && getterMethod.isAnnotationPresent( Parent.class );
 	}
 }

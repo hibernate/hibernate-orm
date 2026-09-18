@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Set;
 
 import org.hibernate.engine.spi.IdentifierValue;
@@ -51,51 +54,59 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 		this.delegate = delegate;
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return delegate.getNature();
 	}
 
+	@Nonnull
 	@Override
 	public IdentifierValue getUnsavedStrategy() {
 		return delegate.getUnsavedStrategy();
 	}
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity) {
+	public Object getIdentifier(@Nonnull Object entity) {
 		return delegate.getIdentifier( entity );
 	}
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+	public Object getIdentifier(@Nonnull Object entity, @Nullable MergeContext mergeContext) {
 		return delegate.getIdentifier( entity, mergeContext );
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+	public void setIdentifier(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		delegate.setIdentifier( entity, id, session );
 	}
 
+	@Nullable
 	@Override
 	public Object instantiate() {
 		return delegate.instantiate();
 	}
 
+	@Nonnull
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return ((SingleAttributeIdentifierMapping) delegate).getPropertyAccess();
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getPartMappingType() {
 		return this;
 	}
 
 	@Override
-	public int compare(Object value1, Object value2) {
+	public int compare(@Nullable Object value1, @Nullable Object value2) {
 		return super.compare( value1, value2 );
 	}
 
+	@Nonnull
 	@Override
 	public String getAttributeName() {
 		return getPartName();
@@ -106,11 +117,13 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return this;

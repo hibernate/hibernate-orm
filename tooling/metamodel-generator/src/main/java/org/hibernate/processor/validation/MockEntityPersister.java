@@ -4,6 +4,10 @@
  */
 package org.hibernate.processor.validation;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import jakarta.persistence.AccessType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
@@ -86,6 +90,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 		return factory;
 	}
 
+	@Nonnull
 	@Override
 	public String getEntityName() {
 		return entityName;
@@ -164,6 +169,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 		return factory.createMockEntityPersister(getRootEntityName());
 	}
 
+	@Nonnull
 	@Override
 	public Set<String> getSubclassEntityNames() {
 		final var names = new HashSet<String>();
@@ -191,6 +197,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 		return new Serializable[] {entityName};
 	}
 
+	@Nonnull
 	@Override
 	public EntityPersister getEntityPersister() {
 		return this;
@@ -238,6 +245,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 		return true;
 	}
 
+	@Nullable
 	@Override
 	public String getMappedSuperclass() {
 		return null;

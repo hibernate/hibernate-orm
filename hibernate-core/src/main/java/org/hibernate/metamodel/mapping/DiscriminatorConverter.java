@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -21,34 +24,39 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 	private final JavaType<R> relationalJavaType;
 
 	public DiscriminatorConverter(
-			String discriminatorName,
-			JavaType<O> domainJavaType,
-			JavaType<R> relationalJavaType) {
+			@Nonnull String discriminatorName,
+			@Nonnull JavaType<O> domainJavaType,
+			@Nonnull JavaType<R> relationalJavaType) {
 		this.discriminatorName = discriminatorName;
 		this.domainJavaType = domainJavaType;
 		this.relationalJavaType = relationalJavaType;
 	}
 
+	@Nonnull
 	public String getDiscriminatorName() {
 		return discriminatorName;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<O> getDomainJavaType() {
 		return domainJavaType;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<R> getRelationalJavaType() {
 		return relationalJavaType;
 	}
 
-	public DiscriminatorValueDetails getDetailsForRelationalForm(R relationalForm) {
+	@Nullable
+	public DiscriminatorValueDetails getDetailsForRelationalForm(@Nullable R relationalForm) {
 		return getDetailsForDiscriminatorValue( relationalForm );
 	}
 
+	@Nonnull
 	@Override
-	public O toDomainValue(R relationalForm) {
+	public O toDomainValue(@Nullable R relationalForm) {
 		assert relationalForm == null || relationalJavaType.isInstance( relationalForm );
 		final var matchingValueDetails = getDetailsForRelationalForm( relationalForm );
 		if ( matchingValueDetails == null ) {
@@ -63,8 +71,9 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 				: (O) indicatedEntity.getEntityName();
 	}
 
+	@Nullable
 	@Override
-	public R toRelationalValue(O domainForm) {
+	public R toRelationalValue(@Nullable O domainForm) {
 		final String entityName = getEntityName( domainForm );
 		if ( entityName == null ) {
 			return null;
@@ -76,21 +85,26 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		}
 	}
 
-	protected abstract String getEntityName(O domainForm);
+	@Nullable
+	protected abstract String getEntityName(@Nullable O domainForm);
 
-	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue);
+	@Nullable
+	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(@Nullable Object relationalValue);
 
-	public abstract DiscriminatorValueDetails getDetailsForEntityName(String entityName);
+	@Nonnull
+	public abstract DiscriminatorValueDetails getDetailsForEntityName(@Nonnull String entityName);
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "DiscriminatorConverter(" + discriminatorName + ")";
 	}
 
-	public abstract void forEachValueDetail(Consumer<DiscriminatorValueDetails> consumer);
+	public abstract void forEachValueDetail(@Nonnull Consumer<DiscriminatorValueDetails> consumer);
 
 	/**
 	 * Find and return the first DiscriminatorValueDetails which matches the given {@code handler}
 	 */
-	public abstract <X> X fromValueDetails(Function<DiscriminatorValueDetails,X> handler);
+	@Nullable
+	public abstract <X> X fromValueDetails(@Nonnull Function<DiscriminatorValueDetails,X> handler);
 }

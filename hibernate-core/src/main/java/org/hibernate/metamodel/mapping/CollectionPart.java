@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 
@@ -33,6 +36,7 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 		 */
 		ID;
 
+		@Nonnull
 		public String getName() {
 			return switch (this) {
 				case ELEMENT -> "{element}";
@@ -41,7 +45,8 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 			};
 		}
 
-		public static Nature fromNameExact(String name) {
+		@Nullable
+		public static Nature fromNameExact(@Nonnull String name) {
 			return switch ( name ) {
 				case "{element}" -> ELEMENT;
 				case "{index}" -> INDEX;
@@ -50,7 +55,8 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 			};
 		}
 
-		public static Nature fromName(String name) {
+		@Nullable
+		public static Nature fromName(@Nullable String name) {
 			// NOTE : the `$x$` form comes form order-by handling
 			//		todo (6.0) : ^^ convert these to use the `{x}` form instead?
 
@@ -78,15 +84,19 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 		}
 	}
 
+	@Nonnull
 	Nature getNature();
 
+	@Nonnull
 	PluralAttributeMapping getCollectionAttribute();
 
+	@Nonnull
 	@Override
 	default String getPartName() {
 		return getNature().getName();
 	}
 
+	@Nonnull
 	default ModelPart getInclusionCheckPart() {
 		return this;
 	}

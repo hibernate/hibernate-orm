@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
@@ -129,6 +131,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		);
 	}
 
+	@Nonnull
 	public DiscriminatorConverter<?,?> getValueConverter() {
 		return valueConverter;
 	}
@@ -137,21 +140,25 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		return underlyingJdbcMapping;
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return table;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return column;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectableName() {
 		return selectablePath.getSelectableName();
 	}
 
+	@Nonnull
 	@Override
 	public SelectablePath getSelectablePath() {
 		return selectablePath;
@@ -217,73 +224,81 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		return scale;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return jdbcMapping().getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return ROLE_NAME;
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getUnderlyingJdbcMapping() {
 		return underlyingJdbcMapping;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return underlyingJdbcMapping.disassemble( value, session, value );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		cacheKey.addValue( underlyingJdbcMapping.disassemble( value, session, value ) );
 		cacheKey.addHashCode( underlyingJdbcMapping.getHashCode( value ) );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, domainValue, this );
 		return getJdbcTypeCount();
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return declaringType.findContainingEntityMapping();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
-		return null;
+		return getJdbcMapping();
 	}
 
 	@Override
@@ -302,30 +317,31 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, jdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachSelectable(SelectableConsumer consumer) {
+	public int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		consumer.accept( offset, this );
 		return 1;
 	}
 
+	@Nonnull
 	@Override
 	public BasicFetch<?> generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
+			@Nonnull FetchParent fetchParent,
+			@Nonnull NavigablePath fetchablePath,
+			@Nonnull FetchTiming fetchTiming,
 			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
@@ -366,12 +382,13 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		return FetchTiming.IMMEDIATE;
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -383,12 +400,13 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		);
 	}
 
+	@Nonnull
 	@Override
 	public Expression resolveSqlExpression(
-			NavigablePath navigablePath,
-			JdbcMapping jdbcMappingToUse,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nullable JdbcMapping jdbcMappingToUse,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAstCreationState creationState) {
 		final var tableReference =
 				tableGroup.resolveTableReference( navigablePath, this,
 						getContainingTableExpression() );
@@ -398,18 +416,18 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		resolveSqlSelection( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, creationState ), getJdbcMapping() );
 	}
 

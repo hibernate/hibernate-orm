@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.metamodel.mapping.ordering.ast.PathResolutionException;
+
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +44,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 	public SqlAstNode resolve(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String modelPartName,
+			@Nullable String modelPartName,
 			SqlAstCreationState creationState) {
 		return resolve(
 				getReferenceModelPart(),
@@ -52,11 +56,14 @@ public abstract class AbstractDomainPath implements DomainPath {
 	}
 
 	public Expression resolve(
-			ModelPart referenceModelPart,
+			@Nullable ModelPart referenceModelPart,
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String modelPartName,
+			@Nullable String modelPartName,
 			SqlAstCreationState creationState) {
+		if ( referenceModelPart == null ) {
+			throw new PathResolutionException( "Unknown ordering model part: " + modelPartName );
+		}
 		final var selection = referenceModelPart.asBasicValuedModelPart();
 		if ( selection != null ) {
 			final var tableReference = tableGroup.resolveTableReference(
@@ -80,7 +87,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			final var subPart =
 					ELEMENT_TOKEN.equals( modelPartName )
 							? entityValuedModelPart.getEntityMappingType().getIdentifierMapping()
-							: entityValuedModelPart.findSubPart( modelPartName );
+							: modelPartName == null ? null : entityValuedModelPart.findSubPart( modelPartName );
 			return resolve( subPart, ast, tableGroup, modelPartName, creationState );
 		}
 		else if ( referenceModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
@@ -95,8 +102,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 				return new SqlTuple( expressions, embeddableValuedModelPart );
 			}
 			else {
-				final var subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
-				assert subPart.asBasicValuedModelPart() != null;
+				final var subPart = modelPartName == null ? null : embeddableValuedModelPart.findSubPart( modelPartName, null );
 				return resolve( subPart, ast, tableGroup, modelPartName, creationState );
 			}
 		}
@@ -110,7 +116,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 	public void apply(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String collation,
+			@Nullable String collation,
 			String modelPartName,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
@@ -128,14 +134,17 @@ public abstract class AbstractDomainPath implements DomainPath {
 	}
 
 	private void apply(
-			ModelPart referenceModelPart,
+			@Nullable ModelPart referenceModelPart,
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String collation,
+			@Nullable String collation,
 			String modelPartName,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
+		if ( referenceModelPart == null ) {
+			throw new PathResolutionException( "Unknown ordering model part: " + modelPartName );
+		}
 		final var basicPart = referenceModelPart.asBasicValuedModelPart();
 		if ( basicPart != null ) {
 			addSortSpecification(
@@ -187,7 +196,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String collation,
+			@Nullable String collation,
 			String modelPartName,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
@@ -210,7 +219,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		}
 		else {
 			final var subPart =
-					embeddableValuedModelPart.findSubPart( modelPartName, null )
+					castNonNull( embeddableValuedModelPart.findSubPart( modelPartName, null ) )
 							.asBasicValuedModelPart();
 			addSortSpecification(
 					castNonNull( subPart ),
@@ -228,7 +237,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SelectableMapping selection,
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String collation,
+			@Nullable String collation,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -27,6 +29,8 @@ import jakarta.annotation.Nullable;
 
 import static org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping.IdentifierValueMapper;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * Embeddable describing the virtual-id aspect of a non-aggregated composite id
  */
@@ -45,7 +49,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		super( virtualIdSource.getType().getPropertyNames().length );
 
 		this.idMapping = idMapping;
-		navigableRole = idMapping.getNavigableRole();
+		navigableRole = castNonNull( idMapping.getNavigableRole() );
 		representationStrategy = new VirtualIdRepresentationStrategy(
 				this,
 				identifiedEntityMapping,
@@ -97,18 +101,20 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// IdentifierValueMapper
 
+	@Nonnull
 	@Override
 	public EmbeddableValuedModelPart getEmbeddedPart() {
 		return idMapping;
 	}
 
+	@Nonnull
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
+	public Object getIdentifier(@Nonnull Object entity, @Nullable SharedSessionContractImplementor session) {
 		return representationStrategy.getInstantiator().instantiate( () -> getValues( entity ) );
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+	public void setIdentifier(@Nonnull Object entity, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		if ( entity != id ) {
 			setValues( entity, getValues( id ) );
 		}
@@ -118,43 +124,49 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EmbeddableMappingType
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return idMapping.getPartName();
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
 		return getEmbeddedPart();
 	}
 
+	@Nonnull
 	@Override
 	public VirtualIdRepresentationStrategy getRepresentationStrategy() {
 		return representationStrategy;
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return idMapping.findContainingEntityMapping();
 	}
 
+	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
+	public <T> DomainResult<T> createDomainResult(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nullable String resultVariable, @Nonnull DomainResultCreationState creationState) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public <X, Y> int decompose(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer, @Nullable SharedSessionContractImplementor session) {
 		if ( idMapping.getIdClassEmbeddable() != null ) {
 			// during decompose, if there is an IdClass for the entity the
 			// incoming `domainValue` should be an instance of that IdClass
@@ -165,7 +177,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final var attributeMapping = attributeMappings.get( i );
 				span += attributeMapping.decompose(
-						attributeMapping.getValue( domainValue ),
+						domainValue == null ? null : attributeMapping.getValue( domainValue ),
 						offset + span,
 						x,
 						y,
@@ -177,12 +189,13 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		}
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType createInverseMappingType(
-			EmbeddedAttributeMapping valueMapping,
-			TableGroupProducer declaringTableGroupProducer,
-			SelectableMappings selectableMappings,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull EmbeddedAttributeMapping valueMapping,
+			@Nonnull TableGroupProducer declaringTableGroupProducer,
+			@Nonnull SelectableMappings selectableMappings,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		return new VirtualIdEmbeddable(
 				valueMapping,
 				declaringTableGroupProducer,
@@ -236,7 +249,13 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
-	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, @Nullable SharedSessionContractImplementor session) {
+		if ( one == other ) {
+			return true;
+		}
+		if ( one == null || other == null ) {
+			return false;
+		}
 		final var idClassEmbeddable = idMapping.getIdClassEmbeddable();
 		if ( idClassEmbeddable != null ) {
 			return idClassEmbeddable.areEqual( one, other, session );
@@ -255,7 +274,16 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
-	public int compare(Object value1, Object value2) {
+	public int compare(@Nullable Object value1, @Nullable Object value2) {
+		if ( value1 == value2 ) {
+			return 0;
+		}
+		if ( value1 == null ) {
+			return -1;
+		}
+		if ( value2 == null ) {
+			return 1;
+		}
 		final var idClassEmbeddable = idMapping.getIdClassEmbeddable();
 		if ( idClassEmbeddable != null ) {
 			final var attributeMappings = idClassEmbeddable.getAttributeMappings();

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 
 import org.hibernate.Incubating;
@@ -29,25 +31,27 @@ public interface AuditMapping extends AuxiliaryMapping {
 	/**
 	 * Get the changeset ID selectable mapping for the given original table.
 	 */
-	SelectableMapping getChangesetIdMapping(String originalTableName);
+	@Nonnull
+	SelectableMapping getChangesetIdMapping(@Nonnull String originalTableName);
 
 	/**
 	 * Get the modification type selectable mapping for the given original table,
 	 * or {@code null} if the table does not carry a modification type column.
 	 */
 	@Nullable
-	SelectableMapping getModificationTypeMapping(String originalTableName);
+	SelectableMapping getModificationTypeMapping(@Nonnull String originalTableName);
 
 	/**
 	 * Get the invalidating changeset selectable mapping for the given original table,
 	 * or {@code null} if the validity audit strategy is not active.
 	 */
 	@Nullable
-	SelectableMapping getInvalidatingChangesetIdMapping(String originalTableName);
+	SelectableMapping getInvalidatingChangesetIdMapping(@Nonnull String originalTableName);
 
 	/**
 	 * Get the entity loader for single-entity audit queries.
 	 */
+	@Nonnull
 	AuditEntityLoader getEntityLoader();
 
 	/**
@@ -59,12 +63,13 @@ public interface AuditMapping extends AuxiliaryMapping {
 	 *
 	 * @param includeDeletions if {@code true}, omit the {@code REVTYPE <> DEL} filter
 	 */
+	@Nonnull
 	Predicate createRestriction(
-			TableGroupProducer tableGroupProducer,
-			TableReference tableReference,
-			List<SelectableMapping> keySelectables,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			String originalTableName,
-			Expression upperBound,
+			@Nonnull TableGroupProducer tableGroupProducer,
+			@Nonnull TableReference tableReference,
+			@Nonnull List<SelectableMapping> keySelectables,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull String originalTableName,
+			@Nonnull Expression upperBound,
 			boolean includeDeletions);
 }

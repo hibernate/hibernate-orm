@@ -4,6 +4,9 @@
  */
 package org.hibernate.sql.ast.spi.query.expression;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.spi.IndexedConsumer;
@@ -43,16 +46,19 @@ public class EmbeddableTypeLiteral
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// BasicValuedMapping
 
+	@Nonnull
 	@Override
 	public MappingModelExpressible<?> getExpressionType() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return basicType;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return basicType;
@@ -63,50 +69,53 @@ public class EmbeddableTypeLiteral
 		return basicType.getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return basicType.getJdbcMapping( index );
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getSingleJdbcMapping() {
 		return basicType.getSingleJdbcMapping();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		return basicType.forEachJdbcType( offset, action );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return basicType.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		basicType.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return basicType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return basicType.forEachJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
@@ -142,6 +151,7 @@ public class EmbeddableTypeLiteral
 		sqlTreeWalker.visitEmbeddableTypeLiteral( this );
 	}
 
+	@Nonnull
 	@Override
 	public JavaType getExpressibleJavaType() {
 		return basicType.getExpressibleJavaType();

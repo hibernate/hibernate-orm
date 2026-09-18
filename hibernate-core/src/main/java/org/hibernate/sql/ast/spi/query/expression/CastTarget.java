@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.ast.spi.query.expression;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -37,6 +39,7 @@ public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
 		this.scale = scale;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return type;
@@ -67,6 +70,7 @@ public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
 		return scale;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMappingContainer getExpressionType() {
 		return type;

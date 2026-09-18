@@ -376,7 +376,7 @@ public interface CollectionPersister extends Restrictable {
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState);
+			@Nullable SqlAstCreationState creationState);
 
 
 

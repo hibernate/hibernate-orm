@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 
 import jakarta.annotation.Nullable;
@@ -56,21 +58,25 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 		this.type = type;
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return Nature.ID;
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getCollectionAttribute() {
 		return collectionDescriptor.getAttributeMapping();
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return containingTableName;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return columnName;
@@ -141,37 +147,43 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return type;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return type;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return type;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return getMappedType().getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		return collectionDescriptor.getAttributeMapping().createDomainResult(
 				navigablePath,
 				tableGroup,
@@ -182,18 +194,18 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		collectionDescriptor.getAttributeMapping().applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		collectionDescriptor.getAttributeMapping().applySqlSelections(
 				navigablePath,
 				tableGroup,
@@ -204,16 +216,17 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, domainValue, this );
 		return getJdbcTypeCount();
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
@@ -221,7 +234,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Override
 	public String getFetchableName() {
-		return null;
+		return getPartName();
 	}
 
 	@Override
@@ -235,7 +248,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
@@ -318,24 +331,25 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 		return FetchTiming.IMMEDIATE;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return type.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		type.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return type.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 }

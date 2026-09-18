@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Set;
 
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
@@ -14,19 +16,23 @@ import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
  * @author Steve Ebersole
  */
 public interface EntityAssociationMapping extends ModelPart, Association, TableGroupJoinProducer {
+	@Nonnull
 	@Override
 	default String getFetchableName() {
-		return getPartName();
+		return org.hibernate.internal.util.NullnessUtil.castNonNull( getPartName() );
 	}
 
+	@Nonnull
 	EntityMappingType getAssociatedEntityMappingType();
 
+	@Nonnull
 	Set<String> getTargetKeyPropertyNames();
 
 	/**
 	 * The model sub-part relative to the associated entity type that is the target
 	 * of this association's foreign-key
 	 */
+	@Nonnull
 	ModelPart getKeyTargetMatchPart();
 
 	boolean isReferenceToPrimaryKey();

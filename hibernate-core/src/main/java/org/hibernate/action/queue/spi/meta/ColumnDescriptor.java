@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.queue.spi.meta;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -56,16 +58,19 @@ public record ColumnDescriptor(
 		return new JdbcValueDescriptorImpl( name, jdbcMapping, parameterUsage, parameterIndex );
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return tableName;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return selectionExpression;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectableName() {
 		return name;
@@ -76,6 +81,7 @@ public record ColumnDescriptor(
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public String getCustomWriteExpression() {
 		return writeFragment;
@@ -121,6 +127,7 @@ public record ColumnDescriptor(
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;

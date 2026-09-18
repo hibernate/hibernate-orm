@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.util.Locale;
 import java.util.function.Supplier;
 
@@ -60,11 +62,13 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 		return RepresentationMode.POJO;
 	}
 
+	@Nullable
 	@Override
 	public MultiValueReader getMultiValueReader() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public MultiValueWriter getMultiValueWriter() {
 		return null;

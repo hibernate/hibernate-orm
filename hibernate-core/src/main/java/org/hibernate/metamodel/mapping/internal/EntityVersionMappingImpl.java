@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
@@ -37,6 +39,8 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.VersionJavaType;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -93,21 +97,25 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		);
 	}
 
+	@Nonnull
 	@Override
 	public BasicAttributeMapping getVersionAttribute() {
-		return (BasicAttributeMapping) declaringType.findAttributeMapping( attributeName );
+		return (BasicAttributeMapping) castNonNull( declaringType.findAttributeMapping( attributeName ) );
 	}
 
+	@Nonnull
 	@Override
 	public VersionValue getUnsavedStrategy() {
 		return unsavedValueStrategy;
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return columnTableExpression;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return columnExpression;
@@ -178,36 +186,43 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		return temporalPrecision;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return versionBasicType;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return versionBasicType;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return versionBasicType.getJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public VersionJavaType<?> getJavaType() {
 		return (VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor();
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return attributeName;
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return getVersionAttribute().getNavigableRole();
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return declaringType;
@@ -259,12 +274,13 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		);
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -278,27 +294,27 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nonnull DomainResultCreationState creationState) {
 		resolveSqlSelection( tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( tableGroup, creationState ), getJdbcMapping() );
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, domainValue, this );
 		return getJdbcTypeCount();
 	}
@@ -331,29 +347,30 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		return FetchTiming.IMMEDIATE;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return versionBasicType.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		versionBasicType.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return versionBasicType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

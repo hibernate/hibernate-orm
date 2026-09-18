@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -33,7 +36,7 @@ public interface Bindable extends JdbcMappingContainer {
 	 * @apiNote Same as {@link #forEachJdbcType(int, IndexedConsumer)} starting from `0`
 	 */
 	@Override
-	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping> action) {
 		return forEachJdbcType( 0, action );
 	}
 
@@ -73,7 +76,8 @@ public interface Bindable extends JdbcMappingContainer {
 	 *
 	 * @see org.hibernate.engine.spi.EntityEntry
 	 */
-	Object disassemble(Object value, SharedSessionContractImplementor session);
+	@Nullable
+	Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session);
 
 	/**
 	 * Add to the MutableCacheKey the values obtained disassembling the value and the hasCode generated from
@@ -83,7 +87,7 @@ public interface Bindable extends JdbcMappingContainer {
 	 * @param value the value to disassemble
 	 * @param session the SharedSessionContractImplementor
 	 */
-	void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session);
+	void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session);
 
 	/**
 	 * Visit each constituent JDBC value over the result from {@link #disassemble}.
@@ -100,11 +104,11 @@ public interface Bindable extends JdbcMappingContainer {
 	 * Additionally, it passes through the values {@code X} and {@code Y} to the consumer.
 	 */
 	default <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable Object value,
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return forEachDisassembledJdbcValue( value, 0, x, y, valuesConsumer, session );
 	}
 
@@ -113,21 +117,21 @@ public interface Bindable extends JdbcMappingContainer {
 	 * but additionally receives an offset by which the selectionIndex is incremented when calling {@link JdbcValuesBiConsumer#consume(int, Object, Object, Object, JdbcMapping)}.
 	 */
 	<X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session);
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session);
 
 	/**
 	 * A short hand form of {@link #forEachDisassembledJdbcValue(Object, Object, Object, JdbcValuesBiConsumer, SharedSessionContractImplementor)},
 	 * that passes null for the two values {@code X} and {@code Y}.
 	 */
 	default int forEachDisassembledJdbcValue(
-			Object value,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable Object value,
+			@Nonnull JdbcValuesConsumer valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return forEachDisassembledJdbcValue( value, null, null, valuesConsumer, session );
 	}
 
@@ -136,10 +140,10 @@ public interface Bindable extends JdbcMappingContainer {
 	 * that passes null for the two values {@code X} and {@code Y} .
 	 */
 	default int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nonnull JdbcValuesConsumer valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return forEachDisassembledJdbcValue( value, offset, null, null, valuesConsumer, session );
 	}
 
@@ -150,11 +154,11 @@ public interface Bindable extends JdbcMappingContainer {
 	 * {@link #forEachDisassembledJdbcValue(Object, JdbcValuesConsumer, SharedSessionContractImplementor)}
 	 */
 	default <X, Y> int forEachJdbcValue(
-			Object value,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable Object value,
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return forEachJdbcValue( value, 0, x, y, valuesConsumer, session );
 	}
 
@@ -165,12 +169,12 @@ public interface Bindable extends JdbcMappingContainer {
 	 * {@link #forEachDisassembledJdbcValue(Object, int, JdbcValuesConsumer, SharedSessionContractImplementor)}
 	 */
 	default <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return forEachDisassembledJdbcValue( disassemble( value, session ), offset, x, y, valuesConsumer, session );
 	}
 
@@ -179,9 +183,9 @@ public interface Bindable extends JdbcMappingContainer {
 	 * that passes null for the two values {@code X} and {@code Y}.
 	 */
 	default int forEachJdbcValue(
-			Object value,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable Object value,
+			@Nonnull JdbcValuesConsumer valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return forEachJdbcValue( value, null, null, valuesConsumer, session );
 	}
 
@@ -190,10 +194,10 @@ public interface Bindable extends JdbcMappingContainer {
 	 * that passes null for the two values {@code X} and {@code Y}.
 	 */
 	default int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nonnull JdbcValuesConsumer valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return forEachJdbcValue( value, offset, null, null, valuesConsumer, session );
 	}
 
@@ -204,14 +208,14 @@ public interface Bindable extends JdbcMappingContainer {
 	@FunctionalInterface
 	interface JdbcValuesConsumer extends JdbcValuesBiConsumer<Object, Object> {
 		@Override
-		default void consume(int valueIndex, Object o, Object o2, Object jdbcValue, JdbcMapping jdbcMapping) {
+		default void consume(int valueIndex, @Nullable Object o, @Nullable Object o2, @Nullable Object jdbcValue, @Nonnull JdbcMapping jdbcMapping) {
 			consume( valueIndex, jdbcValue, jdbcMapping );
 		}
 
 		/**
 		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
 		 */
-		void consume(int valueIndex, Object jdbcValue, JdbcMapping jdbcMapping);
+		void consume(int valueIndex, @Nullable Object jdbcValue, @Nonnull JdbcMapping jdbcMapping);
 	}
 
 	/**
@@ -223,6 +227,6 @@ public interface Bindable extends JdbcMappingContainer {
 		/**
 		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
 		 */
-		void consume(int valueIndex, X x, Y y, Object jdbcValue, JdbcMapping jdbcMapping);
+		void consume(int valueIndex, @Nullable X x, @Nullable Y y, @Nullable Object jdbcValue, @Nonnull JdbcMapping jdbcMapping);
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import java.io.Serializable;
@@ -118,21 +120,25 @@ public class CustomType<J>
 		return userType;
 	}
 
+	@Nonnull
 	@Override
 	public ValueExtractor<J> getJdbcValueExtractor() {
 		return valueExtractor;
 	}
 
+	@Nonnull
 	@Override
 	public ValueBinder<J> getJdbcValueBinder() {
 		return valueBinder;
 	}
 
+	@Nullable
 	@Override
 	public JdbcLiteralFormatter<J> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcType getJdbcType() {
 		return jdbcType;
@@ -159,7 +165,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public boolean isEqual(Object x, Object y) throws HibernateException {
+	public boolean isEqual(@Nullable Object x, @Nullable Object y) throws HibernateException {
 		return getUserType().equals( (J) x, (J) y );
 	}
 
@@ -168,8 +174,9 @@ public class CustomType<J>
 		return getUserType().hashCode( (J) x );
 	}
 
+	@Nullable
 	@Override
-	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
+	public Object assemble(@Nullable Serializable cached, SharedSessionContractImplementor session, Object owner) {
 		final J assembled = getUserType().assemble( cached, owner );
 		// Since UserType#assemble is an optional operation,
 		// we have to handle the fact that it could produce a null value,
@@ -180,13 +187,15 @@ public class CustomType<J>
 				: assembled;
 	}
 
+	@Nullable
 	@Override
-	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
+	public Serializable disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session, @Nullable Object owner) {
 		return disassembleForCache( value );
 	}
 
+	@Nullable
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) {
+	public Serializable disassemble(@Nullable Object value, SessionFactoryImplementor sessionFactory) {
 		return disassembleForCache( value );
 	}
 
@@ -201,14 +210,15 @@ public class CustomType<J>
 				: disassembled;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		// Use the value converter if available for conversion to the jdbc representation
 		return convertToRelationalValue( (J) value );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 
 		final Serializable disassembled = getUserType().disassemble( (J) value );
 		// Since UserType#disassemble is an optional operation,
@@ -224,10 +234,11 @@ public class CustomType<J>
 		}
 	}
 
+	@Nullable
 	@Override
 	public Object replace(
-			Object original,
-			Object target,
+			@Nullable Object original,
+			@Nullable Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache) {
@@ -237,7 +248,7 @@ public class CustomType<J>
 	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
-			Object value,
+			@Nullable Object value,
 			int index,
 			boolean[] settable,
 			SharedSessionContractImplementor session) throws SQLException {
@@ -250,7 +261,7 @@ public class CustomType<J>
 	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
-			Object value,
+			@Nullable Object value,
 			int index,
 			SharedSessionContractImplementor session) throws SQLException {
 		//noinspection unchecked
@@ -262,8 +273,9 @@ public class CustomType<J>
 		return name;
 	}
 
+	@Nullable
 	@Override
-	public Object deepCopy(Object value, SessionFactoryImplementor factory) throws HibernateException {
+	public Object deepCopy(@Nullable Object value, SessionFactoryImplementor factory) throws HibernateException {
 		return getUserType().deepCopy( (J) value );
 	}
 
@@ -273,7 +285,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
+	public String toLoggableString(@Nullable Object value, SessionFactoryImplementor factory) {
 		if ( value == null ) {
 			return "null";
 		}
@@ -289,7 +301,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
+	public boolean[] toColumnNullness(@Nullable Object value, MappingContext mapping) {
 		final boolean[] result = new boolean[ getColumnSpan(mapping) ];
 		if ( value != null ) {
 			Arrays.fill( result, true );
@@ -298,7 +310,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
+	public boolean isDirty(@Nullable Object old, @Nullable Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return checkable[0] && isDirty( old, current, session );
 	}
@@ -377,26 +389,31 @@ public class CustomType<J>
 		return mappedJavaType.getJavaTypeClass();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<J> getMappedJavaType() {
 		return mappedJavaType;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<J> getExpressibleJavaType() {
 		return this.getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<J> getJavaTypeDescriptor() {
 		return this.getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJdbcJavaType() {
 		return jdbcJavaType;
 	}
 
+	@Nullable
 	@Override
 	public BasicValueConverter<J, ?> getValueConverter() {
 		return converter;

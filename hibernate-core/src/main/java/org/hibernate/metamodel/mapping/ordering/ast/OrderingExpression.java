@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.sql.ast.spi.creation.SqlTreeCreationException;
 
 import jakarta.persistence.criteria.Nulls;
@@ -25,7 +27,7 @@ import org.hibernate.sql.ast.spi.query.select.QuerySpec;
  */
 public interface OrderingExpression extends Node {
 
-	SqlAstNode resolve(QuerySpec ast, TableGroup tableGroup, String modelPartName, SqlAstCreationState creationState);
+	SqlAstNode resolve(QuerySpec ast, TableGroup tableGroup, @Nullable String modelPartName, SqlAstCreationState creationState);
 
 	String toDescriptiveText();
 
@@ -35,7 +37,7 @@ public interface OrderingExpression extends Node {
 	void apply(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String collation,
+			@Nullable String collation,
 			String modelPartName,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
@@ -43,7 +45,7 @@ public interface OrderingExpression extends Node {
 
 	static Expression applyCollation(
 			Expression expression,
-			String collation,
+			@Nullable String collation,
 			SqlAstCreationState creationState) {
 		final Expression sortExpression;
 		if ( collation == null ) {

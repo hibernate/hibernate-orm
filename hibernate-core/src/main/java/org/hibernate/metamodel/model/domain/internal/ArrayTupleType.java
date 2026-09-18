@@ -82,6 +82,7 @@ public class ArrayTupleType
 		return components[index];
 	}
 
+	@Nonnull
 	@Override
 	public SqmBindableType<?> get(String componentName) {
 		throw new UnsupportedMappingException( "Array tuple has no component names" );
@@ -103,34 +104,36 @@ public class ArrayTupleType
 		return "ArrayTupleType" + Arrays.toString( components );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		throw new UnsupportedOperationException();
 	}
 }

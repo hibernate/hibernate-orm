@@ -18,7 +18,7 @@ public interface SqmComparableExpression<C extends Comparable<? super C>>
 		extends JpaComparableExpression<C>, SqmExpression<C> {
 	@Nonnull
 	@Override
-	SqmComparableExpression<C> coalesce(C y);
+	SqmComparableExpression<C> coalesce(@Nonnull C y);
 
 	@Nonnull
 	@Override
@@ -26,7 +26,7 @@ public interface SqmComparableExpression<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	SqmComparableExpression<C> nullif(C y);
+	SqmComparableExpression<C> nullif(@Nonnull C y);
 
 	@Nonnull
 	@Override
@@ -38,7 +38,7 @@ public interface SqmComparableExpression<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	SqmPredicate greaterThan(C y);
+	SqmPredicate greaterThan(@Nonnull C y);
 
 	@Nonnull
 	@Override
@@ -46,7 +46,7 @@ public interface SqmComparableExpression<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	SqmPredicate greaterThanOrEqualTo(C y);
+	SqmPredicate greaterThanOrEqualTo(@Nonnull C y);
 
 	@Nonnull
 	@Override
@@ -54,7 +54,7 @@ public interface SqmComparableExpression<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	SqmPredicate lessThan(C y);
+	SqmPredicate lessThan(@Nonnull C y);
 
 	@Nonnull
 	@Override
@@ -62,7 +62,7 @@ public interface SqmComparableExpression<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	SqmPredicate lessThanOrEqualTo(C y);
+	SqmPredicate lessThanOrEqualTo(@Nonnull C y);
 
 	@Nonnull
 	@Override
@@ -70,7 +70,7 @@ public interface SqmComparableExpression<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	SqmPredicate between(C x, C y);
+	SqmPredicate between(@Nonnull C x, @Nonnull C y);
 
 	@Nonnull
 	@Override

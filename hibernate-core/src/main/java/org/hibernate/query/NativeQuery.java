@@ -113,26 +113,32 @@ public interface NativeQuery<T>
 		extends SelectionQuery<T>, MutationQuery, SynchronizeableQuery, StatementOrTypedQuery {
 
 	@Override
-	NativeQuery<T> addOption(TypedQuery.Option option);
+	@Nonnull
+	NativeQuery<T> addOption(@Nonnull TypedQuery.Option option);
 
 	@Override
-	NativeQuery<T> addOption(Statement.Option option);
+	@Nonnull
+	NativeQuery<T> addOption(@Nonnull Statement.Option option);
 
 	@Override
 	@SuppressWarnings({"rawtypes", "unchecked"})
+	@Nonnull
 	Set getOptions();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - SynchronizeableQuery
 	@Override
-	NativeQuery<T> addSynchronizedQuerySpace(String querySpace);
+	@Nonnull
+	NativeQuery<T> addSynchronizedQuerySpace(@Nonnull String querySpace);
 
 	@Override
-	NativeQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
+	@Nonnull
+	NativeQuery<T> addSynchronizedEntityName(@Nonnull String entityName) throws MappingException;
 
 	@Override
-	NativeQuery<T> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
+	@Nonnull
+	NativeQuery<T> addSynchronizedEntityClass(@Nonnull @SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -172,6 +178,7 @@ public interface NativeQuery<T>
 	NativeQuery<T> setCacheable(boolean cacheable);
 
 	@Override
+	@Nonnull
 	NativeQuery<T> setCacheRegion(@Nullable String cacheRegion);
 
 	@Override
@@ -466,8 +473,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addScalar(String columnAlias);
+	NativeQuery<T> addScalar(@Nonnull String columnAlias);
 
 	/**
 	 * Declare a scalar query result.
@@ -485,8 +493,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicTypeReference type);
+	NativeQuery<T> addScalar(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") BasicTypeReference type);
 
 	/**
 	 * Declare a scalar query result.
@@ -504,8 +513,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicDomainType type);
+	NativeQuery<T> addScalar(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") BasicDomainType type);
 
 	/**
 	 * Declare a scalar query result using the specified result type.
@@ -521,8 +531,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") Class javaType);
+	NativeQuery<T> addScalar(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") Class javaType);
 
 	/**
 	 * Declare a scalar query result with an explicit conversion.
@@ -540,8 +551,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, AttributeConverter<?,C> converter);
+	<C> NativeQuery<T> addScalar(@Nonnull String columnAlias, @Nonnull Class<C> relationalJavaType, @Nonnull AttributeConverter<?,C> converter);
 
 	/**
 	 * Declare a scalar query result with an explicit conversion.
@@ -561,8 +573,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	<O,R> NativeQuery<T> addScalar(String columnAlias, Class<O> domainJavaType, Class<R> jdbcJavaType, AttributeConverter<O,R> converter);
+	<O,R> NativeQuery<T> addScalar(@Nonnull String columnAlias, @Nonnull Class<O> domainJavaType, @Nonnull Class<R> jdbcJavaType, @Nonnull AttributeConverter<O,R> converter);
 
 	/**
 	 * Declare a scalar query result with an explicit conversion.
@@ -580,8 +593,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
+	<C> NativeQuery<T> addScalar(@Nonnull String columnAlias, @Nonnull Class<C> relationalJavaType, @Nonnull Class<? extends AttributeConverter<?,C>> converter);
 
 	/**
 	 * Declare a scalar query result with an explicit conversion.
@@ -601,20 +615,22 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
 	<O,R> NativeQuery<T> addScalar(
-			String columnAlias,
-			Class<O> domainJavaType,
-			Class<R> jdbcJavaType,
-			Class<? extends AttributeConverter<O,R>> converter);
+			@Nonnull String columnAlias,
+			@Nonnull Class<O> domainJavaType,
+			@Nonnull Class<R> jdbcJavaType,
+			@Nonnull Class<? extends AttributeConverter<O,R>> converter);
 
 	/**
 	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	<J> InstantiationResultNode<J> addInstantiation(Class<J> targetJavaType);
+	<J> InstantiationResultNode<J> addInstantiation(@Nonnull Class<J> targetJavaType);
 
 	/**
 	 * Defines a result based on a specified attribute. Differs from adding
@@ -629,8 +645,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") Class entityJavaType, String attributePath);
+	NativeQuery<T> addAttributeResult(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityJavaType, @Nonnull String attributePath);
 
 	/**
 	 * Defines a result based on a specified attribute.  Differs from adding
@@ -645,8 +662,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addAttributeResult(String columnAlias, String entityName, String attributePath);
+	NativeQuery<T> addAttributeResult(@Nonnull String columnAlias, @Nonnull String entityName, @Nonnull String attributePath);
 
 	/**
 	 * Defines a result based on a specified attribute. Differs from adding a
@@ -663,8 +681,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") SingularAttribute attribute);
+	NativeQuery<T> addAttributeResult(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") SingularAttribute attribute);
 
 	/**
 	 * Add a new root return mapping, returning a {@link RootReturn} to allow
@@ -681,8 +700,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	RootReturn addRoot(String tableAlias, String entityName);
+	RootReturn addRoot(@Nonnull String tableAlias, @Nonnull String entityName);
 
 	/**
 	 * Add a new root return mapping, returning a {@link RootReturn} to allow
@@ -699,8 +719,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	RootReturn addRoot(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
+	RootReturn addRoot(@Nonnull String tableAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityType);
 
 	/**
 	 * Declare a "root" entity, without specifying an alias. The expectation
@@ -716,8 +737,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addEntity(String entityName);
+	NativeQuery<T> addEntity(@Nonnull String entityName);
 
 	/**
 	 * Declare a "root" entity.
@@ -731,8 +753,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addEntity(String tableAlias, String entityName);
+	NativeQuery<T> addEntity(@Nonnull String tableAlias, @Nonnull String entityName);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -747,8 +770,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
+	NativeQuery<T> addEntity(@Nonnull String tableAlias, @Nonnull String entityName, @Nullable LockMode lockMode);
 
 	/**
 	 * Declare a "root" entity, without specifying an alias. The expectation here
@@ -762,8 +786,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addEntity(@SuppressWarnings("rawtypes") Class entityType);
+	NativeQuery<T> addEntity(@Nonnull @SuppressWarnings("rawtypes") Class entityType);
 
 	/**
 	 * Declare a "root" entity.
@@ -777,8 +802,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
+	NativeQuery<T> addEntity(@Nonnull String tableAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityType);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -793,8 +819,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass, LockMode lockMode);
+	NativeQuery<T> addEntity(@Nonnull String tableAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityClass, @Nullable LockMode lockMode);
 
 	/**
 	 * Declare a join fetch result.
@@ -812,8 +839,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName);
+	FetchReturn addFetch(@Nonnull String tableAlias, @Nonnull String ownerTableAlias, @Nonnull String joinPropertyName);
 
 	/**
 	 * Declare a join fetch result.
@@ -827,8 +855,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addJoin(String tableAlias, String path);
+	NativeQuery<T> addJoin(@Nonnull String tableAlias, @Nonnull String path);
 
 	/**
 	 * Declare a join fetch result.
@@ -846,8 +875,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
+	NativeQuery<T> addJoin(@Nonnull String tableAlias, @Nonnull String ownerTableAlias, @Nonnull String joinPropertyName);
 
 	/**
 	 * Declare a join fetch result, specifying a lock mode.
@@ -862,8 +892,9 @@ public interface NativeQuery<T>
 	 * similar approach pending the outcome of
 	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0")
-	NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
+	NativeQuery<T> addJoin(@Nonnull String tableAlias, @Nonnull String path, @Nullable LockMode lockMode);
 
 	/**
 	 * Simple unification interface for all returns from the various {@code addXYZ()}
@@ -883,11 +914,13 @@ public interface NativeQuery<T>
 	}
 
 	interface InstantiationResultNode<J> extends ReturnableResultNode {
-		default InstantiationResultNode<J> addBasicArgument(String columnAlias) {
+		@Nonnull
+		default InstantiationResultNode<J> addBasicArgument(@Nonnull String columnAlias) {
 			return addBasicArgument( columnAlias, null );
 		}
 
-		InstantiationResultNode<J> addBasicArgument(String columnAlias, String argumentAlias);
+		@Nonnull
+		InstantiationResultNode<J> addBasicArgument(@Nonnull String columnAlias, @Nullable String argumentAlias);
 	}
 
 	/**
@@ -903,7 +936,8 @@ public interface NativeQuery<T>
 		 *
 		 * @return {@code this}, for method chaining
 		 */
-		ReturnProperty addColumnAlias(String columnAlias);
+		@Nonnull
+		ReturnProperty addColumnAlias(@Nonnull String columnAlias);
 	}
 
 	/**
@@ -912,16 +946,20 @@ public interface NativeQuery<T>
 	 */
 	interface RootReturn extends ReturnableResultNode {
 
+		@Nonnull
 		String getTableAlias();
 
+		@Nullable
 		String getDiscriminatorAlias();
 
+		@Nonnull
 		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		EntityMappingType getEntityMapping();
 
+		@Nonnull
 		NavigablePath getNavigablePath();
 
-	@Nullable
+		@Nullable
 		LockMode getLockMode();
 
 		/**
@@ -931,10 +969,11 @@ public interface NativeQuery<T>
 		 *
 		 * @return {@code this}, for method chaining
 		 */
-	@Nonnull
-		RootReturn setLockMode(LockMode lockMode);
+		@Nonnull
+		RootReturn setLockMode(@Nullable LockMode lockMode);
 
-		RootReturn addIdColumnAliases(String... aliases);
+		@Nonnull
+		RootReturn addIdColumnAliases(@Nonnull String... aliases);
 
 		/**
 		 * Name the column alias that identifies the entity's discriminator.
@@ -943,7 +982,8 @@ public interface NativeQuery<T>
 		 *
 		 * @return {@code this}, for method chaining
 		 */
-		RootReturn setDiscriminatorAlias(String columnAlias);
+		@Nonnull
+		RootReturn setDiscriminatorAlias(@Nullable String columnAlias);
 
 		/**
 		 * Add a simple property-to-one-column mapping.
@@ -953,7 +993,8 @@ public interface NativeQuery<T>
 		 *
 		 * @return {@code this}, for method chaining
 		 */
-		RootReturn addProperty(String propertyName, String columnAlias);
+		@Nonnull
+		RootReturn addProperty(@Nonnull String propertyName, @Nonnull String columnAlias);
 
 		/**
 		 * Add a property, presumably with more than one column.
@@ -962,7 +1003,8 @@ public interface NativeQuery<T>
 		 *
 		 * @return The config object for further control.
 		 */
-		ReturnProperty addProperty(String propertyName);
+		@Nonnull
+		ReturnProperty addProperty(@Nonnull String propertyName);
 	}
 
 	/**
@@ -971,11 +1013,14 @@ public interface NativeQuery<T>
 	 */
 	interface CollectionReturn extends ReturnableResultNode {
 
+		@Nonnull
 		String getTableAlias();
 
+		@Nonnull
 		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		PluralAttributeMapping getPluralAttribute();
 
+		@Nonnull
 		NavigablePath getNavigablePath();
 	}
 
@@ -985,13 +1030,17 @@ public interface NativeQuery<T>
 	 */
 	interface FetchReturn extends ResultNode {
 
+		@Nonnull
 		String getTableAlias();
 
+		@Nonnull
 		String getOwnerAlias();
 
+		@Nonnull
 		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		Fetchable getFetchable();
 
+		@Nonnull
 		String getFetchableName();
 
 		/**
@@ -1001,8 +1050,8 @@ public interface NativeQuery<T>
 		 *
 		 * @return {@code this}, for method chaining
 		 */
-	@Nonnull
-		FetchReturn setLockMode(LockMode lockMode);
+		@Nonnull
+		FetchReturn setLockMode(@Nullable LockMode lockMode);
 
 		/**
 		 * Add a simple property-to-one-column mapping.
@@ -1012,7 +1061,8 @@ public interface NativeQuery<T>
 		 *
 		 * @return {@code this}, for method chaining
 		 */
-		FetchReturn addProperty(String propertyName, String columnAlias);
+		@Nonnull
+		FetchReturn addProperty(@Nonnull String propertyName, @Nonnull String columnAlias);
 
 		/**
 		 * Add a property, presumably with more than one column.
@@ -1021,6 +1071,7 @@ public interface NativeQuery<T>
 		 *
 		 * @return The config object for further control.
 		 */
-		ReturnProperty addProperty(String propertyName);
+		@Nonnull
+		ReturnProperty addProperty(@Nonnull String propertyName);
 	}
 }

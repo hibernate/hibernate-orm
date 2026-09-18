@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.restriction;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -21,14 +22,16 @@ import org.hibernate.query.range.Range;
  *
  * @author Gavin King
  */
-record NamedAttributeRange<X, U>(Class<X> entity, String attributeName, Range<U> range) implements Restriction<X> {
+record NamedAttributeRange<X, U>(@Nonnull Class<X> entity, @Nonnull String attributeName, @Nonnull Range<U> range) implements Restriction<X> {
 	@Override
+	@Nonnull
 	public Restriction<X> negated() {
 		return new Negation<>( this );
 	}
 
 	@Override
-	public Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder) {
+	@Nonnull
+	public Predicate toPredicate(@Nonnull Root<? extends X> root, @Nonnull CriteriaBuilder builder) {
 		final EntityType<? extends X> entityType = root.getModel();
 		if ( !entity.isAssignableFrom( entityType.getJavaType() ) ) {
 			throw new IllegalArgumentException( "Root entity is not a subtype of '" + entity.getTypeName() + "'" );

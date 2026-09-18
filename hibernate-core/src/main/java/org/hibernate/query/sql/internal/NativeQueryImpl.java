@@ -497,6 +497,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nullable
 	public Boolean isSelectQuery() {
 		if ( resultMappingSuppliedToCtor
 			|| resultSetMapping.getNumberOfResultBuilders() > 0
@@ -511,7 +512,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NamedNativeQueryMemento<R> toMemento(String name) {
+	@Nonnull
+	public NamedNativeQueryMemento<R> toMemento(@Nonnull String name) {
 		if ( isSelectQuery() == Boolean.TRUE ) {
 			return toSelectionMemento( name );
 		}
@@ -524,7 +526,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeMutationMementoImpl<R> toMutationMemento(String name) {
+	@Nonnull
+	public NativeMutationMementoImpl<R> toMutationMemento(@Nonnull String name) {
 		errorIfSelectForSure();
 		final var options = getQueryOptions();
 		return new NativeMutationMementoImpl<>(
@@ -541,7 +544,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	@SuppressWarnings("removal")
-	public NativeSelectionMementoImpl<R> toSelectionMemento(String name) {
+	@Nonnull
+	public NativeSelectionMementoImpl<R> toSelectionMemento(@Nonnull String name) {
 		errorIfNotSelectForSure();
 		final var options = getQueryOptions();
 		return new NativeSelectionMementoImpl<>(
@@ -586,7 +590,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	@Nonnull
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> graph, GraphSemantic semantic) {
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> graph, @Nonnull GraphSemantic semantic) {
 		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}
 
@@ -599,7 +603,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	@Nonnull
-	public <X> NativeQueryImplementor<X> asSelectionQuery(Class<X> type) {
+	public <X> NativeQueryImplementor<X> asSelectionQuery(@Nonnull Class<X> type) {
 		errorIfNotSelectForSure();
 		checkResultType( type, resultSetMapping() );
 		//noinspection unchecked
@@ -608,7 +612,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	@Nonnull
-	public <X> NativeQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
+	public <X> NativeQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph) {
 		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
 	}
 
@@ -711,6 +715,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nullable
 	public Class<R> getResultType() {
 		errorIfNotSelectForSure();
 		return resultType;
@@ -811,7 +816,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setPage(Page page) {
+	@Nonnull
+	public NativeQueryImplementor<R> setPage(@Nonnull Page page) {
 		final var limit = queryOptions.getLimit();
 		limit.setFirstRow( page.getFirstResult() );
 		limit.setMaxRows( page.getMaxResults() );
@@ -1108,7 +1114,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> page) {
+	@Nonnull
+	public KeyedResultList<R> getKeyedResultList(@Nonnull KeyedPage<R> page) {
 		throw new UnsupportedOperationException("native queries do not support key-based pagination");
 	}
 
@@ -1321,13 +1328,14 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public void addResultTypeClass(Class<?> resultClass) {
+	public void addResultTypeClass(@Nonnull Class<?> resultClass) {
 		assert resultSetMapping.getNumberOfResultBuilders() == 0;
 		registerBuilder( Builders.resultClassBuilder( resultClass, getSessionFactory().getMappingMetamodel() ) );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addScalar(String columnAlias) {
+	@Nonnull
+	public NativeQueryImplementor<R> addScalar(@Nonnull String columnAlias) {
 		return registerBuilder( Builders.scalar( columnAlias ) );
 	}
 
@@ -1341,18 +1349,21 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQuery<R> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicTypeReference type) {
+	@Nonnull
+	public NativeQuery<R> addScalar(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") BasicTypeReference type) {
 		return registerBuilder( Builders.scalar( columnAlias,
 				getBasicTypeRegistry().resolve( (BasicTypeReference<?>) type ) ) );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicDomainType type) {
+	@Nonnull
+	public NativeQueryImplementor<R> addScalar(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") BasicDomainType type) {
 		return registerBuilder( Builders.scalar( columnAlias, (BasicType<?>) type ) );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addScalar(String columnAlias, @SuppressWarnings("rawtypes") Class javaType) {
+	@Nonnull
+	public NativeQueryImplementor<R> addScalar(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") Class javaType) {
 		@SuppressWarnings("unchecked")
 		final BasicType<?> basicType = getBasicTypeRegistry().getRegisteredType( javaType );
 		return basicType != null
@@ -1361,41 +1372,46 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public <C> NativeQueryImplementor<R> addScalar(
-			String columnAlias,
-			Class<C> jdbcJavaType,
-			AttributeConverter<?, C> converter) {
+			@Nonnull String columnAlias,
+			@Nonnull Class<C> jdbcJavaType,
+			@Nonnull AttributeConverter<?, C> converter) {
 		return registerBuilder( Builders.converted( columnAlias, jdbcJavaType, converter, getSessionFactory() ) );
 	}
 
 	@Override
+	@Nonnull
 	public <O, J> NativeQueryImplementor<R> addScalar(
-			String columnAlias,
-			Class<O> domainJavaType,
-			Class<J> jdbcJavaType,
-			AttributeConverter<O, J> converter) {
+			@Nonnull String columnAlias,
+			@Nonnull Class<O> domainJavaType,
+			@Nonnull Class<J> jdbcJavaType,
+			@Nonnull AttributeConverter<O, J> converter) {
 		return registerBuilder( Builders.converted( columnAlias, domainJavaType, jdbcJavaType, converter, getSessionFactory() ) );
 	}
 
 	@Override
+	@Nonnull
 	public <C> NativeQueryImplementor<R> addScalar(
-			String columnAlias,
-			Class<C> relationalJavaType,
-			Class<? extends AttributeConverter<?, C>> converter) {
+			@Nonnull String columnAlias,
+			@Nonnull Class<C> relationalJavaType,
+			@Nonnull Class<? extends AttributeConverter<?, C>> converter) {
 		return registerBuilder( Builders.converted( columnAlias, relationalJavaType, converter, getSessionFactory() ) );
 	}
 
 	@Override
+	@Nonnull
 	public <O, J> NativeQueryImplementor<R> addScalar(
-			String columnAlias,
-			Class<O> domainJavaType,
-			Class<J> jdbcJavaType,
-			Class<? extends AttributeConverter<O, J>> converterJavaType) {
+			@Nonnull String columnAlias,
+			@Nonnull Class<O> domainJavaType,
+			@Nonnull Class<J> jdbcJavaType,
+			@Nonnull Class<? extends AttributeConverter<O, J>> converterJavaType) {
 		return registerBuilder( Builders.converted( columnAlias, domainJavaType, jdbcJavaType, converterJavaType, getSessionFactory() ) );
 	}
 
 	@Override
-	public <J> InstantiationResultNode<J> addInstantiation(Class<J> targetJavaType) {
+	@Nonnull
+	public <J> InstantiationResultNode<J> addInstantiation(@Nonnull Class<J> targetJavaType) {
 		final DynamicResultBuilderInstantiation<J> builder =
 				Builders.instantiation( targetJavaType, getSessionFactory() );
 		registerBuilder( builder );
@@ -1403,32 +1419,36 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> addAttributeResult(
-			String columnAlias,
-			@SuppressWarnings("rawtypes") Class entityJavaType,
-			String attributePath) {
+			@Nonnull String columnAlias,
+			@Nonnull @SuppressWarnings("rawtypes") Class entityJavaType,
+			@Nonnull String attributePath) {
 		return addAttributeResult( columnAlias, entityJavaType.getName(), attributePath );
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> addAttributeResult(
-			String columnAlias,
-			String entityName,
-			String attributePath) {
+			@Nonnull String columnAlias,
+			@Nonnull String entityName,
+			@Nonnull String attributePath) {
 		registerBuilder( Builders.attributeResult( columnAlias, entityName, attributePath, getSessionFactory() ) );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> addAttributeResult(
-			String columnAlias,
-			@SuppressWarnings("rawtypes") SingularAttribute attribute) {
+			@Nonnull String columnAlias,
+			@Nonnull @SuppressWarnings("rawtypes") SingularAttribute attribute) {
 		registerBuilder( Builders.attributeResult( columnAlias, attribute, getSessionFactory() ) );
 		return this;
 	}
 
 	@Override
-	public DynamicResultBuilderEntityStandard addRoot(String tableAlias, String entityName) {
+	@Nonnull
+	public DynamicResultBuilderEntityStandard addRoot(@Nonnull String tableAlias, @Nonnull String entityName) {
 		final var resultBuilder = Builders.entity( tableAlias, entityName, getSessionFactory() );
 		resultSetMapping.addResultBuilder( resultBuilder );
 		entityMappingTypeByTableAlias.put( tableAlias, resultBuilder.getEntityMapping() );
@@ -1436,17 +1456,20 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public DynamicResultBuilderEntityStandard addRoot(String tableAlias, @SuppressWarnings("rawtypes") Class entityType) {
+	@Nonnull
+	public DynamicResultBuilderEntityStandard addRoot(@Nonnull String tableAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityType) {
 		return addRoot( tableAlias, entityType.getName() );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addEntity(String entityName) {
+	@Nonnull
+	public NativeQueryImplementor<R> addEntity(@Nonnull String entityName) {
 		return addEntity( unqualify( entityName ), entityName );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName) {
+	@Nonnull
+	public NativeQueryImplementor<R> addEntity(@Nonnull String tableAlias, @Nonnull String entityName) {
 		final var builder = Builders.entityCalculated( tableAlias, entityName, getSessionFactory() );
 		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
 		registerBuilder( builder );
@@ -1454,7 +1477,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode) {
+	@Nonnull
+	public NativeQueryImplementor<R> addEntity(@Nonnull String tableAlias, @Nonnull String entityName, @Nullable LockMode lockMode) {
 		final var builder = Builders.entityCalculated( tableAlias, entityName, lockMode, getSessionFactory() );
 		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
 		registerBuilder( builder );
@@ -1462,27 +1486,32 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addEntity(@SuppressWarnings("rawtypes") Class entityType) {
+	@Nonnull
+	public NativeQueryImplementor<R> addEntity(@Nonnull @SuppressWarnings("rawtypes") Class entityType) {
 		return addEntity( entityType.getName() );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addEntity(Class<R> entityType, LockMode lockMode) {
+	@Nonnull
+	public NativeQueryImplementor<R> addEntity(@Nonnull Class<R> entityType, @Nullable LockMode lockMode) {
 		return addEntity( unqualify( entityType.getName() ), entityType.getName(), lockMode);
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass) {
+	@Nonnull
+	public NativeQueryImplementor<R> addEntity(@Nonnull String tableAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityClass) {
 		return addEntity( tableAlias, entityClass.getName() );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass, LockMode lockMode) {
+	@Nonnull
+	public NativeQueryImplementor<R> addEntity(@Nonnull String tableAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityClass, @Nullable LockMode lockMode) {
 		return addEntity( tableAlias, entityClass.getName(), lockMode );
 	}
 
 	@Override
-	public FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
+	@Nonnull
+	public FetchReturn addFetch(@Nonnull String tableAlias, @Nonnull String ownerTableAlias, @Nonnull String joinPropertyName) {
 		final var subPart = entityMappingTypeByTableAlias.get( ownerTableAlias ).findSubPart( joinPropertyName );
 		addEntityMappingType( tableAlias, subPart );
 		final var fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, (Fetchable) subPart );
@@ -1506,7 +1535,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addJoin(String tableAlias, String path) {
+	@Nonnull
+	public NativeQueryImplementor<R> addJoin(@Nonnull String tableAlias, @Nonnull String path) {
 		createFetchJoin( tableAlias, path );
 		return this;
 	}
@@ -1522,25 +1552,29 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName) {
+	@Nonnull
+	public NativeQueryImplementor<R> addJoin(@Nonnull String tableAlias, @Nonnull String ownerTableAlias, @Nonnull String joinPropertyName) {
 		addFetch( tableAlias, ownerTableAlias, joinPropertyName );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addJoin(String tableAlias, String path, LockMode lockMode) {
+	@Nonnull
+	public NativeQueryImplementor<R> addJoin(@Nonnull String tableAlias, @Nonnull String path, @Nullable LockMode lockMode) {
 		createFetchJoin( tableAlias, path ).setLockMode( lockMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public Collection<String> getSynchronizedQuerySpaces() {
 		return querySpaces;
 	}
 
 
 	@Override
-	public NativeQueryImplementor<R> addSynchronizedQuerySpace(String querySpace) {
+	@Nonnull
+	public NativeQueryImplementor<R> addSynchronizedQuerySpace(@Nonnull String querySpace) {
 		addQuerySpaces( querySpace );
 		return this;
 	}
@@ -1564,13 +1598,15 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) {
+	@Nonnull
+	public NativeQueryImplementor<R> addSynchronizedEntityName(@Nonnull String entityName) {
 		addQuerySpaces( getMappingMetamodel().getEntityDescriptor( entityName ).getQuerySpaces() );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) {
+	@Nonnull
+	public NativeQueryImplementor<R> addSynchronizedEntityClass(@Nonnull @SuppressWarnings("rawtypes") Class entityClass) {
 		addQuerySpaces( getMappingMetamodel().getEntityDescriptor( entityClass ).getQuerySpaces() );
 		return this;
 	}
@@ -1653,6 +1689,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> setCacheRegion(@Nullable String cacheRegion) {
 		errorIfNotSelectForSure();
 		queryOptions.setResultCacheRegionName( cacheRegion );

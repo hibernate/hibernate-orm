@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -33,20 +34,21 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 
 	private final Map<String, SqmExpression<?>> attributes;
 
-	public SqmXmlAttributesExpression(String attributeName, jakarta.persistence.criteria.Expression<?> expression) {
+	public SqmXmlAttributesExpression(@Nonnull String attributeName, @Nonnull jakarta.persistence.criteria.Expression<?> expression) {
 		final Map<String, SqmExpression<?>> attributes = new LinkedHashMap<>();
 		attributes.put( attributeName, (SqmExpression<?>) expression );
 		this.attributes = attributes;
 	}
 
-	private SqmXmlAttributesExpression(Map<String, SqmExpression<?>> attributes) {
+	private SqmXmlAttributesExpression(@Nonnull Map<String, SqmExpression<?>> attributes) {
 		this.attributes = attributes;
 	}
 
-	public void attribute(String attributeName, jakarta.persistence.criteria.Expression<?> expression) {
+	public void attribute(@Nonnull String attributeName, @Nonnull jakarta.persistence.criteria.Expression<?> expression) {
 		attributes.put( attributeName, (SqmExpression<?>) expression );
 	}
 
+	@Nonnull
 	public Map<String, SqmExpression<?>> getAttributes() {
 		return attributes;
 	}
@@ -57,12 +59,13 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 	}
 
 	@Override
-	public NodeBuilder nodeBuilder() {
+	public @Nonnull NodeBuilder nodeBuilder() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		final Map<String, Expression> attributes = new LinkedHashMap<>();
 		for ( Map.Entry<String, SqmExpression<?>> entry : this.attributes.entrySet() ) {
 			attributes.put( entry.getKey(), (Expression) castNonNull( entry.getValue().accept( walker ) ) );
@@ -71,8 +74,9 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 		return (X) new XmlAttributes( attributes );
 	}
 
+	@Nonnull
 	@Override
-	public SqmXmlAttributesExpression copy(SqmCopyContext context) {
+	public SqmXmlAttributesExpression copy(@Nonnull SqmCopyContext context) {
 		final SqmXmlAttributesExpression existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -85,7 +89,7 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		String separator = "xmlattributes(";
 		for ( Map.Entry<String, SqmExpression<?>> entry : attributes.entrySet() ) {
 			hql.append( separator );
@@ -109,7 +113,7 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmXmlAttributesExpression that
 			&& SqmCacheable.areCompatible( attributes, that.attributes );
 	}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.HqlTranslator;
 
@@ -22,22 +25,24 @@ import org.hibernate.query.hql.spi.HqlTranslator;
  * @see EntityTypeException
  */
 public class UnknownEntityException extends SemanticException {
+	@Nonnull
 	private final String entityName;
 
-	public UnknownEntityException(String entityName) {
+	public UnknownEntityException(@Nonnull String entityName) {
 		this( "Could not resolve entity '" + entityName + "'", entityName );
 	}
 
-	public UnknownEntityException(String message, String entityName) {
+	public UnknownEntityException(@Nonnull String message, @Nonnull String entityName) {
 		super( message );
 		this.entityName = entityName;
 	}
 
-	public UnknownEntityException(String message, String entityName, Exception cause) {
+	public UnknownEntityException(@Nonnull String message, @Nonnull String entityName, @Nullable Exception cause) {
 		super( message, cause );
 		this.entityName = entityName;
 	}
 
+	@Nonnull
 	public String getEntityName() {
 		return entityName;
 	}

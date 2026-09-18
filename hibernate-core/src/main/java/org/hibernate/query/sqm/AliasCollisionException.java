@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.query.SemanticException;
 
 /**
@@ -14,11 +17,11 @@ import org.hibernate.query.SemanticException;
  * @author Andrea Boriero
  */
 public class AliasCollisionException extends SemanticException {
-	public AliasCollisionException(String message) {
+	public AliasCollisionException(@Nonnull String message) {
 		super( message );
 	}
 
-	public AliasCollisionException(String message, Exception cause) {
+	public AliasCollisionException(@Nonnull String message, @Nullable Exception cause) {
 		super( message, cause );
 	}
 }

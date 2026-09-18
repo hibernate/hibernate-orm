@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NativeQuery;
@@ -44,65 +47,77 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 	}
 
 	@Override
+	@Nonnull
 	public EntityMappingType getEntityMapping() {
 		return entityMapping;
 	}
 
 	@Override
+	@Nonnull
 	public String getTableAlias() {
 		return tableAlias;
 	}
 
 	@Override
+	@Nonnull
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
 
 	@Override
+	@Nullable
 	public LockMode getLockMode() {
 		return explicitLockMode;
 	}
 
 	@Override
-	public NativeQuery.RootReturn setLockMode(LockMode lockMode) {
+	@Nonnull
+	public NativeQuery.RootReturn setLockMode(@Nullable LockMode lockMode) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NativeQuery.RootReturn addIdColumnAliases(String... aliases) {
+	@Nonnull
+	public NativeQuery.RootReturn addIdColumnAliases(@Nonnull String... aliases) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
+	@Nullable
 	public String getDiscriminatorAlias() {
 		return null;
 	}
 
 	@Override
-	public NativeQuery.RootReturn setDiscriminatorAlias(String columnAlias) {
+	@Nonnull
+	public NativeQuery.RootReturn setDiscriminatorAlias(@Nullable String columnAlias) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NativeQuery.RootReturn addProperty(String propertyName, String columnAlias) {
+	@Nonnull
+	public NativeQuery.RootReturn addProperty(@Nonnull String propertyName, @Nonnull String columnAlias) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NativeQuery.ReturnProperty addProperty(String propertyName) {
+	@Nonnull
+	public NativeQuery.ReturnProperty addProperty(@Nonnull String propertyName) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
+	@Nonnull
 	public DynamicResultBuilderEntityCalculated cacheKeyInstance() {
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public EntityResult<?> buildResult(
-			JdbcValuesMetadata jdbcResultsMetadata,
+			@Nonnull JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			DomainResultCreationState domainResultCreationState) {
+			@Nonnull DomainResultCreationState domainResultCreationState) {
 		final var creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 
 		final var tableGroup = entityMapping.createRootTableGroup(

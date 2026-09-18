@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.spi.domain;
 
-import jakarta.annotation.Nullable;
 import java.util.Set;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -27,10 +27,9 @@ public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> 
 	private final JavaType<C> javaType;
 	private final SqmBindableType<C> selectionType;
 
-	@SuppressWarnings("unchecked")
 	public SqmPluralPartSelectionPath(
-			SqmPluralValuedSimplePath<C> pluralPath,
-			@jakarta.annotation.Nullable CollectionPart.Nature selectedPartNature) {
+			@Nonnull SqmPluralValuedSimplePath<C> pluralPath,
+			@Nullable CollectionPart.Nature selectedPartNature) {
 		this(
 				pluralPath.getNavigablePath(),
 				(SqmPluralPersistentAttribute<?, C, ?>) pluralPath.getModel(),
@@ -43,11 +42,11 @@ public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> 
 
 	@SuppressWarnings("unchecked")
 	private SqmPluralPartSelectionPath(
-			NavigablePath navigablePath,
-			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder,
+			@Nonnull NodeBuilder nodeBuilder,
 			@jakarta.annotation.Nullable CollectionPart.Nature selectedPartNature) {
 		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
 		this.selectedPartNature = selectedPartNature;
@@ -59,12 +58,13 @@ public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> 
 		this.selectionType = new PluralAttributeCollectionType<>( javaType );
 	}
 
-	public @jakarta.annotation.Nullable CollectionPart.Nature getSelectedPartNature() {
+	public @Nullable CollectionPart.Nature getSelectedPartNature() {
 		return selectedPartNature;
 	}
 
+	@Nonnull
 	@Override
-	public SqmPluralPartSelectionPath<C> copy(SqmCopyContext context) {
+	public SqmPluralPartSelectionPath<C> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -107,7 +107,7 @@ public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> 
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		if ( selectedPartNature == null ) {
 			super.appendHqlString( hql, context );
 		}

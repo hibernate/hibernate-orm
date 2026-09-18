@@ -18,14 +18,15 @@ import org.hibernate.spi.NavigablePath;
 public class SqmCorrelatedDerivedRootJoin<T> extends SqmCorrelatedRootJoin<T> {
 
 	public SqmCorrelatedDerivedRootJoin(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedNavigable,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedNavigable,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedDerivedRootJoin<T> copy(SqmCopyContext context) {
+	public SqmCorrelatedDerivedRootJoin<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -44,8 +45,9 @@ public class SqmCorrelatedDerivedRootJoin<T> extends SqmCorrelatedRootJoin<T> {
 
 	// Need to suppress argument warnings because correlatedJoin which is under initialization is passed to addSqmJoin,
 	// which expects an initialized argument. We know this is safe though because we only store the instance
+	@Nonnull
 	@SuppressWarnings({"unchecked", "argument"})
-	public static <X, J extends SqmJoin<X, ?>> SqmCorrelatedDerivedRootJoin<X> create(J correlationParent, J correlatedJoin) {
+	public static <X, J extends SqmJoin<X, ?>> SqmCorrelatedDerivedRootJoin<X> create(@Nonnull J correlationParent, @Nonnull J correlatedJoin) {
 		final SqmFrom<?, X> parentPath = (SqmFrom<?, X>) correlationParent.getParentPath();
 		final SqmCorrelatedDerivedRootJoin<X> rootJoin;
 		if ( parentPath == null ) {
@@ -81,11 +83,13 @@ public class SqmCorrelatedDerivedRootJoin<T> extends SqmCorrelatedRootJoin<T> {
 		throw new UnsupportedOperationException( "Correlated derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
+	@Nonnull
 	@Override
 	public String getEntityName() {
 		throw new UnsupportedOperationException( "Correlated derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<T> getResolvedModel() {
 		return getReferencedPathSource();

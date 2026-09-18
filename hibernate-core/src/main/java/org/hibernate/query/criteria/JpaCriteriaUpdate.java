@@ -28,11 +28,13 @@ public interface JpaCriteriaUpdate<T> extends JpaManipulationCriteria<T>, Criter
 	/**
 	 * Mark this update statement as versioned.
 	 */
+	@Nonnull
 	JpaCriteriaUpdate<T> versioned();
 
 	/**
 	 * Set whether this update statement is versioned.
 	 */
+	@Nonnull
 	JpaCriteriaUpdate<T> versioned(boolean versioned);
 
 	/**

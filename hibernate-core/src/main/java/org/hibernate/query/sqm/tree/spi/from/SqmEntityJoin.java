@@ -41,10 +41,10 @@ public class SqmEntityJoin<L,R>
 	private final SqmRoot<L> sqmRoot;
 
 	public SqmEntityJoin(
-			EntityDomainType<R> joinedEntityDescriptor,
+			@Nonnull EntityDomainType<R> joinedEntityDescriptor,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			SqmRoot<L> sqmRoot) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull SqmRoot<L> sqmRoot) {
 		this(
 				buildRootNavigablePath( joinedEntityDescriptor.getHibernateEntityName(), alias ),
 				joinedEntityDescriptor,
@@ -55,11 +55,11 @@ public class SqmEntityJoin<L,R>
 	}
 
 	protected SqmEntityJoin(
-			NavigablePath navigablePath,
-			EntityDomainType<R> joinedEntityDescriptor,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull EntityDomainType<R> joinedEntityDescriptor,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			SqmRoot<L> sqmRoot) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull SqmRoot<L> sqmRoot) {
 		super( navigablePath,
 				(SqmEntityDomainType<R>) joinedEntityDescriptor,
 				sqmRoot, alias, joinType, sqmRoot.nodeBuilder() );
@@ -67,10 +67,10 @@ public class SqmEntityJoin<L,R>
 	}
 
 	public SqmEntityJoin(
-			EntityType<R> entity,
+			@Nonnull EntityType<R> entity,
 			@Nullable String alias,
-			JoinType joinType,
-			SqmRoot<L> root) {
+			@Nonnull JoinType joinType,
+			@Nonnull SqmRoot<L> root) {
 		this( (EntityDomainType<R>) entity, alias, SqmJoinType.from( joinType ), root );
 	}
 
@@ -79,8 +79,9 @@ public class SqmEntityJoin<L,R>
 		return true;
 	}
 
+	@Nonnull
 	@Override
-	public SqmEntityJoin<L,R> copy(SqmCopyContext context) {
+	public SqmEntityJoin<L,R> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -99,6 +100,7 @@ public class SqmEntityJoin<L,R>
 		return path;
 	}
 
+	@Nonnull
 	public SqmRoot<L> getRoot() {
 		return sqmRoot;
 	}
@@ -134,11 +136,13 @@ public class SqmEntityJoin<L,R>
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<R> getReferencedPathSource() {
 		return (SqmEntityDomainType<R>) super.getReferencedPathSource();
 	}
 
+	@Nonnull
 	public String getEntityName() {
 		return getReferencedPathSource().getHibernateEntityName();
 	}
@@ -173,8 +177,9 @@ public class SqmEntityJoin<L,R>
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitQualifiedEntityJoin( this );
 	}
 
@@ -237,7 +242,8 @@ public class SqmEntityJoin<L,R>
 		return new SqmCorrelatedEntityJoin<>( this );
 	}
 
-	public SqmEntityJoin<L,R> makeCopy(SqmCreationProcessingState creationProcessingState) {
+	@Nonnull
+	public SqmEntityJoin<L,R> makeCopy(@Nonnull SqmCreationProcessingState creationProcessingState) {
 		final var pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmEntityJoin<>(
 				getReferencedPathSource(),

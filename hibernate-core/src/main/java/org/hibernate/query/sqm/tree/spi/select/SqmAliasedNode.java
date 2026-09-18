@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.select;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
@@ -22,6 +23,7 @@ import org.hibernate.sql.ast.spi.result.DomainResultProducer;
  * @author Steve Ebersole
  */
 public interface SqmAliasedNode<T> extends SqmTypedNode<T> {
+	@Nonnull
 	SqmSelectableNode<T> getSelectableNode();
 	@Nullable String getAlias();
 

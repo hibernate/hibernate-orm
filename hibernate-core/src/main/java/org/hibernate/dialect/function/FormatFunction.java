@@ -4,8 +4,12 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -171,14 +175,14 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		private final TypeConfiguration typeConfiguration;
 
 		public FormatSqmFunction(
-				SqmFunctionDescriptor descriptor,
-				FunctionRenderer renderer,
-				List<? extends SqmTypedNode<?>> arguments,
-				ReturnableType<T> impliedResultType,
-				ArgumentsValidator argumentsValidator,
-				FunctionReturnTypeResolver returnTypeResolver,
+				@Nonnull SqmFunctionDescriptor descriptor,
+				@Nonnull FunctionRenderer renderer,
+				@Nonnull List<? extends SqmTypedNode<?>> arguments,
+				@Nullable ReturnableType<T> impliedResultType,
+				@Nullable ArgumentsValidator argumentsValidator,
+				@Nonnull FunctionReturnTypeResolver returnTypeResolver,
 				boolean supportsPatternLiterals,
-				QueryEngine queryEngine) {
+				@Nonnull QueryEngine queryEngine) {
 			super(
 					descriptor,
 					renderer,
@@ -193,8 +197,9 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			this.typeConfiguration = queryEngine.getTypeConfiguration();
 		}
 
+		@Nullable
 		@Override
-		public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+		public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 			final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 			final ReturnableType<?> resultType = resolveResultType( walker );
 			final MappingModelExpressible<?> mappingModelExpressible =
@@ -421,24 +426,31 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			);
 		}
 
-		private FunctionRenderer getFunction(SqmToSqlAstConverter walker, String name) {
+		@Nonnull
+		private FunctionRenderer getFunction(@Nonnull SqmToSqlAstConverter walker, @Nonnull String name) {
 			return (FunctionRenderer)
-					walker.getCreationContext().getSqmFunctionRegistry().findFunctionDescriptor( name );
+					walker.getCreationContext().getSqmFunctionRegistry().getFunctionDescriptor( name );
 		}
 
-		private FunctionRenderer getFunction(SqmToSqlAstConverter walker, String name, int argumentCount) {
+		@Nonnull
+		private FunctionRenderer getFunction(@Nonnull SqmToSqlAstConverter walker, @Nonnull String name, int argumentCount) {
 			final SqmFunctionDescriptor functionDescriptor =
 					walker.getCreationContext().getSqmFunctionRegistry()
-							.findFunctionDescriptor( name );
-			return functionDescriptor instanceof MultipatternSqmFunctionDescriptor multipatternSqmFunctionDescriptor
+							.getFunctionDescriptor( name );
+			final FunctionRenderer renderer = functionDescriptor instanceof MultipatternSqmFunctionDescriptor multipatternSqmFunctionDescriptor
 					? (FunctionRenderer) multipatternSqmFunctionDescriptor.getFunction( argumentCount )
 					: (FunctionRenderer) functionDescriptor;
+			if ( renderer == null ) {
+				throw new NoSuchElementException( name + " with " + argumentCount + " arguments" );
+			}
+			return renderer;
 		}
 
+		@Nonnull
 		private SqlAstNode getOffsetAdjusted(
-				SqlTuple sqlTuple,
-				FunctionRenderer timestampaddFunction,
-				BasicType<Integer> integerType) {
+				@Nonnull SqlTuple sqlTuple,
+				@Nonnull FunctionRenderer timestampaddFunction,
+				@Nonnull BasicType<Integer> integerType) {
 			final Expression instantExpression = sqlTuple.getExpressions().get( 0 );
 			final Expression offsetExpression = sqlTuple.getExpressions().get( 1 );
 
@@ -455,11 +467,12 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			);
 		}
 
+		@Nonnull
 		private Expression createFullOffset(
-				FunctionRenderer concatFunction,
-				BasicType<String> stringType,
-				BasicType<Integer> integerType,
-				Expression offsetExpression) {
+				@Nonnull FunctionRenderer concatFunction,
+				@Nonnull BasicType<String> stringType,
+				@Nonnull BasicType<Integer> integerType,
+				@Nonnull Expression offsetExpression) {
 			if ( offsetExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString() ) {
 				return offsetExpression;
 			}
@@ -498,12 +511,13 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			}
 		}
 
+		@Nonnull
 		private Expression createMediumOffset(
-				FunctionRenderer concatFunction,
-				FunctionRenderer substringFunction,
-				BasicType<String> stringType,
-				BasicType<Integer> integerType,
-				Expression offsetExpression) {
+				@Nonnull FunctionRenderer concatFunction,
+				@Nonnull FunctionRenderer substringFunction,
+				@Nonnull BasicType<String> stringType,
+				@Nonnull BasicType<Integer> integerType,
+				@Nonnull Expression offsetExpression) {
 			if ( offsetExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString() ) {
 				return concat(
 						concatFunction,
@@ -564,12 +578,13 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			}
 		}
 
+		@Nonnull
 		private Expression createSmallOffset(
-				FunctionRenderer concatFunction,
-				FunctionRenderer substringFunction,
-				BasicType<String> stringType,
-				BasicType<Integer> integerType,
-				Expression offsetExpression) {
+				@Nonnull FunctionRenderer concatFunction,
+				@Nonnull FunctionRenderer substringFunction,
+				@Nonnull BasicType<String> stringType,
+				@Nonnull BasicType<Integer> integerType,
+				@Nonnull Expression offsetExpression) {
 			if ( offsetExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString() ) {
 				return new SelfRenderingFunctionSqlAstExpression(
 						"substring",
@@ -592,12 +607,13 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			}
 		}
 
+		@Nonnull
 		private Expression concatAsLiteral(
-				FunctionRenderer concatFunction,
-				BasicType<String> stringType,
-				String delimiter,
-				Expression expression,
-				Expression expression2) {
+				@Nonnull FunctionRenderer concatFunction,
+				@Nonnull BasicType<String> stringType,
+				@Nonnull String delimiter,
+				@Nullable Expression expression,
+				@Nonnull Expression expression2) {
 			return concat(
 					concatFunction,
 					stringType,
@@ -616,11 +632,12 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			);
 		}
 
+		@Nonnull
 		private Expression concat(
-				FunctionRenderer concatFunction,
-				BasicType<String> stringType,
-				Expression expression,
-				Expression expression2) {
+				@Nonnull FunctionRenderer concatFunction,
+				@Nonnull BasicType<String> stringType,
+				@Nullable Expression expression,
+				@Nonnull Expression expression2) {
 			if ( expression == null ) {
 				return expression2;
 			}
@@ -686,9 +703,10 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			}
 		}
 
+		@Nonnull
 		private Expression getHours(
-				BasicType<Integer> integerType,
-				Expression offsetExpression) {
+				@Nonnull BasicType<Integer> integerType,
+				@Nonnull Expression offsetExpression) {
 			return /*new SelfRenderingFunctionSqlAstExpression(
 					"cast",
 					castFunction,
@@ -706,9 +724,10 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			)*/;
 		}
 
+		@Nonnull
 		private Expression getMinutes(
-				BasicType<Integer> integerType,
-				Expression offsetExpression){
+				@Nonnull BasicType<Integer> integerType,
+				@Nonnull Expression offsetExpression){
 			return /*new SelfRenderingFunctionSqlAstExpression(
 					"cast",
 					castFunction,

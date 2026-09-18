@@ -4,6 +4,9 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 
@@ -42,5 +45,6 @@ public interface TupleTransformer<T> {
 	 *
 	 * @return The transformed row.
 	 */
-	T transformTuple(Object[] tuple, String[] aliases);
+	@Nullable
+	T transformTuple(@Nonnull Object[] tuple, @Nonnull String[] aliases);
 }

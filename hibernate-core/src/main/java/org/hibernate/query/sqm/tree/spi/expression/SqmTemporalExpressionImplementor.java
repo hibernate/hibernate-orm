@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
  */
 public interface SqmTemporalExpressionImplementor<T extends Temporal & Comparable<? super T>>
 		extends SqmComparableExpressionImplementor<T>, SqmTemporalExpression<T> {
-	SqmCriteriaNodeBuilder nodeBuilder();
+	@Nonnull SqmCriteriaNodeBuilder nodeBuilder();
 
 	@Nonnull
 	@Override
@@ -32,7 +32,7 @@ public interface SqmTemporalExpressionImplementor<T extends Temporal & Comparabl
 
 	@Nonnull
 	@Override
-	default SqmTemporalExpression<T> coalesce(T y) {
+	default SqmTemporalExpression<T> coalesce(@Nonnull T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -44,7 +44,7 @@ public interface SqmTemporalExpressionImplementor<T extends Temporal & Comparabl
 
 	@Nonnull
 	@Override
-	default SqmTemporalExpression<T> nullif(T y) {
+	default SqmTemporalExpression<T> nullif(@Nonnull T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 }

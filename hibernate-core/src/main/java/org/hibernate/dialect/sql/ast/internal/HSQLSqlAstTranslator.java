@@ -295,7 +295,8 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 
 	@Override
 	protected void visitArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		// HSQL requires a type for both parameters and null literals in arithmetic expressions.
+		render( expression, SqlAstNodeRenderingMode.NO_UNTYPED );
 	}
 
 }

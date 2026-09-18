@@ -36,17 +36,18 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	private final String enumValueName;
 
 	public SqmEnumLiteral(
-			E enumValue,
-			EnumJavaType<E> referencedEnumTypeDescriptor,
-			String enumValueName,
-			NodeBuilder nodeBuilder) {
+			@Nonnull E enumValue,
+			@Nonnull EnumJavaType<E> referencedEnumTypeDescriptor,
+			@Nonnull String enumValueName,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( null, enumValue, nodeBuilder );
 		this.referencedEnumTypeDescriptor = referencedEnumTypeDescriptor;
 		this.enumValueName = enumValueName;
 	}
 
+	@Nonnull
 	@Override
-	public SqmEnumLiteral<E> copy(SqmCopyContext context) {
+	public SqmEnumLiteral<E> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -65,6 +66,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
+	@Nonnull
 	public SqmBindableType<E> getExpressible() {
 		return this;
 	}
@@ -75,6 +77,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return BASIC;
 	}
@@ -84,17 +87,19 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 		return null;
 	}
 
+	@Nonnull
 	public E getEnumValue() {
 		return castNonNull( getLiteralValue() );
 	}
 
+	@Nonnull
 	@Override
 	public EnumJavaType<E> getExpressibleJavaType() {
 		return referencedEnumTypeDescriptor;
 	}
 
 	@Override
-	public Class<E> getJavaType() {
+	public @Nonnull Class<E> getJavaType() {
 		return referencedEnumTypeDescriptor.getJavaTypeClass();
 	}
 
@@ -102,11 +107,12 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SemanticPathPart
 
+	@Nonnull
 	@Override
 	public SemanticPathPart resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new UnknownPathException(
 				String.format(
 						Locale.ROOT,
@@ -117,11 +123,12 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 		);
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new UnknownPathException(
 				String.format(
 						Locale.ROOT,
@@ -132,6 +139,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 		);
 	}
 
+	@Nonnull
 	private Integer ordinalValue() {
 		return getExpressibleJavaType().toOrdinal( getEnumValue() );
 	}
@@ -178,13 +186,14 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 		return nodeBuilder().literal( getExpressibleJavaType().toName( getEnumValue() ) );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitEnumLiteral( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( getEnumValue().getDeclaringClass().getTypeName() );
 		hql.append( '.' );
 		hql.append( enumValueName );

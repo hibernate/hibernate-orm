@@ -38,11 +38,11 @@ public class SqmDeleteStatement<T>
 		extends AbstractSqmRestrictedDmlStatement<T>
 		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaDelete<T> {
 
-	public SqmDeleteStatement(NodeBuilder nodeBuilder) {
+	public SqmDeleteStatement(@Nonnull NodeBuilder nodeBuilder) {
 		super( SqmQuerySource.HQL, nodeBuilder );
 	}
 
-	public SqmDeleteStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
+	public SqmDeleteStatement(@Nonnull Class<T> targetEntity, @Nonnull NodeBuilder nodeBuilder) {
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
@@ -56,11 +56,11 @@ public class SqmDeleteStatement<T>
 	}
 
 	public SqmDeleteStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmQuerySource querySource,
 			@Nullable Set<SqmParameter<?>> parameters,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			SqmRoot<T> target) {
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull SqmRoot<T> target) {
 		super( builder, querySource, parameters, cteStatements, target );
 	}
 
@@ -69,7 +69,7 @@ public class SqmDeleteStatement<T>
 	 *           All it does is change the SqmQuerySource to CRITERIA
 	 *           in order to allow correct parameter handing.
 	 */
-	public SqmDeleteStatement(SqmDeleteStatement<?> original) {
+	public SqmDeleteStatement(@Nonnull SqmDeleteStatement<?> original) {
 		super(
 				original.nodeBuilder(),
 				CRITERIA,
@@ -80,8 +80,9 @@ public class SqmDeleteStatement<T>
 		whereClause = original.copyWhereClause( new SimpleSqmCopyContext() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmDeleteStatement<T> copy(SqmCopyContext context) {
+	public SqmDeleteStatement<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -129,13 +130,14 @@ public class SqmDeleteStatement<T>
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitDeleteStatement( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		appendHqlCteString( hql, context );
 		hql.append( "delete from " );
 		final SqmRoot<T> root = getTarget();

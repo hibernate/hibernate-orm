@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.criteria.JpaCastTarget;
@@ -28,32 +29,32 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	private final @Nullable Integer scale;
 
 	public SqmCastTarget(
-			ReturnableType<T> type,
-			NodeBuilder nodeBuilder) {
+			@Nonnull ReturnableType<T> type,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( type, null, nodeBuilder );
 	}
 
 	public SqmCastTarget(
-			ReturnableType<T> type,
+			@Nonnull ReturnableType<T> type,
 			@Nullable Long length,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( type, length, null, null, nodeBuilder );
 	}
 
 	public SqmCastTarget(
-			ReturnableType<T> type,
+			@Nonnull ReturnableType<T> type,
 			@Nullable Integer precision,
 			@Nullable Integer scale,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( type, null, precision, scale, nodeBuilder );
 	}
 
 	public SqmCastTarget(
-			ReturnableType<T> type,
+			@Nonnull ReturnableType<T> type,
 			@Nullable Long length,
 			@Nullable Integer precision,
 			@Nullable Integer scale,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.type = type;
 		this.length = length;
@@ -76,17 +77,20 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 		return scale;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCastTarget<T> copy(SqmCopyContext context) {
+	public SqmCastTarget<T> copy(@Nonnull SqmCopyContext context) {
 		return this;
 	}
 
+	@Nonnull
 	public ReturnableType<T> getType() {
 		return type;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCastTarget(this);
 	}
 
@@ -96,7 +100,7 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( type.getTypeName() );
 		if ( precision != null ) {
 			hql.append( '(' );
@@ -129,7 +133,7 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

@@ -18,7 +18,7 @@ import java.math.BigInteger;
  */
 public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N>>
 		extends SqmComparableExpressionImplementor<N>, SqmNumericExpression<N> {
-	SqmCriteriaNodeBuilder nodeBuilder();
+	@Nonnull SqmCriteriaNodeBuilder nodeBuilder();
 
 	@Nonnull
 	@Override
@@ -28,7 +28,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmNumericExpression<N> coalesce(N y) {
+	default SqmNumericExpression<N> coalesce(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().coalesce(this, y ) );
 	}
 
@@ -40,7 +40,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmNumericExpression<N> nullif(N y) {
+	default SqmNumericExpression<N> nullif(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().nullif(this, y ) );
 	}
 
@@ -52,7 +52,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmPredicate gt(Number y) {
+	default SqmPredicate gt(@Nonnull Number y) {
 		return nodeBuilder().gt( this, y );
 	}
 
@@ -64,7 +64,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmPredicate ge(Number y) {
+	default SqmPredicate ge(@Nonnull Number y) {
 		return nodeBuilder().ge( this, y );
 	}
 
@@ -76,7 +76,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmPredicate lt(Number y) {
+	default SqmPredicate lt(@Nonnull Number y) {
 		return nodeBuilder().lt( this, y );
 	}
 
@@ -88,7 +88,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmPredicate le(Number y) {
+	default SqmPredicate le(@Nonnull Number y) {
 		return nodeBuilder().le( this, y );
 	}
 
@@ -150,7 +150,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmNumericExpression<N> plus(N y) {
+	default SqmNumericExpression<N> plus(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.ADD,
 				this,
@@ -172,7 +172,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmNumericExpression<N> times(N y) {
+	default SqmNumericExpression<N> times(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.MULTIPLY,
 				this,
@@ -194,7 +194,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmNumericExpression<N> minus(N y) {
+	default SqmNumericExpression<N> minus(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.SUBTRACT,
 				this,
@@ -216,7 +216,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmNumericExpression<N> dividedBy(N y) {
+	default SqmNumericExpression<N> dividedBy(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.DIVIDE,
 				this,
@@ -227,7 +227,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmNumericExpression<N> subtractedFrom(N y) {
+	default SqmNumericExpression<N> subtractedFrom(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.SUBTRACT,
 				nodeBuilder().numericLiteral( y ),
@@ -238,7 +238,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmNumericExpression<N> dividedInto(N y) {
+	default SqmNumericExpression<N> dividedInto(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.DIVIDE,
 				nodeBuilder().numericLiteral( y ),
@@ -285,7 +285,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 
 	@Nonnull
 	@Override
-	default SqmNumericExpression<Double> power(Number y) {
+	default SqmNumericExpression<Double> power(@Nonnull Number y) {
 		var expr = nodeBuilder().power( this, y );
 		return expr instanceof SqmNumericExpression<Double> correct
 				? correct
@@ -358,7 +358,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 	@Nonnull
 	@Override
 	default SqmNumericExpression<Long> toLong() {
-		if ( Long.class.equals( getJavaType() ) ) {
+		if ( Long.class.equals( getJavaTypeIfKnown() ) ) {
 			//noinspection unchecked,rawtypes
 			return (SqmNumericExpression) this;
 		}
@@ -370,7 +370,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 	@Nonnull
 	@Override
 	default SqmNumericExpression<Integer> toInteger() {
-		if ( Integer.class.equals( getJavaType() ) ) {
+		if ( Integer.class.equals( getJavaTypeIfKnown() ) ) {
 			//noinspection unchecked,rawtypes
 			return (SqmNumericExpression) this;
 		}
@@ -382,7 +382,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 	@Nonnull
 	@Override
 	default SqmNumericExpression<Float> toFloat() {
-		if ( Float.class.equals( getJavaType() ) ) {
+		if ( Float.class.equals( getJavaTypeIfKnown() ) ) {
 			//noinspection unchecked,rawtypes
 			return (SqmNumericExpression) this;
 		}
@@ -394,7 +394,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 	@Nonnull
 	@Override
 	default SqmNumericExpression<Double> toDouble() {
-		if ( Double.class.equals( getJavaType() ) ) {
+		if ( Double.class.equals( getJavaTypeIfKnown() ) ) {
 			//noinspection unchecked,rawtypes
 			return (SqmNumericExpression) this;
 		}
@@ -406,7 +406,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 	@Nonnull
 	@Override
 	default SqmNumericExpression<BigDecimal> toBigDecimal() {
-		if ( BigDecimal.class.equals( getJavaType() ) ) {
+		if ( BigDecimal.class.equals( getJavaTypeIfKnown() ) ) {
 			//noinspection unchecked,rawtypes
 			return (SqmNumericExpression) this;
 		}
@@ -418,7 +418,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 	@Nonnull
 	@Override
 	default SqmNumericExpression<BigInteger> toBigInteger() {
-		if ( BigInteger.class.equals( getJavaType() ) ) {
+		if ( BigInteger.class.equals( getJavaTypeIfKnown() ) ) {
 			//noinspection unchecked,rawtypes
 			return (SqmNumericExpression) this;
 		}

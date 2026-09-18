@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.range;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -16,18 +17,20 @@ import java.util.Objects;
  *
  * @author Gavin King
  */
-record LowerBound<U extends Comparable<U>>(U bound, boolean open) implements Range<U> {
+record LowerBound<U extends Comparable<U>>(@Nonnull U bound, boolean open) implements Range<U> {
 	LowerBound {
 		Objects.requireNonNull( bound, "bound is null" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {
+	public Predicate toPredicate(@Nonnull Path<? extends U> path, @Nonnull CriteriaBuilder builder) {
 		return open
 				? builder.greaterThan( path, bound )
 				: builder.greaterThanOrEqualTo( path, bound );
 	}
 
+	@Nonnull
 	@Override
 	public Class<? extends U> getType() {
 		return ReflectHelper.getClass( bound );

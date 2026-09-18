@@ -45,6 +45,7 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	/**
 	 * The type of join.
 	 */
+	@Nonnull
 	SqmJoinType getSqmJoinType();
 
 	/**
@@ -74,8 +75,9 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	@Override
 	<Y> SqmAttributeJoin<R, Y> join(@Nonnull String attributeName, @Nonnull JoinType jt);
 
+	@Nonnull
 	@Override
-	SqmJoin<L, R> copy(SqmCopyContext context);
+	SqmJoin<L, R> copy(@Nonnull SqmCopyContext context);
 
 	@Nonnull
 	@Override

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.metamodel.SingularAttribute;
 
@@ -15,22 +17,22 @@ import jakarta.persistence.metamodel.SingularAttribute;
  * @author Gavin King
  */
 record NamedAttributeOrder<X>
-		(SortDirection direction, Nulls nullPrecedence, Class<X> entityClass, String attributeName, boolean caseSensitive)
+		(@Nonnull SortDirection direction, @Nonnull Nulls nullPrecedence, @Nonnull Class<X> entityClass, @Nonnull String attributeName, boolean caseSensitive)
 		implements Order<X> {
 
-	NamedAttributeOrder(SortDirection order, Nulls nullPrecedence, Class<X> entityClass, String attributeName) {
+	NamedAttributeOrder(@Nonnull SortDirection order, @Nonnull Nulls nullPrecedence, @Nonnull Class<X> entityClass, @Nonnull String attributeName) {
 		this( order, nullPrecedence, entityClass, attributeName, true );
 	}
 
-	private NamedAttributeOrder(NamedAttributeOrder<X> that, Nulls nullPrecedence) {
+	private NamedAttributeOrder(@Nonnull NamedAttributeOrder<X> that, @Nonnull Nulls nullPrecedence) {
 		this( that.direction, nullPrecedence, that.entityClass, that.attributeName, that.caseSensitive );
 	}
 
-	private NamedAttributeOrder(NamedAttributeOrder<X> that, SortDirection direction) {
+	private NamedAttributeOrder(@Nonnull NamedAttributeOrder<X> that, @Nonnull SortDirection direction) {
 		this( direction, that.nullPrecedence, that.entityClass, that.attributeName, that.caseSensitive );
 	}
 
-	private NamedAttributeOrder(NamedAttributeOrder<X> that, boolean caseSensitive) {
+	private NamedAttributeOrder(@Nonnull NamedAttributeOrder<X> that, boolean caseSensitive) {
 		this( that.direction, that.nullPrecedence, that.entityClass, that.attributeName, caseSensitive );
 	}
 
@@ -40,31 +42,37 @@ record NamedAttributeOrder<X>
 	}
 
 	@Override
+	@Nullable
 	public SingularAttribute<X, ?> attribute() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public Order<X> ignoringCase() {
 		return new NamedAttributeOrder<>( this, false );
 	}
 
 	@Override
+	@Nonnull
 	public Order<X> reverse() {
 		return new NamedAttributeOrder<>( this, direction.reverse() );
 	}
 
 	@Override
+	@Nonnull
 	public Order<X> withNullsFirst() {
 		return new NamedAttributeOrder<>( this, Nulls.FIRST );
 	}
 
 	@Override
+	@Nonnull
 	public Order<X> withNullsLast() {
 		return new NamedAttributeOrder<>( this, Nulls.LAST );
 	}
 
 	@Override
+	@Nonnull
 	public String toString() {
 		return attributeName + " " + direction;
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.HqlInterpretationException;
@@ -27,22 +28,24 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 	private final String pathName;
 
 	public SqmAnyDiscriminatorValue(
-			String pathName,
-			EntityDomainType entityValue,
-			BasicType<T> domainType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull String pathName,
+			@Nonnull EntityDomainType entityValue,
+			@Nonnull BasicType<T> domainType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( domainType, nodeBuilder );
 		this.value = entityValue;
 		this.pathName = pathName;
 		this.domainType = domainType;
 	}
 
+	@Nonnull
 	public BasicType<T> getDomainType(){
 		return domainType;
 	}
 
+	@Nonnull
 	@Override
-	public SqmAnyDiscriminatorValue<T> copy(SqmCopyContext context) {
+	public SqmAnyDiscriminatorValue<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -60,42 +63,48 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 		return expression;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitAnyDiscriminatorTypeValueExpression( this );
 	}
 
+	@Nonnull
 	public EntityDomainType getEntityValue() {
 		return value;
 	}
 
+	@Nonnull
 	public String getPathName() {
 		return pathName;
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return getEntityValue().getName();
 	}
 
+	@Nonnull
 	@Override
 	public SemanticPathPart resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new HqlInterpretationException( "Cannot dereference an entity name" );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new HqlInterpretationException( "Cannot dereference an entity name" );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( getEntityValue().getName() );
 	}
 
@@ -114,7 +123,7 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmAnyDiscriminatorValue<?> that
 			&& Objects.equals( this.value.getName(), that.value.getName() )
 			&& Objects.equals( this.pathName, that.pathName );

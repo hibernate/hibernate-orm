@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.Incubating;
 
@@ -19,13 +21,15 @@ public interface JpaJsonTableFunction extends JpaJsonTableColumnsNode {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaJsonTableFunction passing(String parameterName, Expression<?> expression);
+	@Nonnull
+	JpaJsonTableFunction passing(@Nonnull String parameterName, @Nonnull Expression<?> expression);
 
 	/**
 	 * Get the {@link ErrorBehavior} of this json table expression.
 	 *
 	 * @return the error behavior
 	 */
+	@Nonnull
 	ErrorBehavior getErrorBehavior();
 
 	/**
@@ -33,25 +37,29 @@ public interface JpaJsonTableFunction extends JpaJsonTableColumnsNode {
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonTableFunction unspecifiedOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#ERROR} for this json table expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonTableFunction errorOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#NULL} for this json table expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonTableFunction nullOnError();
 
 	/**
 	 * Add an ordinality column with the given name.
 	 */
+	@Nonnull
 	@Override
-	JpaJsonTableFunction ordinalityColumn(String columnName);
+	JpaJsonTableFunction ordinalityColumn(@Nonnull String columnName);
 
 	/**
 	 * The behavior of the json exists expression when a JSON processing error occurs.

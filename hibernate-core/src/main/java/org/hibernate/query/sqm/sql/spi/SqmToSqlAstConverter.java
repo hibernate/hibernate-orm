@@ -18,11 +18,13 @@ import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.spi.select.SqmQueryPart;
 import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.creation.SqlTreeCreationException;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.QueryTransformer;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -31,6 +33,21 @@ import jakarta.annotation.Nullable;
  * @author Steve Ebersole
  */
 public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAstCreationState {
+	/**
+	 * Visits a node whose SQL translation is required by the enclosing expression or statement.
+	 * A SQL null literal has a SQL AST expression and is therefore a valid result.
+	 *
+	 * @throws SqlTreeCreationException if the visitor does not produce a result
+	 */
+	@Nonnull
+	default Object visitWithRequiredResult(@Nonnull SqmVisitableNode node) {
+		final Object result = node.accept( this );
+		if ( result == null ) {
+			throw new SqlTreeCreationException( "No SQL AST result for " + node.getClass().getName() );
+		}
+		return result;
+	}
+
 	Stack<Clause> getCurrentClauseStack();
 
 	Stack<SqmQueryPart<?>> getSqmQueryPartStack();

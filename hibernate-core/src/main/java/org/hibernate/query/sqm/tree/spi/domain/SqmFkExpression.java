@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -26,14 +27,14 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * @author Steve Ebersole
  */
 public class SqmFkExpression<T> extends AbstractSqmPath<T> {
-	public SqmFkExpression(SqmPath<?> toOnePath) {
+	public SqmFkExpression(@Nonnull SqmPath<?> toOnePath) {
 		this( toOnePath.getNavigablePath().append( ForeignKeyDescriptor.PART_NAME ), toOnePath );
 	}
 
 	@SuppressWarnings("unchecked")
 	private SqmFkExpression(
-			NavigablePath navigablePath,
-			SqmPath<?> toOnePath) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPath<?> toOnePath) {
 		super(
 				navigablePath,
 				(SqmPathSource<T>)
@@ -44,7 +45,8 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 		);
 	}
 
-	private static IdentifiableDomainType<?> pathDomainType(SqmPath<?> toOnePath) {
+	@Nonnull
+	private static IdentifiableDomainType<?> pathDomainType(@Nonnull SqmPath<?> toOnePath) {
 		if ( toOnePath.getReferencedPathSource().getPathType()
 				instanceof IdentifiableDomainType<?> identifiableDomainType ) {
 			return identifiableDomainType;
@@ -60,20 +62,22 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 		return castNonNull( super.getLhs() );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitFkExpression( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "fk(" );
 		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFkExpression<T> copy(SqmCopyContext context) {
+	public SqmFkExpression<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -97,8 +101,9 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 		throw new TreatException( "Fk paths cannot be TREAT-ed" );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
+	public SqmPath<?> resolvePathPart(@Nonnull String name, boolean isTerminal, @Nonnull SqmCreationState creationState) {
 		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;

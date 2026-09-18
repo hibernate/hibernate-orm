@@ -21,7 +21,7 @@ public class SqmCorrelatedCrossJoin<L, T> extends SqmCrossJoin<L, T> implements 
 	private final SqmCorrelatedRootJoin<L> correlatedRootJoin;
 	private final SqmCrossJoin<L, T> correlationParent;
 
-	public SqmCorrelatedCrossJoin(SqmCrossJoin<L, T> correlationParent) {
+	public SqmCorrelatedCrossJoin(@Nonnull SqmCrossJoin<L, T> correlationParent) {
 		super(
 				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
@@ -33,18 +33,19 @@ public class SqmCorrelatedCrossJoin<L, T> extends SqmCrossJoin<L, T> implements 
 	}
 
 	private SqmCorrelatedCrossJoin(
-			SqmEntityDomainType<T> joinedEntityDescriptor,
+			@Nonnull SqmEntityDomainType<T> joinedEntityDescriptor,
 			@Nullable String alias,
-			SqmRoot<L> sqmRoot,
-			SqmCorrelatedRootJoin<L> correlatedRootJoin,
-			SqmCrossJoin<L, T> correlationParent) {
+			@Nonnull SqmRoot<L> sqmRoot,
+			@Nonnull SqmCorrelatedRootJoin<L> correlatedRootJoin,
+			@Nonnull SqmCrossJoin<L, T> correlationParent) {
 		super( correlationParent.getNavigablePath(), joinedEntityDescriptor, alias, sqmRoot );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedCrossJoin<L, T> copy(SqmCopyContext context) {
+	public SqmCorrelatedCrossJoin<L, T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -69,6 +70,7 @@ public class SqmCorrelatedCrossJoin<L, T> extends SqmCrossJoin<L, T> implements 
 		return correlationParent;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return correlationParent;
@@ -79,13 +81,15 @@ public class SqmCorrelatedCrossJoin<L, T> extends SqmCrossJoin<L, T> implements 
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<L> getCorrelatedRoot() {
 		return correlatedRootJoin;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedCrossJoin<L, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
+	public SqmCorrelatedCrossJoin<L, T> makeCopy(@Nonnull SqmCreationProcessingState creationProcessingState) {
 		final var pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCorrelatedCrossJoin<>(
 				getReferencedPathSource(),
@@ -96,20 +100,21 @@ public class SqmCorrelatedCrossJoin<L, T> extends SqmCrossJoin<L, T> implements 
 		);
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedCrossJoin( this );
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> other) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> other) {
 		return super.deepEquals( other )
 			&& other instanceof SqmCorrelatedCrossJoin<?, ?> that
 			&& correlationParent.equals( that.correlationParent );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> other) {
 		return super.isDeepCompatible( other )
 			&& other instanceof SqmCorrelatedCrossJoin<?, ?> that
 			&& correlationParent.isCompatible( that.correlationParent );

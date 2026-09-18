@@ -7,6 +7,8 @@ package org.hibernate.envers.function;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
@@ -127,10 +129,10 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 	private static class OrderByFragmentSelfRenderingSqmFunction<T> extends SelfRenderingSqmFunction<T> {
 
 		public OrderByFragmentSelfRenderingSqmFunction(
-				OrderByFragmentFunction orderByFragmentFunction,
-				List<? extends SqmTypedNode<?>> arguments,
-				ReturnableType<T> impliedResultType,
-				QueryEngine queryEngine) {
+				@Nonnull OrderByFragmentFunction orderByFragmentFunction,
+				@Nonnull List<? extends SqmTypedNode<?>> arguments,
+				@Nullable ReturnableType<T> impliedResultType,
+				@Nonnull QueryEngine queryEngine) {
 			super(
 					orderByFragmentFunction,
 					(sqlAppender, sqlAstArguments, returnType, walker) -> {},
@@ -144,14 +146,14 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		}
 
 		private OrderByFragmentSelfRenderingSqmFunction(
-				SqmFunctionDescriptor descriptor,
-				FunctionRenderer renderer,
-				List<? extends SqmTypedNode<?>> arguments,
-				ReturnableType<T> impliedResultType,
-				ArgumentsValidator argumentsValidator,
-				FunctionReturnTypeResolver returnTypeResolver,
-				NodeBuilder nodeBuilder,
-				String name) {
+				@Nonnull SqmFunctionDescriptor descriptor,
+				@Nonnull FunctionRenderer renderer,
+				@Nonnull List<? extends SqmTypedNode<?>> arguments,
+				@Nullable ReturnableType<T> impliedResultType,
+				@Nullable ArgumentsValidator argumentsValidator,
+				@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+				@Nonnull NodeBuilder nodeBuilder,
+				@Nonnull String name) {
 			super(
 					descriptor,
 					renderer,
@@ -164,8 +166,9 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 			);
 		}
 
+		@Nonnull
 		@Override
-		public OrderByFragmentSelfRenderingSqmFunction<T> copy(SqmCopyContext context) {
+		public OrderByFragmentSelfRenderingSqmFunction<T> copy(@Nonnull SqmCopyContext context) {
 			final OrderByFragmentSelfRenderingSqmFunction<T> existing = context.getCopy( this );
 			if ( existing != null ) {
 				return existing;
@@ -189,8 +192,9 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 			);
 		}
 
+		@Nullable
 		@Override
-		public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+		public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 			final String sqmAlias = ( (SqmLiteral<String>) getArguments().get( 0 ) ).getLiteralValue();
 			final String attributeRole = ( (SqmLiteral<String>) getArguments().get( 1 ) ).getLiteralValue();
 			final TableGroup tableGroup = ( (FromClauseIndex) walker.getFromClauseAccess() ).findTableGroup(

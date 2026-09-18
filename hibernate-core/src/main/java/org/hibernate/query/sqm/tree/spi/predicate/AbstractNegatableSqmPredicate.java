@@ -16,15 +16,15 @@ import org.hibernate.query.sqm.spi.SqmBindableType;
 public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate implements SqmNegatablePredicate {
 	private boolean negated;
 
-	public AbstractNegatableSqmPredicate(NodeBuilder nodeBuilder) {
+	public AbstractNegatableSqmPredicate(@Nonnull NodeBuilder nodeBuilder) {
 		this( false, nodeBuilder );
 	}
 
-	public AbstractNegatableSqmPredicate(boolean negated, NodeBuilder nodeBuilder) {
+	public AbstractNegatableSqmPredicate(boolean negated, @Nonnull NodeBuilder nodeBuilder) {
 		this( nodeBuilder.getBooleanType(), negated, nodeBuilder );
 	}
 
-	public AbstractNegatableSqmPredicate(@Nullable SqmBindableType<Boolean> type, boolean negated, NodeBuilder nodeBuilder) {
+	public AbstractNegatableSqmPredicate(@Nullable SqmBindableType<Boolean> type, boolean negated, @Nonnull NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		this.negated = negated;
 	}
@@ -39,6 +39,7 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 		negated = !negated;
 	}
 
+	@Nonnull
 	protected abstract SqmNegatablePredicate createNegatedNode();
 
 	@Nonnull

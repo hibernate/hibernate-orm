@@ -36,11 +36,11 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	private @Nullable SqmExpression<? extends Number> fetchExpression;
 	private FetchClauseType fetchClauseType = FetchClauseType.ROWS_ONLY;
 
-	public SqmQueryPart(NodeBuilder nodeBuilder) {
+	public SqmQueryPart(@Nonnull NodeBuilder nodeBuilder) {
 		this.nodeBuilder = nodeBuilder;
 	}
 
-	public SqmQueryPart(SqmQueryPart<T> original, SqmCopyContext context) {
+	public SqmQueryPart(@Nonnull SqmQueryPart<T> original, @Nonnull SqmCopyContext context) {
 		this.nodeBuilder = original.nodeBuilder;
 		if ( original.orderByClause != null ) {
 			this.orderByClause = original.orderByClause.copy( context );
@@ -54,7 +54,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		this.fetchClauseType = original.fetchClauseType;
 	}
 
-	protected void copyTo(SqmQueryPart<T> target, SqmCopyContext context) {
+	protected void copyTo(@Nonnull SqmQueryPart<T> target, @Nonnull SqmCopyContext context) {
 		if ( orderByClause != null ) {
 			target.orderByClause = orderByClause.copy( context );
 		}
@@ -67,17 +67,20 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		target.fetchClauseType = fetchClauseType;
 	}
 
+	@Nonnull
 	@Override
-	public abstract SqmQueryPart<T> copy(SqmCopyContext context);
+	public abstract SqmQueryPart<T> copy(@Nonnull SqmCopyContext context);
 
+	@Nonnull
 	public abstract SqmQuerySpec<T> getFirstQuerySpec();
 
+	@Nonnull
 	public abstract SqmQuerySpec<T> getLastQuerySpec();
 
 	public abstract boolean isSimpleQueryPart();
 
 	@Override
-	public NodeBuilder nodeBuilder() {
+	public @Nonnull NodeBuilder nodeBuilder() {
 		return nodeBuilder;
 	}
 
@@ -108,7 +111,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		setFetchExpression( fetchExpression, FetchClauseType.ROWS_ONLY );
 	}
 
-	public void setFetchExpression(@Nullable SqmExpression<? extends Number> fetchExpression, FetchClauseType fetchClauseType) {
+	public void setFetchExpression(@Nullable SqmExpression<? extends Number> fetchExpression, @Nonnull FetchClauseType fetchClauseType) {
 		if ( fetchExpression == null ) {
 			this.fetchExpression = null;
 			this.fetchClauseType = FetchClauseType.ROWS_ONLY;
@@ -123,6 +126,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		}
 	}
 
+	@Nonnull
 	@Override
 	public FetchClauseType getFetchClauseType() {
 		return fetchClauseType;
@@ -178,14 +182,14 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	@Nonnull
 	@Override
-	public JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+	public JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, @Nonnull FetchClauseType fetchClauseType) {
 		setFetchExpression( (SqmExpression<? extends Number>) fetch, fetchClauseType );
 		return this;
 	}
 
 	public abstract void validateQueryStructureAndFetchOwners();
 
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final List<SqmSortSpecification> sortSpecifications = getSortSpecifications();
 		if ( !sortSpecifications.isEmpty() ) {
 			hql.append( " order by " );
@@ -235,7 +239,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmQueryPart<?> that
 			&& getClass() == that.getClass()
 			&& SqmCacheable.areCompatible( orderByClause, that.orderByClause )

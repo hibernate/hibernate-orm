@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.BasicTypeReference;
@@ -45,7 +47,7 @@ import java.util.Objects;
  *
  * @see org.hibernate.type.StandardBasicTypes
  */
-public record TypedParameterValue<J>(BindableType<J> type, J value) {
+public record TypedParameterValue<J>(@Nonnull BindableType<J> type, @Nullable J value) {
 
 	public TypedParameterValue {
 		Objects.requireNonNull( type, "type must not be null" );
@@ -56,7 +58,8 @@ public record TypedParameterValue<J>(BindableType<J> type, J value) {
 	 *
 	 * @since 7.0
 	 */
-	public static <J> TypedParameterValue<J> of(Type<J> type, J value) {
+	@Nonnull
+	public static <J> TypedParameterValue<J> of(@Nonnull Type<J> type, @Nullable J value) {
 		return new TypedParameterValue<>( (BindableType<J>) type, value );
 	}
 
@@ -65,7 +68,8 @@ public record TypedParameterValue<J>(BindableType<J> type, J value) {
 	 *
 	 * @since 7.0
 	 */
-	public static <J> TypedParameterValue<J> ofNull(Type<J> type) {
+	@Nonnull
+	public static <J> TypedParameterValue<J> ofNull(@Nonnull Type<J> type) {
 		return new TypedParameterValue<>( (BindableType<J>) type, null );
 	}
 
@@ -76,6 +80,7 @@ public record TypedParameterValue<J>(BindableType<J> type, J value) {
 	 *
 	 * @deprecated use {@link #value}
 	 */
+	@Nullable
 	@Deprecated(since = "7")
 	public J getValue() {
 		return value;
@@ -88,6 +93,7 @@ public record TypedParameterValue<J>(BindableType<J> type, J value) {
 	 *
 	 * @deprecated use {@link #type}
 	 */
+	@Nonnull
 	@Deprecated(since = "7")
 	public BindableType<J> getType() {
 		return type;
@@ -100,6 +106,7 @@ public record TypedParameterValue<J>(BindableType<J> type, J value) {
 	 *
 	 * @deprecated use {@link #type}
 	 */
+	@Nullable
 	@Deprecated(since = "7")
 	public BasicTypeReference<J> getTypeReference() {
 		return type instanceof BasicTypeReference<J> reference ? reference : null;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 
 /**
@@ -17,12 +19,14 @@ public interface JpaJsonQueryNode {
 	 *
 	 * @return the wrap mode
 	 */
+	@Nonnull
 	WrapMode getWrapMode();
 	/**
 	 * Get the {@link ErrorBehavior} of this json query expression.
 	 *
 	 * @return the error behavior
 	 */
+	@Nonnull
 	ErrorBehavior getErrorBehavior();
 
 	/**
@@ -30,6 +34,7 @@ public interface JpaJsonQueryNode {
 	 *
 	 * @return the empty behavior
 	 */
+	@Nonnull
 	EmptyBehavior getEmptyBehavior();
 
 	/**
@@ -37,24 +42,28 @@ public interface JpaJsonQueryNode {
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode withoutWrapper();
 	/**
 	 * Sets the {@link WrapMode#WITH_WRAPPER} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode withWrapper();
 	/**
 	 * Sets the {@link WrapMode#WITH_CONDITIONAL_WRAPPER} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode withConditionalWrapper();
 	/**
 	 * Sets the {@link WrapMode#UNSPECIFIED} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode unspecifiedWrapper();
 
 	/**
@@ -62,30 +71,35 @@ public interface JpaJsonQueryNode {
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode unspecifiedOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#ERROR} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode errorOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#NULL} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode nullOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#EMPTY_ARRAY} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode emptyArrayOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#EMPTY_OBJECT} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode emptyObjectOnError();
 
 	/**
@@ -93,30 +107,35 @@ public interface JpaJsonQueryNode {
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode unspecifiedOnEmpty();
 	/**
 	 * Sets the {@link EmptyBehavior#ERROR} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode errorOnEmpty();
 	/**
 	 * Sets the {@link EmptyBehavior#NULL} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode nullOnEmpty();
 	/**
 	 * Sets the {@link EmptyBehavior#EMPTY_ARRAY} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode emptyArrayOnEmpty();
 	/**
 	 * Sets the {@link EmptyBehavior#EMPTY_OBJECT} for this json query expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonQueryNode emptyObjectOnEmpty();
 
 	/**

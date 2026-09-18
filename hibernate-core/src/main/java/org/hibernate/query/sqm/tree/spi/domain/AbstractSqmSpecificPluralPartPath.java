@@ -19,10 +19,10 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 	private final PluralPersistentAttribute<?, ?, ?> pluralAttribute;
 
 	public AbstractSqmSpecificPluralPartPath(
-			NavigablePath navigablePath,
-			SqmPluralValuedSimplePath<?> pluralDomainPath,
-			PluralPersistentAttribute<?, ?, ?> referencedAttribute,
-			SqmPathSource<T> pathSource) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPluralValuedSimplePath<?> pluralDomainPath,
+			@Nonnull PluralPersistentAttribute<?, ?, ?> referencedAttribute,
+			@Nonnull SqmPathSource<T> pathSource) {
 		super(
 				navigablePath,
 				pathSource,
@@ -33,10 +33,12 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 		this.pluralAttribute = referencedAttribute;
 	}
 
+	@Nonnull
 	public SqmPluralValuedSimplePath<?> getPluralDomainPath() {
 		return pluralDomainPath;
 	}
 
+	@Nonnull
 	public PluralPersistentAttribute<?, ?, ?> getPluralAttribute() {
 		return pluralAttribute;
 	}

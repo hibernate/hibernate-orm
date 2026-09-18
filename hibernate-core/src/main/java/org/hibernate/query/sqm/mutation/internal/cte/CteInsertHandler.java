@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
+import org.hibernate.sql.ast.spi.creation.SqlTreeCreationException;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.boot.model.naming.Identifier;
@@ -635,9 +637,13 @@ public class CteInsertHandler implements InsertHandler {
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getQueryEngine().getCriteriaBuilder() );
-		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" )
+		final var countExpression = factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" )
 				.generateSqmExpression( arg, null, factory.getQueryEngine() )
 				.convertToSqlAst( sqmConverter );
+		if ( countExpression == null ) {
+			throw new SqlTreeCreationException( "The count function did not produce a SQL expression" );
+		}
+		return countExpression;
 	}
 
 	protected String addDmlCtes(

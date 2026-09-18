@@ -839,7 +839,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public SqmTranslation<T> translate() {
 		final var sqmStatement = getStatement();
 		//noinspection unchecked
-		final T statement = (T) sqmStatement.accept( this );
+		final T statement = (T) visitWithRequiredResult( sqmStatement );
 		pruneTableGroupJoins();
 		return new StandardSqmTranslation<>(
 				statement,
@@ -1000,7 +1000,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				currentClauseStack.push( Clause.SET );
 				assignedPathInterpretation =
 						(PathInterpretation<?>)
-								sqmAssignment.getTargetPath().accept( this );
+								visitWithRequiredResult( sqmAssignment.getTargetPath() );
 			}
 			finally {
 				currentClauseStack.pop();
@@ -1061,7 +1061,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				else {
 					addAssignments(
-							(Expression) assignmentValue.accept( this ),
+							(Expression) visitWithRequiredResult( assignmentValue ),
 							assignedPathInterpretation,
 							targetColumnReferences,
 							assignments,
@@ -1372,7 +1372,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var constraintAttributes = sqmConflictClause.getConstraintPaths();
 		final List<String> constraintColumnNames = new ArrayList<>( constraintAttributes.size() );
 		for ( var constraintAttribute : constraintAttributes ) {
-			final var assignable = ( (Assignable) constraintAttribute.accept( this ) );
+			final var assignable = ( (Assignable) visitWithRequiredResult( constraintAttribute ) );
 			for ( var columnReference : assignable.getColumnReferences() ) {
 				constraintColumnNames.add( columnReference.getSelectableName() );
 			}
@@ -1440,7 +1440,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else if ( localName.equals( versionAttributeName ) ) {
 				needsVersionInsert = false;
 			}
-			final var assignable = (Assignable) path.accept( this );
+			final var assignable = (Assignable) visitWithRequiredResult( path );
 			targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
 		}
 		if ( needsVersionInsert ) {
@@ -1544,7 +1544,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final var sqmExpression = expressions.get( i );
 			valuesExpressions.add(
 					insertionTargetPaths == null
-							? (Expression) sqmExpression.accept( this )
+							? (Expression) visitWithRequiredResult( sqmExpression )
 							: visitWithInferredType( sqmExpression, insertionTargetPaths.get( i ) )
 			);
 		}
@@ -1584,7 +1584,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				prepareForSelection( sqmPath );
 			}
 			dynamicInstantiation.addArgument( sqmArgument.getAlias(),
-					(DomainResultProducer<?>) sqmArgument.accept( this ) );
+					(DomainResultProducer<?>) visitWithRequiredResult( sqmArgument ) );
 		}
 		dynamicInstantiation.complete();
 		return dynamicInstantiation;
@@ -1875,8 +1875,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	@Nonnull
 	public QueryPart visitQueryPart(SqmQueryPart<?> queryPart) {
-		return (QueryPart) super.visitQueryPart( queryPart );
+		return (QueryPart) visitWithRequiredResult( queryPart );
 	}
 
 	@Override
@@ -2058,7 +2059,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final var havingClausePredicate = sqmQuerySpec.getHavingClausePredicate();
 		if ( havingClausePredicate != null ) {
-			sqlQuerySpec.setHavingClauseRestrictions( visitHavingClause( havingClausePredicate ) );
+			final var havingPredicate = visitHavingClause( havingClausePredicate );
+			if ( havingPredicate != null ) {
+				sqlQuerySpec.setHavingClauseRestrictions( havingPredicate );
+			}
 		}
 
 		visitOrderByOffsetAndFetch( sqmQuerySpec, sqlQuerySpec );
@@ -2168,17 +2172,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private void applyOffsetAndFetch(SqmQueryPart<?> sqmQueryPart, QueryPart sqlQueryPart) {
 		inferrableTypeAccessStack.push( () -> getTypeConfiguration().getBasicTypeForJavaType( Integer.class ) );
-		sqlQueryPart.setOffsetClauseExpression( visitOffsetExpression( sqmQueryPart.getOffsetExpression() ) );
+		final var offsetExpression = visitOffsetExpression( sqmQueryPart.getOffsetExpression() );
+		if ( offsetExpression != null ) {
+			sqlQueryPart.setOffsetClauseExpression( offsetExpression );
+		}
 		final var fetchClauseType = sqmQueryPart.getFetchClauseType();
 		if ( fetchClauseType == FetchClauseType.PERCENT_ONLY
 			|| fetchClauseType == FetchClauseType.PERCENT_WITH_TIES ) {
 			inferrableTypeAccessStack.pop();
 			inferrableTypeAccessStack.push( () -> getTypeConfiguration().getBasicTypeForJavaType( Double.class ) );
 		}
-		sqlQueryPart.setFetchClauseExpression(
-				visitFetchExpression( sqmQueryPart.getFetchExpression() ),
-				fetchClauseType
-		);
+		final var fetchExpression = visitFetchExpression( sqmQueryPart.getFetchExpression() );
+		if ( fetchExpression != null ) {
+			sqlQueryPart.setFetchClauseExpression( fetchExpression, fetchClauseType );
+		}
 		inferrableTypeAccessStack.pop();
 	}
 
@@ -2727,7 +2734,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Predicate visitHavingClause(SqmPredicate sqmPredicate) {
+	@Nullable
+	public Predicate visitHavingClause(@Nullable SqmPredicate sqmPredicate) {
 		currentClauseStack.push( Clause.HAVING );
 		inferrableTypeAccessStack.push( () -> null );
 		try {
@@ -2743,7 +2751,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Void visitOrderByClause(SqmOrderByClause orderByClause) {
+	@Nullable
+	public Void visitOrderByClause(@Nullable SqmOrderByClause orderByClause) {
 		super.visitOrderByClause( orderByClause );
 		return null;
 	}
@@ -2762,7 +2771,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Expression visitOffsetExpression(SqmExpression<?> expression) {
+	@Nullable
+	public Expression visitOffsetExpression(@Nullable SqmExpression<?> expression) {
 		if ( expression == null ) {
 			return null;
 		}
@@ -2778,7 +2788,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Expression visitFetchExpression(SqmExpression<?> expression) {
+	@Nullable
+	public Expression visitFetchExpression(@Nullable SqmExpression<?> expression) {
 		if ( expression == null ) {
 			return null;
 		}
@@ -3007,7 +3018,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Temporarily push an empty FromClauseIndex to disallow access to aliases from the top query
 			// Only lateral subqueries are allowed to see the aliases
 			fromClauseIndexStack.push( new FromClauseIndex( null ) );
-			final var statement = (SelectStatement) derivedRoot.getQueryPart().accept( this );
+			final var statement = (SelectStatement) visitWithRequiredResult( derivedRoot.getQueryPart() );
 			fromClauseIndexStack.pop();
 			final var tupleType = (AnonymousTupleType<?>) sqmRoot.getNodeType();
 			final var sqlSelections =
@@ -3864,7 +3875,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Only lateral subqueries are allowed to see the aliases
 			fromClauseIndexStack.push( new FromClauseIndex( null ) );
 		}
-		final var statement = (SelectStatement) sqmJoin.getQueryPart().accept( this );
+		final var statement = (SelectStatement) visitWithRequiredResult( sqmJoin.getQueryPart() );
 		if ( !sqmJoin.isLateral() ) {
 			fromClauseIndexStack.pop();
 		}
@@ -4944,9 +4955,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var navigablePath = functionPath.getNavigablePath();
 		final var tableGroup = getFromClauseAccess().findTableGroup( navigablePath );
 		if ( tableGroup == null ) {
-			final var functionExpression = (Expression) functionPath.getFunction().accept( this );
-			final var jdbcType = functionExpression.getExpressionType().getSingleJdbcMapping().getJdbcType();
-			if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
+			final var functionExpression =
+					(Expression) visitWithRequiredResult( functionPath.getFunction() );
+			if ( functionExpression.getExpressionType().getSingleJdbcMapping().getJdbcType()
+					instanceof AggregateJdbcType aggregateJdbcType ) {
 				final var embeddableFunctionTableGroup =
 						new EmbeddableFunctionTableGroup(
 								navigablePath,
@@ -5068,7 +5080,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path) {
 		// SemanticQueryBuilder applies the index expression to the generated join
-		return path.getLhs().accept( this );
+		return visitWithRequiredResult( path.getLhs() );
 	}
 
 	@Override
@@ -6866,7 +6878,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitOver(SqmOver<?> over) {
 		currentClauseStack.push( Clause.OVER );
-		final var expression = (Expression) over.getExpression().accept( this );
+		final var expression = (Expression) visitWithRequiredResult( over.getExpression() );
 		final var window = over.getWindow();
 		final List<Expression> partitions = new ArrayList<>( window.getPartitions().size() );
 		for ( var partition : window.getPartitions() ) {
@@ -6899,14 +6911,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitDistinct(SqmDistinct<?> sqmDistinct) {
-		return new Distinct( (Expression) sqmDistinct.getExpression().accept( this ) );
+		return new Distinct( (Expression) visitWithRequiredResult( sqmDistinct.getExpression() ) );
 	}
 
 	@Override
 	public Object visitOverflow(SqmOverflow<?> sqmOverflow) {
 		final var fillerExpression = sqmOverflow.getFillerExpression();
 		return new Overflow(
-				(Expression) sqmOverflow.getSeparatorExpression().accept( this ),
+				(Expression) visitWithRequiredResult( sqmOverflow.getSeparatorExpression() ),
 				fillerExpression == null
 						? null
 						: (Expression) fillerExpression.accept( this ),
@@ -6971,17 +6983,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitCoalesce(SqmCoalesce<?> sqmCoalesce) {
 		final var queryEngine = getSessionFactory().getQueryEngine();
-		return getSqmFunctionRegistry()
+		final var coalesce = getSqmFunctionRegistry()
 				.findFunctionDescriptor( "coalesce" )
-				.generateSqmExpression( sqmCoalesce.getArguments(), null, queryEngine )
-				.accept( this );
+				.generateSqmExpression( sqmCoalesce.getArguments(), null, queryEngine );
+		return visitWithRequiredResult( coalesce );
 	}
 
 	@Override
 	public Object visitUnaryOperationExpression(SqmUnaryOperation<?> expression) {
 		return new UnaryOperation(
 				interpret( expression.getOperation() ),
-				toSqlExpression( expression.getOperand().accept( this ) ),
+				toSqlExpression( visitWithRequiredResult( expression.getOperand() ) ),
 				getExpressionType( expression )
 		);
 	}
@@ -7025,10 +7037,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			// Infer one operand type through the other
 			inferrableTypeAccessStack.push( () -> determineValueMapping( rightOperand, fromClauseIndex ) );
-			final var lhs = toSqlExpression( leftOperand.accept( this ) );
+			final var lhs = toSqlExpression( visitWithRequiredResult( leftOperand ) );
 			inferrableTypeAccessStack.pop();
 			inferrableTypeAccessStack.push( () -> determineValueMapping( leftOperand, fromClauseIndex ) );
-			final var rhs = toSqlExpression( rightOperand.accept( this ) );
+			final var rhs = toSqlExpression( visitWithRequiredResult( rightOperand ) );
 			inferrableTypeAccessStack.pop();
 
 			if ( durationToRight && appliedByUnit != null ) {
@@ -7114,7 +7126,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final var timestamp = adjustedTimestamp;
 				final var timestampType = adjustedTimestampType;
 				inferrableTypeAccessStack.push( () -> determineValueMapping( rhs, fromClauseIndex ) );
-				adjustedTimestamp = toSqlExpression( lhs.accept( this ) );
+				adjustedTimestamp = toSqlExpression( visitWithRequiredResult( lhs ) );
 				inferrableTypeAccessStack.pop();
 				final var type = adjustedTimestamp.getExpressionType();
 				if ( type instanceof SqmExpressible<?> sqmExpressible ) {
@@ -7132,7 +7144,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				try {
 					inferrableTypeAccessStack.push( () -> determineValueMapping( lhs, fromClauseIndex ) );
-					final Object result = rhs.accept( this );
+					final Object result = visitWithRequiredResult( rhs );
 					if ( result instanceof SqlTupleContainer ) {
 						return result;
 					}
@@ -7180,7 +7192,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// -x * (d1 + d2) => - x * d1 - x * d2
 				// -x * (d1 - d2) => - x * d1 + x * d2
 				inferrableTypeAccessStack.push( () -> determineValueMapping( rhs, fromClauseIndex ) );
-				final Expression duration = toSqlExpression( lhs.accept( this ) );
+				final Expression duration = toSqlExpression( visitWithRequiredResult( lhs ) );
 				inferrableTypeAccessStack.pop();
 				final Expression scale = adjustmentScale;
 				final boolean negate = negativeAdjustment;
@@ -7188,7 +7200,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				negativeAdjustment = false; //was sucked into the scale
 				try {
 					inferrableTypeAccessStack.push( () -> determineValueMapping( lhs, fromClauseIndex ) );
-					return rhs.accept( this );
+					return visitWithRequiredResult( rhs );
 				}
 				finally {
 					inferrableTypeAccessStack.pop();
@@ -7222,10 +7234,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
 		inferrableTypeAccessStack.push( () -> determineValueMapping( rhs, fromClauseIndex ) );
-		final var left = getActualExpression( cleanly( () -> toSqlExpression( lhs.accept( this ) ) ) );
+		final var left = getActualExpression( cleanly( () -> toSqlExpression( visitWithRequiredResult( lhs ) ) ) );
 		inferrableTypeAccessStack.pop();
 		inferrableTypeAccessStack.push( () -> determineValueMapping( lhs, fromClauseIndex ) );
-		final var right = getActualExpression( cleanly( () -> toSqlExpression( rhs.accept( this ) ) ) );
+		final var right = getActualExpression( cleanly( () -> toSqlExpression( visitWithRequiredResult( rhs ) ) ) );
 		inferrableTypeAccessStack.pop();
 
 		// The result of timestamp subtraction is always a `Duration`, unless a unit is applied
@@ -7265,7 +7277,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// we're immediately converting the resulting
 			// duration to a scalar in the given unit
 
-			final var unit = (DurationUnit) appliedByUnit.getUnit().accept( this );
+			final var unit = (DurationUnit) visitWithRequiredResult( appliedByUnit.getUnit() );
 			return applyScale( timestampdiff().expression( null, unit, right, left ) );
 		}
 		else {
@@ -7397,9 +7409,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		//      to null before we recurse down the tree?
 		//      and what about scale?
 		inferrableTypeAccessStack.push( () -> null );
-		final var magnitude = toSqlExpression( toDuration.getMagnitude().accept( this ) );
+		final var magnitude = toSqlExpression( visitWithRequiredResult( toDuration.getMagnitude() ) );
 		inferrableTypeAccessStack.pop();
-		final var unit = (DurationUnit) toDuration.getUnit().accept( this );
+		final var unit = (DurationUnit) visitWithRequiredResult( toDuration.getUnit() );
 
 		// let's start by applying the propagated scale
 		// so we don't forget to do it in what follows
@@ -7448,7 +7460,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var outer = appliedByUnit;
 		appliedByUnit = byUnit;
 		try {
-			return byUnit.getDuration().accept( this );
+			return visitWithRequiredResult( byUnit.getDuration() );
 		}
 		finally {
 			appliedByUnit = outer;
@@ -7482,6 +7494,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	@Nonnull
 	public Object visitModifiedSubQueryExpression(SqmModifiedSubQueryExpression<?> expr) {
 		return new ModifiedSubQueryExpression(
 				visitSubQueryExpression( expr.getSubQuery() ),
@@ -7530,14 +7543,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					return null;
 				}
 		);
-		final var fixture = (Expression) expression.getFixture().accept( this );
+		final var fixture = (Expression) visitWithRequiredResult( expression.getFixture() );
 		final var fixtureType = (MappingModelExpressible<?>) fixture.getExpressionType();
 		inferrableTypeAccessStack.pop();
 		var resolved = determineCurrentExpressible( expression );
 		Expression otherwise = null;
 		for ( var whenFragment : expression.getWhenFragments() ) {
 			inferrableTypeAccessStack.push( () -> fixtureType );
-			final var checkValue = (Expression) whenFragment.getCheckValue().accept( this );
+			final var checkValue = (Expression) visitWithRequiredResult( whenFragment.getCheckValue() );
 			inferrableTypeAccessStack.pop();
 			handleTypeInCaseExpression( fixture, checkValue );
 
@@ -7545,7 +7558,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
 			);
-			final var resultExpression = (Expression) whenFragment.getResult().accept( this );
+			final var resultExpression = (Expression) visitWithRequiredResult( whenFragment.getResult() );
 			inferrableTypeAccessStack.pop();
 			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, resultExpression.getExpressionType() );
 
@@ -7557,7 +7570,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
 			);
-			otherwise = (Expression) expression.getOtherwise().accept( this );
+			otherwise = (Expression) visitWithRequiredResult( expression.getOtherwise() );
 			inferrableTypeAccessStack.pop();
 			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, otherwise.getExpressionType() );
 		}
@@ -7614,7 +7627,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
 			);
-			final var resultExpression = (Expression) whenFragment.getResult().accept( this );
+			final var resultExpression = (Expression) visitWithRequiredResult( whenFragment.getResult() );
 			inferrableTypeAccessStack.pop();
 			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, resultExpression.getExpressionType() );
 
@@ -7626,7 +7639,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
 			);
-			otherwise = (Expression) expression.getOtherwise().accept( this );
+			otherwise = (Expression) visitWithRequiredResult( expression.getOtherwise() );
 			inferrableTypeAccessStack.pop();
 			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, otherwise.getExpressionType() );
 		}
@@ -7729,7 +7742,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Expression visitParameterizedEntityTypeExpression(SqmParameterizedEntityType<?> sqmExpression) {
 		assert resolveInferredType() instanceof EntityDiscriminatorMapping;
-		return (Expression) sqmExpression.getDiscriminatorSource().accept( this );
+		return (Expression) visitWithRequiredResult( sqmExpression.getDiscriminatorSource() );
 	}
 
 	@Override
@@ -7821,7 +7834,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public GroupedPredicate visitGroupedPredicate(SqmGroupedPredicate predicate) {
-		return new GroupedPredicate( (Predicate) predicate.getSubPredicate().accept( this ) );
+		return new GroupedPredicate( (Predicate) visitWithRequiredResult( predicate.getSubPredicate() ) );
 	}
 
 	@Override
@@ -7847,7 +7860,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		List<TableGroup> filteredTableGroups = null;
 		for ( int i = 0; i < subpredicates.size(); i++ ) {
 			tableGroupEntityNameUses.clear();
-			disjunction.add( (Predicate) subpredicates.get( i ).accept( this ) );
+			disjunction.add( (Predicate) visitWithRequiredResult( subpredicates.get( i ) ) );
 			if ( !tableGroupEntityNameUses.isEmpty() ) {
 				if ( disjunctEntityNameUsesArray == null ) {
 					disjunctEntityNameUsesArray = new Map[subpredicates.size()];
@@ -8095,7 +8108,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final Expression lhs;
 		try {
-			lhs = (Expression) predicate.getLeftHandExpression().accept( this );
+			lhs = (Expression) visitWithRequiredResult( predicate.getLeftHandExpression() );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8193,7 +8206,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public NegatedPredicate visitNegatedPredicate(SqmNegatedPredicate predicate) {
 		return new NegatedPredicate(
-				(Predicate) predicate.getWrappedPredicate().accept( this )
+				(Predicate) visitWithRequiredResult( predicate.getWrappedPredicate() )
 		);
 	}
 
@@ -8204,7 +8217,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final Expression lhs;
 		try {
-			lhs = (Expression) predicate.getLeftHandExpression().accept( this );
+			lhs = (Expression) visitWithRequiredResult( predicate.getLeftHandExpression() );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8214,7 +8227,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final Expression rhs;
 		try {
-			rhs = (Expression) predicate.getRightHandExpression().accept( this );
+			rhs = (Expression) visitWithRequiredResult( predicate.getRightHandExpression() );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8446,7 +8459,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 
 		try {
-			expression = (Expression) predicate.getExpression().accept( this );
+			expression = (Expression) visitWithRequiredResult( predicate.getExpression() );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8459,7 +8472,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		try {
-			lowerBound = (Expression) predicate.getLowerBound().accept( this );
+			lowerBound = (Expression) visitWithRequiredResult( predicate.getLowerBound() );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8472,7 +8485,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		try {
-			upperBound = (Expression) predicate.getUpperBound().accept( this );
+			upperBound = (Expression) visitWithRequiredResult( predicate.getUpperBound() );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8574,7 +8587,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		final Expression testExpression;
 		try {
-			testExpression = (Expression) predicate.getTestExpression().accept( this );
+			testExpression = (Expression) visitWithRequiredResult( predicate.getTestExpression() );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8586,7 +8599,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		try {
 			for ( var expression : listExpressions ) {
-				inPredicate.addExpression( (Expression) expression.accept( this ) );
+				inPredicate.addExpression( (Expression) visitWithRequiredResult( expression ) );
 			}
 		}
 		finally {
@@ -8657,7 +8670,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var iterator = domainParamBinding.getBindValues().iterator();
 
 		final var inListPredicate = new InListPredicate(
-				(Expression) sqmPredicate.getTestExpression().accept( this ),
+				(Expression) visitWithRequiredResult( sqmPredicate.getTestExpression() ),
 				sqmPredicate.isNegated(),
 				getBooleanType()
 		);
@@ -8712,7 +8725,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitBooleanExpressionPredicate(SqmBooleanExpressionPredicate predicate) {
 		inferrableTypeAccessStack.push( this::getBooleanType );
 		final var sqmExpression = predicate.getBooleanExpression();
-		final var booleanExpression = (Expression) sqmExpression.accept( this );
+		final var booleanExpression = (Expression) visitWithRequiredResult( sqmExpression );
 		boolean negated = predicate.isNegated();
 		if ( booleanExpression instanceof CaseSearchedExpression caseExpr
 				&& sqmExpression instanceof SqmFunction<?> sqmFunction
@@ -8745,7 +8758,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitExistsPredicate(SqmExistsPredicate predicate) {
 		inferrableTypeAccessStack.push( () -> null );
-		final var selectStatement = (SelectStatement) predicate.getExpression().accept( this );
+		final var selectStatement = (SelectStatement) visitWithRequiredResult( predicate.getExpression() );
 		inferrableTypeAccessStack.pop();
 		return new ExistsPredicate( selectStatement, predicate.isNegated(), getBooleanType() );
 	}
@@ -8779,7 +8792,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitAsWrapperExpression(AsWrapperSqmExpression<?> sqmExpression) {
 		return new AsWrappedExpression<>(
-				(Expression) sqmExpression.getExpression().accept( this ),
+				(Expression) visitWithRequiredResult( sqmExpression.getExpression() ),
 				sqmExpression.getNodeType()
 		);
 	}
@@ -8787,7 +8800,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitNamedExpression(SqmNamedExpression<?> expression) {
 		return new AliasedExpression(
-				(Expression) expression.getExpression().accept( this ),
+				(Expression) visitWithRequiredResult( expression.getExpression() ),
 				expression.getName()
 		);
 	}

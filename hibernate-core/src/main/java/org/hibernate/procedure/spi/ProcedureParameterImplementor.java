@@ -4,6 +4,8 @@
  */
 package org.hibernate.procedure.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -17,6 +19,7 @@ import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 @Incubating(since = "6.0")
 public interface ProcedureParameterImplementor<T> extends ProcedureParameter<T>, QueryParameterImplementor<T> {
 
-	JdbcCallParameterRegistration toJdbcParameterRegistration(int startIndex, ProcedureCallImplementor<?> procedureCall);
+	@Nonnull
+	JdbcCallParameterRegistration toJdbcParameterRegistration(int startIndex, @Nonnull ProcedureCallImplementor<?> procedureCall);
 
 }

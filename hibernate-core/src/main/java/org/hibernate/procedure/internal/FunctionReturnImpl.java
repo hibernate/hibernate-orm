@@ -18,6 +18,8 @@ import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.ParameterMode;
 
 /**
@@ -51,7 +53,8 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	}
 
 	@Override
-	public JdbcCallFunctionReturn toJdbcFunctionReturn(SharedSessionContractImplementor persistenceContext) {
+	@Nonnull
+	public JdbcCallFunctionReturn toJdbcFunctionReturn(@Nonnull SharedSessionContractImplementor persistenceContext) {
 		if ( getJdbcTypeCode() == Types.REF_CURSOR ) {
 			return new RefCurserJdbcCallFunctionReturnImpl( new JdbcCallRefCursorExtractorImpl( 1 ) );
 		}
@@ -74,26 +77,31 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	}
 
 	@Override
+	@Nonnull
 	public BindableType<T> getHibernateType() {
 		return ormType;
 	}
 
 	@Override
+	@Nullable
 	public String getName() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public Integer getPosition() {
 		return 1;
 	}
 
 	@Override
+	@Nonnull
 	public ParameterMode getMode() {
 		return ParameterMode.OUT;
 	}
 
 	@Override
+	@Nonnull
 	public Class<T> getParameterType() {
 		return ormType.getJavaType();
 	}
@@ -104,7 +112,7 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	}
 
 	@Override
-	public void applyAnticipatedType(BindableType<?> type) {
+	public void applyAnticipatedType(@Nullable BindableType<?> type) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -114,6 +122,7 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	}
 
 	@Override
+	@Nonnull
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		return session -> new FunctionReturnImpl<>( procedureCall, ormType );
 	}

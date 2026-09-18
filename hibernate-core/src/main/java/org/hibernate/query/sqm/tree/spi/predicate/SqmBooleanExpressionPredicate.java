@@ -28,30 +28,31 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	private final SqmExpression<Boolean> booleanExpression;
 
 	public SqmBooleanExpressionPredicate(
-			SqmExpression<Boolean> booleanExpression,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmExpression<Boolean> booleanExpression,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( booleanExpression, false, nodeBuilder );
 	}
 
 	public SqmBooleanExpressionPredicate(
-			SqmExpression<Boolean> booleanExpression,
+			@Nonnull SqmExpression<Boolean> booleanExpression,
 			boolean negated,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( booleanExpression.getExpressible(), negated, nodeBuilder );
 
 		assert isBooleanExpression( booleanExpression );
 		this.booleanExpression = booleanExpression;
 	}
 
-	private static boolean isBooleanExpression(SqmExpression<Boolean> expression) {
+	private static boolean isBooleanExpression(@Nonnull SqmExpression<Boolean> expression) {
 		final SqmBindableType<Boolean> nodeType = expression.getNodeType();
 		final Class<?> expressionJavaType =
 				nodeType != null ? nodeType.getExpressibleJavaType().getJavaTypeClass() : Boolean.class;
 		return boolean.class.equals( expressionJavaType ) || Boolean.class.equals( expressionJavaType );
 	}
 
+	@Nonnull
 	@Override
-	public SqmBooleanExpressionPredicate copy(SqmCopyContext context) {
+	public SqmBooleanExpressionPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmBooleanExpressionPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -68,12 +69,14 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmExpression<Boolean> getBooleanExpression() {
 		return booleanExpression;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitBooleanExpressionPredicate( this );
 	}
 
@@ -86,7 +89,7 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		booleanExpression.appendHqlString( hql, context );
 	}
 
@@ -105,7 +108,7 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmBooleanExpressionPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& this.booleanExpression.isCompatible( that.booleanExpression );
@@ -118,11 +121,13 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmBooleanExpressionPredicate( booleanExpression, !isNegated(), nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return isNegated()

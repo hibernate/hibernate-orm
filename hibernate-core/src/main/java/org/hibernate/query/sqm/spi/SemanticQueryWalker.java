@@ -293,7 +293,8 @@ public interface SemanticQueryWalker<T> {
 
 	T visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions);
 
-	T visitHavingClause(SqmPredicate clause);
+	@Nullable
+	T visitHavingClause(@Nullable SqmPredicate clause);
 
 	T visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation);
 
@@ -318,6 +319,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitSubQueryExpression(SqmSubQuery<?> expression);
 
+	@Nullable
 	T visitModifiedSubQueryExpression(SqmModifiedSubQueryExpression<?> expression);
 
 	T visitSimpleCaseExpression(SqmCaseSimple<?, ?> expression);
@@ -415,7 +417,8 @@ public interface SemanticQueryWalker<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// sorting
 
-	T visitOrderByClause(SqmOrderByClause orderByClause);
+	@Nullable
+	T visitOrderByClause(@Nullable SqmOrderByClause orderByClause);
 
 	T visitSortSpecification(SqmSortSpecification sortSpecification);
 
@@ -423,8 +426,10 @@ public interface SemanticQueryWalker<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// paging
 
-	T visitOffsetExpression(SqmExpression<?> expression);
-	T visitFetchExpression(SqmExpression<?> expression);
+	@Nullable
+	T visitOffsetExpression(@Nullable SqmExpression<?> expression);
+	@Nullable
+	T visitFetchExpression(@Nullable SqmExpression<?> expression);
 
 
 

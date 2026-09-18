@@ -242,6 +242,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		return consumer;
 	}
 
+	@Nullable
 	public Object visitQueryPart(SqmQueryPart<?> queryPart) {
 		return queryPart.accept( this );
 	}
@@ -673,7 +674,8 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitOrderByClause(SqmOrderByClause orderByClause) {
+	@Nullable
+	public Object visitOrderByClause(@Nullable SqmOrderByClause orderByClause) {
 		if ( orderByClause == null ) {
 			return null;
 		}
@@ -693,7 +695,8 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitOffsetExpression(SqmExpression<?> expression) {
+	@Nullable
+	public Object visitOffsetExpression(@Nullable SqmExpression<?> expression) {
 		if ( expression == null ) {
 			return null;
 		}
@@ -710,7 +713,8 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitHavingClause(SqmPredicate sqmPredicate) {
+	@Nullable
+	public Object visitHavingClause(@Nullable SqmPredicate sqmPredicate) {
 		if ( sqmPredicate == null ) {
 			return null;
 		}
@@ -718,7 +722,8 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitFetchExpression(SqmExpression<?> expression) {
+	@Nullable
+	public Object visitFetchExpression(@Nullable SqmExpression<?> expression) {
 		if ( expression == null ) {
 			return null;
 		}
@@ -799,6 +804,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
+	@Nullable
 	public Object visitModifiedSubQueryExpression(SqmModifiedSubQueryExpression<?> expression) {
 		return expression.getSubQuery().accept( this );
 	}

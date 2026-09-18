@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.ParameterMetadata;
@@ -13,7 +14,6 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmBindableType;
-import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 
@@ -34,26 +34,39 @@ public class JpaCriteriaParameter<T>
 		implements SqmParameter<T>, QueryParameterImplementor<T> {
 
 	private final @Nullable String name;
+	private final @Nullable Class<T> declaredJavaType;
 	private boolean allowsMultiValuedBinding;
 
 	public JpaCriteriaParameter(
 			@Nullable String name,
 			@Nullable BindableType<? super T> type,
 			boolean allowsMultiValuedBinding,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
+		this( name, type, null, allowsMultiValuedBinding, nodeBuilder );
+	}
+
+	public JpaCriteriaParameter(
+			@Nullable String name,
+			@Nullable BindableType<? super T> type,
+			@Nullable Class<T> declaredJavaType,
+			boolean allowsMultiValuedBinding,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder.resolveExpressible( type ), nodeBuilder );
 		this.name = name;
+		this.declaredJavaType = declaredJavaType;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
 
-	protected JpaCriteriaParameter(JpaCriteriaParameter<T> original) {
+	protected JpaCriteriaParameter(@Nonnull JpaCriteriaParameter<T> original) {
 		super( original.getNodeType(), original.nodeBuilder() );
 		this.name = original.name;
+		this.declaredJavaType = original.declaredJavaType;
 		this.allowsMultiValuedBinding = original.allowsMultiValuedBinding;
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaParameter<T> copy(SqmCopyContext context) {
+	public JpaCriteriaParameter<T> copy(@Nonnull SqmCopyContext context) {
 		// Don't create a copy of regular parameters because identity is important here
 		return this;
 	}
@@ -101,13 +114,14 @@ public class JpaCriteriaParameter<T>
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public void applyAnticipatedType(BindableType type) {
+	public void applyAnticipatedType(@Nullable BindableType type) {
 		super.internalApplyInferableType( nodeBuilder().resolveExpressible( type ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmParameter<T> copy() {
-		return new JpaCriteriaParameter<>( getName(), getAnticipatedType(), allowMultiValuedBinding(), nodeBuilder() );
+		return new JpaCriteriaParameter<>( this );
 	}
 
 	@Override
@@ -116,9 +130,25 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public @Nullable Class<T> getParameterType() {
-		final SqmExpressible<T> nodeType = getNodeType();
-		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
+	public @Nonnull Class<T> getParameterType() {
+		final var javaType = getJavaTypeIfKnown();
+		if ( javaType == null ) {
+			throw new IllegalStateException( "Could not determine the Java type of Criteria parameter"
+					+ (name == null ? "" : " '" + name + "'") );
+		}
+		return javaType;
+	}
+
+	@Override
+	public @Nullable Class<T> getJavaTypeIfKnown() {
+		if ( declaredJavaType != null ) {
+			return declaredJavaType;
+		}
+		else {
+			final var nodeType = getNodeType();
+			final var javaType = nodeType == null ? null : nodeType.getExpressibleJavaType();
+			return javaType == null ? null : javaType.getJavaTypeClass();
+		}
 	}
 
 	@Override
@@ -126,22 +156,25 @@ public class JpaCriteriaParameter<T>
 		super.internalApplyInferableType( newType );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitJpaCriteriaParameter( this );
 	}
 
 	@Override
+	@Nonnull
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		throw new UnsupportedOperationException( "ParameterMemento cannot be extracted from Criteria query parameter" );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( ':' ).append( name( context ) );
 	}
 
-	private String name(SqmRenderContext context) {
+	@Nonnull
+	private String name(@Nonnull SqmRenderContext context) {
 		return name == null ? context.resolveParameterName( this ) : name;
 	}
 
@@ -161,8 +194,8 @@ public class JpaCriteriaParameter<T>
 	// For caching, we can consider two parameters to be compatible if they are unnamed, or they have the same name
 
 	@Override
-	public boolean isCompatible(Object object) {
-		return getClass() == object.getClass()
+	public boolean isCompatible(@Nullable Object object) {
+		return object != null && getClass() == object.getClass()
 			&& Objects.equals( name, ((JpaCriteriaParameter<?>) object).name );
 	}
 

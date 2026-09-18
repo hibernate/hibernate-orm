@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.spi.SqmExpressible;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -26,7 +27,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	public AbstractSqmParameter(
 			boolean canBeMultiValued,
 			@Nullable SqmBindableType<T> inherentType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.canBeMultiValued = canBeMultiValued;
 	}
@@ -73,9 +74,13 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	}
 
 	@Override
-	public @Nullable Class<T> getParameterType() {
+	public @Nonnull Class<T> getParameterType() {
 		final SqmExpressible<T> nodeType = getNodeType();
-		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
+		if ( nodeType != null && nodeType.getExpressibleJavaType().getJavaTypeClass() != null ) {
+			return nodeType.getExpressibleJavaType().getJavaTypeClass();
+		}
+		throw new IllegalStateException( "Could not determine the Java type of query parameter "
+				+ (getName() != null ? ":" + getName() : "?" + getPosition()) );
 	}
 
 	@Override

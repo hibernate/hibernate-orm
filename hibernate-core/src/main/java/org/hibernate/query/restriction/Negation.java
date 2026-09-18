@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.restriction;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -16,14 +17,16 @@ import jakarta.persistence.criteria.Root;
  *
  * @author Gavin King
  */
-record Negation<X>(Restriction<X> restriction) implements Restriction<X> {
+record Negation<X>(@Nonnull Restriction<X> restriction) implements Restriction<X> {
+	@Nonnull
 	@Override
 	public Restriction<X> negated() {
 		return restriction;
 	}
 
+	@Nonnull
 	@Override
-	public Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder) {
+	public Predicate toPredicate(@Nonnull Root<? extends X> root, @Nonnull CriteriaBuilder builder) {
 		return builder.not( restriction.toPredicate( root, builder ) );
 	}
 }

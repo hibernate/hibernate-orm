@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import jakarta.annotation.Nullable;
 import org.hibernate.internal.util.QuotingHelper;
@@ -52,13 +53,13 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 	private final Columns columns;
 
 	public SqmXmlTableFunction(
-			SqmSetReturningFunctionDescriptor descriptor,
-			SetReturningFunctionRenderer renderer,
+			@Nonnull SqmSetReturningFunctionDescriptor descriptor,
+			@Nonnull SetReturningFunctionRenderer renderer,
 			@Nullable ArgumentsValidator argumentsValidator,
-			SetReturningFunctionTypeResolver setReturningTypeResolver,
-			NodeBuilder nodeBuilder,
-			SqmExpression<String> xpath,
-			SqmExpression<?> document) {
+			@Nonnull SetReturningFunctionTypeResolver setReturningTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull SqmExpression<String> xpath,
+			@Nonnull SqmExpression<?> document) {
 		this(
 				descriptor,
 				renderer,
@@ -74,19 +75,20 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 	// though we make it safe by not calling any methods on it until initialization finishes
 	@SuppressWarnings({"uninitialized", "assignment", "argument"})
 	private SqmXmlTableFunction(
-			SqmSetReturningFunctionDescriptor descriptor,
-			SetReturningFunctionRenderer renderer,
-			List<SqmTypedNode<?>> arguments,
+			@Nonnull SqmSetReturningFunctionDescriptor descriptor,
+			@Nonnull SetReturningFunctionRenderer renderer,
+			@Nonnull List<SqmTypedNode<?>> arguments,
 			@Nullable ArgumentsValidator argumentsValidator,
-			SetReturningFunctionTypeResolver setReturningTypeResolver,
-			NodeBuilder nodeBuilder,
-			ArrayList<ColumnDefinition> columnDefinitions) {
+			@Nonnull SetReturningFunctionTypeResolver setReturningTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull ArrayList<ColumnDefinition> columnDefinitions) {
 		super( descriptor, renderer, arguments, argumentsValidator, setReturningTypeResolver, nodeBuilder, "xmltable" );
 		this.columns = new Columns( this, columnDefinitions );
 		arguments.set( arguments.size() - 1, this.columns );
 	}
 
-	private static List<SqmTypedNode<?>> createArgumentsList(SqmExpression<String> xpath, SqmExpression<?> document) {
+	@Nonnull
+	private static List<SqmTypedNode<?>> createArgumentsList(@Nonnull SqmExpression<String> xpath, @Nonnull SqmExpression<?> document) {
 		// Since the last argument is the Columns object, though that needs the `this` reference,
 		// we need to construct an array with a null slot at the end, where the Columns instance is put into.
 		// Suppress nullness checks as this will eventually turn non-nullable
@@ -95,8 +97,9 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		return Arrays.asList( array );
 	}
 
+	@Nonnull
 	@Override
-	public SqmXmlTableFunction<T> copy(SqmCopyContext context) {
+	public SqmXmlTableFunction<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -123,8 +126,9 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		return tableFunction;
 	}
 
+	@Nonnull
 	@Override
-	protected List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
+	protected List<SqlAstNode> resolveSqlAstArguments(@Nonnull List<? extends SqmTypedNode<?>> sqmArguments, @Nonnull SqmToSqlAstConverter walker) {
 		// The last argument is the SqmXmlTableFunction.Columns which will convert to null, so remove that
 		final List<SqlAstNode> sqlAstNodes = super.resolveSqlAstArguments( sqmArguments, 0, sqmArguments.size() - 1, walker );
 
@@ -136,13 +140,15 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		return sqlAstNodes;
 	}
 
+	@Nonnull
 	@Override
-	public JpaXmlTableColumnNode<String> queryColumn(String columnName) {
+	public JpaXmlTableColumnNode<String> queryColumn(@Nonnull String columnName) {
 		return queryColumn( columnName, null );
 	}
 
+	@Nonnull
 	@Override
-	public JpaXmlTableColumnNode<String> queryColumn(String columnName, @Nullable String xpath) {
+	public JpaXmlTableColumnNode<String> queryColumn(@Nonnull String columnName, @Nullable String xpath) {
 		final QueryColumnDefinition definition = new QueryColumnDefinition(
 				this,
 				columnName,
@@ -153,23 +159,27 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		return definition;
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaXmlTableColumnNode<X> valueColumn(String columnName, Class<X> type) {
+	public <X> JpaXmlTableColumnNode<X> valueColumn(@Nonnull String columnName, @Nonnull Class<X> type) {
 		return valueColumn( columnName, type, null );
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaXmlTableColumnNode<X> valueColumn(String columnName, JpaCastTarget<X> castTarget) {
+	public <X> JpaXmlTableColumnNode<X> valueColumn(@Nonnull String columnName, @Nonnull JpaCastTarget<X> castTarget) {
 		return valueColumn( columnName, castTarget, null );
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaXmlTableColumnNode<X> valueColumn(String columnName, Class<X> type, @Nullable String xpath) {
+	public <X> JpaXmlTableColumnNode<X> valueColumn(@Nonnull String columnName, @Nonnull Class<X> type, @Nullable String xpath) {
 		return valueColumn( columnName, nodeBuilder().castTarget( type ), xpath );
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaXmlTableColumnNode<X> valueColumn(String columnName, JpaCastTarget<X> castTarget, @Nullable String xpath) {
+	public <X> JpaXmlTableColumnNode<X> valueColumn(@Nonnull String columnName, @Nonnull JpaCastTarget<X> castTarget, @Nullable String xpath) {
 		final ValueColumnDefinition<X> definition = new ValueColumnDefinition<>(
 				this,
 				columnName,
@@ -180,14 +190,15 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		return definition;
 	}
 
+	@Nonnull
 	@Override
-	public SqmXmlTableFunction<T> ordinalityColumn(String columnName) {
+	public SqmXmlTableFunction<T> ordinalityColumn(@Nonnull String columnName) {
 		columns.addColumn( new OrdinalityColumnDefinition( columnName, nodeBuilder().getLongType() ) );
 		return this;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "xmltable(" );
 		getArguments().get( 0 ).appendHqlString( hql, context );
 		hql.append( " passing " );
@@ -204,7 +215,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmXmlTableFunction<?> that
 			&& super.isCompatible( object )
 			&& columns.isCompatible( that.columns );
@@ -275,13 +286,15 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			);
 		}
 
+		@Nonnull
 		@Override
-		public JpaXmlTableColumnNode<String> defaultValue(String value) {
+		public JpaXmlTableColumnNode<String> defaultValue(@Nullable String value) {
 			return defaultExpression( table.nodeBuilder().value( value ) );
 		}
 
+		@Nonnull
 		@Override
-		public JpaXmlTableColumnNode<String> defaultExpression(Expression<String> expression) {
+		public JpaXmlTableColumnNode<String> defaultExpression(@Nonnull Expression<String> expression) {
 			table.checkTypeResolved();
 			this.defaultExpression = (SqmExpression<String>) expression;
 			return this;
@@ -371,7 +384,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		public XmlTableColumnDefinition convertToSqlAst(SqmToSqlAstConverter walker) {
 			return new XmlTableValueColumnDefinition(
 					name,
-					(CastTarget) type.accept( walker ),
+					(CastTarget) walker.visitWithRequiredResult( type ),
 					xpath,
 					defaultExpression == null
 							? null
@@ -379,13 +392,15 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			);
 		}
 
+		@Nonnull
 		@Override
-		public JpaXmlTableColumnNode<X> defaultValue(X value) {
+		public JpaXmlTableColumnNode<X> defaultValue(@Nullable X value) {
 			return defaultExpression( table.nodeBuilder().value( value ) );
 		}
 
+		@Nonnull
 		@Override
-		public JpaXmlTableColumnNode<X> defaultExpression(Expression<X> expression) {
+		public JpaXmlTableColumnNode<X> defaultExpression(@Nonnull Expression<X> expression) {
 			table.checkTypeResolved();
 			this.defaultExpression = (SqmExpression<X>) expression;
 			return this;
@@ -480,7 +495,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		private final Set<String> columnNames;
 		private final ArrayList<ColumnDefinition> columnDefinitions;
 
-		private Columns(SqmXmlTableFunction<?> table, ArrayList<ColumnDefinition> columnDefinitions) {
+		private Columns(@Nonnull SqmXmlTableFunction<?> table, @Nonnull ArrayList<ColumnDefinition> columnDefinitions) {
 			this.table = table;
 			this.columnDefinitions = columnDefinitions;
 			this.columnNames = new HashSet<>( columnDefinitions.size() );
@@ -489,6 +504,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			}
 		}
 
+		@Nonnull
 		public AnonymousTupleType<?> createTupleType() {
 			if ( columnDefinitions.isEmpty() ) {
 				throw new IllegalArgumentException( "Couldn't determine types of columns of function 'xmltable'" );
@@ -506,8 +522,9 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			return new AnonymousTupleType<>( componentTypes, componentNames );
 		}
 
+		@Nonnull
 		@Override
-		public Columns copy(SqmCopyContext context) {
+		public Columns copy(@Nonnull SqmCopyContext context) {
 			final ArrayList<ColumnDefinition> definitions = new ArrayList<>( columnDefinitions.size() );
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
 				definitions.add( columnDefinition.copy( context ) );
@@ -515,7 +532,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			return new Columns( castNonNull( context.getCopy( table ) ), definitions );
 		}
 
-		private void addColumn(ColumnDefinition columnDefinition) {
+		private void addColumn(@Nonnull ColumnDefinition columnDefinition) {
 			table.checkTypeResolved();
 			if ( !columnNames.add( columnDefinition.name() ) ) {
 				throw new IllegalStateException( "Duplicate column: " + columnDefinition.name() );
@@ -524,7 +541,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 			String separator = " columns ";
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
 				hql.append( separator );
@@ -539,12 +556,13 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 
 		@Override
-		public NodeBuilder nodeBuilder() {
+		public @Nonnull NodeBuilder nodeBuilder() {
 			return table.nodeBuilder();
 		}
 
+		@Nullable
 		@Override
-		public <X> X accept(SemanticQueryWalker<X> walker) {
+		public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
 				if ( columnDefinition instanceof SqmXmlTableFunction.ValueColumnDefinition<?> definition ) {
 					if ( definition.defaultExpression != null ) {
@@ -576,7 +594,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 
 		@Override
-		public boolean isCompatible(Object object) {
+		public boolean isCompatible(@Nullable Object object) {
 			return object instanceof Columns that
 				&& SqmCacheable.areCompatible( columnDefinitions, that.columnDefinitions );
 		}

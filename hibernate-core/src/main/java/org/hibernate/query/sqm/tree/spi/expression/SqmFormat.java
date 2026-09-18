@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.spi.expression;
 
 import java.util.regex.Pattern;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -45,9 +46,9 @@ public class SqmFormat extends SqmLiteral<String> {
 	private static final Pattern FORMAT = Pattern.compile( "('[^']+'|[:;/,.!@#$^&?~`|()\\[\\]{}<>\\-+*=]|\\s|G{1,2}|[yY]{1,4}|M{1,4}|w{1,2}|W|E{3,4}|e{1,2}|d{1,2}|D{1,3}|a|[Hhms]{1,2}|S{1,6}|[zZx]{1,3})*");
 
 	public SqmFormat(
-			String value,
-			SqmBindableType<String> inherentType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull String value,
+			@Nonnull SqmBindableType<String> inherentType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super(value, inherentType, nodeBuilder);
 		if (!FORMAT.matcher(value).matches()) {
 			throw new SemanticException("Illegal format pattern '" + value + "'");
@@ -64,8 +65,9 @@ public class SqmFormat extends SqmLiteral<String> {
 		return castNonNull( super.getLiteralValue() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFormat copy(SqmCopyContext context) {
+	public SqmFormat copy(@Nonnull SqmCopyContext context) {
 		final SqmFormat existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -82,13 +84,14 @@ public class SqmFormat extends SqmLiteral<String> {
 		return expression;
 	}
 
+	@Nullable
 	@Override
-	public <R> R accept(SemanticQueryWalker<R> walker) {
+	public <R> R accept(@Nonnull SemanticQueryWalker<R> walker) {
 		return walker.visitFormat( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( getLiteralValue() );
 	}
 }

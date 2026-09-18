@@ -41,12 +41,12 @@ import jakarta.persistence.metamodel.EntityType;
 public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertSelect<T> {
 	private SqmQueryPart<?> selectQueryPart;
 
-	public SqmInsertSelectStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
+	public SqmInsertSelectStatement(@Nonnull SqmRoot<T> targetRoot, @Nonnull NodeBuilder nodeBuilder) {
 		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
 		this.selectQueryPart = new SqmQuerySpec<>( nodeBuilder );
 	}
 
-	public SqmInsertSelectStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
+	public SqmInsertSelectStatement(@Nonnull Class<T> targetEntity, @Nonnull NodeBuilder nodeBuilder) {
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
@@ -61,20 +61,21 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	private SqmInsertSelectStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmQuerySource querySource,
 			@Nullable Set<SqmParameter<?>> parameters,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			SqmRoot<T> target,
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull SqmRoot<T> target,
 			@Nullable List<SqmPath<?>> insertionTargetPaths,
 			@Nullable SqmConflictClause<T> conflictClause,
-			SqmQueryPart<?> selectQueryPart) {
+			@Nonnull SqmQueryPart<?> selectQueryPart) {
 		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths, conflictClause );
 		this.selectQueryPart = selectQueryPart;
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertSelectStatement<T> copy(SqmCopyContext context) {
+	public SqmInsertSelectStatement<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -116,23 +117,25 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 
 	@Nonnull
 	@Override
-	public SqmInsertSelectStatement<T> select(CriteriaQuery<Tuple> criteriaQuery) {
+	public SqmInsertSelectStatement<T> select(@Nonnull CriteriaQuery<Tuple> criteriaQuery) {
 		final var selectStatement = (SqmSelectStatement<Tuple>) criteriaQuery;
 		putAllCtes( selectStatement );
 		setSelectQueryPart( selectStatement.getQueryPart() );
 		return this;
 	}
 
+	@Nonnull
 	public SqmQueryPart<?> getSelectQueryPart() {
 		return selectQueryPart;
 	}
 
-	public void setSelectQueryPart(SqmQueryPart<?> selectQueryPart) {
+	public void setSelectQueryPart(@Nonnull SqmQueryPart<?> selectQueryPart) {
 		this.selectQueryPart = selectQueryPart;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitInsertSelectStatement( this );
 	}
 
@@ -171,7 +174,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		super.appendHqlString( hql, context );
 		hql.append( ' ' );
 		selectQueryPart.appendHqlString( hql, context );
@@ -196,7 +199,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmInsertSelectStatement<?> that
 			&& super.isCompatible( that )
 			&& selectQueryPart.isCompatible( that.selectQueryPart );

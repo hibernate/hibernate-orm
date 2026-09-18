@@ -152,8 +152,8 @@ public class NamedSqmFunctionDescriptor
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		render( sqlAppender, sqlAstArguments, filter, emptyList(), respectNulls, fromFirst, walker );
@@ -164,8 +164,8 @@ public class NamedSqmFunctionDescriptor
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
-			Boolean respectNulls,
-			Boolean fromFirst,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
 			SqlAstTranslator<?> translator) {
 		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
 		final boolean caseWrapper =

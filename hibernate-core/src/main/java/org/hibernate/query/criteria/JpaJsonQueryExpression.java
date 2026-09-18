@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.Expression;
@@ -20,78 +22,93 @@ public interface JpaJsonQueryExpression extends JpaExpression<String>, JpaJsonQu
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaJsonQueryExpression passing(String parameterName, Expression<?> expression);
+	@Nonnull
+	JpaJsonQueryExpression passing(@Nonnull String parameterName, @Nonnull Expression<?> expression);
 
 	/**
 	 * Use the JSON query wrapper mode without a wrapper.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression withoutWrapper();
 	/**
 	 * Use the JSON query wrapper mode with a wrapper.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression withWrapper();
 	/**
 	 * Use the JSON query wrapper mode with a conditional wrapper.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression withConditionalWrapper();
 	/**
 	 * Use the unspecified JSON query wrapper mode.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression unspecifiedWrapper();
 
 	/**
 	 * Use the unspecified JSON error behavior.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression unspecifiedOnError();
 	/**
 	 * Use the JSON error behavior that raises an error.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression errorOnError();
 	/**
 	 * Use the JSON error behavior that returns null.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression nullOnError();
 	/**
 	 * Use the JSON error behavior that returns an empty array.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression emptyArrayOnError();
 	/**
 	 * Use the JSON error behavior that returns an empty object.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression emptyObjectOnError();
 
 	/**
 	 * Use the unspecified JSON empty behavior.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression unspecifiedOnEmpty();
 	/**
 	 * Use the JSON empty behavior that raises an error.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression errorOnEmpty();
 	/**
 	 * Use the JSON empty behavior that returns null.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression nullOnEmpty();
 	/**
 	 * Use the JSON empty behavior that returns an empty array.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression emptyArrayOnEmpty();
 	/**
 	 * Use the JSON empty behavior that returns an empty object.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonQueryExpression emptyObjectOnEmpty();
 

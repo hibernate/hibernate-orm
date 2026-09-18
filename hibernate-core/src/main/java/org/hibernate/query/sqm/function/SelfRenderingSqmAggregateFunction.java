@@ -4,10 +4,13 @@
  */
 package org.hibernate.query.sqm.function;
 
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -29,24 +32,25 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFunction<T>
 		implements SqmAggregateFunction<T> {
 
-	private final SqmPredicate filter;
+	private final @Nullable SqmPredicate filter;
 
 	public SelfRenderingSqmAggregateFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
-			SqmPredicate filter,
-			ReturnableType<T> impliedResultType,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
+			@Nullable SqmPredicate filter,
+			@Nullable ReturnableType<T> impliedResultType,
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name) {
 		super( descriptor, renderer, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
 		this.filter = filter;
 	}
 
+	@Nonnull
 	@Override
-	public SelfRenderingSqmAggregateFunction<T> copy(SqmCopyContext context) {
+	public SelfRenderingSqmAggregateFunction<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -75,8 +79,9 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 		}
 	}
 
+	@Nonnull
 	@Override
-	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+	public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 		final ReturnableType<?> resultType = resolveResultType( walker );
 
 		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
@@ -94,13 +99,14 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 		);
 	}
 
+	@Nullable
 	@Override
 	public SqmPredicate getFilter() {
 		return filter;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
 		hql.append( getFunctionName() );
 		hql.append( '(' );
@@ -127,7 +133,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		return super.equals( o )
 			&& o instanceof SelfRenderingSqmAggregateFunction<?> that
 			&& Objects.equals( filter, that.filter );
@@ -141,7 +147,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 	}
 
 	@Override
-	public boolean isCompatible(Object o) {
+	public boolean isCompatible(@Nullable Object o) {
 		return super.isCompatible( o )
 			&& o instanceof SelfRenderingSqmAggregateFunction<?> that
 			&& SqmCacheable.areCompatible( filter, that.filter );

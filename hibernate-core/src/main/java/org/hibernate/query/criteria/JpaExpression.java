@@ -129,11 +129,12 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 	 */
 	@Nonnull
 	@Override
-	JpaExpression<T> coalesce(T y);
+	JpaExpression<T> coalesce(@Nonnull T y);
 
 	/**
 	 * Create a simple case expression based on this expression.
 	 */
+	@Nonnull
 	<R> JpaSimpleCase<T, R> selectCase();
 
 	/**
@@ -169,7 +170,7 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 	 */
 	@Nonnull
 	@Override
-	JpaExpression<T> nullif(T y);
+	JpaExpression<T> nullif(@Nonnull T y);
 
 	/**
 	 * Create a predicate testing whether this expression is a member of a collection.
@@ -197,7 +198,7 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 	 */
 	@Nonnull
 	@Override
-	JpaPredicate equalTo(Object value);
+	JpaPredicate equalTo(@Nonnull Object value);
 
 	/**
 	 * Create a cast expression for this expression.
@@ -218,5 +219,5 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 	 */
 	@Nonnull
 	@Override
-	JpaPredicate notEqualTo(Object value);
+	JpaPredicate notEqualTo(@Nonnull Object value);
 }

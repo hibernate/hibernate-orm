@@ -41,19 +41,21 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode
 	private final List<? extends SqmTypedNode<?>> arguments;
 
 	public SqmSetReturningFunction(
-			String functionName,
-			SqmSetReturningFunctionDescriptor functionDescriptor,
-			List<? extends SqmTypedNode<?>> arguments,
-			NodeBuilder criteriaBuilder) {
+			@Nonnull String functionName,
+			@Nonnull SqmSetReturningFunctionDescriptor functionDescriptor,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
 		this.functionName = functionName;
 		this.functionDescriptor = functionDescriptor;
 		this.arguments = arguments;
 	}
 
+	@Nonnull
 	@Override
-	public abstract SqmSetReturningFunction<T> copy(SqmCopyContext context);
+	public abstract SqmSetReturningFunction<T> copy(@Nonnull SqmCopyContext context);
 
+	@Nonnull
 	public SqmSetReturningFunctionDescriptor getFunctionDescriptor() {
 		return functionDescriptor;
 	}
@@ -64,27 +66,31 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode
 		return functionName;
 	}
 
+	@Nonnull
 	public abstract AnonymousTupleType<T> getType();
 
+	@Nonnull
 	public List<? extends SqmTypedNode<?>> getArguments() {
 		return arguments;
 	}
 
+	@Nonnull
 	public abstract TableGroup convertToSqlAst(
-			NavigablePath navigablePath,
-			String identifierVariable,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull String identifierVariable,
 			boolean lateral,
 			boolean canUseInnerJoins,
 			boolean withOrdinality,
-			SqmToSqlAstConverter walker);
+			@Nonnull SqmToSqlAstConverter walker);
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitSetReturningFunction( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( functionName );
 		if ( arguments.isEmpty() ) {
 			hql.append( "()" );
@@ -116,7 +122,7 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmSetReturningFunction<?> that
 			&& this.getClass() == that.getClass()
 			&& this.functionName.equals( that.functionName )

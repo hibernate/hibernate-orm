@@ -29,8 +29,8 @@ public class SqmTreatedCrossJoin<L, T, S extends T>
 	private final SqmEntityDomainType<S> treatTarget;
 
 	public SqmTreatedCrossJoin(
-			SqmCrossJoin<L, T> wrappedPath,
-			SqmEntityDomainType<S> treatTarget) {
+			@Nonnull SqmCrossJoin<L, T> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget) {
 		super(
 				wrappedPath.getNavigablePath()
 						.treatAs( treatTarget.getHibernateEntityName(), null ),
@@ -43,9 +43,9 @@ public class SqmTreatedCrossJoin<L, T, S extends T>
 	}
 
 	private SqmTreatedCrossJoin(
-			NavigablePath navigablePath,
-			SqmCrossJoin<L, T> wrappedPath,
-			SqmEntityDomainType<S> treatTarget) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmCrossJoin<L, T> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget) {
 		super(
 				navigablePath,
 				treatTarget,
@@ -58,7 +58,7 @@ public class SqmTreatedCrossJoin<L, T, S extends T>
 
 	@Override
 	@Nonnull
-	public SqmTreatedCrossJoin<L, T, S> copy(SqmCopyContext context) {
+	public SqmTreatedCrossJoin<L, T, S> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -92,6 +92,7 @@ public class SqmTreatedCrossJoin<L, T, S extends T>
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmCrossJoin<L, T> getWrappedPath() {
 		return wrappedPath;
@@ -102,18 +103,20 @@ public class SqmTreatedCrossJoin<L, T, S extends T>
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "treat(" );
 		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );

@@ -57,7 +57,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	void applyInferableType(@Nullable SqmBindableType<?> type);
 
 	@Override
-	default void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
+	default void visitSubSelectableNodes(@Nonnull Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
 		jpaSelectionConsumer.accept( this );
 	}
 
@@ -121,7 +121,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 
 	@Nonnull
 	@Override
-	SqmPredicate equalTo(Object value);
+	SqmPredicate equalTo(@Nonnull Object value);
 
 	@Nonnull
 	@Override
@@ -139,10 +139,12 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	@Override
 	SqmPredicate in(@Nonnull Expression<Collection<?>> values);
 
+	@Nonnull
 	@Override
-	SqmExpression<T> copy(SqmCopyContext context);
+	SqmExpression<T> copy(@Nonnull SqmCopyContext context);
 
-	default <X> SqmExpression<X> castAs(DomainType<X> type) {
+	@Nonnull
+	default <X> SqmExpression<X> castAs(@Nonnull DomainType<X> type) {
 		if ( getNodeType() == type ) {
 			// safe cast, because we just checked
 			@SuppressWarnings("unchecked")
@@ -173,5 +175,5 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 
 	@Nonnull
 	@Override
-	JpaPredicate notEqualTo(Object value);
+	JpaPredicate notEqualTo(@Nonnull Object value);
 }

@@ -27,12 +27,13 @@ public interface JpaInPredicate<T> extends JpaPredicate, CriteriaBuilder.In<T>  
 	 */
 	@Override
 	@Nonnull
-	JpaInPredicate<T> value(T value);
+	JpaInPredicate<T> value(@Nonnull T value);
 
 	/**
 	 *  Add to list of values to be tested against.
 	 *  @param value expression
 	 *  @return in predicate
 	 */
-	JpaInPredicate<T> value(JpaExpression<? extends T> value);
+	@Nonnull
+	JpaInPredicate<T> value(@Nonnull JpaExpression<? extends T> value);
 }

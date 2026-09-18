@@ -5,6 +5,7 @@
 package org.hibernate.query.criteria;
 
 import jakarta.persistence.metamodel.Type;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 
@@ -19,6 +20,7 @@ public interface JpaCastTarget<T> {
 	/**
 	 * Returns the JPA type for this cast target.
 	 */
+	@Nonnull
 	Type<T> getType();
 
 	/**

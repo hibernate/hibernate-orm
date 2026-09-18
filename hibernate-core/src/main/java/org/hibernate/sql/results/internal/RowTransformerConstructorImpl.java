@@ -4,10 +4,14 @@
  */
 package org.hibernate.sql.results.internal;
 
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.TupleElement;
 import org.hibernate.InstantiationException;
+import org.hibernate.query.criteria.JpaTupleElement;
 import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.query.sqm.tree.spi.SqmExpressibleAccessor;
+import org.hibernate.query.sqm.tree.spi.expression.SqmLiteralNull;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -36,8 +40,9 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 		final List<Class<?>> argumentTypes = elements.stream()
 				.map( RowTransformerConstructorImpl::resolveElementJavaType )
 				.collect( toList() );
-		if ( argumentTypes.size() == 1 && argumentTypes.get( 0 ) == null ) {
-			// Can not (properly) resolve constructor for single null element
+		if ( argumentTypes.contains( null )
+				|| argumentTypes.size() == 1 && argumentTypes.get( 0 ) == Void.class ) {
+			// A single untyped null must remain a scalar result instead of selecting an arbitrary constructor.
 			throw new InstantiationException( "Cannot instantiate query result type, argument types are unknown ", type );
 		}
 
@@ -48,6 +53,7 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 		constructor.setAccessible( true );
 	}
 
+	@Nullable
 	private static Class<?> resolveElementJavaType(TupleElement<?> element) {
 		if ( element instanceof SqmExpressibleAccessor<?> accessor ) {
 			final SqmExpressible<?> expressible = accessor.getExpressible();
@@ -56,7 +62,11 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 			}
 		}
 
-		return element.getJavaType();
+		final var javaType = element instanceof JpaTupleElement<?> sqmElement
+				? sqmElement.getJavaTypeIfKnown()
+				: element.getJavaType();
+		// An untyped null literal is compatible with any reference parameter type.
+		return javaType == null && element instanceof SqmLiteralNull<?> ? Void.class : javaType;
 	}
 
 	@Override

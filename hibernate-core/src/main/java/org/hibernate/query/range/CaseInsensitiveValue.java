@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.range;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -16,18 +17,20 @@ import java.util.Objects;
  *
  * @author Gavin King
  */
-record CaseInsensitiveValue(String value) implements Range<String> {
+record CaseInsensitiveValue(@Nonnull String value) implements Range<String> {
 	CaseInsensitiveValue {
 		Objects.requireNonNull( value, "value is null" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate toPredicate(Path<? extends String> path, CriteriaBuilder builder) {
+	public Predicate toPredicate(@Nonnull Path<? extends String> path, @Nonnull CriteriaBuilder builder) {
 		@SuppressWarnings("unchecked")
 		final Path<String> stringPath = (Path<String>) path; // safe, because String is final
 		return builder.lower( stringPath ).equalTo( value.toLowerCase( Locale.ROOT ) );
 	}
 
+	@Nonnull
 	@Override
 	public Class<String> getType() {
 		return String.class;

@@ -14,6 +14,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -62,13 +64,25 @@ public class LiteralTests {
 		);
 	}
 
-	@Test
+	@ParameterizedTest
+	@ValueSource(strings = { "9876543210", "98765432109876543210" })
 	@JiraKey("HHH-16737")
-	public void testUntypedIntegralLiteral(SessionFactoryScope scope) {
+	public void testUntypedIntegralLiteral(String literal, SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select 1 from Human h where h.bigIntegerValue = 9876543210", Integer.class ).getResultList();
-					session.createQuery( "select 1 from Human h where h.bigIntegerValue = 98765432109876543210", Integer.class ).getResultList();
+					session.createQuery( "select 1 from Human h where h.bigIntegerValue = " + literal, Integer.class ).getResultList();
+					session.createQuery( "select 1 from Human h where " + literal + " = h.bigIntegerValue", Integer.class ).getResultList();
+				}
+		);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "9876543210", "98765432109876543210" })
+	public void testUntypedIntegralLiteralInArithmetic(String literal, SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select h.bigIntegerValue + " + literal + " from Human h", BigInteger.class ).getResultList();
+					session.createQuery( "select " + literal + " + h.bigIntegerValue from Human h", BigInteger.class ).getResultList();
 				}
 		);
 	}

@@ -83,7 +83,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 * Set the query fetch limit.
 	 */
 	@Nonnull
-	JpaCriteriaQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+	JpaCriteriaQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch, @Nonnull FetchClauseType fetchClauseType);
 
 	/**
 	 * Set the query fetch limit.
@@ -95,11 +95,12 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 * Set the query fetch limit.
 	 */
 	@Nonnull
-	JpaCriteriaQuery<T> fetch(@Nullable Number fetch, FetchClauseType fetchClauseType);
+	JpaCriteriaQuery<T> fetch(@Nullable Number fetch, @Nonnull FetchClauseType fetchClauseType);
 
 	/**
 	 * Return the fetch clause type.
 	 */
+	@Nonnull
 	FetchClauseType getFetchClauseType();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -123,7 +124,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 *         enough root entities in the query
 	 */
 	@Nonnull
-	<E> JpaRoot<? extends E> getRoot(int position, Class<E> type);
+	<E> JpaRoot<? extends E> getRoot(int position, @Nonnull Class<E> type);
 
 	/**
 	 * Get a {@linkplain Root query root} element with the given alias
@@ -137,7 +138,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 *         no root entities with the given alias
 	 */
 	@Nonnull
-	<E> JpaRoot<? extends E> getRoot(String alias, Class<E> type);
+	<E> JpaRoot<? extends E> getRoot(@Nonnull String alias, @Nonnull Class<E> type);
 
 	/**
 	 * {@inheritDoc}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.function;
 
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -25,8 +27,8 @@ public class SelfRenderingWindowFunctionSqlAstExpression<T> extends SelfRenderin
 		implements WindowFunctionExpression {
 
 	private final Predicate filter;
-	private final Boolean respectNulls;
-	private final Boolean fromFirst;
+	private final @Nullable Boolean respectNulls;
+	private final @Nullable Boolean fromFirst;
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public SelfRenderingWindowFunctionSqlAstExpression(
@@ -34,10 +36,10 @@ public class SelfRenderingWindowFunctionSqlAstExpression<T> extends SelfRenderin
 			FunctionRenderer renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
-			ReturnableType<T> type,
-			JdbcMappingContainer expressible) {
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
+			@Nullable ReturnableType<T> type,
+			@Nullable JdbcMappingContainer expressible) {
 		super( functionName, renderer, sqlAstArguments, type, expressible );
 		this.filter = filter;
 		this.respectNulls = respectNulls;
@@ -50,11 +52,13 @@ public class SelfRenderingWindowFunctionSqlAstExpression<T> extends SelfRenderin
 	}
 
 	@Override
+	@Nullable
 	public Boolean getRespectNulls() {
 		return respectNulls;
 	}
 
 	@Override
+	@Nullable
 	public Boolean getFromFirst() {
 		return fromFirst;
 	}

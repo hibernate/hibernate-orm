@@ -28,7 +28,7 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 	private final String functionName;
 	private final @Nullable ReturnableType<T> returnableType;
 
-	public SqmIndexAggregateFunction(SqmPluralValuedSimplePath<?> pluralDomainPath, String functionName) {
+	public SqmIndexAggregateFunction(@Nonnull SqmPluralValuedSimplePath<?> pluralDomainPath, @Nonnull String functionName) {
 		//noinspection unchecked
 		super(
 				pluralDomainPath.getParentNavigablePath()
@@ -84,8 +84,9 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 		return returnableType == null ? super.getNodeJavaType() : returnableType.getExpressibleJavaType();
 	}
 
+	@Nonnull
 	@Override
-	public SqmIndexAggregateFunction<T> copy(SqmCopyContext context) {
+	public SqmIndexAggregateFunction<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -102,27 +103,30 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 		return path;
 	}
 
+	@Nonnull
 	public String getFunctionName() {
 		return functionName;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitIndexAggregateFunction( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( functionName ).append( "(" );
 		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );

@@ -4,11 +4,14 @@
  */
 package org.hibernate.query.sqm.function;
 
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -34,19 +37,19 @@ import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderingSqmAggregateFunction<T>
 		implements SqmOrderedSetAggregateFunction<T> {
 
-	private final SqmOrderByClause withinGroup;
+	private final @Nullable SqmOrderByClause withinGroup;
 
 	public SelfRenderingSqmOrderedSetAggregateFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
-			SqmPredicate filter,
-			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
+			@Nullable SqmPredicate filter,
+			@Nullable SqmOrderByClause withinGroupClause,
+			@Nullable ReturnableType<T> impliedResultType,
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name) {
 		super(
 				descriptor,
 				renderer,
@@ -61,8 +64,9 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		this.withinGroup = withinGroupClause;
 	}
 
+	@Nonnull
 	@Override
-	public SelfRenderingSqmOrderedSetAggregateFunction<T> copy(SqmCopyContext context) {
+	public SelfRenderingSqmOrderedSetAggregateFunction<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -90,8 +94,9 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		return expression;
 	}
 
+	@Nonnull
 	@Override
-	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+	public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 		final ReturnableType<?> resultType = resolveResultType( walker );
 
 		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
@@ -130,13 +135,14 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		);
 	}
 
+	@Nullable
 	@Override
 	public SqmOrderByClause getWithinGroup() {
 		return withinGroup;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
 		hql.append( getFunctionName() );
 		hql.append( '(' );
@@ -177,7 +183,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		return super.equals( o )
 			&& o instanceof SelfRenderingSqmOrderedSetAggregateFunction<?> that
 			&& Objects.equals( withinGroup, that.withinGroup );
@@ -191,7 +197,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 	}
 
 	@Override
-	public boolean isCompatible(Object o) {
+	public boolean isCompatible(@Nullable Object o) {
 		return super.isCompatible( o )
 			&& o instanceof SelfRenderingSqmOrderedSetAggregateFunction<?> that
 			&& SqmCacheable.areCompatible( withinGroup, that.withinGroup );

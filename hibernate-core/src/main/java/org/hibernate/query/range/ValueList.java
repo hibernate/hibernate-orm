@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.range;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -17,7 +18,7 @@ import java.util.Objects;
  *
  * @author Gavin King
  */
-record ValueList<U>(List<U> values) implements Range<U> {
+record ValueList<U>(@Nonnull List<U> values) implements Range<U> {
 	ValueList {
 		Objects.requireNonNull( values, "value list is null" );
 		if ( values.isEmpty() ) {
@@ -25,11 +26,13 @@ record ValueList<U>(List<U> values) implements Range<U> {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {
+	public Predicate toPredicate(@Nonnull Path<? extends U> path, @Nonnull CriteriaBuilder builder) {
 		return path.in( values );
 	}
 
+	@Nonnull
 	@Override
 	public Class<? extends U> getType() {
 		return ReflectHelper.getClass( values.get(0) );

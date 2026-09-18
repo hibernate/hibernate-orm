@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.range;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -13,15 +14,17 @@ import jakarta.persistence.criteria.Predicate;
  *
  * @author Gavin King
  */
-record Interval<U extends Comparable<U>>(LowerBound<U> lowerBound, UpperBound<U> upperBound)
+record Interval<U extends Comparable<U>>(@Nonnull LowerBound<U> lowerBound, @Nonnull UpperBound<U> upperBound)
 		implements Range<U> {
+	@Nonnull
 	@Override
-	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {
+	public Predicate toPredicate(@Nonnull Path<? extends U> path, @Nonnull CriteriaBuilder builder) {
 		return lowerBound.open() || upperBound.open()
 				? builder.and( lowerBound.toPredicate( path, builder ), upperBound.toPredicate( path, builder ) )
 				: builder.between( path, lowerBound.bound(), upperBound.bound() );
 	}
 
+	@Nonnull
 	@Override
 	public Class<? extends U> getType() {
 		return lowerBound.getType();

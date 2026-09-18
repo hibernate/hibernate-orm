@@ -39,6 +39,7 @@ public interface SqmPredicate
 	@Override
 	SqmPredicate not();
 
+	@Nonnull
 	@Override
-	SqmPredicate copy(SqmCopyContext context);
+	SqmPredicate copy(@Nonnull SqmCopyContext context);
 }

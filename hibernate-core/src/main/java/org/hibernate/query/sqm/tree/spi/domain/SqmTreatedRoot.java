@@ -25,8 +25,8 @@ public class SqmTreatedRoot<E, S extends E>
 	private final SqmEntityDomainType<S> treatTarget;
 
 	public SqmTreatedRoot(
-			SqmRoot<E> wrappedPath,
-			SqmEntityDomainType<S> treatTarget) {
+			@Nonnull SqmRoot<E> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget) {
 		super(
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
@@ -40,9 +40,9 @@ public class SqmTreatedRoot<E, S extends E>
 	}
 
 	private SqmTreatedRoot(
-			NavigablePath navigablePath,
-			SqmRoot<E> wrappedPath,
-			SqmEntityDomainType<S> treatTarget) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmRoot<E> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget) {
 		super(
 				navigablePath,
 				treatTarget,
@@ -55,7 +55,7 @@ public class SqmTreatedRoot<E, S extends E>
 
 	@Override
 	@Nonnull
-	public SqmTreatedRoot<E, S> copy(SqmCopyContext context) {
+	public SqmTreatedRoot<E, S> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -78,11 +78,13 @@ public class SqmTreatedRoot<E, S extends E>
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public EntityDomainType<S> getManagedType() {
 		return getTreatTarget();
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<E> getWrappedPath() {
 		return wrappedPath;
@@ -93,6 +95,7 @@ public class SqmTreatedRoot<E, S extends E>
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<S> getReferencedPathSource() {
 		return treatTarget;
@@ -104,23 +107,25 @@ public class SqmTreatedRoot<E, S extends E>
 		return wrappedPath.getLhs();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitTreatedPath( this );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "treat(" );
 		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );

@@ -24,12 +24,12 @@ import org.hibernate.query.sqm.tree.spi.from.SqmTreatedAttributeJoin;
 public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implements SqmSingularValuedJoin<O,T> {
 
 	public SqmSingularJoin(
-			SqmFrom<?,O> lhs,
-			SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
+			@Nonnull SqmFrom<?,O> lhs,
+			@Nonnull SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super(
 				lhs,
 				joinedNavigable.createNavigablePath( lhs, alias ),
@@ -41,24 +41,26 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		);
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitSingularJoin(this);
 	}
 
 	protected SqmSingularJoin(
-			SqmFrom<?, O> lhs,
-			NavigablePath navigablePath,
-			SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
+			@Nonnull SqmFrom<?, O> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, joinedNavigable, alias, joinType, fetched, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSingularJoin<O, T> copy(SqmCopyContext context) {
+	public SqmSingularJoin<O, T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -156,6 +158,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		return new SqmCorrelatedSingularJoin<>( this );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return String.format(

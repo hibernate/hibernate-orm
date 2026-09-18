@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -30,9 +31,9 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	private final Modifier modifier;
 
 	public SqmModifiedSubQueryExpression(
-			SqmSubQuery<T> subquery,
-			Modifier modifier,
-			NodeBuilder builder) {
+			@Nonnull SqmSubQuery<T> subquery,
+			@Nonnull Modifier modifier,
+			@Nonnull NodeBuilder builder) {
 		this (
 				subquery,
 				modifier,
@@ -42,17 +43,18 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	public SqmModifiedSubQueryExpression(
-			SqmSubQuery<T> subQuery,
-			Modifier modifier,
+			@Nonnull SqmSubQuery<T> subQuery,
+			@Nonnull Modifier modifier,
 			@Nullable SqmBindableType<T> resultType,
-			NodeBuilder builder) {
+			@Nonnull NodeBuilder builder) {
 		super( resultType, builder );
 		this.subQuery = subQuery;
 		this.modifier = modifier;
 	}
 
+	@Nonnull
 	@Override
-	public SqmModifiedSubQueryExpression<T> copy(SqmCopyContext context) {
+	public SqmModifiedSubQueryExpression<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -70,21 +72,24 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 		return expression;
 	}
 
+	@Nonnull
 	public Modifier getModifier() {
 		return modifier;
 	}
 
+	@Nonnull
 	public SqmSubQuery<T> getSubQuery() {
 		return subQuery;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitModifiedSubQueryExpression( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( modifier );
 		hql.append( " (" );
 		subQuery.appendHqlString( hql, context );
@@ -106,7 +111,7 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmModifiedSubQueryExpression<?> that
 			&& modifier == that.modifier
 			&& subQuery.isCompatible( that.subQuery );

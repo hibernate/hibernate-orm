@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -21,17 +22,19 @@ import org.hibernate.query.sqm.tree.spi.select.SqmSelectableNode;
 public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> implements SqmSelectableNode<T> {
 	private final SqmParameter<T> discriminatorSource;
 
+	@Nonnull
 	public SqmExpression<T> getDiscriminatorSource() {
 		return discriminatorSource;
 	}
 
-	public SqmParameterizedEntityType(SqmParameter<T> parameterExpression, NodeBuilder nodeBuilder) {
+	public SqmParameterizedEntityType(@Nonnull SqmParameter<T> parameterExpression, @Nonnull NodeBuilder nodeBuilder) {
 		super( SqmExpressionHelper.toSqmType( parameterExpression.getAnticipatedType(), nodeBuilder ), nodeBuilder );
 		this.discriminatorSource = parameterExpression;
 	}
 
+	@Nonnull
 	@Override
-	public SqmParameterizedEntityType<T> copy(SqmCopyContext context) {
+	public SqmParameterizedEntityType<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -53,13 +56,14 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 		discriminatorSource.applyInferableType( type );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitParameterizedEntityTypeExpression( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "type(" );
 		discriminatorSource.appendHqlString( hql, context );
 		hql.append( ')' );
@@ -77,7 +81,7 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmParameterizedEntityType<?> that
 			&& discriminatorSource.isCompatible( that.discriminatorSource );
 	}

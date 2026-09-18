@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 
 /**
@@ -17,6 +19,7 @@ public interface JpaJsonExistsNode {
 	 *
 	 * @return the error behavior
 	 */
+	@Nonnull
 	ErrorBehavior getErrorBehavior();
 
 	/**
@@ -24,24 +27,28 @@ public interface JpaJsonExistsNode {
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonExistsNode unspecifiedOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#ERROR} for this json exists expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonExistsNode errorOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#TRUE} for this json exists expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonExistsNode trueOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#FALSE} for this json exists expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonExistsNode falseOnError();
 
 	/**

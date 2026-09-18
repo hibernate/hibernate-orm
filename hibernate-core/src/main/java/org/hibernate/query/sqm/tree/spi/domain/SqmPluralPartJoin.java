@@ -28,11 +28,11 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 
 	public SqmPluralPartJoin(
-			SqmFrom<?,O> lhs,
-			SqmPathSource<T> joinedNavigable,
+			@Nonnull SqmFrom<?,O> lhs,
+			@Nonnull SqmPathSource<T> joinedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super(
 				SqmCreationHelper.buildSubNavigablePath( lhs, joinedNavigable.getPathName(), alias ),
 				joinedNavigable,
@@ -44,12 +44,12 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	}
 
 	protected SqmPluralPartJoin(
-			SqmFrom<?, O> lhs,
-			NavigablePath navigablePath,
-			SqmPathSource<T> joinedNavigable,
+			@Nonnull SqmFrom<?, O> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> joinedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super(
 				navigablePath,
 				joinedNavigable,
@@ -65,8 +65,9 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 		return false;
 	}
 
+	@Nonnull
 	@Override
-	public SqmPluralPartJoin<O, T> copy(SqmCopyContext context) {
+	public SqmPluralPartJoin<O, T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -102,8 +103,9 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 		throw new UnsupportedOperationException( "Setting a predicate for a plural part join is unsupported" );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitPluralPartJoin( this );
 	}
 
@@ -175,6 +177,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 		return new SqmCorrelatedPluralPartJoin<>( this );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return String.format(

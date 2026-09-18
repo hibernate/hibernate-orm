@@ -19,6 +19,8 @@ layout.buildDirectory.set(file("target"))
 dependencies {
 	implementation gradleApi()
 
+	compileOnly libs.jakarta.annotation
+
 	implementation libs.jakarta.inject
 
     implementation libs.jakarta.jaxbXjc

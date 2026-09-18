@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.criteria.JpaJsonExistsExpression;
@@ -38,14 +39,14 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 	private ErrorBehavior errorBehavior = ErrorBehavior.UNSPECIFIED;
 
 	public SqmJsonExistsExpression(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ReturnableType<Boolean> impliedResultType,
 			@Nullable ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name) {
 		super(
 				descriptor,
 				renderer,
@@ -59,16 +60,16 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 	}
 
 	private SqmJsonExistsExpression(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ReturnableType<Boolean> impliedResultType,
 			@Nullable ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name,
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name,
 			@Nullable Map<String, SqmExpression<?>> passingExpressions,
-			ErrorBehavior errorBehavior) {
+			@Nonnull ErrorBehavior errorBehavior) {
 		super(
 				descriptor,
 				renderer,
@@ -83,7 +84,8 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 		this.errorBehavior = errorBehavior;
 	}
 
-	public SqmJsonExistsExpression copy(SqmCopyContext context) {
+	@Nonnull
+	public SqmJsonExistsExpression copy(@Nonnull SqmCopyContext context) {
 		final SqmJsonExistsExpression existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -109,45 +111,52 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 		);
 	}
 
+	@Nonnull
 	@Override
 	public ErrorBehavior getErrorBehavior() {
 		return errorBehavior;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonExistsExpression unspecifiedOnError() {
 		this.errorBehavior = ErrorBehavior.UNSPECIFIED;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonExistsExpression errorOnError() {
 		this.errorBehavior = ErrorBehavior.ERROR;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonExistsExpression trueOnError() {
 		this.errorBehavior = ErrorBehavior.TRUE;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonExistsExpression falseOnError() {
 		this.errorBehavior = ErrorBehavior.FALSE;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonExistsExpression passing(
-			String parameterName,
-			jakarta.persistence.criteria.Expression<?> expression) {
+			@Nonnull String parameterName,
+			@Nonnull jakarta.persistence.criteria.Expression<?> expression) {
 		addPassingExpression( parameterName, (SqmExpression<?>) expression );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+	public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 		final @Nullable ReturnableType<?> resultType = resolveResultType( walker );
 		final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 		final ArgumentsValidator validator = getArgumentsValidator();
@@ -173,7 +182,7 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "json_exists(" );
 		getArguments().get( 0 ).appendHqlString( hql, context );
 		hql.append( ',' );
@@ -204,7 +213,7 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 	}
 
 	@Override
-	public boolean isCompatible(Object other) {
+	public boolean isCompatible(@Nullable Object other) {
 		return super.isCompatible( other )
 			&& other instanceof SqmJsonExistsExpression that
 			&& errorBehavior == that.errorBehavior;

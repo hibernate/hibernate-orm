@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 
 /**
@@ -18,7 +21,8 @@ public interface JpaXmlTableFunction {
 	 *
 	 * @return The {@link JpaXmlTableColumnNode} for the column
 	 */
-	JpaXmlTableColumnNode<String> queryColumn(String columnName);
+	@Nonnull
+	JpaXmlTableColumnNode<String> queryColumn(@Nonnull String columnName);
 
 	/**
 	 * Defines a string column on the result type with the given name for which the value can be obtained
@@ -26,21 +30,24 @@ public interface JpaXmlTableFunction {
 	 *
 	 * @return The {@link JpaXmlTableColumnNode} for the column
 	 */
-	JpaXmlTableColumnNode<String> queryColumn(String columnName, String xpath);
+	@Nonnull
+	JpaXmlTableColumnNode<String> queryColumn(@Nonnull String columnName, @Nullable String xpath);
 
 	/**
 	 * Like {@link #valueColumn(String, Class, String)} but uses the column name as XPath expression.
 	 *
 	 * @return The {@link JpaXmlTableColumnNode} for the column
 	 */
-	<X> JpaXmlTableColumnNode<X> valueColumn(String columnName, Class<X> type);
+	@Nonnull
+	<X> JpaXmlTableColumnNode<X> valueColumn(@Nonnull String columnName, @Nonnull Class<X> type);
 
 	/**
 	 * Like {@link #valueColumn(String, JpaCastTarget, String)} but uses the column name as XPath expression.
 	 *
 	 * @return The {@link JpaXmlTableColumnNode} for the column
 	 */
-	<X> JpaXmlTableColumnNode<X> valueColumn(String columnName, JpaCastTarget<X> castTarget);
+	@Nonnull
+	<X> JpaXmlTableColumnNode<X> valueColumn(@Nonnull String columnName, @Nonnull JpaCastTarget<X> castTarget);
 
 	/**
 	 * Like {@link #valueColumn(String, JpaCastTarget, String)}, but converting the {@link Class}
@@ -48,14 +55,16 @@ public interface JpaXmlTableFunction {
 	 *
 	 * @return The {@link JpaXmlTableColumnNode} for the column
 	 */
-	<X> JpaXmlTableColumnNode<X> valueColumn(String columnName, Class<X> type, String xpath);
+	@Nonnull
+	<X> JpaXmlTableColumnNode<X> valueColumn(@Nonnull String columnName, @Nonnull Class<X> type, @Nullable String xpath);
 
 	/**
 	 * Defines an column on the result type with the given name and type for which the value can be obtained by the given XPath path expression.
 	 *
 	 * @return The {@link JpaXmlTableColumnNode} for the column
 	 */
-	<X> JpaXmlTableColumnNode<X> valueColumn(String columnName, JpaCastTarget<X> castTarget, String xpath);
+	@Nonnull
+	<X> JpaXmlTableColumnNode<X> valueColumn(@Nonnull String columnName, @Nonnull JpaCastTarget<X> castTarget, @Nullable String xpath);
 
 	/**
 	 * Defines a long column on the result type with the given name which is set to the ordinality i.e.
@@ -63,5 +72,6 @@ public interface JpaXmlTableFunction {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaXmlTableFunction ordinalityColumn(String columnName);
+	@Nonnull
+	JpaXmlTableFunction ordinalityColumn(@Nonnull String columnName);
 }

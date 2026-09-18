@@ -39,13 +39,13 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	private boolean fetchJoin;
 
 	protected AbstractSqmAttributeJoin(
-			SqmFrom<?, L> lhs,
-			NavigablePath navigablePath,
-			SqmPathSource<R> joinedNavigable,
+			@Nonnull SqmFrom<?, L> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<R> joinedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetchJoin,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super(
 				navigablePath,
 				joinedNavigable,
@@ -96,7 +96,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 		fetchJoin = false;
 	}
 
-	private static void validateFetchAlias(@Nullable String alias, boolean fetchJoin, NodeBuilder nodeBuilder) {
+	private static void validateFetchAlias(@Nullable String alias, boolean fetchJoin, @Nonnull NodeBuilder nodeBuilder) {
 		if ( fetchJoin && alias != null && !alias.startsWith( "var_" )
 				&& nodeBuilder.isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
@@ -105,8 +105,9 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 		}
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitQualifiedAttributeJoin( this );
 	}
 
@@ -172,14 +173,14 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	// is fine for the purpose of matching nodes "syntactically".
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> object) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> object) {
 		return super.deepEquals( object )
 				&& object instanceof AbstractSqmAttributeJoin<?, ?> thatJoin
 				&& fetchJoin == thatJoin.isFetched();
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> object) {
 		return super.isDeepCompatible( object )
 			&& object instanceof AbstractSqmAttributeJoin<?, ?> thatJoin
 			&& fetchJoin == thatJoin.isFetched();

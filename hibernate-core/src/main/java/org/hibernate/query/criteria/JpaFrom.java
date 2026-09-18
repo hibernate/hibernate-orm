@@ -91,6 +91,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	/**
 	 * Create a derived join for the given subquery.
 	 */
+	@Nonnull
 	<X> JpaDerivedJoin<X> join(@Nonnull Subquery<X> subquery, @Nonnull org.hibernate.query.common.JoinType joinType);
 
 	/**

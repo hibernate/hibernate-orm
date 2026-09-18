@@ -35,24 +35,25 @@ public class SqmBasicValuedSimplePath<T>
 		extends AbstractSqmSimplePath<T>
 		implements SqmBindableType<T> {
 	public SqmBasicValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
 	public SqmBasicValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmBasicValuedSimplePath<T> copy(SqmCopyContext context) {
+	public SqmBasicValuedSimplePath<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -73,12 +74,13 @@ public class SqmBasicValuedSimplePath<T>
 		return path;
 	}
 
+	@Nonnull
 	protected SqmBasicValuedSimplePath<T> createCopy(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmBasicValuedSimplePath<>(
 				navigablePath,
 				referencedPathSource,
@@ -94,6 +96,7 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return BASIC;
 	}
@@ -101,11 +104,12 @@ public class SqmBasicValuedSimplePath<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SemanticPathPart
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new UnknownPathException(
 				String.format(
 						"Could not interpret attribute '%s' of basic-valued path '%s'",
@@ -114,11 +118,12 @@ public class SqmBasicValuedSimplePath<T>
 		);
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		final var pathRegistry =
 				creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
@@ -143,8 +148,9 @@ public class SqmBasicValuedSimplePath<T>
 		}
 	}
 
+	@Nonnull
 	private SelfRenderingSqmFunction<?> getIndexFunction(
-			SqmExpression<?> selector, SqmDomainType<T> sqmPathType, QueryEngine queryEngine) {
+			@Nonnull SqmExpression<?> selector, @Nonnull SqmDomainType<T> sqmPathType, @Nonnull QueryEngine queryEngine) {
 		final SqmFunctionRegistry registry = queryEngine.getSqmFunctionRegistry();
 		if ( sqmPathType instanceof BasicPluralType<?, ?> ) {
 			return registry.getFunctionDescriptor( "array_get" )
@@ -167,7 +173,7 @@ public class SqmBasicValuedSimplePath<T>
 		}
 	}
 
-	private @Nullable Class<?> getJavaTypeClass(SqmDomainType<T> sqmPathType) {
+	private @Nullable Class<?> getJavaTypeClass(@Nonnull SqmDomainType<T> sqmPathType) {
 		final SqmBindableType<T> expressible = nodeBuilder().resolveExpressible( sqmPathType );
 		return expressible == null ? null : expressible.getRelationalJavaType().getJavaTypeClass();
 	}
@@ -222,6 +228,7 @@ public class SqmBasicValuedSimplePath<T>
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
 		return super.getExpressible().getExpressibleJavaType();
@@ -236,11 +243,13 @@ public class SqmBasicValuedSimplePath<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Visitation
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitBasicValuedPath( this );
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getRelationalJavaType() {
 		return super.getExpressible().getRelationalJavaType();

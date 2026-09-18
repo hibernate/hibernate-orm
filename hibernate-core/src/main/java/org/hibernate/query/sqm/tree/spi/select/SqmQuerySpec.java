@@ -70,14 +70,14 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	private List<SqmExpression<?>> groupByClauseExpressions = Collections.emptyList();
 	private @Nullable SqmPredicate havingClausePredicate;
 
-	public SqmQuerySpec(NodeBuilder nodeBuilder) {
+	public SqmQuerySpec(@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		// Enforce non-nullness of the fromClause
 		this.fromClause = new SqmFromClause();
 		this.selectClause = new SqmSelectClause( false, nodeBuilder );
 	}
 
-	public SqmQuerySpec(SqmQuerySpec<T> original, SqmCopyContext context) {
+	public SqmQuerySpec(@Nonnull SqmQuerySpec<T> original, @Nonnull SqmCopyContext context) {
 		super( original, context );
 		this.fromClause = original.fromClause.copy( context );
 		this.selectClause = original.selectClause.copy( context );
@@ -96,8 +96,9 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmQuerySpec<T> copy(SqmCopyContext context) {
+	public SqmQuerySpec<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -122,16 +123,19 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return querySpec;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitQuerySpec( this );
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> getFirstQuerySpec() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> getLastQuerySpec() {
 		return this;
@@ -142,12 +146,13 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmFromClause getFromClause() {
 		return fromClause;
 	}
 
-	public void setFromClause(SqmFromClause fromClause) {
+	public void setFromClause(@Nullable SqmFromClause fromClause) {
 		// Enforce non-nullness of the fromClause
 		this.fromClause = fromClause == null ? new SqmFromClause() : fromClause;
 	}
@@ -202,11 +207,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return false;
 	}
 
+	@Nonnull
 	public SqmSelectClause getSelectClause() {
 		return selectClause;
 	}
 
-	public void setSelectClause(SqmSelectClause selectClause) {
+	public void setSelectClause(@Nonnull SqmSelectClause selectClause) {
 		this.selectClause = selectClause;
 	}
 
@@ -220,7 +226,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public void applyPredicate(SqmPredicate predicate) {
+	public void applyPredicate(@Nullable SqmPredicate predicate) {
 		if ( predicate != null ) {
 			if ( whereClause == null ) {
 				whereClause = new SqmWhereClause( nodeBuilder() );
@@ -234,11 +240,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return hasPositionalGroupItem;
 	}
 
+	@Nonnull
 	public List<SqmExpression<?>> getGroupByClauseExpressions() {
 		return groupByClauseExpressions;
 	}
 
-	public void setGroupByClauseExpressions(List<SqmExpression<?>> groupByClauseExpressions) {
+	public void setGroupByClauseExpressions(@Nullable List<SqmExpression<?>> groupByClauseExpressions) {
 		this.hasPositionalGroupItem = false;
 		if ( groupByClauseExpressions == null ) {
 			this.groupByClauseExpressions = Collections.emptyList();
@@ -278,6 +285,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
 	public JpaSelection<T> getSelection() {
@@ -286,7 +294,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setSelection(JpaSelection<T> selection) {
+	public SqmQuerySpec<T> setSelection(@Nonnull JpaSelection<T> selection) {
 		final var selectClause = getSelectClause();
 		// NOTE: this call comes from JPA which inherently supports just
 		// a single (possibly "compound") selection.
@@ -323,7 +331,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Nonnull
 	@Override
-	public SqmQuerySpec<T> addRoot(JpaRoot<?> root) {
+	public SqmQuerySpec<T> addRoot(@Nonnull JpaRoot<?> root) {
 		if ( getFromClause() == null ) {
 			setFromClause( new SqmFromClause() );
 		}
@@ -371,7 +379,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setRestriction(BooleanExpression... restrictions) {
+	public SqmQuerySpec<T> setRestriction(@Nonnull BooleanExpression... restrictions) {
 		if ( restrictions.length == 0 ) {
 			setWhereClause( null );
 		}
@@ -404,7 +412,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setRestriction(List<Predicate> restrictions) {
+	public SqmQuerySpec<T> setRestriction(@Nonnull List<Predicate> restrictions) {
 		if ( restrictions == null ) {
 			throw new IllegalArgumentException( "The predicate list cannot be null" );
 		}
@@ -420,6 +428,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return this;
 	}
 
+	@Nonnull
 	private SqmWhereClause resetWhereClause() {
 		final var whereClause = getWhereClause();
 		if ( whereClause == null ) {
@@ -441,7 +450,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setGroupingExpressions(List<? extends Expression<?>> groupExpressions) {
+	public SqmQuerySpec<T> setGroupingExpressions(@Nonnull List<? extends Expression<?>> groupExpressions) {
 		this.hasPositionalGroupItem = false;
 		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.size() );
 		for ( var groupExpression : groupExpressions ) {
@@ -455,7 +464,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setGroupingExpressions(Expression<?>... groupExpressions) {
+	public SqmQuerySpec<T> setGroupingExpressions(@Nonnull Expression<?>... groupExpressions) {
 		this.hasPositionalGroupItem = false;
 		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.length );
 		for ( var groupExpression : groupExpressions ) {
@@ -495,14 +504,14 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setGroupRestriction(BooleanExpression... restrictions) {
+	public SqmQuerySpec<T> setGroupRestriction(@Nullable BooleanExpression... restrictions) {
 		havingClausePredicate = restrictions == null ? null : nodeBuilder().wrap( restrictions );
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setGroupRestriction(List<Predicate> restrictions) {
+	public SqmQuerySpec<T> setGroupRestriction(@Nonnull List<Predicate> restrictions) {
 		havingClausePredicate = nodeBuilder().wrap( restrictions );
 		return this;
 	}
@@ -530,7 +539,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+	public SqmQuerySpec<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, @Nonnull FetchClauseType fetchClauseType) {
 		setFetchExpression( (SqmExpression<? extends Number>) fetch, fetchClauseType );
 		return this;
 	}
@@ -568,7 +577,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmSelectableNode<?> selectableNode) {
+	private void collectSelectedFromSet(@Nonnull Set<SqmFrom<?, ?>> selectedFromSet, @Nonnull SqmSelectableNode<?> selectableNode) {
 		if ( selectableNode instanceof SqmJpaCompoundSelection<?> compoundSelection ) {
 			for ( var selectionItem : compoundSelection.getSelectionItems() ) {
 				collectSelectedFromSet( selectedFromSet, selectionItem );
@@ -590,7 +599,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> sqmFrom) {
+	private void collectSelectedFromSet(@Nonnull Set<SqmFrom<?, ?>> selectedFromSet, @Nonnull SqmFrom<?, ?> sqmFrom) {
 		selectedFromSet.add( sqmFrom );
 		for ( var sqmJoin : sqmFrom.getSqmJoins() ) {
 			if ( sqmJoin.getReferencedPathSource().getPathType() instanceof EmbeddableDomainType<?> ) {
@@ -603,7 +612,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> joinContainer) {
+	private void validateFetchOwners(@Nonnull Set<SqmFrom<?, ?>> selectedFromSet, @Nonnull SqmFrom<?, ?> joinContainer) {
 		for ( var sqmJoin : joinContainer.getSqmJoins() ) {
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
 				if ( attributeJoin.isFetched() ) {
@@ -626,7 +635,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	private void assertFetchOwner(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmJoin<?, ?> fetchJoin) {
+	private void assertFetchOwner(@Nonnull Set<SqmFrom<?, ?>> selectedFromSet, @Nonnull SqmFrom<?, ?> owner, @Nonnull SqmJoin<?, ?> fetchJoin) {
 		if ( !selectedFromSet.contains( owner ) ) {
 			throw new SemanticException(
 					"Query specified join fetching, but the owner " +
@@ -637,7 +646,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final var selections = selectClause.getSelections();
 		if ( !selections.isEmpty() ) {
 			hql.append( "select " );
@@ -675,7 +684,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Internal
-	public boolean whereClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
+	public boolean whereClauseContains(@Nonnull NavigablePath navigablePath, @Nonnull SqmToSqlAstConverter sqlAstConverter) {
 		if ( whereClause == null ) {
 			return false;
 		}
@@ -687,7 +696,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Internal
-	public boolean groupByClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
+	public boolean groupByClauseContains(@Nullable NavigablePath navigablePath, @Nonnull SqmToSqlAstConverter sqlAstConverter) {
 		if ( groupByClauseExpressions.isEmpty() ) {
 			return false;
 		}
@@ -699,7 +708,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Internal
-	public boolean orderByClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
+	public boolean orderByClauseContains(@Nullable NavigablePath navigablePath, @Nonnull SqmToSqlAstConverter sqlAstConverter) {
 		final var orderByClause = getOrderByClause();
 		if ( orderByClause == null
 				|| orderByClause.getSortSpecifications().isEmpty() ) {
@@ -712,7 +721,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	private boolean isSameOrChildren(NavigablePath navigablePath, List<NavigablePath> navigablePaths) {
+	private boolean isSameOrChildren(@Nullable NavigablePath navigablePath, @Nonnull List<NavigablePath> navigablePaths) {
 		for ( var path : navigablePaths ) {
 			if ( path.isParentOrEqual( navigablePath ) ) {
 				return true;
@@ -721,7 +730,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return false;
 	}
 
-	private boolean isSameOrParent(NavigablePath navigablePath, List<NavigablePath> navigablePaths) {
+	private boolean isSameOrParent(@Nonnull NavigablePath navigablePath, @Nonnull List<NavigablePath> navigablePaths) {
 		for ( var path : navigablePaths ) {
 			if ( navigablePath.isParentOrEqual( path ) ) {
 				return true;
@@ -753,7 +762,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmQuerySpec<?> that
 			&& super.isCompatible( object )
 			&& fromClause.isCompatible( that.fromClause )

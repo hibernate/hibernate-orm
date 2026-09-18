@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.sql.hand.query;
 
+import jakarta.annotation.Nonnull;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -980,7 +982,8 @@ public class NativeSQLQueriesTest {
 
 	private static class UpperCasedAliasToEntityMapResultTransformer implements TupleTransformer<Object> {
 		@Override
-		public Object transformTuple(Object[] tuple, String[] aliases) {
+		@Nonnull
+		public Object transformTuple(@Nonnull Object[] tuple, @Nonnull String[] aliases) {
 			Map<String,Object> result = new HashMap<>( tuple.length );
 			for ( int i = 0; i < tuple.length; i++ ) {
 				String alias = aliases[i];

@@ -28,7 +28,7 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 
 	private final SqmSetReturningFunction<E> function;
 
-	public SqmFunctionRoot(SqmSetReturningFunction<E> function, @Nullable String alias) {
+	public SqmFunctionRoot(@Nonnull SqmSetReturningFunction<E> function, @Nullable String alias) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				function,
@@ -38,9 +38,9 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	}
 
 	protected SqmFunctionRoot(
-			NavigablePath navigablePath,
-			SqmSetReturningFunction<E> function,
-			SqmPathSource<E> pathSource,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmSetReturningFunction<E> function,
+			@Nonnull SqmPathSource<E> pathSource,
 			@Nullable String alias) {
 		super(
 				navigablePath,
@@ -52,8 +52,9 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 		this.function = function;
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunctionRoot<E> copy(SqmCopyContext context) {
+	public SqmFunctionRoot<E> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -71,11 +72,13 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmSetReturningFunction<E> getFunction() {
 		return function;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<Long> index() {
 		final SqmPathSource<?> pathSource =
@@ -85,8 +88,9 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 		return resolvePath( indexPathSource.getPathName(), indexPathSource );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitRootFunction( this );
 	}
 
@@ -99,11 +103,13 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 		throw new UnsupportedOperationException( "Function root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
+	@Nonnull
 	@Override
 	public String getEntityName() {
 		throw new UnsupportedOperationException( "Function root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<E> getResolvedModel() {
 		return getReferencedPathSource();
@@ -122,13 +128,13 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> object) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> object) {
 		return super.deepEquals( object )
 			&& function.equals( ((SqmFunctionRoot<?>) object).function );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> object) {
 		return super.isDeepCompatible( object )
 			&& function.isCompatible( ((SqmFunctionRoot<?>) object).function );
 	}

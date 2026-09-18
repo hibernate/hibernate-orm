@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.common.FrameKind;
@@ -22,6 +23,7 @@ public interface JpaWindowFrame {
 	 *
 	 * @return the window frame kind
 	 */
+	@Nonnull
 	FrameKind getKind();
 
 	/**

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.restriction;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -18,14 +19,16 @@ import org.hibernate.query.range.Range;
  *
  * @author Gavin King
  */
-record AttributeRange<X, U>(SingularAttribute<X, U> attribute, Range<U> range) implements Restriction<X> {
+record AttributeRange<X, U>(@Nonnull SingularAttribute<X, U> attribute, @Nonnull Range<U> range) implements Restriction<X> {
+	@Nonnull
 	@Override
 	public Restriction<X> negated() {
 		return new Negation<>( this );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder) {
+	public Predicate toPredicate(@Nonnull Root<? extends X> root, @Nonnull CriteriaBuilder builder) {
 		return range.toPredicate( root.get( attribute ), builder );
 	}
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -27,10 +28,10 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	private final SqmExpression<?> rhsOperand;
 
 	public SqmBinaryArithmetic(
-			BinaryArithmeticOperator operator,
-			SqmExpression<?> lhsOperand,
-			SqmExpression<?> rhsOperand,
-			NodeBuilder nodeBuilder) {
+			@Nonnull BinaryArithmeticOperator operator,
+			@Nonnull SqmExpression<?> lhsOperand,
+			@Nonnull SqmExpression<?> rhsOperand,
+			@Nonnull NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
 				(SqmBindableType<T>) // TODO: this cast is unsound
@@ -58,11 +59,11 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	public SqmBinaryArithmetic(
-			BinaryArithmeticOperator operator,
-			SqmExpression<?> lhsOperand,
-			SqmExpression<?> rhsOperand,
+			@Nonnull BinaryArithmeticOperator operator,
+			@Nonnull SqmExpression<?> lhsOperand,
+			@Nonnull SqmExpression<?> rhsOperand,
 			@Nullable SqmBindableType<T> expressibleType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( expressibleType, nodeBuilder );
 
 		this.operator = operator;
@@ -71,8 +72,9 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		this.rhsOperand = rhsOperand;
 	}
 
+	@Nonnull
 	@Override
-	public SqmBinaryArithmetic<T> copy(SqmCopyContext context) {
+	public SqmBinaryArithmetic<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -91,8 +93,9 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		return expression;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitBinaryArithmeticExpression( this );
 	}
 
@@ -101,6 +104,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	 *
 	 * @return The left-hand operand.
 	 */
+	@Nonnull
 	public SqmExpression<?> getLeftHandOperand() {
 		return lhsOperand;
 	}
@@ -110,6 +114,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	 *
 	 * @return The operator
 	 */
+	@Nonnull
 	public BinaryArithmeticOperator getOperator() {
 		return operator;
 	}
@@ -119,6 +124,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	 *
 	 * @return The right-hand operand.
 	 */
+	@Nonnull
 	public SqmExpression<?> getRightHandOperand() {
 		return rhsOperand;
 	}
@@ -131,13 +137,14 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		super.internalApplyInferableType( type );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return getOperator().toLoggableText( lhsOperand.asLoggableText(), rhsOperand.asLoggableText() );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		lhsOperand.appendHqlString( hql, context );
 		hql.append( ' ' );
 		hql.append( operator.getOperatorSqlText() );
@@ -162,7 +169,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmBinaryArithmetic<?> that
 			&& this.operator == that.operator
 			&& this.lhsOperand.isCompatible( that.lhsOperand )

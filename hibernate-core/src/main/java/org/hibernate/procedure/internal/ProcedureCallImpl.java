@@ -260,13 +260,13 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@Nonnull
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull Class<X> type) {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
 	}
 
 	@Override
 	@Nonnull
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph) {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
 	}
 
@@ -718,7 +718,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
-			String parameterName,
+			@Nonnull String parameterName,
 			@Nonnull Class<?> type,
 			@Nonnull ParameterMode mode) {
 		checkNotClosed();
@@ -795,7 +795,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
-			String parameterName,
+			@Nonnull String parameterName,
 			@Nonnull Type<?> type,
 			@Nonnull ParameterMode mode) {
 		checkNotClosed();
@@ -815,7 +815,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@Nonnull
-	public <T> ProcedureParameterImplementor<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
+	public <T> ProcedureParameterImplementor<T> registerParameter(int position, @Nonnull Class<T> javaType, @Nonnull ParameterMode mode) {
 		final var parameterType = getMappingMetamodel().resolveParameterBindType( javaType );
 		final var procedureParameter =
 				new ProcedureParameterImpl<>( position, mode, getExpressibleJavaType( parameterType ), parameterType );
@@ -864,7 +864,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@Nonnull
-	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(int position, @Nonnull Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
+	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(int position, @Nonnull Class<? extends AttributeConverter<T, ?>> converter, @Nonnull ParameterMode mode) {
 		checkNotClosed();
 		final var convertedType = createConvertedParameterType(
 				converter,
@@ -883,7 +883,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@Nonnull
-	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(@Nonnull String parameterName, @Nonnull Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
+	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(@Nonnull String parameterName, @Nonnull Class<? extends AttributeConverter<T, ?>> converter, @Nonnull ParameterMode mode) {
 		checkNotClosed();
 		final var convertedType = createConvertedParameterType(
 				converter,
@@ -914,7 +914,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <T> ProcedureParameterImplementor<T> registerParameter(
-			String name,
+			@Nonnull String name,
 			@Nonnull Type<T> typeReference,
 			@Nonnull ParameterMode mode) {
 		checkNotClosed();
@@ -941,20 +941,21 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getSynchronizedQuerySpaces() {
 		return synchronizedQuerySpaces == null ? emptySet() : unmodifiableSet( synchronizedQuerySpaces );
 	}
 
 	@Override
 	@Nonnull
-	public ProcedureCallImplementor<R> addSynchronizedQuerySpace(String querySpace) {
+	public ProcedureCallImplementor<R> addSynchronizedQuerySpace(@Nonnull String querySpace) {
 		synchronizedQuerySpaces().add( querySpace );
 		return this;
 	}
 
 	@Override
 	@Nonnull
-	public ProcedureCallImplementor<R> addSynchronizedEntityName(String entityName) {
+	public ProcedureCallImplementor<R> addSynchronizedEntityName(@Nonnull String entityName) {
 		final var entityDescriptor = getMappingMetamodel().getEntityDescriptor( entityName );
 		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
@@ -966,7 +967,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@Nonnull
-	public ProcedureCallImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) {
+	public ProcedureCallImplementor<R> addSynchronizedEntityClass(@Nonnull @SuppressWarnings("rawtypes") Class entityClass) {
 		final var entityDescriptor = getMappingMetamodel().getEntityDescriptor( entityClass );
 		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
@@ -978,7 +979,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@Nonnull
-	public NamedCallableQueryMemento toMemento(String name) {
+	public NamedCallableQueryMemento toMemento(@Nonnull String name) {
 		return new NamedCallableQueryMementoImpl(
 				name,
 				procedureName,
@@ -1596,7 +1597,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@Nonnull
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph, @Nonnull GraphSemantic graphSemantic) {
 		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}
 

@@ -38,6 +38,7 @@ public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJ
 		return !isFetched() && !isImplicitJoin();
 	}
 
+	@Nonnull
 	@Override
 	SqmPathSource<T> getReferencedPathSource();
 
@@ -109,7 +110,8 @@ public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJ
 	@Nonnull
 	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(@Nonnull Class<S> treatTarget, @Nullable String alias, boolean fetch);
 
+	@Nonnull
 	@Override
-	SqmAttributeJoin<O, T> copy(SqmCopyContext context);
+	SqmAttributeJoin<O, T> copy(@Nonnull SqmCopyContext context);
 
 }

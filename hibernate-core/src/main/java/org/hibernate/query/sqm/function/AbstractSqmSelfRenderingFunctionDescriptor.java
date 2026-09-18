@@ -165,8 +165,8 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	protected <T> SelfRenderingSqmWindowFunction<T> generateSqmWindowFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		if ( functionKind != FunctionKind.WINDOW ) {

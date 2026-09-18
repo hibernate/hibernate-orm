@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.query.common.FrameExclusion;
 
@@ -24,7 +27,8 @@ public interface JpaWindow {
 	 *
 	 * @return the modified window
 	 */
-	JpaWindow partitionBy(Expression<?>... expressions);
+	@Nonnull
+	JpaWindow partitionBy(@Nonnull Expression<?>... expressions);
 
 	/**
 	 * Add order by expressions to the window.
@@ -33,7 +37,8 @@ public interface JpaWindow {
 	 *
 	 * @return the modified window
 	 */
-	JpaWindow orderBy(Order... expressions);
+	@Nonnull
+	JpaWindow orderBy(@Nonnull Order... expressions);
 
 	/**
 	 * Add a {@code ROWS} frame clause to the window and define
@@ -44,7 +49,8 @@ public interface JpaWindow {
 	 *
 	 * @return the modified window
 	 */
-	JpaWindow frameRows(JpaWindowFrame startFrame, JpaWindowFrame endFrame);
+	@Nonnull
+	JpaWindow frameRows(@Nullable JpaWindowFrame startFrame, @Nullable JpaWindowFrame endFrame);
 
 	/**
 	 * Add a {@code RANGE} frame clause to the window and define
@@ -55,7 +61,8 @@ public interface JpaWindow {
 	 *
 	 * @return the modified window
 	 */
-	JpaWindow frameRange(JpaWindowFrame startFrame, JpaWindowFrame endFrame);
+	@Nonnull
+	JpaWindow frameRange(@Nullable JpaWindowFrame startFrame, @Nullable JpaWindowFrame endFrame);
 
 	/**
 	 * Add a {@code GROUPS} frame clause to the window and define
@@ -66,7 +73,8 @@ public interface JpaWindow {
 	 *
 	 * @return the modified window
 	 */
-	JpaWindow frameGroups(JpaWindowFrame startFrame, JpaWindowFrame endFrame);
+	@Nonnull
+	JpaWindow frameGroups(@Nullable JpaWindowFrame startFrame, @Nullable JpaWindowFrame endFrame);
 
 	/**
 	 * Set a {@link FrameExclusion} for this window's frame.
@@ -75,5 +83,6 @@ public interface JpaWindow {
 	 *
 	 * @return the modified window
 	 */
-	JpaWindow frameExclude(FrameExclusion frameExclusion);
+	@Nonnull
+	JpaWindow frameExclude(@Nonnull FrameExclusion frameExclusion);
 }

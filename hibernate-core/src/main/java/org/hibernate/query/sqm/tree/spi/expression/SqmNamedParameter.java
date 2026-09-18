@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -21,26 +22,27 @@ import java.util.Objects;
 public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	private final String name;
 
-	public SqmNamedParameter(String name, boolean canBeMultiValued, NodeBuilder nodeBuilder) {
+	public SqmNamedParameter(@Nonnull String name, boolean canBeMultiValued, @Nonnull NodeBuilder nodeBuilder) {
 		this( name, canBeMultiValued, null, nodeBuilder );
 	}
 
 	public SqmNamedParameter(
-			String name,
+			@Nonnull String name,
 			boolean canBeMultiValued,
 			@Nullable SqmBindableType<T> inherentType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, inherentType, nodeBuilder );
 		this.name = name;
 	}
 
+	@Nonnull
 	@Override
-	public SqmNamedParameter<T> copy(SqmCopyContext context) {
+	public SqmNamedParameter<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmNamedParameter<T> expression = context.registerCopy(
+		final var expression = context.registerCopy(
 				this,
 				new SqmNamedParameter<>(
 						name,
@@ -53,33 +55,38 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 		return expression;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitNamedParameterExpression( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return ":" + getName();
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "SqmNamedParameter(" + getName() + ")";
 	}
 
 	@Override
+	@Nonnull
 	public String getName() {
 		return name;
 	}
 
+	@Nonnull
 	@Override
 	public SqmParameter<T> copy() {
 		return new SqmNamedParameter<>( getName(), allowMultiValuedBinding(), getNodeType(), nodeBuilder() );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( ':' ).append( getName() );
 	}
 
@@ -95,7 +102,7 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals(  object );
 	}
 

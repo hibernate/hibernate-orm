@@ -59,11 +59,11 @@ public abstract class AbstractSqmSelectQuery<T>
 	private SqmQueryPart<T> sqmQueryPart;
 	private final Class<T> resultType;
 
-	public AbstractSqmSelectQuery(Class<T> resultType, NodeBuilder builder) {
+	public AbstractSqmSelectQuery(@Nonnull Class<T> resultType, @Nonnull NodeBuilder builder) {
 		this( new SqmQuerySpec<>( builder ), resultType, builder );
 	}
 
-	public AbstractSqmSelectQuery(SqmQueryPart<T> queryPart, Class<T> resultType, NodeBuilder builder) {
+	public AbstractSqmSelectQuery(@Nonnull SqmQueryPart<T> queryPart, @Nonnull Class<T> resultType, @Nonnull NodeBuilder builder) {
 		super( builder );
 		this.cteStatements = new LinkedHashMap<>();
 		this.resultType = resultType;
@@ -71,26 +71,27 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	protected AbstractSqmSelectQuery(
-			NodeBuilder builder,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			Class<T> resultType) {
+			@Nonnull NodeBuilder builder,
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull Class<T> resultType) {
 		super( builder );
 		this.cteStatements = cteStatements;
 		this.resultType = resultType;
 	}
 
 	public AbstractSqmSelectQuery(
-			SqmQueryPart<T> queryPart,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			Class<T> resultType,
-			NodeBuilder builder) {
+			@Nonnull SqmQueryPart<T> queryPart,
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull Class<T> resultType,
+			@Nonnull NodeBuilder builder) {
 		super( builder );
 		this.cteStatements = cteStatements;
 		this.resultType = resultType;
 		this.sqmQueryPart = queryPart;
 	}
 
-	protected Map<String, SqmCteStatement<?>> copyCteStatements(SqmCopyContext context) {
+	@Nonnull
+	protected Map<String, SqmCteStatement<?>> copyCteStatements(@Nonnull SqmCopyContext context) {
 		final Map<String, SqmCteStatement<?>> copies = new LinkedHashMap<>( cteStatements.size() );
 		for ( var entry : cteStatements.entrySet() ) {
 			copies.put( entry.getKey(), entry.getValue().copy( context ) );
@@ -104,16 +105,17 @@ public abstract class AbstractSqmSelectQuery<T>
 		return cteStatements.values();
 	}
 
+	@Nonnull
 	Map<String, SqmCteStatement<?>> getCteStatementMap() {
 		return new LinkedHashMap<>( cteStatements );
 	}
 
-	void addCteStatements(Map<String, SqmCteStatement<?>> cteStatements) {
+	void addCteStatements(@Nonnull Map<String, SqmCteStatement<?>> cteStatements) {
 		this.cteStatements.putAll( cteStatements );
 	}
 
 	@Override
-	public @Nullable SqmCteStatement<?> getCteStatement(String cteLabel) {
+	public @Nullable SqmCteStatement<?> getCteStatement(@Nonnull String cteLabel) {
 		return cteStatements.get( cteLabel );
 	}
 
@@ -179,7 +181,8 @@ public abstract class AbstractSqmSelectQuery<T>
 		return withInternal( validateCteName( name ), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
-	private String validateCteName(String name) {
+	@Nonnull
+	private String validateCteName(@Nonnull String name) {
 		if ( name == null || name.isBlank() ) {
 			throw new IllegalArgumentException( "Illegal empty CTE name" );
 		}
@@ -194,7 +197,8 @@ public abstract class AbstractSqmSelectQuery<T>
 		return name;
 	}
 
-	protected <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
+	@Nonnull
+	protected <X> JpaCteCriteria<X> withInternal(@Nonnull String name, @Nonnull AbstractQuery<X> criteria) {
 		final var cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) criteria,
@@ -207,11 +211,12 @@ public abstract class AbstractSqmSelectQuery<T>
 		return cteStatement;
 	}
 
+	@Nonnull
 	protected <X> JpaCteCriteria<X> withInternal(
-			String name,
-			AbstractQuery<X> baseCriteria,
+			@Nonnull String name,
+			@Nonnull AbstractQuery<X> baseCriteria,
 			boolean unionDistinct,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		final var cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) baseCriteria,
@@ -244,7 +249,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		return sqmQueryPart;
 	}
 
-	public void setQueryPart(SqmQueryPart<T> sqmQueryPart) {
+	public void setQueryPart(@Nonnull SqmQueryPart<T> sqmQueryPart) {
 		this.sqmQueryPart = sqmQueryPart;
 	}
 
@@ -266,7 +271,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(int, Class)
 	 */
 	@Nonnull
-	public <E> JpaRoot<? extends E> getRoot(int position, Class<E> type) {
+	public <E> JpaRoot<? extends E> getRoot(int position, @Nonnull Class<E> type) {
 		final var rootList = getQuerySpec().getRootList();
 		if ( rootList.size() <= position ) {
 			throw new IllegalArgumentException( "Not enough root entities" );
@@ -278,7 +283,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(String, Class)
 	 */
 	@Nonnull
-	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
+	public <E> JpaRoot<? extends E> getRoot(@Nonnull String alias, @Nonnull Class<E> type) {
 		for ( var root : getQuerySpec().getRootList() ) {
 			final String rootAlias = root.getAlias();
 			if ( rootAlias != null && rootAlias.equals( alias ) ) {
@@ -288,7 +293,8 @@ public abstract class AbstractSqmSelectQuery<T>
 		throw new IllegalArgumentException( "No root entity with alias " + alias );
 	}
 
-	private static <E> JpaRoot<? extends E> castRoot(JpaRoot<?> root, Class<E> type) {
+	@Nonnull
+	private static <E> JpaRoot<? extends E> castRoot(@Nonnull JpaRoot<?> root, @Nonnull Class<E> type) {
 		final var rootEntityType = root.getJavaType();
 		if ( rootEntityType == null ) {
 			throw new AssertionFailure( "Java type of root entity was null" );
@@ -339,7 +345,8 @@ public abstract class AbstractSqmSelectQuery<T>
 		return root;
 	}
 
-	private <X> SqmRoot<X> addRoot(SqmRoot<X> root) {
+	@Nonnull
+	private <X> SqmRoot<X> addRoot(@Nonnull SqmRoot<X> root) {
 		getQuerySpec().addRoot( root );
 		return root;
 	}
@@ -473,7 +480,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		return this;
 	}
 
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		if ( !cteStatements.isEmpty() ) {
 			hql.append( "with " );
 			for ( var value : cteStatements.values() ) {
@@ -501,7 +508,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof AbstractSqmSelectQuery<?> that
 			&& Objects.equals( this.resultType, that.resultType ) // for performance!
 			&& this.sqmQueryPart.isCompatible( that.sqmQueryPart )
@@ -515,8 +522,9 @@ public abstract class AbstractSqmSelectQuery<T>
 		return result;
 	}
 
+	@Nonnull
 	@SuppressWarnings("unchecked")
-	protected Selection<? extends T> getResultSelection(Selection<?>[] selections) {
+	protected Selection<? extends T> getResultSelection(@Nonnull Selection<?>[] selections) {
 		final var resultType = getResultType();
 		if ( resultType == Object.class ) {
 			return switch ( selections.length ) {

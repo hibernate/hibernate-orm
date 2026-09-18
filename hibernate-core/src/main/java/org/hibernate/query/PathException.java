@@ -4,6 +4,9 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 /**
  * Indicates a problem with a path expression in HQL/JPQL.
  *
@@ -12,15 +15,15 @@ package org.hibernate.query;
  * @see org.hibernate.query.sqm.UnknownPathException
  */
 public class PathException extends SemanticException {
-	public PathException(String message) {
+	public PathException(@Nonnull String message) {
 		super( message );
 	}
 
-	public PathException(String message, Exception cause) {
+	public PathException(@Nonnull String message, @Nullable Exception cause) {
 		super( message, cause );
 	}
 
-	public PathException(String message, String hql, Exception cause) {
+	public PathException(@Nonnull String message, @Nullable String hql, @Nullable Exception cause) {
 		super(message, hql, cause);
 	}
 }

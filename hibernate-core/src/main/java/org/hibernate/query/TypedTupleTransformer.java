@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 
 /**
@@ -19,5 +21,6 @@ public interface TypedTupleTransformer<T> extends TupleTransformer<T> {
 	/**
 	 * The type resulting from this transformation
 	 */
+	@Nonnull
 	Class<T> getTransformedType();
 }

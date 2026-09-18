@@ -99,7 +99,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@Nonnull
-	public final <X> X unwrap(Class<X> type) {
+	public final <X> X unwrap(@Nonnull Class<X> type) {
 		if ( type.isInstance( this ) ) {
 			return type.cast( this );
 		}
@@ -236,6 +236,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override @SuppressWarnings("removal")
+	@Nullable
 	public T getSingleResult() {
 		try {
 			final var list = getResultList();
@@ -436,6 +437,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public Query<T> setCacheRegion(@Nullable String cacheRegion) {
 		verifySelectionOption( "Result caching" );
 		queryOptions.setResultCacheRegionName( cacheRegion );

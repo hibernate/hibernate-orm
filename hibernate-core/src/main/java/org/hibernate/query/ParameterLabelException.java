@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * Indicates a problem with the labelling of query parameters.
  *
@@ -12,7 +14,7 @@ package org.hibernate.query;
  * @since 6.3
  */
 public class ParameterLabelException extends SemanticException {
-	public ParameterLabelException(String message) {
+	public ParameterLabelException(@Nonnull String message) {
 		super(message);
 	}
 }

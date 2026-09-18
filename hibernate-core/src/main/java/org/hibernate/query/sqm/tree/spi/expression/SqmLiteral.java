@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmBindableType;
@@ -32,7 +33,7 @@ import static org.hibernate.internal.util.QuotingHelper.appendSingleQuoteEscaped
 public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	private final @Nullable T value;
 
-	public SqmLiteral(T value, @Nullable SqmBindableType<? super T> inherentType, NodeBuilder nodeBuilder) {
+	public SqmLiteral(@Nonnull T value, @Nullable SqmBindableType<? super T> inherentType, @Nonnull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		assert value != null;
 		assert inherentType == null
@@ -40,19 +41,20 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		this.value = value;
 	}
 
-	protected SqmLiteral(@Nullable SqmBindableType<T> inherentType, NodeBuilder nodeBuilder) {
+	protected SqmLiteral(@Nullable SqmBindableType<T> inherentType, @Nonnull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.value = null;
 	}
 
 	// Constructor for SqmEnumLiteral
-	SqmLiteral(@Nullable SqmBindableType<T> inherentType, T value, NodeBuilder nodeBuilder) {
+	SqmLiteral(@Nullable SqmBindableType<T> inherentType, @Nonnull T value, @Nonnull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.value = value;
 	}
 
+	@Nonnull
 	@Override
-	public SqmLiteral<T> copy(SqmCopyContext context) {
+	public SqmLiteral<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -70,22 +72,24 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		return value;
 	}
 
+	@Nullable
 	@Override
-	public <R> R accept(SemanticQueryWalker<R> walker) {
+	public <R> R accept(@Nonnull SemanticQueryWalker<R> walker) {
 		return walker.visitLiteral( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return "Literal( " + getLiteralValue() + ")";
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		appendHqlString( hql, getJavaTypeDescriptor(), getLiteralValue() );
 	}
 
-	public static <T> void appendHqlString(StringBuilder sb, @Nullable JavaType<T> javaType, @Nullable T value) {
+	public static <T> void appendHqlString(@Nonnull StringBuilder sb, @Nullable JavaType<T> javaType, @Nullable T value) {
 		if ( value == null ) {
 			sb.append( "null" );
 		}
@@ -121,7 +125,7 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

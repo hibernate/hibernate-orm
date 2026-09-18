@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.Statement;
@@ -60,7 +61,7 @@ public interface QueryOption {
 	/// {@value org.hibernate.cfg.JdbcSettings#USE_SQL_COMMENTS}.
 	///
 	/// @param comment The text of the comment
-	record Comment(String comment) implements TypedQuery.Option, Statement.Option {
+	record Comment(@Nonnull String comment) implements TypedQuery.Option, Statement.Option {
 		public Comment {
 			requireNonNull(comment, "Comment text must be specified");
 		}

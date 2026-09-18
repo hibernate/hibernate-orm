@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
@@ -19,7 +20,7 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 	private final SqmCorrelatedRootJoin<O> correlatedRootJoin;
 	private final SqmPluralPartJoin<O, T> correlationParent;
 
-	public SqmCorrelatedPluralPartJoin(SqmPluralPartJoin<O, T> correlationParent) {
+	public SqmCorrelatedPluralPartJoin(@Nonnull SqmPluralPartJoin<O, T> correlationParent) {
 		super(
 				correlationParent.getLhs(),
 				correlationParent.getNavigablePath(),
@@ -32,8 +33,9 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 		this.correlationParent = correlationParent;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedPluralPartJoin<O, T> copy(SqmCopyContext context) {
+	public SqmCorrelatedPluralPartJoin<O, T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -46,8 +48,9 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 		return path;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedPluralPartJoin( this );
 	}
 
@@ -57,6 +60,7 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 		return correlationParent;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return correlationParent;
@@ -67,20 +71,21 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<O> getCorrelatedRoot() {
 		return correlatedRootJoin;
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> other) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> other) {
 		return super.deepEquals( other )
 			&& other instanceof SqmCorrelatedPluralPartJoin<?, ?> that
 			&& correlationParent.equals( that.correlationParent );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> other) {
 		return super.isDeepCompatible( other )
 			&& other instanceof SqmCorrelatedPluralPartJoin<?, ?> that
 			&& correlationParent.isCompatible( that.correlationParent );

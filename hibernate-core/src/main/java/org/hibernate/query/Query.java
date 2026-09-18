@@ -611,6 +611,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead as caching is only relevant for
 	 * selection queries
 	 */
+	@Nonnull
 	@Deprecated(since = "8.0", forRemoval = true)
 	Query<T> setCacheRegion(@Nullable String cacheRegion);
 
@@ -908,6 +909,7 @@ public interface Query<T> extends CommonQueryContract {
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nullable
 	T getSingleResult();
 
 	/**

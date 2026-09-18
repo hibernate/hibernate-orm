@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import org.hibernate.sql.ast.spi.creation.SqlTreeCreationException;
+
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.spi.QueryEngine;
@@ -58,11 +60,14 @@ public interface OrderingExpression extends Node {
 					queryEngine.getSqmFunctionRegistry()
 							.findFunctionDescriptor( "collate" )
 							.generateSqmExpression(
-									new SqmSelfRenderingExpression<>( walker -> expression, null, null ),
+									new SqmSelfRenderingExpression<>( walker -> expression, null, queryEngine.getCriteriaBuilder() ),
 									null,
 									queryEngine
 							)
 							.convertToSqlAst( converter );
+		}
+		if ( sortExpression == null ) {
+			throw new SqlTreeCreationException( "The collate function did not produce a SQL expression" );
 		}
 		return sortExpression;
 	}

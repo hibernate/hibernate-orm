@@ -142,8 +142,7 @@ public class AttributeConverterTest {
 			BasicValueResolutionBuilder.applyResolution(
 					details,
 					buildingContext.getServiceComponents(),
-					MappingResolutionState.from( buildingContext ),
-					buildingContext
+					MappingResolutionState.from( buildingContext )
 			);
 
 			final var type = basicValue.getType();

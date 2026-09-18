@@ -10,7 +10,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.mapping.spi.CategorizedDomainModel;
 import org.hibernate.boot.mapping.spi.EmbeddableUsageMetadata;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 
@@ -45,17 +44,6 @@ public interface EmbeddableBindingContext {
 
 	/// The mutable component mapping for [#getEmbeddableUsage()].
 	Component getComponent();
-
-	/// Access to boot services and metadata-wide contribution facilities.
-	///
-	/// @apiNote This is an escape hatch for binder behavior which is broader than
-	/// mutation of the local property or containing entity.
-	///
-	/// @deprecated There is no replacement per-se, but hopefully the deprecation
-	/// leads to reports about specific bits of the context which are needed
-	/// and/or useful for implementors.
-	@Deprecated(since = "9.0")
-	MetadataBuildingContext getMetadataBuildingContext();
 
 	/// Reports that the given custom annotation is not supported on this
 	/// embeddable usage.

@@ -1,5 +1,6 @@
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.SPI;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature;
 
 /**
@@ -13,7 +14,12 @@ import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature;
  *
  * @author Steve Ebersole
  */
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJpaCompliantImpl {
+	@SPI(SPI.Role.USE)
+	public ImplicitNamingStrategyLegacyJpaImpl() {
+	}
+
 	/**
 	 * Singleton access
 	 */
@@ -25,7 +31,7 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 		final Identifier identifier = toIdentifier(
 				owningPhysicalTableName.getText()
 				+ "_" + transformAttributePath( source.getOwningAttributePath() ),
-				source.getBuildingContext()
+				source.getNamingContext()
 		);
 		return owningPhysicalTableName.isQuoted() ? identifier.quoted() : identifier;
 	}
@@ -37,7 +43,7 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 				source.getNonOwningPhysicalTableName() == null
 						? transformAttributePath( source.getAssociationOwningAttributePath() )
 						: source.getNonOwningPhysicalTableName();
-		return toIdentifier( ownerPortion + "_" + ownedPortion, source.getBuildingContext() );
+		return toIdentifier( ownerPortion + "_" + ownedPortion, source.getNamingContext() );
 	}
 
 	@Override
@@ -62,6 +68,6 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 						? source.getReferencedTableName().getText()
 						: transformAttributePath( source.getAttributePath() );
 		final String name = qualifier + '_' + source.getReferencedColumnName().getText();
-		return toIdentifier( name, source.getBuildingContext() );
+		return toIdentifier( name, source.getNamingContext() );
 	}
 }

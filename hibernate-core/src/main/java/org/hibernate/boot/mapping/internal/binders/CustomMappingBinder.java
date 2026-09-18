@@ -5,7 +5,6 @@ import java.lang.annotation.Annotation;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.Collate;
-import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.binder.AttributeBindingContext;
 import org.hibernate.binder.EmbeddableBindingContext;
@@ -22,7 +21,6 @@ import org.hibernate.boot.mapping.spi.EntityTypeMetadata;
 import org.hibernate.boot.mapping.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.mapping.spi.DeclarationRole;
 import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.Component;
@@ -42,9 +40,8 @@ public class CustomMappingBinder {
 	public static ComponentBindingPhase.CustomMapping typeBinding(
 			EmbeddableContribution contribution,
 			Component component,
-			BindingState bindingState,
 			BindingContext bindingContext) {
-		return new ComponentTypeBinding( contribution, component, bindingState, bindingContext );
+		return new ComponentTypeBinding( contribution, component, bindingContext );
 	}
 
 	public static AttributeBindingPhase.CustomMapping attributeBinding(
@@ -59,9 +56,7 @@ public class CustomMappingBinder {
 	static void callTypeBinders(
 			org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl entityType,
 			PersistentClass persistentClass,
-			BindingState bindingState,
 			BindingContext bindingContext) {
-		final MetadataBuildingContext metadataBuildingContext = bindingState.getMetadataBuildingContext();
 		for ( var metaAnnotated : entityType.getClassDetails().getMetaAnnotated(
 				TypeBinderType.class,
 				bindingContext.getModelsContext()
@@ -72,8 +67,7 @@ public class CustomMappingBinder {
 					new StandardEntityBindingContext(
 							bindingContext.getCategorizedDomainModel(),
 							entityType,
-							persistentClass,
-							metadataBuildingContext
+							persistentClass
 					)
 			);
 		}
@@ -82,9 +76,7 @@ public class CustomMappingBinder {
 	static void callTypeBinders(
 			EmbeddableContribution contribution,
 			Component component,
-			BindingState bindingState,
 			BindingContext bindingContext) {
-		final MetadataBuildingContext metadataBuildingContext = bindingState.getMetadataBuildingContext();
 		for ( var metaAnnotated : contribution.componentType().getMetaAnnotated(
 				TypeBinderType.class,
 				bindingContext.getModelsContext()
@@ -96,8 +88,7 @@ public class CustomMappingBinder {
 							bindingContext.getCategorizedDomainModel(),
 							contribution.usage(),
 							component.getOwner(),
-							component,
-							metadataBuildingContext
+							component
 					)
 			);
 		}
@@ -119,8 +110,7 @@ public class CustomMappingBinder {
 				AttributeBinderType.class,
 				bindingContext.getModelsContext()
 		) ) {
-			if ( metaAnnotated.annotationType() == TenantId.class
-					|| metaAnnotated.annotationType() == Collate.class ) {
+			if ( metaAnnotated.annotationType() == Collate.class ) {
 				continue;
 			}
 			callAttributeBinder( metaAnnotated, metaAnnotated.annotationType(), attributeBindingContext );
@@ -130,11 +120,10 @@ public class CustomMappingBinder {
 	private record ComponentTypeBinding(
 			EmbeddableContribution contribution,
 			Component component,
-			BindingState bindingState,
 			BindingContext bindingContext) implements ComponentBindingPhase.CustomMapping {
 		@Override
 		public void bindCustomMapping() {
-			callTypeBinders( contribution, component, bindingState, bindingContext );
+			callTypeBinders( contribution, component, bindingContext );
 		}
 	}
 
@@ -221,8 +210,7 @@ public class CustomMappingBinder {
 				bindingContext.getCategorizedDomainModel(),
 				resolveAttributeApplication( member, persistentClass, property, bindingState, bindingContext ),
 				persistentClass,
-				property,
-				bindingState.getMetadataBuildingContext()
+				property
 		);
 	}
 
@@ -316,16 +304,14 @@ public class CustomMappingBinder {
 			CategorizedDomainModel getDomainModel,
 			AttributeApplication getAttribute,
 			PersistentClass getPersistentClass,
-			Property getProperty,
-			MetadataBuildingContext getMetadataBuildingContext)
+			Property getProperty)
 			implements AttributeBindingContext {
 	}
 
 	private record StandardEntityBindingContext(
 			CategorizedDomainModel getDomainModel,
 			EntityTypeMetadata getEntityType,
-			PersistentClass getPersistentClass,
-			MetadataBuildingContext getMetadataBuildingContext)
+			PersistentClass getPersistentClass)
 			implements EntityBindingContext {
 	}
 
@@ -333,8 +319,7 @@ public class CustomMappingBinder {
 			CategorizedDomainModel getDomainModel,
 			org.hibernate.boot.mapping.spi.EmbeddableUsageMetadata getEmbeddableUsage,
 			PersistentClass getPersistentClass,
-			Component getComponent,
-			MetadataBuildingContext getMetadataBuildingContext)
+			Component getComponent)
 			implements EmbeddableBindingContext {
 	}
 

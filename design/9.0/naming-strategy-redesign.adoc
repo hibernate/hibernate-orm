@@ -1,0 +1,130 @@
+= ORM 9 Naming Strategy Redesign
+:toc2:
+:sectanchors:
+
+== Status
+
+Initial design proposal. No replacement contract or whole-interface deprecation
+has been approved. Steve raised deprecating `ImplicitNamingStrategy` in 8.0 and
+replacing it in 9.0; this document starts that investigation.
+The `ImplicitNamingContext` / `ImplicitNamingDefaults` changes are implemented
+and verified, providing focused inputs for this work. Their completed scope is
+recorded in link:context-contract-narrowing-design.adoc[Context Contract Narrowing].
+
+== Problem And Goals
+
+Steve identified inconsistent invocation and substantial room to improve the
+implicit naming contract. Establish a concrete inventory before deciding which
+callbacks to replace: a better interface alone will not correct missing calls
+or inconsistent interpretation by callers.
+
+* Define which naming decisions are customizable and exactly when they run.
+* Give each decision complete, unambiguous inputs without broad boot access.
+* Distinguish missing names, explicit names, defaults, logical identifiers,
+  physical identifiers, and quoting responsibilities.
+* Make extension and migration practical for strategy implementors and subclasses.
+* Preserve existing names by default unless a particular correction is explicitly
+  accepted and documented as a compatibility change.
+
+== Constraints
+
+Naming strategies are SPI. Existing strategy interfaces remain in their current
+package for the context-narrowing slice. Placement and roles for any replacement
+must be decided explicitly. New naming inputs already use
+`org.hibernate.boot.model.naming.spi`.
+
+Interpret names during mapping resolution. Metadata restoration should consume
+resolved names without rerunning strategies. Avoid reflection requirements in
+new naming inputs, consistent with the Quarkus interpretation boundary.
+
+The physical strategy currently receives `JdbcEnvironment`. Its redesign is an
+open scope decision, not an automatic consequence of replacing the implicit SPI.
+Keep `ObjectNameNormalizer` and legacy `NamingStrategyHelper` cleanup separately
+tracked until their relationship to the selected pipeline is defined.
+
+== Investigation: Invocation And Input Matrix
+
+Inventory each callback and each path that constructs a name directly. Record:
+
+* mapping kind (entity, basic attribute, association, collection, inheritance,
+  tenant, any mapping, or constraint);
+* annotation/XML origin, explicit-name handling, and default precedence;
+* available entity names, attribute paths, table names, and referenced columns;
+* whether each identifier is logical or physical and its quoting state;
+* invocation timing, multiplicity, and subsequent physical transformation;
+* test evidence and any intentional bypass.
+
+The current join-table source exposes physical table names while the strategy
+produces a logical table name. Treat that as a concrete input-semantics question:
+document the dependency before changing it. Constraint callbacks also accept
+user-provided identifiers; determine whether explicit-name handling belongs in
+those callbacks or in the caller. Neither observation alone establishes a bug.
+
+Use the matrix to distinguish accidental omissions from intentional exclusions.
+Require reproducible mapping examples for every proposed consistency correction.
+
+== Alternatives And Tradeoffs
+
+Refine the existing role-specific callback interface::
+Keep familiar dispatch and source types, repair invocation rules, and revise
+ambiguous inputs. Lowest migration burden, but may retain historical divisions
+that do not match the desired pipeline.
+
+Replace it with a new role-specific SPI (initial preference)::
+Design callbacks and immutable inputs around the naming decisions found in the
+inventory. Provide a supported default implementation with deliberate subclass
+hooks. Clear migration boundary, but potentially substantial provider changes.
+Do not invent the final method list before the inventory.
+
+One generic naming request and dispatcher::
+Represent naming kinds through a typed request hierarchy. Centralizes dispatch
+and can make coverage visible, but moves branching into providers and makes
+handling new request kinds a compatibility concern. An untyped property bag is
+not an acceptable substitute for defined inputs.
+
+== Proposed Sequence
+
+The independent `ImplicitNamingContext` / `ImplicitNamingDefaults` slice is complete.
+The remaining sequence is:
+
+. Build the invocation/input matrix and capture inconsistent cases as tests.
+. Agree on responsibility boundaries and choose an extension model.
+. Produce a working specification with exact contracts, precedence, invocation
+  rules, compatibility policy, edge cases, and acceptance tests.
+. Obtain explicit approval before implementing the replacement.
+
+== Compatibility And Deprecation
+
+Decide the 8.0 deprecation message only once the replacement direction and 9.0
+migration expectations are clear. A deprecation with no usable replacement in
+8.0 must say so, and must distinguish continuing 8.0 usage from 9.0 migration.
+Steve's planned 8.0 deprecations of `ImplicitNameSource.getBuildingContext()`
+and the two context-taking protected JPA helpers remain separate decisions.
+
+Evaluate an adapter against the invocation matrix. It may preserve common
+strategies, but cannot promise compatibility if old callbacks lack information
+or depended on old timing. Include subclasses overriding protected helpers,
+settings-based registration, and bootstrap registration in the migration plan.
+Do not silently accept obsolete overrides while bypassing their dispatch.
+
+== Open Decisions
+
+* Is the redesign limited to implicit naming, or does evidence justify changing
+  the physical boundary as well?
+* Which observed bypasses are defects, and which naming decisions should remain
+  outside strategy control?
+* Should explicit names bypass implicit callbacks uniformly, including constraints?
+* Should providers primarily implement an interface, subclass a default strategy,
+  or compose smaller policies? Which extension points are supported?
+* Is a legacy adapter worth its semantic limitations, and for how long?
+* Should the entire interface be deprecated in 8.0 before its replacement is
+  available, or should that wait for a concrete migration path?
+
+== Acceptance Direction
+
+Compare resolved logical and physical names across representative annotations
+and XML mappings, including associations, collections, inheritance, composite
+identifiers, tenant columns, any mappings, and constraints. Verify explicit-name
+precedence, defaults, quoting, charset-dependent hashes, callback counts, and
+subclass dispatch. Any changed name needs an intentional compatibility decision.
+Restoration must preserve finalized names without invoking naming strategies.

@@ -3,9 +3,9 @@ package org.hibernate.boot.model.naming;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Remove;
+import org.hibernate.SPI;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 
 import static org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION;
@@ -21,9 +21,11 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  *
  * @author Steve Ebersole
  */
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStrategy, Serializable {
 	public static final ImplicitNamingStrategy INSTANCE = new ImplicitNamingStrategyJpaCompliantImpl();
 
+	@SPI(SPI.Role.USE)
 	public ImplicitNamingStrategyJpaCompliantImpl() {
 	}
 
@@ -35,7 +37,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 			throw new HibernateException( "Could not determine primary table name for entity: "
 											+ source.getEntityNaming().getClassName() );
 		}
-		return toIdentifier( tableName, source.getBuildingContext() );
+		return toIdentifier( tableName, source.getNamingContext() );
 	}
 
 	protected String transformEntityName(EntityNaming entityNaming) {
@@ -59,7 +61,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 		final String name = source.getOwningPhysicalTableName()
 				+ '_'
 				+ source.getNonOwningPhysicalTableName();
-		return toIdentifier( name, source.getBuildingContext() );
+		return toIdentifier( name, source.getNamingContext() );
 	}
 
 	/**
@@ -76,7 +78,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 		final String name = transformEntityName( source.getOwningEntityNaming() )
 				+ '_'
 				+ transformAttributePath( source.getOwningAttributePath() );
-		return toIdentifier( name, source.getBuildingContext() );
+		return toIdentifier( name, source.getNamingContext() );
 	}
 
 	@Override
@@ -84,24 +86,24 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 		// JPA states the implicit column name should be the attribute name
 		return toIdentifier(
 				transformAttributePath( source.getIdentifierAttributePath() ),
-				source.getBuildingContext()
+				source.getNamingContext()
 		);
 	}
 
 	@Override
 	public Identifier determineDiscriminatorColumnName(ImplicitDiscriminatorColumnNameSource source) {
-		final var context = source.getBuildingContext();
+		final var context = source.getNamingContext();
 		return toIdentifier(
-				context.getEffectiveDefaults().getDefaultDiscriminatorColumnName(),
+				context.getNamingDefaults().getDefaultDiscriminatorColumnName(),
 				context
 		);
 	}
 
 	@Override
 	public Identifier determineTenantIdColumnName(ImplicitTenantIdColumnNameSource source) {
-		final var context = source.getBuildingContext();
+		final var context = source.getNamingContext();
 		return toIdentifier(
-				context.getEffectiveDefaults().getDefaultTenantIdColumnName(),
+				context.getNamingDefaults().getDefaultTenantIdColumnName(),
 				context
 		);
 	}
@@ -115,7 +117,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	public Identifier determineBasicColumnName(ImplicitBasicColumnNameSource source) {
 		return toIdentifier(
 				transformAttributePath( source.getAttributePath() ),
-				source.getBuildingContext()
+				source.getNamingContext()
 		);
 	}
 
@@ -141,7 +143,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 						: transformAttributePath( source.getAttributePath() );
 		final String referencedColumnName = source.getReferencedColumnName().getText();
 		final String name = referencingPropertyOrEntity + '_' + referencedColumnName;
-		return toIdentifier( name, source.getBuildingContext() );
+		return toIdentifier( name, source.getNamingContext() );
 	}
 
 	/**
@@ -155,20 +157,20 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	@Override
 	public Identifier determineAnyDiscriminatorColumnName(ImplicitAnyDiscriminatorColumnNameSource source) {
-		final MetadataBuildingContext context = source.getBuildingContext();
+		final ImplicitNamingContext context = source.getNamingContext();
 		return toIdentifier(
 				transformAttributePath( source.getAttributePath() )
-						+ "_" + context.getEffectiveDefaults().getDefaultDiscriminatorColumnName(),
+						+ "_" + context.getNamingDefaults().getDefaultDiscriminatorColumnName(),
 				context
 		);
 	}
 
 	@Override
 	public Identifier determineAnyKeyColumnName(ImplicitAnyKeyColumnNameSource source) {
-		final MetadataBuildingContext context = source.getBuildingContext();
+		final ImplicitNamingContext context = source.getNamingContext();
 		return toIdentifier(
 				transformAttributePath( source.getAttributePath() )
-						+ "_" + context.getEffectiveDefaults().getDefaultIdColumnName(),
+						+ "_" + context.getNamingDefaults().getDefaultIdColumnName(),
 				context
 		);
 	}
@@ -177,7 +179,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	public Identifier determineMapKeyColumnName(ImplicitMapKeyColumnNameSource source) {
 		return toIdentifier(
 				transformAttributePath( source.getPluralAttributePath() ) + "_KEY",
-				source.getBuildingContext()
+				source.getNamingContext()
 		);
 	}
 
@@ -185,7 +187,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	public Identifier determineListIndexColumnName(ImplicitIndexColumnNameSource source) {
 		return toIdentifier(
 				transformAttributePath( source.getPluralAttributePath() ) + "_ORDER",
-				source.getBuildingContext()
+				source.getNamingContext()
 		);
 	}
 
@@ -231,19 +233,15 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	 * {@link org.hibernate.engine.jdbc.env.spi.IdentifierHelper}.
 	 *
 	 * @param stringForm The String form of the name
-	 * @param buildingContext Access to the {@code IdentifierHelper}
+	 * @param namingContext Access to the {@code IdentifierHelper}
 	 *
 	 * @return The identifier
 	 *
 	 * @implNote This will be removed in 9.0 as part of a holistic improvement to naming strategies.
 	 */
-	@Remove
-	protected Identifier toIdentifier(String stringForm, MetadataBuildingContext buildingContext) {
+	protected Identifier toIdentifier(String stringForm, ImplicitNamingContext namingContext) {
 		return toIdentifier( stringForm,
-				buildingContext.getMetadataCollector()
-						.getDatabase()
-						.getJdbcEnvironment()
-						.getIdentifierHelper() );
+				namingContext.getIdentifierHelper() );
 	}
 
 	/**
@@ -265,7 +263,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	 * @return The identifier
 	 */
 	protected Identifier generateConstraintName(ImplicitConstraintNameSource source) {
-		return toIdentifier( generateConstraintNameString( source ), source.getBuildingContext() );
+		return toIdentifier( generateConstraintNameString( source ), source.getNamingContext() );
 	}
 
 	/**
@@ -274,7 +272,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	 * @return The name as a string
 	 */
 	protected String generateConstraintNameString(ImplicitConstraintNameSource source) {
-		final var namingHelper = namingHelper( source.getBuildingContext() );
+		final var namingHelper = namingHelper( source.getNamingContext() );
 		final String prefix = constraintNamePrefix( source.kind() );
 		return source instanceof ImplicitForeignKeyNameSource foreignKeySource
 				? namingHelper.generateHashedFkName(
@@ -296,9 +294,8 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	 *
 	 * @implNote This will be removed in 9.0 as part of a holistic improvement to naming strategies.
 	 */
-	@Remove
-	protected NamingHelper namingHelper(MetadataBuildingContext context) {
-		return NamingHelper.withCharset( context.getBuildingPlan().getSchemaCharset() );
+	protected NamingHelper namingHelper(ImplicitNamingContext context) {
+		return NamingHelper.withCharset( context.getSchemaCharset() );
 	}
 
 	/**

@@ -109,8 +109,7 @@ public class SoftDeleteHelper {
 		BasicValueResolutionBuilder.applyResolution(
 				resolutionInput,
 				context.getServiceComponents(),
-				MappingResolutionState.from( context ),
-				context
+				MappingResolutionState.from( context )
 		);
 	}
 

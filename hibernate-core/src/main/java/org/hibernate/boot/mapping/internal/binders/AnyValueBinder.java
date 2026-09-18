@@ -9,6 +9,8 @@ import org.hibernate.annotations.AnyKeyJavaType;
 import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.model.naming.ImplicitAnyDiscriminatorColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitAnyKeyColumnNameSource;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
@@ -30,7 +32,6 @@ import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 
 import jakarta.persistence.DiscriminatorType;
 
@@ -217,8 +218,8 @@ class AnyValueBinder {
 					}
 
 					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				} )
 				.getText();
@@ -233,8 +234,8 @@ class AnyValueBinder {
 					}
 
 					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				} )
 				.getText();

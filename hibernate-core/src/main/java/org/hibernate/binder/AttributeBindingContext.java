@@ -7,7 +7,6 @@ package org.hibernate.binder;
 import org.hibernate.Incubating;
 import org.hibernate.boot.mapping.spi.AttributeApplication;
 import org.hibernate.boot.mapping.spi.CategorizedDomainModel;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
@@ -51,15 +50,4 @@ public interface AttributeBindingContext {
 
 	/// The mutable property produced for [#getAttribute()].
 	Property getProperty();
-
-	/// Access to boot services and metadata-wide contribution facilities.
-	///
-	/// @apiNote This is an escape hatch for binder behavior which is broader than
-	/// mutation of the local property or containing entity.
-	///
-	/// @deprecated There is no replacement per-se, but hopefully the deprecation
-	/// leads to reports about specific bits of the context which are needed
-	/// and/or useful for implementors.
-	@Deprecated(since = "9.0")
-	MetadataBuildingContext getMetadataBuildingContext();
 }

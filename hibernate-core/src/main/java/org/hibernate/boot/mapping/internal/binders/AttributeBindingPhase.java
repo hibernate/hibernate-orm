@@ -27,8 +27,7 @@ public interface AttributeBindingPhase {
 		return () -> BasicValueResolutionBuilder.applyResolution(
 				details,
 				services,
-				state,
-				buildingContext
+				state
 		);
 	}
 

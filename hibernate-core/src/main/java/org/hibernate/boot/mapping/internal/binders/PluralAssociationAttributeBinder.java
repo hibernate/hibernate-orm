@@ -10,6 +10,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
@@ -967,8 +969,8 @@ class PluralAssociationAttributeBinder {
 					}
 
 					@Override
-					public org.hibernate.boot.spi.MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				} )
 				.getText();

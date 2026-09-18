@@ -48,14 +48,12 @@ import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
@@ -109,14 +107,13 @@ public final class BasicValueResolutionBuilder {
 	public static void applyResolution(
 			BasicValueResolutionDetails details,
 			MappingResolutionServices services,
-			MappingResolutionState state,
-			MetadataBuildingContext buildingContext) {
+			MappingResolutionState state) {
 		if ( details.value().getResolution() != null ) {
 			details.value().applyResolution( details.value().getResolution(), state );
 			return;
 		}
 		state.captureResolutionDetails( details );
-		final BasicValue.Resolution<?> resolution = buildResolution( details, services, state, buildingContext );
+		final BasicValue.Resolution<?> resolution = buildResolution( details, services, state );
 		if ( resolution == null ) {
 			throw new IllegalStateException( "Unable to resolve BasicValue: " + details.value() );
 		}
@@ -126,8 +123,7 @@ public final class BasicValueResolutionBuilder {
 	private static BasicValue.Resolution<?> buildResolution(
 			BasicValueResolutionDetails details,
 			MappingResolutionServices services,
-			MappingResolutionState state,
-			MetadataBuildingContext buildingContext) {
+			MappingResolutionState state) {
 		final var typeParameters = details.getTypeParameters();
 		if ( typeParameters != null
 				&& parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
@@ -137,17 +133,16 @@ public final class BasicValueResolutionBuilder {
 					details.createParameterType( services.getClassLoaderService() )
 			);
 		}
-		return buildResolution( details, services, state, buildingContext, typeParameters );
+		return buildResolution( details, services, state, typeParameters );
 	}
 
 	private static BasicValue.Resolution<?> buildResolution(
 			BasicValueResolutionDetails details,
 			MappingResolutionServices services,
 			MappingResolutionState state,
-			MetadataBuildingContext buildingContext,
 			Properties typeParameters) {
 		if ( details.getExplicitCustomType() != null ) {
-			return explicitCustomTypeResolution( details, services, state, buildingContext );
+			return explicitCustomTypeResolution( details, services, state );
 		}
 
 		final var explicitJavaType = details.role().determineExplicitJavaType( details, services, state );
@@ -182,15 +177,13 @@ public final class BasicValueResolutionBuilder {
 	private static BasicValue.Resolution<?> explicitCustomTypeResolution(
 			BasicValueResolutionDetails details,
 			MappingResolutionServices services,
-			MappingResolutionState state,
-			MetadataBuildingContext buildingContext) {
+			MappingResolutionState state) {
 		final var parameters = details.buildCustomTypeProperties();
 		final var customType = new CustomType<>(
 				getConfiguredUserTypeBean(
 						details,
 						services,
 						state,
-						buildingContext,
 						details.getExplicitCustomType(),
 						details.value().getTypeAnnotation(),
 						parameters
@@ -206,7 +199,6 @@ public final class BasicValueResolutionBuilder {
 			BasicValueResolutionDetails details,
 			MappingResolutionServices services,
 			MappingResolutionState state,
-			MetadataBuildingContext buildingContext,
 			Class<? extends UserType<?>> explicitCustomType,
 			Annotation typeAnnotation,
 			Properties parameters) {
@@ -214,7 +206,6 @@ public final class BasicValueResolutionBuilder {
 				details,
 				services,
 				state,
-				buildingContext,
 				explicitCustomType,
 				parameters,
 				typeAnnotation
@@ -231,11 +222,10 @@ public final class BasicValueResolutionBuilder {
 			BasicValueResolutionDetails details,
 			MappingResolutionServices services,
 			MappingResolutionState state,
-			MetadataBuildingContext buildingContext,
 			Class<? extends UserType<?>> customType,
 			Properties parameters,
 			Annotation typeAnnotation) {
-		final var creationContext = new UserTypeCreationContextImpl( details, services, buildingContext, parameters );
+		final var creationContext = new UserTypeCreationContextImpl( details.member(), parameters );
 		final var typeInstance = instantiateUserType( services, state, customType, typeAnnotation, creationContext );
 		if ( typeInstance instanceof AnnotationBasedUserType<?, ?> annotationBased ) {
 			initializeAnnotationBasedUserType( typeAnnotation, annotationBased, creationContext );
@@ -345,24 +335,12 @@ public final class BasicValueResolutionBuilder {
 	}
 
 	private record UserTypeCreationContextImpl(
-			BasicValueResolutionDetails details,
-			MappingResolutionServices services,
-			MetadataBuildingContext buildingContext,
+			MemberDetails memberDetails,
 			Properties parameters) implements UserTypeCreationContext {
 
 		@Override
-		public MetadataBuildingContext getBuildingContext() {
-			return buildingContext;
-		}
-
-		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return services.getServiceRegistry();
-		}
-
-		@Override
 		public MemberDetails getMemberDetails() {
-			return details.member();
+			return memberDetails;
 		}
 
 		@Override

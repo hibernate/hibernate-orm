@@ -1322,7 +1322,7 @@ public class ElementCollectionBindingTests {
 		public Identifier determineListIndexColumnName(ImplicitIndexColumnNameSource source) {
 			return toIdentifier(
 					"implicit_list_index_" + source.getPluralAttributePath().getProperty(),
-					source.getBuildingContext()
+					source.getNamingContext()
 			);
 		}
 
@@ -1330,7 +1330,7 @@ public class ElementCollectionBindingTests {
 		public Identifier determineMapKeyColumnName(ImplicitMapKeyColumnNameSource source) {
 			return toIdentifier(
 					"implicit_map_key_" + source.getPluralAttributePath().getProperty(),
-					source.getBuildingContext()
+					source.getNamingContext()
 			);
 		}
 	}

@@ -1,7 +1,6 @@
 package org.hibernate.boot.model.naming;
 
-import org.hibernate.Remove;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 
 /**
  * Common contract for all implicit naming sources
@@ -10,12 +9,9 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  */
 public interface ImplicitNameSource {
 	/**
-	 * Access to the current building context.
+	 * Access to the current naming context.
 	 *
-	 * @return The building context
-	 *
-	 * @implNote This will be removed in 9.0 as part of a holistic improvement to naming strategies.
+	 * @return The naming context
 	 */
-	@Remove
-	MetadataBuildingContext getBuildingContext();
+	ImplicitNamingContext getNamingContext();
 }

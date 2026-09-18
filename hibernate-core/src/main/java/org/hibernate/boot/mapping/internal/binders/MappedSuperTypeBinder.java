@@ -449,8 +449,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		BasicValueResolutionBuilder.applyResolution(
 				details,
 				getBindingState().getMetadataBuildingContext().getServiceComponents(),
-				getBindingState().getMappingResolutionState(),
-				getBindingState().getMetadataBuildingContext()
+				getBindingState().getMappingResolutionState()
 		);
 		return basicValue;
 	}

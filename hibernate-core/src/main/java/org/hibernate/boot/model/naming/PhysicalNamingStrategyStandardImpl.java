@@ -2,6 +2,7 @@ package org.hibernate.boot.model.naming;
 
 import java.io.Serializable;
 
+import org.hibernate.SPI;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
@@ -10,7 +11,12 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  *
  * @author Steve Ebersole
  */
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class PhysicalNamingStrategyStandardImpl implements PhysicalNamingStrategy, Serializable {
+	@SPI(SPI.Role.USE)
+	public PhysicalNamingStrategyStandardImpl() {
+	}
+
 	/**
 	 * Singleton access
 	 */

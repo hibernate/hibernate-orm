@@ -9,6 +9,8 @@ import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder;
 import org.hibernate.boot.mapping.internal.binders.AttributeBindingPhase;
@@ -287,7 +289,7 @@ public class BasicValueMappingMaterializer {
 			MappingResolutionServices services,
 			MappingResolutionState state,
 			MetadataBuildingContext buildingContext) {
-		BasicValueResolutionBuilder.applyResolution( input, services, state, buildingContext );
+		BasicValueResolutionBuilder.applyResolution( input, services, state );
 	}
 
 	private static void applyGeneratedIdentifierMember(
@@ -504,8 +506,8 @@ public class BasicValueMappingMaterializer {
 					}
 
 					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				} )
 				.getText();

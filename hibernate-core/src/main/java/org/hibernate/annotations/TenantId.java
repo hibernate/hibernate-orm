@@ -1,6 +1,5 @@
 package org.hibernate.annotations;
 
-import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.generator.internal.TenantIdGeneration;
 
 import java.lang.annotation.Retention;
@@ -29,7 +28,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @ValueGenerationType(generatedBy = TenantIdGeneration.class)
 @IdGeneratorType(TenantIdGeneration.class)
-@AttributeBinderType(binder = TenantIdBinder.class)
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface TenantId {}

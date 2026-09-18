@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.collectionloader" default-access="field">
+	<class name="Owner">
+		<id name="id" type="long">
+			<generator class="native"/>
+		</id>
+		<property name="name"/>
+		<set name="employments" inverse="true">
+			<key column="owner_id"/>
+			<one-to-many class="Employment"/>
+			<loader query-ref="ownerEmployments"/>
+		</set>
+	</class>
+
+	<class name="Employment">
+		<id name="id" type="long">
+			<generator class="native"/>
+		</id>
+		<many-to-one name="owner" column="owner_id"/>
+	</class>
+
+	<sql-query name="ownerEmployments">
+		<load-collection alias="e" role="Owner.employments"/>
+		SELECT *
+		FROM Employment e
+		WHERE e.owner_id = :id
+		ORDER BY e.id ASC
+	</sql-query>
+</hibernate-mapping>

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.entityloader" default-access="field">
+	<class name="Product">
+		<id name="id" type="long">
+			<generator class="native"/>
+		</id>
+		<property name="name"/>
+		<loader query-ref="loadProduct"/>
+	</class>
+
+	<sql-query name="loadProduct">
+		<return alias="p" class="Product"/>
+		SELECT *
+		FROM products p
+		WHERE p.id = ?
+	</sql-query>
+</hibernate-mapping>

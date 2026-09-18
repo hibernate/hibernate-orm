@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.cdi.lifecycle;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.util.Map;
 
 import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
@@ -36,7 +37,7 @@ public class ExtendedBeanManagerSmokeTests {
 		assertThat( ref.lifecycleListener ).isNull();
 
 		final EntityManagerFactory emf = BootstrapPipeline.build(
-				new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ),
+				PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ) ),
 				integrationSettings( settingName, ref )
 		);
 
@@ -59,7 +60,7 @@ public class ExtendedBeanManagerSmokeTests {
 		assertThat( ref.lifecycleListener ).isNull();
 
 		final EntityManagerFactory emf = BootstrapPipeline.build(
-				new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ),
+				PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ) ),
 				integrationSettings( settingName, ref )
 		);
 

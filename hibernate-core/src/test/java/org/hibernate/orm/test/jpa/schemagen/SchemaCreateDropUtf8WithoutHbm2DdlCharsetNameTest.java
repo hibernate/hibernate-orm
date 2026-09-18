@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.jpa.schemagen;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,7 +67,7 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 	@JiraKey(value = "HHH-10972")
 	public void testEncoding() throws Exception {
 
-		BootstrapPipeline.generateSchema( persistenceUnitDescriptor, config );
+		BootstrapPipeline.generateSchema( PersistenceUnitSources.standalone( persistenceUnitDescriptor ), config );
 
 		final String fileContent = new String( Files.readAllBytes( createSchema.toPath() ) )
 				.toLowerCase();

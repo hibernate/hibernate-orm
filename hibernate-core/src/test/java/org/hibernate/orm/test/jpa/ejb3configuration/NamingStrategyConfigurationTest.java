@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.util.Map;
 
 import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
@@ -31,7 +32,7 @@ public class NamingStrategyConfigurationTest {
 			Map<String, Object> settings = ServiceRegistryUtil.createBaseSettings();
 			settings.put( AvailableSettings.PHYSICAL_NAMING_STRATEGY, MyNamingStrategy.class.getName() );
 			try (var metadataResolution = BootstrapPipeline.resolveMetadata(
-					new PersistenceUnitInfoDescriptor( adapter ),
+					PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( adapter ) ),
 					settings
 			)) {
 				assertEquals(

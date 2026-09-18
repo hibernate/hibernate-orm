@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.jpa.boot;
 
+import java.nio.file.Path;
+import org.junit.jupiter.api.io.TempDir;
 import jakarta.persistence.EntityManagerFactory;
 import java.net.URL;
 import java.util.Map;
@@ -15,7 +17,8 @@ import org.junit.jupiter.api.Test;
  */
 public class NewBootProcessTest {
 	@Test
-	public void basicNewBootProcessTest() {
+	public void basicNewBootProcessTest(@TempDir Path directory) throws Exception {
+		final var root = directory.toUri().toURL();
 		Map settings = ServiceRegistryUtil.createBaseSettings();
 
 		HibernatePersistenceProvider persistenceProvider = new HibernatePersistenceProvider();
@@ -23,8 +26,7 @@ public class NewBootProcessTest {
 				new JpaXsdVersionsTest.PersistenceUnitInfoImpl( "my-test" ) {
 					@Override
 					public URL getPersistenceUnitRootUrl() {
-						// just get any known url...
-						return HibernatePersistenceProvider.class.getResource( "/org/hibernate/jpa/persistence_1_0.xsd" );
+						return root;
 					}
 				},
 				settings

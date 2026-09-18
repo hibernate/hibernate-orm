@@ -1,5 +1,6 @@
 package org.hibernate.testing.orm.junit;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -285,7 +286,7 @@ public class EntityManagerFactoryExtension
 
 		protected jakarta.persistence.EntityManagerFactory createEntityManagerFactory() {
 			final PersistenceUnitInfoDescriptor descriptor = new PersistenceUnitInfoDescriptor( persistenceUnitInfo );
-			return BootstrapPipeline.build( descriptor, integrationSettings );
+			return BootstrapPipeline.build( PersistenceUnitSources.container( descriptor ), integrationSettings );
 		}
 	}
 }

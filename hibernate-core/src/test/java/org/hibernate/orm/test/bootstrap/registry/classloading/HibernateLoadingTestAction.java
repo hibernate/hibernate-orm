@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.bootstrap.registry.classloading;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -28,7 +29,7 @@ public class HibernateLoadingTestAction extends NotLeakingTestAction implements 
 		super.run(); //for basic sanity self-check
 		final Map<String,Object> config = new HashMap<>();
 		EntityManagerFactory emf = BootstrapPipeline.build(
-				new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+				PersistenceUnitSources.standalone( new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
 					@Override
 					public boolean isExcludeUnlistedClasses() {
 						return true;
@@ -38,7 +39,7 @@ public class HibernateLoadingTestAction extends NotLeakingTestAction implements 
 					public List<String> getManagedClassNames() {
 						return HibernateLoadingTestAction.this.getManagedClassNames();
 					}
-				},
+				} ),
 				config
 		);
 		try {

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.jpa.ops;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.util.List;
 import java.util.Map;
 
@@ -56,11 +57,11 @@ public class GetLoadJpaComplianceDifferentSessionsTest extends EntityManagerFact
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 
 		EntityManagerFactory newEntityManagerFactory = BootstrapPipeline.build(
-				new TestingPersistenceUnitDescriptorImpl(
+				PersistenceUnitSources.standalone( new TestingPersistenceUnitDescriptorImpl(
 						getClass().getSimpleName(),
 						List.of(Workload.class.getName()),
 						List.of()
-				),
+				) ),
 				settings
 		);
 

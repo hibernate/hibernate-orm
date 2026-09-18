@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.jpa.persistenceunit;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.util.Collections;
 import java.util.Map;
 
@@ -105,7 +106,7 @@ public class SharedCacheModeDeprecatedWarningTest {
 
 	private static void resolveMetadata(PersistenceUnitInfoAdapter adapter, Map<?, ?> settings) {
 		try (var ignored = BootstrapPipeline.resolveMetadata(
-				new PersistenceUnitInfoDescriptor( adapter ),
+				PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( adapter ) ),
 				settings
 		)) {
 		}

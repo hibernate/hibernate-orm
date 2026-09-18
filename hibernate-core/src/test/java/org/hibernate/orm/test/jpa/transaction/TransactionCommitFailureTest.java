@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.jpa.transaction;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -52,7 +53,7 @@ public class TransactionCommitFailureTest {
 		connectionIsOpen = new AtomicBoolean();
 
 		final Map<String, Object> settings = basicSettings();
-		emf = BootstrapPipeline.build( new PersistenceUnitDescriptorAdapter(), settings );
+		emf = BootstrapPipeline.build( PersistenceUnitSources.standalone( new PersistenceUnitDescriptorAdapter() ), settings );
 	}
 
 	@AfterEach

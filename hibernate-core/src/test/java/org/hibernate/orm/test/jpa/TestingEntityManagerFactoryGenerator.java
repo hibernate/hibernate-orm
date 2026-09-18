@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.jpa;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,6 @@ public class TestingEntityManagerFactoryGenerator {
 	}
 
 	public static EntityManagerFactory generateEntityManagerFactory(PersistenceUnitDescriptor descriptor, Map<String,Object> settings) {
-		return BootstrapPipeline.build( descriptor, settings );
+		return BootstrapPipeline.build( PersistenceUnitSources.standalone( descriptor ), settings );
 	}
 }

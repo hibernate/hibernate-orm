@@ -1,5 +1,6 @@
 package org.hibernate.jpa;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.process.internal.EnhancementCandidates;
 import org.hibernate.SPI;
@@ -65,7 +66,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 		else {
 			return org.hibernate.boot.pipeline.internal.BootstrapPipeline.build(
-					persistenceUnitDescriptor,
+					PersistenceUnitSources.standalone( persistenceUnitDescriptor ),
 					wrap( map )
 			);
 		}
@@ -167,7 +168,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map<?,?> map) {
 		JPA_LOGGER.startingCreateContainerEntityManagerFactory( info.getPersistenceUnitName() );
 		return org.hibernate.boot.pipeline.internal.BootstrapPipeline.build(
-				new PersistenceUnitInfoDescriptor( info ),
+				PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( info ) ),
 				wrap( map )
 		);
 	}
@@ -183,7 +184,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	public void generateSchema(PersistenceUnitInfo info, Map<?,?> map) {
 		JPA_LOGGER.startingGenerateSchemaForPuiName( info.getPersistenceUnitName() );
 		org.hibernate.boot.pipeline.internal.BootstrapPipeline.generateSchema(
-				new PersistenceUnitInfoDescriptor( info ),
+				PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( info ) ),
 				wrap( map )
 		);
 	}
@@ -204,7 +205,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 		else {
 			org.hibernate.boot.pipeline.internal.BootstrapPipeline.generateSchema(
-					persistenceUnitDescriptor,
+					PersistenceUnitSources.standalone( persistenceUnitDescriptor ),
 					wrap( map )
 			);
 			return true;

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.schemaupdate;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.orm.test.jpa.mapping.ColumnWithExplicitReferenceToPrimaryTableTest.AnEntity;
@@ -30,7 +31,7 @@ public class Hbm2ddlCreateOnlyTest {
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-only" );
 		ServiceRegistryUtil.applySettings( settings );
 
-		try (var emf = BootstrapPipeline.build( pu, settings )) {
+		try (var emf = BootstrapPipeline.build( PersistenceUnitSources.standalone( pu ), settings )) {
 			emf.createEntityManager();
 		}
 	}

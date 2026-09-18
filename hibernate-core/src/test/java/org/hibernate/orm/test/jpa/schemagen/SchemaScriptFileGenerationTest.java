@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.jpa.schemagen;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -50,7 +51,7 @@ public class SchemaScriptFileGenerationTest {
 	@JiraKey(value = "10601")
 	public void testGenerateSchemaDoesNotProduceTheSameStatementTwice() throws Exception {
 
-		BootstrapPipeline.generateSchema( persistenceUnitDescriptor, config );
+		BootstrapPipeline.generateSchema( PersistenceUnitSources.standalone( persistenceUnitDescriptor ), config );
 
 		final String fileContent = new String( Files.readAllBytes( createSchema.toPath() ) ).toLowerCase();
 

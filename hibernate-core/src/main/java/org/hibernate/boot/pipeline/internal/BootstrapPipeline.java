@@ -28,6 +28,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.JpaSettings;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
+import org.hibernate.boot.pipeline.internal.source.ConfigurationMappingProcessor;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.spi.ServiceException;
@@ -57,7 +59,7 @@ import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 /// factory pieces directly.
 ///
 /// The overloads accepting {@link PersistenceConfiguration} and
-/// {@link PersistenceUnitDescriptor} are entry-point adapters.  They resolve
+/// [PersistenceUnitSources] carry the entry-point discovery contract. They resolve
 /// bootstrap settings, create the service registries, collect mapping-source
 /// contributions, and then delegate to the resolved-input form,
 /// {@link #build(BootstrapPipelineRequest)}.
@@ -186,7 +188,7 @@ public class BootstrapPipeline {
 	/// The bootstrap-owned service registries are attached to the returned
 	/// SessionFactory and are destroyed when the SessionFactory is closed.
 	///
-	/// @param persistenceUnitDescriptor descriptor for the persistence unit
+	/// @param persistenceUnitSources source adapter for the persistence unit
 	/// @param integrationSettings settings supplied by the bootstrap entry point
 	///
 	/// @return the built SessionFactory
@@ -196,12 +198,13 @@ public class BootstrapPipeline {
 	/// @see org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor
 	/// @see org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor
 	public static SessionFactory build(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			PersistenceUnitSources persistenceUnitSources,
 			Map<?, ?> integrationSettings) {
+		final var persistenceUnitDescriptor = persistenceUnitSources.descriptor();
 		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor );
 		try {
 			final var bootstrapRequest = createEntryPointBootstrapRequest(
-					persistenceUnitDescriptor,
+					persistenceUnitSources,
 					integrationSettings,
 					bootstrapServiceRegistry
 			);
@@ -227,23 +230,24 @@ public class BootstrapPipeline {
 	/// settings.
 	///
 	/// This follows the same descriptor and settings resolution as
-	/// [#build(PersistenceUnitDescriptor, Map)], but stops after metadata
+	/// [#build(PersistenceUnitSources, Map)], but stops after metadata
 	/// resolution and invokes Hibernate's schema-management coordinator.  The
 	/// service registries created for this operation are always destroyed before
 	/// the method returns.
 	///
-	/// @param persistenceUnitDescriptor descriptor for the persistence unit
+	/// @param persistenceUnitSources source adapter for the persistence unit
 	/// @param integrationSettings settings supplied by the bootstrap entry point
 	///
 	/// @throws PersistenceException if schema management fails
 	public static void generateSchema(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			PersistenceUnitSources persistenceUnitSources,
 			Map<?, ?> integrationSettings) {
+		final var persistenceUnitDescriptor = persistenceUnitSources.descriptor();
 		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor );
 		StandardServiceRegistry standardServiceRegistry = null;
 		try {
 			final var bootstrapRequest = createEntryPointBootstrapRequest(
-					persistenceUnitDescriptor,
+					persistenceUnitSources,
 					integrationSettings,
 					bootstrapServiceRegistry
 			);
@@ -273,13 +277,14 @@ public class BootstrapPipeline {
 	/// the resolved mapping product so later SessionFactory construction can
 	/// continue through the pipeline-aware path.
 	public static MappingResolutionResult resolveMetadata(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			PersistenceUnitSources persistenceUnitSources,
 			Map<?, ?> integrationSettings) {
+		final var persistenceUnitDescriptor = persistenceUnitSources.descriptor();
 		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor );
 		StandardServiceRegistry standardServiceRegistry = null;
 		try {
 			final var bootstrapRequest = createEntryPointBootstrapRequest(
-					persistenceUnitDescriptor,
+					persistenceUnitSources,
 					integrationSettings,
 					bootstrapServiceRegistry
 			);
@@ -472,12 +477,11 @@ public class BootstrapPipeline {
 	}
 
 	private static EntryPointBootstrapRequest createEntryPointBootstrapRequest(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			PersistenceUnitSources persistenceUnitSources,
 			Map<?, ?> integrationSettings,
 			org.hibernate.boot.registry.BootstrapServiceRegistry bootstrapServiceRegistry) {
-		if ( persistenceUnitDescriptor instanceof org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor container ) {
-			container.registerClassTransformer( integrationSettings );
-		}
+		final var persistenceUnitDescriptor = persistenceUnitSources.descriptor();
+		persistenceUnitSources.registerClassTransformer( integrationSettings );
 
 		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
 				persistenceUnitDescriptor,
@@ -499,9 +503,8 @@ public class BootstrapPipeline {
 				bootstrapSettings,
 				mappingSettings,
 				standardServiceRegistry,
-				MappingSources.from(
-						persistenceUnitDescriptor,
-						bootstrapSettings,
+				persistenceUnitSources.collect(
+						bootstrapSettings, mappingSettings,
 						contributionDiscoveryContext
 				),
 				mappingCustomizations( bootstrapSettings.configurationValues() ),
@@ -534,7 +537,7 @@ public class BootstrapPipeline {
 			ResolvedMappingSettings mappingSettings,
 			ContributionDiscoveryContext contributionDiscoveryContext) {
 		if ( persistenceConfiguration instanceof HibernatePersistenceConfiguration hibernatePersistenceConfiguration ) {
-			return MappingSources.from(
+			return ConfigurationMappingProcessor.discover(
 					hibernatePersistenceConfiguration,
 					bootstrapSettings,
 					mappingSettings,
@@ -542,7 +545,7 @@ public class BootstrapPipeline {
 			);
 		}
 		else {
-			return MappingSources.from( persistenceConfiguration );
+			return ConfigurationMappingProcessor.declared( persistenceConfiguration );
 		}
 	}
 

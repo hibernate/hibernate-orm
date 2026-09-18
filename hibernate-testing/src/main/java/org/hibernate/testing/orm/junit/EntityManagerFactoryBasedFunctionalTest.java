@@ -1,5 +1,6 @@
 package org.hibernate.testing.orm.junit;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FetchType;
@@ -46,7 +47,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 	@Override
 	public EntityManagerFactory produceEntityManagerFactory() {
 		final EntityManagerFactory entityManagerFactory = BootstrapPipeline.build(
-				buildPersistenceUnitDescriptor(),
+				PersistenceUnitSources.standalone( buildPersistenceUnitDescriptor() ),
 				buildSettings()
 		);
 

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.mapping.collections;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
@@ -68,11 +69,11 @@ public class MapKeyTypeTest extends EntityManagerFactoryBasedFunctionalTest {
 					"none"
 			);
 			entityManagerFactory =  BootstrapPipeline.build(
-					new TestingPersistenceUnitDescriptorImpl(
+					PersistenceUnitSources.standalone( new TestingPersistenceUnitDescriptorImpl(
 							getClass().getSimpleName(),
 							List.of( Person.class.getName() ),
 							List.of()
-					),
+					) ),
 					settings
 			).unwrap(SessionFactoryImplementor.class);
 

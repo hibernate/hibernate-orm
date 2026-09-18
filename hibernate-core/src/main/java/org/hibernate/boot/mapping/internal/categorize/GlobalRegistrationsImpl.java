@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.function.Function;
 
-import org.hibernate.models.spi.ModuleDetails;
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.annotations.FetchProfile;
@@ -735,8 +734,12 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 	}
 
-	public void collectNamedEntityGraphRegistrations(ModuleDetails moduleDetails) {
-		moduleDetails.forEachAnnotationUsage( org.hibernate.annotations.NamedEntityGraph.class, modelsContext, usage ->
+	public void collectNamedEntityGraphRegistrations(AnnotationTarget target) {
+		if ( target instanceof ClassDetails classDetails ) {
+			collectClassNamedEntityGraphRegistrations( classDetails );
+			return;
+		}
+		target.forEachAnnotationUsage( org.hibernate.annotations.NamedEntityGraph.class, modelsContext, usage ->
 				collectNamedEntityGraphRegistration(
 						usage.name(),
 						null,
@@ -746,7 +749,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		);
 	}
 
-	public void collectNamedEntityGraphRegistrations(ClassDetails classDetails) {
+	private void collectClassNamedEntityGraphRegistrations(ClassDetails classDetails) {
 		classDetails.forEachAnnotationUsage( NamedEntityGraph.class, modelsContext, usage -> {
 			if ( !classDetails.hasDirectAnnotationUsage( Entity.class ) && StringHelper.isEmpty( usage.name() ) ) {
 				throw new AnnotationException(

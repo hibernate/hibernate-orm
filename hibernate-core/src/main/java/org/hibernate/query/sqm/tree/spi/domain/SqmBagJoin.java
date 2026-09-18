@@ -28,28 +28,29 @@ import java.util.List;
  */
 public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> implements JpaCollectionJoin<O, E> {
 	public SqmBagJoin(
-			SqmFrom<?,O> lhs,
-			SqmBagPersistentAttribute<? super O,E> attribute,
+			@Nonnull SqmFrom<?,O> lhs,
+			@Nonnull SqmBagPersistentAttribute<? super O,E> attribute,
 			@Nullable String alias,
-			SqmJoinType sqmJoinType,
+			@Nonnull SqmJoinType sqmJoinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
 	}
 
 	protected SqmBagJoin(
-			SqmFrom<?, O> lhs,
-			NavigablePath navigablePath,
-			SqmBagPersistentAttribute<O,E> attribute,
+			@Nonnull SqmFrom<?, O> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmBagPersistentAttribute<O,E> attribute,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, attribute, alias, joinType, fetched, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmBagJoin<O, E> copy(SqmCopyContext context) {
+	public SqmBagJoin<O, E> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -77,8 +78,9 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 		return (SqmBagPersistentAttribute<O, E>) super.getModel();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitBagJoin( this );
 	}
 

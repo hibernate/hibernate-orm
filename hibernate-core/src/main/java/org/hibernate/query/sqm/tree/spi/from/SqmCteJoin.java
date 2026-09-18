@@ -35,10 +35,10 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 	private final SqmCteStatement<T> cte;
 
 	public SqmCteJoin(
-			SqmCteStatement<T> cte,
+			@Nonnull SqmCteStatement<T> cte,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			SqmRoot<T> sqmRoot) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull SqmRoot<T> sqmRoot) {
 		//noinspection unchecked
 		this(
 				buildRootNavigablePath( "<<cte>>", alias ),
@@ -51,12 +51,12 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 	}
 
 	protected SqmCteJoin(
-			NavigablePath navigablePath,
-			SqmCteStatement<T> cte,
-			SqmPathSource<T> pathSource,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmCteStatement<T> cte,
+			@Nonnull SqmPathSource<T> pathSource,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			SqmRoot<T> sqmRoot) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull SqmRoot<T> sqmRoot) {
 		super(
 				navigablePath,
 				pathSource,
@@ -73,8 +73,9 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 		return false;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCteJoin<T> copy(SqmCopyContext context) {
+	public SqmCteJoin<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -95,6 +96,7 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 		return path;
 	}
 
+	@Nonnull
 	public SqmRoot<?> getRoot() {
 		return (SqmRoot<?>) castNonNull( super.getLhs() );
 	}
@@ -105,6 +107,7 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 		return getRoot();
 	}
 
+	@Nonnull
 	public SqmCteStatement<T> getCte() {
 		return cte;
 	}
@@ -116,8 +119,9 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 		return null;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitQualifiedCteJoin( this );
 	}
 
@@ -173,14 +177,14 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> object) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> object) {
 		return super.deepEquals( object )
 			&& Objects.equals( cte.getCteTable().getCteName(),
 				((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> object) {
 		return super.isDeepCompatible( object )
 			&& Objects.equals( cte.getCteTable().getCteName(),
 				((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );

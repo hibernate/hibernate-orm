@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.predicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -18,17 +19,18 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<?> expression;
 
-	public SqmNullnessPredicate(SqmExpression<?> expression, NodeBuilder nodeBuilder) {
+	public SqmNullnessPredicate(@Nonnull SqmExpression<?> expression, @Nonnull NodeBuilder nodeBuilder) {
 		this( expression, false, nodeBuilder );
 	}
 
-	public SqmNullnessPredicate(SqmExpression<?> expression, boolean negated, NodeBuilder nodeBuilder) {
+	public SqmNullnessPredicate(@Nonnull SqmExpression<?> expression, boolean negated, @Nonnull NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.expression = expression;
 	}
 
+	@Nonnull
 	@Override
-	public SqmNullnessPredicate copy(SqmCopyContext context) {
+	public SqmNullnessPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmNullnessPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -45,17 +47,19 @@ public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getExpression() {
 		return expression;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitIsNullPredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		expression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " is not null" );
@@ -80,7 +84,7 @@ public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmNullnessPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& this.expression.isCompatible( that.expression );
@@ -93,6 +97,7 @@ public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmNullnessPredicate( expression, !isNegated(), nodeBuilder() );

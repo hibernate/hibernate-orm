@@ -30,12 +30,12 @@ public abstract class AbstractSqmPluralJoin<L,C,E>
 		implements JpaJoin<L,E>, PluralJoin<L,C,E> {
 
 	public AbstractSqmPluralJoin(
-			SqmFrom<?, L> lhs,
-			SqmPluralPersistentAttribute<? super L,C,E> joinedNavigable,
+			@Nonnull SqmFrom<?, L> lhs,
+			@Nonnull SqmPluralPersistentAttribute<? super L,C,E> joinedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super(
 				lhs,
 				joinedNavigable.createNavigablePath( lhs, alias ),
@@ -48,13 +48,13 @@ public abstract class AbstractSqmPluralJoin<L,C,E>
 	}
 
 	protected AbstractSqmPluralJoin(
-			SqmFrom<?, L> lhs,
-			NavigablePath navigablePath,
-			PluralPersistentAttribute<L,C,E> joinedNavigable,
+			@Nonnull SqmFrom<?, L> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull PluralPersistentAttribute<L,C,E> joinedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, (SqmPathSource<E>) joinedNavigable, alias, joinType, fetched, nodeBuilder );
 	}
 

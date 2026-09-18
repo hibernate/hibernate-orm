@@ -52,7 +52,7 @@ public interface JpaConflictClause<T> {
 	 * against the insert target.
 	 */
 	@Nonnull
-	JpaConflictClause<T> conflictOnConstraintAttributes(String... attributes);
+	JpaConflictClause<T> conflictOnConstraintAttributes(@Nonnull String... attributes);
 
 	/**
 	 * Shorthand for calling {@link #conflictOnConstraintPaths(List)} with paths resolved for the given attributes

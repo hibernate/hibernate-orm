@@ -40,9 +40,9 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	private BasicDomainType<N> type;
 
 	public SqmHqlNumericLiteral(
-			String literalValue,
-			BasicDomainType<N> type,
-			NodeBuilder criteriaBuilder) {
+			@Nonnull String literalValue,
+			@Nonnull BasicDomainType<N> type,
+			@Nonnull NodeBuilder criteriaBuilder) {
 		this( literalValue,
 				interpretCategory( literalValue, castNonNull( criteriaBuilder.resolveExpressible( type ) ) ),
 				type, criteriaBuilder );
@@ -50,16 +50,17 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	}
 
 	public SqmHqlNumericLiteral(
-			String literalValue,
-			NumericTypeCategory typeCategory,
-			BasicDomainType<N> type,
-			NodeBuilder criteriaBuilder) {
+			@Nonnull String literalValue,
+			@Nonnull NumericTypeCategory typeCategory,
+			@Nonnull BasicDomainType<N> type,
+			@Nonnull NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder.resolveExpressible( type ), criteriaBuilder );
 		this.literalValue = literalValue;
 		this.typeCategory = typeCategory;
 		this.type = type;
 	}
 
+	@Nonnull
 	public String getUnparsedLiteralValue() {
 		return literalValue;
 	}
@@ -69,17 +70,19 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 		return typeCategory.parseLiteralValue( literalValue );
 	}
 
+	@Nonnull
 	public NumericTypeCategory getTypeCategory() {
 		return typeCategory;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitHqlNumericLiteral( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( literalValue )
 			.append( switch ( typeCategory ) {
 				case BIG_DECIMAL -> "bd";
@@ -105,7 +108,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 
@@ -114,6 +117,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 		return hashCode();
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		final StringBuilder stringBuilder = new StringBuilder();
@@ -121,12 +125,14 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 		return stringBuilder.toString();
 	}
 
+	@Nonnull
 	@Override
-	public SqmHqlNumericLiteral<N> copy(SqmCopyContext context) {
+	public SqmHqlNumericLiteral<N> copy(@Nonnull SqmCopyContext context) {
 		return new SqmHqlNumericLiteral<>( literalValue, typeCategory, type, nodeBuilder() );
 	}
 
-	private static <N extends Number> NumericTypeCategory interpretCategory(String literalValue, SqmExpressible<N> type) {
+	@Nonnull
+	private static <N extends Number> NumericTypeCategory interpretCategory(@Nonnull String literalValue, @Nonnull SqmExpressible<N> type) {
 		assert type != null;
 
 		final JavaType<N> javaTypeDescriptor = type.getExpressibleJavaType();

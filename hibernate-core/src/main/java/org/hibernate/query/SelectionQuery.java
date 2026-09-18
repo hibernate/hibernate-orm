@@ -148,6 +148,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	/**
 	 * The type of things returned from the query.
 	 */
+	@Nullable
 	Class<R> getResultType();
 
 
@@ -239,6 +240,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	R getSingleResult();
 
 	/**
@@ -341,8 +343,9 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see KeyedPage
 	 * @see KeyedResultList
 	 */
+	@Nonnull
 	@Incubating(since = "8.0")
-	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
+	KeyedResultList<R> getKeyedResultList(@Nonnull KeyedPage<R> page);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -573,8 +576,9 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.3
 	 */
+	@Nonnull
 	@Incubating(since = "8.0")
-	SelectionQuery<R> setPage(Page page);
+	SelectionQuery<R> setPage(@Nonnull Page page);
 
 	/**
 	 * Obtain the {@link CacheMode} in effect for this query. By default,
@@ -704,6 +708,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	SelectionQuery<R> setCacheRegion(@Nullable String cacheRegion);
 
 	/**

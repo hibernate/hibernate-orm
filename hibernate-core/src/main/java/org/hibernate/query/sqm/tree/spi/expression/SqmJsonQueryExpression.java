@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.criteria.JpaJsonQueryExpression;
@@ -42,14 +43,14 @@ public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String
 	private EmptyBehavior emptyBehavior = EmptyBehavior.UNSPECIFIED;
 
 	public SqmJsonQueryExpression(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ReturnableType<String> impliedResultType,
 			@Nullable ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name) {
 		super(
 				descriptor,
 				renderer,
@@ -63,18 +64,18 @@ public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String
 	}
 
 	private SqmJsonQueryExpression(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ReturnableType<String> impliedResultType,
 			@Nullable ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name,
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name,
 			@Nullable Map<String, SqmExpression<?>> passingExpressions,
-			WrapMode wrapMode,
-			ErrorBehavior errorBehavior,
-			EmptyBehavior emptyBehavior) {
+			@Nonnull WrapMode wrapMode,
+			@Nonnull ErrorBehavior errorBehavior,
+			@Nonnull EmptyBehavior emptyBehavior) {
 		super(
 				descriptor,
 				renderer,
@@ -91,7 +92,8 @@ public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String
 		this.emptyBehavior = emptyBehavior;
 	}
 
-	public SqmJsonQueryExpression copy(SqmCopyContext context) {
+	@Nonnull
+	public SqmJsonQueryExpression copy(@Nonnull SqmCopyContext context) {
 		final SqmJsonQueryExpression existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -119,115 +121,134 @@ public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String
 		);
 	}
 
+	@Nonnull
 	@Override
 	public WrapMode getWrapMode() {
 		return wrapMode;
 	}
 
+	@Nonnull
 	@Override
 	public ErrorBehavior getErrorBehavior() {
 		return errorBehavior;
 	}
 
+	@Nonnull
 	@Override
 	public EmptyBehavior getEmptyBehavior() {
 		return emptyBehavior;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression withoutWrapper() {
 		this.wrapMode = WrapMode.WITHOUT_WRAPPER;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression withWrapper() {
 		this.wrapMode = WrapMode.WITH_WRAPPER;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression withConditionalWrapper() {
 		this.wrapMode = WrapMode.WITH_CONDITIONAL_WRAPPER;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression unspecifiedWrapper() {
 		this.wrapMode = WrapMode.UNSPECIFIED;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression unspecifiedOnError() {
 		this.errorBehavior = ErrorBehavior.UNSPECIFIED;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression errorOnError() {
 		this.errorBehavior = ErrorBehavior.ERROR;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression nullOnError() {
 		this.errorBehavior = ErrorBehavior.NULL;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression emptyArrayOnError() {
 		this.errorBehavior = ErrorBehavior.EMPTY_ARRAY;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression emptyObjectOnError() {
 		this.errorBehavior = ErrorBehavior.EMPTY_OBJECT;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression unspecifiedOnEmpty() {
 		this.errorBehavior = ErrorBehavior.UNSPECIFIED;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression errorOnEmpty() {
 		this.emptyBehavior = EmptyBehavior.ERROR;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression nullOnEmpty() {
 		this.emptyBehavior = EmptyBehavior.NULL;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression emptyArrayOnEmpty() {
 		this.emptyBehavior = EmptyBehavior.EMPTY_ARRAY;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression emptyObjectOnEmpty() {
 		this.emptyBehavior = EmptyBehavior.EMPTY_OBJECT;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJsonQueryExpression passing(
-			String parameterName,
-			jakarta.persistence.criteria.Expression<?> expression) {
+			@Nonnull String parameterName,
+			@Nonnull jakarta.persistence.criteria.Expression<?> expression) {
 		addPassingExpression( parameterName, (SqmExpression<?>) expression );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+	public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 		final @Nullable ReturnableType<?> resultType = resolveResultType( walker );
 		final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 		final ArgumentsValidator validator = getArgumentsValidator();
@@ -265,7 +286,7 @@ public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "json_query(" );
 		getArguments().get( 0 ).appendHqlString( hql, context );
 		hql.append( ',' );
@@ -311,7 +332,7 @@ public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String
 	}
 
 	@Override
-	public boolean isCompatible(Object other) {
+	public boolean isCompatible(@Nullable Object other) {
 		return super.isCompatible( other )
 			&& other instanceof SqmJsonQueryExpression that
 			&& wrapMode == that.wrapMode

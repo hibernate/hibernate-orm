@@ -18,6 +18,7 @@ import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.creation.SqlAliasStemHelper;
@@ -27,6 +28,7 @@ import org.hibernate.sql.ast.spi.query.MutationStatement;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
@@ -86,6 +88,29 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		// Spanner rejects untyped null literals as comparison operands.
+		renderComparisonEmulation( castNullLiteral( lhs ), operator, castNullLiteral( rhs ) );
+	}
+
+	private Expression castNullLiteral(Expression expression) {
+		// Numeric literals cannot be null, and parsing their value may overflow the inferred Java type.
+		if ( expression instanceof UnparsedNumericLiteral<?> ) {
+			return expression;
+		}
+		if ( expression instanceof Literal literal && literal.getLiteralValue() == null ) {
+			final var jdbcMapping = literal.getJdbcMapping();
+			return new SelfRenderingFunctionSqlAstExpression<>(
+					"cast",
+					castFunction(),
+					List.of( literal, new CastTarget( jdbcMapping ) ),
+					null,
+					jdbcMapping
+			);
+		}
+		return expression;
+	}
+
+	private void renderComparisonEmulation(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		if ( rhs instanceof Every || rhs instanceof Any ) {
 			final boolean all = rhs instanceof Every;
 			final SelectStatement subquery = all ? ( (Every) rhs ).getSubquery() : ( (Any) rhs ).getSubquery();
@@ -360,6 +385,12 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		else {
 			super.visitBinaryArithmeticExpression( arithmeticExpression );
 		}
+	}
+
+	@Override
+	protected void visitArithmeticOperand(Expression expression) {
+		// Spanner rejects untyped null literals as arithmetic operands.
+		castNullLiteral( expression ).accept( this );
 	}
 
 	@Override

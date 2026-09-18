@@ -15,7 +15,7 @@ import org.hibernate.query.sqm.tree.spi.select.SqmSortSpecification;
  * @author Steve Ebersole
  */
 public interface SqmComparableExpressionImplementor<C extends Comparable<? super C>> extends SqmComparableExpression<C> {
-	SqmCriteriaNodeBuilder nodeBuilder();
+	@Nonnull SqmCriteriaNodeBuilder nodeBuilder();
 
 	@Nonnull
 	@Override
@@ -25,7 +25,7 @@ public interface SqmComparableExpressionImplementor<C extends Comparable<? super
 
 	@Nonnull
 	@Override
-	default SqmComparableExpression<C> coalesce(C y) {
+	default SqmComparableExpression<C> coalesce(@Nonnull C y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -37,7 +37,7 @@ public interface SqmComparableExpressionImplementor<C extends Comparable<? super
 
 	@Nonnull
 	@Override
-	default SqmComparableExpression<C> nullif(C y) {
+	default SqmComparableExpression<C> nullif(@Nonnull C y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 
@@ -49,7 +49,7 @@ public interface SqmComparableExpressionImplementor<C extends Comparable<? super
 
 	@Nonnull
 	@Override
-	default SqmPredicate greaterThan(C y) {
+	default SqmPredicate greaterThan(@Nonnull C y) {
 		return nodeBuilder().greaterThan( this, y );
 	}
 
@@ -61,7 +61,7 @@ public interface SqmComparableExpressionImplementor<C extends Comparable<? super
 
 	@Nonnull
 	@Override
-	default SqmPredicate greaterThanOrEqualTo(C y) {
+	default SqmPredicate greaterThanOrEqualTo(@Nonnull C y) {
 		return nodeBuilder().greaterThanOrEqualTo( this, y );
 	}
 
@@ -73,7 +73,7 @@ public interface SqmComparableExpressionImplementor<C extends Comparable<? super
 
 	@Nonnull
 	@Override
-	default SqmPredicate lessThan(C y) {
+	default SqmPredicate lessThan(@Nonnull C y) {
 		return nodeBuilder().lessThan( this, y );
 	}
 
@@ -85,7 +85,7 @@ public interface SqmComparableExpressionImplementor<C extends Comparable<? super
 
 	@Nonnull
 	@Override
-	default SqmPredicate lessThanOrEqualTo(C y) {
+	default SqmPredicate lessThanOrEqualTo(@Nonnull C y) {
 		return nodeBuilder().lessThanOrEqualTo( this, y );
 	}
 
@@ -97,7 +97,7 @@ public interface SqmComparableExpressionImplementor<C extends Comparable<? super
 
 	@Nonnull
 	@Override
-	default SqmPredicate between(C x, C y) {
+	default SqmPredicate between(@Nonnull C x, @Nonnull C y) {
 		return nodeBuilder().between( this, x, y );
 	}
 

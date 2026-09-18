@@ -43,11 +43,11 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertValues<T> {
 	private @Nullable List<SqmValues> valuesList;
 
-	public SqmInsertValuesStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
+	public SqmInsertValuesStatement(@Nonnull SqmRoot<T> targetRoot, @Nonnull NodeBuilder nodeBuilder) {
 		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
 	}
 
-	public SqmInsertValuesStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
+	public SqmInsertValuesStatement(@Nonnull Class<T> targetEntity, @Nonnull NodeBuilder nodeBuilder) {
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
@@ -61,11 +61,11 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	private SqmInsertValuesStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmQuerySource querySource,
 			@Nullable Set<SqmParameter<?>> parameters,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			SqmRoot<T> target,
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull SqmRoot<T> target,
 			@Nullable List<SqmPath<?>> insertionTargetPaths,
 			@Nullable SqmConflictClause<T> conflictClause,
 			@Nullable List<SqmValues> valuesList) {
@@ -73,8 +73,9 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 		this.valuesList = valuesList;
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertValuesStatement<T> copy(SqmCopyContext context) {
+	public SqmInsertValuesStatement<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -93,11 +94,13 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 		return copyWithValues( context, valuesList );
 	}
 
-	public SqmInsertValuesStatement<T> copyWithoutValues(SqmCopyContext context) {
+	@Nonnull
+	public SqmInsertValuesStatement<T> copyWithoutValues(@Nonnull SqmCopyContext context) {
 		return copyWithValues( context, null );
 	}
 
-	private SqmInsertValuesStatement<T> copyWithValues(SqmCopyContext context, @Nullable List<SqmValues> valuesList) {
+	@Nonnull
+	private SqmInsertValuesStatement<T> copyWithValues(@Nonnull SqmCopyContext context, @Nullable List<SqmValues> valuesList) {
 		final var newQuerySource = context.getQuerySource();
 		final SqmInsertValuesStatement<T> sqmInsertValuesStatementCopy = context.registerCopy(
 				this,
@@ -129,14 +132,16 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 		}
 	}
 
+	@Nonnull
 	public List<SqmValues> getValuesList() {
 		return valuesList == null
 				? Collections.emptyList()
 				: Collections.unmodifiableList( valuesList );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitInsertValuesStatement( this );
 	}
 
@@ -188,7 +193,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final List<SqmValues> valuesList = castNonNull( this.valuesList );
 
 		super.appendHqlString( hql, context );
@@ -205,7 +210,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 		}
 	}
 
-	private static void appendValues(SqmValues sqmValues, StringBuilder sb, SqmRenderContext context) {
+	private static void appendValues(@Nonnull SqmValues sqmValues, @Nonnull StringBuilder sb, @Nonnull SqmRenderContext context) {
 		final List<SqmExpression<?>> expressions = sqmValues.getExpressions();
 		sb.append( '(' );
 		expressions.get( 0 ).appendHqlString( sb, context );
@@ -231,7 +236,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmInsertValuesStatement<?> that
 			&& super.isCompatible( that )
 			&& SqmCacheable.areCompatible( valuesList, that.valuesList );

@@ -4,8 +4,12 @@
  */
 package org.hibernate.query.restriction;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.criteria.JpaTupleElement;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 
 import jakarta.data.constraint.AtLeast;
@@ -78,19 +82,21 @@ public final class JakartaDataRestriction {
 	 * as a {@linkplain Restriction Hibernate query restriction}, allowing it to be used
 	 * in a specification.
 	 */
-	private record Adapter<T>(jakarta.data.restrict.Restriction<? super T> restriction)
+	private record Adapter<T>(@Nonnull jakarta.data.restrict.Restriction<? super T> restriction)
 			implements Restriction<T> {
 		private Adapter {
 			requireNonNull( restriction, "missing restriction" );
 		}
 
 		@Override
+		@Nonnull
 		public Restriction<T> negated() {
 			return adaptRestriction( restriction.negate() );
 		}
 
 		@Override
-		public Predicate toPredicate(Root<? extends T> root, CriteriaBuilder builder) {
+		@Nonnull
+		public Predicate toPredicate(@Nonnull Root<? extends T> root, @Nonnull CriteriaBuilder builder) {
 			return JakartaDataRestriction.restriction( restriction, root, builder );
 		}
 	}
@@ -98,7 +104,8 @@ public final class JakartaDataRestriction {
 	/**
 	 * Adapt the given {@linkplain jakarta.data.restrict.Restriction Jakarta Data restriction}.
 	 */
-	public static <T> Restriction<T> adaptRestriction(jakarta.data.restrict.Restriction<? super T> restriction) {
+	@Nonnull
+	public static <T> Restriction<T> adaptRestriction(@Nonnull jakarta.data.restrict.Restriction<? super T> restriction) {
 		return new Adapter<>( restriction );
 	}
 
@@ -107,10 +114,10 @@ public final class JakartaDataRestriction {
 	 * to the given root entity of the given {@linkplain CriteriaQuery criteria query}.
 	 */
 	public static <T> void applyRestriction(
-			jakarta.data.restrict.Restriction<? super T> restriction,
-			CriteriaQuery<?> query,
-			Root<? extends T> root,
-			CriteriaBuilder builder) {
+			@Nonnull jakarta.data.restrict.Restriction<? super T> restriction,
+			@Nonnull CriteriaQuery<?> query,
+			@Nonnull Root<? extends T> root,
+			@Nonnull CriteriaBuilder builder) {
 		requireNonNull( restriction, "missing restriction" );
 		requireNonNull( query, "missing query" );
 		requireNonNull( root, "missing root" );
@@ -129,10 +136,10 @@ public final class JakartaDataRestriction {
 	 * to the given root entity of the given {@linkplain CriteriaQuery criteria query}.
 	 */
 	public static void applyOrder(
-			jakarta.data.Order<?> order,
-			CriteriaQuery<?> query,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull jakarta.data.Order<?> order,
+			@Nonnull CriteriaQuery<?> query,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		requireNonNull( order, "missing order" );
 		for ( var sort : order.sorts() ) {
 			applySort( sort, query, root, builder );
@@ -144,10 +151,10 @@ public final class JakartaDataRestriction {
 	 * to the given root entity of the given {@linkplain CriteriaQuery criteria query}.
 	 */
 	public static void applySort(
-			jakarta.data.Sort<?> sort,
-			CriteriaQuery<?> query,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull jakarta.data.Sort<?> sort,
+			@Nonnull CriteriaQuery<?> query,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		requireNonNull( sort, "missing sort" );
 		requireNonNull( query, "missing query" );
 		requireNonNull( root, "missing root" );
@@ -237,11 +244,12 @@ public final class JakartaDataRestriction {
 	 * to the given {@linkplain Expression JPA expression}, returning a {@linkplain Predicate
 	 * JPA criteria predicate}.
 	 */
+	@Nonnull
 	public static <T> Predicate applyConstraint(
-			Expression<? extends T> expression,
-			Constraint<T> constraint,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull Expression<? extends T> expression,
+			@Nonnull Constraint<T> constraint,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		requireNonNull( expression, "missing expression" );
 		requireNonNull( constraint, "missing constraint" );
 		requireNonNull( root, "missing root" );
@@ -607,7 +615,7 @@ public final class JakartaDataRestriction {
 			return builder.literal( value );
 		}
 		else {
-			final var javaType = wrapperType( expression.getJavaType() );
+			final var javaType = javaTypeIfKnown( expression );
 			return javaType == null
 					? builder.nullLiteral( Object.class )
 					: builder.nullLiteral( javaType );
@@ -626,7 +634,7 @@ public final class JakartaDataRestriction {
 	private static void verifyExpressionType(
 			Expression<?> expression,
 			Class<?> expectedType) {
-		final var expressionType = expression.getJavaType();
+		final var expressionType = javaTypeIfKnown( expression );
 		if ( expressionType != null ) {
 			final var javaType = wrapperType( expressionType );
 			if ( !expectedType.isAssignableFrom( javaType ) ) {
@@ -639,8 +647,8 @@ public final class JakartaDataRestriction {
 	private static void verifyAssignableExpressionType(
 			Expression<?> expression,
 			Expression<?> valueExpression) {
-		final var expressionType = wrapperType( expression.getJavaType() );
-		final var valueType = wrapperType( valueExpression.getJavaType() );
+		final var expressionType = javaTypeIfKnown( expression );
+		final var valueType = javaTypeIfKnown( valueExpression );
 		if ( expressionType != null && valueType != null && !expressionType.isAssignableFrom( valueType ) ) {
 			throw new IllegalArgumentException(
 					"Expected '" + expressionType.getName() + "' expression but got '" + valueType.getName() + "'" );
@@ -648,15 +656,23 @@ public final class JakartaDataRestriction {
 	}
 
 	private static void verifyValueType(Expression<?> expression, Object value) {
-		final var expressionType = wrapperType( expression.getJavaType() );
+		final var expressionType = javaTypeIfKnown( expression );
 		if ( value != null && expressionType != null && !expressionType.isInstance( value ) ) {
 			throw new IllegalArgumentException(
 					"Expected '" + expressionType.getName() + "' value but got '" + value.getClass().getName() + "'" );
 		}
 	}
 
+	@Nullable
+	private static Class<?> javaTypeIfKnown(Expression<?> expression) {
+		final var javaType = expression instanceof JpaTupleElement<?> tupleElement
+				? tupleElement.getJavaTypeIfKnown()
+				: expression.getJavaType();
+		return javaType == null ? null : wrapperType( javaType );
+	}
+
 	private static Class<?> wrapperType(Class<?> javaType) {
-		if ( javaType == null || !javaType.isPrimitive() ) {
+		if ( !javaType.isPrimitive() ) {
 			return javaType;
 		}
 		else if ( javaType == boolean.class ) {

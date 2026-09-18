@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
@@ -107,6 +109,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	}
 
 	@Override
+	@Nonnull
 	public DynamicResultBuilderBasicStandard cacheKeyInstance() {
 		return this;
 	}

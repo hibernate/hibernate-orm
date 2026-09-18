@@ -24,17 +24,18 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	private final SqmDurationUnit<?> unit;
 
 	public SqmToDuration(
-			SqmExpression<?> magnitude,
-			SqmDurationUnit<?> unit,
-			ReturnableType<T> type,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmExpression<?> magnitude,
+			@Nonnull SqmDurationUnit<?> unit,
+			@Nonnull ReturnableType<T> type,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder.resolveExpressible( type ), nodeBuilder );
 		this.magnitude = magnitude;
 		this.unit = unit;
 	}
 
+	@Nonnull
 	@Override
-	public SqmToDuration<T> copy(SqmCopyContext context) {
+	public SqmToDuration<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -52,10 +53,12 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 		return expression;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getMagnitude() {
 		return magnitude;
 	}
 
+	@Nonnull
 	public SqmDurationUnit<?> getUnit() {
 		return unit;
 	}
@@ -65,18 +68,20 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 		return castNonNull( super.getNodeType() );
 	}
 
+	@Nullable
 	@Override
-	public <R> R accept(SemanticQueryWalker<R> walker) {
+	public <R> R accept(@Nonnull SemanticQueryWalker<R> walker) {
 		return walker.visitToDuration( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return magnitude.asLoggableText() + " " + unit.getUnit();
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		magnitude.appendHqlString( hql, context );
 		hql.append( ' ' );
 		hql.append( unit.getUnit() );
@@ -97,7 +102,7 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmToDuration<?> that
 			&& magnitude.isCompatible( that.magnitude )
 			&& unit.isCompatible( that.unit );

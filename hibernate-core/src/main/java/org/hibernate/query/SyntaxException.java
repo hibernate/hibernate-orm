@@ -4,6 +4,9 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.QueryException;
 
 /**
@@ -16,10 +19,10 @@ import org.hibernate.QueryException;
  * @since 6.3
  */
 public class SyntaxException extends QueryException {
-	public SyntaxException(String message, String queryString) {
+	public SyntaxException(@Nonnull String message, @Nullable String queryString) {
 		super( message, queryString );
 	}
-	public SyntaxException(String message) {
+	public SyntaxException(@Nonnull String message) {
 		super( message );
 	}
 }

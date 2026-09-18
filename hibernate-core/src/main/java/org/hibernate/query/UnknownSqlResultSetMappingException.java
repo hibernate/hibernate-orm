@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.MappingException;
 
 import jakarta.persistence.NamedNativeQuery;
@@ -18,13 +20,15 @@ import jakarta.persistence.NamedNativeQuery;
  * @author Steve Ebersole
  */
 public class UnknownSqlResultSetMappingException extends MappingException {
+	@Nonnull
 	private final String unknownSqlResultSetMappingName;
 
-	public UnknownSqlResultSetMappingException(String unknownSqlResultSetMappingName) {
+	public UnknownSqlResultSetMappingException(@Nonnull String unknownSqlResultSetMappingName) {
 		super( "The given SqlResultSetMapping name [" + unknownSqlResultSetMappingName + "] is unknown" );
 		this.unknownSqlResultSetMappingName = unknownSqlResultSetMappingName;
 	}
 
+	@Nonnull
 	public String getUnknownSqlResultSetMappingName() {
 		return unknownSqlResultSetMappingName;
 	}

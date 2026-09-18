@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.restriction;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.FetchParent;
 import jakarta.persistence.criteria.JoinType;
@@ -14,20 +15,23 @@ import jakarta.persistence.metamodel.SingularAttribute;
  *
  * @author Gavin King
  */
-record PathElement<X, U, V>(Path<? super X, U> parent, SingularAttribute<? super U, V> attribute)
+record PathElement<X, U, V>(@Nonnull Path<? super X, U> parent, @Nonnull SingularAttribute<? super U, V> attribute)
 		implements Path<X, V> {
+	@Nonnull
 	@Override
 	public Class<V> getType() {
 		return attribute.getJavaType();
 	}
 
+	@Nonnull
 	@Override
-	public jakarta.persistence.criteria.Path<V> path(Root<? extends X> root) {
+	public jakarta.persistence.criteria.Path<V> path(@Nonnull Root<? extends X> root) {
 		return parent.path( root ).get( attribute );
 	}
 
+	@Nonnull
 	@Override
-	public FetchParent<?, V> fetch(Root<? extends X> root) {
+	public FetchParent<?, V> fetch(@Nonnull Root<? extends X> root) {
 		return parent.fetch( root ).fetch( attribute, JoinType.LEFT );
 	}
 }

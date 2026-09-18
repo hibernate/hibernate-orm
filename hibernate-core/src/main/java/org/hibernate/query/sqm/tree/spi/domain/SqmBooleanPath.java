@@ -18,7 +18,7 @@ public interface SqmBooleanPath extends SqmPath<Boolean>, SqmBooleanExpression {
 
 	@Nonnull
 	@Override
-	SqmBooleanExpression coalesce(Boolean y);
+	SqmBooleanExpression coalesce(@Nonnull Boolean y);
 
 	@Nonnull
 	@Override
@@ -26,5 +26,5 @@ public interface SqmBooleanPath extends SqmPath<Boolean>, SqmBooleanExpression {
 
 	@Nonnull
 	@Override
-	SqmBooleanExpression nullif(Boolean y);
+	SqmBooleanExpression nullif(@Nonnull Boolean y);
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.range;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -15,19 +16,20 @@ import java.util.Locale;
  *
  * @author Gavin King
  */
-record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
+record Pattern(@Nonnull String pattern, boolean caseSensitive) implements Range<String> {
 
 	// default escape and wildcard characters
 	private static final char ESCAPE = '\\';
 	private static final char WILDCARD_CHAR = '_';
 	private static final char WILDCARD_STRING = '%';
 
-	Pattern(String pattern, boolean caseSensitive, char charWildcard, char stringWildcard) {
+	Pattern(@Nonnull String pattern, boolean caseSensitive, char charWildcard, char stringWildcard) {
 		this( translate( pattern, charWildcard, stringWildcard ), caseSensitive );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate toPredicate(Path<? extends String> path, CriteriaBuilder builder) {
+	public Predicate toPredicate(@Nonnull Path<? extends String> path, @Nonnull CriteriaBuilder builder) {
 		@SuppressWarnings("unchecked")
 		final Path<String> stringPath = (Path<String>) path; // safe, because String is final
 		return caseSensitive
@@ -35,12 +37,14 @@ record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 				: builder.like( builder.lower( stringPath ), pattern.toLowerCase( Locale.ROOT ), ESCAPE );
 	}
 
+	@Nonnull
 	@Override
 	public Class<String> getType() {
 		return String.class;
 	}
 
-	private static String translate(String pattern, char charWildcard, char stringWildcard) {
+	@Nonnull
+	private static String translate(@Nonnull String pattern, char charWildcard, char stringWildcard) {
 		final var result = new StringBuilder();
 		for ( int i = 0; i < pattern.length(); i++ ) {
 			final char ch = pattern.charAt( i );

@@ -6,6 +6,7 @@ package org.hibernate.query.internal;
 
 import java.util.Objects;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.AbstractQueryParameter;
@@ -56,11 +57,13 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 	}
 
 	@Override
+	@Nonnull
 	public Integer getPosition() {
 		return position;
 	}
 
 	@Override
+	@Nonnull
 	public NamedQueryMemento.ParameterMemento toMemento() {
 		return session -> new QueryParameterPositionalImpl<>( getPosition(), allowsMultiValuedBinding(), getHibernateType() );
 	}

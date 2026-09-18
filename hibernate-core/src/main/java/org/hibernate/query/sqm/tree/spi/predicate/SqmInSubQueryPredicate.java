@@ -29,17 +29,17 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	private final SqmSubQuery<T> subQueryExpression;
 
 	public SqmInSubQueryPredicate(
-			SqmExpression<T> testExpression,
-			SqmSubQuery<T> subQueryExpression,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmExpression<T> testExpression,
+			@Nonnull SqmSubQuery<T> subQueryExpression,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( testExpression, subQueryExpression, false, nodeBuilder );
 	}
 
 	public SqmInSubQueryPredicate(
-			SqmExpression<T> testExpression,
-			SqmSubQuery<T> subQueryExpression,
+			@Nonnull SqmExpression<T> testExpression,
+			@Nonnull SqmSubQuery<T> subQueryExpression,
 			boolean negated,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( negated,  nodeBuilder );
 		this.testExpression = testExpression;
 		this.subQueryExpression = subQueryExpression;
@@ -55,8 +55,9 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		subQueryExpression.applyInferableType( expressibleType );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInSubQueryPredicate<T> copy(SqmCopyContext context) {
+	public SqmInSubQueryPredicate<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -74,6 +75,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		return predicate;
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<T> getTestExpression() {
 		return testExpression;
@@ -85,18 +87,20 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		return getTestExpression();
 	}
 
+	@Nonnull
 	public SqmSubQuery<T> getSubQueryExpression() {
 		return subQueryExpression;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitInSubQueryPredicate( this );
 	}
 
 	@Override
 	@Nonnull
-	public SqmInPredicate<T> value(T value) {
+	public SqmInPredicate<T> value(@Nonnull T value) {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -106,13 +110,14 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		throw new UnsupportedOperationException(  );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInPredicate<T> value(JpaExpression<? extends T> value) {
+	public SqmInPredicate<T> value(@Nonnull JpaExpression<? extends T> value) {
 		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		testExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " not" );
@@ -121,6 +126,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		subQueryExpression.appendHqlString( hql, context );
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmInSubQueryPredicate<>(
@@ -148,7 +154,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmInSubQueryPredicate<?> that
 			&& this.isNegated() == that.isNegated()
 			&& this.testExpression.isCompatible( that.testExpression )

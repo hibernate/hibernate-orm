@@ -105,7 +105,7 @@ public interface MutationOrSelectionQuery
 	 * @throws IllegalArgumentException If the given {@code type} is not compatible with the query's defined result type.
 	 */
 	@Nonnull
-	<R> SelectionQuery<R> asSelectionQuery(Class<R> type);
+	<R> SelectionQuery<R> asSelectionQuery(@Nonnull Class<R> type);
 
 	/**
 	 * Casts this query as a {@code SelectionQuery} with the given result graph.
@@ -114,7 +114,7 @@ public interface MutationOrSelectionQuery
 	 * @throws IllegalArgumentException If the given graph result type is not compatible with the {@code Query} type parameter.
 	 */
 	@Nonnull
-	<X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph);
+	<X> SelectionQuery<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph);
 
 	/**
 	 * Overload of {@linkplain #asSelectionQuery(EntityGraph)} allowing a specific semantic
@@ -129,7 +129,7 @@ public interface MutationOrSelectionQuery
 	 * @see #asSelectionQuery(Class)
 	 */
 	@Nonnull
-	<X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic);
+	<X> SelectionQuery<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph, @Nonnull GraphSemantic graphSemantic);
 
 	/**
 	 * Casts this query as a mutation query.
@@ -242,6 +242,7 @@ public interface MutationOrSelectionQuery
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nullable
 	Object getSingleResult();
 
 	@Override
@@ -337,6 +338,7 @@ public interface MutationOrSelectionQuery
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nonnull
 	MutationOrSelectionQuery setCacheRegion(@Nullable String cacheRegion);
 
 	@Override

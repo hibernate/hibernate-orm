@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.QueryException;
 
 /**
@@ -19,7 +21,7 @@ import org.hibernate.QueryException;
  * @see org.hibernate.annotations.NamedNativeQuery
  */
 public class UnknownNamedQueryException extends QueryException {
-	public UnknownNamedQueryException(String queryName) {
+	public UnknownNamedQueryException(@Nonnull String queryName) {
 		super( "No query named '" + queryName + "'" );
 	}
 }

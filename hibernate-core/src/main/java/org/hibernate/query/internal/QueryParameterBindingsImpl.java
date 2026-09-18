@@ -127,6 +127,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public <P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
+		parameter = QueryParameterBindingParameter.unwrap( parameter );
 		final var binding = parameterBindingMap.get( parameter );
 		if ( binding == null ) {
 			throw new IllegalArgumentException(

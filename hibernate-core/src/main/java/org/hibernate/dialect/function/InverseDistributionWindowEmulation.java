@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,8 +58,9 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 				queryEngine
 		) {
 
+			@Nonnull
 			@Override
-			public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+			public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 				final Clause currentClause = walker.getCurrentClauseStack().getCurrent();
 				if ( currentClause == Clause.OVER ) {
 					return super.convertToSqlAst( walker );

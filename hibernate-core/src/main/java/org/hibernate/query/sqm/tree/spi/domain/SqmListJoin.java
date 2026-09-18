@@ -31,28 +31,29 @@ public class SqmListJoin<O,E>
 		extends AbstractSqmPluralJoin<O,List<E>, E>
 		implements JpaListJoin<O, E> {
 	public SqmListJoin(
-			SqmFrom<?,O> lhs,
-			SqmListPersistentAttribute<? super O, E> listAttribute,
+			@Nonnull SqmFrom<?,O> lhs,
+			@Nonnull SqmListPersistentAttribute<? super O, E> listAttribute,
 			@Nullable String alias,
-			SqmJoinType sqmJoinType,
+			@Nonnull SqmJoinType sqmJoinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, listAttribute, alias, sqmJoinType, fetched, nodeBuilder );
 	}
 
 	protected SqmListJoin(
-			SqmFrom<?, O> lhs,
-			NavigablePath navigablePath,
-			SqmListPersistentAttribute<O, E> listAttribute,
+			@Nonnull SqmFrom<?, O> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmListPersistentAttribute<O, E> listAttribute,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, listAttribute, alias, joinType, fetched, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmListJoin<O, E> copy(SqmCopyContext context) {
+	public SqmListJoin<O, E> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -80,8 +81,9 @@ public class SqmListJoin<O,E>
 		return (SqmListPersistentAttribute<O, E>) super.getModel();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitListJoin( this );
 	}
 

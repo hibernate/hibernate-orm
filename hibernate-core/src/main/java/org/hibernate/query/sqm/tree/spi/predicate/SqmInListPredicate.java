@@ -32,30 +32,30 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	private final SqmExpression<T> testExpression;
 	private final List<SqmExpression<T>> listExpressions;
 
-	public SqmInListPredicate(SqmExpression<T> testExpression, NodeBuilder nodeBuilder) {
+	public SqmInListPredicate(@Nonnull SqmExpression<T> testExpression, @Nonnull NodeBuilder nodeBuilder) {
 		this( testExpression, new ArrayList<>(), nodeBuilder );
 	}
 
 	@SuppressWarnings({"unchecked", "unused"})
 	public SqmInListPredicate(
-			SqmExpression<T> testExpression,
-			NodeBuilder nodeBuilder,
-			SqmExpression<T>... listExpressions) {
+			@Nonnull SqmExpression<T> testExpression,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull SqmExpression<T>... listExpressions) {
 		this( testExpression, ArrayHelper.toExpandableList( listExpressions ), nodeBuilder );
 	}
 
 	public SqmInListPredicate(
-			SqmExpression<T> testExpression,
-			List<? extends SqmExpression<T>> listExpressions,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmExpression<T> testExpression,
+			@Nonnull List<? extends SqmExpression<T>> listExpressions,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( testExpression, listExpressions, false, nodeBuilder );
 	}
 
 	public SqmInListPredicate(
-			SqmExpression<T> testExpression,
-			List<? extends SqmExpression<T>> listExpressions,
+			@Nonnull SqmExpression<T> testExpression,
+			@Nonnull List<? extends SqmExpression<T>> listExpressions,
 			boolean negated,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.testExpression = testExpression;
 		//noinspection unchecked
@@ -65,8 +65,9 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmInListPredicate<T> copy(SqmCopyContext context) {
+	public SqmInListPredicate<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -88,6 +89,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		return predicate;
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<T> getTestExpression() {
 		return testExpression;
@@ -101,7 +103,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 
 	@Override
 	@Nonnull
-	public SqmInPredicate<T> value(T value) {
+	public SqmInPredicate<T> value(@Nonnull T value) {
 		if ( value instanceof Collection ) {
 			//noinspection unchecked
 			for ( T v : ( (Collection<T>) value ) ) {
@@ -123,41 +125,44 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmInPredicate<T> value(JpaExpression<? extends T> value) {
+	public SqmInPredicate<T> value(@Nonnull JpaExpression<? extends T> value) {
 		//noinspection unchecked
 		addExpression( (SqmExpression<T>) value );
 		return this;
 	}
 
+	@Nonnull
 	public List<? extends SqmExpression<T>> getListExpressions() {
 		return listExpressions;
 	}
 
-	public void addExpression(SqmExpression<T> expression) {
+	public void addExpression(@Nonnull SqmExpression<T> expression) {
 		implyListElementType( expression );
 
 		listExpressions.add( expression );
 	}
 
-	private void implyListElementType(SqmExpression<?> expression) {
+	private void implyListElementType(@Nonnull SqmExpression<?> expression) {
 		implyListElementType( expression, getTestExpression(), nodeBuilder() );
 	}
 
-	private static void implyListElementType(SqmExpression<?> expression, SqmExpression<?> testExpression, NodeBuilder nodeBuilder) {
+	private static void implyListElementType(@Nonnull SqmExpression<?> expression, @Nonnull SqmExpression<?> testExpression, @Nonnull NodeBuilder nodeBuilder) {
 		assertComparable( testExpression, expression, nodeBuilder );
 		expression.applyInferableType(
 				QueryHelper.highestPrecedenceType2( testExpression.getExpressible(), expression.getExpressible() )
 		);
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitInListPredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		testExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " not" );
@@ -188,7 +193,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmInListPredicate<?> that
 			&& this.isNegated() == that.isNegated()
 			&& this.testExpression.isCompatible( that.testExpression )
@@ -203,6 +208,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmInListPredicate<>( testExpression, listExpressions, !isNegated(), nodeBuilder() );

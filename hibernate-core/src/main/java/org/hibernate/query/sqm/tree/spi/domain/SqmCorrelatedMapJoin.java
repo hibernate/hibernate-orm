@@ -21,7 +21,7 @@ public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements Sq
 	private final SqmCorrelatedRootJoin<L> correlatedRootJoin;
 	private final SqmMapJoin<L, K, V> correlationParent;
 
-	public SqmCorrelatedMapJoin(SqmMapJoin<L, K, V> correlationParent) {
+	public SqmCorrelatedMapJoin(@Nonnull SqmMapJoin<L, K, V> correlationParent) {
 		super(
 				correlationParent.getLhs(),
 				correlationParent.getNavigablePath(),
@@ -36,21 +36,22 @@ public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements Sq
 	}
 
 	private SqmCorrelatedMapJoin(
-			SqmFrom<?, L> lhs,
-			SqmMapPersistentAttribute<L,K,V> attribute,
+			@Nonnull SqmFrom<?, L> lhs,
+			@Nonnull SqmMapPersistentAttribute<L,K,V> attribute,
 			@Nullable String alias,
-			SqmJoinType sqmJoinType,
+			@Nonnull SqmJoinType sqmJoinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder,
-			SqmCorrelatedRootJoin<L> correlatedRootJoin,
-			SqmMapJoin<L, K, V> correlationParent) {
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull SqmCorrelatedRootJoin<L> correlatedRootJoin,
+			@Nonnull SqmMapJoin<L, K, V> correlationParent) {
 		super( lhs, correlationParent.getNavigablePath(), attribute, alias, sqmJoinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedMapJoin<L, K, V> copy(SqmCopyContext context) {
+	public SqmCorrelatedMapJoin<L, K, V> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -78,6 +79,7 @@ public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements Sq
 		return correlationParent;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<V> getWrappedPath() {
 		return correlationParent;
@@ -88,25 +90,27 @@ public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements Sq
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<L> getCorrelatedRoot() {
 		return correlatedRootJoin;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedMapJoin( this );
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> other) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> other) {
 		return super.deepEquals( other )
 			&& other instanceof SqmCorrelatedMapJoin<?, ?, ?> that
 			&& correlationParent.equals( that.correlationParent );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> other) {
 		return super.isDeepCompatible( other )
 			&& other instanceof SqmCorrelatedMapJoin<?, ?, ?> that
 			&& correlationParent.isCompatible( that.correlationParent );

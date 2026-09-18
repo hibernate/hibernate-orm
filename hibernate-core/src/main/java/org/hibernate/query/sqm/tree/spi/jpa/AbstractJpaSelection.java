@@ -22,7 +22,7 @@ import org.hibernate.query.sqm.tree.spi.select.SqmSelectableNode;
 public abstract class AbstractJpaSelection<T>
 		extends AbstractJpaTupleElement<T>
 		implements SqmSelectableNode<T>, JpaSelection<T> {
-	protected AbstractJpaSelection(@Nullable SqmBindableType<? super T> sqmExpressible, NodeBuilder criteriaBuilder) {
+	protected AbstractJpaSelection(@Nullable SqmBindableType<? super T> sqmExpressible, @Nonnull NodeBuilder criteriaBuilder) {
 		super( sqmExpressible, criteriaBuilder );
 	}
 
@@ -38,6 +38,7 @@ public abstract class AbstractJpaSelection<T>
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public List<? extends JpaSelection<?>> getSelectionItems() {
 		throw new IllegalStateException( "Not a compound selection" );

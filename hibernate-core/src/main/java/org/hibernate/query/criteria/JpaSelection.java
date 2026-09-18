@@ -19,6 +19,7 @@ public interface JpaSelection<T> extends JpaTupleElement<T>, Selection<T> {
 	/**
 	 * Return the items of this selection.
 	 */
+	@Nonnull
 	List<? extends JpaSelection<?>> getSelectionItems();
 
 	/**

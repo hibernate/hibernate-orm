@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.criteria.JpaXmlElementExpression;
@@ -33,14 +34,14 @@ import jakarta.annotation.Nullable;
 public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> implements JpaXmlElementExpression {
 
 	public SqmXmlElementExpression(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ReturnableType<String> impliedResultType,
 			@Nullable ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name) {
 		super(
 				descriptor,
 				renderer,
@@ -53,8 +54,9 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmXmlElementExpression attribute(String attributeName, Expression<?> expression) {
+	public SqmXmlElementExpression attribute(@Nonnull String attributeName, @Nonnull Expression<?> expression) {
 		//noinspection unchecked
 		final List<SqmTypedNode<?>> arguments = (List<SqmTypedNode<?>>) getArguments();
 		if ( arguments.size() > 1 && arguments.get( 1 ) instanceof SqmXmlAttributesExpression attributesExpression ) {
@@ -66,13 +68,15 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmXmlElementExpression content(Expression<?>... expressions) {
+	public SqmXmlElementExpression content(@Nonnull Expression<?>... expressions) {
 		return content( Arrays.asList(expressions) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmXmlElementExpression content(List<? extends Expression<?>> expressions) {
+	public SqmXmlElementExpression content(@Nonnull List<? extends Expression<?>> expressions) {
 		//noinspection unchecked
 		final List<SqmTypedNode<?>> arguments = (List<SqmTypedNode<?>>) getArguments();
 		int contentIndex = 1;
@@ -90,8 +94,9 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmXmlElementExpression copy(SqmCopyContext context) {
+	public SqmXmlElementExpression copy(@Nonnull SqmCopyContext context) {
 		final SqmXmlElementExpression existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -116,7 +121,7 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
 		hql.append( "xmlelement(name " );
 		arguments.get( 0 ).appendHqlString( hql, context );

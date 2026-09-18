@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.function.json;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.CteGenerateSeriesFunction;
@@ -73,8 +74,9 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 				(SqmExpression<?>) sqmArguments.get( 0 ),
 				sqmArguments.size() > 1 ? (SqmExpression<String>) sqmArguments.get( 1 ) : null
 		) {
+			@Nonnull
 			@Override
-			public TableGroup convertToSqlAst(NavigablePath navigablePath, String identifierVariable, boolean lateral, boolean canUseInnerJoins, boolean withOrdinality, SqmToSqlAstConverter walker) {
+			public TableGroup convertToSqlAst(@Nonnull NavigablePath navigablePath, @Nonnull String identifierVariable, boolean lateral, boolean canUseInnerJoins, boolean withOrdinality, @Nonnull SqmToSqlAstConverter walker) {
 				final FunctionTableGroup tableGroup = (FunctionTableGroup) super.convertToSqlAst( navigablePath, identifierVariable, lateral, canUseInnerJoins, withOrdinality, walker );
 				final JsonTableArguments arguments = JsonTableArguments.extract( tableGroup.getPrimaryTableReference().getFunctionExpression().getArguments() );
 				final Expression jsonPath = arguments.jsonPath();

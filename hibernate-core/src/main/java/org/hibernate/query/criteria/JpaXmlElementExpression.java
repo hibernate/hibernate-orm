@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 
 import org.hibernate.Incubating;
@@ -22,19 +24,22 @@ public interface JpaXmlElementExpression extends JpaExpression<String> {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaXmlElementExpression attribute(String attributeName, Expression<?> expression);
+	@Nonnull
+	JpaXmlElementExpression attribute(@Nonnull String attributeName, @Nonnull Expression<?> expression);
 
 	/**
 	 * Passes the given {@link Expression}s as value for the XML content of this element.
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaXmlElementExpression content(List<? extends Expression<?>> expressions);
+	@Nonnull
+	JpaXmlElementExpression content(@Nonnull List<? extends Expression<?>> expressions);
 
 	/**
 	 * Passes the given {@link Expression}s as value for the XML content of this element.
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaXmlElementExpression content(Expression<?>... expressions);
+	@Nonnull
+	JpaXmlElementExpression content(@Nonnull Expression<?>... expressions);
 }

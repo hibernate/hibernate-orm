@@ -38,14 +38,14 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 	private final SqmSetClause setClause;
 	private @Nullable SqmWhereClause whereClause;
 
-	public SqmConflictUpdateAction(SqmInsertStatement<T> insertStatement) {
+	public SqmConflictUpdateAction(@Nonnull SqmInsertStatement<T> insertStatement) {
 		this.insertStatement = insertStatement;
 		this.setClause = new SqmSetClause();
 	}
 
 	private SqmConflictUpdateAction(
-			SqmInsertStatement<T> insertStatement,
-			SqmSetClause setClause,
+			@Nonnull SqmInsertStatement<T> insertStatement,
+			@Nonnull SqmSetClause setClause,
 			@Nullable SqmWhereClause whereClause) {
 		this.insertStatement = insertStatement;
 		this.setClause = setClause;
@@ -96,11 +96,11 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		return this;
 	}
 
-	public void addAssignment(SqmAssignment<?> assignment) {
+	public void addAssignment(@Nonnull SqmAssignment<?> assignment) {
 		setClause.addAssignment( assignment );
 	}
 
-	private <Y> void applyAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {
+	private <Y> void applyAssignment(@Nonnull SqmPath<Y> targetPath, @Nonnull SqmExpression<? extends Y> value) {
 		setClause.addAssignment( new SqmAssignment<>( targetPath, value ) );
 	}
 
@@ -130,6 +130,7 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		return whereClause == null ? null : whereClause.getPredicate();
 	}
 
+	@Nonnull
 	protected SqmWhereClause initAndGetWhereClause() {
 		if ( whereClause == null ) {
 			whereClause = new SqmWhereClause( nodeBuilder() );
@@ -138,12 +139,13 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 	}
 
 	@Override
-	public NodeBuilder nodeBuilder() {
+	public @Nonnull NodeBuilder nodeBuilder() {
 		return insertStatement.nodeBuilder();
 	}
 
+	@Nonnull
 	@Override
-	public SqmConflictUpdateAction<T> copy(SqmCopyContext context) {
+	public SqmConflictUpdateAction<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -158,6 +160,7 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		);
 	}
 
+	@Nonnull
 	public SqmSetClause getSetClause() {
 		return setClause;
 	}
@@ -166,11 +169,12 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		return whereClause;
 	}
 
+	@Nonnull
 	private SqmRoot<T> getTarget() {
 		return insertStatement.getTarget();
 	}
 
-	public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder sb, @Nonnull SqmRenderContext context) {
 		sb.append( " do update" );
 		setClause.appendHqlString( sb, context );
 
@@ -196,7 +200,7 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmConflictUpdateAction<?> that
 				&& setClause.isCompatible( that.getSetClause() )
 				&& SqmCacheable.areCompatible( whereClause, that.getWhereClause() );

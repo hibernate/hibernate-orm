@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
@@ -25,9 +26,9 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	private final SqmExpression<?> selectorExpression;
 
 	public SqmIndexedCollectionAccessPath(
-			NavigablePath navigablePath,
-			SqmAttributeJoin<?, ?> pluralDomainPath,
-			SqmExpression<?> selectorExpression) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmAttributeJoin<?, ?> pluralDomainPath,
+			@Nonnull SqmExpression<?> selectorExpression) {
 		//noinspection unchecked
 		super(
 				navigablePath,
@@ -44,8 +45,9 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 		return (SqmAttributeJoin<?, ?>) castNonNull( super.getLhs() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmIndexedCollectionAccessPath<T> copy(SqmCopyContext context) {
+	public SqmIndexedCollectionAccessPath<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -64,27 +66,31 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 		return path;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getSelectorExpression() {
 		return selectorExpression;
 	}
 
+	@Nonnull
 	public PluralPersistentAttribute<?, ?, T> getPluralAttribute() {
 		//noinspection unchecked
 		return (PluralPersistentAttribute<?, ?, T>) getLhs().getReferencedPathSource();
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitIndexedPluralAccessPath( this );
 	}
 
@@ -105,7 +111,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		getLhs().getLhs().appendHqlString( hql, context );
 		hql.append( '.' );
 		hql.append( getLhs().getReferencedPathSource().getPathName() );

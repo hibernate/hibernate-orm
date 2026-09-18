@@ -5,6 +5,7 @@
 package org.hibernate.query.criteria;
 
 import java.util.Set;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.JoinType;
@@ -69,12 +70,14 @@ public interface JpaFetch<O,T> extends JpaFetchParent<O,T>, Fetch<O,T> {
 	 *
 	 * @apiNote JPA does not allow restricting a fetch
 	 */
-	JpaJoin<O, T> on(JpaExpression<Boolean> restriction);
+	@Nonnull
+	JpaJoin<O, T> on(@Nullable JpaExpression<Boolean> restriction);
 
 	/**
 	 * Add a restriction to the fetch.
 	 *
 	 * @apiNote JPA does not allow restricting a fetch
 	 */
-	JpaJoin<O, T> on(JpaPredicate... restrictions);
+	@Nonnull
+	JpaJoin<O, T> on(@Nullable JpaPredicate... restrictions);
 }

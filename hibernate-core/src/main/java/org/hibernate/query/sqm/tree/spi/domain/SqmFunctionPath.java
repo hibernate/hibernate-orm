@@ -32,11 +32,11 @@ import static java.util.Arrays.asList;
 public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	private final SqmFunction<?> function;
 
-	public SqmFunctionPath(SqmFunction<?> function) {
+	public SqmFunctionPath(@Nonnull SqmFunction<?> function) {
 		this( new NavigablePath( function.toHqlString() ), function );
 	}
 
-	private SqmFunctionPath(NavigablePath navigablePath, SqmFunction<?> function) {
+	private SqmFunctionPath(@Nonnull NavigablePath navigablePath, @Nonnull SqmFunction<?> function) {
 		super(
 				navigablePath,
 				determinePathSource( navigablePath, function ),
@@ -46,7 +46,8 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		this.function = function;
 	}
 
-	private static <X> SqmPathSource<X> determinePathSource(NavigablePath navigablePath, SqmFunction<?> function) {
+	@Nonnull
+	private static <X> SqmPathSource<X> determinePathSource(@Nonnull NavigablePath navigablePath, @Nonnull SqmFunction<?> function) {
 		//noinspection unchecked
 		final var nodeType = (SqmBindableType<X>) function.getNodeType();
 		if ( nodeType == null ) {
@@ -86,12 +87,14 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		}
 	}
 
+	@Nonnull
 	public SqmFunction<?> getFunction() {
 		return function;
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunctionPath<T> copy(SqmCopyContext context) {
+	public SqmFunctionPath<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -106,21 +109,23 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		final var pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
 		final var navigablePath =
 				getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName(),
@@ -145,13 +150,14 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		return path;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitFunctionPath( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		function.appendHqlString( hql, context );
 	}
 
@@ -169,8 +175,9 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 
 	@Override
 	public boolean equals(@Nullable Object object) {
-		return super.equals( object )
-			&& function.equals( ((SqmFunctionPath<?>) object).function );
+		return object instanceof SqmFunctionPath<?> that
+			&& super.equals( object )
+			&& function.equals( that.function );
 	}
 
 	@Override
@@ -181,9 +188,10 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
-		return super.isCompatible( object )
-			&& function.isCompatible( ((SqmFunctionPath<?>) object).function );
+	public boolean isCompatible(@Nullable Object object) {
+		return object instanceof SqmFunctionPath<?> that
+			&& super.isCompatible( object )
+			&& function.isCompatible( that.function );
 	}
 
 	@Override

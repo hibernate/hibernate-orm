@@ -59,12 +59,14 @@ public class SqmSearchClauseSpecification implements JpaSearchOrder, SqmCacheabl
 		return sortOrder == SortDirection.ASCENDING;
 	}
 
+	@Nonnull
 	@Override
 	public JpaSearchOrder reverse() {
 		SortDirection newSortOrder = this.sortOrder == null ? SortDirection.DESCENDING : sortOrder.reverse();
 		return new SqmSearchClauseSpecification( cteColumn, newSortOrder, nullPrecedence );
 	}
 
+	@Nonnull
 	@Override
 	public JpaCteCriteriaAttribute getAttribute() {
 		return cteColumn;

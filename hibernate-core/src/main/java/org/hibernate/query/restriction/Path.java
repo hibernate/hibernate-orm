@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.restriction;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.FetchParent;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -39,45 +40,57 @@ import java.util.List;
  */
 @Incubating(since = "7.0", group = "query-specifications")
 public interface Path<X,U> {
-	jakarta.persistence.criteria.Path<U> path(Root<? extends X> root);
+	@Nonnull
+	jakarta.persistence.criteria.Path<U> path(@Nonnull Root<? extends X> root);
 
+	@Nonnull
 	Class<U> getType();
 
-	default <V> Path<X, V> to(SingularAttribute<? super U, V> attribute) {
+	@Nonnull
+	default <V> Path<X, V> to(@Nonnull SingularAttribute<? super U, V> attribute) {
 		return new PathElement<>( this, attribute );
 	}
 
-	default <V> Path<X, V> to(String attributeName, Class<V> attributeType) {
+	@Nonnull
+	default <V> Path<X, V> to(@Nonnull String attributeName, @Nonnull Class<V> attributeType) {
 		return new NamedPathElement<>( this, attributeName, attributeType );
 	}
 
-	static <X> Path<X, X> from(Class<X> type) {
+	@Nonnull
+	static <X> Path<X, X> from(@Nonnull Class<X> type) {
 		return new PathRoot<>( type );
 	}
 
-	default Restriction<X> restrict(Range<? super U> range) {
+	@Nonnull
+	default Restriction<X> restrict(@Nonnull Range<? super U> range) {
 		return new PathRange<>( this, range );
 	}
 
-	default Restriction<X> equalTo(U value) {
+	@Nonnull
+	default Restriction<X> equalTo(@Nonnull U value) {
 		return restrict( Range.singleValue( value ) );
 	}
 
-	default Restriction<X> notEqualTo(U value) {
+	@Nonnull
+	default Restriction<X> notEqualTo(@Nonnull U value) {
 		return equalTo( value ).negated();
 	}
 
-	default Restriction<X> in(List<U> values) {
+	@Nonnull
+	default Restriction<X> in(@Nonnull List<U> values) {
 		return restrict( Range.valueList( values ) );
 	}
 
-	default Restriction<X> notIn(List<U> values) {
+	@Nonnull
+	default Restriction<X> notIn(@Nonnull List<U> values) {
 		return in( values ).negated();
 	}
 
+	@Nonnull
 	default Restriction<X> notNull() {
 		return restrict( Range.notNull( getType() ) );
 	}
 
-	FetchParent<?, ? extends U> fetch(Root<? extends X> root);
+	@Nonnull
+	FetchParent<?, ? extends U> fetch(@Nonnull Root<? extends X> root);
 }

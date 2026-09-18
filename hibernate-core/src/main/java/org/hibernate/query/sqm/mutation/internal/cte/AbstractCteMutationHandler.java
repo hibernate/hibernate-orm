@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
+import org.hibernate.sql.ast.spi.creation.SqlTreeCreationException;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.LockMode;
@@ -246,10 +248,14 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			MultiTableSqmMutationConverter sqmConverter) {
 		final QueryEngine queryEngine = factory.getQueryEngine();
 		final SqmExpression<?> arg = new SqmStar( queryEngine.getCriteriaBuilder() );
-		return queryEngine.getSqmFunctionRegistry()
+		final var countExpression = queryEngine.getSqmFunctionRegistry()
 				.findFunctionDescriptor( "count" )
 				.generateSqmExpression( arg, null, queryEngine )
 				.convertToSqlAst( sqmConverter );
+		if ( countExpression == null ) {
+			throw new SqlTreeCreationException( "The count function did not produce a SQL expression" );
+		}
+		return countExpression;
 	}
 
 	protected Predicate createIdSubQueryPredicate(

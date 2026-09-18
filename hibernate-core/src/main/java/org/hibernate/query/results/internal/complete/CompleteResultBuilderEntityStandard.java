@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.results.internal.complete;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -55,6 +58,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	}
 
 	@Override
+	@Nonnull
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
@@ -65,47 +69,56 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	}
 
 	@Override
+	@Nonnull
 	public String getTableAlias() {
 		return tableAlias;
 	}
 
 	@Override
+	@Nullable
 	public String getDiscriminatorAlias() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public EntityMappingType getEntityMapping() {
 		return entityDescriptor;
 	}
 
 	@Override
+	@Nullable
 	public LockMode getLockMode() {
 		return lockMode;
 	}
 
 	@Override
-	public NativeQuery.RootReturn setLockMode(LockMode lockMode) {
+	@Nonnull
+	public NativeQuery.RootReturn setLockMode(@Nullable LockMode lockMode) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NativeQuery.RootReturn addIdColumnAliases(String... aliases) {
+	@Nonnull
+	public NativeQuery.RootReturn addIdColumnAliases(@Nonnull String... aliases) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NativeQuery.RootReturn setDiscriminatorAlias(String columnAlias) {
+	@Nonnull
+	public NativeQuery.RootReturn setDiscriminatorAlias(@Nullable String columnAlias) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NativeQuery.RootReturn addProperty(String propertyName, String columnAlias) {
+	@Nonnull
+	public NativeQuery.RootReturn addProperty(@Nonnull String propertyName, @Nonnull String columnAlias) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NativeQuery.ReturnProperty addProperty(String propertyName) {
+	@Nonnull
+	public NativeQuery.ReturnProperty addProperty(@Nonnull String propertyName) {
 		throw new UnsupportedOperationException();
 	}
 

@@ -27,6 +27,7 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -40,14 +41,14 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 	private @Nullable Map<String, SqmExpression<?>> passingExpressions;
 
 	public AbstractSqmJsonPathExpression(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ReturnableType<T> impliedResultType,
 			@Nullable ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name) {
 		super(
 				descriptor,
 				renderer,
@@ -61,14 +62,14 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 	}
 
 	protected AbstractSqmJsonPathExpression(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ReturnableType<T> impliedResultType,
 			@Nullable ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name,
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name,
 			@Nullable Map<String, SqmExpression<?>> passingExpressions) {
 		super(
 				descriptor,
@@ -83,18 +84,19 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 		this.passingExpressions = passingExpressions;
 	}
 
+	@Nonnull
 	public Map<String, SqmExpression<?>> getPassingExpressions() {
 		return passingExpressions == null ? Collections.emptyMap() : Collections.unmodifiableMap( passingExpressions );
 	}
 
-	protected void addPassingExpression(String identifier, SqmExpression<?> expression) {
+	protected void addPassingExpression(@Nonnull String identifier, @Nonnull SqmExpression<?> expression) {
 		if ( passingExpressions == null ) {
 			passingExpressions = new HashMap<>();
 		}
 		passingExpressions.put( identifier, expression );
 	}
 
-	protected @Nullable Map<String, SqmExpression<?>> copyPassingExpressions(SqmCopyContext context) {
+	protected @Nullable Map<String, SqmExpression<?>> copyPassingExpressions(@Nonnull SqmCopyContext context) {
 		if ( passingExpressions == null ) {
 			return null;
 		}
@@ -105,7 +107,7 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 		return copy;
 	}
 
-	protected @Nullable JsonPathPassingClause createJsonPathPassingClause(SqmToSqlAstConverter walker) {
+	protected @Nullable JsonPathPassingClause createJsonPathPassingClause(@Nonnull SqmToSqlAstConverter walker) {
 		if ( passingExpressions == null || passingExpressions.isEmpty() ) {
 			return null;
 		}
@@ -116,7 +118,7 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 		return new JsonPathPassingClause( converted );
 	}
 
-	protected void appendPassingExpressionHqlString(StringBuilder sb, SqmRenderContext context) {
+	protected void appendPassingExpressionHqlString(@Nonnull StringBuilder sb, @Nonnull SqmRenderContext context) {
 		final var passingExpressions = this.passingExpressions;
 		if ( passingExpressions != null && !passingExpressions.isEmpty() ) {
 			sb.append( " passing " );
@@ -143,7 +145,7 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 	}
 
 	@Override
-	public boolean isCompatible(Object other) {
+	public boolean isCompatible(@Nullable Object other) {
 		return super.isCompatible( other )
 			&& other instanceof AbstractSqmJsonPathExpression<?> that
 			&& SqmCacheable.areCompatible( passingExpressions, that.passingExpressions );

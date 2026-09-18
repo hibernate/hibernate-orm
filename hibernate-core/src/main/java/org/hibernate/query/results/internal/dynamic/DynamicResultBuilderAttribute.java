@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.NativeQuery;
@@ -62,11 +64,13 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 	}
 
 	@Override
-	public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {
+	@Nonnull
+	public NativeQuery.ReturnProperty addColumnAlias(@Nonnull String columnAlias) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
+	@Nonnull
 	public DynamicResultBuilderAttribute cacheKeyInstance() {
 		return this;
 	}

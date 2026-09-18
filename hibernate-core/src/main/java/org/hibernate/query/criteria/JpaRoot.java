@@ -34,5 +34,6 @@ public interface JpaRoot<T> extends JpaFrom<T,T>, Root<T> {
 	/**
 	 * Return the managed type of this root.
 	 */
+	@Nonnull
 	EntityDomainType<T> getManagedType();
 }

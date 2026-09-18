@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -31,6 +33,7 @@ public interface SqmTypedNode<T> extends SqmNode, SqmExpressibleAccessor<T>, Sqm
 
 	@Nullable SqmBindableType<T> getNodeType();
 
+	@Nonnull
 	@Override
-	SqmTypedNode<T> copy(SqmCopyContext context);
+	SqmTypedNode<T> copy(@Nonnull SqmCopyContext context);
 }

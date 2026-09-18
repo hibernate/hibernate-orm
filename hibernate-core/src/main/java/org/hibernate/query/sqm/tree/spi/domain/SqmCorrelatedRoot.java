@@ -22,7 +22,7 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 
 	private final SqmRoot<T> correlationParent;
 
-	public SqmCorrelatedRoot(SqmRoot<T> correlationParent) {
+	public SqmCorrelatedRoot(@Nonnull SqmRoot<T> correlationParent) {
 		super(
 				correlationParent.getNavigablePath(),
 				correlationParent.getModel(),
@@ -32,13 +32,14 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 		this.correlationParent = correlationParent;
 	}
 
-	protected SqmCorrelatedRoot(NavigablePath navigablePath, SqmPathSource<T> referencedNavigable, NodeBuilder nodeBuilder, SqmRoot<T> correlationParent) {
+	protected SqmCorrelatedRoot(@Nonnull NavigablePath navigablePath, @Nonnull SqmPathSource<T> referencedNavigable, @Nonnull NodeBuilder nodeBuilder, @Nonnull SqmRoot<T> correlationParent) {
 		super( navigablePath, referencedNavigable, nodeBuilder );
 		this.correlationParent = correlationParent;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedRoot<T> copy(SqmCopyContext context) {
+	public SqmCorrelatedRoot<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -57,6 +58,7 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 		return correlationParent;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return getCorrelationParent();
@@ -84,25 +86,27 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<T> getCorrelatedRoot() {
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedRoot( this );
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> other) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> other) {
 		return super.deepEquals( other )
 			&& other instanceof SqmCorrelatedRoot<?> that
 			&& correlationParent.equals( that.correlationParent );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> other) {
 		return super.isDeepCompatible( other )
 			&& other instanceof SqmCorrelatedRoot<?> that
 			&& correlationParent.isCompatible( that.correlationParent );

@@ -47,16 +47,16 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 	SelectionQueryImplementor<T> asSelectionQuery();
 
 	@Nonnull
-	<X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type);
+	<X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull Class<X> type);
 
 	@Nonnull
-	<X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph);
+	<X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph);
 
 	@Nonnull
-	<X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic);
+	<X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph, @Nonnull GraphSemantic graphSemantic);
 
 	@Nonnull
-	<R> SelectionQueryImplementor<R> withResultSetMapping(ResultSetMapping<R> mapping);
+	<R> SelectionQueryImplementor<R> withResultSetMapping(@Nonnull ResultSetMapping<R> mapping);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

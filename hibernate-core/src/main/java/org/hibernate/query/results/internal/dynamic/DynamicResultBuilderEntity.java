@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.query.results.spi.ResultBuilderEntityValued;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
@@ -14,8 +16,9 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 public interface DynamicResultBuilderEntity extends DynamicResultBuilder, ResultBuilderEntityValued {
 	@Override
+	@Nonnull
 	EntityResult<?> buildResult(
-			JdbcValuesMetadata jdbcResultsMetadata,
+			@Nonnull JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			DomainResultCreationState domainResultCreationState);
+			@Nonnull DomainResultCreationState domainResultCreationState);
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -17,12 +18,13 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * @author Christian Beikov
  */
 public class SqmCollation extends SqmLiteral<String> {
-	public SqmCollation(String value, SqmBindableType<String> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCollation(@Nonnull String value, @Nullable SqmBindableType<String> inherentType, @Nonnull NodeBuilder nodeBuilder) {
 		super(value, inherentType == null ? nodeBuilder.getStringType() : inherentType, nodeBuilder);
 	}
 
+	@Nonnull
 	@Override
-	public SqmCollation copy(SqmCopyContext context) {
+	public SqmCollation copy(@Nonnull SqmCopyContext context) {
 		final SqmCollation existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -45,13 +47,14 @@ public class SqmCollation extends SqmLiteral<String> {
 		return castNonNull( super.getNodeType() );
 	}
 
+	@Nullable
 	@Override
-	public <R> R accept(SemanticQueryWalker<R> walker) {
+	public <R> R accept(@Nonnull SemanticQueryWalker<R> walker) {
 		return walker.visitCollation( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( getLiteralValue() );
 	}
 }

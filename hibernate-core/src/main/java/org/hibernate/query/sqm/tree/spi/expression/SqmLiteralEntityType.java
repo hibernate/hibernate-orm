@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -35,13 +36,14 @@ public class SqmLiteralEntityType<T>
 		implements SqmSelectableNode<T>, SemanticPathPart {
 	private final SqmEntityDomainType<T> entityType;
 
-	public SqmLiteralEntityType(SqmEntityDomainType<T> entityType, NodeBuilder nodeBuilder) {
+	public SqmLiteralEntityType(@Nonnull SqmEntityDomainType<T> entityType, @Nonnull NodeBuilder nodeBuilder) {
 		super( getDiscriminatorType( entityType, nodeBuilder ), nodeBuilder );
 		this.entityType = entityType;
 	}
 
+	@Nonnull
 	@Override
-	public SqmLiteralEntityType<T> copy(SqmCopyContext context) {
+	public SqmLiteralEntityType<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -54,6 +56,7 @@ public class SqmLiteralEntityType<T>
 	}
 
 	@Override
+	@Nonnull
 	public SqmEntityDomainType<T> getNodeType() {
 		return entityType;
 	}
@@ -62,8 +65,9 @@ public class SqmLiteralEntityType<T>
 	public void internalApplyInferableType(@Nullable SqmBindableType<?> type) {
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitEntityTypeLiteralExpression( this );
 	}
 
@@ -76,29 +80,32 @@ public class SqmLiteralEntityType<T>
 //	}
 
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return "TYPE(" + entityType + ")";
 	}
 
+	@Nonnull
 	@Override
 	public SemanticPathPart resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new HqlInterpretationException( "Cannot dereference an entity name" );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new HqlInterpretationException( "Cannot dereference an entity name" );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( entityType.getName() );
 	}
 
@@ -114,7 +121,7 @@ public class SqmLiteralEntityType<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

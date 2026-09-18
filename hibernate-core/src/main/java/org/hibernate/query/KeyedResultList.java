@@ -4,6 +4,9 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 
 import java.util.List;
@@ -60,15 +63,20 @@ import java.util.List;
  */
 @Incubating(since = "6.5")
 public class KeyedResultList<R> {
+	@Nonnull
 	private final List<R> resultList;
+	@Nonnull
 	private final List<List<?>> keyList;
+	@Nonnull
 	private final KeyedPage<R> page;
+	@Nullable
 	private final KeyedPage<R> nextPage;
+	@Nullable
 	private final KeyedPage<R> previousPage;
 
 	public KeyedResultList(
-			List<R> resultList, List<List<?>> keyList,
-			KeyedPage<R> page, KeyedPage<R> nextPage, KeyedPage<R> previousPage) {
+			@Nonnull List<R> resultList, @Nonnull List<List<?>> keyList,
+			@Nonnull KeyedPage<R> page, @Nullable KeyedPage<R> nextPage, @Nullable KeyedPage<R> previousPage) {
 		this.resultList = resultList;
 		this.keyList = keyList;
 		this.page = page;
@@ -79,6 +87,7 @@ public class KeyedResultList<R> {
 	/**
 	 * The results on the current page.
 	 */
+	@Nonnull
 	public List<R> getResultList() {
 		return resultList;
 	}
@@ -86,6 +95,7 @@ public class KeyedResultList<R> {
 	/**
 	 * The keys of the results, in order.
 	 */
+	@Nonnull
 	public List<List<?>> getKeyList() {
 		return keyList;
 	}
@@ -95,6 +105,7 @@ public class KeyedResultList<R> {
 	 * approximate {@linkplain Page#getNumber()
 	 * page number} of the current page.
 	 */
+	@Nonnull
 	public KeyedPage<R> getPage() {
 		return page;
 	}
@@ -105,6 +116,7 @@ public class KeyedResultList<R> {
 	 * it is known that there are no more results
 	 * after this page.
 	 */
+	@Nullable
 	public KeyedPage<R> getNextPage() {
 		return nextPage;
 	}
@@ -114,6 +126,7 @@ public class KeyedResultList<R> {
 	 * or {@code null} if it is known that this is the
 	 * first page.
 	 */
+	@Nullable
 	public KeyedPage<R> getPreviousPage() {
 		return previousPage;
 	}

@@ -23,7 +23,7 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	public SqmPositionalParameter(
 			int position,
 			boolean canBeMultiValued,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( position, canBeMultiValued, null, nodeBuilder );
 	}
 
@@ -31,18 +31,19 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 			int position,
 			boolean canBeMultiValued,
 			@Nullable SqmBindableType<T> expressibleType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, expressibleType, nodeBuilder );
 		this.position = position;
 	}
 
+	@Nonnull
 	@Override
-	public SqmPositionalParameter<T> copy(SqmCopyContext context) {
+	public SqmPositionalParameter<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmPositionalParameter<T> expression = context.registerCopy(
+		final var expression = context.registerCopy(
 				this,
 				new SqmPositionalParameter<>(
 						position,
@@ -60,28 +61,32 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 		return position;
 	}
 
+	@Nonnull
 	@Override
 	public SqmParameter<T> copy() {
 		return new SqmPositionalParameter<>( getPosition(), allowMultiValuedBinding(), this.getNodeType(), nodeBuilder() );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitPositionalParameterExpression( this );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "SqmPositionalParameter(" + getPosition() + ")";
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return "?" + getPosition();
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( '?' );
 		hql.append( getPosition() );
 	}
@@ -98,7 +103,7 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

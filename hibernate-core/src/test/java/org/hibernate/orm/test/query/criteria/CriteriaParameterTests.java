@@ -16,6 +16,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.sqm.tree.spi.expression.JpaCriteriaParameter;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -23,9 +24,25 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @DomainModel( annotatedClasses = BasicEntity.class )
 @SessionFactory
 public class CriteriaParameterTests {
+	@Test
+	public void testParameterCompatibility(SessionFactoryScope scope) {
+		final var builder = scope.getSessionFactory().getCriteriaBuilder();
+		final var unnamed = (JpaCriteriaParameter<String>) builder.parameter( String.class );
+		final var named = (JpaCriteriaParameter<String>) builder.parameter( String.class, "name" );
+		assertFalse( unnamed.isCompatible( null ) );
+		assertFalse( named.isCompatible( null ) );
+		assertFalse( named.isCompatible( unnamed ) );
+		assertFalse( named.isCompatible( builder.literal( "name" ) ) );
+		assertTrue( unnamed.isCompatible( builder.parameter( String.class ) ) );
+		assertTrue( named.isCompatible( builder.parameter( String.class, "name" ) ) );
+	}
+
 	@Test
 	public void testParameterBaseline(SessionFactoryScope scope) {
 		scope.inTransaction(

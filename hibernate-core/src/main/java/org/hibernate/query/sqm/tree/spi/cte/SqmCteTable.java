@@ -101,6 +101,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 				: name;
 	}
 
+	@Nonnull
 	@Override
 	public DomainType<T> getType() {
 		return this;
@@ -114,7 +115,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	}
 
 	@Override
-	public @Nullable JpaCteCriteriaAttribute getAttribute(String name) {
+	public @Nullable JpaCteCriteriaAttribute getAttribute(@Nonnull String name) {
 		final Integer index = getIndex( name );
 		return index == null ? null : columns.get( index );
 	}

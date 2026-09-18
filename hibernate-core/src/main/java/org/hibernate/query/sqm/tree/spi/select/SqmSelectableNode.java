@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi.select;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.Consumer;
 import jakarta.persistence.criteria.Selection;
 
@@ -29,10 +31,11 @@ public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T> {
 	 * @see JpaSelection#getSelectionItems()
 	 * @see Selection#getCompoundSelectionItems()
 	 */
-	void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer);
+	void visitSubSelectableNodes(@Nonnull Consumer<SqmSelectableNode<?>> jpaSelectionConsumer);
 
+	@Nonnull
 	@Override
-	SqmSelectableNode<T> copy(SqmCopyContext context);
+	SqmSelectableNode<T> copy(@Nonnull SqmCopyContext context);
 
 	default @Nullable Integer getTupleLength() {
 		final SqmBindableType<T> nodeType = getExpressible();

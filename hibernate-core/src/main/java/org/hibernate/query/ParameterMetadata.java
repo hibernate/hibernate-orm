@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Parameter;
 
 import org.hibernate.Incubating;
@@ -99,6 +100,7 @@ public interface ParameterMetadata {
 	 */
 	boolean containsReference(QueryParameter<?> parameter);
 
+	@Nonnull
 	Set<? extends QueryParameter<?>> getRegistrations();
 
 	/**

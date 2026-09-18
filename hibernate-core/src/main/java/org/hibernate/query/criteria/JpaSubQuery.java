@@ -29,22 +29,26 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 	/**
 	 * Set the compound subquery selection.
 	 */
-	JpaSubQuery<T> multiselect(Selection<?>... selections);
+	@Nonnull
+	JpaSubQuery<T> multiselect(@Nonnull Selection<?>... selections);
 
 	/**
 	 * Set the compound subquery selection.
 	 */
-	JpaSubQuery<T> multiselect(List<Selection<?>> selectionList);
+	@Nonnull
+	JpaSubQuery<T> multiselect(@Nonnull List<Selection<?>> selectionList);
 
 	/**
 	 * Correlate the given parent query element into this subquery.
 	 */
-	<X, Y> JpaCrossJoin<X, Y> correlate(JpaCrossJoin<X, Y> parentCrossJoin);
+	@Nonnull
+	<X, Y> JpaCrossJoin<X, Y> correlate(@Nonnull JpaCrossJoin<X, Y> parentCrossJoin);
 
 	/**
 	 * Correlate the given parent query element into this subquery.
 	 */
-	<X> JpaEntityJoin<T,X> correlate(JpaEntityJoin<T,X> parentEntityJoin);
+	@Nonnull
+	<X> JpaEntityJoin<T,X> correlate(@Nonnull JpaEntityJoin<T,X> parentEntityJoin);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
@@ -54,11 +58,13 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 	 */
 	@Nullable JpaExpression<Number> getOffset();
 
+	@Nonnull
 	JpaSubQuery<T> offset(@Nullable JpaExpression<? extends Number> offset);
 
 	/**
 	 * Set the subquery offset.
 	 */
+	@Nonnull
 	JpaSubQuery<T> offset(@Nullable Number offset);
 
 	/**
@@ -66,26 +72,31 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 	 */
 	@Nullable JpaExpression<Number> getFetch();
 
+	@Nonnull
 	JpaSubQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch);
 
 	/**
 	 * Set the subquery fetch limit.
 	 */
-	JpaSubQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+	@Nonnull
+	JpaSubQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch, @Nonnull FetchClauseType fetchClauseType);
 
 	/**
 	 * Set the subquery fetch limit.
 	 */
+	@Nonnull
 	JpaSubQuery<T> fetch(@Nullable Number fetch);
 
 	/**
 	 * Set the subquery fetch limit.
 	 */
-	JpaSubQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType);
+	@Nonnull
+	JpaSubQuery<T> fetch(@Nullable Number fetch, @Nonnull FetchClauseType fetchClauseType);
 
 	/**
 	 * Return the fetch clause type.
 	 */
+	@Nonnull
 	FetchClauseType getFetchClauseType();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -94,17 +105,20 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 	/**
 	 * Return the ordering expressions.
 	 */
+	@Nonnull
 	List<JpaOrder> getOrderList();
 
 	/**
 	 * Set the ordering expressions.
 	 */
-	JpaSubQuery<T> orderBy(Order... o);
+	@Nonnull
+	JpaSubQuery<T> orderBy(@Nonnull Order... o);
 
 	/**
 	 * Set the ordering expressions.
 	 */
-	JpaSubQuery<T> orderBy(List<Order> o);
+	@Nonnull
+	JpaSubQuery<T> orderBy(@Nonnull List<Order> o);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

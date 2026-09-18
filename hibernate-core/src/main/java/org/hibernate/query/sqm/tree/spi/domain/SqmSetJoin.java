@@ -30,28 +30,29 @@ public class SqmSetJoin<O, E>
 		extends AbstractSqmPluralJoin<O,Set<E>, E>
 		implements JpaSetJoin<O, E> {
 	public SqmSetJoin(
-			SqmFrom<?,O> lhs,
-			SqmSetPersistentAttribute<? super O, E> pluralValuedNavigable,
+			@Nonnull SqmFrom<?,O> lhs,
+			@Nonnull SqmSetPersistentAttribute<? super O, E> pluralValuedNavigable,
 			@Nullable String alias,
-			SqmJoinType sqmJoinType,
+			@Nonnull SqmJoinType sqmJoinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, pluralValuedNavigable, alias, sqmJoinType, fetched, nodeBuilder );
 	}
 
 	protected SqmSetJoin(
-			SqmFrom<?, O> lhs,
-			NavigablePath navigablePath,
-			SqmSetPersistentAttribute<O, E> pluralValuedNavigable,
+			@Nonnull SqmFrom<?, O> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmSetPersistentAttribute<O, E> pluralValuedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, pluralValuedNavigable, alias, joinType, fetched, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSetJoin<O, E> copy(SqmCopyContext context) {
+	public SqmSetJoin<O, E> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -80,8 +81,9 @@ public class SqmSetJoin<O, E>
 		return (SqmSetPersistentAttribute<O, E>) super.getModel();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitSetJoin( this );
 	}
 

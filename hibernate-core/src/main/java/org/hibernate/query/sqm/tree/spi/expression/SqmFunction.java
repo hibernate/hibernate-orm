@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.spi.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -39,39 +40,44 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	private final List<? extends SqmTypedNode<?>> arguments;
 
 	public SqmFunction(
-			String functionName,
-			SqmFunctionDescriptor functionDescriptor,
+			@Nonnull String functionName,
+			@Nonnull SqmFunctionDescriptor functionDescriptor,
 			@Nullable SqmBindableType<T> type,
-			List<? extends SqmTypedNode<?>> arguments,
-			NodeBuilder criteriaBuilder) {
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.functionName = functionName;
 		this.functionDescriptor = functionDescriptor;
 		this.arguments = arguments;
 	}
 
+	@Nonnull
 	public SqmFunctionDescriptor getFunctionDescriptor() {
 		return functionDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public String getFunctionName() {
 		return functionName;
 	}
 
+	@Nonnull
 	public List<? extends SqmTypedNode<?>> getArguments() {
 		return arguments;
 	}
 
-	public abstract Expression convertToSqlAst(SqmToSqlAstConverter walker);
+	@Nullable
+	public abstract Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker);
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitFunction( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		// Special case a few functions with special syntax for rendering...
 		// Unless we introduce dedicated SqmXXX classes that override this method, we have to render it this way
 		switch ( functionName ) {
@@ -181,6 +187,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 
 	private SqmFunctionPath<T> functionPath;
 
+	@Nonnull
 	private SqmFunctionPath<T> getFunctionPath() {
 		SqmFunctionPath<T> path = functionPath;
 		if ( path == null ) {
@@ -189,19 +196,21 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SemanticPathPart resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		return getFunctionPath().resolvePathPart( name, isTerminal, creationState );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		return getFunctionPath().resolveIndexedAccess( selector, isTerminal, creationState );
 	}
 
@@ -221,7 +230,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object other) {
+	public boolean isCompatible(@Nullable Object other) {
 		return other instanceof SqmFunction<?> that
 			&& getClass() == other.getClass()
 			&& functionName.equals( that.functionName )

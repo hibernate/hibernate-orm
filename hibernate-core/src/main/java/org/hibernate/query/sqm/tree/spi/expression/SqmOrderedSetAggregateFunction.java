@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.query.sqm.tree.spi.select.SqmOrderByClause;
 
 /**
@@ -15,5 +17,6 @@ import org.hibernate.query.sqm.tree.spi.select.SqmOrderByClause;
  */
 public interface SqmOrderedSetAggregateFunction<T> extends SqmAggregateFunction<T> {
 
+	@Nullable
 	SqmOrderByClause getWithinGroup();
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 
 import org.hibernate.query.common.FrameExclusion;
@@ -28,23 +30,23 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 	private final SqmWindow window;
 
 	public SqmOver(
-			SqmExpression<T> expression,
-			SqmWindow window) {
+			@Nonnull SqmExpression<T> expression,
+			@Nonnull SqmWindow window) {
 		super( expression.getNodeType(), expression.nodeBuilder() );
 		this.expression = expression;
 		this.window = window;
 	}
 
 	public SqmOver(
-			SqmExpression<T> expression,
-			List<SqmExpression<?>> partitions,
-			List<SqmSortSpecification> orderList,
-			FrameMode mode,
-			FrameKind startKind,
-			SqmExpression<?> startExpression,
-			FrameKind endKind,
-			SqmExpression<?> endExpression,
-			FrameExclusion exclusion) {
+			@Nonnull SqmExpression<T> expression,
+			@Nonnull List<SqmExpression<?>> partitions,
+			@Nonnull List<SqmSortSpecification> orderList,
+			@Nonnull FrameMode mode,
+			@Nonnull FrameKind startKind,
+			@Nullable SqmExpression<?> startExpression,
+			@Nonnull FrameKind endKind,
+			@Nullable SqmExpression<?> endExpression,
+			@Nonnull FrameExclusion exclusion) {
 		this(
 				expression,
 				new SqmWindow(
@@ -61,8 +63,9 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmOver<T> copy(SqmCopyContext context) {
+	public SqmOver<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -78,10 +81,12 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 		return over;
 	}
 
+	@Nonnull
 	public SqmExpression<T> getExpression() {
 		return expression;
 	}
 
+	@Nonnull
 	public SqmWindow getWindow() {
 		return window;
 	}
@@ -91,13 +96,14 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 		return expression.getNodeType();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitOver( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		expression.appendHqlString( hql, context );
 		hql.append( " over (" );
 		window.appendHqlString( hql, context );
@@ -119,7 +125,7 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmOver<?> sqmOver
 			&& expression.isCompatible( sqmOver.expression )
 			&& window.isCompatible( sqmOver.window );

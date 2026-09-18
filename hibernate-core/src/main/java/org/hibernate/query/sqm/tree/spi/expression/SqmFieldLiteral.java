@@ -36,9 +36,9 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 
 	public SqmFieldLiteral(
 			@Nullable T value,
-			JavaType<T> fieldJavaType,
-			String fieldName,
-			NodeBuilder nodeBuilder) {
+			@Nonnull JavaType<T> fieldJavaType,
+			@Nonnull String fieldName,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( null, nodeBuilder );
 		this.value = value;
 		this.fieldJavaType = fieldJavaType;
@@ -46,12 +46,14 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return BASIC;
 	}
 
+	@Nonnull
 	@Override
-	public SqmFieldLiteral<T> copy(SqmCopyContext context) {
+	public SqmFieldLiteral<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -71,6 +73,7 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 		return value;
 	}
 
+	@Nonnull
 	public String getFieldName() {
 		return fieldName;
 	}
@@ -99,21 +102,23 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitFieldLiteral( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), getValue() );
 	}
 
+	@Nonnull
 	@Override
 	public SemanticPathPart resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new UnknownPathException(
 				String.format(
 						Locale.ROOT,
@@ -124,11 +129,12 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 		);
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new UnknownPathException(
 				String.format(
 						Locale.ROOT,
@@ -156,7 +162,7 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

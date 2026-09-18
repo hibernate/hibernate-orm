@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.function;
 
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -32,8 +34,8 @@ public class SelfRenderingAggregateFunctionSqlAstExpression<T> extends SelfRende
 			FunctionRenderer renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
-			ReturnableType<T> type,
-			JdbcMappingContainer expressible) {
+			@Nullable ReturnableType<T> type,
+			@Nullable JdbcMappingContainer expressible) {
 		super( functionName, renderer, sqlAstArguments, type, expressible );
 		this.filter = filter;
 	}

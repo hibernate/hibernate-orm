@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
@@ -84,27 +85,32 @@ public class DynamicResultBuilderEntityStandard
 	}
 
 	@Override
+	@Nonnull
 	public EntityMappingType getEntityMapping() {
 		return entityMapping;
 	}
 
 	@Override
+	@Nonnull
 	public String getTableAlias() {
 		return tableAlias;
 	}
 
 	@Override
+	@Nonnull
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
 
 	@Override
+	@Nullable
 	public LockMode getLockMode() {
 		return lockMode;
 	}
 
 	@Override
-	public NativeQuery.RootReturn addIdColumnAliases(String... aliases) {
+	@Nonnull
+	public NativeQuery.RootReturn addIdColumnAliases(@Nonnull String... aliases) {
 		if ( idColumnNames == null ) {
 			idColumnNames = new ArrayList<>( aliases.length );
 		}
@@ -113,6 +119,7 @@ public class DynamicResultBuilderEntityStandard
 	}
 
 	@Override
+	@Nullable
 	public String getDiscriminatorAlias() {
 		return discriminatorColumnName;
 	}
@@ -123,15 +130,17 @@ public class DynamicResultBuilderEntityStandard
 	}
 
 	@Override
+	@Nonnull
 	public DynamicResultBuilderEntityStandard cacheKeyInstance() {
 		return new DynamicResultBuilderEntityStandard( this );
 	}
 
 	@Override
+	@Nonnull
 	public EntityResult<?> buildResult(
-			JdbcValuesMetadata jdbcResultsMetadata,
+			@Nonnull JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			DomainResultCreationState domainResultCreationState) {
+			@Nonnull DomainResultCreationState domainResultCreationState) {
 		return buildResultOrFetch(
 				(tableGroup) -> (EntityResult<?>) entityMapping.createDomainResult(
 						navigablePath,
@@ -317,26 +326,30 @@ public class DynamicResultBuilderEntityStandard
 	}
 
 	@Override
-	public DynamicResultBuilderEntityStandard setLockMode(LockMode lockMode) {
+	@Nonnull
+	public DynamicResultBuilderEntityStandard setLockMode(@Nullable LockMode lockMode) {
 		this.lockMode = lockMode;
 		return this;
 	}
 
 	@Override
-	public DynamicResultBuilderEntityStandard setDiscriminatorAlias(String columnName) {
+	@Nonnull
+	public DynamicResultBuilderEntityStandard setDiscriminatorAlias(@Nullable String columnName) {
 		this.discriminatorColumnName = columnName;
 		return this;
 	}
 
 	@Override
-	public NativeQuery.RootReturn addProperty(String propertyName, String columnAlias) {
+	@Nonnull
+	public NativeQuery.RootReturn addProperty(@Nonnull String propertyName, @Nonnull String columnAlias) {
 		final var subPart = entityMapping.findSubPart( propertyName );
 		addProperty( (Fetchable) subPart, columnAlias );
 		return this;
 	}
 
 	@Override
-	public NativeQuery.ReturnProperty addProperty(String propertyName) {
+	@Nonnull
+	public NativeQuery.ReturnProperty addProperty(@Nonnull String propertyName) {
 		return addProperty( (Fetchable) entityMapping.findSubPart( propertyName ) );
 	}
 

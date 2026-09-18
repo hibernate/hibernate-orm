@@ -143,6 +143,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @since 8.0
 	 */
+	@Nonnull
 	@Incubating(since = "8.0")
 	FlushMode getEffectiveFlushMode();
 
@@ -171,6 +172,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @see #getComment()
 	 */
+	@Nonnull
 	CommonQueryContract setComment(@Nullable String comment);
 
 	/**
@@ -180,6 +182,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * {@link Dialect#getQueryHintString(String, List)} determines how
 	 * the hint is actually added to the SQL query.
 	 */
+	@Nonnull
 	CommonQueryContract addQueryHint(@Nonnull String hint);
 
 	/**
@@ -535,7 +538,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @return {@code this}, for method chaining
 	 */
 	@Nonnull
-	<P> CommonQueryContract setParameterList(int parameter, @Nonnull Collection<? extends P> values, Class<P> javaType);
+	<P> CommonQueryContract setParameterList(int parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter using the given
@@ -547,7 +550,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @return {@code this}, for method chaining
 	 */
 	@Nonnull
-	<P> CommonQueryContract setParameterList(int parameter, @Nonnull Collection<? extends P> values, Type<P> type);
+	<P> CommonQueryContract setParameterList(int parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.

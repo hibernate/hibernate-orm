@@ -37,43 +37,44 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	private List<SqmJoin<?, ?>> orderedJoins;
 
 	public SqmRoot(
-			EntityDomainType<E> entityType,
+			@Nonnull EntityDomainType<E> entityType,
 			@Nullable String alias,
 			boolean allowJoins,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( entityType, alias, nodeBuilder );
 		this.allowJoins = allowJoins;
 	}
 
 	protected SqmRoot(
-			NavigablePath navigablePath,
-			SqmPathSource<E> referencedNavigable,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<E> referencedNavigable,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, nodeBuilder );
 		this.allowJoins = true;
 	}
 
 	public SqmRoot(
-			NavigablePath navigablePath,
-			EntityDomainType<E> entityType,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull EntityDomainType<E> entityType,
 			@Nullable String alias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, (SqmEntityDomainType<E>) entityType, alias, nodeBuilder );
 		this.allowJoins = true;
 	}
 
 	protected SqmRoot(
-			NavigablePath navigablePath,
-			SqmPathSource<E> referencedNavigable,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<E> referencedNavigable,
 			@Nullable String alias,
 			boolean allowJoins,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, alias, nodeBuilder );
 		this.allowJoins = allowJoins;
 	}
 
+	@Nonnull
 	@Override
-	public SqmRoot<E> copy(SqmCopyContext context) {
+	public SqmRoot<E> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -93,7 +94,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Internal
-	public void copyTo(SqmRoot<E> target, SqmCopyContext context) {
+	public void copyTo(@Nonnull SqmRoot<E> target, @Nonnull SqmCopyContext context) {
 		super.copyTo( target, context );
 		if ( orderedJoins != null ) {
 			target.orderedJoins = new ArrayList<>( orderedJoins.size() );
@@ -118,7 +119,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return orderedJoins;
 	}
 
-	public void addOrderedJoin(SqmJoin<?, ?> join) {
+	public void addOrderedJoin(@Nonnull SqmJoin<?, ?> join) {
 		if ( orderedJoins == null ) {
 			// If we encounter anything but an attribute join, we need to order joins strictly
 			if ( !( join instanceof SqmAttributeJoin<?, ?> ) ) {
@@ -131,13 +132,13 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		}
 	}
 
-	private void addOrderedJoinTransitive(SqmJoin<?, ?> join) {
+	private void addOrderedJoinTransitive(@Nonnull SqmJoin<?, ?> join) {
 		orderedJoins.add( join );
 		join.visitSqmJoins( this::addOrderedJoinTransitive );
 	}
 
 	@Override
-	public void addSqmJoin(SqmJoin<E, ?> join) {
+	public void addSqmJoin(@Nonnull SqmJoin<E, ?> join) {
 		if ( !allowJoins ) {
 			throw new IllegalArgumentException(
 					"The root node [" + this + "] does not allow join/fetch"
@@ -152,10 +153,12 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return this;
 	}
 
+	@Nonnull
 	public String getEntityName() {
 		return getModel().getHibernateEntityName();
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		final String entityName = getEntityName();
@@ -163,19 +166,20 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return explicitAlias == null ? entityName : entityName + " as " + explicitAlias;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitRootPath( this );
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> other) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> other) {
 		return super.deepEquals( other )
 			&& Objects.equals( getOrderedJoins(), ((SqmRoot<?>) other).getOrderedJoins() );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> other) {
 		return super.isDeepCompatible( other )
 			&& SqmCacheable.areCompatible( getOrderedJoins(), ((SqmRoot<?>) other).getOrderedJoins() );
 	}
@@ -189,6 +193,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return (SqmEntityDomainType<E>) getReferencedPathSource();
 	}
 
+	@Nonnull
 	@Override
 	public EntityDomainType<E> getManagedType() {
 		return getModel();

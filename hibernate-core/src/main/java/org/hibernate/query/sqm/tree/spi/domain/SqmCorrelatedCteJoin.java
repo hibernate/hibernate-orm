@@ -24,7 +24,7 @@ public class SqmCorrelatedCteJoin<T> extends SqmCteJoin<T> implements SqmCorrela
 	private final SqmCorrelatedRootJoin<T> correlatedRootJoin;
 	private final SqmCteJoin<T> correlationParent;
 
-	public SqmCorrelatedCteJoin(SqmCteJoin<T> correlationParent) {
+	public SqmCorrelatedCteJoin(@Nonnull SqmCteJoin<T> correlationParent) {
 		//noinspection unchecked
 		super(
 				correlationParent.getCte(),
@@ -37,21 +37,22 @@ public class SqmCorrelatedCteJoin<T> extends SqmCteJoin<T> implements SqmCorrela
 	}
 
 	private SqmCorrelatedCteJoin(
-			NavigablePath navigablePath,
-			SqmCteStatement<T> cte,
-			SqmPathSource<T> pathSource,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmCteStatement<T> cte,
+			@Nonnull SqmPathSource<T> pathSource,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			SqmRoot<T> sqmRoot,
-			SqmCorrelatedRootJoin<T> correlatedRootJoin,
-			SqmCteJoin<T> correlationParent) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull SqmRoot<T> sqmRoot,
+			@Nonnull SqmCorrelatedRootJoin<T> correlatedRootJoin,
+			@Nonnull SqmCteJoin<T> correlationParent) {
 		super( navigablePath, cte, pathSource, alias, joinType, sqmRoot );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedCteJoin<T> copy(SqmCopyContext context) {
+	public SqmCorrelatedCteJoin<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -79,6 +80,7 @@ public class SqmCorrelatedCteJoin<T> extends SqmCteJoin<T> implements SqmCorrela
 		return correlationParent;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return correlationParent;
@@ -89,25 +91,27 @@ public class SqmCorrelatedCteJoin<T> extends SqmCteJoin<T> implements SqmCorrela
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<T> getCorrelatedRoot() {
 		return correlatedRootJoin;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedCteJoin( this );
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> other) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> other) {
 		return super.deepEquals( other )
 			&& other instanceof SqmCorrelatedCteJoin<?> that
 			&& correlationParent.equals( that.correlationParent );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> other) {
 		return super.isDeepCompatible( other )
 			&& other instanceof SqmCorrelatedCteJoin<?> that
 			&& correlationParent.isCompatible( that.correlationParent );

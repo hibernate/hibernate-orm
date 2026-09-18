@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
 
@@ -16,5 +18,6 @@ import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
  */
 public interface SqmAggregateFunction<T> extends JpaFunction<T>, SqmExpression<T> {
 
+	@Nullable
 	SqmPredicate getFilter();
 }

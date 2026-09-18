@@ -21,29 +21,30 @@ public class SqmBooleanValuedSimplePath
 		extends SqmComparableValuedSimplePath<Boolean>
 		implements SqmBooleanPath, SqmBooleanExpressionImplementor {
 	public SqmBooleanValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<Boolean> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<Boolean> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
 	public SqmBooleanValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<Boolean> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<Boolean> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
 	protected SqmBooleanValuedSimplePath createCopy(
-			NavigablePath navigablePath,
-			SqmPathSource<Boolean> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<Boolean> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmBooleanValuedSimplePath(
 				navigablePath,
 				referencedPathSource,
@@ -61,7 +62,7 @@ public class SqmBooleanValuedSimplePath
 
 	@Nonnull
 	@Override
-	public SqmBooleanExpression coalesce(Boolean y) {
+	public SqmBooleanExpression coalesce(@Nonnull Boolean y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -73,7 +74,7 @@ public class SqmBooleanValuedSimplePath
 
 	@Nonnull
 	@Override
-	public SqmBooleanExpression nullif(Boolean y) {
+	public SqmBooleanExpression nullif(@Nonnull Boolean y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().nullif( this, y ) );
 	}
 

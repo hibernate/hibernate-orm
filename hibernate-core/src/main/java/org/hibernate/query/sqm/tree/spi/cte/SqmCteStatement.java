@@ -59,10 +59,10 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	// though we make it safe by not calling any methods on it until initialization finishes
 	@SuppressWarnings({"uninitialized", "argument"})
 	public SqmCteStatement(
-			String name,
-			SqmSelectQuery<T> cteDefinition,
-			SqmCteContainer cteContainer,
-			NodeBuilder nodeBuilder) {
+			@Nonnull String name,
+			@Nonnull SqmSelectQuery<T> cteDefinition,
+			@Nonnull SqmCteContainer cteContainer,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.cteDefinition = cteDefinition;
 		this.cteContainer = cteContainer;
@@ -76,12 +76,12 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	// though we make it safe by not calling any methods on it until initialization finishes
 	@SuppressWarnings({"uninitialized", "argument"})
 	public SqmCteStatement(
-			String name,
-			SqmSelectQuery<T> nonRecursiveQueryPart,
+			@Nonnull String name,
+			@Nonnull SqmSelectQuery<T> nonRecursiveQueryPart,
 			boolean unionDistinct,
-			Function<JpaCteCriteria<T>, AbstractQuery<T>> finalCriteriaProducer,
-			SqmCteContainer cteContainer,
-			NodeBuilder nodeBuilder) {
+			@Nonnull Function<JpaCteCriteria<T>, AbstractQuery<T>> finalCriteriaProducer,
+			@Nonnull SqmCteContainer cteContainer,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.cteContainer = cteContainer;
 		this.materialization = CteMaterialization.UNDEFINED;
@@ -120,14 +120,14 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	}
 
 	private SqmCteStatement(
-			NodeBuilder builder,
-			SqmCteContainer cteContainer,
-			SqmCteTable<T> cteTable,
-			CteMaterialization materialization,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmCteContainer cteContainer,
+			@Nonnull SqmCteTable<T> cteTable,
+			@Nonnull CteMaterialization materialization,
 			@Nullable CteSearchClauseKind searchClauseKind,
-			List<SqmSearchClauseSpecification> searchBySpecifications,
+			@Nonnull List<SqmSearchClauseSpecification> searchBySpecifications,
 			@Nullable String searchAttributeName,
-			List<SqmCteTableColumn> cycleAttributes,
+			@Nonnull List<SqmCteTableColumn> cycleAttributes,
 			@Nullable String cycleMarkAttributeName,
 			@Nullable String cyclePathAttributeName,
 			@Nullable SqmLiteral<Object> cycleValue,
@@ -146,8 +146,9 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		this.noCycleValue = noCycleValue;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCteStatement<T> copy(SqmCopyContext context) {
+	public SqmCteStatement<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -180,6 +181,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		return cteTable.getName();
 	}
 
+	@Nonnull
 	public SqmCteTable<?> getCteTable() {
 		return cteTable;
 	}
@@ -196,13 +198,14 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		return cteContainer;
 	}
 
+	@Nonnull
 	@Override
 	public CteMaterialization getMaterialization() {
 		return materialization;
 	}
 
 	@Override
-	public void setMaterialization(CteMaterialization materialization) {
+	public void setMaterialization(@Nonnull CteMaterialization materialization) {
 		this.materialization = materialization;
 	}
 
@@ -265,7 +268,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	}
 
 	@Override
-	public void search(CteSearchClauseKind kind, String searchAttributeName, List<JpaSearchOrder> searchOrders) {
+	public void search(@Nullable CteSearchClauseKind kind, @Nullable String searchAttributeName, @Nullable List<JpaSearchOrder> searchOrders) {
 		if ( kind == null || searchAttributeName == null || searchOrders == null || searchOrders.isEmpty() ) {
 			this.searchClauseKind = null;
 			this.searchBySpecifications = Collections.emptyList();
@@ -292,11 +295,11 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 
 	@Override
 	public <X> void cycleUsing(
-			String cycleMarkAttributeName,
-			String cyclePathAttributeName,
-			X cycleValue,
-			X noCycleValue,
-			List<JpaCteCriteriaAttribute> cycleAttributes) {
+			@Nullable String cycleMarkAttributeName,
+			@Nullable String cyclePathAttributeName,
+			@Nullable X cycleValue,
+			@Nullable X noCycleValue,
+			@Nullable List<JpaCteCriteriaAttribute> cycleAttributes) {
 		if ( cycleMarkAttributeName == null || cycleAttributes == null || cycleAttributes.isEmpty() ) {
 			this.cycleMarkAttributeName = null;
 			this.cyclePathAttributeName = null;
@@ -332,13 +335,14 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		}
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCteStatement( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		if ( cteTable.getName() == null ) {
 			hql.append( "generated_" );
 		}
@@ -456,7 +460,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmCteStatement<?> that
 			&& cteTable.isCompatible( that.cteTable )
 			&& cteDefinition.isCompatible( that.cteDefinition )

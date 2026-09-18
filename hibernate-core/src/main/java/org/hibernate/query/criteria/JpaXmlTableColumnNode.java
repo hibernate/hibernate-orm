@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.Incubating;
 
@@ -19,12 +22,14 @@ public interface JpaXmlTableColumnNode<T> {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaXmlTableColumnNode<T> defaultValue(T value);
+	@Nonnull
+	JpaXmlTableColumnNode<T> defaultValue(@Nullable T value);
 
 	/**
 	 * Specifies the default value to use if resolving the XPath expression doesn't produce results.
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaXmlTableColumnNode<T> defaultExpression(Expression<T> expression);
+	@Nonnull
+	JpaXmlTableColumnNode<T> defaultExpression(@Nonnull Expression<T> expression);
 }

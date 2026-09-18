@@ -62,15 +62,19 @@ public interface NativeQueryImplementor<R>
 	 * Best guess whether this is a select query.  {@code null}
 	 * indicates unknown
 	 */
+	@Nullable
 	Boolean isSelectQuery();
 
 	@Override
-	NamedNativeQueryMemento<?> toMemento(String name);
+	@Nonnull
+	NamedNativeQueryMemento<?> toMemento(@Nonnull String name);
 
 	@Override
-	NamedMutationMemento<?> toMutationMemento(String name);
+	@Nonnull
+	NamedMutationMemento<?> toMutationMemento(@Nonnull String name);
 
 	@Override @SuppressWarnings({"unchecked", "rawtypes"})
+	@Nonnull
 	Set getOptions();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -88,11 +92,11 @@ public interface NativeQueryImplementor<R>
 
 	@Override
 	@Nonnull
-	<X> NativeQueryImplementor<X> asSelectionQuery(Class<X> type);
+	<X> NativeQueryImplementor<X> asSelectionQuery(@Nonnull Class<X> type);
 
 	@Override
 	@Nonnull
-	<X> NativeQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph);
+	<X> NativeQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,6 +150,7 @@ public interface NativeQueryImplementor<R>
 
 	@Override
 	@SuppressWarnings("deprecation")
+	@Nullable
 	R getSingleResult();
 
 	@Override
@@ -164,16 +169,20 @@ public interface NativeQueryImplementor<R>
 	// covariant overrides - NativeQuery
 
 	@Override
-	NativeSelectionMementoImpl<R> toSelectionMemento(String name);
+	@Nonnull
+	NativeSelectionMementoImpl<R> toSelectionMemento(@Nonnull String name);
 
 	@Override
-	NativeQueryImplementor<R> addSynchronizedQuerySpace(String querySpace);
+	@Nonnull
+	NativeQueryImplementor<R> addSynchronizedQuerySpace(@Nonnull String querySpace);
 
 	@Override
-	NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException;
+	@Nonnull
+	NativeQueryImplementor<R> addSynchronizedEntityName(@Nonnull String entityName) throws MappingException;
 
 	@Override
-	NativeQueryImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
+	@Nonnull
+	NativeQueryImplementor<R> addSynchronizedEntityClass(@Nonnull @SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -228,6 +237,7 @@ public interface NativeQueryImplementor<R>
 	CacheRetrieveMode getCacheRetrieveMode();
 
 	@Override @SuppressWarnings("removal")
+	@Nonnull
 	NativeQueryImplementor<R> setCacheRegion(@Nullable String cacheRegion);
 
 	@Override @SuppressWarnings("removal")
@@ -307,7 +317,8 @@ public interface NativeQueryImplementor<R>
 	NativeQueryImplementor<R> enableFetchProfile(@Nonnull String profileName);
 
 	@Override
-	NativeQueryImplementor<R> setPage(Page page);
+	@Nonnull
+	NativeQueryImplementor<R> setPage(@Nonnull Page page);
 
 	@Override @SuppressWarnings("deprecation")
 	@Nonnull
@@ -491,76 +502,97 @@ public interface NativeQueryImplementor<R>
 	<P> NativeQueryImplementor<R> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@SuppressWarnings("unused") // Used by Hibernate Reactive
-	void addResultTypeClass(Class<?> resultClass);
+	void addResultTypeClass(@Nonnull Class<?> resultClass);
 
 
 
 	@Override
-	NativeQueryImplementor<R> addScalar(String columnAlias);
+	@Nonnull
+	NativeQueryImplementor<R> addScalar(@Nonnull String columnAlias);
 
 	@Override
-	NativeQueryImplementor<R> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicDomainType type);
+	@Nonnull
+	NativeQueryImplementor<R> addScalar(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") BasicDomainType type);
 
 	@Override
-	NativeQueryImplementor<R> addScalar(String columnAlias, @SuppressWarnings("rawtypes") Class javaType);
+	@Nonnull
+	NativeQueryImplementor<R> addScalar(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") Class javaType);
 
 	@Override
-	<C> NativeQueryImplementor<R> addScalar(String columnAlias, Class<C> relationalJavaType, AttributeConverter<?,C> converter);
+	@Nonnull
+	<C> NativeQueryImplementor<R> addScalar(@Nonnull String columnAlias, @Nonnull Class<C> relationalJavaType, @Nonnull AttributeConverter<?,C> converter);
 
 	@Override
-	<O, J> NativeQueryImplementor<R> addScalar(String columnAlias, Class<O> domainJavaType, Class<J> jdbcJavaType, AttributeConverter<O, J> converter);
+	@Nonnull
+	<O, J> NativeQueryImplementor<R> addScalar(@Nonnull String columnAlias, @Nonnull Class<O> domainJavaType, @Nonnull Class<J> jdbcJavaType, @Nonnull AttributeConverter<O, J> converter);
 
 	@Override
-	<C> NativeQueryImplementor<R> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
+	@Nonnull
+	<C> NativeQueryImplementor<R> addScalar(@Nonnull String columnAlias, @Nonnull Class<C> relationalJavaType, @Nonnull Class<? extends AttributeConverter<?,C>> converter);
 
 	@Override
+	@Nonnull
 	<O, J> NativeQueryImplementor<R> addScalar(
-			String columnAlias,
-			Class<O> domainJavaType,
-			Class<J> jdbcJavaType,
-			Class<? extends AttributeConverter<O, J>> converter);
+			@Nonnull String columnAlias,
+			@Nonnull Class<O> domainJavaType,
+			@Nonnull Class<J> jdbcJavaType,
+			@Nonnull Class<? extends AttributeConverter<O, J>> converter);
 
 	@Override
-	NativeQueryImplementor<R> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") Class entityJavaType, String attributePath);
+	@Nonnull
+	NativeQueryImplementor<R> addAttributeResult(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityJavaType, @Nonnull String attributePath);
 
 	@Override
-	NativeQueryImplementor<R> addAttributeResult(String columnAlias, String entityName, String attributePath);
+	@Nonnull
+	NativeQueryImplementor<R> addAttributeResult(@Nonnull String columnAlias, @Nonnull String entityName, @Nonnull String attributePath);
 
 	@Override
-	NativeQueryImplementor<R> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") SingularAttribute attribute);
+	@Nonnull
+	NativeQueryImplementor<R> addAttributeResult(@Nonnull String columnAlias, @Nonnull @SuppressWarnings("rawtypes") SingularAttribute attribute);
 
 	@Override
-	DynamicResultBuilderEntityStandard addRoot(String tableAlias, String entityName);
+	@Nonnull
+	DynamicResultBuilderEntityStandard addRoot(@Nonnull String tableAlias, @Nonnull String entityName);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(String entityName);
+	@Nonnull
+	NativeQueryImplementor<R> addEntity(@Nonnull String entityName);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(String tableAlias, String entityName);
+	@Nonnull
+	NativeQueryImplementor<R> addEntity(@Nonnull String tableAlias, @Nonnull String entityName);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode);
+	@Nonnull
+	NativeQueryImplementor<R> addEntity(@Nonnull String tableAlias, @Nonnull String entityName, @Nullable LockMode lockMode);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(@SuppressWarnings("rawtypes") Class entityType);
+	@Nonnull
+	NativeQueryImplementor<R> addEntity(@Nonnull @SuppressWarnings("rawtypes") Class entityType);
 
-	NativeQueryImplementor<R> addEntity(Class<R> entityType, LockMode lockMode);
-
-	@Override
-	NativeQueryImplementor<R> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
-
-	@Override
-	NativeQueryImplementor<R> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass, LockMode lockMode);
+	@Nonnull
+	NativeQueryImplementor<R> addEntity(@Nonnull Class<R> entityType, @Nullable LockMode lockMode);
 
 	@Override
-	NativeQueryImplementor<R> addJoin(String tableAlias, String path);
+	@Nonnull
+	NativeQueryImplementor<R> addEntity(@Nonnull String tableAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityType);
 
 	@Override
+	@Nonnull
+	NativeQueryImplementor<R> addEntity(@Nonnull String tableAlias, @Nonnull @SuppressWarnings("rawtypes") Class entityClass, @Nullable LockMode lockMode);
+
+	@Override
+	@Nonnull
+	NativeQueryImplementor<R> addJoin(@Nonnull String tableAlias, @Nonnull String path);
+
+	@Override
+	@Nonnull
 	NativeQueryImplementor<R> addJoin(
-			String tableAlias,
-			String ownerTableAlias,
-			String joinPropertyName);
+			@Nonnull String tableAlias,
+			@Nonnull String ownerTableAlias,
+			@Nonnull String joinPropertyName);
 
 	@Override
-	NativeQueryImplementor<R> addJoin(String tableAlias, String path, LockMode lockMode);
+	@Nonnull
+	NativeQueryImplementor<R> addJoin(@Nonnull String tableAlias, @Nonnull String path, @Nullable LockMode lockMode);
 }

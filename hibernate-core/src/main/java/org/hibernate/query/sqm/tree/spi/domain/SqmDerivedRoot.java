@@ -29,7 +29,7 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	private final SqmSubQuery<T> subQuery;
 
 	public SqmDerivedRoot(
-			SqmSubQuery<T> subQuery,
+			@Nonnull SqmSubQuery<T> subQuery,
 			@Nullable String alias) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
@@ -40,9 +40,9 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	}
 
 	protected SqmDerivedRoot(
-			NavigablePath navigablePath,
-			SqmSubQuery<T> subQuery,
-			SqmPathSource<T> pathSource,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmSubQuery<T> subQuery,
+			@Nonnull SqmPathSource<T> pathSource,
 			@Nullable String alias) {
 		super(
 				navigablePath,
@@ -54,8 +54,9 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 		this.subQuery = subQuery;
 	}
 
+	@Nonnull
 	@Override
-	public SqmDerivedRoot<T> copy(SqmCopyContext context) {
+	public SqmDerivedRoot<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -79,8 +80,9 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 		return subQuery;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitRootDerived( this );
 	}
 
@@ -94,11 +96,13 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 		throw new UnsupportedOperationException( "Derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
+	@Nonnull
 	@Override
 	public String getEntityName() {
 		throw new UnsupportedOperationException( "Derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<T> getResolvedModel() {
 		return getReferencedPathSource();
@@ -117,13 +121,13 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> object) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> object) {
 		return super.deepEquals( object )
 			&& subQuery.equals( ((SqmDerivedRoot<?>) object).subQuery );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> object) {
 		return super.isDeepCompatible( object )
 			&& subQuery.isCompatible( ((SqmDerivedRoot<?>) object).subQuery );
 	}

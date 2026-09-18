@@ -60,6 +60,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -84,14 +85,15 @@ public class HANAUnnestFunction extends UnnestFunction {
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {
+			@Nonnull
 			@Override
 			public TableGroup convertToSqlAst(
-					NavigablePath navigablePath,
-					String identifierVariable,
+					@Nonnull NavigablePath navigablePath,
+					@Nonnull String identifierVariable,
 					boolean lateral,
 					boolean canUseInnerJoins,
 					boolean withOrdinality,
-					SqmToSqlAstConverter walker) {
+					@Nonnull SqmToSqlAstConverter walker) {
 				// SAP HANA only supports table column references i.e. `TABLE_NAME.COLUMN_NAME`
 				// or constants as arguments to xmltable/json_table, so it's impossible to do lateral joins.
 				// There is a nice trick we can apply to make this work though, which is to figure out
@@ -193,7 +195,8 @@ public class HANAUnnestFunction extends UnnestFunction {
 				return functionTableGroup;
 			}
 
-			private Expression createExpression(String qualifier, List<ColumnInfo> idColumns) {
+			@Nonnull
+			private Expression createExpression(@Nullable String qualifier, @Nonnull List<ColumnInfo> idColumns) {
 				if ( idColumns.size() == 1 ) {
 					final ColumnInfo columnInfo = idColumns.get( 0 );
 					return new ColumnReference( qualifier, columnInfo.name(), false, null, columnInfo.jdbcMapping() );
@@ -215,7 +218,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 				}
 			}
 
-			private void addIdColumns(ModelPartContainer modelPartContainer, List<ColumnInfo> idColumns) {
+			private void addIdColumns(@Nonnull ModelPartContainer modelPartContainer, @Nonnull List<ColumnInfo> idColumns) {
 				if ( modelPartContainer instanceof EntityValuedModelPart entityValuedModelPart ) {
 					addIdColumns( entityValuedModelPart.getEntityMappingType(), idColumns );
 				}
@@ -230,7 +233,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 				}
 			}
 
-			private void addIdColumns(EmbeddableValuedModelPart embeddableModelPart, List<ColumnInfo> idColumns) {
+			private void addIdColumns(@Nonnull EmbeddableValuedModelPart embeddableModelPart, @Nonnull List<ColumnInfo> idColumns) {
 				if ( embeddableModelPart instanceof EmbeddedCollectionPart collectionPart ) {
 					addIdColumns( collectionPart.getCollectionAttribute(), idColumns );
 				}
@@ -239,7 +242,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 				}
 			}
 
-			private void addIdColumns(PluralAttributeMapping pluralAttributeMapping, List<ColumnInfo> idColumns) {
+			private void addIdColumns(@Nonnull PluralAttributeMapping pluralAttributeMapping, @Nonnull List<ColumnInfo> idColumns) {
 				final var ddlTypeRegistry = pluralAttributeMapping.getCollectionDescriptor()
 						.getFactory()
 						.getTypeConfiguration()
@@ -247,7 +250,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 				addIdColumns( pluralAttributeMapping.getKeyDescriptor().getKeyPart(), ddlTypeRegistry, idColumns );
 			}
 
-			private void addIdColumns(EntityMappingType entityMappingType, List<ColumnInfo> idColumns) {
+			private void addIdColumns(@Nonnull EntityMappingType entityMappingType, @Nonnull List<ColumnInfo> idColumns) {
 				final var ddlTypeRegistry = entityMappingType.getEntityPersister()
 						.getFactory()
 						.getTypeConfiguration()
@@ -256,9 +259,9 @@ public class HANAUnnestFunction extends UnnestFunction {
 			}
 
 			private void addIdColumns(
-					ValuedModelPart modelPart,
-					DdlTypeRegistry ddlTypeRegistry,
-					List<ColumnInfo> idColumns) {
+					@Nonnull ValuedModelPart modelPart,
+					@Nonnull DdlTypeRegistry ddlTypeRegistry,
+					@Nonnull List<ColumnInfo> idColumns) {
 				modelPart.forEachSelectable( (selectionIndex, selectableMapping) -> {
 					final JdbcMapping jdbcMapping = selectableMapping.getJdbcMapping().getSingleJdbcMapping();
 					idColumns.add( new ColumnInfo(

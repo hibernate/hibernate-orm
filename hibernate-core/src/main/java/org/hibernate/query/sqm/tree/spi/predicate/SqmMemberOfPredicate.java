@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.predicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.SemanticException;
@@ -26,15 +27,15 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<?> leftHandExpression;
 	private final SqmPluralValuedSimplePath<?> pluralPath;
 
-	public SqmMemberOfPredicate(SqmExpression<?> leftHandExpression, SqmPluralValuedSimplePath<?> pluralPath, NodeBuilder nodeBuilder) {
+	public SqmMemberOfPredicate(@Nonnull SqmExpression<?> leftHandExpression, @Nonnull SqmPluralValuedSimplePath<?> pluralPath, @Nonnull NodeBuilder nodeBuilder) {
 		this( leftHandExpression, pluralPath, false, nodeBuilder );
 	}
 
 	public SqmMemberOfPredicate(
-			SqmExpression<?> leftHandExpression,
-			SqmPluralValuedSimplePath<?> pluralPath,
+			@Nonnull SqmExpression<?> leftHandExpression,
+			@Nonnull SqmPluralValuedSimplePath<?> pluralPath,
 			boolean negated,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 
 		this.pluralPath = pluralPath;
@@ -56,8 +57,9 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		leftHandExpression.applyInferableType( simpleDomainType );
 	}
 
+	@Nonnull
 	@Override
-	public SqmMemberOfPredicate copy(SqmCopyContext context) {
+	public SqmMemberOfPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmMemberOfPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -75,21 +77,24 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getLeftHandExpression() {
 		return leftHandExpression;
 	}
 
+	@Nonnull
 	public SqmPluralValuedSimplePath<?> getPluralPath() {
 		return pluralPath;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitMemberOfPredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		leftHandExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " not" );
@@ -115,7 +120,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmMemberOfPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& leftHandExpression.isCompatible( that.leftHandExpression )
@@ -130,6 +135,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmMemberOfPredicate( leftHandExpression, pluralPath, !isNegated(), nodeBuilder() );

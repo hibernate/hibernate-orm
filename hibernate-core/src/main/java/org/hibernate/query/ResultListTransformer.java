@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -42,7 +44,8 @@ public interface ResultListTransformer<T> {
 	 *
 	 * @return The transformed result.
 	 */
-	List<T> transformList(List<T> resultList);
+	@Nonnull
+	List<T> transformList(@Nonnull List<T> resultList);
 
 	/**
 	 * A {@code ResultListTransformer} which collapses a list of results
@@ -53,6 +56,7 @@ public interface ResultListTransformer<T> {
 	 *
 	 * @since 7.3
 	 */
+	@Nonnull
 	static <T> ResultListTransformer<T> uniqueResultTransformer() {
 		return resultList ->
 				switch ( resultList.size() ) {

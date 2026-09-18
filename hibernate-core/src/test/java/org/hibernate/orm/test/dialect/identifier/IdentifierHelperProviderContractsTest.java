@@ -8,11 +8,17 @@ import java.lang.reflect.Proxy;
 import java.util.Set;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.identifier.spi.DelegatingIdentifierHelper;
 import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
+import org.hibernate.dialect.identifier.spi.IdentifierSupport;
 import org.hibernate.dialect.identifier.spi.KeywordSupport;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -24,6 +30,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy.LOWER;
+import static org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy.MIXED;
+import static org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy.UPPER;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -123,13 +132,32 @@ public class IdentifierHelperProviderContractsTest {
 
 	@Test
 	void dialectCaseOverridesTakePrecedenceOverJdbcMetadata() {
-		final IdentifierHelper mariaDb = new MariaDBDialect().buildIdentifierHelper( request() );
-		assertThat( mariaDb.toMetaDataObjectName( Identifier.toIdentifier( "MixedName" ) ) )
-				.isEqualTo( "MixedName" );
+		assertIdentifierSupport( new MariaDBDialect(), MIXED, MIXED );
+		assertIdentifierSupport( new SybaseDialect(), MIXED, MIXED );
+		assertIdentifierSupport( new SQLServerDialect(), MIXED, MIXED );
+		assertIdentifierSupport( new PostgreSQLDialect(), MIXED, LOWER );
+		assertIdentifierSupport( new CockroachDialect(), MIXED, LOWER );
+		assertIdentifierSupport( new MySQLDialect(), MIXED, MIXED );
+		assertIdentifierSupport( new SpannerDialect(), UPPER, MIXED );
+		assertIdentifierSupport( new HANADialect(), MIXED, UPPER );
+	}
 
-		final IdentifierHelper sybase = new SybaseDialect().buildIdentifierHelper( request() );
-		assertThat( sybase.toMetaDataObjectName( Identifier.toIdentifier( "MixedName" ) ) )
-				.isEqualTo( "MixedName" );
+	private static void assertIdentifierSupport(IdentifierSupport support, IdentifierCaseStrategy quotedCaseStrategy, IdentifierCaseStrategy unquotedCaseStrategy) {
+		assertIdentifier( support, quotedCaseStrategy, Identifier.toIdentifier( "MixedName", true ) );
+		assertIdentifier( support, unquotedCaseStrategy, Identifier.toIdentifier( "MixedName", false ) );
+	}
+
+	private static void assertIdentifier(IdentifierSupport support, IdentifierCaseStrategy caseStrategy, Identifier quotedIdentifier) {
+		final String expected = switch ( caseStrategy ) {
+			case LOWER -> "mixedname";
+			case MIXED -> "MixedName";
+			case UPPER -> "MIXEDNAME";
+		};
+
+		final IdentifierHelper helper = support.buildIdentifierHelper( request() );
+		assertThat( helper.toMetaDataObjectName( quotedIdentifier ) )
+				.as(  "Identifier generation failed for " + support.getClass().getSimpleName() )
+				.isEqualTo( expected );
 	}
 
 	private static IdentifierHelperBuildRequest request() {
@@ -138,8 +166,8 @@ public class IdentifierHelperProviderContractsTest {
 				new Class<?>[] { JdbcMetadata.class },
 				(proxy, method, arguments) -> switch ( method.getName() ) {
 					case "isJdbcMetadataAccessible" -> false;
-					case "getUnquotedIdentifierCaseStrategy" -> IdentifierCaseStrategy.LOWER;
-					case "getQuotedIdentifierCaseStrategy" -> IdentifierCaseStrategy.UPPER;
+					case "getUnquotedIdentifierCaseStrategy" -> LOWER;
+					case "getQuotedIdentifierCaseStrategy" -> UPPER;
 					case "getSqlKeywords" -> Set.of();
 					default -> null;
 				}

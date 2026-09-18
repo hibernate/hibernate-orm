@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.spi.mutation.jdbc;
 
+import org.hibernate.SPI;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import java.sql.PreparedStatement;
@@ -28,16 +29,20 @@ import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.ast.spi.model.TableDeleteStandard;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
-public final class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
+@SPI({ USE, IMPLEMENT }) // By Hibernate Reactive
+public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	private final UpsertOperation upsertOperation;
 
 	private final OptionalTableUpdate optionalTableUpdate;
 
+	@SPI(IMPLEMENT)
 	public DeleteOrUpsertOperation(
 			UpsertOperation upsertOperation,
 			OptionalTableUpdate optionalTableUpdate) {
@@ -83,25 +88,8 @@ public final class DeleteOrUpsertOperation implements SelfExecutingUpdateOperati
 
 	private void performDelete(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		final var tableMapping = getTableDetails();
-		MODEL_MUTATION_LOGGER.performingDelete( tableMapping.getTableName() );
-
-		final var upsertDeleteAst = new TableDeleteStandard(
-				optionalTableUpdate.getMutatingTable(),
-				getMutationTarget(),
-				"upsert delete",
-				optionalTableUpdate.getKeyBindings(),
-				emptyList(),
-				emptyList()
-		);
-
+		final var statementDetails = createDeleteStatementDetails( session, tableMapping );
 		final var jdbcServices = session.getJdbcServices();
-		final var upsertDelete =
-				jdbcServices.getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( session.getFactory(), upsertDeleteAst ) )
-						.translate( null, MutationQueryOptions.INSTANCE );
-		final var statementDetails =
-				new PreparedStatementGroupSingleTable( upsertDelete, session )
-						.resolvePreparedStatementDetails( tableMapping.getTableName() );
 		try {
 			final var upsertDeleteStatement = statementDetails.resolveStatement();
 			final String sql = statementDetails.getSqlString();
@@ -126,6 +114,29 @@ public final class DeleteOrUpsertOperation implements SelfExecutingUpdateOperati
 		finally {
 			statementDetails.releaseStatement( session );
 		}
+	}
+
+	@SPI(USE) // By Hibernate Reactive
+	protected final PreparedStatementDetails createDeleteStatementDetails(
+			SharedSessionContractImplementor session,
+			TableMapping tableMapping) {
+		MODEL_MUTATION_LOGGER.performingDelete( tableMapping.getTableName() );
+
+		final var upsertDeleteAst = new TableDeleteStandard(
+				optionalTableUpdate.getMutatingTable(),
+				getMutationTarget(),
+				"upsert delete",
+				optionalTableUpdate.getKeyBindings(),
+				emptyList(),
+				emptyList()
+		);
+
+		final var upsertDelete = session.getJdbcServices().getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( session.getFactory(), upsertDeleteAst ) )
+				.translate( null, MutationQueryOptions.INSTANCE );
+		return new PreparedStatementGroupSingleTable( upsertDelete, session )
+				.resolvePreparedStatementDetails( tableMapping.getTableName() );
 	}
 
 	private void bindDeleteKeyValues(

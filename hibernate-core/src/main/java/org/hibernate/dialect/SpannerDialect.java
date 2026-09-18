@@ -1377,12 +1377,13 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
 		final var builder = request.builder();
+		super.buildIdentifierHelper( request );
 		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 		builder.setAutoQuoteKeywords( true );
 		builder.setAutoQuoteDollar( true );
-		return super.buildIdentifierHelper( request );
+		return builder.build();
 	}
 
 	@Override

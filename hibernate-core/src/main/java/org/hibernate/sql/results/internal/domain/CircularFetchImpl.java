@@ -21,6 +21,7 @@ import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.AbstractNonJoinedEntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder;
@@ -130,7 +131,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 
 	protected EntityInitializer<?> buildEntitySelectFetchInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping fetchable,
+			EntityValuedFetchable fetchable,
 			EntityPersister entityPersister,
 			DomainResult<?> keyResult,
 			NavigablePath navigablePath,
@@ -151,7 +152,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 	protected EntityInitializer<?> buildEntityDelayedFetchInitializer(
 			InitializerParent<?> parent,
 			NavigablePath referencedPath,
-			ToOneAttributeMapping fetchable,
+			EntityValuedFetchable fetchable,
 			boolean selectByUniqueKey,
 			DomainResult<?> keyResult,
 			BasicFetch<?> discriminatorFetch,

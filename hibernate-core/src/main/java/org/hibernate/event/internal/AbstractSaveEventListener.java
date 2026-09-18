@@ -138,10 +138,21 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			generatedId = persister.getIdentifier( entity, source );
 		}
 		final boolean delayIdentityInserts =
-				!source.isTransactionInProgress()
+				generatedOnExecution
 						&& !requiresImmediateIdAccess
-						&& generatedOnExecution;
+						&& ( !source.isTransactionInProgress()
+								|| shouldDelayIdentityInsertsForBatching( source, persister ) );
 		return performSave( entity, generatedId, persister, generatedOnExecution, context, source, delayIdentityInserts );
+	}
+
+	private static boolean shouldDelayIdentityInsertsForBatching(EventSource source, EntityPersister persister) {
+		if ( !source.getFactory().getSessionFactoryOptions().isBatchIdentityInsertsEnabled() ) {
+			return false;
+		}
+		final Integer batchSize = source.getConfiguredJdbcBatchSize();
+		return batchSize != null
+			&& batchSize > 1
+			&& persister.getInsertCoordinator().canBatchGeneratedIdentityInserts();
 	}
 
 	/**
@@ -325,9 +336,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	private static Object handleGeneratedId(boolean useIdentityColumn, Object id, AbstractEntityInsertAction insert) {
 		if ( useIdentityColumn && insert.isEarlyInsert() ) {
 			if ( insert instanceof EntityIdentityInsertAction entityIdentityInsertAction ) {
-				final Object generatedId = entityIdentityInsertAction.getGeneratedId();
-				insert.handleNaturalIdPostSaveNotifications( generatedId );
-				return generatedId;
+				return entityIdentityInsertAction.getGeneratedId();
 			}
 			else {
 				throw new IllegalStateException(

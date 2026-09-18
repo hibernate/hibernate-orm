@@ -39,8 +39,10 @@ new naming inputs, consistent with the Quarkus interpretation boundary.
 
 The physical strategy currently receives `JdbcEnvironment`. Its redesign is an
 open scope decision, not an automatic consequence of replacing the implicit SPI.
-Keep `ObjectNameNormalizer` and legacy `NamingStrategyHelper` cleanup separately
-tracked until their relationship to the selected pipeline is defined.
+The independent normalizer cleanup is complete: `ObjectNameNormalizer` handles
+quoting/rendering through `IdentifierHelper` and `Dialect`; the unused
+`NamingStrategyHelper` callback contract has been removed. This redesign should
+define any needed dispatch mechanism from concrete naming requirements.
 
 == Investigation: Invocation And Input Matrix
 

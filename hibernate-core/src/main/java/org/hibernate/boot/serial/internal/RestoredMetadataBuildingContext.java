@@ -32,7 +32,6 @@ public final class RestoredMetadataBuildingContext implements MetadataBuildingCo
 	private final MappingResolutionServices services;
 	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
 	private final EffectiveMappingDefaults effectiveDefaults;
-	private final ObjectNameNormalizer objectNameNormalizer;
 
 	public RestoredMetadataBuildingContext(
 			BootstrapContext bootstrapContext,
@@ -66,7 +65,6 @@ public final class RestoredMetadataBuildingContext implements MetadataBuildingCo
 		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
 		typeDefinitions.forEach( typeDefinitionRegistry::register );
 		this.effectiveDefaults = new RootMappingDefaults( options.getMappingDefaults(), EmptyPersistenceUnitMetadata.INSTANCE );
-		this.objectNameNormalizer = new ObjectNameNormalizer( this );
 	}
 
 	@Override
@@ -96,7 +94,7 @@ public final class RestoredMetadataBuildingContext implements MetadataBuildingCo
 
 	@Override
 	public ObjectNameNormalizer getObjectNameNormalizer() {
-		return objectNameNormalizer;
+		throw new IllegalStateException( "Restored metadata has resolved names and does not support name normalization" );
 	}
 
 	@Override

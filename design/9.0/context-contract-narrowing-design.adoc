@@ -10,7 +10,7 @@ verified. `UserTypeCreationContext` exposes member details and parameters; binde
 contexts no longer expose metadata-building access, and tenant-id binding is an
 internal process. Implicit naming sources expose `ImplicitNamingContext`, with
 identifier handling, naming defaults, and schema charset.
-Normalizer/helper cleanup remains separate; broader naming contract work is
+Normalizer/helper cleanup is also implemented; broader naming contract work is
 tracked in link:naming-strategy-redesign.adoc[the naming-strategy redesign proposal].
 The canonical follow-up status remains in
 link:follow-up-design.adoc[the bootstrap follow-up design].
@@ -112,7 +112,14 @@ the focused context. Migration requirements are documented in the migration guid
 
 Focused verification covers extension initialization, tenant processing, naming,
 quoting, defaults, charset hashing, subclass hooks, and metadata restoration.
-`ObjectNameNormalizer` and `NamingStrategyHelper` remain separate follow-up work.
+The subsequently authorized normalizer/helper cleanup removes the unused
+`NamingStrategyHelper` contract and `ObjectNameNormalizer.determineLogicalName()`.
+`ObjectNameNormalizer` receives `IdentifierHelper` and `Dialect` directly, with
+no metadata-context or database accessors. Live contexts create it on first access
+to preserve deferred database initialization. Restored contexts explicitly reject
+normalizer access because names are already resolved. Identifier conversion keeps
+the existing `false` quoting and explicit-name arguments; rendering and
+column-definition quoting retain their existing semantics.
 
 === Second Slice: Factory Preparation Inputs
 
@@ -171,8 +178,6 @@ but makes behavior and compatibility consequences reviewable.
 * Which concrete factory-preparation consumer should lead the next slice?
 * Which known external integrations must be included in that consumer inventory
   beyond the repository's tests and examples?
-* What capabilities and lifecycle constraints should govern normalizer/helper
-  cleanup, particularly for restored metadata?
 
 Subsequent slices require their own working specifications and explicit approval
 before implementation, unless Steve explicitly requests implementation earlier.

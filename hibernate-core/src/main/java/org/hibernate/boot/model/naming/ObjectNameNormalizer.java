@@ -2,10 +2,9 @@ package org.hibernate.boot.model.naming;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 
-import static org.hibernate.internal.util.StringHelper.isEmpty;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 
 /**
  * Provides centralized normalization of how database object names are handled.
@@ -13,10 +12,12 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Steve Ebersole
  */
 public class ObjectNameNormalizer {
-	private final MetadataBuildingContext context;
+	private final IdentifierHelper identifierHelper;
+	private final Dialect dialect;
 
-	public ObjectNameNormalizer(@Nonnull MetadataBuildingContext context) {
-		this.context = context;
+	public ObjectNameNormalizer(IdentifierHelper identifierHelper, Dialect dialect) {
+		this.identifierHelper = identifierHelper;
+		this.dialect = dialect;
 	}
 
 	/**
@@ -32,16 +33,11 @@ public class ObjectNameNormalizer {
 	 * @return The identifier accounting for any quoting that need be applied.
 	 */
 	public Identifier normalizeIdentifierQuoting(String identifierText) {
-		return database().toIdentifier( identifierText );
-	}
-
-	protected Database database() {
-		return getBuildingContext().getMetadataCollector().getDatabase();
+		return identifierText == null ? null : identifierHelper.toIdentifier( identifierText, false, false );
 	}
 
 	public Identifier normalizeIdentifierQuoting(Identifier identifier) {
-		return database().getJdbcEnvironment().getIdentifierHelper()
-				.normalizeQuoting( identifier );
+		return identifierHelper.normalizeQuoting( identifier );
 	}
 
 	/**
@@ -53,27 +49,11 @@ public class ObjectNameNormalizer {
 	 */
 	public String normalizeIdentifierQuotingAsString(String identifierText) {
 		final Identifier identifier = normalizeIdentifierQuoting( identifierText );
-		return identifier == null ? null : identifier.render( database().getDialect() );
+		return identifier == null ? null : identifier.render( dialect );
 	}
 
 	public String toDatabaseIdentifierText(String identifierText) {
-		return database().getDialect().quote( normalizeIdentifierQuotingAsString( identifierText ) );
-	}
-
-	/**
-	 * Determine the logical name give a (potentially {@code null}/empty) explicit name.
-	 *
-	 * @param explicitName The explicit, user-supplied name
-	 * @param namingStrategyHelper The naming strategy helper.
-	 *
-	 * @return The logical name
-	 */
-	public Identifier determineLogicalName(String explicitName, NamingStrategyHelper namingStrategyHelper) {
-		final Identifier logicalName =
-				isEmpty( explicitName )
-						? namingStrategyHelper.determineImplicitName( getBuildingContext() )
-						: namingStrategyHelper.handleExplicitName( explicitName, getBuildingContext() );
-		return database().getJdbcEnvironment().getIdentifierHelper().normalizeQuoting( logicalName );
+		return dialect.quote( normalizeIdentifierQuotingAsString( identifierText ) );
 	}
 
 	/**
@@ -89,25 +69,10 @@ public class ObjectNameNormalizer {
 	@Nullable
 	public String applyGlobalQuoting(@Nullable String text) {
 		final var identifier =
-				database().getJdbcEnvironment().getIdentifierHelper()
-						.applyGlobalQuoting( text );
+				identifierHelper.applyGlobalQuoting( text );
 		return identifier == null
 				? null
-				: identifier.render( database().getDialect() );
+				: identifier.render( dialect );
 	}
 
-
-	/**
-	 * Access the contextual information related to the current process of building metadata.  Here,
-	 * that typically might be needed for accessing:<ul>
-	 *     <li>{@link ImplicitNamingStrategy}</li>
-	 *     <li>{@link PhysicalNamingStrategy}</li>
-	 *     <li>{@link Database}</li>
-	 * </ul>
-	 *
-	 * @return The current building context
-	 */
-	protected MetadataBuildingContext getBuildingContext() {
-		return context;
-	}
 }

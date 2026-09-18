@@ -157,7 +157,9 @@ embedded tenant processing is internal, and the component fixture is corrected.
 The implicit naming-context slice is also implemented and verified:
 `ImplicitNameSource` exposes `ImplicitNamingContext`, providing identifier handling,
 schema charset, and `ImplicitNamingDefaults`, inherited by `EffectiveMappingDefaults`.
-Normalizer/helper cleanup remains separate. Broader contract and invocation work
+Normalizer/helper cleanup is complete: the unused strategy helper is removed,
+and the normalizer consumes identifier handling and dialect capabilities directly.
+Broader contract and invocation work
 is tracked in link:naming-strategy-redesign.adoc[the naming-strategy redesign proposal].
 
 `BootstrapContext` construction-time use (ORM 9)::
@@ -170,8 +172,8 @@ without recreating another general-purpose context.
 
 `MetadataBuildingContext`::
 Continue capability-level narrowing only around concrete SPI requirements.
-The implicit naming-source slice is implemented; normalizer/helper access remains
-a separate follow-up. Reference-count reduction and removal
+The implicit naming-source and normalizer/helper slices are implemented.
+Reference-count reduction and removal
 of harmless compatibility constructor parameters are not goals by themselves.
 
 Integrator callbacks::

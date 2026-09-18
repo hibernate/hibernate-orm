@@ -25,7 +25,7 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	private final InFlightMetadataCollector metadataCollector;
 	private final BootstrapContext bootstrapContext;
 	private final MappingResolutionServices serviceComponents;
-	private final ObjectNameNormalizer objectNameNormalizer;
+	private ObjectNameNormalizer objectNameNormalizer;
 	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
 
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
@@ -43,7 +43,6 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 				new PersistenceUnitMetadataImpl()
 		);
 		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingPlan );
-		objectNameNormalizer = new ObjectNameNormalizer(this);
 		typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
 		bootstrapContext.getTypeConfiguration().scope( this );
 	}
@@ -75,6 +74,11 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 
 	@Override
 	public ObjectNameNormalizer getObjectNameNormalizer() {
+		if ( objectNameNormalizer == null ) {
+			final var database = metadataCollector.getDatabase();
+			objectNameNormalizer = new ObjectNameNormalizer(
+					database.getJdbcEnvironment().getIdentifierHelper(), database.getDialect() );
+		}
 		return objectNameNormalizer;
 	}
 

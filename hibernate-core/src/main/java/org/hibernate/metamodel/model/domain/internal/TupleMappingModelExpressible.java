@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +34,7 @@ public class TupleMappingModelExpressible implements MappingModelExpressible<Obj
 		this.mappings = results.toArray( new JdbcMapping[0] );
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(final int index) {
 		return mappings[ index ];
@@ -46,7 +49,7 @@ public class TupleMappingModelExpressible implements MappingModelExpressible<Obj
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		int span = 0;
 		for ( int i = 0; i < components.length; i++ ) {
 			span += components[i].forEachJdbcType( offset + span, action );
@@ -54,8 +57,9 @@ public class TupleMappingModelExpressible implements MappingModelExpressible<Obj
 		return span;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
 		}
@@ -68,7 +72,7 @@ public class TupleMappingModelExpressible implements MappingModelExpressible<Obj
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			for ( int i = 0; i < components.length; i++ ) {
 				components[i].addToCacheKey( cacheKey, null, session );
@@ -84,12 +88,12 @@ public class TupleMappingModelExpressible implements MappingModelExpressible<Obj
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( value == null ) {
 			for ( int i = 0; i < components.length; i++ ) {
@@ -121,12 +125,12 @@ public class TupleMappingModelExpressible implements MappingModelExpressible<Obj
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( value == null ) {
 			for ( int i = 0; i < components.length; i++ ) {

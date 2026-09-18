@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -36,7 +38,9 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
+
 
 /**
  * Single-attribute NaturalIdMapping implementation
@@ -50,7 +54,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 			SingularAttributeMapping attribute,
 			EntityMappingType declaringType,
 			MappingModelCreationProcess creationProcess) {
-		super( declaringType, attribute.getAttributeMetadata().isUpdatable() );
+		super( declaringType, castNonNull( attribute.getAttributeMetadata() ).isUpdatable() );
 		this.attribute = attribute;
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
@@ -61,17 +65,17 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	@Override
 	public void verifyFlushState(
-			Object id,
-			Object[] currentState,
-			Object[] loadedState,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nonnull Object[] currentState,
+			@Nullable Object[] loadedState,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( !isMutable() ) {
 			final var persister = getDeclaringType().getEntityPersister();
 			final Object naturalId = extractNaturalIdFromEntityState( currentState );
 			final Object snapshot =
 					loadedState == null
 							? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
-							: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
+							: persister.requireNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
 			if ( !areEqual( naturalId, snapshot, session ) ) {
 				throw new HibernateException(
 						String.format(
@@ -86,8 +90,9 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		// otherwise, the natural id is mutable (!immutable), no need to do the checks
 	}
 
+	@Nullable
 	@Override
-	public Object extractNaturalIdFromEntityState(Object[] state) {
+	public Object extractNaturalIdFromEntityState(@Nonnull Object[] state) {
 		if ( state == null ) {
 			return null;
 		}
@@ -99,18 +104,19 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		}
 	}
 
+	@Nullable
 	@Override
-	public Object extractNaturalIdFromEntity(Object entity) {
-		return attribute.getPropertyAccess().getPropertyValueAccessor().get( entity );
+	public Object extractNaturalIdFromEntity(@Nonnull Object entity) {
+		return castNonNull( attribute.getPropertyAccess() ).getPropertyValueAccessor().get( entity );
 	}
 
 	@Override
-	public boolean isNormalized(Object incoming) {
+	public boolean isNormalized(@Nullable Object incoming) {
 		return incoming == null || getJavaType().getJavaTypeClass().isInstance( incoming );
 	}
 
 	@Override
-	public void validateInternalForm(Object naturalIdValue) {
+	public void validateInternalForm(@Nullable Object naturalIdValue) {
 		if ( naturalIdValue != null ) {
 			final var naturalIdValueClass = naturalIdValue.getClass();
 			// be flexible - allow a single-valued array
@@ -136,20 +142,22 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	}
 
 	@Override
-	public int calculateHashCode(Object value) {
+	public int calculateHashCode(@Nullable Object value) {
 		//noinspection rawtypes,unchecked
 		return value == null ? 0 : ( (JavaType) getJavaType() ).extractHashCode( value );
 	}
 
+	@Nullable
 	@Override
-	public Object normalizeInput(Object incoming) {
+	public Object normalizeInput(@Nullable Object incoming) {
 		final Object normalizedValue = normalizedValue( incoming );
 		return isLoadByIdComplianceEnabled()
 				? normalizedValue
 				: getJavaType().coerce( normalizedValue );
 	}
 
-	private Object normalizedValue(Object incoming) {
+	@Nullable
+	private Object normalizedValue(@Nullable Object incoming) {
 		sessionFactory.getStatistics().normalizeNaturalId( getDeclaringType().getEntityName() );
 
 		if ( incoming instanceof Map<?,?> valueMap ) {
@@ -170,6 +178,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		return sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
 	}
 
+	@Nonnull
 	@Override
 	public List<SingularAttributeMapping> getNaturalIdAttributes() {
 		return Collections.singletonList( attribute );
@@ -181,44 +190,47 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return attribute.getPartMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return attribute.getJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		return attribute.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		attribute.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		attribute.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		return attribute.forEachSelectable( offset, consumer );
 	}
 
@@ -227,76 +239,82 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		return attribute.getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return attribute.getJdbcMapping( index );
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getSingleJdbcMapping() {
 		return attribute.getSingleJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return attribute.getSingleJdbcMapping();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		return attribute.forEachJdbcType( offset, action );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return attribute.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		attribute.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return attribute.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return attribute.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return attribute.forEachJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
+	@Nonnull
 	@Override
-	public NaturalIdLoader<?> makeLoader(EntityMappingType entityDescriptor) {
+	public NaturalIdLoader<?> makeLoader(@Nonnull EntityMappingType entityDescriptor) {
 		return new SimpleNaturalIdLoader<>( this, entityDescriptor );
 	}
 
+	@Nonnull
 	@Override
-	public MultiNaturalIdLoader<?> makeMultiLoader(EntityMappingType entityDescriptor) {
+	public MultiNaturalIdLoader<?> makeMultiLoader(@Nonnull EntityMappingType entityDescriptor) {
 		return supportsSqlArrayType( getDialect() ) && attribute instanceof BasicAttributeMapping
 				? new MultiNaturalIdLoaderArrayParam<>( entityDescriptor )
 				: new MultiNaturalIdLoaderInPredicate<>( entityDescriptor );
@@ -306,6 +324,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		return sessionFactory.getJdbcServices().getDialect();
 	}
 
+	@Nullable
 	@Override
 	public AttributeMapping asAttributeMapping() {
 		return getAttribute();
@@ -316,6 +335,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		return attribute.hasPartitionedSelectionMapping();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return attribute.getMappedType();

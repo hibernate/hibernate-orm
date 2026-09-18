@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -110,11 +112,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.LOGICAL_ONE_TO_ONE;
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.MANY_TO_ONE;
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.ONE_TO_ONE;
+
 
 /**
  * @author Steve Ebersole
@@ -153,12 +157,12 @@ public class ToOneAttributeMapping
 	 */
 	private final boolean isKeyTableNullable;
 	private final boolean isInternalLoadNullable;
-	private final NotFoundAction notFoundAction;
+	@Nullable private final NotFoundAction notFoundAction;
 	private final boolean unwrapProxy;
 	private final boolean isOptional;
 	private final EntityMappingType entityMappingType;
 
-	private final String referencedPropertyName;
+	@Nullable private final String referencedPropertyName;
 	private final String targetKeyPropertyName;
 	private final Set<String> targetKeyPropertyNames;
 
@@ -168,11 +172,14 @@ public class ToOneAttributeMapping
 	Capture the other side's name of a possibly bidirectional association to allow resolving circular fetches.
 	It may be null if the referenced property is a non-entity.
 	 */
-	private final SelectablePath bidirectionalAttributePath;
+	@Nullable private final SelectablePath bidirectionalAttributePath;
 	private final TableGroupProducer declaringTableGroupProducer;
 
+	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
 	private ForeignKeyDescriptor foreignKeyDescriptor;
+	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
 	private ForeignKeyDescriptor.Nature sideNature;
+	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
 	private String identifyingColumnsTableExpression;
 	private boolean canUseParentTableGroup;
 	private @Nullable EmbeddableValuedModelPart circularFetchModelPart;
@@ -274,7 +281,7 @@ public class ToOneAttributeMapping
 							String.format(
 									Locale.ROOT,
 									"To-one mapping [%s.%s] was mapped with targetEntity=`%s`, but the attribute is declared as `%s`",
-									declaringType.getNavigableRole().getFullPath(),
+									castNonNull( declaringType.getNavigableRole() ).getFullPath(),
 									name,
 									targetType.getName(),
 									declaredType.getName()
@@ -381,7 +388,7 @@ public class ToOneAttributeMapping
 
 					final var persister =
 							(AbstractCollectionPersister)
-									pluralAttribute.getCollectionDescriptor();
+									castNonNull( pluralAttribute ).getCollectionDescriptor();
 					isKeyTableNullable = !persister.getTableName().equals( targetTableName );
 				}
 				else {
@@ -595,10 +602,11 @@ public class ToOneAttributeMapping
 		}
 	}
 
+	@Nullable
 	private static SelectablePath findBidirectionalOneToManyAttributeName(
 			String propertyPath,
 			ManagedMappingType declaringType,
-			SelectablePath parentSelectablePath,
+			@Nullable SelectablePath parentSelectablePath,
 			java.util.Collection<Property> properties) {
 		for ( var property : properties ) {
 			final var value = property.getValue();
@@ -629,10 +637,11 @@ public class ToOneAttributeMapping
 		return null;
 	}
 
+	@Nullable
 	private SelectablePath findBidirectionalOneToOneAttributeName(
 			String propertyPath,
 			ManagedMappingType declaringType,
-			SelectablePath parentSelectablePath,
+			@Nullable SelectablePath parentSelectablePath,
 			java.util.Collection<Property> properties) {
 		for ( var property : properties ) {
 			final var value = property.getValue();
@@ -651,7 +660,7 @@ public class ToOneAttributeMapping
 				}
 			}
 			else if ( value instanceof OneToOne oneToOne ) {
-				if ( declaringTableGroupProducer.getNavigableRole().getLocalName()
+				if ( castNonNull( declaringTableGroupProducer.getNavigableRole() ).getLocalName()
 								.equals( oneToOne.getReferencedEntityName() )
 						&& propertyPath.equals( oneToOne.getMappedByProperty() )
 						&& oneToOne.getReferencedEntityName()
@@ -750,6 +759,7 @@ public class ToOneAttributeMapping
 		}
 	}
 
+	@Nullable
 	static String findMapsIdPropertyName(EntityMappingType entityMappingType, String referencedPropertyName) {
 		final var persister = entityMappingType.getEntityPersister();
 		return Arrays.equals( persister.getIdentifierColumnNames(),
@@ -760,7 +770,7 @@ public class ToOneAttributeMapping
 
 	public static void addPrefixedPropertyPaths(
 			Set<String> targetKeyPropertyNames,
-			String prefix,
+			@Nullable String prefix,
 			Type type,
 			SessionFactoryImplementor factory) {
 		addPrefixedPropertyNames(
@@ -785,7 +795,7 @@ public class ToOneAttributeMapping
 
 	public static void addPrefixedPropertyNames(
 			Set<String> targetKeyPropertyNames,
-			String prefix,
+			@Nullable String prefix,
 			Type type,
 			SessionFactoryImplementor factory) {
 		if ( prefix != null ) {
@@ -914,11 +924,13 @@ public class ToOneAttributeMapping
 		identifyingColumnsTableExpression = tableExpression;
 	}
 
+	@Nonnull
 	@Override
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
 		return this.foreignKeyDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public ForeignKeyDescriptor.Nature getSideNature() {
 		return sideNature;
@@ -939,6 +951,7 @@ public class ToOneAttributeMapping
 		return foreignKeyDescriptor.hasPartitionedSelectionMapping();
 	}
 
+	@Nullable
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;
 	}
@@ -947,6 +960,7 @@ public class ToOneAttributeMapping
 		return targetKeyPropertyName;
 	}
 
+	@Nonnull
 	@Override
 	public Set<String> getTargetKeyPropertyNames() {
 		return targetKeyPropertyNames;
@@ -956,6 +970,7 @@ public class ToOneAttributeMapping
 		return cardinality;
 	}
 
+	@Nullable
 	public SelectablePath getBidirectionalAttributePath() {
 		return bidirectionalAttributePath;
 	}
@@ -964,28 +979,45 @@ public class ToOneAttributeMapping
 		return hasJoinTable;
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getMappedType() {
 		return getEntityMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getEntityMappingType() {
 		return entityMappingType;
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
 
+	@Nonnull
 	@Override
-	public ModelPart findSubPart(String name) {
+	public String getAttributeName() {
+		return castNonNull( super.getAttributeName() );
+	}
+
+	@Nonnull
+	@Override
+	public String getFetchableName() {
+		return getAttributeName();
+	}
+
+	@Nullable
+	@Override
+	public ModelPart findSubPart(@Nonnull String name) {
 		return findSubPart( name, null );
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType targetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType targetType) {
 		// Prefer resolving the key part of the foreign key rather than the target part if possible
 		// This way, we don't have to register table groups the target entity type
 		if ( canUseParentTableGroup && targetKeyPropertyNames.contains( name ) ) {
@@ -998,7 +1030,7 @@ public class ToOneAttributeMapping
 					&& !EntityIdentifierMapping.ID_ROLE_NAME.equals( name )
 					&& !ForeignKeyDescriptor.PART_NAME.equals( name )
 					&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( name )
-					&& !fkPart.getPartName().equals( name ) ) {
+					&& !name.equals( fkPart.getPartName() ) ) {
 				return modelPart.findSubPart( name, targetType );
 			}
 			return fkPart;
@@ -1006,6 +1038,7 @@ public class ToOneAttributeMapping
 		return EntityValuedFetchable.super.findSubPart( name, targetType );
 	}
 
+	@Nullable
 	@Override
 	public Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
@@ -1021,7 +1054,7 @@ public class ToOneAttributeMapping
 				return null;
 			}
 			final var fetchParentNavigablePath = fetchParent.getNavigablePath();
-			var parentNavigablePath = fetchablePath.getParent();
+			var parentNavigablePath = castNonNull( fetchablePath.getParent() );
 			assert parentNavigablePath.equals( fetchParentNavigablePath )
 				|| fetchParentNavigablePath instanceof TreatedNavigablePath
 						&& parentNavigablePath.equals( fetchParentNavigablePath.getRealParent() );
@@ -1068,13 +1101,13 @@ public class ToOneAttributeMapping
 			ModelPart parentModelPart = creationState.resolveModelPart( parentNavigablePath );
 			if ( parentModelPart instanceof EmbeddedIdentifierMappingImpl ) {
 				while ( parentNavigablePath instanceof EntityIdentifierNavigablePath ) {
-					parentNavigablePath = parentNavigablePath.getParent();
+					parentNavigablePath = castNonNull( parentNavigablePath.getParent() );
 					assert parentNavigablePath != null;
 					parentModelPart = creationState.resolveModelPart( parentNavigablePath );
 				}
 			}
 			while ( parentModelPart instanceof EmbeddableValuedFetchable ) {
-				parentNavigablePath = parentNavigablePath.getParent();
+				parentNavigablePath = castNonNull( parentNavigablePath.getParent() );
 				assert parentNavigablePath != null;
 				parentModelPart = creationState.resolveModelPart( parentNavigablePath );
 			}
@@ -1158,11 +1191,14 @@ public class ToOneAttributeMapping
 	}
 
 	protected boolean isBidirectionalAttributeName(
-			NavigablePath parentNavigablePath,
+			@Nullable NavigablePath parentNavigablePath,
 			ModelPart parentModelPart,
-			NavigablePath fetchablePath,
+			@Nullable NavigablePath fetchablePath,
 			DomainResultCreationState creationState) {
 
+		if ( parentNavigablePath == null || fetchablePath == null ) {
+			return false;
+		}
 		if ( bidirectionalAttributePath == null ) {
 			/*
 				check if mappedBy is on the other side of the association
@@ -1205,7 +1241,7 @@ public class ToOneAttributeMapping
 					parentOfParent = parentOfParent.getParent();
 				}
 				// The parent must be non-null. If it is null, the root is a CollectionResult
-				return parentOfParent.getParent() != null
+				return parentOfParent != null && parentOfParent.getParent() != null
 					&& ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) )
 							.isBidirectionalAttributeName( fetchablePath, this );
 			}
@@ -1251,7 +1287,7 @@ public class ToOneAttributeMapping
 				this.mappedBy = "biologicalChild"
 				parent.getFullPath() = "Mother.biologicalChild"
 			 */
-			final var grandparentNavigablePath = parentNavigablePath.getParent();
+				final var grandparentNavigablePath = parentNavigablePath.getParent();
 			if ( parentNavigablePath.getLocalName().equals( CollectionPart.Nature.ELEMENT.getName() )
 					&& grandparentNavigablePath != null
 					&& grandparentNavigablePath.isSuffix( bidirectionalAttributePath ) ) {
@@ -1259,8 +1295,8 @@ public class ToOneAttributeMapping
 				// This can be null for a collection loader
 				if ( parentPath == null ) {
 					return grandparentNavigablePath.getFullPath()
-							.equals( entityMappingType.findByPath( bidirectionalAttributePath )
-									.getNavigableRole().getFullPath() );
+							.equals( castNonNull( castNonNull( entityMappingType.findByPath( bidirectionalAttributePath ) )
+									.getNavigableRole() ).getFullPath() );
 				}
 				else {
 					// If the parent is null, this is a simple collection fetch of a root, in which case the types must match
@@ -1294,7 +1330,7 @@ public class ToOneAttributeMapping
 		return false;
 	}
 
-	private boolean isParentEmbeddedCollectionPart(DomainResultCreationState creationState, NavigablePath parentNavigablePath) {
+	private boolean isParentEmbeddedCollectionPart(DomainResultCreationState creationState, @Nullable NavigablePath parentNavigablePath) {
 		while ( parentNavigablePath != null ) {
 			final var parentModelPart = creationState.resolveModelPart( parentNavigablePath );
 			if ( parentModelPart instanceof EmbeddedCollectionPart ) {
@@ -1313,7 +1349,7 @@ public class ToOneAttributeMapping
 	private Fetch createCircularBiDirectionalFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
-			NavigablePath parentNavigablePath,
+			@Nullable NavigablePath parentNavigablePath,
 			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
 		final NavigablePath referencedNavigablePath;
@@ -1495,7 +1531,7 @@ public class ToOneAttributeMapping
 			FetchParent fetchParent,
 			ToOneAttributeMapping toOneMapping,
 			TableGroup tableGroup,
-			DomainResult<?> keyResult,
+			@Nullable DomainResult<?> keyResult,
 			boolean isAffectedByFilter,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
@@ -1510,6 +1546,7 @@ public class ToOneAttributeMapping
 		);
 	}
 
+	@Nullable
 	private NavigablePath getReferencedNavigablePath(
 			DomainResultCreationState creationState,
 			NavigablePath parentNavigablePath) {
@@ -1576,6 +1613,9 @@ public class ToOneAttributeMapping
 							.isSubclassEntityName( partMappingType.getMappedJavaType().getTypeName() )
 					&& !entityMapping.getEntityPersister()
 							.isSubclassEntityName( entityMappingType.getEntityName() ) ) ) {
+			if ( referencedNavigablePath == null ) {
+				return null;
+			}
 			referencedNavigablePath = referencedNavigablePath.getParent();
 			if ( referencedNavigablePath == null ) {
 				return null;
@@ -1602,7 +1642,7 @@ public class ToOneAttributeMapping
 		final var fetchParentNavigablePath = fetchParent.getNavigablePath();
 		final var parentTableGroup = fromClauseAccess.getTableGroup( fetchParentNavigablePath );
 
-		final var parentNavigablePath = fetchablePath.getParent();
+		final var parentNavigablePath = castNonNull( fetchablePath.getParent() );
 		assert parentNavigablePath.equals( fetchParentNavigablePath )
 			|| fetchParentNavigablePath instanceof TreatedNavigablePath
 					&& parentNavigablePath.equals( fetchParentNavigablePath.getRealParent() );
@@ -1905,7 +1945,7 @@ public class ToOneAttributeMapping
 	private TableGroup createTableGroupForDelayedFetch(
 			NavigablePath fetchablePath,
 			TableGroup parentTableGroup,
-			String resultVariable,
+			@Nullable String resultVariable,
 			DomainResultCreationState creationState) {
 		// Check if we can reuse a table group join of the parent
 		final var compatibleTableGroup = parentTableGroup.findCompatibleJoinedGroup(
@@ -1943,7 +1983,7 @@ public class ToOneAttributeMapping
 		final var identifierMapping = entityMappingType.getIdentifierMapping();
 		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
 			// case 1.2
-			return !foreignKeyDescriptor.getNavigableRole()
+			return !castNonNull( foreignKeyDescriptor.getNavigableRole() )
 					.equals( identifierMapping.getNavigableRole() );
 		}
 		else {
@@ -1989,6 +2029,7 @@ public class ToOneAttributeMapping
 			this.resultJavaType = javaType;
 		}
 
+		@Nullable
 		@Override
 		public String getResultVariable() {
 			return null;
@@ -2147,7 +2188,7 @@ public class ToOneAttributeMapping
 								fromClauseAccess.findTableGroup( parentParentPath );
 				if ( pluralTableGroup != null ) {
 					final String indexPropertyName =
-							pluralTableGroup.getModelPart().getIndexMetadata()
+							castNonNull( pluralTableGroup.getModelPart().getIndexMetadata() )
 									.getIndexPropertyName();
 					final String pathName =
 							embeddablePathSb != null
@@ -2441,7 +2482,7 @@ public class ToOneAttributeMapping
 			&& foreignKeyDescriptor.isKeyPart( valuedModelPart );
 	}
 
-	private void initializeIfNeeded(TableGroup lhs, SqlAstJoinType sqlAstJoinType, TableGroup tableGroup) {
+	private void initializeIfNeeded(TableGroup lhs, @Nullable SqlAstJoinType sqlAstJoinType, TableGroup tableGroup) {
 		if ( sqlAstJoinType == SqlAstJoinType.INNER
 				&& ( isNullable || !lhs.canUseInnerJoins() ) ) {
 			if ( hasJoinTable ) {
@@ -2474,6 +2515,7 @@ public class ToOneAttributeMapping
 		}
 	}
 
+	@Nullable
 	private SqlAstJoinType getJoinTypeForFetch(NavigablePath navigablePath, TableGroup tableGroup) {
 		for ( var tableGroupJoin : tableGroup.getTableGroupJoins() ) {
 			if ( tableGroupJoin.getNavigablePath().equals( navigablePath ) ) {
@@ -2487,7 +2529,7 @@ public class ToOneAttributeMapping
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			boolean fetched,
-			String sourceAlias,
+			@Nullable String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
 		final var primaryTableReference =
@@ -2536,6 +2578,7 @@ public class ToOneAttributeMapping
 		return isInternalLoadNullable;
 	}
 
+	@Nullable
 	public NotFoundAction getNotFoundAction() {
 		return notFoundAction;
 	}
@@ -2553,11 +2596,13 @@ public class ToOneAttributeMapping
 		return unwrapProxy;
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getAssociatedEntityMappingType() {
 		return getEntityMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public ModelPart getKeyTargetMatchPart() {
 		return foreignKeyDescriptor.getPart( sideNature );
@@ -2570,12 +2615,12 @@ public class ToOneAttributeMapping
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		if ( cardinality == ONE_TO_ONE && sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
 			return 0;
 		}
@@ -2584,7 +2629,8 @@ public class ToOneAttributeMapping
 		return foreignKeyDescriptor.breakDownJdbcValues( value, offset, x, y, valueConsumer, session );
 	}
 
-	protected Object extractValue(Object domainValue, SharedSessionContractImplementor session) {
+	@Nullable
+	protected Object extractValue(@Nullable Object domainValue, @Nullable SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
 			return null;
 		}
@@ -2608,9 +2654,10 @@ public class ToOneAttributeMapping
 		return lazyInitializer == null ? domainValue : lazyInitializer.getImplementation();
 	}
 
+	@Nullable
 	protected static Object extractAttributePathValue(Object domainValue, EntityMappingType entityType, String attributePath) {
 		if ( ! attributePath.contains( "." ) ) {
-			return entityType.findAttributeMapping( attributePath ).getValue( domainValue );
+			return castNonNull( entityType.findAttributeMapping( attributePath ) ).getValue( domainValue );
 		}
 
 		Object value = domainValue;
@@ -2620,7 +2667,10 @@ public class ToOneAttributeMapping
 			assert managedType != null;
 
 			final String pathPart = pathParts[ i ];
-			final var attributeMapping = managedType.findAttributeMapping( pathPart );
+			final var attributeMapping = castNonNull( castNonNull( managedType ).findAttributeMapping( pathPart ) );
+			if ( value == null ) {
+				return null;
+			}
 			value = attributeMapping.getValue( value );
 			managedType =
 					attributeMapping.getMappedType() instanceof ManagedMappingType managedMappingType
@@ -2632,7 +2682,7 @@ public class ToOneAttributeMapping
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		return sideNature == ForeignKeyDescriptor.Nature.KEY
 				? foreignKeyDescriptor.visitKeySelectables( offset, consumer )
 				: 0;
@@ -2640,9 +2690,9 @@ public class ToOneAttributeMapping
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 			foreignKeyDescriptor.getKeyPart().applySqlSelections( navigablePath, tableGroup, creationState );
 		}
@@ -2650,10 +2700,10 @@ public class ToOneAttributeMapping
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 			foreignKeyDescriptor.getKeyPart().applySqlSelections(
 					navigablePath,
@@ -2664,6 +2714,7 @@ public class ToOneAttributeMapping
 		}
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return sideNature == ForeignKeyDescriptor.Nature.KEY
@@ -2678,25 +2729,29 @@ public class ToOneAttributeMapping
 				: 0;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(final int index) {
 		return foreignKeyDescriptor.getJdbcMapping( index );
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
-		return sideNature == ForeignKeyDescriptor.Nature.KEY
-				? foreignKeyDescriptor.getSelectable( columnIndex )
-				: null;
+		if ( sideNature != ForeignKeyDescriptor.Nature.KEY ) {
+			throw new IndexOutOfBoundsException( columnIndex );
+		}
+		return foreignKeyDescriptor.getSelectable( columnIndex );
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		return foreignKeyDescriptor.forEachJdbcType( offset, action );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return foreignKeyDescriptor.disassemble(
 				foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
 				session
@@ -2704,7 +2759,7 @@ public class ToOneAttributeMapping
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		final Object cacheValue =
 				value != null && foreignKeyDescriptor.getJavaType().getJavaTypeClass() == value.getClass()
 						? value
@@ -2716,23 +2771,23 @@ public class ToOneAttributeMapping
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return foreignKeyDescriptor.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> consumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> consumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return foreignKeyDescriptor.forEachDisassembledJdbcValue(
 				foreignKeyDescriptor.disassemble(
 						foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),

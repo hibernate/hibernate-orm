@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,12 +57,14 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.util.Collections.singletonList;
 import static org.hibernate.audit.AuditStrategy.VALIDITY;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 import static org.hibernate.query.sqm.ComparisonOperator.GREATER_THAN;
 import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
 import static org.hibernate.query.sqm.ComparisonOperator.NOT_EQUAL;
+
 
 /**
  * Audit mapping implementation.
@@ -86,13 +90,13 @@ public class AuditMappingImpl implements AuditMapping {
 
 	private final JdbcMapping jdbcMapping;
 	private final BasicType<?> changesetIdBasicType;
-	private final String currentTimestampFunctionName;
+	@Nullable private final String currentTimestampFunctionName;
 	private final FunctionRenderer maxFunctionDescriptor;
 	private final AuditStrategy auditStrategy;
 
 	private final EntityMappingType entityMappingType;
 	private final SessionFactoryImplementor sessionFactory;
-	private AuditEntityLoader entityLoader;
+	@Nullable private AuditEntityLoader entityLoader;
 
 	public AuditMappingImpl(
 			Map<String, TableAuditInfo> tableAuditInfoMap,
@@ -129,6 +133,7 @@ public class AuditMappingImpl implements AuditMapping {
 		return info;
 	}
 
+	@Nonnull
 	@Override
 	public AuditEntityLoader getEntityLoader() {
 		if ( entityLoader == null ) {
@@ -140,6 +145,7 @@ public class AuditMappingImpl implements AuditMapping {
 		return entityLoader;
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName() {
 		throw new UnsupportedOperationException(
@@ -147,32 +153,37 @@ public class AuditMappingImpl implements AuditMapping {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public String resolveTableName(String originalTableName) {
+	public String resolveTableName(@Nonnull String originalTableName) {
 		return resolveInfo( originalTableName ).auditTableName;
 	}
 
+	@Nonnull
 	@Override
-	public SelectableMapping getChangesetIdMapping(String originalTableName) {
+	public SelectableMapping getChangesetIdMapping(@Nonnull String originalTableName) {
 		return resolveInfo( originalTableName ).changesetIdMapping;
 	}
 
+	@Nullable
 	@Override
-	public SelectableMapping getModificationTypeMapping(String originalTableName) {
+	public SelectableMapping getModificationTypeMapping(@Nonnull String originalTableName) {
 		return resolveInfo( originalTableName ).modificationTypeMapping;
 	}
 
+	@Nullable
 	@Override
-	public SelectableMapping getInvalidatingChangesetIdMapping(String originalTableName) {
+	public SelectableMapping getInvalidatingChangesetIdMapping(@Nonnull String originalTableName) {
 		return resolveInfo( originalTableName ).invalidatingChangesetMapping;
 	}
 
+	@Nonnull
 	@Override
 	public List<String> getExtraSelectExpressions() {
 		final var anyInfo = tableAuditInfoMap.values().iterator().next();
 		final var exprs = new ArrayList<>( List.of(
 				anyInfo.changesetIdMapping.getSelectionExpression(),
-				anyInfo.modificationTypeMapping.getSelectionExpression()
+				castNonNull( anyInfo.modificationTypeMapping ).getSelectionExpression()
 		) );
 		if ( anyInfo.invalidatingChangesetMapping != null ) {
 			exprs.add( anyInfo.invalidatingChangesetMapping.getSelectionExpression() );
@@ -180,6 +191,7 @@ public class AuditMappingImpl implements AuditMapping {
 		return exprs;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
@@ -191,14 +203,15 @@ public class AuditMappingImpl implements AuditMapping {
 				: new TemporalJdbcParameter( info.changesetIdMapping );
 	}
 
+	@Nonnull
 	@Override
 	public Predicate createRestriction(
-			TableGroupProducer tableGroupProducer,
-			TableReference tableReference,
-			List<SelectableMapping> keySelectables,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			String originalTableName,
-			Expression upperBound,
+			@Nonnull TableGroupProducer tableGroupProducer,
+			@Nonnull TableReference tableReference,
+			@Nonnull List<SelectableMapping> keySelectables,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull String originalTableName,
+			@Nonnull Expression upperBound,
 			boolean includeDeletions) {
 		return createRestriction(
 				tableGroupProducer,
@@ -430,11 +443,11 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public void applyPredicate(
-			EntityMappingType associatedEntityMappingType,
-			Consumer<Predicate> predicateConsumer,
-			LazyTableGroup lazyTableGroup,
-			NavigablePath navigablePath,
-			SqlAstCreationState creationState) {
+			@Nonnull EntityMappingType associatedEntityMappingType,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull LazyTableGroup lazyTableGroup,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqlAstCreationState creationState) {
 		final var influencers = creationState.getLoadQueryInfluencers();
 		final var persister = associatedEntityMappingType.getEntityPersister();
 		final var info = resolveInfo( persister.getTableName() );
@@ -467,11 +480,11 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public void applyPredicate(
-			EntityMappingType associatedEntityDescriptor,
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			LoadQueryInfluencers influencers) {
+			@Nonnull EntityMappingType associatedEntityDescriptor,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers) {
 		if ( hasTemporalPredicate( influencers ) ) {
 			final var persister = associatedEntityDescriptor.getEntityPersister();
 			final var info = resolveInfo( persister.getTableName() );
@@ -489,11 +502,11 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public void applyPredicate(
-			PluralAttributeMapping collectionDescriptor,
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			LoadQueryInfluencers influencers) {
+			@Nonnull PluralAttributeMapping collectionDescriptor,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers) {
 		if ( hasTemporalPredicate( influencers ) ) {
 			final String collectionTable = collectionDescriptor.getCollectionDescriptor().getTableName();
 			final var info = resolveInfo( collectionTable );
@@ -510,7 +523,7 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	@Override
-	public void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers) {
+	public void applyPredicate(@Nonnull TableGroupJoin tableGroupJoin, @Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		if ( hasTemporalPredicate( loadQueryInfluencers )
 				&& tableGroupJoin.getJoinedGroup().getModelPart() instanceof EntityValuedModelPart entityPart ) {
 			final var entityDescriptor = entityPart.getEntityMappingType();
@@ -530,11 +543,11 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public void applyPredicate(
-			Supplier<Consumer<Predicate>> predicateCollector,
-			SqlAstCreationState creationState,
-			TableGroup tableGroup,
-			NamedTableReference rootTableReference,
-			EntityMappingType entityMappingType) {
+			@Nonnull Supplier<Consumer<Predicate>> predicateCollector,
+			@Nonnull SqlAstCreationState creationState,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull NamedTableReference rootTableReference,
+			@Nonnull EntityMappingType entityMappingType) {
 		if ( hasTemporalPredicate( creationState.getLoadQueryInfluencers() ) ) {
 			final String originalTable = entityMappingType.getEntityPersister().getTableName();
 			final var info = resolveInfo( originalTable );
@@ -552,12 +565,12 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public void applyPredicate(
-			TableReferenceJoin tableReferenceJoin,
-			NamedTableReference primaryTableReference,
-			String originalTableName,
-			EntityMappingType entityMappingType,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			LoadQueryInfluencers influencers) {
+			@Nonnull TableReferenceJoin tableReferenceJoin,
+			@Nonnull NamedTableReference primaryTableReference,
+			@Nonnull String originalTableName,
+			@Nonnull EntityMappingType entityMappingType,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers) {
 		if ( influencers.getTemporalIdentifier() != null ) {
 			// Correlate REV between primary and joined tables
 			final String primaryTable = entityMappingType.getMappedTableDetails().getTableName();
@@ -583,6 +596,7 @@ public class AuditMappingImpl implements AuditMapping {
 	 * Walk up the navigable path to find a parent table group with an
 	 * audit mapping, and return a column reference to its REV column.
 	 */
+	@Nullable
 	private static ColumnReference findParentRevColumn(
 			NavigablePath navigablePath,
 			SqlAstCreationState creationState) {
@@ -608,12 +622,12 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	@Override
-	public boolean useAuxiliaryTable(LoadQueryInfluencers influencers) {
+	public boolean useAuxiliaryTable(@Nonnull LoadQueryInfluencers influencers) {
 		return influencers.getTemporalIdentifier() != null;
 	}
 
 	@Override
-	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
 		return influencers.getTemporalIdentifier() != null;
 	}
 

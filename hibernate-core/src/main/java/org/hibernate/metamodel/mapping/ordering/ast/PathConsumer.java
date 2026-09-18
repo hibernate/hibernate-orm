@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 
@@ -22,7 +24,7 @@ public class PathConsumer {
 	private final SequencePart rootSequencePart;
 
 	private final StringBuilder pathSoFar = new StringBuilder();
-	private SequencePart currentPart;
+	@Nullable private SequencePart currentPart;
 
 	public PathConsumer(
 			PluralAttributeMapping pluralAttributeMapping,
@@ -32,6 +34,7 @@ public class PathConsumer {
 		this.rootSequencePart = new RootSequencePart( pluralAttributeMapping );
 	}
 
+	@Nullable
 	public SequencePart getConsumedPart() {
 		return currentPart;
 	}
@@ -51,6 +54,9 @@ public class PathConsumer {
 		pathSoFar.append( unquotedIdentifier );
 
 		try {
+			if ( currentPart == null ) {
+				throw new PathResolutionException( unquotedIdentifier );
+			}
 			currentPart = currentPart.resolvePathPart( unquotedIdentifier, identifier, isTerminal, translationContext );
 		}
 		catch (PathResolutionException pre) {

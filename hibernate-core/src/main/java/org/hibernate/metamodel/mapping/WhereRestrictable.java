@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.function.Consumer;
 
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
@@ -27,8 +31,8 @@ public interface WhereRestrictable {
 	 * Apply the {@link org.hibernate.annotations.SQLRestriction} restrictions
 	 */
 	void applyWhereRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			SqlAstCreationState creationState);
+			@Nullable SqlAstCreationState creationState);
 }

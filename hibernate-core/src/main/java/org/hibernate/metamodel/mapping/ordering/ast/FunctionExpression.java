@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +58,7 @@ public class FunctionExpression implements OrderingExpression, FunctionRenderer 
 	public SelfRenderingFunctionSqlAstExpression<?> resolve(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String modelPartName,
+			@Nullable String modelPartName,
 			SqlAstCreationState creationState) {
 
 		final int size = arguments.size();
@@ -82,7 +84,7 @@ public class FunctionExpression implements OrderingExpression, FunctionRenderer 
 				this,
 				args,
 				null,
-				tableGroup.getModelPart().findSubPart( modelPartName, null )
+				modelPartName == null ? null : tableGroup.getModelPart().findSubPart( modelPartName, null )
 		);
 	}
 
@@ -90,7 +92,7 @@ public class FunctionExpression implements OrderingExpression, FunctionRenderer 
 	public void apply(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String collation,
+			@Nullable String collation,
 			String modelPartName,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,

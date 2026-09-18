@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -38,7 +41,7 @@ public final class ImmutableAttributeMappingsMap implements AttributeMappingsMap
 	}
 
 	@Override
-	public void forEachValue(final Consumer<? super AttributeMapping> action) {
+	public void forEachValue(@Nonnull final Consumer<? super AttributeMapping> action) {
 		for ( var attributeMapping : orderedValues ) {
 			action.accept( attributeMapping );
 		}
@@ -48,12 +51,14 @@ public final class ImmutableAttributeMappingsMap implements AttributeMappingsMap
 		return orderedValues.length;
 	}
 
+	@Nullable
 	@Override
-	public AttributeMapping get(final String name) {
+	public AttributeMapping get(@Nonnull final String name) {
 		final Integer integer = mapStore.get( name );
 		return integer == null ? null : orderedValues[integer];
 	}
 
+	@Nonnull
 	@Override
 	public Iterable<AttributeMapping> valueIterator() {
 		return new AttributeMappingIterable();

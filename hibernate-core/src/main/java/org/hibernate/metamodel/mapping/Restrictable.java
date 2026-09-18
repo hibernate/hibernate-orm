@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -25,11 +28,11 @@ public interface Restrictable extends FilterRestrictable, WhereRestrictable {
 	 * Applies the base set of restrictions.
 	 */
 	void applyBaseRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState);
+			@Nullable Set<String> treatAsDeclarations,
+			@Nullable SqlAstCreationState creationState);
 }

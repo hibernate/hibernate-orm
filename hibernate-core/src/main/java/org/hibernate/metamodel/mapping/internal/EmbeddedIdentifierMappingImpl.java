@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -46,21 +49,25 @@ public class EmbeddedIdentifierMappingImpl
 		this.propertyAccess = propertyAccess;
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return name;
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return Nature.COMPOSITE;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getPartMappingType() {
 		return embeddableDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
 		return getMappedType();
@@ -68,22 +75,23 @@ public class EmbeddedIdentifierMappingImpl
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nonnull DomainResultCreationState creationState) {
 		getEmbeddableTypeDescriptor().applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		getEmbeddableTypeDescriptor()
 				.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity) {
+	public Object getIdentifier(@Nonnull Object entity) {
 		final var lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
@@ -92,7 +100,7 @@ public class EmbeddedIdentifierMappingImpl
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+	public void setIdentifier(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		propertyAccess.getPropertyValueAccessor().set( entity, id );
 	}
 
@@ -107,18 +115,20 @@ public class EmbeddedIdentifierMappingImpl
 		return name;
 	}
 
+	@Nonnull
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return propertyAccess;
 	}
 
+	@Nonnull
 	@Override
 	public String getAttributeName() {
 		return name;
 	}
 
 	@Override
-	public int compare(Object value1, Object value2) {
+	public int compare(@Nullable Object value1, @Nullable Object value2) {
 		return getEmbeddableTypeDescriptor().compare( value1, value2 );
 	}
 }

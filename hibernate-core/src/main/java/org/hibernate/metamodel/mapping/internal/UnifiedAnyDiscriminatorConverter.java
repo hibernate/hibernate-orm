@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
@@ -88,8 +91,9 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 		return details;
 	}
 
+	@Nullable
 	@Override
-	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue) {
+	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(@Nullable Object relationalValue) {
 		if ( relationalValue == null ) {
 			// return immediately to avoid falling through to NOT_NULL case
 			return detailsByValue.get( NULL );
@@ -140,8 +144,9 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 		}
 	}
 
+	@Nonnull
 	@Override
-	public DiscriminatorValueDetails getDetailsForEntityName(String entityName) {
+	public DiscriminatorValueDetails getDetailsForEntityName(@Nonnull String entityName) {
 		final var existing = detailsByEntityName.get( entityName );
 		if ( existing != null ) {
 			return existing;
@@ -162,19 +167,21 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 	}
 
 	@Override
-	public void forEachValueDetail(Consumer<DiscriminatorValueDetails> consumer) {
+	public void forEachValueDetail(@Nonnull Consumer<DiscriminatorValueDetails> consumer) {
 		detailsByEntityName.values().forEach( consumer );
 	}
 
+	@Nullable
 	@Override
 	@SuppressWarnings("unchecked")
-	public R toRelationalValue(O domainForm) {
+	public R toRelationalValue(@Nullable O domainForm) {
 		final String entityName = getEntityName( domainForm );
 		return entityName == null ? null : (R) getDetailsForEntityName( entityName ).getValue();
 	}
 
+	@Nullable
 	@Override
-	public <X> X fromValueDetails(Function<DiscriminatorValueDetails, X> handler) {
+	public <X> X fromValueDetails(@Nonnull Function<DiscriminatorValueDetails, X> handler) {
 		for ( var valueDetails : detailsByEntityName.values() ) {
 			final X result = handler.apply( valueDetails );
 			if ( result != null ) {
@@ -184,8 +191,9 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 		return null;
 	}
 
+	@Nullable
 	@Override
-	protected String getEntityName(O domainForm) {
+	protected String getEntityName(@Nullable O domainForm) {
 		final Class<?> entityClass;
 		if ( domainForm == null ) {
 			return null;

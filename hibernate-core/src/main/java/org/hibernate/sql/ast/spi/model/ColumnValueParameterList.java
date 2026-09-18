@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.ast.spi.model;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -32,7 +34,7 @@ public class ColumnValueParameterList extends ArrayList<ColumnValueParameter> im
 	}
 
 	@Override
-	public void accept(int selectionIndex, SelectableMapping selectableMapping) {
+	public void accept(int selectionIndex, @Nonnull SelectableMapping selectableMapping) {
 		addColumValueParameter( selectableMapping );
 	}
 

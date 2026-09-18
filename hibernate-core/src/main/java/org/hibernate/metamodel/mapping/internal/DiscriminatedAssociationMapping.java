@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -164,7 +168,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	private final JavaType<?> baseAssociationJtd;
 	private final FetchTiming fetchTiming;
 	private final SessionFactoryImplementor sessionFactory;
-	private AssociationKey associationKey;
+	@Nullable private AssociationKey associationKey;
 
 	public DiscriminatedAssociationMapping(
 			DiscriminatedAssociationModelPart modelPart,
@@ -185,6 +189,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return modelPart;
 	}
 
+	@Nonnull
 	public DiscriminatorMapping getDiscriminatorMapping() {
 		return discriminatorPart;
 	}
@@ -193,6 +198,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return keyPart;
 	}
 
+	@Nullable
 	public Object resolveDiscriminatorValueToEntityMapping(EntityMappingType entityMappingType) {
 		final var details =
 				discriminatorPart.getValueConverter()
@@ -200,7 +206,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return details == null ? null : details.getValue();
 	}
 
-	public EntityMappingType resolveDiscriminatorValueToEntityMapping(Object discriminatorValue) {
+	@Nullable
+	public EntityMappingType resolveDiscriminatorValueToEntityMapping(@Nullable Object discriminatorValue) {
 		final var details =
 				discriminatorPart.getValueConverter().
 						getDetailsForDiscriminatorValue( discriminatorValue );
@@ -209,11 +216,11 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 	public <X, Y> int breakDownJdbcValues(
 			int offset,
-			X x,
-			Y y,
-			Object domainValue,
+			@Nullable X x,
+			@Nullable Y y,
+			@Nullable Object domainValue,
 			ModelPart.JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
 			valueConsumer.consume( offset, x, y, null, getDiscriminatorMapping() );
 			valueConsumer.consume( offset + 1, x, y, null, getKeyPart() );
@@ -236,11 +243,11 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 	public <X, Y> int decompose(
 			int offset,
-			X x,
-			Y y,
-			Object domainValue,
+			@Nullable X x,
+			@Nullable Y y,
+			@Nullable Object domainValue,
 			ModelPart.JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
 			valueConsumer.consume( offset, x, y, null, getDiscriminatorMapping() );
 			valueConsumer.consume( offset + 1, x, y, null, getKeyPart() );
@@ -258,7 +265,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return getDiscriminatorMapping().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 	}
 
-	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
+	private EntityMappingType determineConcreteType(Object entity, @Nullable SharedSessionContractImplementor session) {
 		final String entityName =
 				session == null
 						? sessionFactory.bestGuessEntityName( entity )
@@ -267,7 +274,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				.getEntityDescriptor( entityName );
 	}
 
-	public ModelPart findSubPart(String name, EntityMappingType treatTarget) {
+	@Nullable
+	public ModelPart findSubPart(String name, @Nullable EntityMappingType treatTarget) {
 		if ( AnyDiscriminatorPart.ROLE_NAME.equals( name ) ) {
 			return getDiscriminatorMapping();
 		}
@@ -297,6 +305,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		} );
 	}
 
+	@Nullable
 	private ModelPart resolveAssociatedSubPart(String name, EntityMappingType entityMapping) {
 		final var identifierMapping = entityMapping.getIdentifierMapping();
 
@@ -306,7 +315,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
 			final String idAttrName = identifierMapping.getAttributeName();
-			if ( idAttrName.equals( name ) ) {
+			if ( name.equals( idAttrName ) ) {
 				return getKeyPart();
 			}
 		}
@@ -340,6 +349,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return baseAssociationJtd;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return baseAssociationJtd;
@@ -365,6 +375,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return associationKey;
 	}
 
+	@Nullable
 	Fetch resolveCircularFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
@@ -424,7 +435,10 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	 * @throws org.hibernate.sql.ast.spi.creation.SqlTreeCreationException if no table group is registered for
 	 * the declaring path
 	 */
-	static TableGroup getTableGroup(NavigablePath anyPath, FromClauseAccess fromClauseAccess) {
+	static TableGroup getTableGroup(@Nullable NavigablePath anyPath, FromClauseAccess fromClauseAccess) {
+		if ( anyPath == null ) {
+			throw new org.hibernate.sql.ast.spi.creation.SqlTreeCreationException( "Missing path for any-valued mapping" );
+		}
 		final var realParent = anyPath.getRealParent();
 		if ( realParent instanceof TreatedNavigablePath ) {
 			final var treatedTableGroup = fromClauseAccess.findTableGroup( realParent );
@@ -439,8 +453,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			boolean fetched,
-			SqlAstJoinType requestedJoinType,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable SqlAstJoinType requestedJoinType,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			org.hibernate.sql.ast.spi.creation.SqlAstCreationState creationState) {
 		final var virtualTableGroup = new StandardVirtualTableGroup( navigablePath, modelPart, lhs, fetched );
 		final var valueDetails = getMappedEntityValueDetails();
@@ -470,7 +484,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			NavigablePath associationPath,
 			DiscriminatorValueDetails valueDetail,
 			SqlAstJoinType joinType,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			org.hibernate.sql.ast.spi.creation.SqlAstCreationState creationState) {
 		final var entityMapping = valueDetail.getIndicatedEntity();
 		final var concretePath = concreteEntityPath( associationPath, entityMapping );
@@ -644,7 +658,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			String resultVariable,
+			@Nullable String resultVariable,
 			DomainResultCreationState creationState) {
 		if ( resolveJoinedResultTableGroup( navigablePath, tableGroup, creationState ) != null ) {
 			return new JoinedDiscriminatedEntityResult<>(
@@ -667,6 +681,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 	}
 
+	@Nullable
 	private TableGroup resolveJoinedResultTableGroup(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,

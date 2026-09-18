@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,7 +38,9 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.BasicType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createColumnReferenceKey;
+
 
 /**
  * @author Andrea Boriero
@@ -79,25 +83,27 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		return false;
 	}
 
+	@Nonnull
 	@SuppressWarnings( "rawtypes" )
 	@Override
 	public DomainResult createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		resolveSubTypeTableReferences( tableGroup, navigablePath );
 		return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 	}
 
+	@Nonnull
 	@Override
 	public BasicFetch<?> generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
+			@Nonnull FetchParent fetchParent,
+			@Nonnull NavigablePath fetchablePath,
+			@Nonnull FetchTiming fetchTiming,
 			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		final var tableGroup =
 				sqlAstCreationState.getFromClauseAccess()
@@ -119,12 +125,13 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		}
 	}
 
+	@Nonnull
 	@Override
 	public Expression resolveSqlExpression(
-			NavigablePath navigablePath,
-			JdbcMapping jdbcMappingToUse,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nullable JdbcMapping jdbcMappingToUse,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAstCreationState creationState) {
 		return creationState.getSqlExpressionResolver()
 				.resolveSqlExpression(
 						createColumnReferenceKey(
@@ -200,14 +207,16 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 //		throw new UnsupportedOperationException();
 //		// this *should* only be used to create the sql-expression key, so just
 //		// using the primary table expr should be fine
-		return getEntityDescriptor().getMappedTableDetails().getTableName();
+		return castNonNull( getEntityDescriptor() ).getMappedTableDetails().getTableName();
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		// this *should* only be used to create the sql-expression key, so just
@@ -251,7 +260,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 
 	public final class CaseStatementDiscriminatorExpression implements SelfRenderingExpression {
 		private final TableGroup entityTableGroup;
-		CaseSearchedExpression caseSearchedExpression;
+		@Nullable CaseSearchedExpression caseSearchedExpression;
 
 		public CaseStatementDiscriminatorExpression(TableGroup entityTableGroup) {
 			this.entityTableGroup = entityTableGroup;
@@ -342,7 +351,8 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			return expression;
 		}
 
-		@Override
+		@Nonnull
+	@Override
 		public JdbcMappingContainer getExpressionType() {
 			return CaseStatementDiscriminatorMappingImpl.this;
 		}

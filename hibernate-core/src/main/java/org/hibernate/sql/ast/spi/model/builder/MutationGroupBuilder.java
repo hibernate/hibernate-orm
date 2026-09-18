@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.ast.spi.model.builder;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -70,7 +72,7 @@ public final class MutationGroupBuilder implements SelectableConsumer {
 	}
 
 	@Override
-	public void accept(int selectionIndex, SelectableMapping selectableMapping) {
+	public void accept(int selectionIndex, @Nonnull SelectableMapping selectableMapping) {
 		final EntityPersister entityPersister = mutationTarget.getTargetPart().getEntityPersister();
 		final String tableNameForMutation = entityPersister.physicalTableNameForMutation( selectableMapping );
 		final AssigningTableMutationBuilder<?> mutationBuilder = findTableDetailsBuilder( tableNameForMutation );

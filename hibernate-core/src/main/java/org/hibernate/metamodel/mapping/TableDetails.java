@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.spi.NavigablePath;
@@ -22,11 +25,13 @@ public interface TableDetails {
 	/**
 	 * The name of the table
 	 */
+	@Nonnull
 	String getTableName();
 
 	/**
 	 * Details about the primary-key of this table
 	 */
+	@Nullable
 	KeyDetails getKeyDetails();
 
 	/**
@@ -49,42 +54,45 @@ public interface TableDetails {
 		/**
 		 * Group of columns defined on the primary key
 		 */
+		@Nonnull
 		List<? extends KeyColumn> getKeyColumns();
 
 		/**
 		 * Get a key column by relative position
 		 */
+		@Nonnull
 		KeyColumn getKeyColumn(int position);
 
 
 		@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 		@FunctionalInterface
 		interface KeyValueConsumer {
-			void consume(Object jdbcValue, KeyColumn columnMapping);
+			void consume(@Nullable Object jdbcValue, @Nonnull KeyColumn columnMapping);
 		}
 
 		/**
 		 * Visit each key column
 		 */
-		void forEachKeyColumn(KeyColumnConsumer consumer);
+		void forEachKeyColumn(@Nonnull KeyColumnConsumer consumer);
 
 		/**
 		 * Break a key value down into its constituent parts, calling the consumer for each.
 		 */
 		void breakDownKeyJdbcValues(
-				Object domainValue,
-				KeyValueConsumer valueConsumer,
-				SharedSessionContractImplementor session);
+				@Nonnull Object domainValue,
+				@Nonnull KeyValueConsumer valueConsumer,
+				@Nonnull SharedSessionContractImplementor session);
 
 		/**
 		 * Create a DomainResult for selecting and retrieving the key.
 		 */
+		@Nonnull
 		@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 		<K> DomainResult<K> createDomainResult(
-				NavigablePath navigablePath,
-				TableReference tableReference,
-				String resultVariable,
-				DomainResultCreationState creationState);
+				@Nonnull NavigablePath navigablePath,
+				@Nonnull TableReference tableReference,
+				@Nullable String resultVariable,
+				@Nonnull DomainResultCreationState creationState);
 	}
 
 	/**
@@ -94,11 +102,13 @@ public interface TableDetails {
 		/**
 		 * The name of the column
 		 */
+		@Nonnull
 		String getColumnName();
 
 		/**
 		 * Describes the mapping between object and relational for this column
 		 */
+		@Nonnull
 		JdbcMapping getJdbcMapping();
 	}
 
@@ -111,6 +121,6 @@ public interface TableDetails {
 		 * @param position The position of the column within the key group
 		 * @param column The column details
 		 */
-		void consume(int position, KeyColumn column);
+		void consume(int position, @Nonnull KeyColumn column);
 	}
 }

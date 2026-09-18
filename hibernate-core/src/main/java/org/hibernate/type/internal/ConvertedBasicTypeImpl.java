@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -104,21 +106,25 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 		return NO_REG_KEYS;
 	}
 
+	@Nullable
 	@Override
 	public BasicValueConverter getValueConverter() {
 		return converter;
 	}
 
+	@Nonnull
 	@Override
 	public ValueExtractor<J> getJdbcValueExtractor() {
 		return jdbcValueExtractor;
 	}
 
+	@Nonnull
 	@Override
 	public ValueBinder<J> getJdbcValueBinder() {
 		return jdbcValueBinder;
 	}
 
+	@Nullable
 	@Override
 	public JdbcLiteralFormatter getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
@@ -130,19 +136,22 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 		return getExpressibleJavaType().getJavaTypeClass();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJdbcJavaType() {
 		return converter.getRelationalJavaType();
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
+	public boolean[] toColumnNullness(@Nullable Object value, MappingContext mapping) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
+	@Nonnull
 	public final JavaType<J> getJavaTypeDescriptor() {
 		return converter.getDomainJavaType();
 	}
 
+	@Nonnull
 	public final JdbcType getJdbcType() {
 		return jdbcType;
 	}
@@ -188,18 +197,18 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	}
 
 	@Override
-	public final boolean isSame(Object x, Object y) {
+	public final boolean isSame(@Nullable Object x, @Nullable Object y) {
 		return isEqual( x, y );
 	}
 
 	@Override
-	public final boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
+	public final boolean isEqual(@Nullable Object x, @Nullable Object y, SessionFactoryImplementor factory) {
 		return isEqual( x, y );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean isEqual(Object one, Object another) {
+	public boolean isEqual(@Nullable Object one, @Nullable Object another) {
 		return converter.getDomainJavaType().areEqual( (J) one, (J) another );
 	}
 
@@ -216,17 +225,17 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final int compare(Object x, Object y) {
+	public final int compare(@Nullable Object x, @Nullable Object y) {
 		return converter.getDomainJavaType().getComparator().compare( (J) x, (J) y );
 	}
 
 	@Override
-	public final boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) {
+	public final boolean isDirty(@Nullable Object old, @Nullable Object current, SharedSessionContractImplementor session) {
 		return isDirty( old, current );
 	}
 
 	@Override
-	public final boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
+	public final boolean isDirty(@Nullable Object old, @Nullable Object current, boolean[] checkable, SharedSessionContractImplementor session) {
 		return checkable[0] && isDirty( old, current );
 	}
 
@@ -236,15 +245,15 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 
 	@Override
 	public final boolean isModified(
-			Object oldHydratedState,
-			Object currentState,
+			@Nullable Object oldHydratedState,
+			@Nullable Object currentState,
 			boolean[] checkable,
 			SharedSessionContractImplementor session) {
 		return isDirty( oldHydratedState, currentState );
 	}
 
 	@Override
-	public final void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
+	public final void nullSafeSet(PreparedStatement st, @Nullable Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( settable[0] ) {
 			nullSafeSet( st, value, index, session );
@@ -264,7 +273,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	@Override
 	public final void nullSafeSet(
 			PreparedStatement st,
-			Object value,
+			@Nullable Object value,
 			int index,
 			final SharedSessionContractImplementor session) throws SQLException {
 		//noinspection unchecked
@@ -274,7 +283,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final String toLoggableString(Object value, SessionFactoryImplementor factory) {
+	public final String toLoggableString(@Nullable Object value, SessionFactoryImplementor factory) {
 		if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( value ) ) {
 			return  "<uninitialized>";
 		}
@@ -290,43 +299,49 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 		return getMutabilityPlan().isMutable();
 	}
 
+	@Nullable
 	@Override
 	@SuppressWarnings("unchecked")
-	public final Object deepCopy(Object value, SessionFactoryImplementor factory) {
+	public final Object deepCopy(@Nullable Object value, SessionFactoryImplementor factory) {
 		return getMutabilityPlan().deepCopy( (J) value );
 	}
 
+	@Nullable
 	@Override
-	public final Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public final Object assemble(@Nullable Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return getMutabilityPlan().assemble( cached, session );
 	}
 
+	@Nullable
 	@Override
 	@SuppressWarnings("unchecked")
-	public final Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public final Serializable disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session, @Nullable Object owner) throws HibernateException {
 		return getMutabilityPlan().disassemble( (J) value, session );
 	}
 
+	@Nullable
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return converter.toRelationalValue( (J) value );
 	}
 
+	@Nullable
 	@Override
 	@SuppressWarnings("unchecked")
-	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
+	public final Object replace(@Nullable Object original, @Nullable Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		return original == null && target == null
 				? null
 				: converter.getDomainJavaType().getReplacement( (J) original, (J) target, session );
 
 	}
 
+	@Nullable
 	@Override
 	@SuppressWarnings("unchecked")
 	public Object replace(
-			Object original,
-			Object target,
+			@Nullable Object original,
+			@Nullable Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache,
@@ -370,6 +385,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public CastType getCastType() {
 		final JdbcType jdbcType = getJdbcType();

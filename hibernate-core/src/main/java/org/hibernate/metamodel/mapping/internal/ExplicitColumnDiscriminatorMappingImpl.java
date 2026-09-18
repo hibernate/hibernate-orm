@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
@@ -17,7 +19,9 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.type.BasicType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createColumnReferenceKey;
+
 
 /**
  * @author Steve Ebersole
@@ -26,8 +30,8 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 		implements EmbeddableDiscriminatorMapping {
 	private final String name;
 	private final String tableExpression;
-	private final String columnName;
-	private final String columnFormula;
+	@Nullable private final String columnName;
+	@Nullable private final String columnFormula;
 	private final boolean isPhysical;
 	private final boolean isUpdateable;
 	private final @Nullable String customReadExpression;
@@ -103,22 +107,25 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 		}
 	}
 
+	@Nonnull
 	@Override
 	public DiscriminatorType<?> getMappedType() {
 		return (DiscriminatorType<?>) super.getMappedType();
 	}
 
+	@Nonnull
 	@Override
 	public DiscriminatorConverter<?, ?> getValueConverter() {
 		return getMappedType().getValueConverter();
 	}
 
+	@Nonnull
 	@Override
 	public Expression resolveSqlExpression(
-			NavigablePath navigablePath,
-			JdbcMapping jdbcMappingToUse,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nullable JdbcMapping jdbcMappingToUse,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAstCreationState creationState) {
 		final var tableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
 		return creationState.getSqlExpressionResolver()
 				.resolveSqlExpression(
@@ -128,19 +135,22 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 				);
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return tableExpression;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectableName() {
 		return name;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
-		return columnName == null ? columnFormula : columnName;
+		return columnName == null ? castNonNull( columnFormula ) : columnName;
 	}
 
 	@Override

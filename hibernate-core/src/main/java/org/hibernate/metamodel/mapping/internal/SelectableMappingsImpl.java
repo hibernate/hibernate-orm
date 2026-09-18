@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -92,6 +94,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		return new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		return selectableMappings[columnIndex];
@@ -103,7 +106,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 	}
 
 	@Override
-	public int forEachSelectable(final int offset, final SelectableConsumer consumer) {
+	public int forEachSelectable(final int offset, @Nonnull final SelectableConsumer consumer) {
 		for ( int i = 0; i < selectableMappings.length; i++ ) {
 			consumer.accept( offset + i, selectableMappings[i] );
 		}

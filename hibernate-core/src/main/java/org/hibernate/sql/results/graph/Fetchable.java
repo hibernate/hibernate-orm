@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.spi.IndexedConsumer;
@@ -87,6 +89,7 @@ public interface Fetchable extends ModelPart {
 		return false;
 	}
 
+	@Nullable
 	default AttributeMapping asAttributeMapping() {
 		return null;
 	}

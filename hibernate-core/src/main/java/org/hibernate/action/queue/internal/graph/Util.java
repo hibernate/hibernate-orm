@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.queue.internal.graph;
 
+import jakarta.annotation.Nonnull;
+
 
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -20,13 +22,14 @@ public class Util {
 			return 0;
 		}
 
+		@Nonnull
 		@Override
 		public SelectableMapping getSelectable(int columnIndex) {
 			throw new IndexOutOfBoundsException( "No selectables in empty instance" );
 		}
 
 		@Override
-		public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 			return 0;
 		}
 	};

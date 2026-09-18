@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchTiming;
@@ -29,6 +32,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @implNote `discriminatorType` represents the mapping to Class, whereas `discriminatorType.getUnderlyingType()`
  * represents the "raw" JDBC mapping (String, Integer, etc.)
@@ -49,18 +54,21 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		this.underlyingJdbcMapping = underlyingJdbcMapping;
 		this.mappingType = mappingType;
 		this.discriminatorType = discriminatorType;
-		this.role = mappingType.getNavigableRole().append( DISCRIMINATOR_ROLE_NAME );
+		this.role = castNonNull( mappingType.getNavigableRole() ).append( DISCRIMINATOR_ROLE_NAME );
 	}
 
+	@Nullable
 	public EntityMappingType getEntityDescriptor() {
 		return mappingType.asEntityMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public BasicType<?> getUnderlyingJdbcMapping() {
 		return discriminatorType.getUnderlyingJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public DiscriminatorConverter<?, ?> getValueConverter() {
 		return discriminatorType.getValueConverter();
@@ -70,38 +78,44 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EntityDiscriminatorMapping
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return role;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return discriminatorType;
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return mappingType.findContainingEntityMapping();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return getJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return getJdbcMapping().getJavaTypeDescriptor();
 	}
 
+	@Nonnull
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public DomainResult createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		// create a SqlSelection based on the underlying JdbcMapping
 		final var sqlSelection = resolveSqlSelection(
 				navigablePath,
@@ -127,7 +141,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			NavigablePath navigablePath,
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
-			FetchParent fetchParent,
+			@Nullable FetchParent fetchParent,
 			SqlAstCreationState creationState) {
 		return creationState.getSqlExpressionResolver().resolveSqlSelection(
 				resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, creationState ),
@@ -137,14 +151,15 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		);
 	}
 
+	@Nonnull
 	@Override
 	public BasicFetch<?> generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
+			@Nonnull FetchParent fetchParent,
+			@Nonnull NavigablePath fetchablePath,
+			@Nonnull FetchTiming fetchTiming,
 			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var tableGroup =
 				creationState.getSqlAstCreationState().getFromClauseAccess()
 						.getTableGroup( fetchParent.getNavigablePath() );
@@ -175,9 +190,9 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		resolveSqlSelection(
 				navigablePath,
 				underlyingJdbcMapping,
@@ -189,10 +204,10 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept(
 				resolveSqlSelection( navigablePath, underlyingJdbcMapping, tableGroup, null, creationState.getSqlAstCreationState() ),
 				getJdbcMapping()
@@ -201,36 +216,37 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, underlyingJdbcMapping );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, underlyingJdbcMapping );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), this );
 		return getJdbcTypeCount();
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return value;
 	}
 

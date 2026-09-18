@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -75,7 +77,9 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
  */
 public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		implements EntityAssociationMapping, LazyTableGroup.ParentTableGroupUseChecker {
+	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
 	private ForeignKeyDescriptor foreignKey;
+	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
 	private ValuedModelPart fkTargetModelPart;
 
 	public ManyToManyCollectionPart(
@@ -102,6 +106,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		return Cardinality.MANY_TO_MANY;
 	}
 
+	@Nonnull
 	@Override
 	public ModelPart getInclusionCheckPart() {
 		return getForeignKeyDescriptor().getKeyPart();
@@ -113,8 +118,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		return getForeignKeyDescriptor().getAssociationKey();
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType targetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType targetType) {
 		// Prefer resolving the key part of the foreign key rather than the target part if possible
 		// to allow deferring the initialization of the target table group, omitting it if possible.
 		// This is not possible for one-to-many associations because we need to create the target table group eagerly,
@@ -131,6 +137,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		}
 	}
 
+	@Nonnull
 	@Override
 	public Set<String> getTargetKeyPropertyNames() {
 		return targetKeyPropertyNames;
@@ -138,32 +145,34 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer, @Nullable SharedSessionContractImplementor session) {
 		return fkTargetModelPart.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		return foreignKey.getKeyPart().getSelectable( columnIndex );
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return fkTargetModelPart.getContainingTableExpression();
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		foreignKey.getKeyPart().forEachSelectable( offset, consumer );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void forEachInsertable(SelectableConsumer consumer) {
+	public void forEachInsertable(@Nonnull SelectableConsumer consumer) {
 		forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
 					if ( foreignKey.getKeyPart().getSelectable( selectionIndex ).isInsertable() ) {
@@ -174,7 +183,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 	}
 
 	@Override
-	public void forEachUpdatable(SelectableConsumer consumer) {
+	public void forEachUpdatable(@Nonnull SelectableConsumer consumer) {
 		forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
 					if ( foreignKey.getKeyPart().getSelectable( selectionIndex ).isUpdateable() ) {
@@ -186,12 +195,12 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Override
 	public <X, Y> int decompose(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return foreignKey.getKeyPart().decompose(
 				foreignKey.getAssociationKeyFromSide( domainValue, foreignKey.getTargetSide(), session ),
 				offset,
@@ -207,11 +216,13 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Association / TableGroupJoinProducer
 
+	@Nonnull
 	@Override
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
 		return foreignKey;
 	}
 
+	@Nonnull
 	@Override
 	public ForeignKeyDescriptor.Nature getSideNature() {
 		return ForeignKeyDescriptor.Nature.KEY;
@@ -237,6 +248,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public ModelPart getKeyTargetMatchPart() {
 		return fkTargetModelPart instanceof ToOneAttributeMapping
@@ -734,6 +746,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		);
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(final int index) {
 		return getEntityMappingType().getJdbcMapping( index );

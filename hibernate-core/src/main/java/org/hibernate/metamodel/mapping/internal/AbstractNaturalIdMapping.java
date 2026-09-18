@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -32,6 +36,7 @@ public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 		return declaringType;
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return role;
@@ -42,11 +47,13 @@ public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 		return mutable;
 	}
 
+	@Nullable
 	@Override
 	public NaturalIdDataAccess getCacheAccess() {
 		return cachesAccess;
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return declaringType;

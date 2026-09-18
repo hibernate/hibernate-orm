@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -41,6 +43,7 @@ public class CollectionPartPath extends AbstractDomainPath {
 		return navigablePath;
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributePath getLhs() {
 		return lhs;
@@ -51,6 +54,7 @@ public class CollectionPartPath extends AbstractDomainPath {
 		return referencedPart;
 	}
 
+	@Nonnull
 	@Override
 	public SequencePart resolvePathPart(
 			String name,
@@ -59,6 +63,9 @@ public class CollectionPartPath extends AbstractDomainPath {
 			TranslationContext translationContext) {
 		if ( referencedPart instanceof ModelPartContainer modelPartContainer ) {
 			final ModelPart subPart = modelPartContainer.findSubPart( name, null );
+			if ( subPart == null ) {
+				throw new PathResolutionException( name );
+			}
 			return new DomainPathContinuation( navigablePath.append( name ), this, subPart );
 		}
 		else {

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.sql.results.graph.Fetchable;
 
 /**
@@ -15,10 +17,12 @@ public interface Association extends Fetchable {
 	/**
 	 * The descriptor, allowing access to column(s), etc
 	 */
+	@Nonnull
 	ForeignKeyDescriptor getForeignKeyDescriptor();
 
 	/**
 	 * Indicates which "side" of the foreign-key this association describes
 	 */
+	@Nonnull
 	ForeignKeyDescriptor.Nature getSideNature();
 }

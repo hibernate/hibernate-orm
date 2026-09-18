@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -63,7 +65,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 	private final String containingTableExpression;
 
-	private final PropertyAccess parentInjectionAttributePropertyAccess;
+	@Nullable private final PropertyAccess parentInjectionAttributePropertyAccess;
 	private final String sqlAliasStem;
 
 	public EmbeddedCollectionPart(
@@ -85,17 +87,19 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		this.sqlAliasStem = sqlAliasStem;
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getCollectionAttribute() {
 		return collectionDescriptor.getAttributeMapping();
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		// Make sure the pre-created table group for the part is registered under its navigable path
 		resolveTableGroup( navigablePath, creationState );
 		return new EmbeddableResultImpl<>(
@@ -106,26 +110,31 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		);
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return nature;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
 		return embeddableMappingType;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return getEmbeddableTypeDescriptor();
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return containingTableExpression;
 	}
 
+	@Nullable
 	@Override
 	public PropertyAccess getParentInjectionAttributePropertyAccess() {
 		return parentInjectionAttributePropertyAccess;
@@ -187,12 +196,13 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		);
 	}
 
+	@Nonnull
 	@Override
 	public SqlTuple toSqlExpression(
-			TableGroup tableGroup,
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
+			@Nonnull TableGroup tableGroup,
+			@Nonnull Clause clause,
+			@Nonnull SqmToSqlAstConverter walker,
+			@Nonnull SqlAstCreationState sqlAstCreationState) {
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final List<Expression> expressions = new ArrayList<>();
 		getEmbeddableTypeDescriptor().forEachSelectable(
@@ -259,43 +269,47 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		return sqlAliasStem;
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		return getEmbeddableTypeDescriptor().findSubPart( name, treatTargetType );
 	}
 
 	@Override
-	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
 		getEmbeddableTypeDescriptor().visitSubParts( consumer, treatTargetType );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		embeddableMappingType.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		embeddableMappingType.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();

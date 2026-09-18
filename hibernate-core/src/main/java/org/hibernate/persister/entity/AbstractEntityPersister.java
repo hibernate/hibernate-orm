@@ -817,6 +817,7 @@ public abstract class AbstractEntityPersister
 		stateManagement = statementManagerConverter.apply( persistentClass.getRootClass().getStateManagement() );
 	}
 
+	@Nonnull
 	@Override
 	public EntityCallbacks<Object> getEntityCallbacks() {
 		return jpaCallbacks;
@@ -1374,6 +1375,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	@Nonnull
 	@Override
 	public String getSqlAliasStem() {
 		return sqlAliasStem;
@@ -1384,17 +1386,19 @@ public abstract class AbstractEntityPersister
 		return contains( getSubclassTableNames(), tableExpression );
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return getEntityName();
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var entityResult = new EntityResultImpl<T>(
 				navigablePath,
 				this,
@@ -1407,9 +1411,9 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		identifierMapping.applySqlSelections(
 				navigablePath.append( identifierMapping.getPartName() ),
 				tableGroup,
@@ -1419,10 +1423,10 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		identifierMapping.applySqlSelections(
 				navigablePath.append( identifierMapping.getPartName() ),
 				tableGroup,
@@ -1431,15 +1435,17 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	@Nullable
 	@Override
 	public NaturalIdMapping getNaturalIdMapping() {
 		return naturalIdMapping;
 	}
 
+	@Nonnull
 	@Override
 	public TableReference createPrimaryTableReference(
-			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState) {
+			@Nonnull SqlAliasBase sqlAliasBase,
+			@Nonnull SqlAstCreationState creationState) {
 		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
 		final boolean useAuxiliaryTable =
 				auxiliaryMapping != null
@@ -1457,12 +1463,13 @@ public abstract class AbstractEntityPersister
 		return tableReference;
 	}
 
+	@Nullable
 	@Override
 	public TableReferenceJoin createTableReferenceJoin(
-			String joinTableExpression,
-			SqlAliasBase sqlAliasBase,
-			TableReference lhs,
-			SqlAstCreationState creationState) {
+			@Nonnull String joinTableExpression,
+			@Nonnull SqlAliasBase sqlAliasBase,
+			@Nonnull TableReference lhs,
+			@Nonnull SqlAstCreationState creationState) {
 		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
 			if ( getSubclassTableName( i ).equals( joinTableExpression ) ) {
 				return generateTableReferenceJoin(
@@ -1922,6 +1929,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
@@ -2362,6 +2370,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return getIdentifierMapping().getJdbcMapping( index );
@@ -2686,11 +2695,12 @@ public abstract class AbstractEntityPersister
 				);
 	}
 
+	@Nullable
 	@Override
 	public Object loadByUniqueKey(
-			String propertyName,
-			Object uniqueKey,
-			SharedSessionContractImplementor session) throws HibernateException {
+			@Nonnull String propertyName,
+			@Nonnull Object uniqueKey,
+			@Nonnull SharedSessionContractImplementor session) throws HibernateException {
 		return loadByUniqueKey( propertyName, uniqueKey, null, session );
 	}
 
@@ -3000,7 +3010,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void forEachTableDetails(Consumer<TableDetails> consumer) {
+	public void forEachTableDetails(@Nonnull Consumer<TableDetails> consumer) {
 		CollectionHelper.forEach( getTableMappings(), consumer );
 	}
 
@@ -3108,14 +3118,15 @@ public abstract class AbstractEntityPersister
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			Supplier<Consumer<Predicate>> additionalPredicateCollector,
-			SqlAstCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable Supplier<Consumer<Predicate>> additionalPredicateCollector,
+			@Nullable SqlAstCreationState creationState) {
 		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
 
 		final var sqlAliasBase = SqlAliasBase.from(
@@ -3227,10 +3238,10 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void applyDiscriminator(
-			Consumer<Predicate> predicateConsumer,
-			String alias,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
+			@Nullable Consumer<Predicate> predicateConsumer,
+			@Nullable String alias,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAstCreationState creationState) {
 		if ( needsDiscriminator() ) {
 			assert !creationState.supportsEntityNameUsage() : "Entity name usage should have been used instead";
 			final var subMappingTypes = getSubMappingTypes();
@@ -3412,12 +3423,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void applyFilterRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		if ( filterHelper != null ) {
 			filterHelper.applyEnabledFilters(
 					predicateConsumer,
@@ -3434,12 +3445,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void applyBaseRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup, boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup, boolean useQualifier,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState) {
+			@Nullable Set<String> treatAsDeclarations,
+			@Nullable SqlAstCreationState creationState) {
 		applyFilterRestrictions(
 				predicateConsumer,
 				tableGroup,
@@ -3458,10 +3469,10 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void applyWhereRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		if ( sqlWhereStringTemplate != null ) {
 			final String alias = getAliasInWhere( tableGroup, useQualifier );
 			final String fragment = replace( sqlWhereStringTemplate, Template.TEMPLATE, alias );
@@ -4405,14 +4416,14 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
+	public boolean isAffectedByEntityGraph(@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		final var graph = loadQueryInfluencers.getEffectiveEntityGraph().getGraph();
 		return graph != null
 			&& graph.appliesTo( getFactory().getJpaMetamodel().entity( getEntityName() ) );
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers loadQueryInfluencers) {
+	public boolean isAffectedByEnabledFetchProfiles(@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		if ( affectingFetchProfileNames != null && loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 			for ( String profileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
 				if ( affectingFetchProfileNames.contains( profileName ) ) {
@@ -4425,7 +4436,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(
-			LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
 			boolean onlyApplyForLoadByKeyFilters) {
 		return loadQueryInfluencers.hasEnabledFilters()
 			&& isAffectedByEnabledFilters( new HashSet<>(), loadQueryInfluencers, onlyApplyForLoadByKeyFilters );
@@ -4433,8 +4444,8 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(
-			Set<ManagedMappingType> visitedTypes,
-			LoadQueryInfluencers influencers,
+			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		assert influencers.hasEnabledFilters();
 		if ( !visitedTypes.add( this ) ) {
@@ -4617,6 +4628,7 @@ public abstract class AbstractEntityPersister
 
 
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Nonnull
 	@Override
 	public final String getEntityName() {
 		return getName();
@@ -4778,6 +4790,7 @@ public abstract class AbstractEntityPersister
 		return getRootName();
 	}
 
+	@Nullable
 	@Override
 	public String getMappedSuperclass() {
 		return getSuperclass();
@@ -4788,8 +4801,9 @@ public abstract class AbstractEntityPersister
 		return concreteProxy;
 	}
 
+	@Nonnull
 	@Override
-	public EntityPersister resolveConcreteProxyTypeForId(Object id, SharedSessionContractImplementor session) {
+	public EntityPersister resolveConcreteProxyTypeForId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		if ( !concreteProxy ) {
 			return this;
 		}
@@ -4829,6 +4843,7 @@ public abstract class AbstractEntityPersister
 		return isSelectBeforeUpdate();
 	}
 
+	@Nonnull
 	public final OptimisticLockStyle optimisticLockStyle() {
 		return getOptimisticLockStyle();
 	}
@@ -5051,7 +5066,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+	public Object getIdentifier(Object entity, @Nullable MergeContext mergeContext) {
 		return identifierMapping.getIdentifier( entity, mergeContext );
 	}
 
@@ -5277,6 +5292,7 @@ public abstract class AbstractEntityPersister
 	}
 
 
+	@Nonnull
 	@Override
 	public NaturalIdLoader<?> getNaturalIdLoader() {
 		verifyHasNaturalId();
@@ -5286,6 +5302,7 @@ public abstract class AbstractEntityPersister
 		return naturalIdLoader;
 	}
 
+	@Nonnull
 	@Override
 	public MultiNaturalIdLoader<?> getMultiNaturalIdLoader() {
 		verifyHasNaturalId();
@@ -5304,6 +5321,7 @@ public abstract class AbstractEntityPersister
 		throw new AssertionFailure( "Table " + tableName + " not found" );
 	}
 
+	@Nonnull
 	@Override
 	public EntityRepresentationStrategy getRepresentationStrategy() {
 		return representationStrategy;
@@ -5418,12 +5436,12 @@ public abstract class AbstractEntityPersister
 	// org.hibernate.metamodel.mapping.EntityMappingType
 
 	@Override
-	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action) {
 		this.attributeMappings.forEach( action );
 	}
 
 	@Override
-	public void forEachAttributeMapping(IndexedConsumer<? super AttributeMapping> consumer) {
+	public void forEachAttributeMapping(@Nonnull IndexedConsumer<? super AttributeMapping> consumer) {
 		attributeMappings.indexedForEach( consumer );
 	}
 
@@ -5762,11 +5780,13 @@ public abstract class AbstractEntityPersister
 				.createInsertStrategy( entityMappingDescriptor, creationProcess.getCreationContext() );
 	}
 
+	@Nullable
 	@Override
 	public SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
 		return sqmMultiTableMutationStrategy;
 	}
 
+	@Nullable
 	@Override
 	public SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
 		return sqmMultiTableInsertStrategy;
@@ -5904,6 +5924,7 @@ public abstract class AbstractEntityPersister
 		return attributeMappings.size();
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMapping getAttributeMapping(int position) {
 		return attributeMappings.get( position );
@@ -5919,28 +5940,31 @@ public abstract class AbstractEntityPersister
 		return declaredAttributeMappings.size();
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMappingsMap getDeclaredAttributeMappings() {
 		return declaredAttributeMappings;
 	}
 
 	@Override
-	public void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void visitDeclaredAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
 		declaredAttributeMappings.forEachValue( action );
 	}
 
+	@Nullable
 	@Override
 	public EntityPersister getSuperMappingType() {
 		return superMappingType;
 	}
 
+	@Nonnull
 	@Override
 	public Collection<EntityMappingType> getSubMappingTypes() {
 		return subclassMappingTypes == null ? emptyList() : subclassMappingTypes.values();
 	}
 
 	@Override
-	public boolean isTypeOrSuperType(EntityMappingType targetType) {
+	public boolean isTypeOrSuperType(@Nullable EntityMappingType targetType) {
 		if ( targetType == null ) {
 			// todo (6.0) : need to think through what this ought to indicate (if we allow it at all)
 			//		- see `org.hibernate.metamodel.mapping.internal.AbstractManagedMappingType#isTypeOrSuperType`
@@ -6411,26 +6435,31 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return javaType;
 	}
 
+	@Nonnull
 	@Override
 	public EntityPersister getEntityPersister() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public EntityIdentifierMapping getIdentifierMapping() {
 		return identifierMapping;
 	}
 
+	@Nullable
 	@Override
 	public EntityVersionMapping getVersionMapping() {
 		return versionMapping;
 	}
 
+	@Nullable
 	@Override
 	public TenantIdMapping getTenantIdMapping() {
 		return tenantIdMapping;
@@ -6441,39 +6470,46 @@ public abstract class AbstractEntityPersister
 		return tenantIdLoader;
 	}
 
+	@Nullable
 	@Override
 	public EntityRowIdMapping getRowIdMapping() {
 		return rowIdMapping;
 	}
 
+	@Nullable
 	@Override
 	public EntityDiscriminatorMapping getDiscriminatorMapping() {
 		return discriminatorMapping;
 	}
 
+	@Nullable
 	@Override
 	public SoftDeleteMapping getSoftDeleteMapping() {
 		return auxiliaryMapping instanceof SoftDeleteMapping softDeleteMapping
 				? softDeleteMapping : null;
 	}
 
+	@Nullable
 	@Override
 	public TemporalMapping getTemporalMapping() {
 		return auxiliaryMapping instanceof TemporalMapping temporalMapping
 				? temporalMapping : null;
 	}
 
+	@Nullable
 	@Override
 	public AuditMapping getAuditMapping() {
 		return auxiliaryMapping instanceof AuditMapping auditMapping
 				? auditMapping : null;
 	}
 
+	@Nullable
 	@Override
 	public AuxiliaryMapping getAuxiliaryMapping() {
 		return auxiliaryMapping;
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMappingsList getAttributeMappings() {
 		if ( attributeMappings == null ) {
@@ -6504,13 +6540,15 @@ public abstract class AbstractEntityPersister
 		// subclasses?  it depends on the usage
 	}
 
+	@Nullable
 	@Override
-	public AttributeMapping findDeclaredAttributeMapping(String name) {
+	public AttributeMapping findDeclaredAttributeMapping(@Nonnull String name) {
 		return declaredAttributeMappings.get( name );
 	}
 
+	@Nullable
 	@Override
-	public AttributeMapping findAttributeMapping(String name) {
+	public AttributeMapping findAttributeMapping(@Nonnull String name) {
 		final var declaredAttribute = declaredAttributeMappings.get( name );
 		if ( declaredAttribute != null ) {
 			return declaredAttribute;
@@ -6523,8 +6561,9 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 
 		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
 			return discriminatorMapping;
@@ -6625,8 +6664,9 @@ public abstract class AbstractEntityPersister
 		return attribute;
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubTypesSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubTypesSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		final var declaredAttribute = declaredAttributeMappings.get( name );
 		return declaredAttribute != null
 				? declaredAttribute
@@ -6652,8 +6692,8 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void visitSubParts(
-			Consumer<ModelPart> consumer,
-			EntityMappingType treatTargetType) {
+			@Nonnull Consumer<ModelPart> consumer,
+			@Nullable EntityMappingType treatTargetType) {
 		consumer.accept( identifierMapping );
 		declaredAttributeMappings.forEachValue( consumer );
 	}
@@ -6683,6 +6723,7 @@ public abstract class AbstractEntityPersister
 		throw new IndexOutOfBoundsException( position );
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMapping getFetchable(int position) {
 		return getStaticFetchableList().get( position );
@@ -6730,19 +6771,19 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void visitAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
 		attributeMappings.forEach( action );
 	}
 
 	@Override
-	public void visitSuperTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void visitSuperTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
 		if ( superMappingType != null ) {
 			superMappingType.visitSuperTypeAttributeMappings( action );
 		}
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer selectableConsumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer selectableConsumer) {
 		int span = 0;
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			span += attributeMappings.get( i )
@@ -6752,7 +6793,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void visitSubTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
 		forEachAttributeMapping( action );
 		if ( subclassMappingTypes != null ) {
 			for ( var subType : subclassMappingTypes.values() ) {
@@ -6770,12 +6811,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		return getIdentifierMapping().forEachJdbcType( offset, action );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
 		}
@@ -6788,24 +6830,24 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return getIdentifierMapping()
 				.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> consumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> consumer,
+			@Nullable SharedSessionContractImplementor session) {
 		final var identifierMapping = getIdentifierMapping();
 		final Object identifier = value == null ? null
 				: identifierMapping.disassemble( identifierMapping.getIdentifier( value ), session );

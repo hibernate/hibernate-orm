@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -20,8 +22,10 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.util.Collections.singletonList;
 import static org.hibernate.internal.util.QuotingHelper.unquoteIdentifier;
+
 
 /**
  * @author Steve Ebersole
@@ -159,7 +163,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 				true
 		);
 
-		return (OrderingExpression) pathConsumer.getConsumedPart();
+		return (OrderingExpression) castNonNull( pathConsumer.getConsumedPart() );
 	}
 
 	@Override
@@ -174,7 +178,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 		final String identifier = ctx.getChild( 0 ).getText();
 		if ( descriptor == null || descriptor.alwaysIncludesParentheses() || !unquotedIdentifier.equals( identifier ) ) {
 			pathConsumer.consumeIdentifier( unquotedIdentifier, identifier, true, true );
-			return (OrderingExpression) pathConsumer.getConsumedPart();
+			return (OrderingExpression) castNonNull( pathConsumer.getConsumedPart() );
 		}
 		return new SelfRenderingOrderingExpression( unquotedIdentifier );
 	}
@@ -213,6 +217,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 		throw new IllegalStateException( "Unexpected call to #visitCollationSpecification" );
 	}
 
+	@Nullable
 	@Override
 	public Object visitTerminal(TerminalNode node) {
 		return switch ( node.getSymbol().getType() ) {

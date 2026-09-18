@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -760,6 +762,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return hasImmutableNaturalId;
 	}
 
+	@Nonnull
 	public Set<String> getSubclassEntityNames() {
 		return subclassEntityNames;
 	}

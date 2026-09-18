@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -33,6 +35,7 @@ public class PluralAttributePath extends AbstractDomainPath {
 		return navigablePath;
 	}
 
+	@Nullable
 	@Override
 	public DomainPath getLhs() {
 		return null;
@@ -43,6 +46,7 @@ public class PluralAttributePath extends AbstractDomainPath {
 		return pluralAttributeMapping;
 	}
 
+	@Nullable
 	@Override
 	public SequencePart resolvePathPart(
 			String name,

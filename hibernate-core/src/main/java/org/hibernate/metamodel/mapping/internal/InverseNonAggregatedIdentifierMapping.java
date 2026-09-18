@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -31,7 +33,9 @@ import org.hibernate.sql.results.graph.Fetchable;
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+
 
 /**
  * The inverse part of a "non-aggregated" composite identifier.
@@ -39,14 +43,14 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  * Exposes the virtual id embeddable as mapping type, which requires the attribute mapping to implement {@link NonAggregatedIdentifierMapping}.
  */
 public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapping implements NonAggregatedIdentifierMapping {
-	private final IdClassEmbeddable idClassEmbeddable;
+	@Nullable private final IdClassEmbeddable idClassEmbeddable;
 	private final EntityMappingType entityDescriptor;
 
 	private final NonAggregatedIdentifierMapping.IdentifierValueMapper identifierValueMapper;
 
 	// Constructor is only used for creating the inverse attribute mapping
 	InverseNonAggregatedIdentifierMapping(
-			ManagedMappingType keyDeclaringType,
+			@Nullable ManagedMappingType keyDeclaringType,
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			NonAggregatedIdentifierMapping inverseModelPart,
@@ -61,7 +65,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 				creationProcess
 		);
 
-		entityDescriptor = inverseModelPart.findContainingEntityMapping();
+		entityDescriptor = castNonNull( inverseModelPart.findContainingEntityMapping() );
 
 		if ( inverseModelPart.getIdClassEmbeddable() == null ) {
 			idClassEmbeddable = null;
@@ -82,37 +86,44 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		}
 	}
 
+	@Nullable
 	@Override
 	public Object instantiate() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
-		return super.getPartName();
+		return castNonNull( super.getPartName() );
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return Nature.VIRTUAL;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getPartMappingType() {
 		return (EmbeddableMappingType) super.getPartMappingType();
 	}
 // --------------
 
+	@Nullable
 	@Override
 	public IdClassEmbeddable getIdClassEmbeddable() {
 		return idClassEmbeddable;
 	}
 
+	@Nonnull
 	@Override
 	public VirtualIdEmbeddable getVirtualIdEmbeddable() {
 		return (VirtualIdEmbeddable) getMappedType();
 	}
 
+	@Nonnull
 	@Override
 	public NonAggregatedIdentifierMapping.IdentifierValueMapper getIdentifierValueMapper() {
 		return identifierValueMapper;
@@ -123,43 +134,46 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		return idClassEmbeddable != null;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
 		return identifierValueMapper;
 	}
 
 	@Override
-	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, @Nullable SharedSessionContractImplementor session) {
 		return identifierValueMapper.areEqual( one, other, session );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return identifierValueMapper.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		identifierValueMapper.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return identifierValueMapper.forEachJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
+	@Nonnull
 	@Override
 	public SqlTuple toSqlExpression(
-			TableGroup tableGroup,
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
+			@Nonnull TableGroup tableGroup,
+			@Nonnull Clause clause,
+			@Nonnull SqmToSqlAstConverter walker,
+			@Nonnull SqlAstCreationState sqlAstCreationState) {
 		if ( hasContainingClass() ) {
 			final var selectableMappings = getEmbeddableTypeDescriptor();
 			final List<ColumnReference> columnReferences = arrayList( selectableMappings.getJdbcTypeCount() );
@@ -186,13 +200,15 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		return super.toSqlExpression( tableGroup, clause, walker, sqlAstCreationState );
 	}
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity) {
+	public Object getIdentifier(@Nonnull Object entity) {
 		return getIdentifier( entity, null );
 	}
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+	public Object getIdentifier(@Nonnull Object entity, @Nullable MergeContext mergeContext) {
 		if ( hasContainingClass() ) {
 			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate( null );
 			final var embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
@@ -203,7 +219,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 				if ( object == null ) {
 					final var idClassAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 					propertyValues[i] =
-							idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive()
+							castNonNull( idClassAttributeMapping.getPropertyAccess() ).getGetter().getReturnTypeClass().isPrimitive()
 									? idClassAttributeMapping.getExpressibleJavaType().getDefaultValue()
 									: null;
 				}
@@ -235,7 +251,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		}
 	}
 
-	private static Object getIfMerged(Object o, MergeContext mergeContext) {
+	private static Object getIfMerged(Object o, @Nullable MergeContext mergeContext) {
 		if ( mergeContext != null ) {
 			final Object merged = mergeContext.get( o );
 			if ( merged != null ) {
@@ -246,14 +262,15 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+	public void setIdentifier(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		final var propertyValues = new Object[identifierValueMapper.getNumberOfAttributeMappings()];
 		final var embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 		for ( int position = 0; position < propertyValues.length; position++ ) {
 			final var attribute = embeddableTypeDescriptor.getAttributeMapping( position );
 			final var mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( position );
-			Object object = mappedIdAttributeMapping.getValue( id );
-			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping
+			Object object = id == null ? mappedIdAttributeMapping.getExpressibleJavaType().getDefaultValue()
+					: mappedIdAttributeMapping.getValue( id );
+			if ( object != null && attribute instanceof ToOneAttributeMapping toOneAttributeMapping
 					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
 				final var entityPersister =
 						toOneAttributeMapping.getEntityMappingType().getEntityPersister();
@@ -263,7 +280,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 				// use the managed object i.e. proxy or initialized entity
 				object = holder == null ? null : holder.getManagedObject();
 				if ( object == null ) {
-					object = entityDescriptor.findAttributeMapping( toOneAttributeMapping.getAttributeName() )
+					object = castNonNull( entityDescriptor.findAttributeMapping( toOneAttributeMapping.getAttributeName() ) )
 							.getValue( entity );
 				}
 			}
@@ -274,28 +291,28 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer, @Nullable SharedSessionContractImplementor session) {
 		return identifierValueMapper.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		identifierValueMapper.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		identifierValueMapper.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
@@ -307,6 +324,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		return "id";
 	}
 
+	@Nonnull
 	@Override
 	public String getFetchableName() {
 		return EntityIdentifierMapping.ID_ROLE_NAME;
@@ -317,6 +335,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		return getPartMappingType().getNumberOfFetchables();
 	}
 
+	@Nonnull
 	@Override
 	public Fetchable getFetchable(int position) {
 		return getPartMappingType().getFetchable( position );

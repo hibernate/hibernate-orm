@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -55,9 +57,11 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+
 
 /**
  * @author Steve Ebersole
@@ -68,12 +72,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	private final boolean refersToPrimaryKey;
 	private final boolean hasConstraint;
-	private AssociationKey associationKey;
+	@Nullable private AssociationKey associationKey;
 
 	public SimpleForeignKeyDescriptor(
-			ManagedMappingType keyDeclaringType,
+			@Nullable ManagedMappingType keyDeclaringType,
 			BasicValuedModelPart keyModelPart,
-			PropertyAccess keyPropertyAccess,
+			@Nullable PropertyAccess keyPropertyAccess,
 			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
 			boolean insertable,
@@ -118,7 +122,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	public SimpleForeignKeyDescriptor(
-			ManagedMappingType keyDeclaringType,
+			@Nullable ManagedMappingType keyDeclaringType,
 			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
 			boolean refersToPrimaryKey,
@@ -138,9 +142,9 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	 *
 	 */
 	public SimpleForeignKeyDescriptor(
-			ManagedMappingType keyDeclaringType,
+			@Nullable ManagedMappingType keyDeclaringType,
 			SelectableMapping keySelectableMapping,
-			PropertyAccess valueAccess,
+			@Nullable PropertyAccess valueAccess,
 			BasicValuedModelPart targetModelPart,
 			boolean refersToPrimaryKey,
 			boolean hasConstraint,
@@ -173,53 +177,60 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		associationKey = original.associationKey;
 	}
 
+	@Nonnull
 	@Override
 	public String getKeyTable() {
 		return keySide.getModelPart().getContainingTableExpression();
 	}
 
+	@Nonnull
 	@Override
 	public String getTargetTable() {
 		return targetSide.getModelPart().getContainingTableExpression();
 	}
 
+	@Nonnull
 	@Override
 	public BasicValuedModelPart getKeyPart() {
 		return keySide.getModelPart();
 	}
 
+	@Nonnull
 	@Override
 	public BasicValuedModelPart getTargetPart() {
 		return targetSide.getModelPart();
 	}
 
 	@Override
-	public boolean isKeyPart(ValuedModelPart modelPart) {
+	public boolean isKeyPart(@Nonnull ValuedModelPart modelPart) {
 		return this == modelPart || keySide.getModelPart() == modelPart;
 	}
 
+	@Nonnull
 	@Override
 	public Side getKeySide() {
 		return keySide;
 	}
 
+	@Nonnull
 	@Override
 	public Side getTargetSide() {
 		return targetSide;
 	}
 
 	@Override
-	public int compare(Object key1, Object key2) {
+	public int compare(@Nullable Object key1, @Nullable Object key2) {
 		//noinspection unchecked,rawtypes
 		return ( (JavaType) keySide.getModelPart().getJavaType() ).getComparator().compare( key1, key2 );
 	}
 
+	@Nonnull
 	@Override
 	public ForeignKeyDescriptor withKeySelectionMapping(
-			ManagedMappingType declaringType,
-			TableGroupProducer declaringTableGroupProducer,
-			IntFunction<SelectableMapping> selectableMappingAccess,
-			MappingModelCreationProcess creationProcess) {
+			@Nullable ManagedMappingType declaringType,
+			@Nonnull TableGroupProducer declaringTableGroupProducer,
+			@Nonnull IntFunction<SelectableMapping> selectableMappingAccess,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var selectableMapping = selectableMappingAccess.apply( 0 );
 		return new SimpleForeignKeyDescriptor(
 				declaringType,
@@ -234,23 +245,25 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		);
 	}
 
+	@Nonnull
 	@Override
-	public ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart) {
+	public ForeignKeyDescriptor withTargetPart(@Nonnull ValuedModelPart targetPart) {
 		return new SimpleForeignKeyDescriptor(
 				keySide.getModelPart(),
-				targetPart.asBasicValuedModelPart(),
+				castNonNull( targetPart.asBasicValuedModelPart() ),
 				refersToPrimaryKey,
 				hasConstraint,
 				false
 		);
 	}
 
+	@Nonnull
 	@Override
 	public DomainResult<?> createKeyDomainResult(
-			NavigablePath navigablePath,
-			TableGroup targetTableGroup,
-			FetchParent fetchParent,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup targetTableGroup,
+			@Nullable FetchParent fetchParent,
+			@Nonnull DomainResultCreationState creationState) {
 		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
@@ -261,13 +274,14 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		);
 	}
 
+	@Nonnull
 	@Override
 	public DomainResult<?> createKeyDomainResult(
-			NavigablePath navigablePath,
-			TableGroup targetTableGroup,
-			Nature fromSide,
-			FetchParent fetchParent,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup targetTableGroup,
+			@Nonnull Nature fromSide,
+			@Nullable FetchParent fetchParent,
+			@Nonnull DomainResultCreationState creationState) {
 		assert fromSide == Nature.TARGET
 				? targetTableGroup.getTableReference( navigablePath, associationKey.table(), false ) != null
 				: isTargetTableGroup( targetTableGroup );
@@ -280,12 +294,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		);
 	}
 
+	@Nonnull
 	@Override
 	public DomainResult<?> createTargetDomainResult(
-			NavigablePath navigablePath,
-			TableGroup targetTableGroup,
-			FetchParent fetchParent,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup targetTableGroup,
+			@Nullable FetchParent fetchParent,
+			@Nonnull DomainResultCreationState creationState) {
 		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME ),
@@ -296,12 +311,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		);
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup targetTableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup targetTableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
@@ -330,18 +346,18 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -349,7 +365,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			BasicValuedModelPart selectableMapping,
-			FetchParent fetchParent,
+			@Nullable FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
@@ -368,7 +384,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 							Locale.ROOT,
 							"Unable to determine TableReference (`%s`) for `%s`",
 							selectableMapping.getContainingTableExpression(),
-							getNavigableRole().getFullPath()
+							castNonNull( getNavigableRole() ).getFullPath()
 					)
 			);
 		}
@@ -394,11 +410,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		);
 	}
 
+	@Nonnull
 	@Override
 	public Predicate generateJoinPredicate(
-			TableReference targetSideReference,
-			TableReference keySideReference,
-			SqlAstCreationState creationState) {
+			@Nonnull TableReference targetSideReference,
+			@Nonnull TableReference keySideReference,
+			@Nonnull SqlAstCreationState creationState) {
 		return new ComparisonPredicate(
 				new ColumnReference( targetSideReference, targetSide.getModelPart() ),
 				ComparisonOperator.EQUAL,
@@ -406,11 +423,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		);
 	}
 
+	@Nonnull
 	@Override
 	public Predicate generateJoinPredicate(
-			TableGroup targetSideTableGroup,
-			TableGroup keySideTableGroup,
-			SqlAstCreationState creationState) {
+			@Nonnull TableGroup targetSideTableGroup,
+			@Nonnull TableGroup keySideTableGroup,
+			@Nonnull SqlAstCreationState creationState) {
 		final var lhsTableReference =
 				targetSideTableGroup.resolveTableReference( targetSideTableGroup.getNavigablePath(),
 						targetSide.getModelPart().getContainingTableExpression() );
@@ -421,7 +439,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public boolean isSimpleJoinPredicate(Predicate predicate) {
+	public boolean isSimpleJoinPredicate(@Nullable Predicate predicate) {
 		if ( predicate instanceof ComparisonPredicate comparisonPredicate
 				&& comparisonPredicate.getOperator() == ComparisonOperator.EQUAL
 				&& comparisonPredicate.getLeftHandExpression() instanceof ColumnReference lhsColumnRef
@@ -436,47 +454,53 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return targetSide.getModelPart().getMappedType();
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		consumer.accept( offset, this );
 		return 1;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return targetSide.getModelPart().getJdbcMapping().getJavaTypeDescriptor();
 	}
 
+	@Nullable
 	@Override
 	public NavigableRole getNavigableRole() {
 		return targetSide.getModelPart().getNavigableRole();
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return targetSide.getModelPart().findContainingEntityMapping();
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return getJdbcMapping().convertToRelationalValue( value );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		CacheHelper.addBasicValueToCacheKey( cacheKey, value, getJdbcMapping(), session );
 	}
 
+	@Nullable
 	@Override
 	public Object getAssociationKeyFromSide(
-			Object targetObject,
-			ForeignKeyDescriptor.Side side,
-			SharedSessionContractImplementor session) {
+			@Nullable Object targetObject,
+			@Nonnull ForeignKeyDescriptor.Side side,
+			@Nullable SharedSessionContractImplementor session) {
 		if ( targetObject == null ) {
 			return null;
 		}
@@ -503,42 +527,42 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			}
 		}
 
-		return ( (PropertyBasedMapping) modelPart )
-				.getPropertyAccess().getPropertyValueAccessor().get( targetObject );
+		return castNonNull( ( (PropertyBasedMapping) modelPart )
+				.getPropertyAccess() ).getPropertyValueAccessor().get( targetObject );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), keySide.getModelPart() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int visitKeySelectables(int offset, SelectableConsumer consumer) {
+	public int visitKeySelectables(int offset, @Nonnull SelectableConsumer consumer) {
 		consumer.accept( offset, keySide.getModelPart() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int visitTargetSelectables(int offset, SelectableConsumer consumer) {
+	public int visitTargetSelectables(int offset, @Nonnull SelectableConsumer consumer) {
 		consumer.accept( offset, targetSide.getModelPart() );
 		return getJdbcTypeCount();
 	}
@@ -548,6 +572,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return hasConstraint;
 	}
 
+	@Nonnull
 	@Override
 	public AssociationKey getAssociationKey() {
 		if ( associationKey == null ) {
@@ -557,6 +582,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return associationKey;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
@@ -564,50 +590,56 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		}
 		return targetSide.getModelPart().getJdbcMapping();
 	}
+	@Nonnull
 	@Override
 	public JdbcMapping getSingleJdbcMapping() {
 		return targetSide.getModelPart().getJdbcMapping();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, targetSide.getModelPart().getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, disassemble( value, session ), targetSide.getModelPart().getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return keySide.getModelPart().getContainingTableExpression();
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return keySide.getModelPart().getSelectionExpression();
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectableName() {
 		return keySide.getModelPart().getSelectableName();
 	}
 
+	@Nonnull
 	@Override
 	public SelectablePath getSelectablePath() {
 		return keySide.getModelPart().getSelectablePath();
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		return keySide.getModelPart();
@@ -697,6 +729,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return FetchTiming.IMMEDIATE;
 	}
 
+	@Nullable
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
@@ -708,11 +741,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
-		return null;
+		return getPartMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return keySide.getModelPart().getJdbcMapping();

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -123,28 +125,33 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		return "EntityIdentifierMapping(" + idRole.getFullPath() + ")";
 	}
 
+	@Nonnull
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return propertyAccess;
 	}
 
+	@Nonnull
 	@Override
 	public String getAttributeName() {
 		return attributeName;
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return Nature.SIMPLE;
 	}
 
+	@Nonnull
 	@Override
 	public IdentifierValue getUnsavedStrategy() {
 		return unsavedStrategy;
 	}
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity) {
+	public Object getIdentifier(@Nonnull Object entity) {
 		final var lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
@@ -153,20 +160,23 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+	public void setIdentifier(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		propertyAccess.getPropertyValueAccessor().set( entity, id );
 	}
 
+	@Nullable
 	@Override
 	public Object instantiate() {
 		return entityPersister.getRepresentationStrategy().getInstantiator().instantiate();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return getJdbcMapping()::getJavaTypeDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return getJdbcMapping()::getJavaTypeDescriptor;
@@ -174,43 +184,47 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, domainValue, this );
 		return getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return entityPersister;
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, idType );
 		return getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return getMappedType().getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return idRole;
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection =
 				resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 		return new BasicResult<>(
@@ -225,18 +239,18 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept(
 				resolveSqlSelection( navigablePath, tableGroup, null, creationState ),
 				getJdbcMapping()
@@ -246,7 +260,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			FetchParent fetchParent,
+			@Nullable FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final var expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final var rootTableReference = rootTableReference( navigablePath, tableGroup );
@@ -276,11 +290,13 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		}
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return rootTable;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return pkColumnName;
@@ -351,6 +367,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		return scale;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return idType;
@@ -366,24 +383,25 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return idType.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		idType.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return idType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 

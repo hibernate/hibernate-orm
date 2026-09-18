@@ -9,11 +9,13 @@ import java.time.Instant;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -68,6 +70,10 @@ public class MappingModelAccessTests {
 		assertThat( productVersionMapping.getVersionAttribute().getAttributeName() ).isEqualTo( "version" );
 		assertThat( productVersionMapping.getVersionAttribute().getJavaType().getJavaTypeClass() ).isEqualTo( Instant.class );
 		assertThat( productVersionMapping.asAttributeMapping() ).isSameAs( productVersionMapping.getVersionAttribute() );
+
+		final var vendor = (ToOneAttributeMapping) productMapping.findAttributeMapping( "vendor" );
+		final var foreignKey = (BasicValuedModelPart) vendor.getForeignKeyDescriptor();
+		assertThat( foreignKey.getMappedType().getMappedJavaType().getJavaTypeClass() ).isEqualTo( Integer.class );
 	}
 
 	@Test

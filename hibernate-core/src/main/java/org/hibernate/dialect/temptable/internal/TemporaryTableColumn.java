@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.temptable.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.dialect.temptable.spi.TemporaryTableColumnDescriptor;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -62,6 +64,7 @@ public class TemporaryTableColumn implements TemporaryTableColumnDescriptor, Sql
 		return columnName;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;

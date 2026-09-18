@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
@@ -31,7 +33,7 @@ public class SelfRenderingOrderingExpression extends SelfRenderingSqlFragmentExp
 	public Expression resolve(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String modelPartName,
+			@Nullable String modelPartName,
 			SqlAstCreationState creationState) {
 		return this;
 	}
@@ -40,7 +42,7 @@ public class SelfRenderingOrderingExpression extends SelfRenderingSqlFragmentExp
 	public void apply(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String collation,
+			@Nullable String collation,
 			String modelPartName,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,

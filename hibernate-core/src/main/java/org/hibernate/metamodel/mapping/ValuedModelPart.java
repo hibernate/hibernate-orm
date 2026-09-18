@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * Describes a ModelPart that is also a ValueMapping (and therefore also a SelectableMappings).
  * <p>
@@ -16,6 +18,7 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	/**
 	 * The table which contains the columns mapped by this value
 	 */
+	@Nonnull
 	String getContainingTableExpression();
 
 	@Override
@@ -23,26 +26,27 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 		return ModelPart.super.getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	default JdbcMapping getSingleJdbcMapping() {
 		return ModelPart.super.getSingleJdbcMapping();
 	}
 
 	@Override
-	default int forEachSelectable(int offset, SelectableConsumer consumer) {
+	default int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		return ModelPart.super.forEachSelectable( offset, consumer );
 	}
 
 	@Override
-	default int forEachSelectable(SelectableConsumer consumer) {
+	default int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 		return ModelPart.super.forEachSelectable( consumer );
 	}
 
-	default int forEachColumn(SelectableConsumer consumer) {
+	default int forEachColumn(@Nonnull SelectableConsumer consumer) {
 		return ModelPart.super.forEachColumn( consumer );
 	}
 
-	default void forEachInsertable(SelectableConsumer consumer) {
+	default void forEachInsertable(@Nonnull SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
 					if ( selectableMapping.isInsertable() && !selectableMapping.isFormula() ) {
@@ -52,7 +56,7 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 		);
 	}
 
-	default void forEachNonFormula(SelectableConsumer consumer) {
+	default void forEachNonFormula(@Nonnull SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
 					if ( !selectableMapping.isFormula() ) {
@@ -62,7 +66,7 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 		);
 	}
 
-	default void forEachUpdatable(SelectableConsumer consumer) {
+	default void forEachUpdatable(@Nonnull SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
 					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {

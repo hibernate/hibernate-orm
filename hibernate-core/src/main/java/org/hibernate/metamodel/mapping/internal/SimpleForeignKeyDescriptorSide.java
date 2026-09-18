@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 
@@ -22,11 +24,13 @@ public class SimpleForeignKeyDescriptorSide implements ForeignKeyDescriptor.Side
 		this.modelPart = modelPart;
 	}
 
+	@Nonnull
 	@Override
 	public ForeignKeyDescriptor.Nature getNature() {
 		return nature;
 	}
 
+	@Nonnull
 	@Override
 	public BasicValuedModelPart getModelPart() {
 		return modelPart;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
@@ -19,11 +21,14 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface DiscriminatorType<O> extends ConvertedBasicType<O>, BasicDomainType<O> {
+	@Nonnull
 	@Override
 	DiscriminatorConverter<O, ?> getValueConverter();
 
+	@Nonnull
 	BasicType<?> getUnderlyingJdbcMapping();
 
+	@Nonnull
 	@Override
 	default JavaType<O> getJavaTypeDescriptor() {
 		return ConvertedBasicType.super.getJavaTypeDescriptor();

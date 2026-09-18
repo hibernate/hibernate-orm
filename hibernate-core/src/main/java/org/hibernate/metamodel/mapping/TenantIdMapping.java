@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -14,17 +17,19 @@ public interface TenantIdMapping {
 	/**
 	 * The tenant attribute outside the identifier, or {@code null} if there is none.
 	 */
+	@Nullable
 	AttributeMapping getAttributeMapping();
 
-	Object getTenantIdFromIdentifier(Object id, SharedSessionContractImplementor session);
+	@Nullable
+	Object getTenantIdFromIdentifier(@Nullable Object id, @Nonnull SharedSessionContractImplementor session);
 
-	boolean hasUnassignedIdentifierTenant(Object id, SharedSessionContractImplementor session);
+	boolean hasUnassignedIdentifierTenant(@Nullable Object id, @Nonnull SharedSessionContractImplementor session);
 
-	void validateIdentifier(Object id, SharedSessionContractImplementor session);
+	void validateIdentifier(@Nullable Object id, @Nonnull SharedSessionContractImplementor session);
 
-	void validateAssignedValue(Object entity, Object id, SharedSessionContractImplementor session);
+	void validateAssignedValue(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session);
 
-	void initializeIdentifier(Object entity, SharedSessionContractImplementor session);
+	void initializeIdentifier(@Nonnull Object entity, @Nonnull SharedSessionContractImplementor session);
 
-	void initialize(Object entity, Object[] state, SharedSessionContractImplementor session);
+	void initialize(@Nonnull Object entity, @Nonnull Object[] state, @Nonnull SharedSessionContractImplementor session);
 }

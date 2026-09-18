@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 
 import jakarta.annotation.Nullable;
@@ -44,6 +46,7 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	@Nullable Class<?> getNaturalIdClass();
 
 	/// The attribute(s) making up the natural-id.
+	@Nonnull
 	List<SingularAttributeMapping> getNaturalIdAttributes();
 
 	/// Whether the natural-id is mutable.
@@ -51,6 +54,7 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	/// @apiNote For compound natural-ids, this is true if any of the attributes are mutable.
 	boolean isMutable();
 
+	@Nonnull
 	@Override
 	default String getPartName() {
 		return PART_NAME;
@@ -58,52 +62,58 @@ public interface NaturalIdMapping extends VirtualModelPart {
 
 	/// Access to the natural-id's L2 cache access.
 	/// Returns null if the natural-id is not configured for caching.
+	@Nullable
 	NaturalIdDataAccess getCacheAccess();
 
 	/// Verify the natural-id value(s) we are about to flush to the database
 	void verifyFlushState(
-			Object id,
-			Object[] currentState,
-			Object[] loadedState,
-			SharedSessionContractImplementor session);
+			@Nonnull Object id,
+			@Nonnull Object[] currentState,
+			@Nullable Object[] loadedState,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/// Given an array of "full entity state", extract the normalized natural id representation.
 	///
 	/// @param state The attribute state array
 	///
 	/// @return The extracted natural id values.
-	Object extractNaturalIdFromEntityState(Object[] state);
+	@Nullable
+	Object extractNaturalIdFromEntityState(@Nonnull Object[] state);
 
 	/// Given an entity instance, extract the normalized natural-id representation.
 	///
 	/// @param entity The entity instance
 	///
 	/// @return The extracted natural-id values.
-	Object extractNaturalIdFromEntity(Object entity);
+	@Nullable
+	Object extractNaturalIdFromEntity(@Nonnull Object entity);
 
 	/// Normalize a user-provided natural-id value into the representation Hibernate uses internally.
 	///
 	/// @param incoming The user-supplied value
 	/// @return The normalized, internal representation
-	Object normalizeInput(Object incoming);
+	@Nullable
+	Object normalizeInput(@Nullable Object incoming);
 
 	/// Whether the incoming value is in normalized internal form.
 	///
 	/// @see #normalizeInput
-	boolean isNormalized(Object incoming);
+	boolean isNormalized(@Nullable Object incoming);
 
 	/// Validates a natural id value(s) for the described natural-id based on the expected internal representation
-	void validateInternalForm(Object naturalIdValue);
+	void validateInternalForm(@Nullable Object naturalIdValue);
 
 	/// Calculate the hash-code of a natural-id value
 	///
 	/// @param value The natural-id value
 	/// @return The hash-code
-	int calculateHashCode(Object value);
+	int calculateHashCode(@Nullable Object value);
 
 	/// Make a loader capable of loading a single entity by natural-id
-	NaturalIdLoader<?> makeLoader(EntityMappingType entityDescriptor);
+	@Nonnull
+	NaturalIdLoader<?> makeLoader(@Nonnull EntityMappingType entityDescriptor);
 
 	/// Make a loader capable of loading multiple entities by natural-id
-	MultiNaturalIdLoader<?> makeMultiLoader(EntityMappingType entityDescriptor);
+	@Nonnull
+	MultiNaturalIdLoader<?> makeMultiLoader(@Nonnull EntityMappingType entityDescriptor);
 }

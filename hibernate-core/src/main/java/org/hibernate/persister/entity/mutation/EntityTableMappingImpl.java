@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -123,10 +126,12 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		}
 	}
 
+	@Nonnull
 	@Override public String getTableName() {
 		return tableName;
 	}
 
+	@Nullable
 	@Override
 	public KeyDetails getKeyDetails() {
 		return keyMapping;
@@ -269,6 +274,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			this.identifierPart = identifierPart;
 		}
 
+		@Nonnull
 		@Override
 		public List<? extends KeyColumn> getKeyColumns() {
 			return keyColumns;
@@ -279,13 +285,14 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			return getKeyColumns().size();
 		}
 
+		@Nonnull
 		@Override
 		public KeyColumn getKeyColumn(int position) {
 			return getKeyColumns().get( position );
 		}
 
 		@Override
-		public void forEachKeyColumn(KeyColumnConsumer consumer) {
+		public void forEachKeyColumn(@Nonnull KeyColumnConsumer consumer) {
 			final var keyColumns = getKeyColumns();
 			for ( int i = 0; i < keyColumns.size(); i++ ) {
 				consumer.consume( i, keyColumns.get( i ) );
@@ -297,13 +304,14 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			return getKeyColumns().size();
 		}
 
+		@Nonnull
 		@Override
 		public SelectableMapping getSelectable(int columnIndex) {
 			return getKeyColumns().get( columnIndex );
 		}
 
 		@Override
-		public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 			final var keyColumns = getKeyColumns();
 			for ( int i = 0; i < keyColumns.size(); i++ ) {
 				consumer.accept( i, keyColumns.get( i ) );
@@ -312,9 +320,9 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		}
 
 		public void breakDownKeyJdbcValues(
-				Object domainValue,
-				KeyValueConsumer valueConsumer,
-				SharedSessionContractImplementor session) {
+				@Nonnull Object domainValue,
+				@Nonnull KeyValueConsumer valueConsumer,
+				@Nonnull SharedSessionContractImplementor session) {
 			identifierPart.forEachJdbcValue(
 					domainValue,
 					getKeyColumns(),
@@ -341,7 +349,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		}
 
 		@Override
-		public int forEachSelectable(SelectableConsumer consumer) {
+		public int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 			forEachKeyColumn( consumer::accept );
 			return getJdbcTypeCount();
 		}
@@ -355,12 +363,13 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			this.keyColumn = keyColumns.get( 0 );
 		}
 
+		@Nonnull
 		@Override
 		public <K> DomainResult<K> createDomainResult(
-				NavigablePath navigablePath,
-				TableReference tableReference,
-				String resultVariable,
-				DomainResultCreationState creationState) {
+				@Nonnull NavigablePath navigablePath,
+				@Nonnull TableReference tableReference,
+				@Nullable String resultVariable,
+				@Nonnull DomainResultCreationState creationState) {
 			// create SqlSelection based on the underlying JdbcMapping
 			final var sqlSelection = resolveSqlSelection(
 					tableReference,
@@ -387,12 +396,13 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			super( keyColumns, identifierPart );
 		}
 
+		@Nonnull
 		@Override
 		public <K> DomainResult<K> createDomainResult(
-				NavigablePath navigablePath,
-				TableReference tableReference,
-				String resultVariable,
-				DomainResultCreationState creationState) {
+				@Nonnull NavigablePath navigablePath,
+				@Nonnull TableReference tableReference,
+				@Nullable String resultVariable,
+				@Nonnull DomainResultCreationState creationState) {
 			// this will be challenging if the embeddable defines to-ones.
 			// just error for now.
 			throw new UnsupportedOperationException( "Not implemented yet" );
@@ -422,6 +432,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			);
 		}
 
+		@Nonnull
 		@Override
 		public String getColumnName() {
 			return getSelectionExpression();

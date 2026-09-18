@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.function.BiConsumer;
@@ -23,6 +26,8 @@ import org.hibernate.sql.ast.spi.query.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * Describes an embeddable - the actual type
  *
@@ -32,14 +37,17 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  * @see EmbeddableValuedModelPart
  */
 public interface EmbeddableMappingType extends ManagedMappingType, SelectableMappings {
+	@Nonnull
 	EmbeddableValuedModelPart getEmbeddedValueMapping();
 
+	@Nonnull
 	EmbeddableRepresentationStrategy getRepresentationStrategy();
 
 	/**
 	 * Returns the {@linkplain EmbeddableDiscriminatorMapping discriminator mapping}
 	 * if this discriminator type is polymorphic, {@code null} otherwise.
 	 */
+	@Nullable
 	default EmbeddableDiscriminatorMapping getDiscriminatorMapping() {
 		return null;
 	}
@@ -54,6 +62,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 
 	interface ConcreteEmbeddableType {
 
+		@Nonnull
 		EmbeddableInstantiator getInstantiator();
 
 		int getSubclassId();
@@ -65,28 +74,33 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		 *
 		 * @param attributeMapping the attribute to check
 		 */
-		boolean declaresAttribute(AttributeMapping attributeMapping);
+		boolean declaresAttribute(@Nonnull AttributeMapping attributeMapping);
 
 		boolean declaresAttribute(int attributeIndex);
 
+		@Nullable
 		Object getDiscriminatorValue();
 	}
 
-	default ConcreteEmbeddableType findSubtypeByDiscriminator(Object discriminatorValue) {
+	@Nullable
+	default ConcreteEmbeddableType findSubtypeByDiscriminator(@Nonnull Object discriminatorValue) {
 		return null;
 	}
 
-	default ConcreteEmbeddableType findSubtypeBySubclass(String subclassName) {
+	@Nullable
+	default ConcreteEmbeddableType findSubtypeBySubclass(@Nonnull String subclassName) {
 		return null;
 	}
 
 	/**
 	 * Returns the concrete embeddable subtypes or an empty collection if {@link #isPolymorphic()} is {@code false}.
 	 */
+	@Nonnull
 	default Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
 		return Collections.emptySet();
 	}
 
+	@Nullable
 	default SelectableMapping getAggregateMapping() {
 		return null;
 	}
@@ -95,6 +109,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		return getAggregateMapping() != null;
 	}
 
+	@Nonnull
 	@Override
 	default EmbeddableMappingType getPartMappingType() {
 		return this;
@@ -121,7 +136,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		}
 		// Cache this maybe?
 		final int aggregateSqlTypeCode = aggregateMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
-		return findContainingEntityMapping().getEntityPersister().getFactory()
+		return castNonNull( findContainingEntityMapping() ).getEntityPersister().getFactory()
 				.getJdbcServices()
 				.getDialect()
 				.getAggregateSupport()
@@ -148,6 +163,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		return count;
 	}
 
+	@Nullable
 	default SelectableMapping getJdbcValueSelectable(int columnIndex) {
 		final int numberOfAttributeMappings = getNumberOfAttributeMappings();
 		int count = 0;
@@ -219,7 +235,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 	}
 
 	@Override
-	default int getSelectableIndex(String selectableName) {
+	default int getSelectableIndex(@Nonnull String selectableName) {
 		final int numberOfAttributeMappings = getNumberOfAttributeMappings();
 		int offset = 0;
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
@@ -262,28 +278,30 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 				offset += jdbcTypeCount;
 			}
 		}
-		if ( isPolymorphic() && getDiscriminatorMapping().getSelectableName().equals( selectableName ) ) {
+		final var discriminatorMapping = getDiscriminatorMapping();
+		if ( discriminatorMapping != null && discriminatorMapping.getSelectableName().equals( selectableName ) ) {
 			return offset;
 		}
 		return -1;
 	}
 
+	@Nonnull
 	@org.hibernate.Internal
 	EmbeddableMappingType createInverseMappingType(
-			EmbeddedAttributeMapping valueMapping,
-			TableGroupProducer declaringTableGroupProducer,
-			SelectableMappings selectableMappings,
-			MappingModelCreationProcess creationProcess);
+			@Nonnull EmbeddedAttributeMapping valueMapping,
+			@Nonnull TableGroupProducer declaringTableGroupProducer,
+			@Nonnull SelectableMappings selectableMappings,
+			@Nonnull MappingModelCreationProcess creationProcess);
 
 	@Override
-	default int forEachSelectable(SelectableConsumer consumer) {
+	default int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 		return ManagedMappingType.super.forEachSelectable( consumer );
 	}
 
 	@Override
-	int forEachSelectable(int offset, SelectableConsumer consumer);
+	int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer);
 
-	default void forEachInsertable(int offset, SelectableConsumer consumer) {
+	default void forEachInsertable(int offset, @Nonnull SelectableConsumer consumer) {
 		forEachSelectable(
 				offset,
 				(selectionIndex, selectableMapping) -> {
@@ -296,7 +314,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		);
 	}
 
-	default void forEachUpdatable(int offset, SelectableConsumer consumer) {
+	default void forEachUpdatable(int offset, @Nonnull SelectableConsumer consumer) {
 		forEachSelectable(
 				offset,
 				(selectionIndex, selectableMapping) -> {
@@ -313,22 +331,23 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 	int getJdbcTypeCount();
 
 	@Override
-	int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action);
+	int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action);
 
 	// Make this abstract again to ensure subclasses implement this method
+	@Nonnull
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	<T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState);
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState);
 
 	@Override
 	default void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		forEachAttributeMapping(
 				attributeMapping -> attributeMapping.applySqlSelections( navigablePath, tableGroup, creationState )
 		);
@@ -336,10 +355,10 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 
 	@Override
 	default void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		forEachAttributeMapping(
 				attributeMapping ->
 						attributeMapping.applySqlSelections(
@@ -351,7 +370,16 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		);
 	}
 
-	default int compare(Object value1, Object value2) {
+	default int compare(@Nullable Object value1, @Nullable Object value2) {
+		if ( value1 == value2 ) {
+			return 0;
+		}
+		if ( value1 == null ) {
+			return -1;
+		}
+		if ( value2 == null ) {
+			return 1;
+		}
 		final AttributeMappingsList attributeMappings = getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping attribute = attributeMappings.get( i );

@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.function.IntFunction;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -26,23 +29,29 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	String PART_NAME = "{fk}";
 	String TARGET_PART_NAME = "{fk-target}";
 
+	@Nonnull
 	@Override
 	default String getPartName() {
 		return PART_NAME;
 	}
 
+	@Nonnull
 	String getKeyTable();
 
+	@Nonnull
 	String getTargetTable();
 
 
+	@Nonnull
 	ValuedModelPart getKeyPart();
 
+	@Nonnull
 	ValuedModelPart getTargetPart();
 
-	boolean isKeyPart(ValuedModelPart modelPart);
+	boolean isKeyPart(@Nonnull ValuedModelPart modelPart);
 
-	default ValuedModelPart getPart(Nature nature) {
+	@Nonnull
+	default ValuedModelPart getPart(@Nonnull Nature nature) {
 		if ( nature == Nature.KEY ) {
 			return getKeyPart();
 		}
@@ -51,11 +60,14 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 		}
 	}
 
+	@Nonnull
 	Side getKeySide();
 
+	@Nonnull
 	Side getTargetSide();
 
-	default Side getSide(Nature nature) {
+	@Nonnull
+	default Side getSide(@Nonnull Nature nature) {
 		if ( nature == Nature.KEY ) {
 			return getKeySide();
 		}
@@ -64,6 +76,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 		}
 	}
 
+	@Nonnull
 	@Override
 	default String getContainingTableExpression() {
 		return getKeyTable();
@@ -72,67 +85,74 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	/**
 	 * Compare the 2 values
 	 */
-	int compare(Object key1, Object key2);
+	int compare(@Nullable Object key1, @Nullable Object key2);
 
 	/**
 	 * Create a DomainResult for the referring-side of the fk
 	 * The table group must be the one containing the target.
 	 */
+	@Nonnull
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	DomainResult<?> createKeyDomainResult(
-			NavigablePath navigablePath,
-			TableGroup targetTableGroup,
-			FetchParent fetchParent,
-			DomainResultCreationState creationState);
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup targetTableGroup,
+			@Nullable FetchParent fetchParent,
+			@Nonnull DomainResultCreationState creationState);
 
 	/**
 	 * Create a DomainResult for the referring-side of the fk
 	 * The table group must be the one containing the target.
 	 * The {@link Nature} is the association side of the foreign key i.e. {@link Association#getSideNature()}.
 	 */
+	@Nonnull
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	DomainResult<?> createKeyDomainResult(
-			NavigablePath navigablePath,
-			TableGroup targetTableGroup,
-			Nature fromSide,
-			FetchParent fetchParent,
-			DomainResultCreationState creationState);
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup targetTableGroup,
+			@Nonnull Nature fromSide,
+			@Nullable FetchParent fetchParent,
+			@Nonnull DomainResultCreationState creationState);
 
 	/**
 	 * Create a DomainResult for the target-side of the fk
 	 * The table group must be the one containing the target
 	 */
+	@Nonnull
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	DomainResult<?> createTargetDomainResult(
-			NavigablePath navigablePath,
-			TableGroup targetTableGroup,
-			FetchParent fetchParent,
-			DomainResultCreationState creationState);
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup targetTableGroup,
+			@Nullable FetchParent fetchParent,
+			@Nonnull DomainResultCreationState creationState);
 
 	/**
 	 * Create a DomainResult for the referring-side of the fk
 	 * The table group must be the one containing the target.
 	 */
+	@Nonnull
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	<T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup targetTableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState);
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup targetTableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState);
 
+	@Nonnull
 	Predicate generateJoinPredicate(
-			TableGroup targetSideTableGroup,
-			TableGroup keySideTableGroup,
-			SqlAstCreationState creationState);
+			@Nonnull TableGroup targetSideTableGroup,
+			@Nonnull TableGroup keySideTableGroup,
+			@Nonnull SqlAstCreationState creationState);
 
+	@Nonnull
 	Predicate generateJoinPredicate(
-			TableReference targetSideReference,
-			TableReference keySideReference,
-			SqlAstCreationState creationState);
+			@Nonnull TableReference targetSideReference,
+			@Nonnull TableReference keySideReference,
+			@Nonnull SqlAstCreationState creationState);
 
-	boolean isSimpleJoinPredicate(Predicate predicate);
+	boolean isSimpleJoinPredicate(@Nullable Predicate predicate);
 
+	@Nonnull
 	@Override
 	SelectableMapping getSelectable(int columnIndex);
 
@@ -140,49 +160,54 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	 * Visits the FK "referring" columns
 	 */
 	@Override
-	default int forEachSelectable(int offset, SelectableConsumer consumer) {
+	default int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		return visitKeySelectables( offset, consumer );
 	}
 
+	@Nullable
 	default Object getAssociationKeyFromSide(
-			Object targetObject,
-			Nature nature,
-			SharedSessionContractImplementor session) {
+			@Nullable Object targetObject,
+			@Nonnull Nature nature,
+			@Nullable SharedSessionContractImplementor session) {
 		return getAssociationKeyFromSide( targetObject, getSide( nature ), session );
 	}
 
+	@Nullable
 	Object getAssociationKeyFromSide(
-			Object targetObject,
-			ForeignKeyDescriptor.Side side,
-			SharedSessionContractImplementor session);
+			@Nullable Object targetObject,
+			@Nonnull ForeignKeyDescriptor.Side side,
+			@Nullable SharedSessionContractImplementor session);
 
-	int visitKeySelectables(int offset, SelectableConsumer consumer);
+	int visitKeySelectables(int offset, @Nonnull SelectableConsumer consumer);
 
-	default int visitKeySelectables(SelectableConsumer consumer)  {
+	default int visitKeySelectables(@Nonnull SelectableConsumer consumer)  {
 		return visitKeySelectables( 0, consumer );
 	}
 
-	int visitTargetSelectables(int offset, SelectableConsumer consumer);
+	int visitTargetSelectables(int offset, @Nonnull SelectableConsumer consumer);
 
-	default int visitTargetSelectables(SelectableConsumer consumer) {
+	default int visitTargetSelectables(@Nonnull SelectableConsumer consumer) {
 		return visitTargetSelectables( 0, consumer );
 	}
 
 	/**
 	 * Return a copy of this foreign key descriptor with the selectable mappings as provided by the given accessor.
 	 */
+	@Nonnull
 	@org.hibernate.Internal
 	ForeignKeyDescriptor withKeySelectionMapping(
-			ManagedMappingType declaringType,
-			TableGroupProducer declaringTableGroupProducer,
-			IntFunction<SelectableMapping> selectableMappingAccess,
-			MappingModelCreationProcess creationProcess);
+			@Nullable ManagedMappingType declaringType,
+			@Nonnull TableGroupProducer declaringTableGroupProducer,
+			@Nonnull IntFunction<SelectableMapping> selectableMappingAccess,
+			@Nonnull MappingModelCreationProcess creationProcess);
 
 	/**
 	 * Return a copy of this foreign key descriptor with the target part as given by the argument.
 	 */
-	ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart);
+	@Nonnull
+	ForeignKeyDescriptor withTargetPart(@Nonnull ValuedModelPart targetPart);
 
+	@Nonnull
 	AssociationKey getAssociationKey();
 
 	boolean hasConstraint();
@@ -191,13 +216,16 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 		KEY,
 		TARGET;
 
+		@Nonnull
 		public Nature inverse() {
 			return this == KEY ? TARGET : KEY;
 		}
 	}
 
 	interface Side {
+		@Nonnull
 		Nature getNature();
+		@Nonnull
 		ValuedModelPart getModelPart();
 	}
 

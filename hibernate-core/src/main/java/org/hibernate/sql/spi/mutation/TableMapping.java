@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.spi.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.metamodel.mapping.TableDetails;
@@ -20,6 +22,7 @@ public interface TableMapping extends TableDetails {
 	/**
 	 * The name of the mapped table
 	 */
+	@Nonnull
 	String getTableName();
 
 	default boolean containsTableName(String tableName) {

@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -40,21 +43,25 @@ public interface EntityCollectionPart extends CollectionPart, EntityValuedFetcha
 		return getPartName();
 	}
 
+	@Nonnull
 	@Override
 	default EntityMappingType getPartMappingType() {
 		return getAssociatedEntityMappingType();
 	}
 
+	@Nonnull
 	@Override
 	default EntityMappingType getEntityMappingType() {
 		return getAssociatedEntityMappingType();
 	}
 
+	@Nonnull
 	@Override
 	default JavaType<?> getJavaType() {
 		return getAssociatedEntityMappingType().getJavaType();
 	}
 
+	@Nonnull
 	@Override
 	default JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
@@ -66,7 +73,7 @@ public interface EntityCollectionPart extends CollectionPart, EntityValuedFetcha
 	}
 
 	@Override
-	default void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	default void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		EntityValuedFetchable.super.addToCacheKey( cacheKey, value, session );
 	}
 

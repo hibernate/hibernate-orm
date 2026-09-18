@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,8 +86,9 @@ public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer
 		return columns;
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		final ModelPart subPart = super.findSubPart( name, treatTargetType );
 		if ( subPart != null ) {
 			return subPart;

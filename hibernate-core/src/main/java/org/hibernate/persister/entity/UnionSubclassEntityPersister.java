@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -233,10 +236,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 
+	@Nonnull
 	@Override
 	public UnionTableReference createPrimaryTableReference(
-			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState) {
+			@Nonnull SqlAliasBase sqlAliasBase,
+			@Nonnull SqlAstCreationState creationState) {
 		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
 		final var auxMapping = getAuxiliaryMapping();
 		final boolean useAuxiliaryTable =
@@ -272,14 +276,15 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return tableReference;
 	}
 
+	@Nonnull
 	@Override
 	public TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			SqlAliasBase sqlAliasBase,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase sqlAliasBase,
+			@Nullable Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			@Nullable SqlAstCreationState creationState) {
 		final var tableGroup = new UnionTableGroup(
 				canUseInnerJoins,
 				navigablePath,
@@ -332,21 +337,25 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassByDiscriminatorValue;
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getMappedTableDetails() {
 		return getTableMapping( 0 );
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getIdentifierTableDetails() {
 		return getTableMapping( 0 );
 	}
 
+	@Nonnull
 	@Override
 	public DiscriminatorValue getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
+	@Nullable
 	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLValue;
@@ -417,7 +426,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
+	public void pruneForSubclasses(@Nonnull TableGroup tableGroup, @Nonnull Map<String, EntityNameUse> entityNameUses) {
 		final var tableReference = (NamedTableReference) tableGroup.getTableReference( getRootTableName() );
 		if ( tableReference == null ) {
 			throw new UnknownTableReferenceException( getRootTableName(), "Couldn't find table reference" );
@@ -429,7 +438,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
+	public void visitConstraintOrderedTables(@Nonnull ConstraintOrderedTableConsumer consumer) {
 		for ( int i = 0; i < constraintOrderedTableNames.length; i++ ) {
 			final String tableName = constraintOrderedTableNames[i];
 			final int tablePosition = i;

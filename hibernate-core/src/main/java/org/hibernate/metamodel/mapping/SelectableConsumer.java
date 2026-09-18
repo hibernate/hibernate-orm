@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.internal.MutableSelectableMapping;
@@ -26,7 +28,7 @@ public interface SelectableConsumer {
 	 * {@link SelectableMappings#forEachSelectable(int, SelectableConsumer)}
 	 * was used
 	 */
-	void accept(int selectionIndex, SelectableMapping selectableMapping);
+	void accept(int selectionIndex, @Nonnull SelectableMapping selectableMapping);
 
 	/**
 	 * Simple form of visitation over a number of columns by name, using
@@ -42,7 +44,7 @@ public interface SelectableConsumer {
 	 *     <li>{@link SelectableMapping#getJdbcMapping()}</li>
 	 * </ul>
 	 */
-	default void accept(String tableName, JdbcMappingContainer base, String[] columnNames) {
+	default void accept(@Nonnull String tableName, @Nonnull JdbcMappingContainer base, @Nonnull String[] columnNames) {
 		assert base.getJdbcTypeCount() == columnNames.length;
 
 		final MutableSelectableMapping mutableSelectableMapping = new MutableSelectableMapping( tableName, base, columnNames );
@@ -63,7 +65,7 @@ public interface SelectableConsumer {
 	 *     <li>{@link SelectableMapping#getJdbcMapping()}</li>
 	 * </ul>
 	 */
-	default void accept(SelectableMappings base, String tableName, String[] columnNames) {
+	default void accept(@Nonnull SelectableMappings base, @Nonnull String tableName, @Nonnull String[] columnNames) {
 		class SelectableMappingIterator implements SelectableMapping {
 			private final String tableName;
 			private final SelectableMappings delegate;
@@ -71,24 +73,26 @@ public interface SelectableConsumer {
 
 			private int index;
 
-			public SelectableMappingIterator(String tableName, SelectableMappings delegate, String[] columnNames) {
+			public SelectableMappingIterator(@Nonnull String tableName, @Nonnull SelectableMappings delegate, @Nonnull String[] columnNames) {
 				this.tableName = tableName;
 				this.delegate = delegate;
 				this.columnNames = columnNames;
 				assert delegate.getJdbcTypeCount() == columnNames.length;
 			}
 
-			private void forEach(BiConsumer<Integer,SelectableMapping> consumer) {
+			private void forEach(@Nonnull BiConsumer<Integer,SelectableMapping> consumer) {
 				for ( index = 0; index < columnNames.length; index++ ) {
 					consumer.accept( index, this );
 				}
 			}
 
+			@Nonnull
 			@Override
 			public String getContainingTableExpression() {
 				return tableName;
 			}
 
+			@Nonnull
 			@Override
 			public String getSelectionExpression() {
 				return columnNames[index];
@@ -104,15 +108,18 @@ public interface SelectableConsumer {
 				return null;
 			}
 
+			@Nonnull
 			private SelectableMapping getDelegate() {
 				return delegate.getSelectable( index );
 			}
 
+			@Nonnull
 			@Override
 			public String getSelectableName() {
 				return getDelegate().getSelectableName();
 			}
 
+			@Nonnull
 			@Override
 			public SelectablePath getSelectablePath() {
 				return getDelegate().getSelectablePath();
@@ -173,11 +180,13 @@ public interface SelectableConsumer {
 				return getDelegate().isLob();
 			}
 
+			@Nonnull
 			@Override
 			public JdbcMapping getJdbcMapping() {
 				return getDelegate().getJdbcMapping();
 			}
 
+			@Nonnull
 			@Override
 			public Size toSize() {
 				return getDelegate().toSize();
@@ -196,16 +205,18 @@ public interface SelectableConsumer {
 	 * Very limited functionality in terms of the visited SelectableMappings
 	 * will not have any defined JdbcMapping, etc
 	 */
-	default void accept(String tableName, String[] columnNames, IntFunction<JdbcMapping> jdbcMappings) {
+	default void accept(@Nonnull String tableName, @Nonnull String[] columnNames, @Nonnull IntFunction<JdbcMapping> jdbcMappings) {
 		class SelectableMappingIterator implements SelectableMapping {
 
 			private int index;
 
+			@Nonnull
 			@Override
 			public String getContainingTableExpression() {
 				return tableName;
 			}
 
+			@Nonnull
 			@Override
 			public String getSelectionExpression() {
 				return columnNames[index];
@@ -271,6 +282,7 @@ public interface SelectableConsumer {
 				return false;
 			}
 
+			@Nonnull
 			@Override
 			public JdbcMapping getJdbcMapping() {
 				return jdbcMappings.apply( index );

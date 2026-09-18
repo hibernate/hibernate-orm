@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 
 import jakarta.annotation.Nullable;
@@ -36,7 +38,9 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.results.internal.ResultsLogger.RESULTS_LOGGER;
+
 
 /**
  * Models a basic collection element/value or index/key
@@ -61,36 +65,43 @@ public class BasicValuedCollectionPart
 		this.selectableMapping = selectableMapping;
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return nature;
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getCollectionAttribute() {
 		return collectionDescriptor.getAttributeMapping();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return selectableMapping.getJdbcMapping()::getJavaTypeDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return selectableMapping.getContainingTableExpression();
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return selectableMapping.getSelectionExpression();
 	}
 
+	@Nonnull
 	@Override
 	public SelectablePath getSelectablePath() {
 		return selectableMapping.getSelectablePath();
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectableName() {
 		return selectableMapping.getSelectableName();
@@ -156,11 +167,13 @@ public class BasicValuedCollectionPart
 		return selectableMapping.getScale();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return selectableMapping.getJdbcMapping().getJavaTypeDescriptor();
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
@@ -171,12 +184,13 @@ public class BasicValuedCollectionPart
 		return "BasicValuedCollectionPart(" + navigableRole + ")@" + System.identityHashCode( this );
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -191,7 +205,7 @@ public class BasicValuedCollectionPart
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			FetchParent fetchParent,
+			@Nullable FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final var exprResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final TableGroup targetTableGroup;
@@ -199,7 +213,7 @@ public class BasicValuedCollectionPart
 		// and thus there is no index table group registered. The logic in the PluralTableGroup prevents from looking
 		// into the element table group though because the element table group navigable path is not the parent of this navigable path
 		if ( nature == Nature.INDEX
-				&& collectionDescriptor.getAttributeMapping().getIndexMetadata().getIndexPropertyName() != null ) {
+				&& castNonNull( collectionDescriptor.getAttributeMapping().getIndexMetadata() ).getIndexPropertyName() != null ) {
 			targetTableGroup = ( (PluralTableGroup) tableGroup ).getElementTableGroup();
 		}
 		else {
@@ -217,29 +231,32 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nonnull DomainResultCreationState creationState) {
 		resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, null, creationState ), getJdbcMapping() );
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return selectableMapping.getJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return this::getJavaType;
@@ -296,6 +313,7 @@ public class BasicValuedCollectionPart
 		);
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
@@ -304,6 +322,7 @@ public class BasicValuedCollectionPart
 		return getJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getSingleJdbcMapping() {
 		return getJdbcMapping();
@@ -320,48 +339,48 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, selectableMapping.getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		consumer.accept( offset, selectableMapping );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), this );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public <X, Y> int decompose(
-			Object domainValue, int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable Object domainValue, int offset,
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), this );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

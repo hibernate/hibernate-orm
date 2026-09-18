@@ -6,9 +6,6 @@ package org.hibernate.type;
 
 import org.hibernate.SPI;
 
-import static org.hibernate.SPI.Role.IMPLEMENT;
-import static org.hibernate.SPI.Role.USE;
-
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -36,6 +33,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import jakarta.annotation.Nullable;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 
 /**
  * Convenience base class for {@link BasicType} implementations.
@@ -76,16 +76,19 @@ public abstract class AbstractStandardBasicType<T>
 		typeForEqualsHashCode = javaType.useObjectEqualsHashCode() ? null : this;
 	}
 
+	@Nonnull
 	@Override
 	public ValueExtractor<T> getJdbcValueExtractor() {
 		return jdbcValueExtractor;
 	}
 
+	@Nonnull
 	@Override
 	public ValueBinder<T> getJdbcValueBinder() {
 		return jdbcValueBinder;
 	}
 
+	@Nullable
 	@Override
 	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
@@ -106,7 +109,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
+	public boolean[] toColumnNullness(@Nullable Object value, MappingContext mapping) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
 
@@ -123,10 +126,12 @@ public abstract class AbstractStandardBasicType<T>
 
 	// final implementations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Nonnull
 	public final JavaType<T> getJavaTypeDescriptor() {
 		return javaType;
 	}
 
+	@Nonnull
 	public final JdbcType getJdbcType() {
 		return jdbcType;
 	}
@@ -172,17 +177,17 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final boolean isSame(Object x, Object y) {
+	public final boolean isSame(@Nullable Object x, @Nullable Object y) {
 		return isEqual( x, y );
 	}
 
 	@Override
-	public final boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
+	public final boolean isEqual(@Nullable Object x, @Nullable Object y, SessionFactoryImplementor factory) {
 		return isEqual( x, y );
 	}
 
 	@Override
-	public boolean isEqual(Object one, Object another) {
+	public boolean isEqual(@Nullable Object one, @Nullable Object another) {
 		if ( one == another ) {
 			return true;
 		}
@@ -215,17 +220,17 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final int compare(Object x, Object y) {
+	public final int compare(@Nullable Object x, @Nullable Object y) {
 		return this.javatypeComparator.compare( javaType.cast( x ) , javaType.cast( y )  );
 	}
 
 	@Override
-	public final boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) {
+	public final boolean isDirty(@Nullable Object old, @Nullable Object current, SharedSessionContractImplementor session) {
 		return isDirty( old, current );
 	}
 
 	@Override
-	public final boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
+	public final boolean isDirty(@Nullable Object old, @Nullable Object current, boolean[] checkable, SharedSessionContractImplementor session) {
 		return checkable[0] && isDirty( old, current );
 	}
 
@@ -239,8 +244,8 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public final boolean isModified(
-			Object oldHydratedState,
-			Object currentState,
+			@Nullable Object oldHydratedState,
+			@Nullable Object currentState,
 			boolean[] checkable,
 			SharedSessionContractImplementor session) {
 		return isDirty( oldHydratedState, currentState );
@@ -249,7 +254,7 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public final void nullSafeSet(
 			PreparedStatement st,
-			Object value,
+			@Nullable Object value,
 			int index,
 			final SharedSessionContractImplementor session)
 				throws SQLException {
@@ -262,7 +267,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final String toLoggableString(Object value, SessionFactoryImplementor factory) {
+	public final String toLoggableString(@Nullable Object value, SessionFactoryImplementor factory) {
 		return value == LazyPropertyInitializer.UNFETCHED_PROPERTY
 			|| !Hibernate.isInitialized( value )
 				? "<uninitialized>"
@@ -275,33 +280,38 @@ public abstract class AbstractStandardBasicType<T>
 		return getMutabilityPlan().isMutable();
 	}
 
+	@Nullable
 	@Override
-	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
+	public Object deepCopy(@Nullable Object value, SessionFactoryImplementor factory) {
 		return getMutabilityPlan().deepCopy( javaType.cast( value ) );
 	}
 
+	@Nullable
 	@Override
-	public final Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
+	public final Serializable disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session, @Nullable Object owner) {
 		return getMutabilityPlan().disassemble( javaType.cast( value ), session );
 	}
 
+	@Nullable
 	@Override
-	public final Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
+	public final Object assemble(@Nullable Serializable cached, SharedSessionContractImplementor session, Object owner) {
 		return getMutabilityPlan().assemble( cached, session );
 	}
 
+	@Nullable
 	@Override
-	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
+	public final Object replace(@Nullable Object original, @Nullable Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		return original == null && target == null
 				? null
 				: javaType.getReplacement( javaType.cast( original ), javaType.cast( target ), session );
 
 	}
 
+	@Nullable
 	@Override
 	public Object replace(
-			Object original,
-			Object target,
+			@Nullable Object original,
+			@Nullable Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache,
@@ -332,7 +342,7 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
-			Object value,
+			@Nullable Object value,
 			int index,
 			boolean[] settable,
 			SharedSessionContractImplementor session)
@@ -354,6 +364,7 @@ public abstract class AbstractStandardBasicType<T>
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public CastType getCastType() {
 		// The following is only necessary because we interpret a model part, e.g.

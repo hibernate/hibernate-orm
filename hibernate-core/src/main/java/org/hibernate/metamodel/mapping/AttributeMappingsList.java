@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
@@ -30,10 +32,11 @@ public interface AttributeMappingsList {
 
 	int size();
 
+	@Nonnull
 	AttributeMapping get(int i);
 
-	void forEach(Consumer<? super AttributeMapping> attributeMappingConsumer);
+	void forEach(@Nonnull Consumer<? super AttributeMapping> attributeMappingConsumer);
 
-	void indexedForEach(IndexedConsumer<? super AttributeMapping> consumer);
+	void indexedForEach(@Nonnull IndexedConsumer<? super AttributeMapping> consumer);
 
 }

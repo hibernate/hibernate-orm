@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -113,8 +115,9 @@ public class AnonymousTupleEntityValuedModelPart
 		return identifierMapping;
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
 			if ( identifierMapping.getAttributeName().equals( name ) ) {
 				return identifierMapping;
@@ -133,30 +136,35 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
 		delegate.visitSubParts( consumer, treatTargetType );
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return getPartMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return domainType.getExpressibleJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return delegate.getPartName();
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return "";
@@ -172,66 +180,74 @@ public class AnonymousTupleEntityValuedModelPart
 		return delegate.getEntityMappingType().getNumberOfAttributeMappings();
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMapping getAttributeMapping(int position) {
 		return delegate.getEntityMappingType().getAttributeMapping( position );
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMappingsList getAttributeMappings() {
 		return delegate.getEntityMappingType().getAttributeMappings();
 	}
 
 	@Override
-	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action) {
 		delegate.getEntityMappingType().forEachAttributeMapping( action );
 	}
 
+	@Nonnull
 	@Override
-	public Object[] getValues(Object instance) {
+	public Object[] getValues(@Nonnull Object instance) {
 		return delegate.getEntityMappingType().getValues( instance );
 	}
 
+	@Nullable
 	@Override
-	public Object getValue(Object instance, int position) {
+	public Object getValue(@Nonnull Object instance, int position) {
 		return delegate.getEntityMappingType().getValue( instance, position );
 	}
 
 	@Override
-	public void setValues(Object instance, Object[] resolvedValues) {
+	public void setValues(@Nonnull Object instance, @Nonnull Object[] resolvedValues) {
 		delegate.getEntityMappingType().setValues( instance, resolvedValues );
 	}
 
 	@Override
-	public void setValue(Object instance, int position, Object value) {
+	public void setValue(@Nonnull Object instance, int position, @Nullable Object value) {
 		delegate.getEntityMappingType().setValue( instance, position, value );
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return identifierMapping.getJdbcMapping( index );
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getSingleJdbcMapping() {
 		return identifierMapping.getSingleJdbcMapping();
 	}
 
 	@Override
-	public int forEachSelectable(SelectableConsumer consumer) {
+	public int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		return identifierMapping.forEachSelectable( offset, consumer );
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		return identifierMapping.getSelectable( columnIndex );
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return delegate.getJavaType();
@@ -490,6 +506,7 @@ public class AnonymousTupleEntityValuedModelPart
 		return foreignKeyPart == valuedModelPart;
 	}
 
+	@Nonnull
 	@Override
 	public String getSqlAliasStem() {
 		return ((TableGroupJoinProducer) delegate).getSqlAliasStem();
@@ -500,205 +517,229 @@ public class AnonymousTupleEntityValuedModelPart
 		return delegate.getNumberOfFetchables();
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return delegate.getNavigableRole();
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		return delegate.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		identifierMapping.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		identifierMapping.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return delegate.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return delegate.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		delegate.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return delegate.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> consumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> consumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return delegate.forEachJdbcValue( value, offset, x, y, consumer, session );
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		return delegate.forEachJdbcType( offset, action );
 	}
 
+	@Nonnull
 	@Override
 	public EntityPersister getEntityPersister() {
 		return delegate.getEntityMappingType().getEntityPersister();
 	}
 
+	@Nonnull
 	@Override
 	public String getEntityName() {
 		return delegate.getEntityMappingType().getEntityName();
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getMappedTableDetails() {
 		return delegate.getEntityMappingType().getMappedTableDetails();
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getIdentifierTableDetails() {
 		return delegate.getEntityMappingType().getIdentifierTableDetails();
 	}
 
 	@Override
-	public void forEachTableDetails(Consumer<TableDetails> consumer) {
+	public void forEachTableDetails(@Nonnull Consumer<TableDetails> consumer) {
 		delegate.getEntityMappingType().forEachTableDetails( consumer );
 	}
 
 	@Override
-	public void visitQuerySpaces(Consumer<String> querySpaceConsumer) {
+	public void visitQuerySpaces(@Nonnull Consumer<String> querySpaceConsumer) {
 		delegate.getEntityMappingType().visitQuerySpaces( querySpaceConsumer );
 	}
 
+	@Nullable
 	@Override
-	public AttributeMapping findDeclaredAttributeMapping(String name) {
+	public AttributeMapping findDeclaredAttributeMapping(@Nonnull String name) {
 		return delegate.getEntityMappingType().findDeclaredAttributeMapping( name );
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMappingsMap getDeclaredAttributeMappings() {
 		return delegate.getEntityMappingType().getDeclaredAttributeMappings();
 	}
 
 	@Override
-	public void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void visitDeclaredAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
 		delegate.getEntityMappingType().visitDeclaredAttributeMappings( action );
 	}
 
+	@Nonnull
 	@Override
 	public EntityIdentifierMapping getIdentifierMapping() {
 		return delegate.getEntityMappingType().getIdentifierMapping();
 	}
 
+	@Nullable
 	@Override
 	public EntityDiscriminatorMapping getDiscriminatorMapping() {
 		return delegate.getEntityMappingType().getDiscriminatorMapping();
 	}
 
+	@Nonnull
 	@Override
 	public DiscriminatorValue getDiscriminatorValue() {
 		return delegate.getEntityMappingType().getDiscriminatorValue();
 	}
 
+	@Nullable
 	@Override
 	public String getDiscriminatorSQLValue() {
 		return delegate.getEntityMappingType().getDiscriminatorSQLValue();
 	}
 
+	@Nullable
 	@Override
 	public EntityVersionMapping getVersionMapping() {
 		return delegate.getEntityMappingType().getVersionMapping();
 	}
 
+	@Nonnull
 	@Override
 	public OptimisticLockStyle optimisticLockStyle() {
 		return delegate.getEntityMappingType().optimisticLockStyle();
 	}
 
+	@Nullable
 	@Override
 	public NaturalIdMapping getNaturalIdMapping() {
 		return delegate.getEntityMappingType().getNaturalIdMapping();
 	}
 
+	@Nullable
 	@Override
 	public EntityRowIdMapping getRowIdMapping() {
 		return delegate.getEntityMappingType().getRowIdMapping();
 	}
 
+	@Nullable
 	@Override
 	public SoftDeleteMapping getSoftDeleteMapping() {
 		return delegate.getEntityMappingType().getSoftDeleteMapping();
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getSoftDeleteTableDetails() {
 		return delegate.getEntityMappingType().getSoftDeleteTableDetails();
 	}
 
 	@Override
-	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
+	public void visitConstraintOrderedTables(@Nonnull ConstraintOrderedTableConsumer consumer) {
 		delegate.getEntityMappingType().visitConstraintOrderedTables( consumer );
 	}
 
+	@Nullable
 	@Override
-	public Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session) {
+	public Object loadByUniqueKey(@Nonnull String propertyName, @Nonnull Object uniqueKey, @Nonnull SharedSessionContractImplementor session) {
 		return delegate.getEntityMappingType().loadByUniqueKey( propertyName, uniqueKey, session );
 	}
 
+	@Nonnull
 	@Override
 	public NaturalIdLoader<?> getNaturalIdLoader() {
 		return delegate.getEntityMappingType().getNaturalIdLoader();
 	}
 
+	@Nonnull
 	@Override
 	public MultiNaturalIdLoader<?> getMultiNaturalIdLoader() {
 		return delegate.getEntityMappingType().getMultiNaturalIdLoader();
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getEntityMappingType() {
 		return this;
@@ -733,7 +774,7 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+	public boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return false;
 	}
 

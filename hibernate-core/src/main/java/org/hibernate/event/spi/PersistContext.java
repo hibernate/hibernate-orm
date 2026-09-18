@@ -20,15 +20,30 @@ public interface PersistContext {
 	static PersistContext create() {
 		// use extension to avoid creating
 		// a useless wrapper object
-		class Impl extends IdentityHashMap<Object,Object>
-				implements PersistContext {
-			Impl() {
-				super(10);
-			}
+		class Impl implements PersistContext {
+			private Object first;
+			private boolean hasFirst;
+			private IdentityHashMap<Object,Object> seen;
 
 			@Override
 			public boolean add(Object entity) {
-				return put(entity,entity)==null;
+				if ( seen != null ) {
+					return seen.put( entity, entity ) == null;
+				}
+				else if ( !hasFirst ) {
+					first = entity;
+					hasFirst = true;
+					return true;
+				}
+				else if ( first == entity ) {
+					return false;
+				}
+				else {
+					seen = new IdentityHashMap<>( 10 );
+					seen.put( first, first );
+					first = null;
+					return seen.put( entity, entity ) == null;
+				}
 			}
 		}
 		return new Impl();

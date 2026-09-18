@@ -2270,4 +2270,36 @@ public class HbmTransformationJaxbTests {
 					.isEqualTo( "fk_course_student" );
 		} );
 	}
+
+	@Test
+	@JiraKey("HHH-20901")
+	public void testCollectionBatchSizeTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-batch-size/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl authorEntity = transformed.getEntities().stream()
+					.filter( e -> "Author".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( authorEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+			final JaxbManyToManyImpl books = authorEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( books.getName() ).isEqualTo( "books" );
+			assertThat( books.getBatchSize() )
+					.as( "batch-size from <set> should be transferred to many-to-many" )
+					.isEqualTo( 25 );
+
+			final JaxbEntityImpl bookEntity = transformed.getEntities().stream()
+					.filter( e -> "Book".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( bookEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+			final JaxbManyToManyImpl authors = bookEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( authors.getName() ).isEqualTo( "authors" );
+			assertThat( authors.getBatchSize() )
+					.as( "batch-size from inverse <set> should be transferred to many-to-many" )
+					.isEqualTo( 25 );
+		} );
+	}
 }

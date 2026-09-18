@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.collectionbatchsize">
+	
+	<class name="Author" table="AUTHOR">
+		<id name="id" type="long">
+			<generator class="increment"/>
+		</id>
+		<property name="name" type="string"/>
+		<set name="books" table="AUTHOR_BOOK" inverse="false" cascade="all" lazy="false" batch-size="25">
+			<key column="AUTHOR_ID"/>
+			<many-to-many class="Book" column="BOOK_ID"/>
+		</set>
+	</class>
+	
+	<class name="Book" table="BOOK">
+		<id name="id" type="long">
+			<generator class="increment"/>
+		</id>
+		<property name="title" type="string"/>
+		<set name="authors" table="AUTHOR_BOOK" inverse="true" cascade="all" lazy="false" batch-size="25">
+			<key column="BOOK_ID"/>
+			<many-to-many class="Author" column="AUTHOR_ID"/>
+		</set>
+	</class>
+	
+</hibernate-mapping>

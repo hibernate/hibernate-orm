@@ -744,7 +744,7 @@ public class AnyAssociationTests {
 		public Identifier determineAnyDiscriminatorColumnName(ImplicitAnyDiscriminatorColumnNameSource source) {
 			return toIdentifier(
 					"implicit_any_discriminator_" + source.getAttributePath().getProperty(),
-					source.getBuildingContext()
+					source.getNamingContext()
 			);
 		}
 
@@ -752,7 +752,7 @@ public class AnyAssociationTests {
 		public Identifier determineAnyKeyColumnName(ImplicitAnyKeyColumnNameSource source) {
 			return toIdentifier(
 					"implicit_any_key_" + source.getAttributePath().getProperty(),
-					source.getBuildingContext()
+					source.getNamingContext()
 			);
 		}
 	}

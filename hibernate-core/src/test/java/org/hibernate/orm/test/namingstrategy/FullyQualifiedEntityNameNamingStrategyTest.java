@@ -132,7 +132,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 				ownedPortion = transformAttributePath( source.getAssociationOwningAttributePath() );
 			}
 
-			return toIdentifier( ownerPortion + "_" + ownedPortion, source.getBuildingContext() );
+			return toIdentifier( ownerPortion + "_" + ownedPortion, source.getNamingContext() );
 		}
 
 		@Override
@@ -147,7 +147,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 						+ transformAttributePath( source.getAttributePath() )
 						+ "_" + source.getReferencedColumnName();
 			}
-			return toIdentifier( name, source.getBuildingContext() );
+			return toIdentifier( name, source.getNamingContext() );
 		}
 	}
 }

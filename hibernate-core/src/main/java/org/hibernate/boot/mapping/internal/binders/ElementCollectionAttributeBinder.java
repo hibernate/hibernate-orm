@@ -10,6 +10,8 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
@@ -38,7 +40,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -524,8 +525,8 @@ class ElementCollectionAttributeBinder {
 						}
 
 						@Override
-						public MetadataBuildingContext getBuildingContext() {
-							return bindingState.getMetadataBuildingContext();
+						public ImplicitNamingContext getNamingContext() {
+							return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 						}
 					} )
 					.getText();

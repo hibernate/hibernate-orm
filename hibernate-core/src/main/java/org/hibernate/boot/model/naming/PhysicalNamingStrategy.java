@@ -5,6 +5,7 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.Incubating;
+import org.hibernate.SPI;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
@@ -38,6 +39,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  * @author Steve Ebersole
  */
 @Incubating(since = "6.0")
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 public interface PhysicalNamingStrategy {
 	/**
 	 * Determine the physical catalog name from the given logical name

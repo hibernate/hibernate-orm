@@ -412,8 +412,7 @@ public class TemporalHelper {
 				BasicValueResolutionBuilder.applyResolution(
 						resolutionInput,
 						context.getServiceComponents(),
-						MappingResolutionState.from( context ),
-						context
+						MappingResolutionState.from( context )
 				);
 			}
 			else {
@@ -424,8 +423,7 @@ public class TemporalHelper {
 				BasicValueResolutionBuilder.applyResolution(
 						details,
 						context.getServiceComponents(),
-						MappingResolutionState.from( context ),
-						context
+						MappingResolutionState.from( context )
 				);
 			}
 		}

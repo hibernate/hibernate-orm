@@ -12,6 +12,8 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKeyCompositeType;
 import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
@@ -132,8 +134,8 @@ class CollectionIndexBinder {
 					}
 
 					@Override
-					public org.hibernate.boot.spi.MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				} )
 				.getText();
@@ -723,8 +725,8 @@ class CollectionIndexBinder {
 					}
 
 					@Override
-					public org.hibernate.boot.spi.MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				} )
 				.getText();

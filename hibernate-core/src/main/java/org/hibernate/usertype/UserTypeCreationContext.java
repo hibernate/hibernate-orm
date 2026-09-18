@@ -5,11 +5,8 @@
 package org.hibernate.usertype;
 
 import org.hibernate.Incubating;
-import org.hibernate.Remove;
 import org.hibernate.annotations.Type;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.service.ServiceRegistry;
 
 import java.util.Properties;
 
@@ -23,24 +20,6 @@ import java.util.Properties;
  */
 @Incubating(since = "7.3")
 public interface UserTypeCreationContext {
-	/**
-	 * Access to the {@link MetadataBuildingContext}.
-	 *
-	 * @apiNote This broad access will be removed in 9.0. Users requiring
-	 * specific boot-time values should report those requirements.
-	 */
-	@Remove
-	MetadataBuildingContext getBuildingContext();
-
-	/**
-	 * Access to available services.
-	 *
-	 * @apiNote This broad access will be removed in 9.0. Users requiring
-	 * specific services should report those requirements.
-	 */
-	@Remove
-	ServiceRegistry getServiceRegistry();
-
 	/**
 	 * Access to the {@link MemberDetails}.
 	 */

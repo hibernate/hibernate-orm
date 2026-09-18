@@ -179,7 +179,33 @@ removed with the old source collector.  Prefer the corresponding
 `Configuration` may still add annotated classes, packages, resources, files,
 URLs, streams, and mapping directories through its supported methods.
 
+[[user-type-creation-context]]
+==== UserType creation context
+
+`UserTypeCreationContext#getBuildingContext()` and `getServiceRegistry()` have
+been removed, as announced by their 9.0 removal notices. Custom types continue
+to receive member metadata through `getMemberDetails()` and mapping parameters
+through `getParameters()` during construction and initialization.
+
+Extensions calling either removed method must be updated and recompiled;
+previously compiled calls are not binary compatible. There is no general
+replacement context or service-registry accessor. If a custom type needs another
+boot-time value or capability, report that requirement so a focused extension
+contract can be considered.
+
 ==== Removed broad integration hooks
+
+`AttributeBindingContext`, `EntityBindingContext`, and
+`EmbeddableBindingContext` no longer expose `getMetadataBuildingContext()`.
+Binders retain their categorized mapping inputs and mutable destination mapping
+objects. There is no replacement general context or service-registry accessor.
+Extensions calling the removed methods must be updated and recompiled; those
+calls are not binary compatible.
+
+`@TenantId` binding is now an internal mapping operation and no longer carries
+an `@AttributeBinderType` marker. Tenant mapping, filtering, and value generation
+remain supported, including tenant attributes inside embeddables. Custom binder
+annotations on the same member continue to run.
 
 Broad hooks tied to the removed staged builders have also been removed.
 Integrations should use the narrow contract matching the actual contribution:
@@ -758,3 +784,24 @@ Explicit mapping resources may still be located anywhere on the application clas
 Container-provided class/package/module inventories remain authoritative; Hibernate
 loads XML mappings without repeating program-element scanning. If no root or
 referenced archives are supplied, no ambient classpath search is performed.
+
+=== Implicit naming inputs
+
+`ImplicitNameSource.getBuildingContext()` has been replaced by
+`getNamingContext()`, returning `org.hibernate.boot.model.naming.spi.ImplicitNamingContext`.
+Strategies now obtain `IdentifierHelper`, schema charset, and effective naming
+defaults from that focused context. General metadata-building access is removed.
+
+The naming constants and quote/identifier/discriminator/tenant default accessors
+formerly declared by `EffectiveMappingDefaults` are now declared by
+`org.hibernate.boot.model.naming.spi.ImplicitNamingDefaults`.
+`EffectiveMappingDefaults` extends that interface, so normal inherited member
+access remains available; reflection inspecting declared members must use the
+new declaring interface. Recompile custom naming integrations for 9.0.
+
+Subclasses of `ImplicitNamingStrategyJpaCompliantImpl` must change overrides and
+calls of `toIdentifier(String, MetadataBuildingContext)` and
+`namingHelper(MetadataBuildingContext)` to accept `ImplicitNamingContext`.
+The `toIdentifier(String, IdentifierHelper)` overload remains available.
+The old protected signatures are removed, so already compiled subclasses must
+be rebuilt. Naming algorithms and the physical naming signatures are unchanged.

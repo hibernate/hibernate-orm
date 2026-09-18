@@ -28,7 +28,7 @@ public class TestNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl i
 	public Identifier determineBasicColumnName(ImplicitBasicColumnNameSource source) {
 		return toIdentifier(
 				"PTCN_" + source.getAttributePath().getProperty(),
-				source.getBuildingContext()
+				source.getNamingContext()
 		);
 	}
 

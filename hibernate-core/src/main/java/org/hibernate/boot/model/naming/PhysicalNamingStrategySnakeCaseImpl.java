@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.SPI;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 import java.util.Locale;
@@ -33,7 +34,12 @@ import static java.lang.Character.isUpperCase;
  * @since 7.0
  */
 // Originally copied from Spring's SpringPhysicalNamingStrategy as this strategy is popular there.
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class PhysicalNamingStrategySnakeCaseImpl implements PhysicalNamingStrategy {
+	@SPI(SPI.Role.USE)
+	public PhysicalNamingStrategySnakeCaseImpl() {
+	}
+
 
 	@Override
 	public Identifier toPhysicalCatalogName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {

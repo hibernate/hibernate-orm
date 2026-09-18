@@ -17,6 +17,8 @@ import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.categorize.StandardPersistentAttributeMemberResolver;
@@ -818,8 +820,8 @@ public record ComponentSource(
 							}
 
 							@Override
-							public MetadataBuildingContext getBuildingContext() {
-								return buildingContext;
+							public ImplicitNamingContext getNamingContext() {
+								return ImplicitNamingContextImpl.from( buildingContext );
 							}
 						} )
 		);

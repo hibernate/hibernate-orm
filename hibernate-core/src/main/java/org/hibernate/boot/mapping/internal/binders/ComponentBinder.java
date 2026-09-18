@@ -457,7 +457,7 @@ public class ComponentBinder {
 				columns.add( column );
 			}
 		}
-		state.addComponentCustomMapping( CustomMappingBinder.typeBinding( contribution, component, state, context ) );
+		state.addComponentCustomMapping( CustomMappingBinder.typeBinding( contribution, component, context ) );
 		for ( AppliedAttributeMapping appliedAttribute : appliedAttributes ) {
 			state.getBootBindingModel().addAppliedAttributeMapping( appliedAttribute );
 		}
@@ -535,14 +535,9 @@ public class ComponentBinder {
 				property.setReturnedClassName( member.getType().getName() );
 			}
 			new org.hibernate.binder.internal.TenantIdBinder().bind(
-					tenantId,
-					CustomMappingBinder.attributeBindingContext(
-							member,
-							ownerBinding,
-							property,
-							state,
-							context
-					)
+					ownerBinding,
+					property,
+					state.getMetadataBuildingContext()
 			);
 		}
 	}
@@ -620,8 +615,7 @@ public class ComponentBinder {
 		BasicValueResolutionBuilder.applyResolution(
 				details,
 				context.getServiceComponents(),
-				MappingResolutionState.from( context ),
-				context
+				MappingResolutionState.from( context )
 		);
 		return basicValue;
 	}

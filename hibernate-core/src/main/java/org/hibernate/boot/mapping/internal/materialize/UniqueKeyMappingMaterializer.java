@@ -9,6 +9,8 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -106,8 +108,8 @@ public final class UniqueKeyMappingMaterializer {
 					}
 
 					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return context;
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( context );
 					}
 				} )
 				.render( context.getMetadataCollector().getDatabase().getDialect() );

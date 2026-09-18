@@ -7,8 +7,6 @@ package org.hibernate.binder.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TenantId;
-import org.hibernate.binder.AttributeBinder;
-import org.hibernate.binder.AttributeBindingContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.rowsecurity.internal.RowLevelSecurityDdlMaterializer;
@@ -32,18 +30,15 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
  *
  * @author Gavin King
  */
-public class TenantIdBinder implements AttributeBinder<TenantId> {
+public class TenantIdBinder {
 
 	public static final String FILTER_NAME = "_tenantId";
 	public static final String PARAMETER_NAME = "tenantId";
 
-	@Override
 	public void bind(
-			TenantId tenantId,
-			AttributeBindingContext context) {
-		final MetadataBuildingContext buildingContext = context.getMetadataBuildingContext();
-		final PersistentClass persistentClass = context.getPersistentClass();
-		final Property property = context.getProperty();
+			PersistentClass persistentClass,
+			Property property,
+			MetadataBuildingContext buildingContext) {
 		final var collector = buildingContext.getMetadataCollector();
 		final var tenantIdType =
 				collector.getTypeConfiguration().getBasicTypeRegistry()

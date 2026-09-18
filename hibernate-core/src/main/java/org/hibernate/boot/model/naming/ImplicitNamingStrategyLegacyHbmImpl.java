@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.SPI;
+
 import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
@@ -11,7 +13,12 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  *
  * @author Steve Ebersole
  */
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJpaCompliantImpl {
+	@SPI(SPI.Role.USE)
+	public ImplicitNamingStrategyLegacyHbmImpl() {
+	}
+
 	/**
 	 * Singleton access
 	 */
@@ -25,7 +32,7 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 	@Override
 	public Identifier determineBasicColumnName(ImplicitBasicColumnNameSource source) {
 		return source.isCollectionElement()
-				? toIdentifier( "elt", source.getBuildingContext() )
+				? toIdentifier( "elt", source.getNamingContext() )
 				: super.determineBasicColumnName( source );
 	}
 
@@ -33,7 +40,7 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 	public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source) {
 		final var attributePath = source.getAttributePath();
 		return attributePath != null
-				? toIdentifier( transformAttributePath( attributePath ), source.getBuildingContext() )
+				? toIdentifier( transformAttributePath( attributePath ), source.getNamingContext() )
 				: super.determineJoinColumnName( source );
 	}
 
@@ -44,7 +51,7 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 			final String name = source.getOwningPhysicalTableName()
 					+ '_'
 					+ transformAttributePath( associationOwningAttributePath );
-			return toIdentifier( name, source.getBuildingContext() );
+			return toIdentifier( name, source.getNamingContext() );
 		}
 		else {
 			return super.determineJoinTableName( source );

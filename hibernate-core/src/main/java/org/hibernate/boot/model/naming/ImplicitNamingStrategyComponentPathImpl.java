@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.SPI;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.spi.NavigablePath;
@@ -18,7 +19,12 @@ import org.hibernate.spi.NavigablePath;
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class ImplicitNamingStrategyComponentPathImpl extends ImplicitNamingStrategyJpaCompliantImpl {
+	@SPI(SPI.Role.USE)
+	public ImplicitNamingStrategyComponentPathImpl() {
+	}
+
 	public static final ImplicitNamingStrategyComponentPathImpl INSTANCE = new ImplicitNamingStrategyComponentPathImpl();
 
 	@Override

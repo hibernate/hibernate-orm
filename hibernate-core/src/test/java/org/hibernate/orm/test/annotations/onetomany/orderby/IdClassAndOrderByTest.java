@@ -91,7 +91,7 @@ public class IdClassAndOrderByTest {
 		public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
 			String var10000 = source.getOwningPhysicalTableName();
 			String name = var10000 + "_" + source.getAssociationOwningAttributePath().getProperty();
-			return this.toIdentifier( name, source.getBuildingContext() );
+			return this.toIdentifier( name, source.getNamingContext() );
 		}
 	}
 }

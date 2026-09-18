@@ -775,8 +775,7 @@ public final class AuditHelper {
 		BasicValueResolutionBuilder.applyResolution(
 				details,
 				context.getServiceComponents(),
-				MappingResolutionState.from( context ),
-				context
+				MappingResolutionState.from( context )
 		);
 
 		return column;

@@ -17,6 +17,8 @@ import org.hibernate.boot.model.internal.DerivedIdentifierGeneratorDescriptor;
 import org.hibernate.boot.model.internal.GeneratedValueGeneratorDescriptor;
 import org.hibernate.boot.model.internal.GeneratorAnnotationHelper;
 import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTableBinding;
@@ -1367,8 +1369,8 @@ public class IdentifierMappingMaterializer {
 					}
 
 					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return state.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( state.getMetadataBuildingContext() );
 					}
 				} )
 				.getText();

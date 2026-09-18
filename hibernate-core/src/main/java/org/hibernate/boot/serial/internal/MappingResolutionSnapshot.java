@@ -74,7 +74,7 @@ public final class MappingResolutionSnapshot implements Serializable {
 							entry.getValue(),
 							services
 					);
-					BasicValueResolutionBuilder.applyResolution( details, services, state, buildingContext );
+					BasicValueResolutionBuilder.applyResolution( details, services, state );
 				}
 				catch (RuntimeException e) {
 					throw new IllegalStateException(

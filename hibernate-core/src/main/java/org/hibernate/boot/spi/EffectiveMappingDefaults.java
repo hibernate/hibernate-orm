@@ -9,6 +9,7 @@ import java.util.EnumSet;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingDefaults;
 import org.hibernate.cache.spi.access.AccessType;
 
 import jakarta.persistence.CascadeType;
@@ -23,10 +24,7 @@ import jakarta.persistence.CascadeType;
  *
  * @author Steve Ebersole
  */
-public interface EffectiveMappingDefaults {
-	String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
-	String DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME = "tenant_id";
-	String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
+public interface EffectiveMappingDefaults extends ImplicitNamingDefaults {
 
 	/**
 	 * The default database catalog name to use
@@ -43,36 +41,6 @@ public interface EffectiveMappingDefaults {
 	 * @see PersistenceUnitMetadata#getDefaultCatalog()
 	 */
 	String getDefaultSchemaName();
-
-	/**
-	 * Whether database identifiers be quoted by default
-	 *
-	 * @see GlobalMappingDefaults#shouldImplicitlyQuoteIdentifiers()
-	 * @see PersistenceUnitMetadata#useQuotedIdentifiers()
-	 *
-	 */
-	boolean isDefaultQuoteIdentifiers();
-
-	/**
-	 * The default column name to use for the identifier column if none specified in
-	 * the mapping.
-	 * Falls back to {@value #DEFAULT_IDENTIFIER_COLUMN_NAME}.
-	 */
-	String getDefaultIdColumnName();
-
-	/**
-	 * The default column name to use for the discriminator column if none specified
-	 * in the mapping.
-	 * Falls back to {@value #DEFAULT_DISCRIMINATOR_COLUMN_NAME}.
-	 */
-	String getDefaultDiscriminatorColumnName();
-
-	/**
-	 * The default column name to use for the tenant identifier column if none is
-	 * specified in the mapping.
-	 * Falls back to {@value #DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME}.
-	 */
-	String getDefaultTenantIdColumnName();
 
 	/**
 	 * The default package name to use if none specified in XML mappings.

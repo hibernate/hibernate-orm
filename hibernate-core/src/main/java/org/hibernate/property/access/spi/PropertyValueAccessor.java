@@ -30,7 +30,7 @@ import org.hibernate.usertype.CompositeUserType;
  * {@link ValueReader}/{@link ValueWriter}
  * from hibernate-accessor — ORM never implements those interfaces.
  */
-@Incubating
+@Incubating(since = "8.0")
 public final class PropertyValueAccessor {
 
 	/**

@@ -6,9 +6,7 @@
         <dynamic-insert>true</dynamic-insert>
         <dynamic-update>true</dynamic-update>
         <attributes>
-            <id name="id">
-                <generated-value strategy="IDENTITY"/>
-            </id>
+            <id name="id"/>
             <basic name="name"/>
             <basic name="description"/>
             <basic name="notes"/>

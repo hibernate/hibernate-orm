@@ -5,7 +5,9 @@
 package org.hibernate.orm.test.hqlimport;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -19,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Verifies that {@code <import>} (hql-import) elements in orm.xml are processed
  * and register class names for use in HQL polymorphic queries.
  */
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @JiraKey("HHH-20716")
 @DomainModel(xmlMappings = "org/hibernate/orm/test/hqlimport/Mappings.orm.xml")
 @SessionFactory

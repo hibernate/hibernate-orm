@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.spi.mutation.jdbc;
 
+import org.hibernate.SPI;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import java.sql.PreparedStatement;
@@ -28,16 +29,20 @@ import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.ast.spi.model.TableDeleteStandard;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
+@SPI({ USE, IMPLEMENT }) // By Hibernate Reactive
 public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	private final UpsertOperation upsertOperation;
 
 	private final OptionalTableUpdate optionalTableUpdate;
 
+	@SPI(IMPLEMENT)
 	public DeleteOrUpsertOperation(
 			UpsertOperation upsertOperation,
 			OptionalTableUpdate optionalTableUpdate) {
@@ -111,9 +116,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 		}
 	}
 
-	/*
-	 * Used by Hibernate Reactive
-	 */
+	@SPI(USE) // By Hibernate Reactive
 	protected final PreparedStatementDetails createDeleteStatementDetails(
 			SharedSessionContractImplementor session,
 			TableMapping tableMapping) {

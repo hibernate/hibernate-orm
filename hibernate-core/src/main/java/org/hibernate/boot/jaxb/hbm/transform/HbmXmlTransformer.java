@@ -2987,6 +2987,7 @@ public class HbmXmlTransformer {
 		target.setFetch( fetchType );
 		target.setOptimisticLock( source.isOptimisticLock() );
 		target.setMutable( source.isMutable() );
+		TransformationHelper.transfer( source::getBatchSize, target::setBatchSize );
 
 		if ( isNotEmpty( source.getCollectionType() ) ) {
 			final var jaxbCollectionUserType = new JaxbCollectionUserTypeImpl();

@@ -316,7 +316,7 @@ public class TypecheckUtil {
 	 * @see #areTypesComparable(SqmBindableType, SqmBindableType, BindingContext)
 	 */
 	public static boolean isTypeAssignable(
-			SqmBindableType<?> targetType, SqmBindableType<?> expressionType,
+			@Nullable SqmBindableType<?> targetType, @Nullable SqmBindableType<?> expressionType,
 			BindingContext bindingContext) {
 
 		if ( targetType == null || expressionType == null || targetType == expressionType ) {
@@ -475,7 +475,11 @@ public class TypecheckUtil {
 		else {
 			final var targetType = targetPath.getNodeType();
 			final var expressionType = expression.getNodeType();
-			if ( targetType != null && expressionType != null && targetPath.isEnum() ) {
+			if ( targetType == null || expressionType == null ) {
+				// An unknown type cannot be checked yet.
+				return;
+			}
+			if ( targetPath.isEnum() ) {
 				// this is needed by Hibernate Processor due to the weird
 				// handling of enumerated types in the annotation processor
 				if ( !Objects.equals( targetType.getTypeName(), expressionType.getTypeName() ) ) {

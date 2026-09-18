@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.function.array;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CteGenerateSeriesFunction;
@@ -58,8 +59,9 @@ public class DB2UnnestFunction extends UnnestFunction {
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {
+			@Nonnull
 			@Override
-			public TableGroup convertToSqlAst(NavigablePath navigablePath, String identifierVariable, boolean lateral, boolean canUseInnerJoins, boolean withOrdinality, SqmToSqlAstConverter walker) {
+			public TableGroup convertToSqlAst(@Nonnull NavigablePath navigablePath, @Nonnull String identifierVariable, boolean lateral, boolean canUseInnerJoins, boolean withOrdinality, @Nonnull SqmToSqlAstConverter walker) {
 				walker.registerQueryTransformer( new DB2JsonTableFunction.SeriesQueryTransformer( maximumArraySize ) );
 				return super.convertToSqlAst( navigablePath, identifierVariable, lateral, canUseInnerJoins, withOrdinality, walker );
 			}

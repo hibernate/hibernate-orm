@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.spi.NavigablePath;
@@ -18,15 +19,16 @@ import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
  */
 public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	public SqmEntityValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmEntityValuedSimplePath<T> copy(SqmCopyContext context) {
+	public SqmEntityValuedSimplePath<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -46,18 +48,20 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitEntityValuedPath( this );
 	}
 

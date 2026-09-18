@@ -5,6 +5,7 @@
 package org.hibernate.query.criteria;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 
@@ -19,6 +20,7 @@ public interface JpaJsonValueNode<T> {
 	 *
 	 * @return the error behavior
 	 */
+	@Nonnull
 	ErrorBehavior getErrorBehavior();
 
 	/**
@@ -26,6 +28,7 @@ public interface JpaJsonValueNode<T> {
 	 *
 	 * @return the empty behavior
 	 */
+	@Nonnull
 	EmptyBehavior getEmptyBehavior();
 
 	/**
@@ -49,50 +52,58 @@ public interface JpaJsonValueNode<T> {
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonValueNode<T> unspecifiedOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#ERROR} for this json value expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonValueNode<T> errorOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#NULL} for this json value expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonValueNode<T> nullOnError();
 	/**
 	 * Sets the {@link ErrorBehavior#DEFAULT} for this json value expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaJsonValueNode<T> defaultOnError(Expression<?> expression);
+	@Nonnull
+	JpaJsonValueNode<T> defaultOnError(@Nonnull Expression<?> expression);
 
 	/**
 	 * Sets the {@link EmptyBehavior#UNSPECIFIED} for this json value expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonValueNode<T> unspecifiedOnEmpty();
 	/**
 	 * Sets the {@link EmptyBehavior#ERROR} for this json value expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonValueNode<T> errorOnEmpty();
 	/**
 	 * Sets the {@link EmptyBehavior#NULL} for this json value expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
+	@Nonnull
 	JpaJsonValueNode<T> nullOnEmpty();
 	/**
 	 * Sets the {@link EmptyBehavior#DEFAULT} for this json value expression.
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaJsonValueNode<T> defaultOnEmpty(Expression<?> expression);
+	@Nonnull
+	JpaJsonValueNode<T> defaultOnEmpty(@Nonnull Expression<?> expression);
 
 	/**
 	 * The behavior of the json value expression when a JSON processing error occurs.

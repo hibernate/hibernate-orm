@@ -180,7 +180,8 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	@Override
 	@Nullable
 	public <T> BindableType<T> getInferredParameterType(@Nonnull QueryParameter<T> parameter) {
-		final var sqmParameters = queryParameters.get( (QueryParameterImplementor<T>) parameter );
+		final var sqmParameters = queryParameters.get(
+				QueryParameterBindingParameter.unwrap( (QueryParameterImplementor<T>) parameter ) );
 		if ( sqmParameters != null && !sqmParameters.isEmpty() ) {
 			for ( var sqmParameter : sqmParameters ) {
 				final var nodeType = sqmParameter.getNodeType();
@@ -196,7 +197,8 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	@Override
 	public boolean containsReference(@Nonnull QueryParameter<?> parameter) {
 		//noinspection SuspiciousMethodCalls
-		return queryParameters.containsKey( parameter );
+		return queryParameters.containsKey( parameter instanceof QueryParameterImplementor<?> implementor
+				? QueryParameterBindingParameter.unwrap( implementor ) : parameter );
 	}
 
 	@Override
@@ -224,7 +226,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	@Nonnull
 	public <P> QueryParameterImplementor<P> resolve(@Nonnull Parameter<P> param) {
 		if ( param instanceof QueryParameterImplementor<P> parameterImplementor ) {
-			return parameterImplementor;
+			return QueryParameterBindingParameter.unwrap( parameterImplementor );
 		}
 		else {
 			final String errorMessage =

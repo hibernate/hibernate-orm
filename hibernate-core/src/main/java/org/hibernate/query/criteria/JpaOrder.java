@@ -18,12 +18,14 @@ public interface JpaOrder extends Order, JpaCriteriaNode {
 	/**
 	 * The direction, ascending or descending, in which to sort
 	 */
+	@Nonnull
 	SortDirection getSortDirection();
 
 	/**
 	 * Set the precedence of nulls for this order element
 	 */
-	JpaOrder nullPrecedence(Nulls precedence);
+	@Nonnull
+	JpaOrder nullPrecedence(@Nonnull Nulls precedence);
 
 	/**
 	 * The precedence for nulls for this order element

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaWindowFrame;
@@ -23,16 +24,17 @@ public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 	private final FrameKind kind;
 	private final @Nullable SqmExpression<?> expression;
 
-	public SqmWindowFrame(NodeBuilder nodeBuilder, FrameKind kind) {
+	public SqmWindowFrame(@Nonnull NodeBuilder nodeBuilder, @Nonnull FrameKind kind) {
 		this( nodeBuilder, kind, null );
 	}
 
-	public SqmWindowFrame(NodeBuilder nodeBuilder, FrameKind kind, @Nullable SqmExpression<?> expression) {
+	public SqmWindowFrame(@Nonnull NodeBuilder nodeBuilder, @Nonnull FrameKind kind, @Nullable SqmExpression<?> expression) {
 		super( nodeBuilder );
 		this.kind = kind;
 		this.expression = expression;
 	}
 
+	@Nonnull
 	@Override
 	public FrameKind getKind() {
 		return kind;
@@ -43,8 +45,9 @@ public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 		return expression;
 	}
 
+	@Nonnull
 	@Override
-	public SqmWindowFrame copy(SqmCopyContext context) {
+	public SqmWindowFrame copy(@Nonnull SqmCopyContext context) {
 		final SqmWindowFrame existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -74,7 +77,7 @@ public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmWindowFrame that
 				&& kind == that.kind
 				&& SqmCacheable.areCompatible( expression, that.expression );

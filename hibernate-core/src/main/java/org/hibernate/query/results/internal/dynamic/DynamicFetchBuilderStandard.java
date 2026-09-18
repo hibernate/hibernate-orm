@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -49,6 +51,7 @@ public class DynamicFetchBuilderStandard
 	}
 
 	@Override
+	@Nonnull
 	public DynamicFetchBuilderStandard cacheKeyInstance() {
 		return new DynamicFetchBuilderStandard( fetchable,
 				List.copyOf( columnNames ) );
@@ -191,12 +194,14 @@ public class DynamicFetchBuilderStandard
 	}
 
 	@Override
-	public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {
+	@Nonnull
+	public NativeQuery.ReturnProperty addColumnAlias(@Nonnull String columnAlias) {
 		columnNames.add( columnAlias );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getColumnAliases() {
 		return columnNames;
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -25,9 +26,9 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	private final SqmPath<T> wrappedPath;
 
 	public SqmTreatedEntityValuedSimplePath(
-			SqmPluralValuedSimplePath<T> wrappedPath,
-			SqmEntityDomainType<S> treatTarget,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmPluralValuedSimplePath<T> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget,
+			@Nonnull NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getNavigablePath().treatAs(
@@ -42,9 +43,9 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	public SqmTreatedEntityValuedSimplePath(
-			SqmPath<T> wrappedPath,
-			SqmEntityDomainType<S> treatTarget,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmPath<T> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget,
+			@Nonnull NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getNavigablePath().treatAs(
@@ -59,10 +60,10 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	private SqmTreatedEntityValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPath<T> wrappedPath,
-			SqmEntityDomainType<S> treatTarget,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPath<T> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget,
+			@Nonnull NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
 				navigablePath,
@@ -74,8 +75,9 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 		this.wrappedPath = wrappedPath;
 	}
 
+	@Nonnull
 	@Override
-	public SqmTreatedEntityValuedSimplePath<T, S> copy(SqmCopyContext context) {
+	public SqmTreatedEntityValuedSimplePath<T, S> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -100,6 +102,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return wrappedPath;
@@ -110,11 +113,13 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
@@ -133,14 +138,15 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 		return resolvePath( attributeName, treatTarget.getSubPathSource( attributeName ) );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		// Cast needed for static nullness analysis.
 		return walker.visitTreatedPath( (SqmTreatedPath<?, ?>) this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "treat(" );
 		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.function;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -48,21 +50,22 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 	private @Nullable AnonymousTupleType<T> type;
 
 	public SelfRenderingSqmSetReturningFunction(
-			SqmSetReturningFunctionDescriptor descriptor,
-			SetReturningFunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull SqmSetReturningFunctionDescriptor descriptor,
+			@Nonnull SetReturningFunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ArgumentsValidator argumentsValidator,
-			SetReturningFunctionTypeResolver setReturningTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
+			@Nonnull SetReturningFunctionTypeResolver setReturningTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name) {
 		super( name, descriptor, arguments, nodeBuilder );
 		this.renderer = renderer;
 		this.argumentsValidator = argumentsValidator;
 		this.setReturningTypeResolver = setReturningTypeResolver;
 	}
 
+	@Nonnull
 	@Override
-	public SelfRenderingSqmSetReturningFunction<T> copy(SqmCopyContext context) {
+	public SelfRenderingSqmSetReturningFunction<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -85,6 +88,7 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 		);
 	}
 
+	@Nonnull
 	@Override
 	public AnonymousTupleType<T> getType() {
 		AnonymousTupleType<T> type = this.type;
@@ -105,6 +109,7 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 		return type != null;
 	}
 
+	@Nonnull
 	public SetReturningFunctionRenderer getFunctionRenderer() {
 		return renderer;
 	}
@@ -113,15 +118,18 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 		return argumentsValidator;
 	}
 
+	@Nonnull
 	public SetReturningFunctionTypeResolver getSetReturningTypeResolver() {
 		return setReturningTypeResolver;
 	}
 
-	protected List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
+	@Nonnull
+	protected List<SqlAstNode> resolveSqlAstArguments(@Nonnull List<? extends SqmTypedNode<?>> sqmArguments, @Nonnull SqmToSqlAstConverter walker) {
 		return resolveSqlAstArguments( sqmArguments, 0, sqmArguments.size(), walker );
 	}
 
-	protected List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, int start, int end, SqmToSqlAstConverter walker) {
+	@Nonnull
+	protected List<SqlAstNode> resolveSqlAstArguments(@Nonnull List<? extends SqmTypedNode<?>> sqmArguments, int start, int end, @Nonnull SqmToSqlAstConverter walker) {
 		if ( start == end ) {
 			return emptyList();
 		}
@@ -173,20 +181,21 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 		}
 	}
 
+	@Nonnull
 	@Override
 	public TableGroup convertToSqlAst(
-			NavigablePath navigablePath,
-			String identifierVariable,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull String identifierVariable,
 			boolean lateral,
 			boolean canUseInnerJoins,
 			boolean withOrdinality,
-			SqmToSqlAstConverter walker) {
+			@Nonnull SqmToSqlAstConverter walker) {
 		final List<SqlAstNode> arguments;
 		try {
 			arguments = resolveSqlAstArguments( getArguments(), walker );
 		}
 		catch ( SqlTreeCreationException ex ) {
-			if ( !lateral && ex.getMessage().contains( "Could not locate TableGroup" ) ) {
+			if ( !lateral && ex.getMessage() != null && ex.getMessage().contains( "Could not locate TableGroup" ) ) {
 				throw new IllegalArgumentException( "Could not construct set-returning function. Maybe you forgot to use 'lateral'?", ex );
 			}
 			throw ex;

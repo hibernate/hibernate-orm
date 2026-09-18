@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.HibernateException;
 
 /**
@@ -17,7 +19,7 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class UnknownParameterException extends HibernateException {
-	public UnknownParameterException(String message) {
+	public UnknownParameterException(@Nonnull String message) {
 		super( message );
 	}
 }

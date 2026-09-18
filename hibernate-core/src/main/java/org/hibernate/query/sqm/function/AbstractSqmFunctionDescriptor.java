@@ -159,8 +159,8 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	public final <T> SelfRenderingSqmFunction<T> generateWindowSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		argumentsValidator.validate( arguments, getName(), queryEngine );
@@ -240,8 +240,8 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	protected <T> SelfRenderingSqmWindowFunction<T> generateSqmWindowFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return (SelfRenderingSqmWindowFunction<T>) generateSqmExpression(

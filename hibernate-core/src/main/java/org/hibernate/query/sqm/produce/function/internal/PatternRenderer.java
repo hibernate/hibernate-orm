@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.produce.function.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
@@ -184,8 +186,8 @@ public class PatternRenderer {
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> args,
 			Predicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
 			SqlAstTranslator<?> translator) {
 		render( sqlAppender, args, filter, emptyList(), respectNulls, fromFirst, translator );
 	}
@@ -195,8 +197,8 @@ public class PatternRenderer {
 			List<? extends SqlAstNode> args,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
-			Boolean respectNulls,
-			Boolean fromFirst,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
 			SqlAstTranslator<?> translator) {
 		final int numberOfArguments = args.size();
 		if ( numberOfArguments < maxParamIndex ) {

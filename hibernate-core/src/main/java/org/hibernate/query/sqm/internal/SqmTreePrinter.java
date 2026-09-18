@@ -493,7 +493,8 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitHavingClause(SqmPredicate predicate) {
+	@Nullable
+	public Object visitHavingClause(@Nullable SqmPredicate predicate) {
 		if ( predicate != null ) {
 			processStanza(
 					"having",
@@ -1073,7 +1074,8 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitOrderByClause(SqmOrderByClause orderByClause) {
+	@Nullable
+	public Object visitOrderByClause(@Nullable SqmOrderByClause orderByClause) {
 		return null;
 	}
 
@@ -1083,12 +1085,14 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitOffsetExpression(SqmExpression<?> expression) {
+	@Nullable
+	public Object visitOffsetExpression(@Nullable SqmExpression<?> expression) {
 		return null;
 	}
 
 	@Override
-	public Object visitFetchExpression(SqmExpression<?> expression) {
+	@Nullable
+	public Object visitFetchExpression(@Nullable SqmExpression<?> expression) {
 		return null;
 	}
 
@@ -1230,6 +1234,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
+	@Nullable
 	public Object visitModifiedSubQueryExpression(SqmModifiedSubQueryExpression<?> expression) {
 		return null;
 	}

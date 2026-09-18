@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.select;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,19 +52,21 @@ public class SqmDynamicInstantiation<T>
 
 	private static final Logger LOG = Logger.getLogger( SqmDynamicInstantiation.class );
 
+	@Nonnull
 	public static <R> SqmDynamicInstantiation<R> forClassInstantiation(
-			JavaType<R> targetJavaType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull JavaType<R> targetJavaType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmDynamicInstantiation<>(
 				new DynamicInstantiationTargetImpl<>( CLASS, targetJavaType ),
 				nodeBuilder
 		);
 	}
 
+	@Nonnull
 	public static <R> SqmDynamicInstantiation<R> classInstantiation(
-			Class<R> targetJavaType,
-			List<? extends SqmSelectableNode<?>> arguments,
-			NodeBuilder nodeBuilder) {
+			@Nonnull Class<R> targetJavaType,
+			@Nonnull List<? extends SqmSelectableNode<?>> arguments,
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmDynamicInstantiation<>(
 				new DynamicInstantiationTargetImpl<>( CLASS,
 						nodeBuilder.getTypeConfiguration().getJavaTypeRegistry()
@@ -73,17 +76,19 @@ public class SqmDynamicInstantiation<T>
 		);
 	}
 
+	@Nonnull
 	public static <M extends Map<?, ?>> SqmDynamicInstantiation<M> forMapInstantiation(
-			JavaType<M> mapJavaType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull JavaType<M> mapJavaType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmDynamicInstantiation<>(
 				new DynamicInstantiationTargetImpl<>( MAP, mapJavaType ),
 				nodeBuilder
 		);
 	}
 
+	@Nonnull
 	public static <M extends Map<?, ?>> SqmDynamicInstantiation<M> mapInstantiation(
-			List<? extends SqmSelectableNode<?>> arguments, NodeBuilder nodeBuilder) {
+			@Nonnull List<? extends SqmSelectableNode<?>> arguments, @Nonnull NodeBuilder nodeBuilder) {
 		return new SqmDynamicInstantiation<>(
 				new DynamicInstantiationTargetImpl<>( MAP,
 						nodeBuilder.getTypeConfiguration().getJavaTypeRegistry()
@@ -93,17 +98,19 @@ public class SqmDynamicInstantiation<T>
 		);
 	}
 
+	@Nonnull
 	public static <L extends List<?>> SqmDynamicInstantiation<L> forListInstantiation(
-			JavaType<L> listJavaType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull JavaType<L> listJavaType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmDynamicInstantiation<>(
 				new DynamicInstantiationTargetImpl<>( LIST, listJavaType ),
 				nodeBuilder
 		);
 	}
 
+	@Nonnull
 	public static <L extends List<?>> SqmDynamicInstantiation<L> listInstantiation(
-			List<? extends SqmSelectableNode<?>> arguments, NodeBuilder nodeBuilder) {
+			@Nonnull List<? extends SqmSelectableNode<?>> arguments, @Nonnull NodeBuilder nodeBuilder) {
 		return new SqmDynamicInstantiation<>(
 				new DynamicInstantiationTargetImpl<>( LIST,
 						nodeBuilder.getTypeConfiguration().getJavaTypeRegistry()
@@ -117,16 +124,16 @@ public class SqmDynamicInstantiation<T>
 	private @Nullable List<SqmDynamicInstantiationArgument<?>> arguments;
 
 	private SqmDynamicInstantiation(
-			SqmDynamicInstantiationTarget<T> instantiationTarget,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmDynamicInstantiationTarget<T> instantiationTarget,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( instantiationTarget.getSqmType(), nodeBuilder );
 		this.instantiationTarget = instantiationTarget;
 	}
 
 	private SqmDynamicInstantiation(
-			SqmDynamicInstantiationTarget<T> instantiationTarget,
-			List<? extends SqmSelectableNode<?>> arguments,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmDynamicInstantiationTarget<T> instantiationTarget,
+			@Nonnull List<? extends SqmSelectableNode<?>> arguments,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( instantiationTarget.getSqmType(), nodeBuilder );
 		this.instantiationTarget = instantiationTarget;
 		final ArrayList<SqmDynamicInstantiationArgument<?>> newArguments = new ArrayList<>();
@@ -138,15 +145,15 @@ public class SqmDynamicInstantiation<T>
 
 	private SqmDynamicInstantiation(
 			@Nullable SqmBindableType<T> sqmExpressible,
-			NodeBuilder criteriaBuilder,
-			SqmDynamicInstantiationTarget<T> instantiationTarget,
+			@Nonnull NodeBuilder criteriaBuilder,
+			@Nonnull SqmDynamicInstantiationTarget<T> instantiationTarget,
 			@Nullable List<SqmDynamicInstantiationArgument<?>> arguments) {
 		super( sqmExpressible, criteriaBuilder );
 		this.instantiationTarget = instantiationTarget;
 		this.arguments = arguments;
 	}
 
-	public boolean checkInstantiation(TypeConfiguration typeConfiguration) {
+	public boolean checkInstantiation(@Nonnull TypeConfiguration typeConfiguration) {
 		if ( getInstantiationTarget().getNature() == CLASS ) {
 			final Class<? extends T> javaType = castNonNull( getJavaType() );
 			if ( javaType.isArray() ) {
@@ -180,6 +187,7 @@ public class SqmDynamicInstantiation<T>
 		}
 	}
 
+	@Nonnull
 	private List<Class<?>> argumentTypes() {
 		return getArguments().stream()
 				.map( arg -> {
@@ -203,8 +211,9 @@ public class SqmDynamicInstantiation<T>
 		return getArguments().stream().allMatch( arg -> arg.getAlias() != null );
 	}
 
+	@Nonnull
 	@Override
-	public SqmDynamicInstantiation<T> copy(SqmCopyContext context) {
+	public SqmDynamicInstantiation<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -233,10 +242,12 @@ public class SqmDynamicInstantiation<T>
 		return instantiation;
 	}
 
+	@Nonnull
 	public SqmDynamicInstantiationTarget<T> getInstantiationTarget() {
 		return instantiationTarget;
 	}
 
+	@Nonnull
 	public List<SqmDynamicInstantiationArgument<?>> getArguments() {
 		return arguments == null ? emptyList() : unmodifiableList( arguments );
 	}
@@ -247,19 +258,20 @@ public class SqmDynamicInstantiation<T>
 		return getInstantiationTarget().getTargetTypeDescriptor();
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return "<new " + instantiationTarget.getJavaType().getName() + ">";
 	}
 
-	public void addArgument(SqmDynamicInstantiationArgument<?> argument) {
+	public void addArgument(@Nonnull SqmDynamicInstantiationArgument<?> argument) {
 		if ( arguments == null ) {
 			arguments = new ArrayList<>();
 		}
 		addArgument( instantiationTarget, arguments, argument );
 	}
 
-	private static void addArgument(SqmDynamicInstantiationTarget<?> instantiationTarget, List<SqmDynamicInstantiationArgument<?>> arguments, SqmDynamicInstantiationArgument<?> argument) {
+	private static void addArgument(@Nonnull SqmDynamicInstantiationTarget<?> instantiationTarget, @Nonnull List<SqmDynamicInstantiationArgument<?>> arguments, @Nonnull SqmDynamicInstantiationArgument<?> argument) {
 		if ( instantiationTarget.getNature() == LIST ) {
 			// really should not have an alias...
 			if ( argument.getAlias() != null && LOG.isDebugEnabled() ) {
@@ -287,25 +299,27 @@ public class SqmDynamicInstantiation<T>
 		arguments.add( argument );
 	}
 
+	@Nonnull
 	@Override
-	public SqmDynamicInstantiationArgument<?> add(SqmExpression<?> expression, String alias) {
+	public SqmDynamicInstantiationArgument<?> add(@Nonnull SqmExpression<?> expression, @Nullable String alias) {
 		final var argument = new SqmDynamicInstantiationArgument<>( expression, alias, nodeBuilder() );
 		addArgument( argument );
 		return argument;
 	}
 
 	@Override
-	public void add(SqmDynamicInstantiationArgument<?> aliasExpression) {
+	public void add(@Nonnull SqmDynamicInstantiationArgument<?> aliasExpression) {
 		addArgument( aliasExpression );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitDynamicInstantiation( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "new " );
 		if ( instantiationTarget.getNature() == LIST ) {
 			hql.append( "list" );
@@ -342,7 +356,7 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmDynamicInstantiation<?> that
 			&& Objects.equals( instantiationTarget, that.instantiationTarget )
 			&& SqmCacheable.areCompatible( arguments, that.arguments );
@@ -355,6 +369,7 @@ public class SqmDynamicInstantiation<T>
 		return result;
 	}
 
+	@Nonnull
 	@SuppressWarnings("unused")
 	public SqmDynamicInstantiation<T> makeShallowCopy() {
 		return new SqmDynamicInstantiation<>( getInstantiationTarget(), nodeBuilder() );
@@ -417,12 +432,13 @@ public class SqmDynamicInstantiation<T>
 	// JPA
 
 	@Override
-	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> consumer) {
+	public void visitSubSelectableNodes(@Nonnull Consumer<SqmSelectableNode<?>> consumer) {
 		for ( SqmDynamicInstantiationArgument<?> argument : getArguments() ) {
 			consumer.accept( argument.getSelectableNode() );
 		}
 	}
 
+	@Nonnull
 	@Override
 	public List<SqmSelectableNode<?>> getSelectionItems() {
 		final List<SqmSelectableNode<?>> list = new ArrayList<>();

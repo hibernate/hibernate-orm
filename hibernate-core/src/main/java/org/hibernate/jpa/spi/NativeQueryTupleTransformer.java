@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 import org.hibernate.HibernateException;
@@ -25,50 +27,49 @@ import static java.util.Locale.ROOT;
  */
 public class NativeQueryTupleTransformer implements TypedTupleTransformer<Tuple> {
 
+	@Nonnull
 	public static final NativeQueryTupleTransformer INSTANCE = new NativeQueryTupleTransformer();
 
 	@Override
-	public Tuple transformTuple(Object[] tuple, String[] aliases) {
+	@Nonnull
+	public Tuple transformTuple(@Nonnull Object[] tuple, @Nonnull String[] aliases) {
 		return new NativeTupleImpl( tuple, aliases );
 	}
 
 	@Override
+	@Nonnull
 	public Class<Tuple> getTransformedType() {
 		return Tuple.class;
 	}
 
-	private static class NativeTupleElementImpl<X> implements TupleElement<X> {
-
-		private final Class<? extends X> javaType;
-
-		private final String alias;
-
-		public NativeTupleElementImpl(Class<? extends X> javaType, String alias) {
-			this.javaType = javaType;
-			this.alias = alias;
-		}
+	private record NativeTupleElementImpl<X>
+			(@Nonnull Class<? extends X> javaType, @Nullable String alias)
+					implements TupleElement<X> {
 
 		@Override
-		public Class<? extends X> getJavaType() {
+		public @Nonnull Class<? extends X> getJavaType() {
 			return javaType;
 		}
 
 		@Override
-		public String getAlias() {
+		public @Nullable String getAlias() {
 			return alias;
 		}
 	}
 
 	private static class NativeTupleImpl implements Tuple {
 
+		@Nonnull
 		private final Object[] tuple;
 
 		private final int size;
 
+		@Nonnull
 		private final Map<String, Object> aliasToValue = new LinkedHashMap<>();
+		@Nonnull
 		private final Map<String, String> aliasReferences = new LinkedHashMap<>();
 
-		public NativeTupleImpl(Object[] tuple, String[] aliases) {
+		public NativeTupleImpl(@Nonnull Object[] tuple, @Nonnull String[] aliases) {
 			if ( tuple == null ) {
 				throw new HibernateException( "Tuple must not be null" );
 			}
@@ -90,14 +91,15 @@ public class NativeQueryTupleTransformer implements TypedTupleTransformer<Tuple>
 		}
 
 		@Override
-		public <X> X get(String alias, Class<X> type) {
+		@Nullable
+		public <X> X get(@Nonnull String alias, @Nonnull Class<X> type) {
 			final Object untyped = get( alias );
-
-			return ( untyped != null ) ? type.cast( untyped ) : null;
+			return untyped == null ? null : type.cast( untyped );
 		}
 
 		@Override
-		public Object get(String alias) {
+		@Nullable
+		public Object get(@Nonnull String alias) {
 			final String aliasReference = aliasReferences.get( alias.toLowerCase(ROOT) );
 			if ( aliasReference != null && aliasToValue.containsKey( aliasReference ) ) {
 				return aliasToValue.get( aliasReference );
@@ -106,13 +108,14 @@ public class NativeQueryTupleTransformer implements TypedTupleTransformer<Tuple>
 		}
 
 		@Override
-		public <X> X get(int i, Class<X> type) {
+		@Nullable
+		public <X> X get(int i, @Nonnull Class<X> type) {
 			final Object untyped = get( i );
-
-			return ( untyped != null ) ? type.cast( untyped ) : null;
+			return untyped == null ? null : type.cast( untyped );
 		}
 
 		@Override
+		@Nullable
 		public Object get(int i) {
 			if ( i < 0 ) {
 				throw new IllegalArgumentException( "requested tuple index must be greater than zero" );
@@ -124,19 +127,20 @@ public class NativeQueryTupleTransformer implements TypedTupleTransformer<Tuple>
 		}
 
 		@Override
+		@Nonnull
 		public Object[] toArray() {
-			// todo : make a copy?
-			return tuple;
+			return tuple.clone();
 		}
 
 		@Override
+		@Nonnull
 		public String toString() {
 			return Arrays.toString( tuple );
 		}
 
 
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(@Nullable Object obj) {
 			return obj instanceof NativeTupleImpl that
 				&& Objects.equals( this.aliasToValue, that.aliasToValue );
 		}
@@ -148,6 +152,7 @@ public class NativeQueryTupleTransformer implements TypedTupleTransformer<Tuple>
 
 
 		@Override
+		@Nonnull
 		public List<TupleElement<?>> getElements() {
 			final List<TupleElement<?>> elements = new ArrayList<>( size );
 			for ( var entry : aliasToValue.entrySet() ) {
@@ -156,17 +161,19 @@ public class NativeQueryTupleTransformer implements TypedTupleTransformer<Tuple>
 			return elements;
 		}
 
-		private Class<?> getValueClass(Object value) {
-			Class<?> valueClass = Object.class;
-			if ( value != null ) {
-				valueClass = value.getClass();
-			}
-			return valueClass;
+		@Nonnull
+		private Class<?> getValueClass(@Nullable Object value) {
+			return value == null ? Object.class : value.getClass();
 		}
 
 		@Override
-		public <X> X get(TupleElement<X> tupleElement) {
-			return get( tupleElement.getAlias(), tupleElement.getJavaType() );
+		@Nullable
+		public <X> X get(@Nonnull TupleElement<X> tupleElement) {
+			final String alias = tupleElement.getAlias();
+			if ( alias == null ) {
+				throw new IllegalArgumentException( "TupleElement has no alias" );
+			}
+			return tupleElement.getJavaType().cast( get( alias ) );
 		}
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
@@ -76,7 +78,8 @@ public interface Order<X> {
 	 * with smaller values first. If the given attribute is of textual
 	 * type, the ordering is case-sensitive.
 	 */
-	static <T> Order<T> asc(SingularAttribute<T,?> attribute) {
+	@Nonnull
+	static <T> Order<T> asc(@Nonnull SingularAttribute<T,?> attribute) {
 		return new AttributeOrder<>(ASCENDING, Nulls.NONE, attribute);
 	}
 
@@ -85,7 +88,8 @@ public interface Order<X> {
 	 * with larger values first. If the given attribute is of textual
 	 * type, the ordering is case-sensitive.
 	 */
-	static <T> Order<T> desc(SingularAttribute<T,?> attribute) {
+	@Nonnull
+	static <T> Order<T> desc(@Nonnull SingularAttribute<T,?> attribute) {
 		return new AttributeOrder<>(DESCENDING, Nulls.NONE, attribute);
 	}
 
@@ -94,7 +98,8 @@ public interface Order<X> {
 	 * in the given direction. If the given attribute is of textual
 	 * type, the ordering is case-sensitive.
 	 */
-	static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction) {
+	@Nonnull
+	static <T> Order<T> by(@Nonnull SingularAttribute<T,?> attribute, @Nonnull SortDirection direction) {
 		return new AttributeOrder<>(direction, Nulls.NONE, attribute);
 	}
 
@@ -102,7 +107,8 @@ public interface Order<X> {
 	 * An order where an entity is sorted by the given attribute,
 	 * in the given direction, with the specified case-sensitivity.
 	 */
-	static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, boolean ignoreCase) {
+	@Nonnull
+	static <T> Order<T> by(@Nonnull SingularAttribute<T,?> attribute, @Nonnull SortDirection direction, boolean ignoreCase) {
 		return new AttributeOrder<>(direction, Nulls.NONE, attribute, !ignoreCase);
 	}
 
@@ -112,7 +118,8 @@ public interface Order<X> {
 	 * null values. If the given attribute is of textual type, the
 	 * ordering is case-sensitive.
 	 */
-	static <T> Order<T> by(SingularAttribute<T, ?> attribute, SortDirection direction, Nulls nullPrecedence) {
+	@Nonnull
+	static <T> Order<T> by(@Nonnull SingularAttribute<T, ?> attribute, @Nonnull SortDirection direction, @Nonnull Nulls nullPrecedence) {
 		return new AttributeOrder<>(direction, nullPrecedence, attribute);
 	}
 
@@ -122,7 +129,8 @@ public interface Order<X> {
 	 * the named attribute is of textual type, the ordering is
 	 * case-sensitive.
 	 */
-	static <T> Order<T> asc(Class<T> entityClass, String attributeName) {
+	@Nonnull
+	static <T> Order<T> asc(@Nonnull Class<T> entityClass, @Nonnull String attributeName) {
 		return new NamedAttributeOrder<>( ASCENDING, Nulls.NONE, entityClass, attributeName );
 	}
 
@@ -132,7 +140,8 @@ public interface Order<X> {
 	 * the named attribute is of textual type, the ordering is
 	 * case-sensitive.
 	 */
-	static <T> Order<T> desc(Class<T> entityClass, String attributeName) {
+	@Nonnull
+	static <T> Order<T> desc(@Nonnull Class<T> entityClass, @Nonnull String attributeName) {
 		return new NamedAttributeOrder<>( DESCENDING, Nulls.NONE, entityClass, attributeName );
 	}
 
@@ -142,7 +151,8 @@ public interface Order<X> {
 	 * named attribute is of textual type, the ordering is
 	 * case-sensitive.
 	 */
-	static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction) {
+	@Nonnull
+	static <T> Order<T> by(@Nonnull Class<T> entityClass, @Nonnull String attributeName, @Nonnull SortDirection direction) {
 		return new NamedAttributeOrder<>( direction, Nulls.NONE, entityClass, attributeName );
 	}
 
@@ -151,7 +161,8 @@ public interface Order<X> {
 	 * attribute with the given name, in the given direction, with
 	 * the specified case-sensitivity.
 	 */
-	static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, boolean ignoreCase) {
+	@Nonnull
+	static <T> Order<T> by(@Nonnull Class<T> entityClass, @Nonnull String attributeName, @Nonnull SortDirection direction, boolean ignoreCase) {
 		return new NamedAttributeOrder<>( direction, Nulls.NONE, entityClass, attributeName, !ignoreCase );
 	}
 
@@ -162,7 +173,8 @@ public interface Order<X> {
 	 * precedence for null values. If the named attribute is of
 	 * textual type, the ordering is case-sensitive.
 	 */
-	static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, Nulls nullPrecedence) {
+	@Nonnull
+	static <T> Order<T> by(@Nonnull Class<T> entityClass, @Nonnull String attributeName, @Nonnull SortDirection direction, @Nonnull Nulls nullPrecedence) {
 		return new NamedAttributeOrder<>( direction, nullPrecedence, entityClass, attributeName );
 	}
 
@@ -171,6 +183,7 @@ public interface Order<X> {
 	 * in the given position with smaller values first. If the
 	 * item is of textual type, the ordering is case-sensitive.
 	 */
+	@Nonnull
 	static Order<Object[]> asc(int element) {
 		return new ElementOrder<>( ASCENDING, Nulls.NONE, element );
 	}
@@ -180,6 +193,7 @@ public interface Order<X> {
 	 * in the given position with larger values first. If the
 	 * item is of textual type, the ordering is case-sensitive.
 	 */
+	@Nonnull
 	static Order<Object[]> desc(int element) {
 		return new ElementOrder<>( DESCENDING, Nulls.NONE, element );
 	}
@@ -189,7 +203,8 @@ public interface Order<X> {
 	 * in the given position, in the given direction. If the item
 	 * is of textual type, the ordering is case-sensitive.
 	 */
-	static Order<Object[]> by(int element, SortDirection direction) {
+	@Nonnull
+	static Order<Object[]> by(int element, @Nonnull SortDirection direction) {
 		return new ElementOrder<>( direction, Nulls.NONE, element );
 	}
 
@@ -198,7 +213,8 @@ public interface Order<X> {
 	 * in the given position in the given direction, with the specified
 	 * case-sensitivity.
 	 */
-	static Order<Object[]> by(int element, SortDirection direction, boolean ignoreCase) {
+	@Nonnull
+	static Order<Object[]> by(int element, @Nonnull SortDirection direction, boolean ignoreCase) {
 		return new ElementOrder<>( direction, Nulls.NONE, element, !ignoreCase );
 	}
 
@@ -208,7 +224,8 @@ public interface Order<X> {
 	 * precedence for null values. If the named attribute is of
 	 * textual type, the ordering is case-sensitive.
 	 */
-	static Order<Object[]> by(int element, SortDirection direction, Nulls nullPrecedence) {
+	@Nonnull
+	static Order<Object[]> by(int element, @Nonnull SortDirection direction, @Nonnull Nulls nullPrecedence) {
 		return new ElementOrder<>( direction, nullPrecedence, element );
 	}
 
@@ -219,6 +236,7 @@ public interface Order<X> {
 	 *
 	 * @since 7
 	 */
+	@Nonnull
 	SortDirection direction();
 
 	/**
@@ -226,6 +244,7 @@ public interface Order<X> {
 	 *
 	 * @since 7
 	 */
+	@Nonnull
 	Nulls nullPrecedence();
 
 	/**
@@ -245,6 +264,7 @@ public interface Order<X> {
 	 *
 	 * @since 7
 	 */
+	@Nullable
 	Class<X> entityClass();
 
 	/**
@@ -256,6 +276,7 @@ public interface Order<X> {
 	 *
 	 * @since 7
 	 */
+	@Nullable
 	String attributeName();
 
 	/**
@@ -268,6 +289,7 @@ public interface Order<X> {
 	 *
 	 * @since 7
 	 */
+	@Nullable
 	SingularAttribute<X, ?> attribute();
 
 	/**
@@ -285,24 +307,28 @@ public interface Order<X> {
 	 * @return this order, but with the sorting direction reversed.
 	 * @since 6.5
 	 */
+	@Nonnull
 	Order<X> reverse();
 
 	/**
 	 * @return this order, but without case-sensitivity.
 	 * @since 6.5
 	 */
+	@Nonnull
 	Order<X> ignoringCase();
 
 	/**
 	 * @return this order, but with nulls sorted first.
 	 * @since 6.5
 	 */
+	@Nonnull
 	Order<X> withNullsFirst();
 
 	/**
 	 * @return this order, but with nulls sorted last.
 	 * @since 6.5
 	 */
+	@Nonnull
 	Order<X> withNullsLast();
 
 	/**
@@ -316,6 +342,7 @@ public interface Order<X> {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	default Order<X> reversedIf(boolean reverse) {
 		return reverse ? reverse() : this;
 	}
@@ -331,6 +358,7 @@ public interface Order<X> {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	default Order<X> ignoringCaseIf(boolean ignoreCase) {
 		return ignoreCase ? ignoringCase() : this;
 	}
@@ -342,7 +370,7 @@ public interface Order<X> {
 	 * @since 8.0
 	 */
 	@Incubating(since = "8.0", group = "query-specifications")
-	default void apply(CriteriaQuery<?> query, Root<?> root, CriteriaBuilder builder) {
+	default void apply(@Nonnull CriteriaQuery<?> query, @Nonnull Root<?> root, @Nonnull CriteriaBuilder builder) {
 		requireNonNull( query, "missing query" );
 		requireNonNull( root, "missing root" );
 		requireNonNull( builder, "missing builder" );
@@ -355,20 +383,23 @@ public interface Order<X> {
 		query.orderBy( orders );
 	}
 
+	@Nonnull
 	private jakarta.persistence.criteria.Order order(
-			Expression<?> expression,
-			CriteriaBuilder builder) {
+			@Nonnull Expression<?> expression,
+			@Nonnull CriteriaBuilder builder) {
 		return direction() == DESCENDING
 				? builder.desc( expression, nullPrecedence() )
 				: builder.asc( expression, nullPrecedence() );
 	}
 
-	private Expression<?> expression(Root<?> root, CriteriaBuilder builder) {
+	@Nonnull
+	private Expression<?> expression(@Nonnull Root<?> root, @Nonnull CriteriaBuilder builder) {
 		final var path = path( root, attributeName() );
 		return caseSensitive() ? path : builder.lower( path.as( String.class ) );
 	}
 
-	private static Path<?> path(Root<?> root, String path) {
+	@Nonnull
+	private static Path<?> path(@Nonnull Root<?> root, @Nonnull String path) {
 		requireNonNull( path, "missing path" );
 		final var tokens = new StringTokenizer( path, "." );
 		if ( !tokens.hasMoreTokens() ) {
@@ -391,15 +422,18 @@ public interface Order<X> {
 	 *
 	 * @since 6.5
 	 */
-	static <T> List<Order<? super T>> reverse(List<Order<? super T>> ordering) {
+	@Nonnull
+	static <T> List<Order<? super T>> reverse(@Nonnull List<Order<? super T>> ordering) {
 		return ordering.stream().map(Order::reverse).collect(toList());
 	}
 
+	@Nonnull
 	@Deprecated(since = "7", forRemoval = true)
 	default SortDirection getDirection() {
 		return direction();
 	}
 
+	@Nonnull
 	@Deprecated(since = "7", forRemoval = true)
 	default Nulls getNullPrecedence() {
 		return nullPrecedence();
@@ -410,16 +444,19 @@ public interface Order<X> {
 		return !caseSensitive();
 	}
 
+	@Nullable
 	@Deprecated(since = "7", forRemoval = true)
 	default SingularAttribute<X, ?> getAttribute() {
 		return attribute();
 	}
 
+	@Nullable
 	@Deprecated(since = "7", forRemoval = true)
 	default Class<X> getEntityClass() {
 		return entityClass();
 	}
 
+	@Nullable
 	@Deprecated(since = "7", forRemoval = true)
 	default String getAttributeName() {
 		return attributeName();

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
@@ -26,7 +27,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	// The navigable path is optionally set in case this is a reference to an attribute of a selection
 	private final @Nullable NavigablePath navigablePath;
 
-	public SqmAliasedNodeRef(int position, SqmBindableType<Integer> intType, NodeBuilder criteriaBuilder) {
+	public SqmAliasedNodeRef(int position, @Nonnull SqmBindableType<Integer> intType, @Nonnull NodeBuilder criteriaBuilder) {
 		super( intType, criteriaBuilder );
 		this.position = position;
 		this.navigablePath = null;
@@ -34,22 +35,23 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 
 	public SqmAliasedNodeRef(
 			int position,
-			NavigablePath navigablePath,
-			SqmBindableType<Integer> type,
-			NodeBuilder criteriaBuilder) {
+			@Nullable NavigablePath navigablePath,
+			@Nonnull SqmBindableType<Integer> type,
+			@Nonnull NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.position = position;
 		this.navigablePath = navigablePath;
 	}
 
-	private SqmAliasedNodeRef(SqmAliasedNodeRef original) {
+	private SqmAliasedNodeRef(@Nonnull SqmAliasedNodeRef original) {
 		super( original.getNodeType(), original.nodeBuilder() );
 		this.position = original.position;
 		this.navigablePath = original.navigablePath;
 	}
 
+	@Nonnull
 	@Override
-	public SqmAliasedNodeRef copy(SqmCopyContext context) {
+	public SqmAliasedNodeRef copy(@Nonnull SqmCopyContext context) {
 		final SqmAliasedNodeRef existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -67,15 +69,16 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 		return navigablePath;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		// we expect this to be handled specially in
 		// `BaseSqmToSqlAstConverter#resolveGroupOrOrderByExpression`
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		if ( navigablePath == null ) {
 			hql.append( position );
 		}
@@ -98,7 +101,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

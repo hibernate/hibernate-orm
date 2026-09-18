@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Collection;
 
 import org.hibernate.MappingException;
@@ -51,6 +53,7 @@ public interface SynchronizeableQuery {
 	 *
 	 * @return The list of query spaces upon which the query is synchronized.
 	 */
+	@Nonnull
 	Collection<String> getSynchronizedQuerySpaces();
 
 	/**
@@ -68,7 +71,8 @@ public interface SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SynchronizeableQuery addSynchronizedQuerySpace(String querySpace);
+	@Nonnull
+	SynchronizeableQuery addSynchronizedQuerySpace(@Nonnull String querySpace);
 
 	/**
 	 * Add all query spaces associated with the entity with the given names.
@@ -81,7 +85,8 @@ public interface SynchronizeableQuery {
 	 *
 	 * @throws MappingException Indicates the given name could not be resolved as an entity
 	 */
-	SynchronizeableQuery addSynchronizedEntityName(String entityName) throws MappingException;
+	@Nonnull
+	SynchronizeableQuery addSynchronizedEntityName(@Nonnull String entityName) throws MappingException;
 
 	/**
 	 * Add all query spaces associated with the entity with the given type.
@@ -94,5 +99,6 @@ public interface SynchronizeableQuery {
 	 *
 	 * @throws MappingException Indicates the given class could not be resolved as an entity
 	 */
-	SynchronizeableQuery addSynchronizedEntityClass(Class<?> entityClass) throws MappingException;
+	@Nonnull
+	SynchronizeableQuery addSynchronizedEntityClass(@Nonnull Class<?> entityClass) throws MappingException;
 }

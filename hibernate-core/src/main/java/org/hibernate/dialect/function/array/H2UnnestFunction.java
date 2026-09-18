@@ -47,6 +47,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -82,14 +83,15 @@ public class H2UnnestFunction extends UnnestFunction {
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {
+			@Nonnull
 			@Override
 			public TableGroup convertToSqlAst(
-					NavigablePath navigablePath,
-					String identifierVariable,
+					@Nonnull NavigablePath navigablePath,
+					@Nonnull String identifierVariable,
 					boolean lateral,
 					boolean canUseInnerJoins,
 					boolean withOrdinality,
-					SqmToSqlAstConverter walker) {
+					@Nonnull SqmToSqlAstConverter walker) {
 				// Register a transformer that adds a join predicate "array_length(array) <= index"
 				final FunctionTableGroup functionTableGroup = (FunctionTableGroup) super.convertToSqlAst(
 						navigablePath,

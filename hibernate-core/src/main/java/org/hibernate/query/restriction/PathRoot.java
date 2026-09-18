@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.restriction;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.FetchParent;
 
@@ -12,21 +13,24 @@ import jakarta.persistence.criteria.FetchParent;
  *
  * @author Gavin King
  */
-record PathRoot<X>(Class<X> type) implements Path<X, X> {
+record PathRoot<X>(@Nonnull Class<X> type) implements Path<X, X> {
+	@Nonnull
 	@Override
 	public Class<X> getType() {
 		return type;
 	}
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	public jakarta.persistence.criteria.Path<X> path(Root<? extends X> root) {
+	public jakarta.persistence.criteria.Path<X> path(@Nonnull Root<? extends X> root) {
 		// unchecked cast only to get rid of the upper bound
 		return (jakarta.persistence.criteria.Path<X>) root;
 	}
 
+	@Nonnull
 	@Override
-	public FetchParent<?, ? extends X> fetch(Root<? extends X> root) {
+	public FetchParent<?, ? extends X> fetch(@Nonnull Root<? extends X> root) {
 		return root;
 	}
 }

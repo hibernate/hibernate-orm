@@ -42,21 +42,22 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	private final List<SqmQueryPart<T>> queryParts;
 	private final SetOperator setOperator;
 
-	public SqmQueryGroup(SqmQueryPart<T> queryPart, SetOperator setOperator) {
+	public SqmQueryGroup(@Nonnull SqmQueryPart<T> queryPart, @Nonnull SetOperator setOperator) {
 		this( queryPart.nodeBuilder(), setOperator, listOf( queryPart ) );
 	}
 
 	public SqmQueryGroup(
-			NodeBuilder nodeBuilder,
-			SetOperator setOperator,
-			List<SqmQueryPart<T>> queryParts) {
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull SetOperator setOperator,
+			@Nonnull List<SqmQueryPart<T>> queryParts) {
 		super( nodeBuilder );
 		this.setOperator = setOperator;
 		this.queryParts = queryParts;
 	}
 
+	@Nonnull
 	@Override
-	public SqmQueryPart<T> copy(SqmCopyContext context) {
+	public SqmQueryPart<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -74,15 +75,18 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		}
 	}
 
+	@Nonnull
 	public List<SqmQueryPart<T>> queryParts() {
 		return queryParts;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> getFirstQuerySpec() {
 		return queryParts.get( 0 ).getFirstQuerySpec();
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> getLastQuerySpec() {
 		return queryParts.get( queryParts.size() - 1 ).getLastQuerySpec();
@@ -93,8 +97,9 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		return false;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitQueryGroup( this );
 	}
 
@@ -104,6 +109,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		return unmodifiableList( queryParts );
 	}
 
+	@Nonnull
 	public SetOperator getSetOperator() {
 		return setOperator;
 	}
@@ -151,7 +157,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		validateQueryGroupFetchStructure( typedNodes );
 	}
 
-	private void validateQueryGroupFetchStructure(List<? extends SqmTypedNode<?>> typedNodes) {
+	private void validateQueryGroupFetchStructure(@Nonnull List<? extends SqmTypedNode<?>> typedNodes) {
 		final int firstSelectionSize = typedNodes.size();
 		for ( int i = 0; i < queryParts.size(); i++ ) {
 			final SqmQueryPart<T> queryPart = queryParts.get( i );
@@ -184,7 +190,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		}
 	}
 
-	private void validateFetchesMatch(SqmFrom<?, ?> firstFrom, SqmFrom<?, ?> from) {
+	private void validateFetchesMatch(@Nonnull SqmFrom<?, ?> firstFrom, @Nonnull SqmFrom<?, ?> from) {
 		final var firstJoinIter = firstFrom.getSqmJoins().iterator();
 		final var joinIter = from.getSqmJoins().iterator();
 		while ( firstJoinIter.hasNext() ) {
@@ -212,7 +218,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		}
 	}
 
-	private static @Nullable SqmAttributeJoin<?, ?> findFirstFetchJoin(Iterator<? extends SqmJoin<?, ?>> joinIter) {
+	private static @Nullable SqmAttributeJoin<?, ?> findFirstFetchJoin(@Nonnull Iterator<? extends SqmJoin<?, ?>> joinIter) {
 		while ( joinIter.hasNext() ) {
 			if ( joinIter.next() instanceof SqmAttributeJoin<?, ?> attrJoin
 					&& attrJoin.isFetched() ) {
@@ -223,7 +229,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		appendQueryPart( queryParts.get( 0 ), hql, context );
 		for ( int i = 1; i < queryParts.size(); i++ ) {
 			hql.append( ' ' );
@@ -234,7 +240,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		super.appendHqlString( hql, context );
 	}
 
-	private static void appendQueryPart(SqmQueryPart<?> queryPart, StringBuilder sb, SqmRenderContext context) {
+	private static void appendQueryPart(@Nonnull SqmQueryPart<?> queryPart, @Nonnull StringBuilder sb, @Nonnull SqmRenderContext context) {
 		final boolean needsParenthesis = !queryPart.isSimpleQueryPart();
 		if ( needsParenthesis ) {
 			sb.append( '(' );
@@ -262,7 +268,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmQueryGroup<?> that
 			&& super.isCompatible( that )
 			&& this.setOperator == that.setOperator

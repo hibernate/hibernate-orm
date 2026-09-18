@@ -40,7 +40,7 @@ public interface JpaCriteriaInsertSelect<T> extends JpaCriteriaInsert<T> {
 	 * Set the select query supplying inserted values.
 	 */
 	@Nonnull
-	JpaCriteriaInsertSelect<T> select(CriteriaQuery<Tuple> criteriaQuery);
+	JpaCriteriaInsertSelect<T> select(@Nonnull CriteriaQuery<Tuple> criteriaQuery);
 
 	/**
 	 * Set the conflict clause for this insert statement.

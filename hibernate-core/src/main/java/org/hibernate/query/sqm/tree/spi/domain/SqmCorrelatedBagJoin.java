@@ -21,7 +21,7 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 	private final SqmCorrelatedRootJoin<O> correlatedRootJoin;
 	private final SqmBagJoin<O, T> correlationParent;
 
-	public SqmCorrelatedBagJoin(SqmBagJoin<O, T> correlationParent) {
+	public SqmCorrelatedBagJoin(@Nonnull SqmBagJoin<O, T> correlationParent) {
 		super(
 				correlationParent.getLhs(),
 				correlationParent.getNavigablePath(),
@@ -36,21 +36,22 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 	}
 
 	private SqmCorrelatedBagJoin(
-			SqmFrom<?, O> lhs,
-			SqmBagPersistentAttribute<O, T> attribute,
+			@Nonnull SqmFrom<?, O> lhs,
+			@Nonnull SqmBagPersistentAttribute<O, T> attribute,
 			@Nullable String alias,
-			SqmJoinType sqmJoinType,
+			@Nonnull SqmJoinType sqmJoinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder,
-			SqmCorrelatedRootJoin<O> correlatedRootJoin,
-			SqmBagJoin<O, T> correlationParent) {
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull SqmCorrelatedRootJoin<O> correlatedRootJoin,
+			@Nonnull SqmBagJoin<O, T> correlationParent) {
 		super( lhs, correlationParent.getNavigablePath(), attribute, alias, sqmJoinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedBagJoin<O, T> copy(SqmCopyContext context) {
+	public SqmCorrelatedBagJoin<O, T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -72,8 +73,9 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 		return path;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedBagJoin( this );
 	}
 
@@ -83,6 +85,7 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 		return correlationParent;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return correlationParent;
@@ -93,20 +96,21 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<O> getCorrelatedRoot() {
 		return correlatedRootJoin;
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> other) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> other) {
 		return super.deepEquals( other )
 			&& other instanceof SqmCorrelatedBagJoin<?, ?> that
 			&& correlationParent.equals( that.correlationParent );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> other) {
 		return super.isDeepCompatible( other )
 			&& other instanceof SqmCorrelatedBagJoin<?, ?> that
 			&& correlationParent.isCompatible( that.correlationParent );

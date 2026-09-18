@@ -23,8 +23,8 @@ public class SqmTreatedPluralPartJoin<O, T, S extends T>
 	private final SqmEntityDomainType<S> treatTarget;
 
 	public SqmTreatedPluralPartJoin(
-			SqmPluralPartJoin<O, T> wrappedPath,
-			SqmEntityDomainType<S> treatTarget,
+			@Nonnull SqmPluralPartJoin<O, T> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget,
 			@Nullable String alias) {
 		super(
 				wrappedPath.getLhs(),
@@ -40,9 +40,9 @@ public class SqmTreatedPluralPartJoin<O, T, S extends T>
 	}
 
 	private SqmTreatedPluralPartJoin(
-			NavigablePath navigablePath,
-			SqmPluralPartJoin<O, T> wrappedPath,
-			SqmEntityDomainType<S> treatTarget,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPluralPartJoin<O, T> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget,
 			@Nullable String alias) {
 		super(
 				wrappedPath.getLhs(),
@@ -58,7 +58,7 @@ public class SqmTreatedPluralPartJoin<O, T, S extends T>
 
 	@Override
 	@Nonnull
-	public SqmTreatedPluralPartJoin<O, T, S> copy(SqmCopyContext context) {
+	public SqmTreatedPluralPartJoin<O, T, S> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -76,6 +76,7 @@ public class SqmTreatedPluralPartJoin<O, T, S extends T>
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPluralPartJoin<O, T> getWrappedPath() {
 		return wrappedPath;
@@ -92,11 +93,13 @@ public class SqmTreatedPluralPartJoin<O, T, S extends T>
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
@@ -127,7 +130,7 @@ public class SqmTreatedPluralPartJoin<O, T, S extends T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "treat(" );
 		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );

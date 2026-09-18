@@ -27,19 +27,19 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	private final List<SqmPredicate> predicates;
 
 	public SqmJunctionPredicate(
-			BooleanOperator booleanOperator,
-			SqmBindableType<Boolean> expressible,
-			NodeBuilder nodeBuilder) {
+			@Nonnull BooleanOperator booleanOperator,
+			@Nullable SqmBindableType<Boolean> expressible,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( expressible, nodeBuilder );
 		this.booleanOperator = booleanOperator;
 		this.predicates = new ArrayList<>();
 	}
 
 	public SqmJunctionPredicate(
-			BooleanOperator booleanOperator,
-			SqmPredicate leftHandPredicate,
-			SqmPredicate rightHandPredicate,
-			NodeBuilder nodeBuilder) {
+			@Nonnull BooleanOperator booleanOperator,
+			@Nonnull SqmPredicate leftHandPredicate,
+			@Nonnull SqmPredicate rightHandPredicate,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.booleanOperator = booleanOperator;
 		this.predicates = new ArrayList<>( 2 );
@@ -48,16 +48,17 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	}
 
 	public SqmJunctionPredicate(
-			BooleanOperator booleanOperator,
-			List<SqmPredicate> predicates,
-			NodeBuilder nodeBuilder) {
+			@Nonnull BooleanOperator booleanOperator,
+			@Nonnull List<SqmPredicate> predicates,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.booleanOperator = booleanOperator;
 		this.predicates = predicates;
 	}
 
+	@Nonnull
 	@Override
-	public SqmJunctionPredicate copy(SqmCopyContext context) {
+	public SqmJunctionPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmJunctionPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -78,12 +79,14 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public List<SqmPredicate> getPredicates() {
 		return predicates;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitJunctionPredicate( this );
 	}
 
@@ -111,7 +114,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final String separator =
 				switch ( booleanOperator ) {
 					case AND -> " and ";
@@ -124,7 +127,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 		}
 	}
 
-	private void appendJunctionHqlString(SqmPredicate p, StringBuilder sb, SqmRenderContext context) {
+	private void appendJunctionHqlString(@Nonnull SqmPredicate p, @Nonnull StringBuilder sb, @Nonnull SqmRenderContext context) {
 		if ( p instanceof SqmJunctionPredicate junction ) {
 			// If we have the same nature, or if this is a disjunction and the operand is a conjunction,
 			// then we don't need parenthesis, because the AND operator binds stronger
@@ -157,7 +160,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmJunctionPredicate that
 			&& booleanOperator == that.booleanOperator
 			&& SqmCacheable.areCompatible( predicates, that.predicates );

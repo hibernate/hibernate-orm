@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.spi.ResultBuilder;
 
@@ -20,5 +22,6 @@ import org.hibernate.query.results.spi.ResultBuilder;
  * @author Steve Ebersole
  */
 public interface DynamicResultBuilder extends ResultBuilder, NativeQuery.ReturnableResultNode {
+	@Nonnull
 	DynamicResultBuilder cacheKeyInstance();
 }

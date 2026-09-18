@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.function;
 
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 
 import org.hibernate.SPI;
@@ -72,8 +74,8 @@ public interface FunctionRenderer {
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		// Ignore the filter by default. Subclasses will override this

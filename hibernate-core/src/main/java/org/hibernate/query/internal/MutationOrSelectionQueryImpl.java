@@ -90,19 +90,19 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override
 	@Nonnull
-	public <R> SelectionQuery<R> asSelectionQuery(Class<R> type) {
+	public <R> SelectionQuery<R> asSelectionQuery(@Nonnull Class<R> type) {
 		return delegate.asSelectionQuery( type );
 	}
 
 	@Override
 	@Nonnull
-	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph) {
+	public <X> SelectionQuery<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph) {
 		return delegate.asSelectionQuery( entityGraph );
 	}
 
 	@Override
 	@Nonnull
-	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+	public <X> SelectionQuery<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph, @Nonnull GraphSemantic graphSemantic) {
 		return delegate.asSelectionQuery( entityGraph, graphSemantic );
 	}
 
@@ -212,6 +212,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nullable
 	public Object getSingleResult() {
 		return delegate.getSingleResult();
 	}
@@ -263,6 +264,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	// Options
 
 	@Override
+	@Nonnull
 	public FlushMode getEffectiveFlushMode() {
 		return delegate.getEffectiveFlushMode();
 	}
@@ -495,6 +497,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	public MutationOrSelectionQuery setCacheRegion(@Nullable String cacheRegion) {
 		//noinspection removal
 		delegate.setCacheRegion( cacheRegion );
@@ -623,6 +626,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
+	@Nullable
 	public <T> T getParameterValue(@Nonnull Parameter<T> param) {
 		return delegate.getParameterValue( param );
 	}
@@ -634,6 +638,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
+	@Nullable
 	public Object getParameterValue(int position) {
 		return delegate.getParameterValue( position );
 	}
@@ -932,7 +937,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override
 	@Nonnull
-	public <T> T unwrap(Class<T> cls) {
+	public <T> T unwrap(@Nonnull Class<T> cls) {
 		return cls.isInstance( this ) ? cls.cast( this ) : delegate.unwrap( cls );
 	}
 }

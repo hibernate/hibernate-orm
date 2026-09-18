@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.assignment;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
@@ -13,10 +14,10 @@ import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
  *
  * @author Gavin King
  */
-record PathToAttributeAssignment<T, X>(SingularAttribute<T, X> attribute, Path<T,X> value)
+record PathToAttributeAssignment<T, X>(@Nonnull SingularAttribute<T, X> attribute, @Nonnull Path<T,X> value)
 		implements Assignment<T> {
 	@Override
-	public void apply(SqmUpdateStatement<? extends T> update) {
+	public void apply(@Nonnull SqmUpdateStatement<? extends T> update) {
 		update.set( attribute, value.path( update.getRoot() ) );
 	}
 }

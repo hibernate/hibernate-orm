@@ -25,27 +25,31 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	private final TemporalUnit unit;
 	private final ReturnableType<T> type;
 
-	public SqmExtractUnit(TemporalUnit unit, ReturnableType<T> type, NodeBuilder nodeBuilder) {
+	public SqmExtractUnit(@Nonnull TemporalUnit unit, @Nonnull ReturnableType<T> type, @Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.unit = unit;
 		this.type = type;
 	}
 
+	@Nonnull
 	@Override
-	public SqmExtractUnit<T> copy(SqmCopyContext context) {
+	public SqmExtractUnit<T> copy(@Nonnull SqmCopyContext context) {
 		return this;
 	}
 
+	@Nonnull
 	public TemporalUnit getUnit() {
 		return unit;
 	}
 
+	@Nonnull
 	public ReturnableType<T> getType() {
 		return type;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitExtractUnit( this );
 	}
 
@@ -55,7 +59,7 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( unit );
 	}
 
@@ -74,7 +78,7 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

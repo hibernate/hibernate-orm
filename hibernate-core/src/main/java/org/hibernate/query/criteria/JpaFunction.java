@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * Contract for expressions which model a SQL function call.
  *
@@ -17,5 +19,6 @@ public interface JpaFunction<T> extends JpaExpression<T> {
 	 *
 	 * @return The function name.
 	 */
+	@Nonnull
 	String getFunctionName();
 }

@@ -38,28 +38,29 @@ public abstract class AbstractSqmDmlStatement<E>
 	private final Map<String, SqmCteStatement<?>> cteStatements;
 	private SqmRoot<E> target;
 
-	public AbstractSqmDmlStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+	public AbstractSqmDmlStatement(@Nonnull SqmQuerySource querySource, @Nonnull NodeBuilder nodeBuilder) {
 		super( querySource, nodeBuilder );
 		this.cteStatements = new LinkedHashMap<>();
 	}
 
-	public AbstractSqmDmlStatement(SqmRoot<E> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+	public AbstractSqmDmlStatement(@Nonnull SqmRoot<E> target, @Nonnull SqmQuerySource querySource, @Nonnull NodeBuilder nodeBuilder) {
 		this( querySource, nodeBuilder );
 		this.target = target;
 	}
 
 	public AbstractSqmDmlStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmQuerySource querySource,
 			@Nullable Set<SqmParameter<?>> parameters,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			SqmRoot<E> target) {
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull SqmRoot<E> target) {
 		super( builder, querySource, parameters );
 		this.cteStatements = cteStatements;
 		this.target = target;
 	}
 
-	protected Map<String, SqmCteStatement<?>> copyCteStatements(SqmCopyContext context) {
+	@Nonnull
+	protected Map<String, SqmCteStatement<?>> copyCteStatements(@Nonnull SqmCopyContext context) {
 		final Map<String, SqmCteStatement<?>> copy =
 				new LinkedHashMap<>( cteStatements.size() );
 		for ( var entry : cteStatements.entrySet() ) {
@@ -68,7 +69,7 @@ public abstract class AbstractSqmDmlStatement<E>
 		return copy;
 	}
 
-	protected void putAllCtes(SqmCteContainer cteContainer) {
+	protected void putAllCtes(@Nonnull SqmCteContainer cteContainer) {
 		for ( var cteStatement : cteContainer.getCteStatements() ) {
 			final String cteName = cteStatement.getCteTable().getCteName();
 			if ( cteStatements.putIfAbsent( cteName, cteStatement ) != null ) {
@@ -86,7 +87,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	@Override
-	@Nullable public SqmCteStatement<?> getCteStatement(String cteLabel) {
+	@Nullable public SqmCteStatement<?> getCteStatement(@Nonnull String cteLabel) {
 		return cteStatements.get( cteLabel );
 	}
 
@@ -151,7 +152,8 @@ public abstract class AbstractSqmDmlStatement<E>
 		return withInternal( validateCteName( name ), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
-	private String validateCteName(String name) {
+	@Nonnull
+	private String validateCteName(@Nonnull String name) {
 		if ( name == null || name.isBlank() ) {
 			throw new IllegalArgumentException( "Illegal empty CTE name" );
 		}
@@ -166,7 +168,8 @@ public abstract class AbstractSqmDmlStatement<E>
 		return name;
 	}
 
-	private <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
+	@Nonnull
+	private <X> JpaCteCriteria<X> withInternal(@Nonnull String name, @Nonnull AbstractQuery<X> criteria) {
 		final var cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) criteria,
@@ -179,11 +182,12 @@ public abstract class AbstractSqmDmlStatement<E>
 		return cteStatement;
 	}
 
+	@Nonnull
 	private <X> JpaCteCriteria<X> withInternal(
-			String name,
-			AbstractQuery<X> baseCriteria,
+			@Nonnull String name,
+			@Nonnull AbstractQuery<X> baseCriteria,
 			boolean unionDistinct,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		final var cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) baseCriteria,
@@ -216,7 +220,7 @@ public abstract class AbstractSqmDmlStatement<E>
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
-	protected void appendHqlCteString(StringBuilder sb, SqmRenderContext context) {
+	protected void appendHqlCteString(@Nonnull StringBuilder sb, @Nonnull SqmRenderContext context) {
 		if ( !cteStatements.isEmpty() ) {
 			sb.append( "with " );
 			for ( var value : cteStatements.values() ) {
@@ -243,7 +247,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof AbstractSqmDmlStatement<?> that
 			&& getClass() == that.getClass()
 			&& getTarget().isCompatible( that.getTarget() )

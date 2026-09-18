@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.Expression;
@@ -20,26 +22,31 @@ public interface JpaJsonExistsExpression extends JpaExpression<Boolean>, JpaJson
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaJsonExistsExpression passing(String parameterName, Expression<?> expression);
+	@Nonnull
+	JpaJsonExistsExpression passing(@Nonnull String parameterName, @Nonnull Expression<?> expression);
 
 	/**
 	 * Use the unspecified JSON error behavior.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonExistsExpression unspecifiedOnError();
 	/**
 	 * Use the JSON error behavior that raises an error.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonExistsExpression errorOnError();
 	/**
 	 * Use the JSON error behavior that returns true.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonExistsExpression trueOnError();
 	/**
 	 * Use the JSON error behavior that returns false.
 	 */
+	@Nonnull
 	@Override
 	JpaJsonExistsExpression falseOnError();
 }

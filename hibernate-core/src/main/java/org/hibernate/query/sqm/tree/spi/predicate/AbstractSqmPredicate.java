@@ -28,7 +28,7 @@ public abstract class AbstractSqmPredicate
 		extends AbstractSqmExpression<Boolean>
 		implements SqmPredicate, SqmBooleanExpressionImplementor {
 
-	public AbstractSqmPredicate(@Nullable SqmBindableType<Boolean> type, NodeBuilder nodeBuilder) {
+	public AbstractSqmPredicate(@Nullable SqmBindableType<Boolean> type, @Nonnull NodeBuilder nodeBuilder) {
 		super( type == null ? nodeBuilder.getBooleanType() : type, nodeBuilder );
 	}
 
@@ -86,7 +86,7 @@ public abstract class AbstractSqmPredicate
 
 	@Nonnull
 	@Override
-	public SqmBooleanExpression coalesce(Boolean y) {
+	public SqmBooleanExpression coalesce(@Nonnull Boolean y) {
 		return (SqmBooleanExpression) super.coalesce( y );
 	}
 
@@ -98,7 +98,7 @@ public abstract class AbstractSqmPredicate
 
 	@Nonnull
 	@Override
-	public SqmBooleanExpression nullif(Boolean y) {
+	public SqmBooleanExpression nullif(@Nonnull Boolean y) {
 		return (SqmBooleanExpression) super.nullif( y );
 	}
 

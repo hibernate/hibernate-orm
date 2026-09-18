@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmBindableType;
@@ -35,28 +36,30 @@ public enum SqmJsonNullBehavior implements SqmTypedNode<Object> {
 	}
 
 	@Override
-	public NodeBuilder nodeBuilder() {
+	public @Nonnull NodeBuilder nodeBuilder() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nonnull
 	@Override
-	public SqmJsonNullBehavior copy(SqmCopyContext context) {
+	public SqmJsonNullBehavior copy(@Nonnull SqmCopyContext context) {
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		//noinspection unchecked
 		return (X) (this == NULL ? JsonNullBehavior.NULL : JsonNullBehavior.ABSENT);
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( this == NULL ? " null on null" : " absent on null" );
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return this == object;
 	}
 

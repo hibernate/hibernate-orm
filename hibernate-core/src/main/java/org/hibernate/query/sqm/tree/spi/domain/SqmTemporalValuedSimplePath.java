@@ -23,29 +23,30 @@ public class SqmTemporalValuedSimplePath<T extends Temporal & Comparable<? super
 		extends SqmComparableValuedSimplePath<T>
 		implements SqmTemporalPath<T>, SqmTemporalExpressionImplementor<T> {
 	public SqmTemporalValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
 	public SqmTemporalValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
 	protected SqmTemporalValuedSimplePath<T> createCopy(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmTemporalValuedSimplePath<>(
 				navigablePath,
 				referencedPathSource,
@@ -63,7 +64,7 @@ public class SqmTemporalValuedSimplePath<T extends Temporal & Comparable<? super
 
 	@Nonnull
 	@Override
-	public SqmTemporalExpression<T> coalesce(T y) {
+	public SqmTemporalExpression<T> coalesce(@Nonnull T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -75,7 +76,7 @@ public class SqmTemporalValuedSimplePath<T extends Temporal & Comparable<? super
 
 	@Nonnull
 	@Override
-	public SqmTemporalExpression<T> nullif(T y) {
+	public SqmTemporalExpression<T> nullif(@Nonnull T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 }

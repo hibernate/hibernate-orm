@@ -38,14 +38,15 @@ import java.util.Map;
  */
 public interface DiscriminatorSqmPath<T> extends SqmPath<T> {
 	@Override
-	default void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	default void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "type(" );
 		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 
+	@Nonnull
 	@Override
-	default SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
+	default SqmPath<?> resolvePathPart(@Nonnull String name, boolean isTerminal, @Nonnull SqmCreationState creationState) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 

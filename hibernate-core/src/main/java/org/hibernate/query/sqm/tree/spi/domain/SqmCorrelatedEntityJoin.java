@@ -23,7 +23,7 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 	private final SqmCorrelatedRootJoin<L> correlatedRootJoin;
 	private final SqmEntityJoin<L,R> correlationParent;
 
-	public SqmCorrelatedEntityJoin(SqmEntityJoin<L,R> correlationParent) {
+	public SqmCorrelatedEntityJoin(@Nonnull SqmEntityJoin<L,R> correlationParent) {
 		super(
 				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
@@ -36,19 +36,20 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 	}
 
 	public SqmCorrelatedEntityJoin(
-			EntityDomainType<R> joinedEntityDescriptor,
+			@Nonnull EntityDomainType<R> joinedEntityDescriptor,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			SqmRoot<L> sqmRoot,
-			SqmCorrelatedRootJoin<L> correlatedRootJoin,
-			SqmEntityJoin<L,R> correlationParent) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull SqmRoot<L> sqmRoot,
+			@Nonnull SqmCorrelatedRootJoin<L> correlatedRootJoin,
+			@Nonnull SqmEntityJoin<L,R> correlationParent) {
 		super( correlationParent.getNavigablePath(), joinedEntityDescriptor, alias, joinType, sqmRoot );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedEntityJoin<L,R> copy(SqmCopyContext context) {
+	public SqmCorrelatedEntityJoin<L,R> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -74,8 +75,9 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 		return getCorrelatedRoot();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedEntityJoin(this);
 	}
 
@@ -85,6 +87,7 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 		return correlationParent;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<R> getWrappedPath() {
 		return correlationParent;
@@ -95,6 +98,7 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<L> getCorrelatedRoot() {
 		return correlatedRootJoin;
@@ -106,8 +110,9 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 		return new SqmCorrelatedEntityJoin<>( this );
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedEntityJoin<L,R> makeCopy(SqmCreationProcessingState creationProcessingState) {
+	public SqmCorrelatedEntityJoin<L,R> makeCopy(@Nonnull SqmCreationProcessingState creationProcessingState) {
 		final var pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCorrelatedEntityJoin<>(
 				getReferencedPathSource(),
@@ -120,14 +125,14 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> other) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> other) {
 		return super.deepEquals( other )
 			&& other instanceof SqmCorrelatedEntityJoin<?, ?> that
 			&& correlationParent.equals( that.correlationParent );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> other) {
 		return super.isDeepCompatible( other )
 			&& other instanceof SqmCorrelatedEntityJoin<?, ?> that
 			&& correlationParent.isCompatible( that.correlationParent );

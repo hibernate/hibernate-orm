@@ -19,6 +19,7 @@ public interface SqmTreatedPath<T, S extends T> extends JpaTreatedPath<T,S>, Sqm
 	@Nonnull
 	ManagedDomainType<S> getTreatTarget();
 
+	@Nonnull
 	@Override
 	SqmPath<T> getWrappedPath();
 

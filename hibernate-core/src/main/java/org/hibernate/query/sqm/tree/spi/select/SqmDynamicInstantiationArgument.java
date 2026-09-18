@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.select;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -23,16 +24,17 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 	private final NodeBuilder nodeBuilder;
 
 	public SqmDynamicInstantiationArgument(
-			SqmSelectableNode<T> selectableNode,
+			@Nonnull SqmSelectableNode<T> selectableNode,
 			@Nullable String alias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		this.selectableNode = selectableNode;
 		this.alias = alias;
 		this.nodeBuilder = nodeBuilder;
 	}
 
+	@Nonnull
 	@Override
-	public SqmDynamicInstantiationArgument<T> copy(SqmCopyContext context) {
+	public SqmDynamicInstantiationArgument<T> copy(@Nonnull SqmCopyContext context) {
 		return new SqmDynamicInstantiationArgument<>(
 				selectableNode.copy( context ),
 				alias,
@@ -40,6 +42,7 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 		);
 	}
 
+	@Nonnull
 	@Override
 	public SqmSelectableNode<T> getSelectableNode() {
 		return selectableNode;
@@ -50,17 +53,18 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 	}
 
 	@Override
-	public NodeBuilder nodeBuilder() {
+	public @Nonnull NodeBuilder nodeBuilder() {
 		return nodeBuilder;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return selectableNode.accept( walker );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		selectableNode.appendHqlString( hql, context );
 		if ( alias != null ) {
 			hql.append( " as " ).append( alias );
@@ -82,7 +86,7 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmDynamicInstantiationArgument<?> that
 			&& selectableNode.isCompatible( that.selectableNode )
 			&& Objects.equals( alias, that.alias );

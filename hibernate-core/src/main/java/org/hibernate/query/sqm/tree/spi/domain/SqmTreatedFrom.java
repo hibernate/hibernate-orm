@@ -41,5 +41,5 @@ public interface SqmTreatedFrom<L,R,R1 extends R> extends SqmFrom<L,R1>, SqmTrea
 
 	@Nonnull
 	@Override
-	SqmTreatedFrom<L,R,R1> copy(SqmCopyContext context);
+	SqmTreatedFrom<L,R,R1> copy(@Nonnull SqmCopyContext context);
 }

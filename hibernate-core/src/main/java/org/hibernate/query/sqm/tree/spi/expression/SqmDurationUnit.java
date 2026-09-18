@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.common.TemporalUnit;
@@ -23,26 +24,30 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	private final TemporalUnit unit;
 	private final ReturnableType<T> type;
 
-	public SqmDurationUnit(TemporalUnit unit, ReturnableType<T> type, NodeBuilder nodeBuilder) {
+	public SqmDurationUnit(@Nonnull TemporalUnit unit, @Nonnull ReturnableType<T> type, @Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.type = type;
 		this.unit = unit;
 	}
 
+	@Nonnull
 	@Override
-	public SqmDurationUnit<T> copy(SqmCopyContext context) {
+	public SqmDurationUnit<T> copy(@Nonnull SqmCopyContext context) {
 		return this;
 	}
 
+	@Nonnull
 	public ReturnableType<T> getType() {
 		return type;
 	}
 
+	@Nullable
 	@Override
-	public <R> R accept(SemanticQueryWalker<R> walker) {
+	public <R> R accept(@Nonnull SemanticQueryWalker<R> walker) {
 		return walker.visitDurationUnit( this );
 	}
 
+	@Nonnull
 	public TemporalUnit getUnit() {
 		return unit;
 	}
@@ -53,7 +58,7 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( unit );
 	}
 
@@ -69,7 +74,7 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

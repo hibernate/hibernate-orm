@@ -28,27 +28,28 @@ public class SqmEmbeddedValuedSimplePath<T>
 		implements SqmBindableType<T> {
 
 	public SqmEmbeddedValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		assert referencedPathSource.getPathType() instanceof EmbeddableDomainType;
 	}
 
 	@SuppressWarnings("unused")
 	public SqmEmbeddedValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 		assert referencedPathSource.getPathType() instanceof EmbeddableDomainType;
 	}
 
+	@Nonnull
 	@Override
-	public SqmEmbeddedValuedSimplePath<T> copy(SqmCopyContext context) {
+	public SqmEmbeddedValuedSimplePath<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -75,6 +76,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return EMBEDDABLE;
 	}
@@ -84,15 +86,17 @@ public class SqmEmbeddedValuedSimplePath<T>
 		return getResolvedModel().getSqmType();
 	}
 
+	@Nonnull
 	@Override
-	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
+	public SqmPath<?> resolvePathPart(@Nonnull String name, boolean isTerminal, @Nonnull SqmCreationState creationState) {
 		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitEmbeddableValuedPath( this );
 	}
 
@@ -109,6 +113,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 		throw new TreatException( "Embeddable paths cannot be TREAT-ed to an entity type" );
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
 		return super.getExpressible().getExpressibleJavaType();
@@ -119,6 +124,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getRelationalJavaType() {
 		return super.getExpressible().getRelationalJavaType();

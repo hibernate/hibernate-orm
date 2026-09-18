@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SqmBindableType;
@@ -21,13 +22,14 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 
 	private final SqmExpression<T> expression;
 
-	public SqmDistinct(SqmExpression<T> expression, NodeBuilder builder) {
+	public SqmDistinct(@Nonnull SqmExpression<T> expression, @Nonnull NodeBuilder builder) {
 		super( builder );
 		this.expression = expression;
 	}
 
+	@Nonnull
 	@Override
-	public SqmDistinct<T> copy(SqmCopyContext context) {
+	public SqmDistinct<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -41,6 +43,7 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 		);
 	}
 
+	@Nonnull
 	public SqmExpression<T> getExpression() {
 		return expression;
 	}
@@ -50,13 +53,14 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 		return expression.getNodeType();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitDistinct(this);
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "distinct " );
 		expression.appendHqlString( hql, context );
 	}
@@ -73,7 +77,7 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmDistinct<?> that
 			&& expression.isCompatible( that.expression );
 	}

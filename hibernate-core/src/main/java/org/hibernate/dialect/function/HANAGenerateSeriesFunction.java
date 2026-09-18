@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -71,8 +72,9 @@ public class HANAGenerateSeriesFunction extends NumberSeriesGenerateSeriesFuncti
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {
+			@Nonnull
 			@Override
-			public TableGroup convertToSqlAst(NavigablePath navigablePath, String identifierVariable, boolean lateral, boolean canUseInnerJoins, boolean withOrdinality, SqmToSqlAstConverter walker) {
+			public TableGroup convertToSqlAst(@Nonnull NavigablePath navigablePath, @Nonnull String identifierVariable, boolean lateral, boolean canUseInnerJoins, boolean withOrdinality, @Nonnull SqmToSqlAstConverter walker) {
 				final FunctionTableGroup tableGroup = (FunctionTableGroup) super.convertToSqlAst(
 						navigablePath,
 						identifierVariable,

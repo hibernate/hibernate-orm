@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.predicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -19,7 +20,7 @@ public class SqmTruthnessPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<?> expression;
 	private final boolean value;
 
-	public SqmTruthnessPredicate(SqmExpression<?> expression, boolean value, boolean negated, NodeBuilder nodeBuilder) {
+	public SqmTruthnessPredicate(@Nonnull SqmExpression<?> expression, boolean value, boolean negated, @Nonnull NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.expression = expression;
 		this.value = value;
@@ -29,8 +30,9 @@ public class SqmTruthnessPredicate extends AbstractNegatableSqmPredicate {
 		return value;
 	}
 
+	@Nonnull
 	@Override
-	public SqmTruthnessPredicate copy(SqmCopyContext context) {
+	public SqmTruthnessPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmTruthnessPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -48,17 +50,19 @@ public class SqmTruthnessPredicate extends AbstractNegatableSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getExpression() {
 		return expression;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitIsTruePredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		expression.appendHqlString( hql, context );
 		hql.append(" is ");
 		if ( isNegated() ) {
@@ -84,7 +88,7 @@ public class SqmTruthnessPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmTruthnessPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& this.value == that.value
@@ -99,6 +103,7 @@ public class SqmTruthnessPredicate extends AbstractNegatableSqmPredicate {
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmTruthnessPredicate( expression, getBooleanValue(), !isNegated(), nodeBuilder() );

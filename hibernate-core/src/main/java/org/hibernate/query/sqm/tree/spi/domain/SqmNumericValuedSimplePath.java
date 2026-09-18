@@ -21,29 +21,30 @@ public class SqmNumericValuedSimplePath<N extends Number & Comparable<N>>
 		extends SqmComparableValuedSimplePath<N>
 		implements SqmNumericPath<N>, SqmNumericExpressionImplementor<N> {
 	public SqmNumericValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<N> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<N> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
 	public SqmNumericValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<N> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<N> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNumericValuedSimplePath<N> createCopy(
-			NavigablePath navigablePath,
-			SqmPathSource<N> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<N> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmNumericValuedSimplePath<>(
 				navigablePath,
 				referencedPathSource,
@@ -61,7 +62,7 @@ public class SqmNumericValuedSimplePath<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	public SqmNumericExpression<N> coalesce(N y) {
+	public SqmNumericExpression<N> coalesce(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -73,7 +74,7 @@ public class SqmNumericValuedSimplePath<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	public SqmNumericExpression<N> nullif(N y) {
+	public SqmNumericExpression<N> nullif(@Nonnull N y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 }

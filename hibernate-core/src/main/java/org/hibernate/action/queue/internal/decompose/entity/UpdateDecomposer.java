@@ -4,20 +4,17 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
-import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
-
-import org.hibernate.engine.internal.TenantIdHelper;
-import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
-import org.hibernate.action.queue.spi.decompose.entity.UpdateCacheHandling;
-
+import jakarta.annotation.Nullable;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
+import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.PreExecutionCallback;
-import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
-import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
+import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
+import org.hibernate.action.queue.spi.decompose.entity.UpdateCacheHandling;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
@@ -25,6 +22,7 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -38,15 +36,14 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.sql.spi.mutation.MutationOperation;
-import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.ast.internal.model.builder.VersionUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.builder.AssigningTableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.ast.internal.model.builder.VersionUpdateBuilder;
-import org.jetbrains.annotations.Nullable;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +55,7 @@ import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasValueGenerationOnExecution;
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
@@ -148,7 +146,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	private void applyTenantOwnershipCheck(EntityUpdateAction action, List<FlushOperation> operations) {
 		final String tenantTable = entityPersister.physicalTableNameForMutation(
-				TenantIdHelper.tenantIdAttribute( entityPersister ).getSelectable( 0 ) );
+				TenantIdHelper.tenantIdAttribute( entityPersister )
+						.getSelectable( 0 ) );
 		if ( operations.stream()
 				.anyMatch( operation -> operation.getKind() != MutationKind.NO_OP
 										&& !tenantTable.equals( operation.getTableExpression() ) ) ) {
@@ -603,12 +602,13 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				final int[] fieldsPreUpdateNeeded = new int[generators.length];
 				int count = 0;
 				for ( int i = 0; i < generators.length; i++ ) {
-					final Generator generator = generators[i];
+					final var generator = generators[i];
 					if ( generator != null
-						&& generator.generatesOnUpdate()
-						&& generator.generatedBeforeExecution( object, session ) ) {
-						newValues[i] = ((BeforeExecutionGenerator) generator).generate( session, object, newValues[i],
-								UPDATE );
+							&& generator.generatesOnUpdate()
+							&& generator.generatedBeforeExecution( object, session ) ) {
+						newValues[i] =
+								((BeforeExecutionGenerator) generator)
+										.generate( session, object, newValues[i], UPDATE );
 						entityPersister.setValue( object, i, newValues[i] );
 						fieldsPreUpdateNeeded[count++] = i;
 					}

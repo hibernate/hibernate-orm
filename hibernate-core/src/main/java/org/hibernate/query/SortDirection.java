@@ -4,6 +4,9 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Locale;
 
 /**
@@ -17,6 +20,7 @@ public enum SortDirection {
 	ASCENDING,
 	DESCENDING;
 
+	@Nonnull
 	public SortDirection reverse() {
 		return switch (this) {
 			case ASCENDING -> DESCENDING;
@@ -24,7 +28,8 @@ public enum SortDirection {
 		};
 	}
 
-	public static SortDirection interpret(String value) {
+	@Nullable
+	public static SortDirection interpret(@Nullable String value) {
 		if ( value == null ) {
 			return null;
 		}

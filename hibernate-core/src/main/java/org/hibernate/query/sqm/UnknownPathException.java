@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.HqlTranslator;
 
@@ -24,11 +27,11 @@ import org.hibernate.query.hql.spi.HqlTranslator;
  */
 public class UnknownPathException extends PathException {
 
-	public UnknownPathException(String message) {
+	public UnknownPathException(@Nonnull String message) {
 		super( message );
 	}
 
-	public UnknownPathException(String message, String hql, Exception cause) {
+	public UnknownPathException(@Nonnull String message, @Nullable String hql, @Nullable Exception cause) {
 		super( message, hql, cause );
 	}
 

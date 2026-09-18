@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.restriction;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -65,6 +66,7 @@ public interface Restriction<X> {
 	/**
 	 * Negate this restriction.
 	 */
+	@Nonnull
 	Restriction<X> negated();
 
 	/**
@@ -72,7 +74,8 @@ public interface Restriction<X> {
 	 *
 	 * @see #any(List)
 	 */
-	default Restriction<X> or(Restriction<X> restriction) {
+	@Nonnull
+	default Restriction<X> or(@Nonnull Restriction<X> restriction) {
 		return any( this, restriction );
 	}
 
@@ -81,7 +84,8 @@ public interface Restriction<X> {
 	 *
 	 * @see #all(List)
 	 */
-	default Restriction<X> and(Restriction<X> restriction) {
+	@Nonnull
+	default Restriction<X> and(@Nonnull Restriction<X> restriction) {
 		return all( this, restriction );
 	}
 
@@ -90,18 +94,19 @@ public interface Restriction<X> {
 	 * root entity by this restriction.
 	 */
 	@Internal
-	Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder);
+	@Nonnull
+	Predicate toPredicate(@Nonnull Root<? extends X> root, @Nonnull CriteriaBuilder builder);
 
 	/**
 	 * Apply this restriction to the given root entity of the given
 	 * {@linkplain CriteriaQuery criteria query}.
 	 */
-	default void apply(CriteriaQuery<?> query, Root<? extends X> root) {
+	default void apply(@Nonnull CriteriaQuery<?> query, @Nonnull Root<? extends X> root) {
 		if ( !(query instanceof JpaCriteriaQuery<?> criteriaQuery) ) {
 			throw new IllegalArgumentException( "Not a JpaCriteriaQuery" );
 		}
 
-		Predicate predicate = toPredicate( root, criteriaQuery.getCriteriaBuilder() );
+		final var predicate = toPredicate( root, criteriaQuery.getCriteriaBuilder() );
 		if ( query.getRestriction() == null ) {
 			query.where( predicate );
 		}
@@ -114,7 +119,8 @@ public interface Restriction<X> {
 	 * Restrict the allowed values of the given attribute to the given
 	 * {@linkplain Range range}.
 	 */
-	static <T, U> Restriction<T> restrict(SingularAttribute<T, U> attribute, Range<U> range) {
+	@Nonnull
+	static <T, U> Restriction<T> restrict(@Nonnull SingularAttribute<T, U> attribute, @Nonnull Range<U> range) {
 		return new AttributeRange<>( attribute, range );
 	}
 
@@ -125,7 +131,8 @@ public interface Restriction<X> {
 	 * This operation is not compile-time type safe. Prefer the use of
 	 * {@link #restrict(SingularAttribute, Range)}.
 	 */
-	static <T> Restriction<T> restrict(Class<T> type, String attributeName, Range<?> range) {
+	@Nonnull
+	static <T> Restriction<T> restrict(@Nonnull Class<T> type, @Nonnull String attributeName, @Nonnull Range<?> range) {
 		return new NamedAttributeRange<>( type, attributeName, range );
 	}
 
@@ -134,14 +141,16 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#singleValue(Object)
 	 */
-	static <T, U> Restriction<T> equal(SingularAttribute<T, U> attribute, U value) {
+	@Nonnull
+	static <T, U> Restriction<T> equal(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U value) {
 		return restrict( attribute, Range.singleValue( value ) );
 	}
 
 	/**
 	 * Restrict the given attribute to be not equal to the given value.
 	 */
-	static <T, U> Restriction<T> unequal(SingularAttribute<T, U> attribute, U value) {
+	@Nonnull
+	static <T, U> Restriction<T> unequal(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U value) {
 		return equal( attribute, value ).negated();
 	}
 
@@ -150,7 +159,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#singleCaseInsensitiveValue(String)
 	 */
-	static <T> Restriction<T> equalIgnoringCase(SingularAttribute<T, String> attribute, String value) {
+	@Nonnull
+	static <T> Restriction<T> equalIgnoringCase(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String value) {
 		return restrict( attribute, Range.singleCaseInsensitiveValue( value ) );
 	}
 
@@ -160,7 +170,8 @@ public interface Restriction<X> {
 	 * @see Range#valueList(List)
 	 */
 	@SafeVarargs
-	static <T, U> Restriction<T> in(SingularAttribute<T, U> attribute, U... values) {
+	@Nonnull
+	static <T, U> Restriction<T> in(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U... values) {
 		return in( attribute, List.of(values ) );
 	}
 
@@ -168,7 +179,8 @@ public interface Restriction<X> {
 	 * Restrict the given attribute to be not equal to any of the given values.
 	 */
 	@SafeVarargs
-	static <T, U> Restriction<T> notIn(SingularAttribute<T, U> attribute, U... values) {
+	@Nonnull
+	static <T, U> Restriction<T> notIn(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U... values) {
 		return notIn( attribute, List.of(values ) );
 	}
 
@@ -177,14 +189,16 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#valueList(List)
 	 */
-	static <T, U> Restriction<T> in(SingularAttribute<T, U> attribute, java.util.List<U> values) {
+	@Nonnull
+	static <T, U> Restriction<T> in(@Nonnull SingularAttribute<T, U> attribute, @Nonnull java.util.List<U> values) {
 		return restrict( attribute, Range.valueList( values ) );
 	}
 
 	/**
 	 * Restrict the given attribute to be not equal to any of the given values.
 	 */
-	static <T, U> Restriction<T> notIn(SingularAttribute<T, U> attribute, java.util.List<U> values) {
+	@Nonnull
+	static <T, U> Restriction<T> notIn(@Nonnull SingularAttribute<T, U> attribute, @Nonnull java.util.List<U> values) {
 		return in( attribute, values ).negated();
 	}
 
@@ -193,14 +207,16 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#closed(Comparable, Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> between(SingularAttribute<T, U> attribute, U lowerBound, U upperBound) {
+	@Nonnull
+	static <T, U extends Comparable<U>> Restriction<T> between(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U lowerBound, @Nonnull U upperBound) {
 		return restrict( attribute, Range.closed( lowerBound, upperBound ) );
 	}
 
 	/**
 	 * Restrict the given attribute to not fall between the given values.
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> notBetween(SingularAttribute<T, U> attribute, U lowerBound, U upperBound) {
+	@Nonnull
+	static <T, U extends Comparable<U>> Restriction<T> notBetween(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U lowerBound, @Nonnull U upperBound) {
 		return between( attribute, lowerBound, upperBound ).negated();
 	}
 
@@ -209,7 +225,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#greaterThan(Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> greaterThan(SingularAttribute<T, U> attribute, U lowerBound) {
+	@Nonnull
+	static <T, U extends Comparable<U>> Restriction<T> greaterThan(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U lowerBound) {
 		return restrict( attribute, Range.greaterThan( lowerBound ) );
 	}
 
@@ -218,7 +235,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#lessThan(Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> lessThan(SingularAttribute<T, U> attribute, U upperBound) {
+	@Nonnull
+	static <T, U extends Comparable<U>> Restriction<T> lessThan(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U upperBound) {
 		return restrict( attribute, Range.lessThan( upperBound ) );
 	}
 
@@ -227,7 +245,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#greaterThanOrEqualTo(Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> greaterThanOrEqual(SingularAttribute<T, U> attribute, U lowerBound) {
+	@Nonnull
+	static <T, U extends Comparable<U>> Restriction<T> greaterThanOrEqual(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U lowerBound) {
 		return restrict( attribute, Range.greaterThanOrEqualTo( lowerBound ) );
 	}
 
@@ -236,7 +255,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#lessThanOrEqualTo(Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> lessThanOrEqual(SingularAttribute<T, U> attribute, U upperBound) {
+	@Nonnull
+	static <T, U extends Comparable<U>> Restriction<T> lessThanOrEqual(@Nonnull SingularAttribute<T, U> attribute, @Nonnull U upperBound) {
 		return restrict( attribute, Range.lessThanOrEqualTo( upperBound ) );
 	}
 
@@ -251,9 +271,10 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#pattern(String, boolean, char, char)
 	 */
+	@Nonnull
 	static <T> Restriction<T> like(
-			SingularAttribute<T, String> attribute,
-			String pattern, boolean caseSensitive,
+			@Nonnull SingularAttribute<T, String> attribute,
+			@Nonnull String pattern, boolean caseSensitive,
 			char charWildcard, char stringWildcard) {
 		return restrict( attribute, Range.pattern( pattern, caseSensitive, charWildcard, stringWildcard ) );
 	}
@@ -268,7 +289,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#pattern(String, boolean)
 	 */
-	static <T> Restriction<T> like(SingularAttribute<T, String> attribute, String pattern, boolean caseSensitive) {
+	@Nonnull
+	static <T> Restriction<T> like(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String pattern, boolean caseSensitive) {
 		return restrict( attribute, Range.pattern( pattern, caseSensitive ) );
 	}
 
@@ -278,7 +300,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#pattern(String)
 	 */
-	static <T> Restriction<T> like(SingularAttribute<T, String> attribute, String pattern) {
+	@Nonnull
+	static <T> Restriction<T> like(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String pattern) {
 		return like( attribute, pattern, true );
 	}
 
@@ -288,7 +311,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#pattern(String)
 	 */
-	static <T> Restriction<T> notLike(SingularAttribute<T, String> attribute, String pattern) {
+	@Nonnull
+	static <T> Restriction<T> notLike(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String pattern) {
 		return like( attribute, pattern, true ).negated();
 	}
 
@@ -300,7 +324,8 @@ public interface Restriction<X> {
 	 * @param pattern A pattern involving the default wildcard characters
 	 * @param caseSensitive {@code true} if matching is case-sensitive
 	 */
-	static <T> Restriction<T> notLike(SingularAttribute<T, String> attribute, String pattern, boolean caseSensitive) {
+	@Nonnull
+	static <T> Restriction<T> notLike(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String pattern, boolean caseSensitive) {
 		return like( attribute, pattern, caseSensitive ).negated();
 	}
 
@@ -309,7 +334,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#prefix(String)
 	 */
-	static <T> Restriction<T> startsWith(SingularAttribute<T, String> attribute, String prefix) {
+	@Nonnull
+	static <T> Restriction<T> startsWith(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String prefix) {
 		return startsWith( attribute, prefix, true );
 	}
 
@@ -318,7 +344,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#suffix(String)
 	 */
-	static <T> Restriction<T> endsWith(SingularAttribute<T, String> attribute, String suffix) {
+	@Nonnull
+	static <T> Restriction<T> endsWith(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String suffix) {
 		return endsWith( attribute, suffix, true );
 	}
 
@@ -327,14 +354,16 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#containing(String)
 	 */
-	static <T> Restriction<T> contains(SingularAttribute<T, String> attribute, String substring) {
+	@Nonnull
+	static <T> Restriction<T> contains(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String substring) {
 		return contains( attribute, substring, true );
 	}
 
 	/**
 	 * Restrict the given attribute to not contain the given substring.
 	 */
-	static <T> Restriction<T> notContains(SingularAttribute<T, String> attribute, String substring) {
+	@Nonnull
+	static <T> Restriction<T> notContains(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String substring) {
 		return notContains( attribute, substring, true );
 	}
 
@@ -344,7 +373,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#prefix(String, boolean)
 	 */
-	static <T> Restriction<T> startsWith(SingularAttribute<T, String> attribute, String prefix, boolean caseSensitive) {
+	@Nonnull
+	static <T> Restriction<T> startsWith(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String prefix, boolean caseSensitive) {
 		return restrict( attribute, Range.prefix( prefix, caseSensitive ) );
 	}
 
@@ -354,7 +384,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#suffix(String, boolean)
 	 */
-	static <T> Restriction<T> endsWith(SingularAttribute<T, String> attribute, String suffix, boolean caseSensitive) {
+	@Nonnull
+	static <T> Restriction<T> endsWith(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String suffix, boolean caseSensitive) {
 		return restrict( attribute, Range.suffix( suffix, caseSensitive ) );
 	}
 
@@ -364,7 +395,8 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#containing(String, boolean)
 	 */
-	static <T> Restriction<T> contains(SingularAttribute<T, String> attribute, String substring, boolean caseSensitive) {
+	@Nonnull
+	static <T> Restriction<T> contains(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String substring, boolean caseSensitive) {
 		return restrict( attribute, Range.containing( substring, caseSensitive ) );
 	}
 
@@ -372,28 +404,32 @@ public interface Restriction<X> {
 	 * Restrict the given attribute to not contain the given substring, explicitly
 	 * specifying case sensitivity.
 	 */
-	static <T> Restriction<T> notContains(SingularAttribute<T, String> attribute, String substring, boolean caseSensitive) {
+	@Nonnull
+	static <T> Restriction<T> notContains(@Nonnull SingularAttribute<T, String> attribute, @Nonnull String substring, boolean caseSensitive) {
 		return contains( attribute, substring, caseSensitive ).negated();
 	}
 
 	/**
 	 * Restrict the given attribute to be non-null.
 	 */
-	static <T, U> Restriction<T> notNull(SingularAttribute<T, U> attribute) {
+	@Nonnull
+	static <T, U> Restriction<T> notNull(@Nonnull SingularAttribute<T, U> attribute) {
 		return restrict( attribute, Range.notNull( attribute.getJavaType() ) );
 	}
 
 	/**
 	 * Combine the given restrictions using logical and.
 	 */
-	static <T> Restriction<T> all(List<? extends Restriction<? super T>> restrictions) {
+	@Nonnull
+	static <T> Restriction<T> all(@Nonnull List<? extends Restriction<? super T>> restrictions) {
 		return new Conjunction<>( restrictions );
 	}
 
 	/**
 	 * Combine the given restrictions using logical or.
 	 */
-	static <T> Restriction<T> any(List<? extends Restriction<? super T>> restrictions) {
+	@Nonnull
+	static <T> Restriction<T> any(@Nonnull List<? extends Restriction<? super T>> restrictions) {
 		return new Disjunction<>( restrictions );
 	}
 
@@ -401,7 +437,8 @@ public interface Restriction<X> {
 	 * Combine the given restrictions using logical and.
 	 */
 	@SafeVarargs
-	static <T> Restriction<T> all(Restriction<? super T>... restrictions) {
+	@Nonnull
+	static <T> Restriction<T> all(@Nonnull Restriction<? super T>... restrictions) {
 		return new Conjunction<T>( List.of( restrictions ) );
 	}
 
@@ -409,13 +446,15 @@ public interface Restriction<X> {
 	 * Combine the given restrictions using logical or.
 	 */
 	@SafeVarargs
-	static <T> Restriction<T> any(Restriction<? super T>... restrictions) {
+	@Nonnull
+	static <T> Restriction<T> any(@Nonnull Restriction<? super T>... restrictions) {
 		return new Disjunction<T>( List.of( restrictions ) );
 	}
 
 	/**
 	 * An empty restriction.
 	 */
+	@Nonnull
 	static <T> Restriction<T> unrestricted() {
 		return new Unrestricted<>();
 	}

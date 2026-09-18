@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.ast.spi.query.expression;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
 /**
@@ -15,7 +17,9 @@ public interface WindowFunctionExpression extends FunctionExpression {
 
 	Predicate getFilter();
 
+	@Nullable
 	Boolean getRespectNulls();
 
+	@Nullable
 	Boolean getFromFirst();
 }

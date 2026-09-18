@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -15,12 +16,13 @@ import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
  */
 public class SqmStar extends AbstractSqmExpression<Object> {
 
-	public SqmStar(NodeBuilder builder) {
+	public SqmStar(@Nonnull NodeBuilder builder) {
 		super( null, builder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmStar copy(SqmCopyContext context) {
+	public SqmStar copy(@Nonnull SqmCopyContext context) {
 		final SqmStar existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -28,12 +30,13 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 		return context.registerCopy( this, new SqmStar( nodeBuilder() ) );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitStar( this );
 	}
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "*" );
 	}
 
@@ -48,7 +51,7 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

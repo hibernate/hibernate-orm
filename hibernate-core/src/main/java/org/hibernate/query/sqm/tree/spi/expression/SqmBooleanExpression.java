@@ -23,7 +23,7 @@ public interface SqmBooleanExpression extends SqmComparableExpression<Boolean>, 
 
 	@Nonnull
 	@Override
-	SqmBooleanExpression nullif(Boolean y);
+	SqmBooleanExpression nullif(@Nonnull Boolean y);
 
 	@Nonnull
 	@Override

@@ -48,8 +48,8 @@ public class SqmMapEntryReference<K,V>
 	private @Nullable String explicitAlias;
 
 	public SqmMapEntryReference(
-			SqmPath<?> mapPath,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmPath<?> mapPath,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this.mapPath = mapPath;
 		this.nodeBuilder = nodeBuilder;
 
@@ -58,8 +58,9 @@ public class SqmMapEntryReference<K,V>
 						.getDescriptor( Map.Entry.class );
 	}
 
+	@Nonnull
 	@Override
-	public SqmMapEntryReference<K, V> copy(SqmCopyContext context) {
+	public SqmMapEntryReference<K, V> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -75,12 +76,13 @@ public class SqmMapEntryReference<K,V>
 		return explicitAlias;
 	}
 
+	@Nonnull
 	public SqmPath<?> getMapPath() {
 		return mapPath;
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public Class<Map.Entry<K, V>> getJavaType() {
+	public @Nonnull Class<Map.Entry<K, V>> getJavaType() {
 		final Class<?> entryClass = Map.Entry.class;
 		return (Class<Map.Entry<K, V>>) entryClass;
 	}
@@ -93,6 +95,7 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return EMBEDDABLE;
 	}
@@ -104,22 +107,25 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
+	@Nullable
 	public JavaType<Map.Entry<K, V>> getNodeJavaType() {
 		return mapEntryTypeDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<Map.Entry<K, V>> getExpressibleJavaType() {
 		return mapEntryTypeDescriptor;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitMapEntryFunction( this );
 	}
 
 	@Override
-	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
+	public void visitSubSelectableNodes(@Nonnull Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
 		jpaSelectionConsumer.accept( this );
 	}
 
@@ -128,12 +134,14 @@ public class SqmMapEntryReference<K,V>
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public List<? extends JpaSelection<?>> getSelectionItems() {
 		return Collections.emptyList();
 	}
 
 	@Override
+	@Nullable
 	public SqmBindableType<Map.Entry<K, V>> getNodeType() {
 		return this;
 	}
@@ -144,12 +152,12 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public NodeBuilder nodeBuilder() {
+	public @Nonnull NodeBuilder nodeBuilder() {
 		return nodeBuilder;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "entry(" );
 		mapPath.appendHqlString( hql, context );
 		hql.append( ')' );
@@ -170,7 +178,7 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmMapEntryReference<?, ?> that
 			&& mapPath.isCompatible( that.mapPath )
 			&& Objects.equals( explicitAlias, that.explicitAlias );
@@ -207,7 +215,7 @@ public class SqmMapEntryReference<K,V>
 
 	@Nonnull
 	@Override
-	public Predicate equalTo(Object value) {
+	public Predicate equalTo(@Nonnull Object value) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
@@ -219,7 +227,7 @@ public class SqmMapEntryReference<K,V>
 
 	@Nonnull
 	@Override
-	public Predicate notEqualTo(Object value) {
+	public Predicate notEqualTo(@Nonnull Object value) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
@@ -273,7 +281,7 @@ public class SqmMapEntryReference<K,V>
 
 	@Nonnull
 	@Override
-	public Expression<Map.Entry<K, V>> coalesce(Map.Entry<K, V> y) {
+	public Expression<Map.Entry<K, V>> coalesce(@Nonnull Map.Entry<K, V> y) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
@@ -285,10 +293,11 @@ public class SqmMapEntryReference<K,V>
 
 	@Nonnull
 	@Override
-	public Expression<Map.Entry<K, V>> nullif(Map.Entry<K, V> y) {
+	public Expression<Map.Entry<K, V>> nullif(@Nonnull Map.Entry<K, V> y) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	public <R> CriteriaBuilder.SimpleCase<Map.Entry<K, V>, R> selectCase() {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}

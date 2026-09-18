@@ -43,7 +43,6 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.jetbrains.annotations.Contract;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
@@ -80,10 +79,10 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	protected AbstractSqmPath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
 			@Nullable SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( referencedPathSource.getSqmType(), nodeBuilder );
 		this.navigablePath = navigablePath;
 		this.referencedPathSource = referencedPathSource;
@@ -91,33 +90,35 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 //		assert super.getNodeType() == referencedPathSource;
 	}
 
-	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
+	protected void copyTo(@Nonnull AbstractSqmPath<T> target, @Nonnull SqmCopyContext context) {
 		assert navigablePathsMatch( target );
 		super.copyTo( target, context );
 	}
 
 	// meant for assertions only
-	private boolean navigablePathsMatch(AbstractSqmPath<T> target) {
+	private boolean navigablePathsMatch(@Nonnull AbstractSqmPath<T> target) {
 		final var lhs = getLhsOrRoot();
 		final var targetLhs = target.getLhsOrRoot();
 		return lhs == null && targetLhs == null
 			|| lhs != null && targetLhs != null && ( samePath( lhs, targetLhs ) || isPolymorphicRoot( lhs ) );
 	}
 
-	private static boolean samePath(SqmPath<?> lhs, SqmPath<?> targetLhs) {
+	private static boolean samePath(@Nonnull SqmPath<?> lhs, @Nonnull SqmPath<?> targetLhs) {
 		return lhs.getNavigablePath() == targetLhs.getNavigablePath();
 	}
 
-	private boolean isPolymorphicRoot(SqmPath<?> lhs) {
+	private boolean isPolymorphicRoot(@Nonnull SqmPath<?> lhs) {
 		return getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
 	}
 
+	@Nonnull
 	private SqmPath<?> getLhsOrRoot() {
 		final var lhs = getLhs();
 		return lhs != null ? lhs : findRoot();
 	}
 
-	private SqmPath<?> getRoot(SqmPath<?> lhs) {
+	@Nonnull
+	private SqmPath<?> getRoot(@Nonnull SqmPath<?> lhs) {
 		final var parent = lhs.getLhs();
 		return parent == null ? lhs : getRoot( parent );
 	}
@@ -127,11 +128,13 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return referencedPathSource.getPathType();
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
 		return referencedPathSource;
 	}
 
+	@Nonnull
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
@@ -143,20 +146,21 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return lhs;
 	}
 
+	@Nonnull
 	@Override
 	public List<SqmPath<?>> getReusablePaths() {
 		return reusablePaths == null ? emptyList() : new ArrayList<>( reusablePaths.values() );
 	}
 
 	@Override
-	public void visitReusablePaths(Consumer<SqmPath<?>> consumer) {
+	public void visitReusablePaths(@Nonnull Consumer<SqmPath<?>> consumer) {
 		if ( reusablePaths != null ) {
 			reusablePaths.values().forEach( consumer );
 		}
 	}
 
 	@Override
-	public void registerReusablePath(SqmPath<?> path) {
+	public void registerReusablePath(@Nonnull SqmPath<?> path) {
 		assert path.getLhs() == this;
 		if ( reusablePaths == null ) {
 			reusablePaths = new HashMap<>();
@@ -169,7 +173,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public @Nullable SqmPath<?> getReusablePath(String name) {
+	public @Nullable SqmPath<?> getReusablePath(@Nonnull String name) {
 		return reusablePaths == null ? null : reusablePaths.get( ReusablePathKey.normal( name ) );
 	}
 
@@ -189,6 +193,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return getReferencedPathSource();
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<T> getResolvedModel() {
 		final var pathSource = getReferencedPathSource();
@@ -246,27 +251,31 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return resolvePath( attributeName, subNavigable );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPath<?> get(String attributeName, boolean includeSubtypes) {
+	public SqmPath<?> get(@Nonnull String attributeName, boolean includeSubtypes) {
 		final var subPathSource = (SqmPathSource<?>)
 				getResolvedModel().getSubPathSource( attributeName, includeSubtypes );
 		return resolvePath( attributeName, subPathSource );
 	}
 
-	protected <X> SqmPath<X> resolvePath(PersistentAttribute<?, X> attribute) {
+	@Nonnull
+	protected <X> SqmPath<X> resolvePath(@Nonnull PersistentAttribute<?, X> attribute) {
 		//noinspection unchecked
 		return resolvePath( attribute.getName(), (SqmPathSource<X>) attribute );
 	}
 
-	protected <X> SqmPath<X> resolvePath(String attributeName, SqmPathSource<X> pathSource) {
+	@Nonnull
+	protected <X> SqmPath<X> resolvePath(@Nonnull String attributeName, @Nonnull SqmPathSource<X> pathSource) {
 		return resolvePath( pathSource, ReusablePathKey.normal( attributeName ),
 				intermediatePathSource -> pathSource.createSqmPath( this, intermediatePathSource ) );
 	}
 
+	@Nonnull
 	private <X> SqmPath<X> resolvePath(
-			SqmPathSource<?> pathSource,
-			ReusablePathKey reusablePathKey,
-			PathCreator<X> pathCreator) {
+			@Nonnull SqmPathSource<?> pathSource,
+			@Nonnull ReusablePathKey reusablePathKey,
+			@Nonnull PathCreator<X> pathCreator) {
 		final var intermediatePathSource =
 				getResolvedModel()
 						.getIntermediatePathSource( pathSource );
@@ -289,7 +298,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		SqmPath<X> create(@Nullable SqmPathSource<?> intermediatePathSource);
 	}
 
-	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(ManagedDomainType<S> treatTarget) {
+	@Nonnull
+	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(@Nonnull ManagedDomainType<S> treatTarget) {
 		final var treat = getNavigablePath().treatAs( treatTarget.getTypeName() );
 		final var lhs = castNonNull( getLhs() );
 		final var path = lhs.getReusablePath( treat.getLocalName() );
@@ -357,7 +367,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	 * Utility that checks if this path's parent navigable path is compatible with the specified SQM parent,
 	 * and if not creates a copy of the navigable path with the correct parent.
 	 */
-	protected NavigablePath getNavigablePathCopy(SqmPath<?> parent) {
+	@Nonnull
+	protected NavigablePath getNavigablePathCopy(@Nonnull SqmPath<?> parent) {
 		final var realParentPath =
 				getRealParentPath( castNonNull( navigablePath.getRealParent() ),
 						parent.getNavigablePath() );
@@ -367,7 +378,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return navigablePath;
 	}
 
-	private @Nullable NavigablePath getRealParentPath(NavigablePath realParent, NavigablePath parent) {
+	private @Nullable NavigablePath getRealParentPath(@Nonnull NavigablePath realParent, @Nonnull NavigablePath parent) {
 		if ( parent == realParent ) {
 			return null;
 		}
@@ -472,7 +483,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	// contains all the important information. Deep equality for SqmFrom is determined through SqmFromClause
 
 	@Override
-	@Contract("null -> false") // Removes the need for null-checks in overrides calling super
+
 	public boolean equals(@Nullable Object object) {
 		return object instanceof AbstractSqmPath<?> that
 			&& this.getClass() == that.getClass()
@@ -485,7 +496,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof AbstractSqmPath<?> that
 			&& this.getClass() == that.getClass()
 			&& Objects.equals( this.navigablePath, that.navigablePath );
@@ -496,6 +507,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return navigablePath.hashCode();
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "(" + navigablePath + ")";

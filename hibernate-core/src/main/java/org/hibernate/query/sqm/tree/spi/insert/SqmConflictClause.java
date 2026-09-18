@@ -37,7 +37,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 	private @Nullable List<SqmPath<?>> constraintPaths;
 	private @Nullable SqmConflictUpdateAction<T> updateAction;
 
-	public SqmConflictClause(SqmInsertStatement<T> insertStatement) {
+	public SqmConflictClause(@Nonnull SqmInsertStatement<T> insertStatement) {
 		this.insertStatement = insertStatement;
 		this.excludedRoot = new SqmRoot<>(
 				insertStatement.getTarget().getManagedType(),
@@ -48,8 +48,8 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 	}
 
 	private SqmConflictClause(
-			SqmInsertStatement<T> insertStatement,
-			SqmRoot<T> excludedRoot,
+			@Nonnull SqmInsertStatement<T> insertStatement,
+			@Nonnull SqmRoot<T> excludedRoot,
 			@Nullable String constraintName,
 			@Nullable List<SqmPath<?>> constraintPaths,
 			@Nullable SqmConflictUpdateAction<T> updateAction) {
@@ -83,7 +83,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 
 	@Nonnull
 	@Override
-	public JpaConflictClause<T> conflictOnConstraintAttributes(String... attributes) {
+	public JpaConflictClause<T> conflictOnConstraintAttributes(@Nonnull String... attributes) {
 		final ArrayList<SqmPath<?>> paths = new ArrayList<>( attributes.length );
 		for ( String attribute : attributes ) {
 			paths.add( insertStatement.getTarget().get( attribute ) );
@@ -153,12 +153,13 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 	}
 
 	@Override
-	public NodeBuilder nodeBuilder() {
+	public @Nonnull NodeBuilder nodeBuilder() {
 		return insertStatement.nodeBuilder();
 	}
 
+	@Nonnull
 	@Override
-	public SqmConflictClause<T> copy(SqmCopyContext context) {
+	public SqmConflictClause<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -175,7 +176,8 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		);
 	}
 
-	private List<SqmPath<?>> copyOf(List<SqmPath<?>> constraintPaths, SqmCopyContext context) {
+	@Nonnull
+	private List<SqmPath<?>> copyOf(@Nonnull List<SqmPath<?>> constraintPaths, @Nonnull SqmCopyContext context) {
 		if ( constraintPaths.isEmpty() ) {
 			return constraintPaths;
 		}
@@ -186,12 +188,13 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return copies;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitConflictClause( this );
 	}
 
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( " on conflict" );
 		final List<SqmPath<?>> constraintPaths = getConstraintPaths();
 		if ( constraintName != null ) {
@@ -215,7 +218,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		}
 	}
 
-	private static void appendUnqualifiedPath(StringBuilder sb, SqmPath<?> path) {
+	private static void appendUnqualifiedPath(@Nonnull StringBuilder sb, @Nonnull SqmPath<?> path) {
 		final SqmPath<?> lhs = path.getLhs();
 		if ( lhs == null ) {
 			// Skip rendering the root
@@ -247,7 +250,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmConflictClause<?> that
 			&& excludedRoot.isCompatible( that.excludedRoot )
 			&& Objects.equals( constraintName, that.constraintName )

@@ -19,11 +19,12 @@ public class SqmBooleanExpressionWrapper
 		implements SqmBooleanExpressionImplementor, SqmExpressionWrapper<Boolean> {
 	private final SqmExpression<Boolean> wrappedExpression;
 
-	public SqmBooleanExpressionWrapper(SqmExpression<Boolean> wrappedExpression) {
+	public SqmBooleanExpressionWrapper(@Nonnull SqmExpression<Boolean> wrappedExpression) {
 		super( wrappedExpression.getNodeType(), wrappedExpression.nodeBuilder() );
 		this.wrappedExpression = wrappedExpression;
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<Boolean> getWrappedExpression() {
 		return wrappedExpression;
@@ -37,7 +38,7 @@ public class SqmBooleanExpressionWrapper
 
 	@Nonnull
 	@Override
-	public SqmBooleanExpression coalesce(Boolean y) {
+	public SqmBooleanExpression coalesce(@Nonnull Boolean y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -49,7 +50,7 @@ public class SqmBooleanExpressionWrapper
 
 	@Nonnull
 	@Override
-	public SqmBooleanExpression nullif(Boolean y) {
+	public SqmBooleanExpression nullif(@Nonnull Boolean y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().nullif( this, y ) );
 	}
 
@@ -65,23 +66,25 @@ public class SqmBooleanExpressionWrapper
 		throw new UnsupportedOperationException( "Boolean expression does not support min()" );
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Boolean> copy(SqmCopyContext context) {
+	public SqmExpression<Boolean> copy(@Nonnull SqmCopyContext context) {
 		return wrappedExpression.copy( context );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		wrappedExpression.appendHqlString( hql, context );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return wrappedExpression.accept( walker );
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

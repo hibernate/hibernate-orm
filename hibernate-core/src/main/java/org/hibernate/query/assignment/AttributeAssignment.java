@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.assignment;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 
@@ -12,10 +14,10 @@ import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
  *
  * @author Gavin King
  */
-record AttributeAssignment<T, X>(SingularAttribute<T, X> attribute, X value)
+record AttributeAssignment<T, X>(@Nonnull SingularAttribute<T, X> attribute, @Nullable X value)
 		implements Assignment<T> {
 	@Override
-	public void apply(SqmUpdateStatement<? extends T> update) {
+	public void apply(@Nonnull SqmUpdateStatement<? extends T> update) {
 		update.set( attribute, value );
 	}
 }

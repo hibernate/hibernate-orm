@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa.spi;
 
+import jakarta.annotation.Nonnull;
+
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
@@ -98,7 +100,8 @@ public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T>
 	}
 
 	@Override
-	public T transformTuple(Object[] tuple, String[] aliases) {
+	@Nonnull
+	public T transformTuple(@Nonnull Object[] tuple, @Nonnull String[] aliases) {
 		final var ctor = constructor( tuple );
 		try {
 			return ctor.newInstance( tuple );

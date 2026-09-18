@@ -108,6 +108,7 @@ public interface ParameterMetadata {
 	 */
 	boolean containsReference(@Nonnull QueryParameter<?> parameter);
 
+	@Nonnull
 	Set<? extends QueryParameter<?>> getRegistrations();
 
 	/**

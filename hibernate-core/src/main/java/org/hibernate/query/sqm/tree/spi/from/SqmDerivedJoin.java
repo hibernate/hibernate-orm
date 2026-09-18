@@ -42,11 +42,11 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	private final boolean lateral;
 
 	public SqmDerivedJoin(
-			SqmSubQuery<T> subQuery,
+			@Nonnull SqmSubQuery<T> subQuery,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean lateral,
-			SqmRoot<T> sqmRoot) {
+			@Nonnull SqmRoot<T> sqmRoot) {
 		this(
 				buildRootNavigablePath( "<<derived>>", alias ),
 				subQuery,
@@ -59,13 +59,13 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	protected SqmDerivedJoin(
-			NavigablePath navigablePath,
-			SqmSubQuery<T> subQuery,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmSubQuery<T> subQuery,
 			boolean lateral,
-			SqmPathSource<T> pathSource,
+			@Nonnull SqmPathSource<T> pathSource,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			SqmRoot<T> sqmRoot) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull SqmRoot<T> sqmRoot) {
 		super(
 				navigablePath,
 				pathSource,
@@ -78,7 +78,8 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 		this.lateral = lateral;
 	}
 
-	private static SqmJoinType validateJoinType(SqmJoinType joinType, boolean lateral) {
+	@Nonnull
+	private static SqmJoinType validateJoinType(@Nonnull SqmJoinType joinType, boolean lateral) {
 		if ( lateral ) {
 			switch ( joinType ) {
 				case LEFT:
@@ -96,8 +97,9 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 		return false;
 	}
 
+	@Nonnull
 	@Override
-	public SqmDerivedJoin<T> copy(SqmCopyContext context) {
+	public SqmDerivedJoin<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -178,8 +180,9 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitQualifiedDerivedJoin( this );
 	}
 
@@ -249,7 +252,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> object) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> object) {
 		return super.deepEquals( object )
 			&& object instanceof SqmDerivedJoin<?> that
 			&& lateral == that.isLateral()
@@ -257,7 +260,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> object) {
 		return super.isDeepCompatible( object )
 			&& object instanceof SqmDerivedJoin<?> that
 			&& lateral == that.isLateral()

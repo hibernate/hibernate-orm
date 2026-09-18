@@ -51,7 +51,7 @@ public interface JpaQueryPart<T> extends JpaCriteriaNode {
 	 * Set the query offset.
 	 */
 	@Nonnull
-	JpaQueryPart<T> setOffset(JpaExpression<? extends Number> offset);
+	JpaQueryPart<T> setOffset(@Nullable JpaExpression<? extends Number> offset);
 
 	/**
 	 * Return the query fetch expression.
@@ -69,10 +69,11 @@ public interface JpaQueryPart<T> extends JpaCriteriaNode {
 	 * Set the query fetch limit.
 	 */
 	@Nonnull
-	JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+	JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, @Nonnull FetchClauseType fetchClauseType);
 
 	/**
 	 * Return the fetch clause type.
 	 */
+	@Nonnull
 	FetchClauseType getFetchClauseType();
 }

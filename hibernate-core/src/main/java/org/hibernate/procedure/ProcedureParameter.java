@@ -4,6 +4,8 @@
  */
 package org.hibernate.procedure;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 import org.hibernate.query.QueryParameter;
 
@@ -22,5 +24,6 @@ public interface ProcedureParameter<T> extends QueryParameter<T> {
 	 *
 	 * @return The parameter mode.
 	 */
+	@Nonnull
 	ParameterMode getMode();
 }

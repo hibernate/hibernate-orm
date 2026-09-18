@@ -99,8 +99,8 @@ public interface SqmFunctionDescriptor {
 	default <T> SelfRenderingSqmFunction<T> generateWindowSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
 			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		throw new UnsupportedOperationException( "Not a window function" );

@@ -11,6 +11,7 @@ import org.hibernate.query.sqm.tree.spi.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmVisitableNode;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -25,12 +26,12 @@ public abstract class AbstractJpaTupleElement<T>
 	private @Nullable SqmBindableType<T> expressibleType;
 	private @Nullable String alias;
 
-	protected AbstractJpaTupleElement(@Nullable SqmBindableType<? super T> expressibleType, NodeBuilder criteriaBuilder) {
+	protected AbstractJpaTupleElement(@Nullable SqmBindableType<? super T> expressibleType, @Nonnull NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
 		setExpressibleType( expressibleType );
 	}
 
-	protected void copyTo(AbstractJpaTupleElement<T> target, SqmCopyContext context) {
+	protected void copyTo(@Nonnull AbstractJpaTupleElement<T> target, @Nonnull SqmCopyContext context) {
 		target.alias = alias;
 	}
 

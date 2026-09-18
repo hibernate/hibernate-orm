@@ -32,28 +32,29 @@ public class SqmMapJoin<L, K, V>
 		extends AbstractSqmPluralJoin<L, Map<K, V>, V>
 		implements JpaMapJoin<L, K, V> {
 	public SqmMapJoin(
-			SqmFrom<?, L> lhs,
-			SqmMapPersistentAttribute<? super L, K, V> pluralValuedNavigable,
+			@Nonnull SqmFrom<?, L> lhs,
+			@Nonnull SqmMapPersistentAttribute<? super L, K, V> pluralValuedNavigable,
 			@Nullable String alias,
-			SqmJoinType sqmJoinType,
+			@Nonnull SqmJoinType sqmJoinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, pluralValuedNavigable, alias, sqmJoinType, fetched, nodeBuilder );
 	}
 
 	protected SqmMapJoin(
-			SqmFrom<?, L> lhs,
-			NavigablePath navigablePath,
-			SqmMapPersistentAttribute<L, K, V> pluralValuedNavigable,
+			@Nonnull SqmFrom<?, L> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmMapPersistentAttribute<L, K, V> pluralValuedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, pluralValuedNavigable, alias, joinType, fetched, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmMapJoin<L, K, V> copy(SqmCopyContext context) {
+	public SqmMapJoin<L, K, V> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -81,8 +82,9 @@ public class SqmMapJoin<L, K, V>
 		return (SqmMapPersistentAttribute<L, K, V>) super.getModel();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitMapJoin( this );
 	}
 

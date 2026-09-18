@@ -28,15 +28,15 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 	private final SqmTreatableDomainType<S> treatTarget;
 
 	public SqmTreatedBagJoin(
-			SqmBagJoin<L, R> wrappedPath,
-			SqmTreatableDomainType<S> treatTarget,
+			@Nonnull SqmBagJoin<L, R> wrappedPath,
+			@Nonnull SqmTreatableDomainType<S> treatTarget,
 			@Nullable String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedBagJoin(
-			SqmBagJoin<L, R> wrappedPath,
-			SqmTreatableDomainType<S> treatTarget,
+			@Nonnull SqmBagJoin<L, R> wrappedPath,
+			@Nonnull SqmTreatableDomainType<S> treatTarget,
 			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -56,9 +56,9 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 	}
 
 	private SqmTreatedBagJoin(
-			NavigablePath navigablePath,
-			SqmBagJoin<L, R> wrappedPath,
-			SqmTreatableDomainType<S> treatTarget,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmBagJoin<L, R> wrappedPath,
+			@Nonnull SqmTreatableDomainType<S> treatTarget,
 			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -77,7 +77,7 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 
 	@Override
 	@Nonnull
-	public SqmTreatedBagJoin<L, R, S> copy(SqmCopyContext context) {
+	public SqmTreatedBagJoin<L, R, S> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -96,6 +96,7 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmBagJoin<L, R> getWrappedPath() {
 		return wrappedPath;
@@ -118,18 +119,20 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 		return (SqmBagPersistentAttribute<L, S>) super.getReferencedPathSource();
 	}
 
+	@Nonnull
 	@Override
 	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "treat(" );
 		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );

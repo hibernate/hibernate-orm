@@ -41,6 +41,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	/**
 	 * Returns the NavigablePath.
 	 */
+	@Nonnull
 	NavigablePath getNavigablePath();
 
 	/**
@@ -49,6 +50,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 *
 	 * @see SqmPathSource#createSqmPath
 	 */
+	@Nonnull
 	SqmPathSource<T> getReferencedPathSource();
 
 	/**
@@ -70,24 +72,26 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	/**
 	 * Returns an immutable List of reusable paths
 	 */
+	@Nonnull
 	List<SqmPath<?>> getReusablePaths();
 
 	/**
 	 * Visit each reusable path relative to this path
 	 */
-	void visitReusablePaths(Consumer<SqmPath<?>> consumer);
+	void visitReusablePaths(@Nonnull Consumer<SqmPath<?>> consumer);
 
 	/**
 	 * Register a reusable path relative to this path
 	 */
-	void registerReusablePath(SqmPath<?> path);
+	void registerReusablePath(@Nonnull SqmPath<?> path);
 
-	@Nullable SqmPath<?> getReusablePath(String name);
+	@Nullable SqmPath<?> getReusablePath(@Nonnull String name);
 
 	/**
 	 * This node's type is its "referenced path source"
 	 */
 	@Override
+	@Nullable
 	SqmBindableType<T> getNodeType();
 
 	@Override
@@ -98,7 +102,8 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	@Nullable
 	@Override
 	default JavaType<T> getJavaTypeDescriptor() {
-		return getNodeType().getExpressibleJavaType();
+		final var nodeType = getNodeType();
+		return nodeType == null ? null : nodeType.getExpressibleJavaType();
 	}
 
 	@Nonnull
@@ -131,22 +136,25 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 		throw new ParsingException( "Could not find root" );
 	}
 
+	@Nonnull
 	SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState);
+			@Nonnull SqmCreationState creationState);
 
+	@Nonnull
 	@Override
 	default SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new SemanticException( "Index operator applied to non-plural path '" + getNavigablePath() + "'" );
 	}
 
 	/**
 	 * Get this path's actual resolved model, i.e. the concrete type for generic attributes.
 	 */
+	@Nonnull
 	SqmPathSource<T> getResolvedModel();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,10 +186,12 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 *
 	 * @see SqmPathSource#findSubPathSource(String, boolean)
 	 */
-	default SqmPath<?> get(String attributeName, boolean includeSubtypes) {
+	@Nonnull
+	default SqmPath<?> get(@Nonnull String attributeName, boolean includeSubtypes) {
 		return get( attributeName );
 	}
 
+	@Nonnull
 	@Override
-	SqmPath<T> copy(SqmCopyContext context);
+	SqmPath<T> copy(@Nonnull SqmCopyContext context);
 }

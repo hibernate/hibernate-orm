@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
@@ -37,27 +38,27 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	/**
 	 * Constructor for HQL statements.
 	 */
-	public AbstractSqmRestrictedDmlStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+	public AbstractSqmRestrictedDmlStatement(@Nonnull SqmQuerySource querySource, @Nonnull NodeBuilder nodeBuilder) {
 		super( querySource, nodeBuilder );
 	}
 
 	/**
 	 * Constructor for Criteria statements.
 	 */
-	public AbstractSqmRestrictedDmlStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+	public AbstractSqmRestrictedDmlStatement(@Nonnull SqmRoot<T> target, @Nonnull SqmQuerySource querySource, @Nonnull NodeBuilder nodeBuilder) {
 		super( target, querySource, nodeBuilder );
 	}
 
 	protected AbstractSqmRestrictedDmlStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmQuerySource querySource,
 			@Nullable Set<SqmParameter<?>> parameters,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			SqmRoot<T> target) {
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull SqmRoot<T> target) {
 		super( builder, querySource, parameters, cteStatements, target );
 	}
 
-	protected @Nullable SqmWhereClause copyWhereClause(SqmCopyContext context) {
+	protected @Nullable SqmWhereClause copyWhereClause(@Nonnull SqmCopyContext context) {
 		if ( whereClause == null ) {
 			return null;
 		}
@@ -67,11 +68,11 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		}
 	}
 
-	public SqmRoot<T> from(Class<T> entityClass) {
+	public @Nonnull SqmRoot<T> from(@Nonnull Class<T> entityClass) {
 		return from( nodeBuilder().getDomainModel().entity( entityClass ) );
 	}
 
-	public SqmRoot<T> from(EntityType<T> entity) {
+	public @Nonnull SqmRoot<T> from(@Nonnull EntityType<T> entity) {
 		final var entityDomainType = (EntityDomainType<T>) entity;
 		final var root = getTarget();
 		if ( root.getModel() != entity ) {
@@ -86,7 +87,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		return root;
 	}
 
-	public SqmRoot<T> getRoot() {
+	public @Nonnull SqmRoot<T> getRoot() {
 		return getTarget();
 	}
 
@@ -117,6 +118,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 
 
 
+	@Nonnull
 	protected SqmWhereClause initAndGetWhereClause() {
 		if ( whereClause == null ) {
 			whereClause = new SqmWhereClause( nodeBuilder() );
@@ -135,7 +137,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		}
 	}
 
-	protected void setWhere(BooleanExpression... restrictions) {
+	protected void setWhere(@Nullable BooleanExpression... restrictions) {
 		final SqmWhereClause whereClause = initAndGetWhereClause();
 		// Clear the current predicate if one is present
 		whereClause.setPredicate( null );
@@ -146,7 +148,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		}
 	}
 
-	protected void setWhere(List<? extends Expression<Boolean>> restrictions) {
+	protected void setWhere(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		final SqmWhereClause whereClause = initAndGetWhereClause();
 		// Clear the current predicate if one is present
 		whereClause.setPredicate( null );
@@ -156,7 +158,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		if ( whereClause != null ) {
 			final var predicate = whereClause.getPredicate();
 			if ( predicate != null ) {
@@ -181,7 +183,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof AbstractSqmRestrictedDmlStatement<?> that
 			&& super.isCompatible( object )
 			&& SqmCacheable.areCompatible( getWhereClause(), that.getWhereClause() );

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.results.internal.complete;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -63,16 +65,19 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 	}
 
 	@Override
+	@Nonnull
 	public String getTableAlias() {
 		return tableAlias;
 	}
 
 	@Override
+	@Nonnull
 	public PluralAttributeMapping getPluralAttribute() {
 		return pluralAttributeDescriptor;
 	}
 
 	@Override
+	@Nonnull
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}

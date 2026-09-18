@@ -41,11 +41,11 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	private final boolean lateral;
 
 	public SqmFunctionJoin(
-			SqmSetReturningFunction<E> function,
+			@Nonnull SqmSetReturningFunction<E> function,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean lateral,
-			SqmFrom<?, Object> sqmFrom) {
+			@Nonnull SqmFrom<?, Object> sqmFrom) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				function,
@@ -58,13 +58,13 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	public SqmFunctionJoin(
-			NavigablePath navigablePath,
-			SqmSetReturningFunction<E> function,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmSetReturningFunction<E> function,
 			boolean lateral,
-			SqmPathSource<E> pathSource,
+			@Nonnull SqmPathSource<E> pathSource,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			SqmFrom<?, Object> sqmFrom) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull SqmFrom<?, Object> sqmFrom) {
 		super(
 				navigablePath,
 				pathSource,
@@ -77,7 +77,8 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 		this.lateral = lateral;
 	}
 
-	private static SqmJoinType validateJoinType(SqmJoinType joinType, boolean lateral) {
+	@Nonnull
+	private static SqmJoinType validateJoinType(@Nonnull SqmJoinType joinType, boolean lateral) {
 		if ( lateral ) {
 			switch ( joinType ) {
 				case LEFT:
@@ -95,8 +96,9 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 		return false;
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunctionJoin<E> copy(SqmCopyContext context) {
+	public SqmFunctionJoin<E> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -117,11 +119,13 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmSetReturningFunction<E> getFunction() {
 		return function;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<Long> index() {
 		//noinspection unchecked
@@ -171,8 +175,9 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitQualifiedFunctionJoin( this );
 	}
 
@@ -239,7 +244,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> object) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> object) {
 		return super.deepEquals( object )
 			&& object instanceof SqmFunctionJoin<?> that
 			&& lateral == that.isLateral()
@@ -247,7 +252,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> object) {
 		return super.isDeepCompatible( object )
 			&& object instanceof SqmFunctionJoin<?> that
 			&& lateral == that.isLateral()

@@ -14,15 +14,15 @@ import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
  */
 public class SqmCorrelatedDerivedRoot<T> extends SqmCorrelatedRoot<T> implements SqmPathWrapper<T, T>, SqmCorrelation<T, T> {
 
-	public SqmCorrelatedDerivedRoot(SqmDerivedRoot<T> correlationParent) {
+	public SqmCorrelatedDerivedRoot(@Nonnull SqmDerivedRoot<T> correlationParent) {
 		this( (SqmRoot<T>) correlationParent );
 	}
 
-	public SqmCorrelatedDerivedRoot(SqmCteRoot<T> correlationParent) {
+	public SqmCorrelatedDerivedRoot(@Nonnull SqmCteRoot<T> correlationParent) {
 		this( (SqmRoot<T>) correlationParent );
 	}
 
-	private SqmCorrelatedDerivedRoot(SqmRoot<T> correlationParent) {
+	private SqmCorrelatedDerivedRoot(@Nonnull SqmRoot<T> correlationParent) {
 		super(
 				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
@@ -31,8 +31,9 @@ public class SqmCorrelatedDerivedRoot<T> extends SqmCorrelatedRoot<T> implements
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedDerivedRoot<T> copy(SqmCopyContext context) {
+	public SqmCorrelatedDerivedRoot<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -54,11 +55,13 @@ public class SqmCorrelatedDerivedRoot<T> extends SqmCorrelatedRoot<T> implements
 		throw new UnsupportedOperationException( "Correlated derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
+	@Nonnull
 	@Override
 	public String getEntityName() {
 		throw new UnsupportedOperationException( "Correlated derived root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<T> getResolvedModel() {
 		return getReferencedPathSource();

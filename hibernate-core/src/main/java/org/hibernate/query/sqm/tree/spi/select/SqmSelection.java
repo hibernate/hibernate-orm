@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.select;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -24,8 +25,8 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	private final @Nullable String alias;
 
 	public SqmSelection(
-			SqmSelectableNode<T> selectableNode,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmSelectableNode<T> selectableNode,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 
 		assert selectableNode != null;
@@ -34,9 +35,9 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	}
 
 	public SqmSelection(
-			SqmSelectableNode<T> selectableNode,
+			@Nonnull SqmSelectableNode<T> selectableNode,
 			@Nullable String alias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 
 		assert selectableNode != null;
@@ -47,11 +48,13 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelection<T> copy(SqmCopyContext context) {
+	public SqmSelection<T> copy(@Nonnull SqmCopyContext context) {
 		return new SqmSelection<>( selectableNode.copy( context ), alias, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
 	public SqmSelectableNode<T> getSelectableNode() {
 		return selectableNode;
@@ -67,13 +70,14 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 		return alias;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitSelection( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		selectableNode.appendHqlString( hql, context );
 		if ( alias != null ) {
 			hql.append( " as " ).append( alias );
@@ -95,7 +99,7 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmSelection<?> that
 			&& selectableNode.isCompatible( that.selectableNode )
 			&& Objects.equals( alias, that.alias );

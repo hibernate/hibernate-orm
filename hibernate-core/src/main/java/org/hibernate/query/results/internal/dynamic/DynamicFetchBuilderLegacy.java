@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
@@ -87,33 +90,39 @@ public class DynamicFetchBuilderLegacy
 	}
 
 	@Override
+	@Nonnull
 	public String getTableAlias() {
 		return tableAlias;
 	}
 
 	@Override
+	@Nonnull
 	public String getOwnerAlias() {
 		return ownerTableAlias;
 	}
 
 	@Override
+	@Nonnull
 	public Fetchable getFetchable() {
 		return fetchable;
 	}
 
 	@Override
+	@Nonnull
 	public String getFetchableName() {
 		return fetchable.getFetchableName();
 	}
 
 	@Override
-	public NativeQuery.FetchReturn setLockMode(LockMode lockMode) {
+	@Nonnull
+	public NativeQuery.FetchReturn setLockMode(@Nullable LockMode lockMode) {
 		this.lockMode = lockMode;
 		return this;
 	}
 
 	@Override
-	public NativeQuery.FetchReturn addProperty(String propertyName, String columnAlias) {
+	@Nonnull
+	public NativeQuery.FetchReturn addProperty(@Nonnull String propertyName, @Nonnull String columnAlias) {
 		addProperty( resolveFetchable( propertyName ), columnAlias );
 		return this;
 	}
@@ -143,11 +152,13 @@ public class DynamicFetchBuilderLegacy
 	}
 
 	@Override
-	public NativeQuery.ReturnProperty addProperty(String propertyName) {
+	@Nonnull
+	public NativeQuery.ReturnProperty addProperty(@Nonnull String propertyName) {
 		return addProperty( resolveFetchable( propertyName ) );
 	}
 
 	@Override
+	@Nonnull
 	public DynamicFetchBuilderLegacy cacheKeyInstance() {
 		return new DynamicFetchBuilderLegacy(
 				tableAlias,
@@ -319,12 +330,14 @@ public class DynamicFetchBuilderLegacy
 	}
 
 	@Override
-	public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {
+	@Nonnull
+	public NativeQuery.ReturnProperty addColumnAlias(@Nonnull String columnAlias) {
 		columnNames.add( columnAlias );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getColumnAliases() {
 		return columnNames;
 	}

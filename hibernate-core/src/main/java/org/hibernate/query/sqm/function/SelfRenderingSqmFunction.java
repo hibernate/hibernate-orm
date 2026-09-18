@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -40,14 +41,14 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	private @Nullable ReturnableType<?> resultType;
 
 	public SelfRenderingSqmFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ReturnableType<T> impliedResultType,
 			@Nullable ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name) {
 		super( name, descriptor,
 				nodeBuilder.resolveExpressible( impliedResultType ),
 				arguments, nodeBuilder );
@@ -57,8 +58,9 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		this.returnTypeResolver = returnTypeResolver;
 	}
 
+	@Nonnull
 	@Override
-	public SelfRenderingSqmFunction<T> copy(SqmCopyContext context) {
+	public SelfRenderingSqmFunction<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -84,6 +86,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return expression;
 	}
 
+	@Nonnull
 	public FunctionRenderer getFunctionRenderer() {
 		return renderer;
 	}
@@ -96,11 +99,13 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return argumentsValidator;
 	}
 
+	@Nonnull
 	protected FunctionReturnTypeResolver getReturnTypeResolver() {
 		return returnTypeResolver;
 	}
 
-	protected List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
+	@Nonnull
+	protected List<SqlAstNode> resolveSqlAstArguments(@Nonnull List<? extends SqmTypedNode<?>> sqmArguments, @Nonnull SqmToSqlAstConverter walker) {
 		if ( sqmArguments.isEmpty() ) {
 			return emptyList();
 		}
@@ -112,10 +117,11 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		}
 	}
 
+	@Nonnull
 	private List<SqlAstNode> resolveArguments(
-			List<? extends SqmTypedNode<?>> sqmArguments,
-			SqmToSqlAstConverter walker,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nonnull List<? extends SqmTypedNode<?>> sqmArguments,
+			@Nonnull SqmToSqlAstConverter walker,
+			@Nonnull FunctionArgumentTypeResolver argumentTypeResolver) {
 		final FunctionArgumentTypeResolverTypeAccess typeAccess =
 				new FunctionArgumentTypeResolverTypeAccess( walker, this, argumentTypeResolver );
 		final List<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
@@ -126,9 +132,10 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return sqlAstArguments;
 	}
 
+	@Nonnull
 	private static List<SqlAstNode> collectArguments(
-			List<? extends SqmTypedNode<?>> sqmArguments,
-			SqmToSqlAstConverter walker) {
+			@Nonnull List<? extends SqmTypedNode<?>> sqmArguments,
+			@Nonnull SqmToSqlAstConverter walker) {
 		final List<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
 		for ( int i = 0, size = sqmArguments.size(); i < size; i++ ) {
 			sqlAstArguments.add( (SqlAstNode) sqmArguments.get( i ).accept( walker ) );
@@ -136,14 +143,16 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return sqlAstArguments;
 	}
 
+	@Nullable
 	private FunctionArgumentTypeResolver getArgumentTypeResolver() {
 		return getFunctionDescriptor() instanceof AbstractSqmFunctionDescriptor functionDescriptor
 				? functionDescriptor.getArgumentTypeResolver()
 				: null;
 	}
 
+	@Nullable
 	@Override
-	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+	public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 		final @Nullable ReturnableType<?> resultType = resolveResultType( walker );
 		final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 		final ArgumentsValidator validator = argumentsValidator;
@@ -179,7 +188,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		}
 	}
 
-	public @Nullable ReturnableType<?> resolveResultType(SqmToSqlAstConverter walker) {
+	public @Nullable ReturnableType<?> resolveResultType(@Nonnull SqmToSqlAstConverter walker) {
 		if ( resultType == null ) {
 			resultType = determineResultType( walker, walker.getCreationContext().getTypeConfiguration() );
 			if ( resultType != null ) {
@@ -190,8 +199,8 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	}
 
 	protected @Nullable ReturnableType<?> determineResultType(
-			SqmToSqlAstConverter converter,
-			TypeConfiguration typeConfiguration) {
+			@Nullable SqmToSqlAstConverter converter,
+			@Nonnull TypeConfiguration typeConfiguration) {
 		return returnTypeResolver.resolveFunctionReturnType(
 				impliedResultType,
 				converter,
@@ -200,11 +209,12 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		);
 	}
 
+	@Nullable
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected MappingModelExpressible<?> getMappingModelExpressible(
-			SqmToSqlAstConverter walker,
-			ReturnableType<?> resultType,
-			List<SqlAstNode> arguments) {
+			@Nonnull SqmToSqlAstConverter walker,
+			@Nullable ReturnableType<?> resultType,
+			@Nonnull List<SqlAstNode> arguments) {
 
 		if ( resultType instanceof MappingModelExpressible<?> mappingModelExpressible ) {
 			// here we have a BasicType, which can be cast

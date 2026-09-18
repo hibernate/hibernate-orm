@@ -19,11 +19,12 @@ public class SqmNumericExpressionWrapper<N extends Number & Comparable<N>>
 		implements SqmNumericExpressionImplementor<N>, SqmExpressionWrapper<N> {
 	private final SqmExpression<N> wrappedExpression;
 
-	public SqmNumericExpressionWrapper(SqmExpression<N> wrappedExpression) {
+	public SqmNumericExpressionWrapper(@Nonnull SqmExpression<N> wrappedExpression) {
 		super( wrappedExpression.getNodeType(), wrappedExpression.nodeBuilder() );
 		this.wrappedExpression = wrappedExpression;
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<N> getWrappedExpression() {
 		return wrappedExpression;
@@ -38,7 +39,7 @@ public class SqmNumericExpressionWrapper<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	public SqmNumericExpression<N> coalesce(N y) {
+	public SqmNumericExpression<N> coalesce(@Nonnull N y) {
 		var expr = nodeBuilder().coalesce( this, y);
 		return new SqmNumericExpressionWrapper<>( expr );
 	}
@@ -52,28 +53,30 @@ public class SqmNumericExpressionWrapper<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	public SqmNumericExpression<N> nullif(N y) {
+	public SqmNumericExpression<N> nullif(@Nonnull N y) {
 		var expr = nodeBuilder().nullif( this, y);
 		return new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<N> copy(SqmCopyContext context) {
+	public SqmExpression<N> copy(@Nonnull SqmCopyContext context) {
 		return wrappedExpression.copy( context );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return wrappedExpression.accept( walker );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		wrappedExpression.appendHqlString( hql, context );
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

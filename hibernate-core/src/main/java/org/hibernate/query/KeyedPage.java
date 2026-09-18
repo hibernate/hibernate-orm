@@ -4,6 +4,9 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 
@@ -67,16 +70,20 @@ import static org.hibernate.query.KeyedPage.KeyInterpretation.NO_KEY;
  */
 @Incubating(since = "6.5")
 public class KeyedPage<R> {
+	@Nonnull
 	private final List<Order<? super R>> keyDefinition;
+	@Nonnull
 	private final Page page;
+	@Nullable
 	private final List<Comparable<?>> key;
+	@Nonnull
 	private final KeyInterpretation keyInterpretation;
 
-	KeyedPage(List<Order<? super R>> keyDefinition, Page page) {
+	KeyedPage(@Nonnull List<Order<? super R>> keyDefinition, @Nonnull Page page) {
 		this( keyDefinition, page, null, NO_KEY );
 	}
 
-	KeyedPage(List<Order<? super R>> keyDefinition, Page page, List<Comparable<?>> key, KeyInterpretation interpretation) {
+	KeyedPage(@Nonnull List<Order<? super R>> keyDefinition, @Nonnull Page page, @Nullable List<Comparable<?>> key, @Nonnull KeyInterpretation interpretation) {
 		this.keyDefinition = unmodifiableList(keyDefinition);
 		this.page = page;
 		this.key = key;
@@ -88,6 +95,7 @@ public class KeyedPage<R> {
 	 * objects must define a total ordering of the query result set, and
 	 * thus forms a unique key on the result set.
 	 */
+	@Nonnull
 	public List<Order<? super R>> getKeyDefinition() {
 		return keyDefinition;
 	}
@@ -96,6 +104,7 @@ public class KeyedPage<R> {
 	 * A specification of this page in terms of page size and an
 	 * (approximate) page number.
 	 */
+	@Nonnull
 	public Page getPage() {
 		return page;
 	}
@@ -111,6 +120,7 @@ public class KeyedPage<R> {
 	 *
 	 * @return the key, or null if an offset should be used
 	 */
+	@Nullable
 	public List<Comparable<?>> getKey() {
 		return key;
 	}
@@ -120,6 +130,7 @@ public class KeyedPage<R> {
 	 * interpreted as the last result on the previous page, or
 	 * as the first result on the next page.
 	 */
+	@Nonnull
 	public KeyInterpretation getKeyInterpretation() {
 		return keyInterpretation;
 	}
@@ -132,8 +143,9 @@ public class KeyedPage<R> {
 	 * @param keyOfLastResultOnThisPage the key of the last result on this page
 	 * @return a {@link KeyedPage} representing the next page of results
 	 */
+	@Nonnull
 	@Internal
-	public KeyedPage<R> nextPage(List<Comparable<?>> keyOfLastResultOnThisPage) {
+	public KeyedPage<R> nextPage(@Nonnull List<Comparable<?>> keyOfLastResultOnThisPage) {
 		return new KeyedPage<>( keyDefinition, page.next(), keyOfLastResultOnThisPage, KEY_OF_LAST_ON_PREVIOUS_PAGE );
 	}
 
@@ -145,8 +157,9 @@ public class KeyedPage<R> {
 	 * @param keyOfFirstResultOnThisPage the key of the first result on this page
 	 * @return a {@link KeyedPage} representing the next page of results
 	 */
+	@Nullable
 	@Internal
-	public KeyedPage<R> previousPage(List<Comparable<?>> keyOfFirstResultOnThisPage) {
+	public KeyedPage<R> previousPage(@Nonnull List<Comparable<?>> keyOfFirstResultOnThisPage) {
 		if ( page.isFirst() ) {
 			return null;
 		}
@@ -163,8 +176,9 @@ public class KeyedPage<R> {
 	 *         of results, but which may be located using the
 	 *         given key
 	 */
+	@Nonnull
 	@Internal
-	public KeyedPage<R> withKey(List<Comparable<?>> key, KeyInterpretation interpretation) {
+	public KeyedPage<R> withKey(@Nullable List<Comparable<?>> key, @Nonnull KeyInterpretation interpretation) {
 		return new KeyedPage<>( keyDefinition, page, key, interpretation );
 	}
 

@@ -40,9 +40,9 @@ public class SqmCrossJoin<L, T> extends AbstractSqmFrom<L, T> implements JpaCros
 	private final SqmPredicateCollection sqmJoinPredicates;
 
 	public SqmCrossJoin(
-			SqmEntityDomainType<T> joinedEntityDescriptor,
+			@Nonnull SqmEntityDomainType<T> joinedEntityDescriptor,
 			@Nullable String alias,
-			SqmRoot<L> sqmRoot) {
+			@Nonnull SqmRoot<L> sqmRoot) {
 		this(
 				buildRootNavigablePath( joinedEntityDescriptor.getHibernateEntityName(), alias ),
 				joinedEntityDescriptor,
@@ -52,10 +52,10 @@ public class SqmCrossJoin<L, T> extends AbstractSqmFrom<L, T> implements JpaCros
 	}
 
 	protected SqmCrossJoin(
-			NavigablePath navigablePath,
-			SqmEntityDomainType<T> joinedEntityDescriptor,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmEntityDomainType<T> joinedEntityDescriptor,
 			@Nullable String alias,
-			SqmRoot<L> sqmRoot) {
+			@Nonnull SqmRoot<L> sqmRoot) {
 		super(
 				navigablePath,
 				joinedEntityDescriptor,
@@ -78,13 +78,15 @@ public class SqmCrossJoin<L, T> extends AbstractSqmFrom<L, T> implements JpaCros
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}
 
+	@Nonnull
 	@Override
 	public SqmJoinType getSqmJoinType() {
 		return SqmJoinType.CROSS;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCrossJoin<L, T> copy(SqmCopyContext context) {
+	public SqmCrossJoin<L, T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -102,6 +104,7 @@ public class SqmCrossJoin<L, T> extends AbstractSqmFrom<L, T> implements JpaCros
 		return path;
 	}
 
+	@Nonnull
 	public SqmRoot<L> getRoot() {
 		return sqmRoot;
 	}
@@ -113,17 +116,20 @@ public class SqmCrossJoin<L, T> extends AbstractSqmFrom<L, T> implements JpaCros
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<T> getReferencedPathSource() {
 		return (SqmEntityDomainType<T>) super.getReferencedPathSource();
 	}
 
+	@Nonnull
 	public String getEntityName() {
 		return getReferencedPathSource().getHibernateEntityName();
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCrossJoin( this );
 	}
 
@@ -139,7 +145,8 @@ public class SqmCrossJoin<L, T> extends AbstractSqmFrom<L, T> implements JpaCros
 		return new SqmCorrelatedCrossJoin<>( this );
 	}
 
-	public SqmCrossJoin<L, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
+	@Nonnull
+	public SqmCrossJoin<L, T> makeCopy(@Nonnull SqmCreationProcessingState creationProcessingState) {
 		return new SqmCrossJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),

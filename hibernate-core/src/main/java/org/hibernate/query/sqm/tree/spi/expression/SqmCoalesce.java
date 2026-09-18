@@ -23,6 +23,7 @@ import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 
 /**
  * @author Steve Ebersole
@@ -30,26 +31,28 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  */
 public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoalesce<T> {
 	private final SqmFunctionDescriptor functionDescriptor;
+	@Nonnull
 	private final List<SqmExpression<? extends T>> arguments;
 
-	public SqmCoalesce(NodeBuilder nodeBuilder) {
+	public SqmCoalesce(@Nonnull NodeBuilder nodeBuilder) {
 		this( null, nodeBuilder );
 	}
 
-	public SqmCoalesce(@Nullable SqmBindableType<T> type, NodeBuilder nodeBuilder) {
+	public SqmCoalesce(@Nullable SqmBindableType<T> type, @Nonnull NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().getFunctionDescriptor( "coalesce" );
-		this.arguments = new ArrayList<>();
+		arguments = new ArrayList<>();
 	}
 
-	public SqmCoalesce(@Nullable SqmBindableType<T> type, int numberOfArguments, NodeBuilder nodeBuilder) {
+	public SqmCoalesce(@Nullable SqmBindableType<T> type, int numberOfArguments, @Nonnull NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().getFunctionDescriptor( "coalesce" );
-		this.arguments = new ArrayList<>( numberOfArguments );
+		arguments = new ArrayList<>( numberOfArguments );
 	}
 
+	@Nonnull
 	@Override
-	public SqmCoalesce<T> copy(SqmCopyContext context) {
+	public SqmCoalesce<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -62,37 +65,50 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 						nodeBuilder()
 				)
 		);
-		for ( SqmExpression<? extends T> argument : arguments ) {
+		for ( var argument : arguments ) {
 			coalesce.arguments.add( argument.copy( context ) );
 		}
 		copyTo( coalesce, context );
 		return coalesce;
 	}
 
+	@Nonnull
 	public SqmFunctionDescriptor getFunctionDescriptor() {
 		return functionDescriptor;
 	}
 
-	public void value(SqmExpression<? extends T> expression) {
+	public void value(@Nonnull SqmExpression<? extends T> expression) {
 		arguments.add( expression );
+		internalApplyInferableType( highestPrecedenceType2( getNodeType(), expression.getNodeType() ) );
 	}
 
+	@Override
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType) {
+		super.internalApplyInferableType( newType );
+		for ( var argument : arguments ) {
+			argument.applyInferableType( newType );
+		}
+	}
+
+	@Nonnull
 	public List<SqmExpression<? extends T>> getArguments() {
 		return arguments;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCoalesce( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return "coalesce(...)";
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "coalesce(" );
 		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {
@@ -114,7 +130,7 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmCoalesce<?> that
 			&& SqmCacheable.areCompatible( this.arguments, that.arguments );
 	}
@@ -162,8 +178,8 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmCoalesce<T> values(T... values) {
-		final SqmExpression<T> firstOrNull = firstOrNull();
+	public SqmCoalesce<T> values(@Nonnull T... values) {
+		final var firstOrNull = firstOrNull();
 		for ( T value : values ) {
 			value( nodeBuilder().value( value, firstOrNull ) );
 		}

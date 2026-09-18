@@ -378,6 +378,7 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
+	@Nullable
 	default T getSingleResult() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
@@ -445,19 +446,19 @@ public interface MutationQueryImplementor<T>
 
 	@Override
 	@Nonnull
-	default <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
+	default <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull Class<X> type) {
 		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}
 
 	@Override
 	@Nonnull
-	default <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
+	default <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph) {
 		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}
 
 	@Override
 	@Nonnull
-	default <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+	default <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph, @Nonnull GraphSemantic graphSemantic) {
 		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}
 }

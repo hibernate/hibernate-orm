@@ -35,10 +35,11 @@ public interface SqmInsertStatement<T> extends SqmDmlStatement<T>, JpaCriteriaIn
 	@Override
 	SqmInsertStatement<T> setInsertionTargetPaths(@Nonnull List<? extends Path<?>> insertionTargetPaths);
 
+	@Nonnull
 	@Override
-	SqmInsertStatement<T> copy(SqmCopyContext context);
+	SqmInsertStatement<T> copy(@Nonnull SqmCopyContext context);
 
-	void visitInsertionTargetPaths(Consumer<SqmPath<?>> consumer);
+	void visitInsertionTargetPaths(@Nonnull Consumer<SqmPath<?>> consumer);
 
 	@Nullable SqmConflictClause<T> getConflictClause();
 }

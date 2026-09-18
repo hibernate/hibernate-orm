@@ -165,7 +165,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	private void initBindType(Object value) {
-		if ( bindType == null ) {
+		if ( bindType == null || bindType instanceof NullType ) {
 			@SuppressWarnings("unchecked")
 			// If there is no bindType set, then this is effectively a
 			// parameter of the top type. At least arguably safe cast.
@@ -340,7 +340,11 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	private <A> void checkClarifiedType(
 			@Nonnull BindableType<A> clarifiedType,
 			Object valueOrValues) {
-		final var parameterType = queryParameter.getParameterType();
+		// For a collection parameter, the binding type is the element type.
+		final var hibernateType = queryParameter.getHibernateType();
+		final var parameterType = hibernateType == null
+				? QueryParameterBindingParameter.getParameterTypeIfKnown( queryParameter )
+				: hibernateType.getJavaType();
 		if ( parameterType != null ) {
 			final var clarifiedJavaType = clarifiedType.getJavaType();
 			if ( !parameterType.isAssignableFrom( clarifiedJavaType ) ) {
@@ -397,7 +401,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		}
 		catch (HibernateException ex) {
 			throw new QueryArgumentException( "Argument to query parameter has an incompatible type: " + ex.getMessage(),
-					queryParameter.getParameterType(), value );
+					bindType.getJavaType(), value );
 		}
 	}
 

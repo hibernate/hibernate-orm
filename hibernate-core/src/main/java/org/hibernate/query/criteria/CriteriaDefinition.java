@@ -430,7 +430,7 @@ public abstract class CriteriaDefinition<R>
 
 	@Override
 	@Nonnull
-	public JpaCriteriaQuery<R> fetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+	public JpaCriteriaQuery<R> fetch(@Nullable JpaExpression<? extends Number> fetch, @Nonnull FetchClauseType fetchClauseType) {
 		return query.fetch(fetch, fetchClauseType);
 	}
 
@@ -442,10 +442,11 @@ public abstract class CriteriaDefinition<R>
 
 	@Override
 	@Nonnull
-	public JpaCriteriaQuery<R> fetch(@Nullable Number fetch, FetchClauseType fetchClauseType) {
+	public JpaCriteriaQuery<R> fetch(@Nullable Number fetch, @Nonnull FetchClauseType fetchClauseType) {
 		return query.fetch(fetch, fetchClauseType);
 	}
 
+	@Nonnull
 	@Override
 	public FetchClauseType getFetchClauseType() {
 		return query.getFetchClauseType();
@@ -459,13 +460,13 @@ public abstract class CriteriaDefinition<R>
 
 	@Override
 	@Nonnull
-	public <E> JpaRoot<? extends E> getRoot(int position, Class<E> type) {
+	public <E> JpaRoot<? extends E> getRoot(int position, @Nonnull Class<E> type) {
 		return query.getRoot( position, type );
 	}
 
 	@Override
 	@Nonnull
-	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
+	public <E> JpaRoot<? extends E> getRoot(@Nonnull String alias, @Nonnull Class<E> type) {
 		return query.getRoot( alias, type );
 	}
 

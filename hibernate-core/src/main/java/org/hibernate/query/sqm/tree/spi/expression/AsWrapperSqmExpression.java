@@ -19,18 +19,19 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	private final SqmExpression<?> expression;
 
-	AsWrapperSqmExpression(SqmBindableType<T> type, SqmExpression<?> expression) {
+	AsWrapperSqmExpression(@Nonnull SqmBindableType<T> type, @Nonnull SqmExpression<?> expression) {
 		super( type, expression.nodeBuilder() );
 		this.expression = expression;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitAsWrapperExpression( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "wrap(" );
 		expression.appendHqlString( hql, context );
 		hql.append( " as " );
@@ -44,11 +45,13 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 		return expression.as( type );
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<T> copy(SqmCopyContext context) {
+	public SqmExpression<T> copy(@Nonnull SqmCopyContext context) {
 		return new AsWrapperSqmExpression<>( getNodeType(), expression.copy( context ) );
 	}
 
+	@Nonnull
 	public SqmExpression<?> getExpression() {
 		return expression;
 	}
@@ -71,7 +74,7 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof AsWrapperSqmExpression<?> that
 			&& this.expression.isCompatible( that.expression )
 			&& Objects.equals( this.getNodeType(), that.getNodeType() );

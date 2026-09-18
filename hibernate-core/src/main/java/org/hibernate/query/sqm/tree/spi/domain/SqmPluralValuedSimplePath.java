@@ -51,28 +51,28 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 	private final boolean mapAttributeAccess;
 
 	public SqmPluralValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder, false );
 	}
 
 	public SqmPluralValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder, false );
 	}
 
 	public SqmPluralValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder,
+			@Nonnull NodeBuilder nodeBuilder,
 			boolean mapAttributeAccess) {
 		// We need to do an unchecked cast here: PluralPersistentAttribute implements path source with
 		//  the element type, but paths generated from it must be collection-typed.
@@ -81,8 +81,9 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 		this.mapAttributeAccess = mapAttributeAccess;
 	}
 
+	@Nonnull
 	@Override
-	public SqmPluralValuedSimplePath<C> copy(SqmCopyContext context) {
+	public SqmPluralValuedSimplePath<C> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -108,6 +109,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 		return mapAttributeAccess;
 	}
 
+	@Nonnull
 	public PluralPersistentAttribute<?, C, ?> getPluralAttribute() {
 		return (SqmPluralPersistentAttribute<?, C, ?>) getModel();
 	}
@@ -117,16 +119,18 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 		return getPluralAttribute().getAttributeJavaType();
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitPluralValuedPath( this );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		// this is a reference to a collection outside the from clause
 		final var nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature == null ) {
@@ -139,11 +143,12 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 		return sqmPath;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		final var pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
 		final var navigablePath =
@@ -164,10 +169,10 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 	}
 
 	private @Nonnull SqmAttributeJoin<?, ?> join(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			@Nullable SqmFrom<?, ?> path,
-			SqmPathRegistry pathRegistry,
-			String alias) {
+			@Nonnull SqmPathRegistry pathRegistry,
+			@Nullable String alias) {
 		if ( path == null ) {
 			final SqmFrom<?, ?> parent = pathRegistry.resolveFrom( getLhs() );
 			final var join = joinAttribute( parent, alias, selector );
@@ -180,9 +185,9 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 	}
 
 	private <P> @Nonnull SqmAttributeJoin<?, ?> joinAttribute(
-			SqmFrom<?, P> parent,
-			String alias,
-			SqmExpression<?> selector) {
+			@Nonnull SqmFrom<?, P> parent,
+			@Nullable String alias,
+			@Nonnull SqmExpression<?> selector) {
 		final SqmExpression<?> index;
 		final SqmAttributeJoin<P, ?> join;
 		final var referencedPathSource = getReferencedPathSource();

@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -26,15 +27,16 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 	private final EmbeddableDomainType<T> embeddableDomainType;
 
 	protected EmbeddedDiscriminatorSqmPath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
-			EmbeddableDomainType<T> embeddableDomainType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull EmbeddableDomainType<T> embeddableDomainType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		this.embeddableDomainType = embeddableDomainType;
 	}
 
+	@Nonnull
 	public EmbeddableDomainType<T> getEmbeddableDomainType() {
 		return embeddableDomainType;
 	}
@@ -50,8 +52,9 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 		return (EmbeddedDiscriminatorSqmPathSource<T>) getReferencedPathSource();
 	}
 
+	@Nonnull
 	@Override
-	public EmbeddedDiscriminatorSqmPath<T> copy(SqmCopyContext context) {
+	public EmbeddedDiscriminatorSqmPath<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -63,8 +66,9 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 		);
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitDiscriminatorPath( this );
 	}
 

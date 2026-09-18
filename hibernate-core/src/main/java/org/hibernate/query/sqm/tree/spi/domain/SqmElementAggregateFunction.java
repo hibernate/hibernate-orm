@@ -27,7 +27,7 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 	private final String functionName;
 	private final @Nullable ReturnableType<T> returnableType;
 
-	public SqmElementAggregateFunction(SqmPluralValuedSimplePath<?> pluralDomainPath, String functionName) {
+	public SqmElementAggregateFunction(@Nonnull SqmPluralValuedSimplePath<?> pluralDomainPath, @Nonnull String functionName) {
 		//noinspection unchecked
 		super(
 				pluralDomainPath.getParentNavigablePath().append( pluralDomainPath.getNavigablePath().getLocalName(), "{" + functionName + "-element}" ),
@@ -80,8 +80,9 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 		return returnableType == null ? super.getNodeJavaType() : returnableType.getExpressibleJavaType();
 	}
 
+	@Nonnull
 	@Override
-	public SqmElementAggregateFunction<T> copy(SqmCopyContext context) {
+	public SqmElementAggregateFunction<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -98,27 +99,30 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 		return path;
 	}
 
+	@Nonnull
 	public String getFunctionName() {
 		return functionName;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitElementAggregateFunction( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( functionName ).append( "(" );
 		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );

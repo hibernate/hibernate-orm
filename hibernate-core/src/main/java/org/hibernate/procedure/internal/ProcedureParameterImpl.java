@@ -26,6 +26,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ProcedureParameterNamedBinder;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.ParameterMode;
 
 import static org.hibernate.type.internal.BindingTypeHelper.resolveTemporalPrecision;
@@ -48,7 +50,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 			ParameterMode mode,
 			Class<T> javaType,
 			BindableType<T> hibernateType) {
-		super( false, hibernateType );
+		super( false, hibernateType, javaType );
 		this.name = name;
 		this.position = null;
 		this.mode = mode;
@@ -63,7 +65,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 			ParameterMode mode,
 			Class<T> javaType,
 			BindableType<T> hibernateType) {
-		super( false, hibernateType );
+		super( false, hibernateType, javaType );
 		this.name = null;
 		this.position = position;
 		this.mode = mode;
@@ -71,26 +73,31 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 	}
 
 	@Override
+	@Nullable
 	public String getName() {
 		return name;
 	}
 
 	@Override
+	@Nullable
 	public Integer getPosition() {
 		return position;
 	}
 
 	@Override
+	@Nonnull
 	public ParameterMode getMode() {
 		return mode;
 	}
 
 	@Override
+	@Nonnull
 	public Class<T> getParameterType() {
 		return javaType;
 	}
 
 	@Override
+	@Nonnull
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		return session -> isNamed()
 				? new ProcedureParameterImpl<T>( getName(), getMode(), javaType, getHibernateType() )
@@ -98,9 +105,10 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 	}
 
 	@Override
+	@Nonnull
 	public JdbcCallParameterRegistration toJdbcParameterRegistration(
 			int startIndex,
-			ProcedureCallImplementor<?> procedureCall) {
+			@Nonnull ProcedureCallImplementor<?> procedureCall) {
 		final QueryParameterBinding<T> binding =
 				procedureCall.getParameterBindings()
 						.getBinding( this );

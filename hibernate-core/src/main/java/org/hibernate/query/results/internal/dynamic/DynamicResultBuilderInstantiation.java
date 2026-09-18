@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.spi.ResultBuilderInstantiationValued;
@@ -79,12 +82,14 @@ public class DynamicResultBuilderInstantiation<J>
 	}
 
 	@Override
-	public NativeQuery.InstantiationResultNode<J> addBasicArgument(String columnAlias, String argumentAlias) {
+	@Nonnull
+	public NativeQuery.InstantiationResultNode<J> addBasicArgument(@Nonnull String columnAlias, @Nullable String argumentAlias) {
 		argumentResultBuilders.add( new InstantiationArgument( Builders.scalar( columnAlias ), argumentAlias ) );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public DynamicResultBuilderInstantiation<?> cacheKeyInstance() {
 		return new DynamicResultBuilderInstantiation<>( this );
 	}

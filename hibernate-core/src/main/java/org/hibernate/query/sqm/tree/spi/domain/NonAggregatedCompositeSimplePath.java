@@ -22,17 +22,18 @@ import jakarta.persistence.metamodel.EntityType;
 public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePath<T> {
 
 	public NonAggregatedCompositeSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 
 		assert referencedPathSource.getPathType() instanceof EntityType;
 	}
 
+	@Nonnull
 	@Override
-	public NonAggregatedCompositeSimplePath<T> copy(SqmCopyContext context) {
+	public NonAggregatedCompositeSimplePath<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -52,8 +53,9 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 		return path;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitNonAggregatedCompositeValuedPath( this );
 	}
 

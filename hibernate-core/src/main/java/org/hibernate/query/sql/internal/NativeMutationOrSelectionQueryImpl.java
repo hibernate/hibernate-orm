@@ -90,6 +90,7 @@ public class NativeMutationOrSelectionQueryImpl
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nullable
 	public Object getSingleResult() {
 		return super.getSingleResult();
 	}
@@ -591,7 +592,8 @@ public class NativeMutationOrSelectionQueryImpl
 	}
 
 	@Override @Deprecated
-	public NativeMutationOrSelectionQueryImpl setPage(Page page) {
+	@Nonnull
+	public NativeMutationOrSelectionQueryImpl setPage(@Nonnull Page page) {
 		super.setPage( page );
 		return this;
 	}
@@ -629,6 +631,7 @@ public class NativeMutationOrSelectionQueryImpl
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	public NativeMutationOrSelectionQueryImpl setCacheRegion(@Nullable String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
 		return this;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.toolchains;
 
+import jakarta.annotation.Nonnull;
+
 import javax.inject.Inject;
 
 import org.gradle.api.JavaVersion;
@@ -15,7 +17,6 @@ import org.gradle.api.artifacts.VersionConstraint;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 
-import org.jetbrains.annotations.NotNull;
 
 import static org.hibernate.orm.toolchains.JdkVersionConfig.MAIN_JDK_VERSION;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.TEST_JDK_VERSION;
@@ -64,7 +65,7 @@ public class JdkVersionPlugin implements Plugin<Project> {
 		project.getExtensions().add( JdkVersionConfig.DSL_NAME, jdkVersionConfig );
 	}
 
-	@NotNull
+	@Nonnull
 	private static JavaLanguageVersion getJavaLanguageVersion(VersionCatalog jdks, String entryName) {
 		final VersionConstraint versionConstraint = jdks.findVersion( entryName ).orElseThrow();
 		return JavaLanguageVersion.of( versionConstraint.getRequiredVersion() );

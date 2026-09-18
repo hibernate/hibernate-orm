@@ -25,8 +25,8 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	private final SqmEntityDomainType<S> treatTarget;
 
 	public SqmTreatedEntityJoin(
-			SqmEntityJoin<L,R> wrappedPath,
-			SqmEntityDomainType<S> treatTarget,
+			@Nonnull SqmEntityJoin<L,R> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget,
 			@Nullable String alias) {
 		super(
 				wrappedPath.getNavigablePath().treatAs(
@@ -43,9 +43,9 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	}
 
 	private SqmTreatedEntityJoin(
-			NavigablePath navigablePath,
-			SqmEntityJoin<L,R> wrappedPath,
-			SqmEntityDomainType<S> treatTarget,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmEntityJoin<L,R> wrappedPath,
+			@Nonnull SqmEntityDomainType<S> treatTarget,
 			@Nullable String alias) {
 		super(
 				navigablePath,
@@ -60,7 +60,7 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 
 	@Override
 	@Nonnull
-	public SqmTreatedEntityJoin<L,R,S> copy(SqmCopyContext context) {
+	public SqmTreatedEntityJoin<L,R,S> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -90,6 +90,7 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<R> getWrappedPath() {
 		return wrappedPath;
@@ -100,13 +101,14 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "treat(" );
 		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );

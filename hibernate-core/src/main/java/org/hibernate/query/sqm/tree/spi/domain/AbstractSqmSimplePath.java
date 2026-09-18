@@ -20,21 +20,21 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implements SqmSimplePath<T> {
 
 	public AbstractSqmSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
 	// The call to setExplicitAlias() is safe, so ignore the uninitialized error
 	@SuppressWarnings({"uninitialized", "method.invocation"})
 	public AbstractSqmSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		setExplicitAlias( explicitAlias );
 	}
@@ -50,7 +50,7 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		getLhs().appendHqlString( hql, context );
 		hql.append( '.' );
 		hql.append( getReferencedPathSource().getPathName() );
@@ -61,6 +61,7 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 		return getReferencedPathSource().getExpressible();
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
 		final var pathSource = super.getReferencedPathSource();

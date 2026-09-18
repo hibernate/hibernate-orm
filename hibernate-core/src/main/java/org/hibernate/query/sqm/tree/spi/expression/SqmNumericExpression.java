@@ -23,7 +23,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmNumericExpression<N> coalesce(N y);
+	SqmNumericExpression<N> coalesce(@Nonnull N y);
 
 	@Nonnull
 	@Override
@@ -31,7 +31,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmNumericExpression<N> nullif(N y);
+	SqmNumericExpression<N> nullif(@Nonnull N y);
 
 	@Nonnull
 	@Override
@@ -43,7 +43,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmPredicate gt(Number y);
+	SqmPredicate gt(@Nonnull Number y);
 
 	@Nonnull
 	@Override
@@ -51,7 +51,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmPredicate ge(Number y);
+	SqmPredicate ge(@Nonnull Number y);
 
 	@Nonnull
 	@Override
@@ -59,7 +59,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmPredicate lt(Number y);
+	SqmPredicate lt(@Nonnull Number y);
 
 	@Nonnull
 	@Override
@@ -67,7 +67,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmPredicate le(Number y);
+	SqmPredicate le(@Nonnull Number y);
 
 	@Nonnull
 	@Override
@@ -95,7 +95,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmNumericExpression<N> plus(N y);
+	SqmNumericExpression<N> plus(@Nonnull N y);
 
 	@Nonnull
 	@Override
@@ -103,7 +103,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmNumericExpression<N> times(N y);
+	SqmNumericExpression<N> times(@Nonnull N y);
 
 	@Nonnull
 	@Override
@@ -111,7 +111,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmNumericExpression<N> minus(N y);
+	SqmNumericExpression<N> minus(@Nonnull N y);
 
 	@Nonnull
 	@Override
@@ -119,15 +119,15 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmNumericExpression<N> dividedBy(N y);
+	SqmNumericExpression<N> dividedBy(@Nonnull N y);
 
 	@Nonnull
 	@Override
-	SqmNumericExpression<N> subtractedFrom(N y);
+	SqmNumericExpression<N> subtractedFrom(@Nonnull N y);
 
 	@Nonnull
 	@Override
-	SqmNumericExpression<N> dividedInto(N y);
+	SqmNumericExpression<N> dividedInto(@Nonnull N y);
 
 	@Nonnull
 	@Override
@@ -147,7 +147,7 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 
 	@Nonnull
 	@Override
-	SqmNumericExpression<Double> power(Number y);
+	SqmNumericExpression<Double> power(@Nonnull Number y);
 
 	@Nonnull
 	@Override

@@ -245,7 +245,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			if ( sqmRoots.size() != 1 ) {
 				throw new IllegalArgumentException( "Criteria has multiple query roots" );
 			}
-			return Collections.singletonList( new SqmSelection<>( sqmRoots.get( 0 ), null ) );
+			return Collections.singletonList( new SqmSelection<>( sqmRoots.get( 0 ), sqm.nodeBuilder() ) );
 		}
 		else {
 			return selections;

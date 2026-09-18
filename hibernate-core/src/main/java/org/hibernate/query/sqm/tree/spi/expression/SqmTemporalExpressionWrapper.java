@@ -15,7 +15,7 @@ import jakarta.persistence.criteria.Expression;
 public class SqmTemporalExpressionWrapper<T extends Temporal & Comparable<? super T>>
 		extends SqmComparableExpressionWrapper<T>
 		implements SqmTemporalExpressionImplementor<T> {
-	public SqmTemporalExpressionWrapper(SqmExpression<T> wrappedExpression) {
+	public SqmTemporalExpressionWrapper(@Nonnull SqmExpression<T> wrappedExpression) {
 		super( wrappedExpression );
 	}
 
@@ -27,7 +27,7 @@ public class SqmTemporalExpressionWrapper<T extends Temporal & Comparable<? supe
 
 	@Nonnull
 	@Override
-	public SqmTemporalExpression<T> coalesce(T y) {
+	public SqmTemporalExpression<T> coalesce(@Nonnull T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -39,7 +39,7 @@ public class SqmTemporalExpressionWrapper<T extends Temporal & Comparable<? supe
 
 	@Nonnull
 	@Override
-	public SqmTemporalExpression<T> nullif(T y) {
+	public SqmTemporalExpression<T> nullif(@Nonnull T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 }

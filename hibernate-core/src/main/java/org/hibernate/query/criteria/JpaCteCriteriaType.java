@@ -25,6 +25,7 @@ public interface JpaCteCriteriaType<T> extends JpaCriteriaNode {
 	/**
 	 * The domain type of the CTE.
 	 */
+	@Nonnull
 	DomainType<T> getType();
 
 	/**
@@ -37,5 +38,5 @@ public interface JpaCteCriteriaType<T> extends JpaCriteriaNode {
 	 * Returns the found attribute or null.
 	 */
 	@Nullable
-	JpaCteCriteriaAttribute getAttribute(String name);
+	JpaCteCriteriaAttribute getAttribute(@Nonnull String name);
 }

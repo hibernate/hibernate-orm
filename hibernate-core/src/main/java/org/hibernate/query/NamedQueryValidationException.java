@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 
@@ -19,9 +21,10 @@ import java.util.Map;
  * @author Gavin King
  */
 public class NamedQueryValidationException extends QueryException {
+	@Nonnull
 	private final Map<String, HibernateException> errors;
 
-	public NamedQueryValidationException(String message, Map<String, HibernateException> errors) {
+	public NamedQueryValidationException(@Nonnull String message, @Nonnull Map<String, HibernateException> errors) {
 		super( message );
 		this.errors = errors;
 	}
@@ -30,6 +33,7 @@ public class NamedQueryValidationException extends QueryException {
 	 * A map from query name to the error that occurred while
 	 * interpreting or translating the named query.
 	 */
+	@Nonnull
 	public Map<String, HibernateException> getErrors() {
 		return errors;
 	}

@@ -31,25 +31,26 @@ public class SqmCaseSearched<R>
 	private final List<WhenFragment<? extends R>> whenFragments;
 	private @Nullable SqmExpression<? extends R> otherwise;
 
-	public SqmCaseSearched(NodeBuilder nodeBuilder) {
+	public SqmCaseSearched(@Nonnull NodeBuilder nodeBuilder) {
 		this( null, nodeBuilder );
 	}
 
-	public SqmCaseSearched(@Nullable SqmBindableType<R> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCaseSearched(@Nullable SqmBindableType<R> inherentType, @Nonnull NodeBuilder nodeBuilder) {
 		this( inherentType, 10, nodeBuilder );
 	}
 
-	public SqmCaseSearched(int estimatedWhenSize, NodeBuilder nodeBuilder) {
+	public SqmCaseSearched(int estimatedWhenSize, @Nonnull NodeBuilder nodeBuilder) {
 		this( null, estimatedWhenSize, nodeBuilder );
 	}
 
-	private SqmCaseSearched(@Nullable SqmBindableType<R> inherentType, int estimatedWhenSize, NodeBuilder nodeBuilder) {
+	private SqmCaseSearched(@Nullable SqmBindableType<R> inherentType, int estimatedWhenSize, @Nonnull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.whenFragments = new ArrayList<>( estimatedWhenSize );
 	}
 
+	@Nonnull
 	@Override
-	public SqmCaseSearched<R> copy(SqmCopyContext context) {
+	public SqmCaseSearched<R> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -73,6 +74,7 @@ public class SqmCaseSearched<R>
 		return caseSearched;
 	}
 
+	@Nonnull
 	public List<WhenFragment<? extends R>> getWhenFragments() {
 		return whenFragments;
 	}
@@ -81,13 +83,15 @@ public class SqmCaseSearched<R>
 		return otherwise;
 	}
 
-	public SqmCaseSearched<R> when(SqmPredicate predicate, SqmExpression<? extends R> result) {
+	@Nonnull
+	public SqmCaseSearched<R> when(@Nonnull SqmPredicate predicate, @Nonnull SqmExpression<? extends R> result) {
 		whenFragments.add( new WhenFragment<>( predicate, result ) );
 		applyInferableResultType( result.getNodeType() );
 		return this;
 	}
 
-	public SqmCaseSearched<R> otherwise(SqmExpression<? extends R> otherwiseExpression) {
+	@Nonnull
+	public SqmCaseSearched<R> otherwise(@Nonnull SqmExpression<? extends R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
 		applyInferableResultType( otherwiseExpression.getNodeType() );
 		return this;
@@ -116,11 +120,13 @@ public class SqmCaseSearched<R>
 		}
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitSearchedCaseExpression( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return "<searched-case>";
@@ -173,7 +179,7 @@ public class SqmCaseSearched<R>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "case" );
 		for ( WhenFragment<? extends R> whenFragment : whenFragments ) {
 			hql.append( " when " );
@@ -205,7 +211,7 @@ public class SqmCaseSearched<R>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmCaseSearched<?> that
 			&& SqmCacheable.areCompatible( this.whenFragments, that.whenFragments )
 			&& SqmCacheable.areCompatible( this.otherwise, that.otherwise );

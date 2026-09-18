@@ -20,7 +20,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Descriptor for {@link Calendar} handling.
@@ -129,7 +128,7 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 	}
 
 	@Override
-	public @Nullable Object coerceOrNull(@NotNull Object value) {
+	public @Nullable Object coerceOrNull(@Nonnull Object value) {
 		return wrapOrNull( value );
 	}
 

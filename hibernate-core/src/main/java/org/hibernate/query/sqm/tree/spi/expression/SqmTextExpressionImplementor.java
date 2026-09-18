@@ -17,7 +17,7 @@ public interface SqmTextExpressionImplementor
 		extends SqmComparableExpressionImplementor<String>, SqmTextExpression {
 	char LIKE_ESCAPE_CHARACTER = '\\';
 
-	SqmCriteriaNodeBuilder nodeBuilder();
+	@Nonnull SqmCriteriaNodeBuilder nodeBuilder();
 
 	@Nonnull
 	@Override
@@ -309,7 +309,7 @@ public interface SqmTextExpressionImplementor
 
 	@Nonnull
 	@Override
-	default SqmTextExpression coalesce(String y) {
+	default SqmTextExpression coalesce(@Nonnull String y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -321,18 +321,20 @@ public interface SqmTextExpressionImplementor
 
 	@Nonnull
 	@Override
-	default SqmTextExpression nullif(String y) {
+	default SqmTextExpression nullif(@Nonnull String y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().nullif( this, y ) );
 	}
 
-	private static String escapeLikePattern(String value) {
+	@Nonnull
+	private static String escapeLikePattern(@Nonnull String value) {
 		return value
 				.replace( "\\", "\\\\" )
 				.replace( "%", "\\%" )
 				.replace( "_", "\\_" );
 	}
 
-	private static SqmTextExpression wrapTextExpression(SqmExpression<String> expression) {
+	@Nonnull
+	private static SqmTextExpression wrapTextExpression(@Nonnull SqmExpression<String> expression) {
 		return expression instanceof SqmTextExpression textExpression
 				? textExpression
 				: new SqmTextExpressionWrapper( expression );

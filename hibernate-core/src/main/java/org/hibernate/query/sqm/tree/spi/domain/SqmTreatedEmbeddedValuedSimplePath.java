@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -25,8 +26,8 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 
 	@SuppressWarnings("unchecked")
 	public SqmTreatedEmbeddedValuedSimplePath(
-			SqmPath<T> wrappedPath,
-			SqmEmbeddableDomainType<S> treatTarget) {
+			@Nonnull SqmPath<T> wrappedPath,
+			@Nonnull SqmEmbeddableDomainType<S> treatTarget) {
 		super(
 				wrappedPath.getNavigablePath().treatAs( treatTarget.getTypeName() ),
 				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
@@ -39,9 +40,9 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 
 	@SuppressWarnings("unchecked")
 	private SqmTreatedEmbeddedValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPath<T> wrappedPath,
-			SqmEmbeddableDomainType<S> treatTarget) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPath<T> wrappedPath,
+			@Nonnull SqmEmbeddableDomainType<S> treatTarget) {
 		super(
 				navigablePath,
 				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
@@ -52,8 +53,9 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 		this.treatTarget = treatTarget;
 	}
 
+	@Nonnull
 	@Override
-	public SqmTreatedEmbeddedValuedSimplePath<T, S> copy(SqmCopyContext context) {
+	public SqmTreatedEmbeddedValuedSimplePath<T, S> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -76,6 +78,7 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return wrappedPath;
@@ -86,31 +89,35 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		// Cast needed for static nullness analysis.
 		return walker.visitTreatedPath( (SqmTreatedPath<?, ?>) this );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
+	public SqmPath<?> resolvePathPart(@Nonnull String name, boolean isTerminal, @Nonnull SqmCreationState creationState) {
 		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "treat(" );
 		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );

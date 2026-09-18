@@ -22,13 +22,14 @@ import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 public class SqmNegatedPredicate extends AbstractSqmPredicate {
 	private final SqmPredicate wrappedPredicate;
 
-	public SqmNegatedPredicate(SqmPredicate wrappedPredicate, NodeBuilder nodeBuilder) {
+	public SqmNegatedPredicate(@Nonnull SqmPredicate wrappedPredicate, @Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.wrappedPredicate = wrappedPredicate;
 	}
 
+	@Nonnull
 	@Override
-	public SqmNegatedPredicate copy(SqmCopyContext context) {
+	public SqmNegatedPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmNegatedPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -44,6 +45,7 @@ public class SqmNegatedPredicate extends AbstractSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmPredicate getWrappedPredicate() {
 		return wrappedPredicate;
 	}
@@ -56,13 +58,14 @@ public class SqmNegatedPredicate extends AbstractSqmPredicate {
 		return expressions;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitNegatedPredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "not (" );
 		wrappedPredicate.appendHqlString( hql, context );
 		hql.append( ')' );
@@ -80,7 +83,7 @@ public class SqmNegatedPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmNegatedPredicate that
 			&& wrappedPredicate.isCompatible( that.wrappedPredicate );
 	}

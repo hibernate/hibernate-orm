@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.TrimSpec;
@@ -25,25 +26,29 @@ import java.util.Objects;
 public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNode<Void> {
 	private final TrimSpec specification;
 
-	public SqmTrimSpecification(TrimSpec specification, NodeBuilder nodeBuilder) {
+	public SqmTrimSpecification(@Nonnull TrimSpec specification, @Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.specification = specification;
 	}
 
+	@Nonnull
 	@Override
-	public SqmTrimSpecification copy(SqmCopyContext context) {
+	public SqmTrimSpecification copy(@Nonnull SqmCopyContext context) {
 		return this;
 	}
 
+	@Nonnull
 	public TrimSpec getSpecification() {
 		return specification;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitTrimSpecification( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return specification.name();
@@ -55,7 +60,7 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( specification );
 	}
 
@@ -71,7 +76,7 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

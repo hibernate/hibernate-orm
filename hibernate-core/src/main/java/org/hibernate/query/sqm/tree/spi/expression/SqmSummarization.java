@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -23,14 +25,15 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 	private final Kind kind;
 	private final List<SqmExpression<?>> groupings;
 
-	public SqmSummarization(Kind kind, List<SqmExpression<?>> groupings, NodeBuilder criteriaBuilder) {
+	public SqmSummarization(@Nonnull Kind kind, @Nonnull List<SqmExpression<?>> groupings, @Nonnull NodeBuilder criteriaBuilder) {
 		super( null, criteriaBuilder );
 		this.kind = kind;
 		this.groupings = groupings;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSummarization<T> copy(SqmCopyContext context) {
+	public SqmSummarization<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -51,16 +54,19 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		return expression;
 	}
 
+	@Nonnull
 	public Kind getKind() {
 		return kind;
 	}
 
+	@Nonnull
 	public List<SqmExpression<?>> getGroupings() {
 		return groupings;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitSummarization( this );
 	}
 
@@ -70,7 +76,7 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( kind );
 		hql.append( " (" );
 		groupings.get( 0 ).appendHqlString( hql, context );
@@ -96,7 +102,7 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmSummarization<?> that
 			&& kind == that.kind
 			&& SqmCacheable.areCompatible( groupings, that.groupings );

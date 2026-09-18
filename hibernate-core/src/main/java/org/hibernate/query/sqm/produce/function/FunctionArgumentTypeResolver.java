@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
@@ -62,13 +63,15 @@ public interface FunctionArgumentTypeResolver {
 						arguments,
 						converter.getSqmCreationContext().getNodeBuilder()
 				) {
+					@Nonnull
 					@Override
-					public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+					public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 						throw new UnsupportedOperationException();
 					}
 
+					@Nonnull
 					@Override
-					public SqmExpression<Object> copy(SqmCopyContext context) {
+					public SqmExpression<Object> copy(@Nonnull SqmCopyContext context) {
 						throw new UnsupportedOperationException();
 					}
 				},

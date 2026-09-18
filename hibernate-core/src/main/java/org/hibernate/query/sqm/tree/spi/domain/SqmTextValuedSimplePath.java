@@ -21,29 +21,30 @@ public class SqmTextValuedSimplePath
 		extends SqmComparableValuedSimplePath<String>
 		implements SqmTextPath, SqmTextExpressionImplementor {
 	public SqmTextValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<String> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<String> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
 	public SqmTextValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<String> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<String> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
 	protected SqmTextValuedSimplePath createCopy(
-			NavigablePath navigablePath,
-			SqmPathSource<String> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<String> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmTextValuedSimplePath(
 				navigablePath,
 				referencedPathSource,
@@ -61,7 +62,7 @@ public class SqmTextValuedSimplePath
 
 	@Nonnull
 	@Override
-	public SqmTextExpression coalesce(String y) {
+	public SqmTextExpression coalesce(@Nonnull String y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -73,7 +74,7 @@ public class SqmTextValuedSimplePath
 
 	@Nonnull
 	@Override
-	public SqmTextExpression nullif(String y) {
+	public SqmTextExpression nullif(@Nonnull String y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().nullif( this, y ) );
 	}
 }

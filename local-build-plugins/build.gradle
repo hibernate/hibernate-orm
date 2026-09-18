@@ -22,6 +22,8 @@ sourceSets.main.java.srcDir("../shared/classification/src/main/java")
 dependencies {
 	implementation gradleApi()
 
+	compileOnly libs.jakarta.annotation
+
 	implementation libs.jakarta.inject
 
     implementation libs.jakarta.jaxbXjc

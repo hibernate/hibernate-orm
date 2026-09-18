@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -23,12 +26,13 @@ import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 @org.hibernate.Internal
 public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 
-	public MergeCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public MergeCoordinatorStandard(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 	}
 
+	@Nonnull
 	@Override
-	protected <O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
+	protected <O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(@Nonnull EntityTableMapping tableMapping) {
 		final TableMergeBuilder<O> tableUpdateBuilder =
 				new TableMergeBuilder<>( entityPersister(), tableMapping, factory() );
 		addDiscriminatorValueIfNeeded( tableUpdateBuilder, tableMapping );
@@ -36,8 +40,8 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 	}
 
 	private void addDiscriminatorValueIfNeeded(
-			AbstractTableUpdateBuilder<?> tableUpdateBuilder,
-			EntityTableMapping tableMapping) {
+			@Nonnull AbstractTableUpdateBuilder<?> tableUpdateBuilder,
+			@Nonnull EntityTableMapping tableMapping) {
 		final var discriminatorMapping = entityPersister().getDiscriminatorMapping();
 		if ( discriminatorMapping != null
 				&& discriminatorMapping.hasPhysicalColumn()
@@ -54,37 +58,39 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 	}
 
 	@Override
-	protected boolean isColumnIncludedInSet(SelectableMapping selectable) {
+	protected boolean isColumnIncludedInSet(@Nonnull SelectableMapping selectable) {
 		return selectable.isUpdateable() || selectable.isInsertable();
 	}
 
-	private static boolean isInsertableOrUpdatable(AttributeMapping attribute) {
+	private static boolean isInsertableOrUpdatable(@Nonnull AttributeMapping attribute) {
 		final var attributeMetadata = attribute.getAttributeMetadata();
 		return attributeMetadata.isUpdatable()
 			|| attributeMetadata.isInsertable();
 	}
 
+	@Nonnull
 	@Override
-	protected AttributeInclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
+	protected AttributeInclusionChecker createInclusionChecker(@Nonnull boolean[] attributeUpdateability) {
 		return (position, attribute) -> isInsertableOrUpdatable( attribute );
 	}
 
 	@Override
 	protected boolean includeInStaticUpdate(
 			int index,
-			AttributeMapping attribute,
-			boolean[] propertyUpdateability) {
+			@Nonnull AttributeMapping attribute,
+			@Nonnull boolean[] propertyUpdateability) {
 		return isInsertableOrUpdatable( attribute )
 			|| super.includeInStaticUpdate( index, attribute, propertyUpdateability );
 	}
 
 	@Override
-	protected boolean includeProperty(boolean[] insertability, boolean[] updateability, int property) {
+	protected boolean includeProperty(@Nonnull boolean[] insertability, @Nonnull boolean[] updateability, int property) {
 		return insertability[property] || updateability[property];
 	}
 
+	@Nonnull
 	@Override
-	public boolean[] getPropertyUpdateability(Object entity) {
+	public boolean[] getPropertyUpdateability(@Nonnull Object entity) {
 		final boolean[] updateability = super.getPropertyUpdateability( entity );
 		final boolean[] insertability = entityPersister().getPropertyInsertability();
 		final var result = new boolean[updateability.length];
@@ -94,6 +100,7 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	public boolean[] getPropertyUpdateability() {
 		final boolean[] updateability = entityPersister().getPropertyUpdateability();
@@ -105,25 +112,26 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 		return result;
 	}
 	@Override
-	protected void forEachUpdatable(AttributeMapping attributeMapping, TableUpdateBuilder<?> tableUpdateBuilder) {
+	protected void forEachUpdatable(@Nonnull AttributeMapping attributeMapping, @Nonnull TableUpdateBuilder<?> tableUpdateBuilder) {
 		attributeMapping.forEachSelectable( tableUpdateBuilder );
 	}
 
+	@Nonnull
 	@Override
 	protected UpdateValuesAnalysisImpl analyzeUpdateValues(
-			Object entity,
-			Object[] values,
-			Object oldVersion,
-			Object[] oldValues,
-			int[] dirtyAttributeIndexes,
-			AttributeInclusionChecker inclusionChecker,
-			AttributeInclusionChecker lockingChecker,
-			AttributeInclusionChecker dirtinessChecker,
+			@Nullable Object entity,
+			@Nullable Object[] values,
+			@Nullable Object oldVersion,
+			@Nullable Object[] oldValues,
+			@Nullable int[] dirtyAttributeIndexes,
+			@Nonnull AttributeInclusionChecker inclusionChecker,
+			@Nonnull AttributeInclusionChecker lockingChecker,
+			@Nonnull AttributeInclusionChecker dirtinessChecker,
 			boolean restrictToTemporalExcluded,
-			Object rowId,
+			@Nullable Object rowId,
 			boolean forceDynamicUpdate,
 			boolean databaseDirtinessCheck,
-			SharedSessionContractImplementor session) {
+			@Nullable SharedSessionContractImplementor session) {
 		final var updateValuesAnalysis = super.analyzeUpdateValues(
 				entity,
 				values,
@@ -159,6 +167,7 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 		return updateValuesAnalysis;
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "MergeCoordinator(" + entityPersister().getEntityName() + ")";

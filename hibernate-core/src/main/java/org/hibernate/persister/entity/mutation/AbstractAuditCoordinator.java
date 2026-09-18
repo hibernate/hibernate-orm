@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.SQLException;
 
 import org.hibernate.Internal;
@@ -30,18 +33,21 @@ import org.hibernate.sql.model.MutationOperationGroup;
 abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator implements AuditWriter {
 	protected final BasicBatchKey auditBatchKey;
 	protected final boolean[] auditedPropertyMask;
+	@Nullable
 	private final MutationOperationGroup staticAuditInsertGroup;
+	@Nullable
 	private final MutationOperationGroup transactionEndUpdateGroup;
 	private final EntityAuditSupport entityAuditSupport;
 
-	protected AbstractAuditCoordinator(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+	protected AbstractAuditCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 		this.entityAuditSupport = new EntityAuditSupport( entityPersister, factory );
 		this.auditedPropertyMask = entityAuditSupport.getAuditedPropertyMask();
 		this.auditBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_INSERT" );
-		this.staticAuditInsertGroup = entityPersister.isDynamicInsert()
+		final var staticAuditInsertMutationGroup = entityAuditSupport.getStaticAuditInsertMutationGroup();
+		this.staticAuditInsertGroup = staticAuditInsertMutationGroup == null
 				? null
-				: createOperationGroup( null, entityAuditSupport.getStaticAuditInsertMutationGroup() );
+				: createOperationGroup( null, staticAuditInsertMutationGroup );
 		this.transactionEndUpdateGroup = entityAuditSupport.getTransactionEndUpdateMutationGroup() == null
 				? null
 				: createOperationGroup( null, entityAuditSupport.getTransactionEndUpdateMutationGroup() );
@@ -51,11 +57,11 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 	 * Enqueue an audit entry for deferred writing at transaction completion.
 	 */
 	protected void enqueueAuditEntry(
-			EntityKey entityKey,
-			Object entity,
-			Object[] values,
-			ModificationType modificationType,
-			SharedSessionContractImplementor session) {
+			@Nonnull EntityKey entityKey,
+			@Nonnull Object entity,
+			@Nonnull Object[] values,
+			@Nonnull ModificationType modificationType,
+			@Nonnull SharedSessionContractImplementor session) {
 		session.getAuditWorkQueue().enqueue(
 				entityKey,
 				entity,
@@ -66,7 +72,8 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 		);
 	}
 
-	protected EntityKey resolveEntityKey(Object entity, Object id, SharedSessionContractImplementor session) {
+	@Nonnull
+	protected EntityKey resolveEntityKey(@Nonnull Object entity, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
 		return entityEntry != null
 				? entityEntry.getEntityKey()
@@ -79,21 +86,21 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 	 */
 	@Override
 	public void writeAuditRow(
-			EntityKey entityKey,
-			Object entity,
-			Object[] values,
-			ModificationType modificationType,
-			SharedSessionContractImplementor session) {
+			@Nonnull EntityKey entityKey,
+			@Nonnull Object entity,
+			@Nonnull Object[] values,
+			@Nonnull ModificationType modificationType,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var id = entityKey.getIdentifier();
 		updatePreviousTransactionEnd( id, modificationType, session );
 
 		final boolean dynamicInsert = entityPersister().isDynamicInsert();
 		final boolean[] propertyInclusions = entityAuditSupport.resolvePropertyInclusions( entity, values, session );
+		final var mutationGroup = dynamicInsert
+				? entityAuditSupport.resolveAuditInsertMutationGroup( propertyInclusions, entity, session )
+				: null;
 		final MutationOperationGroup operationGroup = dynamicInsert
-				? createOperationGroup(
-						null,
-						entityAuditSupport.resolveAuditInsertMutationGroup( propertyInclusions, entity, session )
-				)
+				? mutationGroup == null ? null : createOperationGroup( null, mutationGroup )
 				: staticAuditInsertGroup;
 		if ( operationGroup == null ) {
 			return;
@@ -120,18 +127,19 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 		}
 	}
 
+	@Nullable
 	@Override
 	protected BatchKey getBatchKey() {
 		return auditBatchKey;
 	}
 
 	private void bindAuditValues(
-			Object id,
-			Object[] values,
-			boolean[] propertyInclusions,
-			ModificationType modificationType,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull Object id,
+			@Nonnull Object[] values,
+			@Nonnull boolean[] propertyInclusions,
+			@Nonnull ModificationType modificationType,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		for ( int tableIndex = 0; tableIndex < entityPersister().getTableMappings().length; tableIndex++ ) {
 			entityAuditSupport.bindAuditInsertValues(
 					tableIndex,
@@ -158,9 +166,9 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 	 * @param session the current session
 	 */
 	private void updatePreviousTransactionEnd(
-			Object id,
-			ModificationType modificationType,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nonnull ModificationType modificationType,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( transactionEndUpdateGroup == null ) {
 			return;
 		}
@@ -193,7 +201,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 	}
 
 	private static boolean verifyOutcome(
-			PreparedStatementDetails statementDetails,
+			@Nonnull PreparedStatementDetails statementDetails,
 			int affectedRowCount,
 			int batchPosition) throws SQLException {
 		statementDetails.getExpectation().verifyOutcome(

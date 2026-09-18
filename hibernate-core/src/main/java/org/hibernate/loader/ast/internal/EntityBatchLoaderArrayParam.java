@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.LockOptions;
@@ -63,8 +66,8 @@ public class EntityBatchLoaderArrayParam<T>
 	 */
 	public EntityBatchLoaderArrayParam(
 			int domainBatchSize,
-			EntityMappingType entityDescriptor,
-			LoadQueryInfluencers loadQueryInfluencers) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		super( entityDescriptor, loadQueryInfluencers );
 		this.domainBatchSize = domainBatchSize;
 
@@ -113,8 +116,9 @@ public class EntityBatchLoaderArrayParam<T>
 		return domainBatchSize;
 	}
 
+	@Nonnull
 	@AllowReflection
-	protected Object[] resolveIdsToInitialize(Object pkValue, SharedSessionContractImplementor session) {
+	protected Object[] resolveIdsToInitialize(@Nonnull Object pkValue, @Nonnull SharedSessionContractImplementor session) {
 		//TODO: should this really be different to EntityBatchLoaderInPredicate impl?
 		final Object[] idsToLoad = new Object[domainBatchSize];
 		session.getPersistenceContextInternal().getBatchFetchQueue()
@@ -129,12 +133,12 @@ public class EntityBatchLoaderArrayParam<T>
 
 	@Override
 	protected void initializeEntities(
-			Object[] idsToInitialize,
-			Object id,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] idsToInitialize,
+			@Nonnull Object id,
+			@Nullable Object entityInstance,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.entityIdsToInitialize(
 					infoString( getLoadable(), id), idsToInitialize );
@@ -157,7 +161,7 @@ public class EntityBatchLoaderArrayParam<T>
 		);
 	}
 
-	private void removeBatchLoadableEntityKeys(Object[] idsToInitialize, SharedSessionContractImplementor session) {
+	private void removeBatchLoadableEntityKeys(@Nonnull Object[] idsToInitialize, @Nonnull SharedSessionContractImplementor session) {
 		final var batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
 		final var persister = getLoadable().getEntityPersister();
 		for ( Object initializedId : idsToInitialize ) {
@@ -168,11 +172,13 @@ public class EntityBatchLoaderArrayParam<T>
 		}
 	}
 
+	@Nullable
 	@Override
-	public T load(Object pkValue, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session) {
+	public T load(@Nonnull Object pkValue, @Nonnull LockOptions lockOptions, @Nullable Boolean readOnly, @Nonnull SharedSessionContractImplementor session) {
 		return load( pkValue, null, lockOptions, readOnly, session );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return String.format(

@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -31,9 +33,9 @@ public interface WriteIndexCoordinator extends CollectionOperationCoordinator {
 	 * @param session The session
 	 */
 	void writeIndex(
-			PersistentCollection<?> collection,
-			Iterator<?> entries,
-			Object key,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Iterator<?> entries,
+			@Nonnull Object key,
 			boolean resetIndex,
-			SharedSessionContractImplementor session);
+			@Nonnull SharedSessionContractImplementor session);
 }

@@ -769,7 +769,7 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
 		return false;
 	}
 
@@ -779,7 +779,7 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
+	public boolean isNotAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
 		return true;
 	}
 }

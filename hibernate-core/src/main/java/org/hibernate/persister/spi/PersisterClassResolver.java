@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -31,7 +33,8 @@ public interface PersisterClassResolver extends Service {
 	 *
 	 * @return The entity persister class to use
 	 */
-	Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass metadata);
+	@Nonnull
+	Class<? extends EntityPersister> getEntityPersisterClass(@Nonnull PersistentClass metadata);
 
 	/**
 	 * Returns the collection persister class for a given collection role or null
@@ -41,5 +44,6 @@ public interface PersisterClassResolver extends Service {
 	 *
 	 * @return The collection persister class to use
 	 */
-	Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata);
+	@Nonnull
+	Class<? extends CollectionPersister> getCollectionPersisterClass(@Nonnull Collection metadata);
 }

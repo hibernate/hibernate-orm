@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nullable;
+
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.CacheRetrieveMode;
@@ -58,7 +60,8 @@ import static java.util.Collections.emptyList;
 public class LoaderSqlAstCreationState
 		implements SqlAstQueryPartProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
 	public interface FetchProcessor {
-		ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState);
+		@Nonnull
+		ImmutableFetchList visitFetches(@Nonnull FetchParent fetchParent, @Nonnull LoaderSqlAstCreationState creationState);
 	}
 
 	private final SqlAliasBaseGenerator sqlAliasBaseManager;
@@ -71,19 +74,21 @@ public class LoaderSqlAstCreationState
 	private final FetchProcessor fetchProcessor;
 
 	private boolean resolvingCircularFetch;
+	@Nullable
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
+	@Nullable
 	private Map<NavigablePath, FetchOptions> fetchOptions;
 
 	public LoaderSqlAstCreationState(
-			QueryPart queryPart,
-			SqlAliasBaseGenerator sqlAliasBaseManager,
-			FromClauseAccess fromClauseAccess,
-			LockOptions lockOptions,
-			FetchProcessor fetchProcessor,
+			@Nonnull QueryPart queryPart,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseManager,
+			@Nonnull FromClauseAccess fromClauseAccess,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull FetchProcessor fetchProcessor,
 			boolean forceIdentifierSelection,
-			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext sf) {
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull SqlAstCreationContext sf) {
 		this.sqlAliasBaseManager = sqlAliasBaseManager;
 		this.fromClauseAccess = fromClauseAccess;
 		this.lockOptions = lockOptions;
@@ -101,67 +106,76 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
+	public void applyOrdering(@Nonnull TableGroup tableGroup, @Nonnull OrderByFragment orderByFragment) {
 		final QuerySpec querySpec = getInflightQueryPart().getFirstQuerySpec();
 		assert querySpec.isRoot() : "Illegal attempt to apply order-by fragment to a non-root query spec";
 		orderByFragment.apply( querySpec, tableGroup, this );
 	}
 
+	@Nonnull
 	@Override
 	public SqlAstCreationContext getCreationContext() {
 		return sf;
 	}
 
+	@Nonnull
 	@Override
 	public SqlAstProcessingState getCurrentProcessingState() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public QueryPart getInflightQueryPart() {
 		return processingState.getInflightQueryPart();
 	}
 
+	@Nonnull
 	@Override
 	public FromClause getFromClause() {
 		return processingState.getFromClause();
 	}
 
 	@Override
-	public void applyPredicate(Predicate predicate) {
+	public void applyPredicate(@Nonnull Predicate predicate) {
 		processingState.applyPredicate( predicate );
 	}
 
 	@Override
-	public void registerTreatedFrom(SqmFrom<?, ?> sqmFrom) {
+	public void registerTreatedFrom(@Nonnull SqmFrom<?, ?> sqmFrom) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses) {
+	public void registerFromUsage(@Nonnull SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nonnull
 	@Override
 	public Map<SqmFrom<?, ?>, Boolean> getFromRegistrations() {
 		return Collections.emptyMap();
 	}
 
+	@Nonnull
 	@Override
 	public SqlExpressionResolver getSqlExpressionResolver() {
 		return processingState;
 	}
 
+	@Nonnull
 	@Override
 	public FromClauseAccess getFromClauseAccess() {
 		return fromClauseAccess;
 	}
 
+	@Nonnull
 	@Override
 	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 		return sqlAliasBaseManager;
 	}
 
+	@Nonnull
 	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return loadQueryInfluencers;
@@ -173,17 +187,19 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
+	public void registerLockMode(@Nonnull String identificationVariable, @Nonnull LockMode explicitLockMode) {
 		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings" );
 	}
 
+	@Nonnull
 	@Override
-	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
+	public ImmutableFetchList visitFetches(@Nonnull FetchParent fetchParent) {
 		return fetchProcessor.visitFetches( fetchParent, this );
 	}
 
+	@Nonnull
 	@Override
-	public <R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action) {
+	public <R> R withNestedFetchParent(@Nonnull FetchParent fetchParent, @Nonnull Function<FetchParent, R> action) {
 		final var nestingFetchParent = processingState.getNestingFetchParent();
 		processingState.setNestingFetchParent( fetchParent );
 		final R result = action.apply( fetchParent );
@@ -201,18 +217,19 @@ public class LoaderSqlAstCreationState
 		this.resolvingCircularFetch = resolvingCircularFetch;
 	}
 
+	@Nullable
 	@Override
 	public ForeignKeyDescriptor.Nature getCurrentlyResolvingForeignKeyPart() {
 		return currentlyResolvingForeignKeySide;
 	}
 
 	@Override
-	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide) {
+	public void setCurrentlyResolvingForeignKeyPart(@Nonnull ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide) {
 		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
 	}
 
 	@Override
-	public void registerFetchOptions(NavigablePath fetchablePath, FetchOptions fetchOptions) {
+	public void registerFetchOptions(@Nonnull NavigablePath fetchablePath, @Nonnull FetchOptions fetchOptions) {
 		if ( fetchOptions.hasOptions() ) {
 			if ( this.fetchOptions == null ) {
 				this.fetchOptions = new HashMap<>();
@@ -221,8 +238,9 @@ public class LoaderSqlAstCreationState
 		}
 	}
 
+	@Nonnull
 	@Override
-	public FetchOptions getFetchOptions(NavigablePath fetchablePath) {
+	public FetchOptions getFetchOptions(@Nonnull NavigablePath fetchablePath) {
 		return fetchOptions == null ? FetchOptions.NONE : fetchOptions.getOrDefault( fetchablePath, FetchOptions.NONE );
 	}
 
@@ -231,23 +249,24 @@ public class LoaderSqlAstCreationState
 		return forceIdentifierSelection;
 	}
 
+	@Nonnull
 	@Override
 	public SqlAstCreationState getSqlAstCreationState() {
 		return this;
 	}
 
 	@Override
-	public boolean registerVisitedAssociationKey(AssociationKey associationKey) {
+	public boolean registerVisitedAssociationKey(@Nonnull AssociationKey associationKey) {
 		return visitedAssociationKeys.add( associationKey );
 	}
 
 	@Override
-	public void removeVisitedAssociationKey(AssociationKey associationKey) {
+	public void removeVisitedAssociationKey(@Nonnull AssociationKey associationKey) {
 		visitedAssociationKeys.remove( associationKey );
 	}
 
 	@Override
-	public boolean isAssociationKeyVisited(AssociationKey associationKey) {
+	public boolean isAssociationKeyVisited(@Nonnull AssociationKey associationKey) {
 		return visitedAssociationKeys.contains( associationKey );
 	}
 
@@ -256,17 +275,20 @@ public class LoaderSqlAstCreationState
 		return true;
 	}
 
+	@Nonnull
 	@Override
-	public ModelPart resolveModelPart(NavigablePath navigablePath) {
+	public ModelPart resolveModelPart(@Nonnull NavigablePath navigablePath) {
 		// for now, let's assume that the navigable-path refers to TableGroup
 		return fromClauseAccess.findTableGroup( navigablePath ).getModelPart();
 	}
 
+	@Nullable
 	@Override
 	public SqlAstProcessingState getParentState() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public Timeout getTimeout() {
 		return null;
@@ -278,11 +300,13 @@ public class LoaderSqlAstCreationState
 		return QueryFlushMode.DEFAULT;
 	}
 
+	@Nullable
 	@Override
 	public Boolean isReadOnly() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public AppliedGraph getAppliedGraph() {
 		// todo (6.0) : use this from the "load settings" (Hibernate method args, map passed to JPA methods)
@@ -290,36 +314,43 @@ public class LoaderSqlAstCreationState
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public TupleTransformer<?> getTupleTransformer() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public ResultListTransformer<?> getResultListTransformer() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public Boolean isResultCachingEnabled() {
 		return false;
 	}
 
+	@Nullable
 	@Override
 	public Boolean getQueryPlanCachingEnabled() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return CacheRetrieveMode.BYPASS;
 	}
 
+	@Nullable
 	@Override
 	public CacheStoreMode getCacheStoreMode() {
 		return CacheStoreMode.BYPASS;
 	}
 
+	@Nullable
 	@Override
 	public String getResultCacheRegionName() {
 		return null;
@@ -331,6 +362,7 @@ public class LoaderSqlAstCreationState
 		return lockOptions;
 	}
 
+	@Nullable
 	@Override
 	public String getComment() {
 		return null;
@@ -342,6 +374,7 @@ public class LoaderSqlAstCreationState
 		return emptyList();
 	}
 
+	@Nullable
 	@Override
 	public Integer getFetchSize() {
 		return null;
@@ -353,11 +386,13 @@ public class LoaderSqlAstCreationState
 		return Limit.NONE;
 	}
 
+	@Nullable
 	@Override
 	public Set<String> getEnabledFetchProfiles() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public Set<String> getDisabledFetchProfiles() {
 		return null;

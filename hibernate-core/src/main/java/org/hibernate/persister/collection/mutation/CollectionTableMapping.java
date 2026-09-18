@@ -28,15 +28,15 @@ public class CollectionTableMapping implements TableMapping {
 //	private final ForeignKeyDescriptor indexFk;
 
 	public CollectionTableMapping(
-			String tableName,
-			String[] spaces,
+			@Nonnull String tableName,
+			@Nonnull String[] spaces,
 			boolean isJoinTable,
 			boolean isInverse,
-			MutationDetails insertDetails,
-			MutationDetails updateDetails,
+			@Nonnull MutationDetails insertDetails,
+			@Nonnull MutationDetails updateDetails,
 			boolean cascadeDeleteEnabled,
-			MutationDetails deleteAllDetails,
-			MutationDetails deleteRowDetails) {
+			@Nonnull MutationDetails deleteAllDetails,
+			@Nonnull MutationDetails deleteRowDetails) {
 		this.tableName = tableName;
 		this.spaces = spaces;
 		this.isJoinTable = isJoinTable;
@@ -52,7 +52,7 @@ public class CollectionTableMapping implements TableMapping {
 	 * Creates an auxiliary table mapping (for history or audit tables)
 	 * based on an existing collection table mapping.
 	 */
-	public CollectionTableMapping(CollectionTableMapping baseMapping, String tableName) {
+	public CollectionTableMapping(@Nonnull CollectionTableMapping baseMapping, @Nonnull String tableName) {
 		this.tableName = tableName;
 		this.spaces = appendSpace( baseMapping.spaces, tableName );
 		this.isJoinTable = baseMapping.isJoinTable;
@@ -64,7 +64,8 @@ public class CollectionTableMapping implements TableMapping {
 		this.deleteRowDetails = baseMapping.deleteRowDetails;
 	}
 
-	private static String[] appendSpace(String[] baseSpaces, String newSpace) {
+	@Nonnull
+	private static String[] appendSpace(@Nonnull String[] baseSpaces, @Nonnull String newSpace) {
 		for ( String space : baseSpaces ) {
 			if ( newSpace.equals( space ) ) {
 				return baseSpaces;
@@ -82,12 +83,13 @@ public class CollectionTableMapping implements TableMapping {
 		return tableName;
 	}
 
+	@Nonnull
 	public String[] getSpaces() {
 		return spaces;
 	}
 
 	@Override
-	public boolean containsTableName(String tableName) {
+	public boolean containsTableName(@Nonnull String tableName) {
 		if ( this.tableName.equals( tableName ) ) {
 			return true;
 		}
@@ -133,11 +135,13 @@ public class CollectionTableMapping implements TableMapping {
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public MutationDetails getInsertDetails() {
 		return insertDetails;
 	}
 
+	@Nonnull
 	@Override
 	public MutationDetails getUpdateDetails() {
 		return updateDetails;
@@ -148,11 +152,13 @@ public class CollectionTableMapping implements TableMapping {
 		return cascadeDeleteEnabled;
 	}
 
+	@Nonnull
 	@Override
 	public MutationDetails getDeleteDetails() {
 		return deleteAllDetails;
 	}
 
+	@Nonnull
 	public MutationDetails getDeleteRowDetails() {
 		return deleteRowDetails;
 	}

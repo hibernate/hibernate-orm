@@ -4,6 +4,12 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -23,13 +29,15 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 	private final RowMutationOperations rowMutationOperations;
 	private final MutationExecutorService mutationExecutorService;
 
+	@Nullable
 	private MutationOperationGroup deleteOperationGroup;
+	@Nullable
 	private MutationOperationGroup insertOperationGroup;
 
 	public UpdateRowsCoordinatorOneToMany(
-			OneToManyPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull OneToManyPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, sessionFactory );
 		this.rowMutationOperations = rowMutationOperations;
 
@@ -37,7 +45,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 	}
 
 	@Override
-	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	protected int doUpdate(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		if ( rowMutationOperations.hasDeleteRow() ) {
 			deleteRows( key, collection, session );
 		}
@@ -49,7 +57,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 		return 0;
 	}
 
-	private void deleteRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	private void deleteRows(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		final var attributeMapping = getMutationTarget().getTargetPart();
 		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
 		final var entries = collection.entries( collectionDescriptor );
@@ -69,7 +77,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 					entryPosition++;
 					if ( collection.needsUpdating( entry, entryPosition, attributeMapping ) ) {
 						final Object entryToUpdate = collection.getSnapshotElement( entry, entryPosition );
-						rowMutationOperations.getDeleteRowRestrictions().applyRestrictions(
+						castNonNull( rowMutationOperations.getDeleteRowRestrictions() ).applyRestrictions(
 								collection,
 								key,
 								entryToUpdate,
@@ -87,6 +95,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 		}
 	}
 
+	@Nonnull
 	private MutationOperationGroup resolveDeleteGroup() {
 		if ( deleteOperationGroup == null ) {
 			final var operation = rowMutationOperations.getDeleteRowOperation();
@@ -96,7 +105,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 		return deleteOperationGroup;
 	}
 
-	private int insertRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	private int insertRows(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		final var attributeMapping = getMutationTarget().getTargetPart();
 		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
 		final var entries = collection.entries( collectionDescriptor );
@@ -118,7 +127,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 				final Object entry = entries.next();
 				entryPosition++;
 				if ( collection.needsUpdating( entry, entryPosition, attributeMapping ) ) {
-					rowMutationOperations.getInsertRowValues().applyValues(
+					castNonNull( rowMutationOperations.getInsertRowValues() ).applyValues(
 							collection,
 							key,
 							entry,
@@ -137,6 +146,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 		}
 	}
 
+	@Nonnull
 	private MutationOperationGroup resolveInsertGroup() {
 		if ( insertOperationGroup == null ) {
 			final var operation = rowMutationOperations.getInsertRowOperation();

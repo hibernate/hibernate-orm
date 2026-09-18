@@ -95,16 +95,19 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * The NavigableRole for this collection.
 	 */
+	@Nonnull
 	NavigableRole getNavigableRole();
 
 	/**
 	 * Get the name of this collection role (the fully qualified class name,
 	 * extended by a "property path")
 	 */
+	@Nonnull
 	default String getRole() {
 		return getNavigableRole().getFullPath();
 	}
 
+	@Nonnull
 	default PluralAttributeMapping getAttributeMapping() {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
@@ -112,21 +115,22 @@ public interface CollectionPersister extends Restrictable {
 	/// Decomposes a prepared collection mutation into graph-native operations.
 	@org.hibernate.Internal
 	void decompose(
-			PreparedCollectionMutation mutation,
+			@Nonnull PreparedCollectionMutation mutation,
 			int ordinalBase,
-			SharedSessionContractImplementor session,
-			DecompositionContext decompositionContext,
-			Consumer<FlushOperation> operationConsumer);
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull DecompositionContext decompositionContext,
+			@Nonnull Consumer<FlushOperation> operationConsumer);
 
 	/**
 	 * Get the persister of the entity that "owns" this collection
 	 */
+	@Nonnull
 	EntityPersister getOwnerEntityPersister();
 
 	/**
 	 * Initialize the given collection with the given key
 	 */
-	void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException;
+	void initialize(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Is this collection role cacheable
@@ -141,6 +145,7 @@ public interface CollectionPersister extends Restrictable {
 		return true;
 	}
 
+	@Nonnull
 	@Internal
 	RowMutationOperations getRowMutationOperations();
 
@@ -150,12 +155,15 @@ public interface CollectionPersister extends Restrictable {
 	@Internal
 	boolean isRowDeleteEnabled();
 
+	@Nullable
 	@Internal
 	boolean[] getIndexColumnIsSettable();
 
+	@Nonnull
 	@Internal
 	boolean[] getElementColumnIsSettable();
 
+	@Nonnull
 	@Internal
 	UnaryOperator<Object> getIndexIncrementer();
 
@@ -177,6 +185,7 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * Return the element class of an array, or null otherwise
 	 */
+	@Nullable
 	Class<?> getElementClass();
 
 	/**
@@ -215,52 +224,53 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * Completely remove the persistent state of the collection
 	 */
-	void remove(Object id, SharedSessionContractImplementor session);
+	void remove(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * (Re)create the collection's persistent state
 	 */
 	void recreate(
-			PersistentCollection<?> collection,
-			Object key,
-			SharedSessionContractImplementor session);
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Delete the persistent state of any elements that were removed from
 	 * the collection
 	 */
 	void deleteRows(
-			PersistentCollection<?> collection,
-			Object key,
-			SharedSessionContractImplementor session);
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Update the persistent state of any elements that were modified
 	 */
 	void updateRows(
-			PersistentCollection<?> collection,
-			Object key,
-			SharedSessionContractImplementor session);
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Insert the persistent state of any new collection elements
 	 */
 	void insertRows(
-			PersistentCollection<?> collection,
-			Object key,
-			SharedSessionContractImplementor session);
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Process queued operations within the PersistentCollection.
 	 */
 	void processQueuedOps(
-			PersistentCollection<?> collection,
-			Object key,
-			SharedSessionContractImplementor session);
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Get the surrogate key generation strategy (optional operation)
 	 */
+	@Nullable
 	BeforeExecutionGenerator getGenerator();
 
 	/**
@@ -280,6 +290,7 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * Get the "space" that holds the persistent state
 	 */
+	@Nonnull
 	String[] getCollectionSpaces();
 
 	/**
@@ -303,40 +314,42 @@ public interface CollectionPersister extends Restrictable {
 
 	void postInstantiate() throws MappingException;
 
+	@Nonnull
 	SessionFactoryImplementor getFactory();
 
-	boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session);
+	boolean isAffectedByEnabledFilters(@Nonnull SharedSessionContractImplementor session);
 
-	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
-	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+	default boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
 	default boolean isAffectedByEnabledFilters(
-			Set<ManagedMappingType> visitedTypes,
-			LoadQueryInfluencers influencers,
+			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
-	default boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByEntityGraph(@Nonnull LoadQueryInfluencers influencers) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
-	default boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByEnabledFetchProfiles(@Nonnull LoadQueryInfluencers influencers) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
 	default boolean isExtraLazy() {
 		return false;
 	}
-	int getSize(Object key, SharedSessionContractImplementor session);
-	boolean indexExists(Object key, Object index, SharedSessionContractImplementor session);
-	boolean elementExists(Object key, Object element, SharedSessionContractImplementor session);
-	Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner);
+	int getSize(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session);
+	boolean indexExists(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session);
+	boolean elementExists(@Nonnull Object key, @Nullable Object element, @Nonnull SharedSessionContractImplementor session);
+	@Nullable
+	Object getElementByIndex(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session, @Nullable Object owner);
 	default int getBatchSize() {
 		return -1;
 	}
@@ -350,6 +363,7 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * @return the name of the property this collection is mapped by
 	 */
+	@Nullable
 	String getMappedByProperty();
 
 	/**
@@ -360,21 +374,23 @@ public interface CollectionPersister extends Restrictable {
 	 * @see CollectionClassification#SORTED_MAP
 	 * @see CollectionClassification#SORTED_SET
 	 */
+	@Nullable
 	Comparator<?> getSortingComparator();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// mapping model
 
+	@Nonnull
 	CollectionSemantics<?,?> getCollectionSemantics();
 
 
 	void applyBaseManyToManyRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
+			@Nonnull Map<String, Filter> enabledFilters,
+			@Nullable Set<String> treatAsDeclarations,
 			@Nullable SqlAstCreationState creationState);
 
 
@@ -389,8 +405,9 @@ public interface CollectionPersister extends Restrictable {
 	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
 	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
 	 */
+	@Nonnull
 	@Deprecated( since = "6", forRemoval = true )
-	String[] getKeyColumnAliases(String suffix);
+	String[] getKeyColumnAliases(@Nonnull String suffix);
 
 	/**
 	 * Generates the collection's index column aliases, based on the given
@@ -402,8 +419,9 @@ public interface CollectionPersister extends Restrictable {
 	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
 	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
 	 */
+	@Nullable
 	@Deprecated( since = "6", forRemoval = true )
-	String[] getIndexColumnAliases(String suffix);
+	String[] getIndexColumnAliases(@Nonnull String suffix);
 
 	/**
 	 * Generates the collection's element column aliases, based on the given
@@ -415,8 +433,9 @@ public interface CollectionPersister extends Restrictable {
 	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
 	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
 	 */
+	@Nonnull
 	@Deprecated( since = "6", forRemoval = true )
-	String[] getElementColumnAliases(String suffix);
+	String[] getElementColumnAliases(@Nonnull String suffix);
 
 	/**
 	 * Generates the collection's identifier column aliases, based on the given
@@ -428,8 +447,9 @@ public interface CollectionPersister extends Restrictable {
 	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
 	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
 	 */
+	@Nullable
 	@Deprecated( since = "6", forRemoval = true )
-	String getIdentifierColumnAlias(String suffix);
+	String getIdentifierColumnAlias(@Nonnull String suffix);
 
 	/**
 	 * Get the associated {@code Type}
@@ -438,6 +458,7 @@ public interface CollectionPersister extends Restrictable {
 	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
 	 * be used instead - here (generally), {@link PluralAttributeMapping}
 	 */
+	@Nonnull
 	@Deprecated( forRemoval = true )
 	CollectionType getCollectionType();
 
@@ -448,6 +469,7 @@ public interface CollectionPersister extends Restrictable {
 	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
 	 * be used instead - here, {@link PluralAttributeMapping#getKeyDescriptor()}
 	 */
+	@Nonnull
 	@Deprecated( forRemoval = true )
 	Type getKeyType();
 
@@ -458,6 +480,7 @@ public interface CollectionPersister extends Restrictable {
 	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
 	 * be used instead - here, {@link PluralAttributeMapping#getIndexDescriptor()}
 	 */
+	@Nullable
 	@Deprecated( forRemoval = true )
 	Type getIndexType();
 
@@ -468,6 +491,7 @@ public interface CollectionPersister extends Restrictable {
 	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
 	 * be used instead - here, {@link PluralAttributeMapping#getElementDescriptor()}
 	 */
+	@Nonnull
 	@Deprecated( forRemoval = true )
 	Type getElementType();
 
@@ -478,19 +502,24 @@ public interface CollectionPersister extends Restrictable {
 	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
 	 * be used instead - here, {@link PluralAttributeMapping#getIdentifierDescriptor()}
 	 */
+	@Nullable
 	@Deprecated( forRemoval = true )
 	Type getIdentifierType();
 
+	@Nullable
 	String getIdentifierColumnName();
 
+	@Nonnull
 	String getTableName();
 
 	/**
 	 * Generate a list of collection index and element columns
 	 */
-	String selectFragment(String alias, String columnSuffix);
+	@Nonnull
+	String selectFragment(@Nonnull String alias, @Nonnull String columnSuffix);
 
-	String[] getCollectionPropertyColumnAliases(String propertyName, String string);
+	@Nullable
+	String[] getCollectionPropertyColumnAliases(@Nonnull String propertyName, @Nonnull String string);
 
 	/**
 	 * Get the persister of the element class, if this is a
@@ -498,5 +527,6 @@ public interface CollectionPersister extends Restrictable {
 	 * for a one-to-many association, the returned persister
 	 * must be {@code OuterJoinLoadable}.
 	 */
+	@Nullable
 	EntityPersister getElementPersister();
 }

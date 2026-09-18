@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -18,20 +20,23 @@ public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordin
 	private final AbstractCollectionPersister mutationTarget;
 	private final SessionFactoryImplementor sessionFactory;
 
-	public AbstractUpdateRowsCoordinator(AbstractCollectionPersister mutationTarget, SessionFactoryImplementor sessionFactory) {
+	public AbstractUpdateRowsCoordinator(@Nonnull AbstractCollectionPersister mutationTarget, @Nonnull SessionFactoryImplementor sessionFactory) {
 		this.mutationTarget = mutationTarget;
 		this.sessionFactory = sessionFactory;
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "UpdateRowsCoordinator(" + getMutationTarget().getRolePath() + ")";
 	}
 
+	@Nonnull
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
+	@Nonnull
 	@Override
 	public AbstractCollectionPersister getMutationTarget() {
 		// exposes AbstractCollectionPersister until we can drop MutationTarget in favor of GraphMutationTarget
@@ -39,7 +44,7 @@ public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordin
 	}
 
 	@Override
-	public void updateRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	public void updateRows(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		MODEL_MUTATION_LOGGER.updatingCollectionRows( mutationTarget.getRolePath(), key );
 
 		// update all the modified entries
@@ -48,9 +53,10 @@ public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordin
 		MODEL_MUTATION_LOGGER.updatedCollectionRows( count, mutationTarget.getRolePath(), key );
 	}
 
-	protected abstract int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session);
+	protected abstract int doUpdate(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session);
 
-	protected Object resolveDeleteRowValue(PersistentCollection<?> collection, Object entry, int entryPosition) {
+	@Nonnull
+	protected Object resolveDeleteRowValue(@Nonnull PersistentCollection<?> collection, @Nonnull Object entry, int entryPosition) {
 		final var attributeMapping = getMutationTarget().getTargetPart();
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {

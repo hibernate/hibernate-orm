@@ -4,6 +4,11 @@
  */
 package org.hibernate.persister.collection;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.HibernateException;
@@ -89,9 +94,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	final boolean doWriteEvenWhenInverse; // contrary to intent of JPA
 
 	public OneToManyPersister(
-			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
-			RuntimeModelCreationContext creationContext)
+			@Nonnull Collection collectionBinding,
+			@Nullable CollectionDataAccess cacheAccessStrategy,
+			@Nonnull RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 		keyIsNullable = collectionBinding.getKey().isNullable();
@@ -101,7 +106,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					&& hasIndex()
 					&& !indexContainsFormula
 					&& isAnyTrue( indexColumnIsSettable )
-					&& !getElementPersisterInternal().managesColumns( indexColumnNames );
+					&& !getElementPersister().managesColumns( castNonNull( indexColumnNames ) );
 
 		rowMutationOperations = buildRowMutationOperations();
 		stateManagement = collectionBinding.getStateManagement();
@@ -114,7 +119,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public void prepareMappingModel(MappingModelCreationProcess creationProcess, Collection bootCollectionDescriptor) {
+	public void prepareMappingModel(@Nonnull MappingModelCreationProcess creationProcess, @Nonnull Collection bootCollectionDescriptor) {
 		super.prepareMappingModel( creationProcess, bootCollectionDescriptor );
 
 		if ( getElementPersister() instanceof UnionSubclassEntityPersister ) {
@@ -133,6 +138,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		decomposer = buildCollectionDecomposer();
 	}
 
+	@Nonnull
 	protected CollectionDecomposer buildCollectionDecomposer() {
 		final var mutationPlanContributor = stateManagement.getGraphIntegration()
 				.createCollectionMutationPlanContributor( this );
@@ -145,28 +151,34 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return doWriteEvenWhenInverse;
 	}
 
+	@Nonnull
 	@Override
 	public RowMutationOperations getRowMutationOperations() {
 		return rowMutationOperations;
 	}
 
+	@Nonnull
 	public InsertRowsCoordinator getInsertRowsCoordinator() {
 		return insertRowsCoordinator;
 	}
 
+	@Nonnull
 	public UpdateRowsCoordinator getUpdateRowsCoordinator() {
 		return updateRowsCoordinator;
 	}
 
+	@Nonnull
 	public DeleteRowsCoordinator getDeleteRowsCoordinator() {
 		return deleteRowsCoordinator;
 	}
 
+	@Nonnull
 	@Override
 	public RemoveCoordinator getRemoveCoordinator() {
 		return removeCoordinator;
 	}
 
+	@Nonnull
 	public WriteIndexCoordinator getWriteIndexCoordinator() {
 		return writeIndexCoordinator;
 	}
@@ -177,42 +189,42 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public void recreate(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
+	public void recreate(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session)
 			throws HibernateException {
 		getInsertRowsCoordinator().insertRows( collection, id, collection::includeInRecreate, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
 
 	@Override
-	public void insertRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
+	public void insertRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session)
 			throws HibernateException {
 		getInsertRowsCoordinator().insertRows( collection, id, collection::includeInInsert, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
 
 	@Override
-	public void updateRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session) {
+	public void updateRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		getUpdateRowsCoordinator().updateRows( id, collection, session );
 //		oldUpdateRows( collection, id, session );
 	}
 
 	@Override
-	public void deleteRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+	public void deleteRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		getDeleteRowsCoordinator().deleteRows( collection, key, session );
 	}
 
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
+	protected void doProcessQueuedOps(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session)
 			throws HibernateException {
 		writeIndex( collection, collection.queuedAdditionIterator(), id, false, session );
 	}
 
 	private void writeIndex(
-			PersistentCollection<?> collection,
-			Iterator<?> entries,
-			Object key,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Iterator<?> entries,
+			@Nonnull Object key,
 			boolean resetIndex,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 		writeIndexCoordinator.writeIndex( collection, entries, key, resetIndex, session );
 	}
 
@@ -225,38 +237,42 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName() {
 		return getElementPersister().getTableName();
 	}
 
 	protected void applyWhereFragments(
-			Consumer<Predicate> predicateConsumer,
-			String alias,
-			TableGroup tableGroup,
-			SqlAstCreationState astCreationState) {
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nullable String alias,
+			@Nonnull TableGroup tableGroup,
+			@Nullable SqlAstCreationState astCreationState) {
 		super.applyWhereFragments( predicateConsumer, alias, tableGroup, astCreationState );
-		if ( !astCreationState.supportsEntityNameUsage() ) {
+		if ( astCreationState != null && !astCreationState.supportsEntityNameUsage() ) {
 			// We only need to apply discriminator for loads, since queries with joined
 			// inheritance subtypes are already filtered by the entity name usage logic
-			getElementPersisterInternal()
+			getElementPersister()
 					.applyDiscriminator( predicateConsumer, alias, tableGroup, astCreationState );
 		}
 	}
 
+	@Nonnull
 	@Override
-	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+	public FilterAliasGenerator getFilterAliasGenerator(@Nonnull String rootAlias) {
 		return getElementPersister().getFilterAliasGenerator( rootAlias );
 	}
 
+	@Nonnull
 	@Override
-	public FilterAliasGenerator getFilterAliasGenerator(TableGroup rootTableGroup) {
+	public FilterAliasGenerator getFilterAliasGenerator(@Nonnull TableGroup rootTableGroup) {
 		return getElementPersister().getFilterAliasGenerator( rootTableGroup );
 	}
 
 
+	@Nonnull
 	@Override
-	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(MutatingTableReference tableReference) {
+	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(@Nonnull MutatingTableReference tableReference) {
 		final var attributeMapping = getAttributeMapping();
 		assert attributeMapping != null;
 
@@ -265,7 +281,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		final int keyColumnCount = foreignKeyDescriptor.getJdbcTypeCount();
 		final int valuesCount = hasIndex()
-				? keyColumnCount + indexColumnNames.length
+				? keyColumnCount + castNonNull( indexColumnNames ).length
 				: keyColumnCount;
 
 		final var parameterBinders =
@@ -312,6 +328,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 
+	@Nonnull
 	private RowMutationOperations buildRowMutationOperations() {
 		final OperationProducer insertRowOperationProducer;
 		final RowMutationOperations.Values insertRowValues;
@@ -370,6 +387,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		);
 	}
 
+	@Nonnull
 	private WriteIndexCoordinator buildWriteIndexCoordinator() {
 		if ( doWriteEvenWhenInverse ) {
 			return new WriteIndexCoordinatorStandard( this, rowMutationOperations, getFactory() );
@@ -379,13 +397,15 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		}
 	}
 
-	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcMutationOperation generateDeleteRowOperation(@Nonnull MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
 				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateDeleteRowAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
-	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(MutatingTableReference tableReference) {
+	@Nonnull
+	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(@Nonnull MutatingTableReference tableReference) {
 		// note that custom SQL delete row details are handled by CollectionRowUpdateBuilder
 		final var updateBuilder = new org.hibernate.sql.ast.internal.model.builder.CollectionRowDeleteByUpdateSetNullBuilder(
 				this,
@@ -438,12 +458,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	private void applyDeleteRowRestrictions(
-			PersistentCollection<?> collection,
-			Object keyValue,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object keyValue,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var pluralAttribute = getAttributeMapping();
 		pluralAttribute.getKeyDescriptor().decompose(
 				keyValue,
@@ -468,13 +488,15 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 
-	private JdbcMutationOperation generateInsertRowOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcMutationOperation generateInsertRowOperation(@Nonnull MutatingTableReference tableReference) {
 		// NOTE: `TableUpdateBuilderStandard` and `TableUpdate` already handle custom-sql
 		return buildTableUpdate( tableReference )
 				.createMutationOperation( null, getFactory() );
 	}
 
-	private TableUpdate<JdbcMutationOperation> buildTableUpdate(MutatingTableReference tableReference) {
+	@Nonnull
+	private TableUpdate<JdbcMutationOperation> buildTableUpdate(@Nonnull MutatingTableReference tableReference) {
 		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder =
 				new TableUpdateBuilderStandard<>( this, tableReference, getFactory(), sqlWhereString );
 		final var attributeMapping = getAttributeMapping();
@@ -491,12 +513,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	private void applyInsertRowValues(
-			PersistentCollection<?> collection,
-			Object keyValue,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object keyValue,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
 		attributeMapping.getKeyDescriptor().getKeyPart().decompose(
 				keyValue,
@@ -540,7 +562,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 
-	private JdbcMutationOperation generateWriteIndexOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcMutationOperation generateWriteIndexOperation(@Nonnull MutatingTableReference tableReference) {
 		// note that custom SQL update details are handled by TableUpdateBuilderStandard
 		final var factory = getFactory();
 		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder =
@@ -564,12 +587,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	private void applyWriteIndexValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object entry,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object entry,
 			int entryPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		getAttributeMapping().getIndexDescriptor().decompose(
 				collection.getIndex( entry, entryPosition, this ),
 				0,
@@ -585,12 +608,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	private void applyWriteIndexRestrictions(
-			PersistentCollection<?> collection,
-			Object key,
-			Object entry,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object entry,
 			int entryPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
 		final var elementDescriptor = (OneToManyCollectionPart) attributeMapping.getElementDescriptor();
 		final var associatedType = elementDescriptor.getAssociatedEntityMappingType();
@@ -623,15 +646,16 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// GraphBasedActionQueue / FlushCoordinator support
 
+	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private CollectionDecomposer decomposer;
 
 	@Override
 	public void decompose(
-			PreparedCollectionMutation mutation,
+			@Nonnull PreparedCollectionMutation mutation,
 			int ordinalBase,
-			SharedSessionContractImplementor session,
-			DecompositionContext decompositionContext,
-			Consumer<FlushOperation> operationConsumer) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull DecompositionContext decompositionContext,
+			@Nonnull Consumer<FlushOperation> operationConsumer) {
 		switch ( mutation.kind() ) {
 			case CREATE -> decomposer.decomposeRecreate(
 					mutation, ordinalBase, session, decompositionContext, operationConsumer );

@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.FindMultipleOption;
 import org.hibernate.LockOptions;
 
@@ -20,6 +23,7 @@ public interface MultiLoadOptions {
 	 *
 	 * @since 7.2
 	 */
+	@Nonnull
 	FindMultipleOption.RemovalsMode getRemovalsMode();
 
 	/**
@@ -28,6 +32,7 @@ public interface MultiLoadOptions {
 	 *
 	 * @since 7.2
 	 */
+	@Nonnull
 	FindMultipleOption.OrderingMode getOrderingMode();
 
 	/**
@@ -59,6 +64,7 @@ public interface MultiLoadOptions {
 	 *
 	 * @return lock options applied during loading.
 	 */
+	@Nonnull
 	LockOptions getLockOptions();
 
 	/**
@@ -66,5 +72,6 @@ public interface MultiLoadOptions {
 	 *
 	 * @return JDBC batch size
 	 */
+	@Nullable
 	Integer getBatchSize();
 }

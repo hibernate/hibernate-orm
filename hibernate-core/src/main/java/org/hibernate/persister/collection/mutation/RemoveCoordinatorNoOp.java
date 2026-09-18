@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -14,15 +16,17 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public class RemoveCoordinatorNoOp implements RemoveCoordinator {
 	private final CollectionMutationTarget mutationTarget;
 
-	public RemoveCoordinatorNoOp(CollectionMutationTarget mutationTarget) {
+	public RemoveCoordinatorNoOp(@Nonnull CollectionMutationTarget mutationTarget) {
 		this.mutationTarget = mutationTarget;
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "RemoveCoordinator(" + mutationTarget.getRolePath() + " [DISABLED])";
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -34,7 +38,7 @@ public class RemoveCoordinatorNoOp implements RemoveCoordinator {
 	}
 
 	@Override
-	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
+	public void deleteAllRows(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		// nothing to do
 	}
 }

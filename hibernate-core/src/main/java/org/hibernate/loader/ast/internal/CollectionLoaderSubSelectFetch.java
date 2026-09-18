@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import java.util.List;
@@ -39,10 +42,10 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 	private final SelectStatement sqlAst;
 
 	public CollectionLoaderSubSelectFetch(
-			PluralAttributeMapping attributeMapping,
-			DomainResult<?> cachedDomainResult,
-			SubselectFetch subselect,
-			SharedSessionContractImplementor session) {
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nullable DomainResult<?> cachedDomainResult,
+			@Nonnull SubselectFetch subselect,
+			@Nonnull SharedSessionContractImplementor session) {
 		this.attributeMapping = attributeMapping;
 		this.subselect = subselect;
 
@@ -69,17 +72,20 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		);
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getLoadable() {
 		return attributeMapping;
 	}
 
+	@Nonnull
 	protected SelectStatement getSqlAst() {
 		return sqlAst;
 	}
 
+	@Nonnull
 	@Override
-	public PersistentCollection<?> load(Object triggerKey, SharedSessionContractImplementor session) {
+	public PersistentCollection<?> load(@Nonnull Object triggerKey, @Nonnull SharedSessionContractImplementor session) {
 		final var collectionKey = session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );
 
 		final var sessionFactory = session.getFactory();
@@ -154,7 +160,8 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		return collection;
 	}
 
-	private CollectionKey collectionKey(EntityKey key, SharedSessionContractImplementor session) {
+	@Nonnull
+	private CollectionKey collectionKey(@Nonnull EntityKey key, @Nonnull SharedSessionContractImplementor session) {
 		return session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() );
 	}
 

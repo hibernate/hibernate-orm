@@ -134,7 +134,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @throws MappingException Indicates an issue in the metadata.
 	 */
-	void postInstantiate(PersistentClass bootEntityDescriptor) throws MappingException;
+	void postInstantiate(@Nonnull PersistentClass bootEntityDescriptor) throws MappingException;
 
 	/**
 	 * Prepare loaders associated with the persister.
@@ -166,6 +166,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * The {@link org.hibernate.SessionFactory} to which this persister
 	 * belongs.
 	 */
+	@Nonnull
 	SessionFactoryImplementor getFactory();
 
 	@Nonnull
@@ -186,6 +187,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The root entity name.
 	 */
+	@Nonnull
 	String getRootEntityName();
 
 	/**
@@ -227,8 +229,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	boolean isDynamicInsert();
 
+	@Nonnull
 	OnDeleteAction[] getPropertyOnDeleteActions();
 
+	@Nonnull
 	Generator[] getGenerators();
 
 	boolean hasImmutableNaturalId();
@@ -248,10 +252,11 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * the entity's non-lazy state as well as the named attribute we are accessing
 	 * if it is still uninitialized after fetching non-lazy state.
 	 */
+	@Nullable
 	default Object initializeEnhancedEntityUsedAsProxy(
-			Object entity,
-			String nameOfAttributeBeingAccessed,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nullable String nameOfAttributeBeingAccessed,
+			@Nonnull SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException(
 				"Initialization of entity enhancement used to act like a proxy is not supported by this EntityPersister : "
 						+ getClass().getName()
@@ -267,7 +272,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * mapped by this persister or one of its subclass entities; false
 	 * otherwise.
 	 */
-	boolean isSubclassEntityName(String entityName);
+	boolean isSubclassEntityName(@Nonnull String entityName);
 
 	/**
 	 * Returns an array of objects that identify spaces in which properties of
@@ -279,6 +284,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The property spaces.
 	 */
+	@Nonnull
 	String[] getPropertySpaces();
 
 	/**
@@ -290,6 +296,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The query spaces.
 	 */
+	@Nonnull
 	Serializable[] getQuerySpaces();
 
 	/**
@@ -301,6 +308,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The query spaces.
 	 */
+	@Nonnull
 	default String[] getSynchronizedQuerySpaces() {
 		return (String[]) getQuerySpaces();
 	}
@@ -429,8 +437,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @deprecated See {@linkplain #findAttributeMapping(String)}
 	 */
+	@Nonnull
 	@Deprecated( since = "6", forRemoval = true )
-	Type getPropertyType(String propertyName) throws MappingException;
+	Type getPropertyType(@Nonnull String propertyName) throws MappingException;
 
 	/**
 	 * Compare the two snapshots to determine if they represent dirty state.
@@ -442,7 +451,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return The indices of all dirty properties, or null if no properties
 	 * were dirty.
 	 */
-	int[] findDirty(Object[] currentState, Object[] previousState, Object owner, SharedSessionContractImplementor session);
+	@Nullable
+	int[] findDirty(@Nonnull Object[] currentState, @Nonnull Object[] previousState, @Nonnull Object owner, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Compare the two snapshots to determine if they represent modified state.
@@ -454,7 +464,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return The indices of all modified properties, or null if no properties
 	 * were modified.
 	 */
-	int[] findModified(Object[] old, Object[] current, Object object, SharedSessionContractImplementor session);
+	@Nullable
+	int[] findModified(@Nonnull Object[] old, @Nonnull Object[] current, @Nonnull Object object, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Determine whether the entity has a particular property holding
@@ -496,11 +507,14 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The type of the version property; or null, if not versioned.
 	 */
+	@Nullable
 	BasicType<?> getVersionType();
 
+	@Nullable
 	@SuppressWarnings("unchecked")
 	default VersionJavaType<Object> getVersionJavaType() {
-		return (VersionJavaType<Object>) getVersionType().getJavaTypeDescriptor();
+		final var versionType = getVersionType();
+		return versionType == null ? null : (VersionJavaType<Object>) versionType.getJavaTypeDescriptor();
 	}
 
 	/**
@@ -526,6 +540,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return The indices of the properties making up the natural id;
 	 *         or null, if no natural id is defined.
 	 */
+	@Nullable
 	int[] getNaturalIdentifierProperties();
 
 	/**
@@ -535,15 +550,18 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @param session The session from which the request originated.
 	 * @return The natural-id snapshot.
 	 */
-	Object getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session);
+	@Nullable
+	Object getNaturalIdentifierSnapshot(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Determine which identifier generation strategy is used for this entity.
 	 *
 	 * @return The identifier generation strategy.
 	 */
+	@Nonnull
 	Generator getGenerator();
 
+	@Nullable
 	default BeforeExecutionGenerator getVersionGenerator() {
 		return new VersionGeneration( getVersionMapping() );
 	}
@@ -572,7 +590,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		else {
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
 				final AttributeMapping attributeMapping = getAttributeMapping( i );
-				final Object attributeValue = attributeMapping.getValue( domainValue );
+				final Object attributeValue = domainValue == null ? null : attributeMapping.getValue( domainValue );
 				span += attributeMapping.breakDownJdbcValues(
 						attributeValue,
 						offset + span,
@@ -613,14 +631,17 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Load an instance of the persistent class.
 	 */
-	Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session);
+	@Nullable
+	Object load(@Nonnull Object id, @Nullable Object optionalObject, @Nonnull LockMode lockMode, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Load an instance of the persistent class.
 	 */
-	Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session);
+	@Nullable
+	Object load(@Nonnull Object id, @Nullable Object optionalObject, @Nonnull LockOptions lockOptions, @Nonnull SharedSessionContractImplementor session);
 
-	default Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session, Boolean readOnly)
+	@Nullable
+	default Object load(@Nonnull Object id, @Nullable Object optionalObject, @Nonnull LockOptions lockOptions, @Nonnull SharedSessionContractImplementor session, @Nullable Boolean readOnly)
 			throws HibernateException {
 		return load( id, optionalObject, lockOptions, session );
 	}
@@ -634,7 +655,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The loaded, matching entities
 	 */
-	List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions);
+	@Nonnull
+	List<?> multiLoad(@Nonnull Object[] ids, @Nonnull SharedSessionContractImplementor session, @Nonnull MultiIdLoadOptions loadOptions);
 
 	@Nullable
 	@Override
@@ -648,12 +670,12 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session);
+	void lock(@Nonnull Object id, @Nullable Object version, @Nonnull Object object, @Nonnull LockMode lockMode, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session);
+	void lock(@Nonnull Object id, @Nullable Object version, @Nonnull Object object, @Nonnull LockOptions lockOptions, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Persist an instance
@@ -662,7 +684,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @deprecated Use {@link InsertCoordinator#insert(Object, Object, Object[], SharedSessionContractImplementor)} instead.
 	 */
 	@Deprecated( forRemoval = true, since = "6.5" )
-	default void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
+	default void insert(@Nonnull Object id, @Nonnull Object[] fields, @Nonnull Object object, @Nonnull SharedSessionContractImplementor session) {
 		getInsertCoordinator().insert( object, id, fields, session );
 	}
 
@@ -672,8 +694,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @see #getInsertCoordinator()
 	 * @deprecated Use {@link InsertCoordinator#insert(Object, Object[], SharedSessionContractImplementor)} instead.
 	 */
+	@Nullable
 	@Deprecated( forRemoval = true, since = "6.5" )
-	default Object insert(Object[] fields, Object object, SharedSessionContractImplementor session) {
+	default Object insert(@Nonnull Object[] fields, @Nonnull Object object, @Nonnull SharedSessionContractImplementor session) {
 		final GeneratedValues generatedValues = getInsertCoordinator().insert( object, fields, session );
 		return generatedValues == null ? null : generatedValues.getGeneratedValue( getIdentifierMapping() );
 	}
@@ -685,7 +708,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @deprecated Use {@link DeleteCoordinator#delete} instead.
 	 */
 	@Deprecated( forRemoval = true, since = "6.5" )
-	default void delete(Object id, Object version, Object object, SharedSessionContractImplementor session) {
+	default void delete(@Nonnull Object id, @Nullable Object version, @Nonnull Object object, @Nonnull SharedSessionContractImplementor session) {
 		getDeleteCoordinator().delete( object, id, version, session );
 	}
 
@@ -697,15 +720,15 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	@Deprecated( forRemoval = true, since = "6.5" )
 	default void update(
-			Object id,
-			Object[] fields,
-			int[] dirtyFields,
+			@Nonnull Object id,
+			@Nonnull Object[] fields,
+			@Nullable int[] dirtyFields,
 			boolean hasDirtyCollection,
-			Object[] oldFields,
-			Object oldVersion,
-			Object object,
-			Object rowId,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] oldFields,
+			@Nullable Object oldVersion,
+			@Nonnull Object object,
+			@Nullable Object rowId,
+			@Nonnull SharedSessionContractImplementor session) {
 		getUpdateCoordinator().update(
 				object,
 				id,
@@ -727,15 +750,15 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	@Deprecated( forRemoval = true, since = "6.5" )
 	default void merge(
-			Object id,
-			Object[] fields,
-			int[] dirtyFields,
+			@Nonnull Object id,
+			@Nonnull Object[] fields,
+			@Nullable int[] dirtyFields,
 			boolean hasDirtyCollection,
-			Object[] oldFields,
-			Object oldVersion,
-			Object object,
-			Object rowId,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] oldFields,
+			@Nullable Object oldVersion,
+			@Nonnull Object object,
+			@Nullable Object rowId,
+			@Nonnull SharedSessionContractImplementor session) {
 		getMergeCoordinator().update(
 				object,
 				id,
@@ -754,6 +777,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @since 6.5
 	 */
+	@Nonnull
 	InsertCoordinator getInsertCoordinator();
 
 	/**
@@ -761,6 +785,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @since 6.5
 	 */
+	@Nonnull
 	UpdateCoordinator getUpdateCoordinator();
 
 	/**
@@ -768,6 +793,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @since 6.5
 	 */
+	@Nonnull
 	DeleteCoordinator getDeleteCoordinator();
 
 	/**
@@ -775,6 +801,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @since 6.5
 	 */
+	@Nonnull
 	default UpdateCoordinator getMergeCoordinator() {
 		throw new UnsupportedOperationException();
 	}
@@ -782,24 +809,28 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Get the Hibernate types of the class properties
 	 */
+	@Nonnull
 	Type[] getPropertyTypes();
 
 	/**
 	 * Get the names of the class properties - doesn't have to be the names of the
 	 * actual Java properties (used for XML generation only)
 	 */
+	@Nonnull
 	String[] getPropertyNames();
 
 	/**
 	 * Get the "insertability" of the properties of this class
 	 * (does the property appear in an SQL INSERT)
 	 */
+	@Nonnull
 	boolean[] getPropertyInsertability();
 
 	/**
 	 * Get the "updateability" of the properties of this class
 	 * (does the property appear in an SQL UPDATE)
 	 */
+	@Nonnull
 	boolean[] getPropertyUpdateability();
 
 	/**
@@ -821,26 +852,32 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * (is the property dirty checked, does the cache need
 	 * to be updated)
 	 */
+	@Nonnull
 	boolean[] getPropertyCheckability();
 
 	/**
 	 * Get the nullability of the properties of this class
 	 */
+	@Nonnull
 	boolean[] getPropertyNullability();
 
 	/**
 	 * Get the "versionability" of the properties of this class
 	 * (is the property optimistic-locked)
 	 */
+	@Nonnull
 	boolean[] getPropertyVersionability();
 
+	@Nonnull
 	boolean[] getPropertyLaziness();
 
+	@Nonnull
 	boolean[] getNonLazyPropertyUpdateability();
 
 	/**
 	 * Get the cascade styles of the properties (optional operation)
 	 */
+	@Nonnull
 	CascadeStyle[] getPropertyCascadeStyles();
 
 	/**
@@ -848,6 +885,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * {@link CascadeStyles#NONE NONE}
 	 * if the identifier has no cascading.
 	 */
+	@Nonnull
 	default CascadeStyle getIdentifierCascadeStyle() {
 		return CascadeStyles.NONE;
 	}
@@ -855,12 +893,14 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Get the identifier type
 	 */
+	@Nonnull
 	Type getIdentifierType();
 
 	/**
 	 * Get the name of the identifier property (or return null) - need not return the
 	 * name of an actual Java property
 	 */
+	@Nullable
 	String getIdentifierPropertyName();
 
 	/**
@@ -898,7 +938,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	CacheEntryStructure getCacheEntryStructure();
 
 	@Nonnull
-	CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session);
+	CacheEntry buildCacheEntry(@Nonnull Object entity, @Nonnull Object[] state, @Nullable Object version, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Does this class have a natural id cache
@@ -908,6 +948,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Get the NaturalId cache (optional operation)
 	 */
+	@Nullable
 	NaturalIdDataAccess getNaturalIdCacheAccessStrategy();
 
 	/**
@@ -939,28 +980,34 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return null if there is no row in the database
 	 */
-	Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException;
+	@Nullable
+	Object[] getDatabaseSnapshot(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) throws HibernateException;
 
+	@Nullable
 	default TenantIdLoader getTenantIdLoader() {
 		return null;
 	}
 
-	Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session);
+	@Nullable
+	Object getIdByUniqueKey(@Nonnull Object key, @Nonnull String uniquePropertyName, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Get the current version of the object, or return null if there is no
 	 * row for the given identifier. In the case of unversioned data, return
 	 * any object if the row exists.
 	 */
-	Object getCurrentVersion(Object id, SharedSessionContractImplementor session) throws HibernateException;
+	@Nullable
+	Object getCurrentVersion(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) throws HibernateException;
 
-	Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) throws HibernateException;
+	@Nonnull
+	Object forceVersionIncrement(@Nonnull Object id, @Nullable Object currentVersion, @Nonnull SharedSessionContractImplementor session) throws HibernateException;
 
+	@Nonnull
 	default Object forceVersionIncrement(
-			Object id,
-			Object currentVersion,
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
 			boolean batching,
-			SharedSessionContractImplementor session) throws HibernateException {
+			@Nonnull SharedSessionContractImplementor session) throws HibernateException {
 		return forceVersionIncrement( id, currentVersion, session );
 	}
 
@@ -1002,27 +1049,30 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Called just after the entities properties have been initialized
 	 */
-	void afterInitialize(Object entity, SharedSessionContractImplementor session);
+	void afterInitialize(@Nonnull Object entity, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Called just after the entity has been reassociated with the session
 	 */
-	void afterReassociate(Object entity, SharedSessionContractImplementor session);
+	void afterReassociate(@Nonnull Object entity, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Create a new proxy instance
 	 */
-	Object createProxy(Object id, SharedSessionContractImplementor session);
+	@Nonnull
+	Object createProxy(@Nonnull Object id, @Nullable SharedSessionContractImplementor session);
 
 	/**
 	 * Is this a new transient instance?
 	 */
-	Boolean isTransient(Object object, SharedSessionContractImplementor session);
+	@Nullable
+	Boolean isTransient(@Nonnull Object object, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Return the values of the insertable properties of the object (including backrefs)
 	 */
-	Object[] getPropertyValuesToInsert(Object object, Map<Object,Object> mergeMap, SharedSessionContractImplementor session);
+	@Nonnull
+	Object[] getPropertyValuesToInsert(@Nonnull Object object, @Nullable Map<Object,Object> mergeMap, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Perform a select to retrieve the values of any generated properties
@@ -1036,7 +1086,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @deprecated Use {@link #processInsertGeneratedProperties(Object, Object, Object[], GeneratedValues, SharedSessionContractImplementor)} instead.
 	 */
 	@Deprecated( forRemoval = true, since = "6.5" )
-	default void processInsertGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+	default void processInsertGeneratedProperties(@Nonnull Object id, @Nonnull Object entity, @Nonnull Object[] state, @Nonnull SharedSessionContractImplementor session) {
 		processInsertGeneratedProperties( id, entity, state, null, session );
 	}
 
@@ -1052,17 +1102,19 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * to the PersistenceContext before calling this method.
 	 */
 	default void processInsertGeneratedProperties(
-			Object id,
-			Object entity,
-			Object[] state,
-			GeneratedValues generatedValues,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nonnull Object entity,
+			@Nonnull Object[] state,
+			@Nullable GeneratedValues generatedValues,
+			@Nonnull SharedSessionContractImplementor session) {
 	}
 
-	default List<? extends ModelPart> getGeneratedProperties(EventType timing) {
+	@Nonnull
+	default List<? extends ModelPart> getGeneratedProperties(@Nonnull EventType timing) {
 		return timing == EventType.INSERT ? getInsertGeneratedProperties() : getUpdateGeneratedProperties();
 	}
 
+	@Nonnull
 	default List<? extends ModelPart> getInsertGeneratedProperties() {
 		return Collections.emptyList();
 	}
@@ -1079,7 +1131,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @deprecated Use {@link #processUpdateGeneratedProperties(Object, Object, Object[], GeneratedValues, SharedSessionContractImplementor)} instead.
 	 */
 	@Deprecated( forRemoval = true, since = "6.5" )
-	default void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+	default void processUpdateGeneratedProperties(@Nonnull Object id, @Nonnull Object entity, @Nonnull Object[] state, @Nonnull SharedSessionContractImplementor session) {
 		processUpdateGeneratedProperties( id, entity, state, null, session );
 	}
 
@@ -1095,12 +1147,13 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * to the PersistenceContext before calling this method.
 	 */
 	void processUpdateGeneratedProperties(
-			Object id,
-			Object entity,
-			Object[] state,
-			GeneratedValues generatedValues,
-			SharedSessionContractImplementor session);
+			@Nonnull Object id,
+			@Nonnull Object entity,
+			@Nonnull Object[] state,
+			@Nullable GeneratedValues generatedValues,
+			@Nonnull SharedSessionContractImplementor session);
 
+	@Nonnull
 	default List<? extends ModelPart> getUpdateGeneratedProperties() {
 		return Collections.emptyList();
 	}
@@ -1113,12 +1166,14 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * The persistent class, or null
 	 */
+	@Nullable
 	Class<?> getMappedClass();
 
 	/**
 	 * Get the proxy interface that instances of <em>this</em> concrete class will be
 	 * cast to (optional operation).
 	 */
+	@Nullable
 	Class<?> getConcreteProxyClass();
 
 	default void setValues(@Nonnull Object object, @Nonnull Object[] values) {
@@ -1131,7 +1186,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @deprecated Use {@link #setValues} instead
 	 */
 	@Deprecated(since = "6.0")
-	void setPropertyValues(Object object, Object[] values);
+	void setPropertyValues(@Nonnull Object object, @Nonnull Object[] values);
 
 	default void setValue(@Nonnull Object object, int i, @Nullable Object value) {
 		setPropertyValue( object, i, value );
@@ -1143,7 +1198,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @deprecated Use {@link #setValue} instead
 	 */
 	@Deprecated(since = "6.0")
-	void setPropertyValue(Object object, int i, Object value);
+	void setPropertyValue(@Nonnull Object object, int i, @Nullable Object value);
 
 	@Nonnull
 	default Object[] getValues(@Nonnull Object object) {
@@ -1153,8 +1208,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * @deprecated Use {@link #getValues} instead
 	 */
+	@Nonnull
 	@Deprecated(since  = "6.0")
-	Object[] getPropertyValues(Object object);
+	Object[] getPropertyValues(@Nonnull Object object);
 
 	@Nullable
 	default Object getValue(@Nonnull Object object, int i) {
@@ -1164,19 +1220,22 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * @deprecated Use {@link #getValue} instead
 	 */
+	@Nullable
 	@Deprecated(since = "6.0")
-	Object getPropertyValue(Object object, int i) throws HibernateException;
+	Object getPropertyValue(@Nonnull Object object, int i) throws HibernateException;
 
 	/**
 	 * Get the value of a particular property
 	 */
-	Object getPropertyValue(Object object, String propertyName);
+	@Nullable
+	Object getPropertyValue(@Nonnull Object object, @Nonnull String propertyName);
 
 	/**
 	 * Get the identifier of an instance from the object's identifier property.
 	 * Throw an exception if it has no identifier property.
 	 */
-	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
+	@Nullable
+	Object getIdentifier(@Nonnull Object entity, @Nullable SharedSessionContractImplementor session);
 
 	/**
 	 * Get the identifier of an instance from the object's identifier property.
@@ -1184,28 +1243,31 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * It's supposed to be use during the merging process
 	 */
-	default Object getIdentifier(Object entity, @Nullable MergeContext mergeContext) {
-		return getIdentifier( entity, mergeContext.getEventSource() );
+	@Nullable
+	default Object getIdentifier(@Nonnull Object entity, @Nullable MergeContext mergeContext) {
+		return getIdentifier( entity, mergeContext == null ? null : mergeContext.getEventSource() );
 	}
 
 	/**
 	 * Get the identifier of an instance from the object's identifier property.
 	 * Throw an exception if it has no identifier property.
 	 */
-	default Object getIdentifier(Object entity) {
+	@Nullable
+	default Object getIdentifier(@Nonnull Object entity) {
 		return getIdentifier( entity, (SharedSessionContractImplementor) null );
 	}
 
 	/**
 	 * Inject the identifier value into the given entity.
 	 */
-	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
+	void setIdentifier(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Get the version number (or timestamp) from the object's version property.
 	 * Return {@code null} if it is not versioned.
 	 */
-	Object getVersion(Object object) throws HibernateException;
+	@Nullable
+	Object getVersion(@Nonnull Object object) throws HibernateException;
 
 	/**
 	 * Create a class instance initialized with the given identifier
@@ -1220,12 +1282,12 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Is the given object an instance of this entity?
 	 */
-	boolean isInstance(Object object);
+	boolean isInstance(@Nonnull Object object);
 
 	/**
 	 * Does the given instance have any uninitialized lazy properties?
 	 */
-	boolean hasUninitializedLazyProperties(Object object);
+	boolean hasUninitializedLazyProperties(@Nonnull Object object);
 
 	/**
 	 * Set the identifier and version of the given instance back to its "unsaved"
@@ -1234,7 +1296,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @see org.hibernate.cfg.AvailableSettings#USE_IDENTIFIER_ROLLBACK
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#isIdentifierRollbackEnabled
 	 */
-	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
+	void resetIdentifier(@Nonnull Object entity, @Nonnull Object currentId, @Nullable Object currentVersion, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Obtain the {@code EntityPersister} for the concrete class of the given
@@ -1265,7 +1327,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @throws HibernateException Indicates that instance was deemed to not be a
 	 *                            subclass of the entity mapped by this persister.
 	 */
-	EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory);
+	@Nonnull
+	EntityPersister getSubclassEntityPersister(@Nullable Object instance, @Nonnull SessionFactoryImplementor factory);
 
 	@Nonnull
 	EntityRepresentationStrategy getRepresentationStrategy();
@@ -1281,20 +1344,24 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 			@Nonnull MutableCacheKeyBuilder cacheKey,
 			@Nullable Object value,
 			@Nullable SharedSessionContractImplementor session) {
-		getIdentifierMapping().addToCacheKey( cacheKey, getIdentifier( value, session ), session );
+		getIdentifierMapping().addToCacheKey( cacheKey, value == null ? null : getIdentifier( value, session ), session );
 	}
 
+	@Nonnull
 	BytecodeEnhancementMetadata getBytecodeEnhancementMetadata();
 
-	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
+	@Nonnull
+	FilterAliasGenerator getFilterAliasGenerator(@Nonnull final String rootAlias);
 
-	default FilterAliasGenerator getFilterAliasGenerator(TableGroup rootTableGroup) {
+	@Nonnull
+	default FilterAliasGenerator getFilterAliasGenerator(@Nonnull TableGroup rootTableGroup) {
 		return new TableGroupFilterAliasGenerator( getTableName(), rootTableGroup );
 	}
 
 	/**
 	 * The table to join to.
 	 */
+	@Nonnull
 	String getTableName();
 
 	/**
@@ -1304,7 +1371,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return A set of unique indexes of the attribute names found in the metamodel
 	 */
-	int[] resolveAttributeIndexes(String[] attributeNames);
+	@Nonnull
+	int[] resolveAttributeIndexes(@Nullable String[] attributeNames);
 
 	/**
 	 * Like {@link #resolveAttributeIndexes(String[])} but also always returns mutable attributes
@@ -1313,11 +1381,12 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return A set of unique indexes of the attribute names found in the metamodel
 	 */
+	@Nonnull
 	default int[] resolveDirtyAttributeIndexes(
-			Object[] values,
-			Object[] loadedState,
-			String[] attributeNames,
-			SessionImplementor session) {
+			@Nonnull Object[] values,
+			@Nonnull Object[] loadedState,
+			@Nullable String[] attributeNames,
+			@Nonnull SessionImplementor session) {
 		return resolveAttributeIndexes( attributeNames );
 	}
 
@@ -1334,6 +1403,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * @return Metadata for each unique key defined
 	 */
+	@Nonnull
 	@Incubating(since = "6.2")
 	Iterable<UniqueKeyEntry> uniqueKeyEntries();
 
@@ -1345,7 +1415,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *           column(s) to use in the select statement restriction.
 	 * @return The SQL select string
 	 */
-	String getSelectByUniqueKeyString(String propertyName);
+	@Nonnull
+	String getSelectByUniqueKeyString(@Nonnull String propertyName);
 
 	/**
 	 * Get a SQL select string that performs a select based on a unique
@@ -1355,7 +1426,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *               column(s) to use in the select statement restriction.
 	 * @return The SQL select string
 	 */
-	default String getSelectByUniqueKeyString(String[] propertyNames) {
+	@Nonnull
+	default String getSelectByUniqueKeyString(@Nonnull String[] propertyNames) {
 		// default impl only for backward compatibility
 		if ( propertyNames.length > 1 ) {
 			throw new IllegalArgumentException( "support for multiple properties not implemented" );
@@ -1363,7 +1435,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		return getSelectByUniqueKeyString( propertyNames[0] );
 	}
 
-	String getSelectByUniqueKeyString(String[] propertyNames, String[] columnNames);
+	@Nonnull
+	String getSelectByUniqueKeyString(@Nonnull String[] propertyNames, @Nonnull String[] columnNames);
 
 
 	/**
@@ -1371,6 +1444,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The primary key column names.
 	 */
+	@Nonnull
 	String[] getRootTableKeyColumnNames();
 
 	/**
@@ -1379,23 +1453,27 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The SQL command string
 	 */
+	@Nullable
 	String getIdentitySelectString();
 
 	/**
 	 * Get the names of columns used to persist the identifier
 	 */
+	@Nonnull
 	String[] getIdentifierColumnNames();
 
 	/**
 	 * Get the result set aliases used for the identifier columns, given a suffix
 	 */
-	String[] getIdentifierAliases(String suffix);
+	@Nonnull
+	String[] getIdentifierAliases(@Nonnull String suffix);
 
 	/**
 	 * Locks are always applied to the "root table".
 	 *
 	 * @return The root table name
 	 */
+	@Nonnull
 	String getRootTableName();
 
 	/**
@@ -1403,6 +1481,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The root table identifier column names.
 	 */
+	@Nonnull
 	String[] getRootTableIdentifierColumnNames();
 
 	/**
@@ -1411,20 +1490,24 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The version column name.
 	 */
+	@Nullable
 	String getVersionColumnName();
 
 	/**
 	 * Get the result set aliases used for the property columns, given a suffix (properties of this class, only).
 	 */
-	String[] getPropertyAliases(String suffix, int i);
+	@Nonnull
+	String[] getPropertyAliases(@Nonnull String suffix, int i);
 
 	/**
 	 * Get the result set aliases used for the identifier columns, given a suffix
 	 */
-	String getDiscriminatorAlias(String suffix);
+	@Nullable
+	String getDiscriminatorAlias(@Nonnull String suffix);
 
 	boolean hasMultipleTables();
 
+	@Nonnull
 	String[] getTableNames();
 
 	/**
@@ -1435,9 +1518,11 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *     <li>{@link org.hibernate.sql.ast.spi.query.delete.DeleteStatement}</li>
 	 * </ul>
 	 */
+	@Nonnull
 	@Deprecated( since = "6.2" )
 	String getTableName(int j);
 
+	@Nonnull
 	String[] getKeyColumns(int j);
 
 	int getTableSpan();
@@ -1450,21 +1535,25 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	int getSubclassTableSpan();
 
+	@Nonnull
 	String getSubclassTableName(int j);
 
-	String getTableNameForColumn(String columnName);
+	@Nonnull
+	String getTableNameForColumn(@Nonnull String columnName);
 
 	/**
 	 * @return the column name for the discriminator as specified in the mapping.
 	 *
 	 * @deprecated Use {@link EntityDiscriminatorMapping#getSelectionExpression()} instead
 	 */
+	@Nullable
 	@Deprecated
 	String getDiscriminatorColumnName();
 
 	/**
 	 * Get the discriminator type
 	 */
+	@Nullable
 	Type getDiscriminatorType();
 
 	/**
@@ -1475,31 +1564,37 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * The indexes of {@linkplain org.hibernate.annotations.Immutable immutable} attributes of the entity.
 	 */
+	@Nonnull
 	int[] getImmutablePropertyIndexes();
 
+	@Nonnull
 	String[] getSubclassPropertyColumnNames(int i);
 
 	/**
 	 * Return the column alias names used to persist/query the indexed property of the class or a subclass.
 	 */
-	String[] getSubclassPropertyColumnAliases(int i, String suffix);
+	@Nonnull
+	String[] getSubclassPropertyColumnAliases(int i, @Nonnull String suffix);
 
 	/**
 	 * Return the column alias names used to persist/query the named property of the class or a subclass (optional operation).
 	 */
-	String[] getSubclassPropertyColumnAliases(String propertyName, String suffix);
+	@Nullable
+	String[] getSubclassPropertyColumnAliases(@Nonnull String propertyName, @Nonnull String suffix);
 
 	int countSubclassProperties();
 
 	/**
 	 * Get the column names for the given property path
 	 */
-	String[] getPropertyColumnNames(String propertyPath);
+	@Nonnull
+	String[] getPropertyColumnNames(@Nonnull String propertyPath);
 
 	/**
 	 * All columns to select, when loading.
 	 */
-	String selectFragment(String alias, String suffix);
+	@Nonnull
+	String selectFragment(@Nonnull String alias, @Nonnull String suffix);
 
 	/**
 	 * The type of the discriminator, or {@code null} if the entity does not have a discriminator.
@@ -1510,6 +1605,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @since 7
 	 */
+	@Nullable
 	DiscriminatorType<?> getDiscriminatorDomainType();
 
 	/**
@@ -1517,20 +1613,23 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @deprecated No longer used in ORM core
 	 */
+	@Nonnull
 	@Deprecated(since = "7.0", forRemoval = true)
-	String[] toColumns(String propertyName);
+	String[] toColumns(@Nonnull String propertyName);
 
 	@Incubating(since = "7.4")
-	boolean excludedFromTemporalVersioning(int[] dirtyAttributeIndexes, boolean hasDirtyCollection);
+	boolean excludedFromTemporalVersioning(@Nullable int[] dirtyAttributeIndexes, boolean hasDirtyCollection);
 
-	boolean isSharedColumn(String columnExpression);
+	boolean isSharedColumn(@Nonnull String columnExpression);
 
+	@Nonnull
 	String[][] getConstraintOrderedTableKeyColumnClosure();
 
 	@Internal
-	boolean managesColumns(String[] columnNames);
+	boolean managesColumns(@Nonnull String[] columnNames);
 
 
+	@Nonnull
 	@Override
 	default String getRolePath() {
 		return getNavigableRole().getFullPath();

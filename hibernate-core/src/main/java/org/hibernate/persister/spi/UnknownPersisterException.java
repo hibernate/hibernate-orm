@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.HibernateException;
 
 /**
@@ -12,11 +14,11 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class UnknownPersisterException extends HibernateException {
-	public UnknownPersisterException(String s) {
+	public UnknownPersisterException(@Nonnull String s) {
 		super( s );
 	}
 
-	public UnknownPersisterException(String string, Throwable root) {
+	public UnknownPersisterException(@Nonnull String string, @Nonnull Throwable root) {
 		super( string, root );
 	}
 }

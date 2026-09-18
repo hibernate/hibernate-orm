@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -18,7 +21,8 @@ import java.util.List;
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EntityTableMapping extends TableMapping {
-	static EntityTableMappingImpl.KeyMapping createKeyMapping(List<EntityTableMappingImpl.KeyColumn> keyColumns, ModelPart identifierPart) {
+	@Nonnull
+	static EntityTableMappingImpl.KeyMapping createKeyMapping(@Nonnull List<EntityTableMappingImpl.KeyColumn> keyColumns, @Nonnull ModelPart identifierPart) {
 		if ( identifierPart instanceof EmbeddableValuedModelPart embeddedModelPart ) {
 			return new EntityTableMappingImpl.CompositeKeyMapping( keyColumns, embeddedModelPart );
 		}
@@ -33,28 +37,36 @@ public interface EntityTableMapping extends TableMapping {
 
 	boolean isSecondaryTable();
 
+	@Nonnull
 	EntityTableMappingImpl.KeyMapping getKeyMapping();
 
 	boolean hasColumns();
 
 	boolean containsAttributeColumns(int attributeIndex);
 
+	@Nonnull
 	int[] getAttributeIndexes();
 
+	@Nonnull
 	Expectation getInsertExpectation();
 
+	@Nullable
 	String getInsertCustomSql();
 
 	boolean isInsertCallable();
 
+	@Nonnull
 	Expectation getUpdateExpectation();
 
+	@Nullable
 	String getUpdateCustomSql();
 
 	boolean isUpdateCallable();
 
+	@Nonnull
 	Expectation getDeleteExpectation();
 
+	@Nullable
 	String getDeleteCustomSql();
 
 	boolean isDeleteCallable();

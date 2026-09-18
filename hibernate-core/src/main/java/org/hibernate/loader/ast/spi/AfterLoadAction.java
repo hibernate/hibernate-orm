@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
@@ -16,5 +18,5 @@ public interface AfterLoadAction {
 	/**
 	 * The action trigger - the {@code entity} is being loaded
 	 */
-	void afterLoad(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session);
+	void afterLoad(@Nonnull Object entity, @Nonnull EntityMappingType entityMappingType, @Nonnull SharedSessionContractImplementor session);
 }

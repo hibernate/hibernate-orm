@@ -4,6 +4,8 @@
  */
 package org.hibernate.processor.validation;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.persistence.AccessType;
 import jakarta.annotation.Nullable;
 import org.hibernate.PropertyNotFoundException;
@@ -394,6 +396,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			initSubclassPersisters();
 		}
 
+		@Nonnull
 		@Override
 		public String getRootEntityName() {
 			var result = type;

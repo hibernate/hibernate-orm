@@ -4,6 +4,11 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -33,25 +38,30 @@ public final class AuditCollectionHelper {
 	private final CollectionTableMapping auditTableMapping;
 	private final SelectableMapping changesetIdMapping;
 	private final SelectableMapping modificationTypeMapping;
+	@Nullable
 	private final SelectableMapping transactionEndMapping;
 	private final AuditStrategy auditStrategy;
 	private final boolean useServerTransactionTimestamps;
+	@Nullable
 	private final String currentTimestampFunctionName;
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;
 
+	@Nullable
 	private MutationOperationGroup auditInsertOperationGroup;
+	@Nullable
 	private MutationOperationGroup transactionEndUpdateGroup;
+	@Nullable
 	private AuditCollectionRowMutationHelper rowMutationHelper;
 
 	AuditCollectionHelper(
-			CollectionMutationTarget mutationTarget,
-			SessionFactoryImplementor sessionFactory,
-			boolean[] indexColumnIsSettable,
-			boolean[] elementColumnIsSettable,
-			UnaryOperator<Object> indexIncrementer,
-			AuditMapping auditMapping) {
+			@Nonnull CollectionMutationTarget mutationTarget,
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nullable boolean[] indexColumnIsSettable,
+			@Nonnull boolean[] elementColumnIsSettable,
+			@Nonnull UnaryOperator<Object> indexIncrementer,
+			@Nonnull AuditMapping auditMapping) {
 		this.mutationTarget = mutationTarget;
 		this.sessionFactory = sessionFactory;
 		this.indexColumnIsSettable = indexColumnIsSettable;
@@ -63,7 +73,7 @@ public final class AuditCollectionHelper {
 				auditMapping.resolveTableName( collectionTableName )
 		);
 		this.changesetIdMapping = auditMapping.getChangesetIdMapping( collectionTableName );
-		this.modificationTypeMapping = auditMapping.getModificationTypeMapping( collectionTableName );
+		this.modificationTypeMapping = castNonNull( auditMapping.getModificationTypeMapping( collectionTableName ) );
 		this.transactionEndMapping = auditMapping.getInvalidatingChangesetIdMapping( collectionTableName );
 		this.auditStrategy = sessionFactory.getSessionFactoryOptions().getAuditStrategy();
 
@@ -76,6 +86,7 @@ public final class AuditCollectionHelper {
 				: null;
 	}
 
+	@Nonnull
 	CollectionTableMapping getAuditTableMapping() {
 		return auditTableMapping;
 	}
@@ -84,6 +95,7 @@ public final class AuditCollectionHelper {
 		return useServerTransactionTimestamps;
 	}
 
+	@Nullable
 	MutationOperationGroup getAuditInsertOperationGroup() {
 		if ( auditInsertOperationGroup == null ) {
 			auditInsertOperationGroup = buildAuditInsertOperationGroup();
@@ -91,6 +103,7 @@ public final class AuditCollectionHelper {
 		return auditInsertOperationGroup;
 	}
 
+	@Nonnull
 	AuditCollectionRowMutationHelper getRowMutationHelper() {
 		if ( rowMutationHelper == null ) {
 			rowMutationHelper = new AuditCollectionRowMutationHelper(
@@ -107,6 +120,7 @@ public final class AuditCollectionHelper {
 		return rowMutationHelper;
 	}
 
+	@Nullable
 	MutationOperationGroup getTransactionEndUpdateGroup() {
 		if ( transactionEndUpdateGroup == null && auditStrategy == VALIDITY && transactionEndMapping != null ) {
 			transactionEndUpdateGroup = buildTransactionEndUpdateGroup();
@@ -114,6 +128,7 @@ public final class AuditCollectionHelper {
 		return transactionEndUpdateGroup;
 	}
 
+	@Nullable
 	private MutationOperationGroup buildAuditInsertOperationGroup() {
 		final var insertBuilder =
 				new TableInsertBuilderStandard( mutationTarget, auditTableMapping, sessionFactory );
@@ -123,7 +138,7 @@ public final class AuditCollectionHelper {
 		return operation == null ? null : singleOperation( MutationType.INSERT, mutationTarget, operation );
 	}
 
-	private void applyAuditInsertDetails(TableInsertBuilderStandard insertBuilder) {
+	private void applyAuditInsertDetails(@Nonnull TableInsertBuilderStandard insertBuilder) {
 		final var attributeMapping = mutationTarget.getTargetPart();
 		attributeMapping.getKeyDescriptor().getKeyPart().forEachSelectable( insertBuilder );
 
@@ -157,6 +172,7 @@ public final class AuditCollectionHelper {
 		insertBuilder.addValueColumn( "?", modificationTypeMapping );
 	}
 
+	@Nullable
 	private MutationOperationGroup buildTransactionEndUpdateGroup() {
 		final var updateBuilder =
 				new TableUpdateBuilderStandard<>( mutationTarget, auditTableMapping, sessionFactory );

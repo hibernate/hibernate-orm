@@ -4,6 +4,10 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 
 import org.hibernate.Incubating;
@@ -19,6 +23,7 @@ import org.hibernate.sql.spi.mutation.ValuesAnalysis;
  */
 @Incubating(since = "6.2")
 public interface UpdateValuesAnalysis extends ValuesAnalysis {
+	@Nullable
 	Object[] getValues();
 
 	/**
@@ -26,22 +31,27 @@ public interface UpdateValuesAnalysis extends ValuesAnalysis {
 	 *
 	 * @apiNote {@linkplain TableMapping#isInverse() Inverse tables} are not included in the result
 	 */
+	@Nonnull
 	TableSet getTablesNeedingUpdate();
 
 	/**
 	 * Descriptor of the tables which had any non-null value bindings
 	 */
+	@Nonnull
 	TableSet getTablesWithNonNullValues();
 
 	/**
 	 * Descriptor of the tables which had any non-null value bindings
 	 */
+	@Nonnull
 	TableSet getTablesWithPreviousNonNullValues();
 
+	@Nonnull
 	TableSet getTablesNeedingDynamicUpdate();
 
 	/**
 	 * Descriptors for the analysis of each attribute
 	 */
+	@Nonnull
 	List<AttributeAnalysis> getAttributeAnalyses();
 }

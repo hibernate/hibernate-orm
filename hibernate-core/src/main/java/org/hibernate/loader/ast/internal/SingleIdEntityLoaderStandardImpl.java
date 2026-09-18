@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.EnumMap;
 import java.util.function.BiFunction;
 
@@ -32,8 +35,8 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	private final BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator;
 
 	public SingleIdEntityLoaderStandardImpl(
-			EntityMappingType entityDescriptor,
-			LoadQueryInfluencers loadQueryInfluencers) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		this( entityDescriptor, loadQueryInfluencers,
 				(lockOptions, influencers) -> createLoadPlan( entityDescriptor, lockOptions, influencers) );
 	}
@@ -45,9 +48,9 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	 * </p>
 	 */
 	protected SingleIdEntityLoaderStandardImpl(
-			EntityMappingType entityDescriptor,
-			LoadQueryInfluencers influencers,
-			BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator) {
 		// todo (6.0) : consider creating a base AST and "cloning" it
 		super( entityDescriptor, influencers.getSessionFactory() );
 		this.loadPlanCreator = loadPlanCreator;
@@ -58,25 +61,28 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 //		}
 	}
 
+	@Nullable
 	@Override
-	public T load(Object key, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session) {
+	public T load(@Nonnull Object key, @Nonnull LockOptions lockOptions, @Nullable Boolean readOnly, @Nonnull SharedSessionContractImplementor session) {
 		return resolveLoadPlan( lockOptions, session.getLoadQueryInfluencers() )
 				.load( key, readOnly, true, session );
 	}
 
+	@Nullable
 	@Override
 	public T load(
-			Object key,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object key,
+			@Nullable Object entityInstance,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		return resolveLoadPlan( lockOptions, session.getLoadQueryInfluencers() )
 				.load( key, entityInstance, readOnly, false, session );
 	}
 
+	@Nonnull
 	@Internal // public for tests, also called by Hibernate Reactive
-	public SingleIdLoadPlan<T> resolveLoadPlan(LockOptions lockOptions, LoadQueryInfluencers influencers) {
+	public SingleIdLoadPlan<T> resolveLoadPlan(@Nonnull LockOptions lockOptions, @Nonnull LoadQueryInfluencers influencers) {
 		if ( getLoadable().isAffectedByEnabledFilters( influencers, true ) ) {
 			// This case is special because the filters need to be applied in order to
 			// properly restrict the SQL/JDBC results.  For this reason it has higher
@@ -101,7 +107,8 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		}
 	}
 
-	private SingleIdLoadPlan<T> getRegularLoadPlan(LockOptions lockOptions, LoadQueryInfluencers influencers) {
+	@Nonnull
+	private SingleIdLoadPlan<T> getRegularLoadPlan(@Nonnull LockOptions lockOptions, @Nonnull LoadQueryInfluencers influencers) {
 		if ( isLoadPlanReusable( lockOptions, influencers )  ) {
 			final var existing = selectByLockMode.get( lockOptions.getLockMode() );
 			if ( existing != null ) {
@@ -118,7 +125,8 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		}
 	}
 
-	private SingleIdLoadPlan<T> getInternalCascadeLoadPlan(LockOptions lockOptions, LoadQueryInfluencers influencers) {
+	@Nonnull
+	private SingleIdLoadPlan<T> getInternalCascadeLoadPlan(@Nonnull LockOptions lockOptions, @Nonnull LoadQueryInfluencers influencers) {
 		// TODO: It might be more efficient to just instantiate a LoadPlanKey
 		//       object here than it is to maintain an EnumMap of EnumMaps
 		final var lockMode = lockOptions.getLockMode();
@@ -156,7 +164,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	 * If there is a pessimistic lock with non-default options like timeout, a custom
 	 * fetch profile, or an entity graph, we don't cache and reuse the plan.
 	 */
-	private boolean isLoadPlanReusable(LockOptions lockOptions, LoadQueryInfluencers influencers) {
+	private boolean isLoadPlanReusable(@Nonnull LockOptions lockOptions, @Nonnull LoadQueryInfluencers influencers) {
 		if ( lockOptions.getLockMode().isPessimistic() && lockOptions.hasNonDefaultOptions() ) {
 			return false;
 		}
@@ -167,10 +175,11 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		}
 	}
 
+	@Nonnull
 	private static <T> SingleIdLoadPlan<T> createLoadPlan(
-			EntityMappingType loadable,
-			LockOptions lockOptions,
-			LoadQueryInfluencers influencers) {
+			@Nonnull EntityMappingType loadable,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull LoadQueryInfluencers influencers) {
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		final var factory = influencers.getSessionFactory();
 		return new SingleIdLoadPlan<>(

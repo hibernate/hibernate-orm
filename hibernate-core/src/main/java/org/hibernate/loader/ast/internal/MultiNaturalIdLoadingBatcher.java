@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import jakarta.annotation.Nonnull;
@@ -43,7 +45,8 @@ public class MultiNaturalIdLoadingBatcher {
 		 *
 		 * Generally delegates to {@link org.hibernate.metamodel.mapping.NaturalIdMapping#normalizeInput}
 		 */
-		Object resolveKeyToLoad(Object incoming, SharedSessionContractImplementor session);
+		@Nullable
+		Object resolveKeyToLoad(@Nonnull Object incoming, @Nonnull SharedSessionContractImplementor session);
 	}
 
 	private final EntityMappingType entityDescriptor;
@@ -58,13 +61,13 @@ public class MultiNaturalIdLoadingBatcher {
 	private final LockOptions lockOptions;
 
 	public MultiNaturalIdLoadingBatcher(
-			EntityMappingType entityDescriptor,
-			ModelPart restrictedPart,
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull ModelPart restrictedPart,
 			int batchSize,
-			KeyValueResolver keyValueResolver,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull KeyValueResolver keyValueResolver,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
 
@@ -99,7 +102,8 @@ public class MultiNaturalIdLoadingBatcher {
 		this.lockOptions = lockOptions;
 	}
 
-	public <E> List<E> multiLoad(Object[] naturalIdValues, SharedSessionContractImplementor session) {
+	@Nonnull
+	public <E> List<E> multiLoad(@Nonnull Object[] naturalIdValues, @Nonnull SharedSessionContractImplementor session) {
 		final ArrayList<E> multiLoadResults = arrayList( naturalIdValues.length );
 		final var jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 
@@ -146,9 +150,10 @@ public class MultiNaturalIdLoadingBatcher {
 		return multiLoadResults;
 	}
 
+	@Nonnull
 	private <E> List<E> performLoad(
-			JdbcParameterBindings jdbcParamBindings,
-			SharedSessionContractImplementor session,
+			@Nonnull JdbcParameterBindings jdbcParamBindings,
+			@Nonnull SharedSessionContractImplementor session,
 			int size) {
 		final var subSelectFetchableKeysHandler =
 				session.getLoadQueryInfluencers()

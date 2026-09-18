@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -17,6 +19,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -31,13 +34,13 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 	private final MutationExecutorService mutationExecutorService;
 
 	public UpdateRowsCoordinatorTablePerSubclass(
-			OneToManyPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull OneToManyPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, sessionFactory );
 		this.rowMutationOperations = rowMutationOperations;
 		final int size =
-				mutationTarget.getElementPersister().getRootEntityDescriptor()
+				castNonNull( mutationTarget.getElementPersister() ).getRootEntityDescriptor()
 						.getSubclassEntityNames().size();
 		deleteSubclassEntries = new SubclassEntry[size];
 		insertSubclassEntries = new SubclassEntry[size];
@@ -46,7 +49,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 	}
 
 	@Override
-	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	protected int doUpdate(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		if ( rowMutationOperations.hasDeleteRow() ) {
 			deleteRows( key, collection, session );
 		}
@@ -58,7 +61,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		return 0;
 	}
 
-	private void deleteRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	private void deleteRows(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		final var attributeMapping = getMutationTarget().getTargetPart();
 		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
 		final var entries = collection.entries( collectionDescriptor );
@@ -85,7 +88,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 						else {
 							mutationExecutor = executors[subclassId];
 						}
-						rowMutationOperations.getDeleteRowRestrictions().applyRestrictions(
+						castNonNull( rowMutationOperations.getDeleteRowRestrictions() ).applyRestrictions(
 								collection,
 								key,
 								entryToUpdate,
@@ -108,7 +111,8 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		}
 	}
 
-	private SubclassEntry getDeleteSubclassEntry( EntityPersister elementPersister) {
+	@Nonnull
+	private SubclassEntry getDeleteSubclassEntry( @Nonnull EntityPersister elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
 		final var subclassEntry = deleteSubclassEntries[subclassId];
 		if ( subclassEntry != null ) {
@@ -121,7 +125,8 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		);
 	}
 
-	private MutationOperationGroup resolveDeleteGroup(EntityPersister elementPersister) {
+	@Nonnull
+	private MutationOperationGroup resolveDeleteGroup(@Nonnull EntityPersister elementPersister) {
 		final var collectionTableMapping = getMutationTarget().getCollectionTableMapping();
 		final var operation = rowMutationOperations.getDeleteRowOperation(
 				new CollectionTableMapping(
@@ -140,7 +145,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		return singleOperation( MutationType.DELETE, getMutationTarget(), operation );
 	}
 
-	private int insertRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	private int insertRows(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		final var attributeMapping = getMutationTarget().getTargetPart();
 		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
 		final var entries = collection.entries( collectionDescriptor );
@@ -169,7 +174,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 					else {
 						mutationExecutor = executors[subclassId];
 					}
-					rowMutationOperations.getInsertRowValues().applyValues(
+					castNonNull( rowMutationOperations.getInsertRowValues() ).applyValues(
 							collection,
 							key,
 							entry,
@@ -191,7 +196,8 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		}
 	}
 
-	private SubclassEntry getInsertSubclassEntry( EntityPersister elementPersister) {
+	@Nonnull
+	private SubclassEntry getInsertSubclassEntry( @Nonnull EntityPersister elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
 		final var subclassEntry = insertSubclassEntries[subclassId];
 		if ( subclassEntry != null ) {
@@ -207,7 +213,8 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		}
 	}
 
-	private MutationOperationGroup resolveInsertGroup(EntityPersister elementPersister) {
+	@Nonnull
+	private MutationOperationGroup resolveInsertGroup(@Nonnull EntityPersister elementPersister) {
 		final var collectionTableMapping = getMutationTarget().getCollectionTableMapping();
 		final var operation = rowMutationOperations.getInsertRowOperation(
 				new CollectionTableMapping(
@@ -232,7 +239,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 
 		private final MutationOperationGroup operationGroup;
 
-		public SubclassEntry(BatchKeyAccess batchKeySupplier, MutationOperationGroup operationGroup) {
+		public SubclassEntry(@Nonnull BatchKeyAccess batchKeySupplier, @Nonnull MutationOperationGroup operationGroup) {
 			this.batchKeySupplier = batchKeySupplier;
 			this.operationGroup = operationGroup;
 		}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
@@ -126,17 +128,24 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	// values to certain combinations of not-null primary key
 	// values in the outer join using an SQL CASE
 	private final Map<DiscriminatorValue, String> subclassesByDiscriminatorValue = new HashMap<>();
+	@Nullable
 	private final String[] discriminatorValues;
+	@Nullable
 	private final boolean[] discriminatorAbstract;
+	@Nullable
 	private final String[] notNullColumnNames;
+	@Nullable
 	private final int[] notNullColumnTableNumbers;
 
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
 
+	@Nullable
 	private final DiscriminatorValue discriminatorValue;
+	@Nullable
 	private final String discriminatorSQLString;
 	private final BasicType<?> discriminatorType;
+	@Nullable
 	private final String explicitDiscriminatorColumnName;
 	private final String discriminatorAlias;
 	private final boolean forceDiscriminator;
@@ -152,20 +161,20 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final Map<String, String> discriminatorColumnNameByTableName;
 
 	public JoinedSubclassEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext)
+			@Nonnull final PersistentClass persistentClass,
+			@Nullable final EntityDataAccess cacheAccessStrategy,
+			@Nullable final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			@Nonnull final RuntimeModelCreationContext creationContext)
 			throws HibernateException {
 		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, identity() );
 	}
 
 	protected JoinedSubclassEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext,
-			final Function<StateManagement, StateManagement> stateManagementConverter)
+			@Nonnull final PersistentClass persistentClass,
+			@Nullable final EntityDataAccess cacheAccessStrategy,
+			@Nullable final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			@Nonnull final RuntimeModelCreationContext creationContext,
+			@Nonnull final Function<StateManagement, StateManagement> stateManagementConverter)
 					throws HibernateException {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, stateManagementConverter );
 
@@ -443,7 +452,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					dialect,
 					subclassSpanMinusOne,
 					table,
-					discriminatorValue,
+					castNonNull( discriminatorValue ),
 					isAbstract( persistentClass)
 			);
 
@@ -486,27 +495,28 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private void initDiscriminatorProperties(
-			Dialect dialect,
+			@Nonnull Dialect dialect,
 			int k,
-			Table table,
-			DiscriminatorValue discriminatorValue,
+			@Nonnull Table table,
+			@Nonnull DiscriminatorValue discriminatorValue,
 			boolean isAbstract) {
 		final String tableName = determineTableName( table );
 		final String columnName = table.getPrimaryKey().getColumn( 0 ).getQuotedName( dialect );
 		discriminatorValuesByTableName.put( tableName, discriminatorValue );
 		discriminatorColumnNameByTableName.put( tableName, columnName );
 		if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
-			discriminatorValues[k] = String.valueOf( literal.value() );
+			castNonNull( discriminatorValues )[k] = String.valueOf( literal.value() );
 		}
 		else if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
-			discriminatorValues[k] = "null";
+			castNonNull( discriminatorValues )[k] = "null";
 		}
 		else {
-			discriminatorValues[k] = "not null";
+			castNonNull( discriminatorValues )[k] = "not null";
 		}
-		discriminatorAbstract[k] = isAbstract;
+		castNonNull( discriminatorAbstract )[k] = isAbstract;
 	}
 
+	@Nonnull
 	@Override
 	public Map<DiscriminatorValue, String> getSubclassByDiscriminatorValue() {
 		return subclassesByDiscriminatorValue;
@@ -554,9 +564,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	 *
 	 * @return subclassNamesBySubclassTable
 	 */
+	@Nonnull
 	private String[][] buildSubclassNamesBySubclassTableMapping(
-			PersistentClass persistentClass,
-			SqlStringGenerationContext context) {
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull SqlStringGenerationContext context) {
 		// this value represents the number of subclasses (and not the class itself)
 		final int numberOfSubclassTables = subclassTableNameClosure.length - coreTableSpan;
 		if ( numberOfSubclassTables == 0 ) {
@@ -569,11 +580,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Nonnull
 	private Set<String> processPersistentClassHierarchy(
-			PersistentClass persistentClass,
+			@Nonnull PersistentClass persistentClass,
 			boolean isBase,
-			String[][] mapping,
-			SqlStringGenerationContext context) {
+			@Nonnull String[][] mapping,
+			@Nonnull SqlStringGenerationContext context) {
 		// collect all the class names that indicate that the "main table"
 		// of the given PersistentClass should be included when one of the
 		// collected class names is used in TREAT
@@ -594,10 +606,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private void associateSubclassNamesToSubclassTableIndexes(
-			PersistentClass persistentClass,
-			Set<String> classNames,
-			String[][] mapping,
-			SqlStringGenerationContext context) {
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull Set<String> classNames,
+			@Nonnull String[][] mapping,
+			@Nonnull SqlStringGenerationContext context) {
 		final String tableName = persistentClass.getTable().getQualifiedName( context );
 		associateSubclassNamesToSubclassTableIndex( tableName, classNames, mapping );
 		for ( var join : persistentClass.getJoins() ) {
@@ -607,9 +619,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private void associateSubclassNamesToSubclassTableIndex(
-			String tableName,
-			Set<String> classNames,
-			String[][] mapping) {
+			@Nonnull String tableName,
+			@Nonnull Set<String> classNames,
+			@Nonnull String[][] mapping) {
 		// find the table's entry in the subclassTableNameClosure array
 		boolean found = false;
 		for ( int i = 1; i < subclassTableNameClosure.length; i++ ) {
@@ -651,7 +663,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected void visitMutabilityOrderedTables(MutabilityOrderedTableConsumer consumer) {
+	protected void visitMutabilityOrderedTables(@Nonnull MutabilityOrderedTableConsumer consumer) {
 		for ( int i = 0; i < naturalOrderTableNames.length; i++ ) {
 			final String tableName = naturalOrderTableNames[i];
 			final int tableIndex = i;
@@ -668,12 +680,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean isIdentifierTable(String tableExpression) {
+	protected boolean isIdentifierTable(@Nonnull String tableExpression) {
 		return tableExpression.equals( getRootTableName() );
 	}
 
 	@Override
-	protected boolean isSecondaryTable(String tableExpression, int relativePosition) {
+	protected boolean isSecondaryTable(@Nonnull String tableExpression, int relativePosition) {
 		// In JoinedSubclassEntityPersister, secondary tables come after inheritance tables.
 		// Tables at positions >= subclassCoreTableSpan are from getSubclassJoinClosure() (secondary tables)
 		// Tables at positions < subclassCoreTableSpan are from getSubclassTableClosure() (inheritance tables)
@@ -685,6 +697,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return isInverseTable[j];
 	}
 
+	@Nonnull
 	@Override
 	public String getAttributeMutationTableName(int i) {
 		return subclassTableNameClosure[subclassPropertyTableNumberClosure[i]];
@@ -695,12 +708,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return isNullableSubclassTable[j];
 	}
 
+	@Nullable
 	@Override
 	public BasicType<?> getDiscriminatorType() {
 		return discriminatorType;
 	}
 
-	@Nonnull
+	@Nullable
 	@Override
 	public DiscriminatorValue getDiscriminatorValue() {
 		return discriminatorValue;
@@ -712,6 +726,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return discriminatorSQLString;
 	}
 
+	@Nullable
 	@Override
 	public String getDiscriminatorColumnName() {
 		return explicitDiscriminatorColumnName == null
@@ -719,18 +734,20 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				: explicitDiscriminatorColumnName;
 	}
 
+	@Nullable
 	@Override
 	public String getDiscriminatorColumnReaders() {
 		return getDiscriminatorColumnName();
 	}
 
+	@Nullable
 	@Override
 	public String getDiscriminatorAlias() {
 		return discriminatorAlias;
 	}
 
 	@Override
-	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+	public void addDiscriminatorToInsertGroup(@Nonnull MutationGroupBuilder insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
@@ -741,6 +758,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Nonnull
 	@Override
 	public EntityTableDescriptor getIdentifierTableDescriptor() {
 		final var superMappingType = getSuperMappingType();
@@ -750,7 +768,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
+	public void addDiscriminatorToInsertGroup(@Nonnull Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
 			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
@@ -766,16 +784,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void bindDiscriminatorForInsert(JdbcValueBindings jdbcValueBindings) {
+	public void bindDiscriminatorForInsert(@Nonnull JdbcValueBindings jdbcValueBindings) {
 		if ( explicitDiscriminatorColumnName != null
 				&& discriminatorValue != DiscriminatorValue.Special.NULL
 				&& discriminatorValue != DiscriminatorValue.Special.NOT_NULL ) {
-			jdbcValueBindings.bindAssignment( -1, discriminatorValue.value(), getDiscriminatorMapping() );
+			jdbcValueBindings.bindAssignment( -1, castNonNull( discriminatorValue ).value(), getDiscriminatorMapping() );
 		}
 	}
 
 	@Override
-	public void addDiscriminatorToDelete(TableDeleteBuilder tableDeleteBuilder) {
+	public void addDiscriminatorToDelete(@Nonnull TableDeleteBuilder tableDeleteBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
 			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
 				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NULL );
@@ -790,14 +808,15 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void bindDiscriminatorForDelete(JdbcValueBindings jdbcValueBindings) {
+	public void bindDiscriminatorForDelete(@Nonnull JdbcValueBindings jdbcValueBindings) {
 		if ( explicitDiscriminatorColumnName != null
 				&& discriminatorValue != DiscriminatorValue.Special.NULL
 				&& discriminatorValue != DiscriminatorValue.Special.NOT_NULL ) {
-			jdbcValueBindings.bindRestriction( -1, discriminatorValue.value(), getDiscriminatorMapping() );
+			jdbcValueBindings.bindRestriction( -1, castNonNull( discriminatorValue ).value(), getDiscriminatorMapping() );
 		}
 	}
 
+	@Nullable
 	private String getDiscriminatorValueString() {
 		if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
 			return "null";
@@ -810,6 +829,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Nonnull
 	@Override
 	public String[] getPropertySpaces() {
 		return spaces; // don't need subclass tables, because they can't appear in conditions
@@ -820,11 +840,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return hasDuplicateTables;
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName(int j) {
 		return naturalOrderTableNames[j];
 	}
 
+	@Nonnull
 	@Override
 	public String[] getKeyColumns(int j) {
 		return naturalOrderTableKeyColumns[j];
@@ -835,8 +857,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return naturalOrderCascadeDeleteEnabled[j];
 	}
 
+	@Nonnull
 	@Override
-	protected TableMutationDetails createTableMutationDetails(PersistentClass bootEntityDescriptor, int relativePosition) {
+	protected TableMutationDetails createTableMutationDetails(@Nonnull PersistentClass bootEntityDescriptor, int relativePosition) {
 		if ( relativePosition < coreTableSpan ) {
 			PersistentClass currentClass = bootEntityDescriptor;
 			int currentPosition = coreTableSpan - 1;
@@ -859,16 +882,19 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return naturalOrderPropertyTableNumbers[property] == j;
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName() {
 		return tableNames[0];
 	}
 
+	@Nonnull
 	@Override
 	public String[] getIdentifierColumnNames() {
 		return tableKeyColumns[0];
 	}
 
+	@Nonnull
 	@Override
 	public String getRootTableName() {
 		return naturalOrderTableNames[0];
@@ -884,21 +910,25 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	protected int[] getPropertyTableNumbers() {
 		return naturalOrderPropertyTableNumbers;
 	}
 
+	@Nonnull
 	@Override
 	protected String[] getSubclassTableKeyColumns(int j) {
 		return subclassTableKeyColumnClosure[j];
 	}
 
+	@Nonnull
 	@Override
 	public String getSubclassTableName(int j) {
 		return subclassTableNameClosure[j];
 	}
 
+	@Nonnull
 	@Override
 	protected String[] getSubclassTableNames() {
 		return subclassTableNameClosure;
@@ -922,7 +952,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	protected boolean isSubclassTableIndicatedByTreatAsDeclarations(
 			int subclassTableNumber,
-			Set<String> treatAsDeclarations) {
+			@Nullable Set<String> treatAsDeclarations) {
 		if ( treatAsDeclarations != null && !treatAsDeclarations.isEmpty() ) {
 			final var inclusionSubclassNameClosure =
 					getSubclassNameClosureBySubclassTable( subclassTableNumber );
@@ -938,6 +968,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return false;
 	}
 
+	@Nonnull
 	private String[] getSubclassNameClosureBySubclassTable(int subclassTableNumber) {
 		final int index = subclassTableNumber - getTableSpan();
 		if ( index >= subclassNamesBySubclassTable.length ) {
@@ -949,18 +980,20 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassNamesBySubclassTable[index];
 	}
 
+	@Nonnull
 	@Override
 	public String[] getConstraintOrderedTableNameClosure() {
 		return constraintOrderedTableNames;
 	}
 
+	@Nonnull
 	@Override
 	public String[][] getConstraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 
 	@Override
-	protected int determineTableNumberForColumn(String columnName) {
+	protected int determineTableNumberForColumn(@Nonnull String columnName) {
 		// HHH-7630: In case the naturalOrder/identifier column is explicitly given in the ordering, check here.
 		for ( int i = 0, max = naturalOrderTableKeyColumns.length; i < max; i++ ) {
 			final var keyColumns = naturalOrderTableKeyColumns[i];
@@ -990,31 +1023,34 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
+	public Object forceVersionIncrement(@Nonnull Object id, @Nullable Object currentVersion, @Nonnull SharedSessionContractImplementor session) {
 		final var superMappingType = getSuperMappingType();
 		return superMappingType != null
 				? superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session )
 				: super.forceVersionIncrement( id, currentVersion, session );
 	}
 
+	@Nonnull
 	@Override
 	public Object forceVersionIncrement(
-			Object id,
-			Object currentVersion,
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
 			boolean batching,
-			SharedSessionContractImplementor session) throws HibernateException {
+			@Nonnull SharedSessionContractImplementor session) throws HibernateException {
 		final var superMappingType = getSuperMappingType();
 		return superMappingType != null
 				? superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session )
 				: super.forceVersionIncrement( id, currentVersion, batching, session );
 	}
 
+	@Nullable
 	@Override
 	protected EntityVersionMapping generateVersionMapping(
-			Supplier<?> templateInstanceCreator,
-			PersistentClass bootEntityDescriptor,
-			MappingModelCreationProcess creationProcess) {
+			@Nullable Supplier<?> templateInstanceCreator,
+			@Nonnull PersistentClass bootEntityDescriptor,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		if ( getVersionType() == null ) {
 			return null;
 		}
@@ -1038,11 +1074,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	protected EntityIdentifierMapping generateIdentifierMapping(
-			Supplier<?> templateInstanceCreator,
-			PersistentClass persistentClass,
-			MappingModelCreationProcess creationProcess) {
+			@Nullable Supplier<?> templateInstanceCreator,
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var idType = getIdentifierType();
 		if ( idType instanceof CompositeType compositeIdType ) {
 			return compositeIdentifierMapping( persistentClass, creationProcess, compositeIdType );
@@ -1055,11 +1092,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Nonnull
 	private BasicEntityIdentifierMappingImpl basicIdentifierMapping(
-			Supplier<?> templateInstanceCreator,
-			PersistentClass persistentClass,
-			MappingModelCreationProcess creationProcess,
-			BasicType<?> idType) {
+			@Nullable Supplier<?> templateInstanceCreator,
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull MappingModelCreationProcess creationProcess,
+			@Nonnull BasicType<?> idType) {
 		final var identifier = persistentClass.getIdentifier();
 		final Long length;
 		final Integer arrayLength;
@@ -1097,10 +1135,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		);
 	}
 
+	@Nonnull
 	private EntityIdentifierMapping compositeIdentifierMapping(
-			PersistentClass persistentClass,
-			MappingModelCreationProcess creationProcess,
-			CompositeType compositeIdType) {
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull MappingModelCreationProcess creationProcess,
+			@Nonnull CompositeType compositeIdType) {
 		// NOTE: the term `isEmbedded` here uses Hibernate's older (pre-JPA) naming for its
 		//       "non-aggregated" composite-id support. It unfortunately conflicts with the
 		//       JPA usage of "embedded".  Here we normalize the legacy naming to the more
@@ -1130,8 +1169,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return explicitDiscriminatorColumnName != null;
 	}
 
+	@Nullable
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(PersistentClass bootEntityDescriptor) {
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(@Nonnull PersistentClass bootEntityDescriptor) {
 		final var superMappingType = getSuperMappingType();
 		if ( superMappingType != null ) {
 			return superMappingType.getDiscriminatorMapping();
@@ -1149,11 +1189,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				return new CaseStatementDiscriminatorMappingImpl(
 						this,
 						subclassTableNameClosure,
-						notNullColumnTableNumbers,
-						notNullColumnNames,
-						discriminatorValues,
-						discriminatorAbstract,
-						getDiscriminatorDomainType()
+						castNonNull( notNullColumnTableNumbers ),
+						castNonNull( notNullColumnNames ),
+						castNonNull( discriminatorValues ),
+						castNonNull( discriminatorAbstract ),
+						castNonNull( getDiscriminatorDomainType() )
 				);
 			}
 		}
@@ -1162,10 +1202,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Nonnull
 	@Override
 	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
-			MappingModelCreationProcess creationProcess,
-			PersistentClass bootEntityDescriptor) {
+			@Nonnull MappingModelCreationProcess creationProcess,
+			@Nonnull PersistentClass bootEntityDescriptor) {
 		assert declaredAttributeMappings != null;
 		return buildNonEncapsulatedCompositeIdentifierMapping(
 				this,
@@ -1176,8 +1217,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+	public FilterAliasGenerator getFilterAliasGenerator(@Nonnull String rootAlias) {
 		return new DynamicFilterAliasGenerator(subclassTableNameClosure, rootAlias);
 	}
 
@@ -1315,11 +1357,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private void optimizeInnerJoins(
-			TableGroup tableGroup,
-			EntityNameUse.UseKind useKind,
-			JoinedSubclassEntityPersister persister,
-			Set<String> tablesToInnerJoin,
-			Set<TableReference> retainedTableReferences) {
+			@Nonnull TableGroup tableGroup,
+			@Nonnull EntityNameUse.UseKind useKind,
+			@Nonnull JoinedSubclassEntityPersister persister,
+			@Nonnull Set<String> tablesToInnerJoin,
+			@Nonnull Set<TableReference> retainedTableReferences) {
 		if ( useKind == EntityNameUse.UseKind.TREAT || useKind == EntityNameUse.UseKind.FILTER ) {
 			final var subclassTableNames = persister.getSubclassTableNames();
 			// Build the intersection of all tables names that are of the class or super class
@@ -1368,10 +1410,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private boolean applyDiscriminatorPredicate(
-			TableReferenceJoin join,
-			NamedTableReference tableReference,
-			Map<String, EntityNameUse> entityNameUses,
-			MappingMetamodelImplementor metamodel) {
+			@Nonnull TableReferenceJoin join,
+			@Nonnull NamedTableReference tableReference,
+			@Nonnull Map<String, EntityNameUse> entityNameUses,
+			@Nonnull MappingMetamodelImplementor metamodel) {
 		if ( tableReference.getTableExpression().equals( getRootTableName() ) ) {
 			final String discriminatorPredicate =
 					getPrunedDiscriminatorPredicate( entityNameUses, metamodel, "t" );

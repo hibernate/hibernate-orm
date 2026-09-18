@@ -59,12 +59,13 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		this.persisterClassResolver = serviceRegistry.getService( PersisterClassResolver.class );
 	}
 
+	@Nonnull
 	@Override
 	public EntityPersister createEntityPersister(
-			PersistentClass entityBinding,
-			EntityDataAccess entityCacheAccessStrategy,
-			NaturalIdDataAccess naturalIdCacheAccessStrategy,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull PersistentClass entityBinding,
+			@Nullable EntityDataAccess entityCacheAccessStrategy,
+			@Nullable NaturalIdDataAccess naturalIdCacheAccessStrategy,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		final var persisterClass = persisterClassResolver.getEntityPersisterClass( entityBinding );
 		final var constructor = resolveEntityPersisterConstructor( persisterClass );
 		try {
@@ -103,7 +104,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		}
 	}
 
-	private Constructor<? extends EntityPersister> resolveEntityPersisterConstructor(Class<? extends EntityPersister> persisterClass) {
+	@Nonnull
+	private Constructor<? extends EntityPersister> resolveEntityPersisterConstructor(@Nonnull Class<? extends EntityPersister> persisterClass) {
 		try {
 			return persisterClass.getConstructor( ENTITY_PERSISTER_CONSTRUCTOR_ARGS );
 		}
@@ -113,11 +115,12 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 
 	}
 
+	@Nonnull
 	@Override
 	public CollectionPersister createCollectionPersister(
-			Collection collectionBinding,
+			@Nonnull Collection collectionBinding,
 			@Nullable CollectionDataAccess cacheAccessStrategy,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		final var persisterClass = persisterClassResolver.getCollectionPersisterClass( collectionBinding );
 		final var constructor = resolveCollectionPersisterConstructor( persisterClass );
 		try {
@@ -147,7 +150,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		}
 	}
 
-	private Constructor<? extends CollectionPersister> resolveCollectionPersisterConstructor(Class<? extends CollectionPersister> persisterClass) {
+	@Nonnull
+	private Constructor<? extends CollectionPersister> resolveCollectionPersisterConstructor(@Nonnull Class<? extends CollectionPersister> persisterClass) {
 		try {
 			return persisterClass.getConstructor( COLLECTION_PERSISTER_CONSTRUCTOR_ARGS );
 		}

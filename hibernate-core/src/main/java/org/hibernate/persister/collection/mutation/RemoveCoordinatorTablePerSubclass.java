@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 
 import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
@@ -16,6 +18,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -27,6 +30,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	private final OperationProducer operationProducer;
 	private final MutationExecutorService mutationExecutorService;
 
+	@Nullable
 	private MutationOperationGroup[] operationGroups;
 
 	/**
@@ -36,19 +40,21 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	 * of timing (chicken-egg) back on the persister.
 	 */
 	public RemoveCoordinatorTablePerSubclass(
-			OneToManyPersister mutationTarget,
-			RowMutationOperations mutationOperations,
-			ServiceRegistry serviceRegistry) {
+			@Nonnull OneToManyPersister mutationTarget,
+			@Nonnull RowMutationOperations mutationOperations,
+			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
-		this.operationProducer = mutationOperations.getDeleteAllRowsOperationProducer();
+		this.operationProducer = castNonNull( mutationOperations.getDeleteAllRowsOperationProducer() );
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "RemoveCoordinator(" + mutationTarget.getRolePath() + ")";
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -60,7 +66,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	}
 
 	@Override
-	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
+	public void deleteAllRows(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.removingCollection( mutationTarget.getRolePath(), key );
 		}
@@ -104,9 +110,10 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 		}
 	}
 
+	@Nonnull
 	private MutationOperationGroup[] buildOperationGroups() {
 		final var subMappingTypes =
-				mutationTarget.getElementPersister()
+				castNonNull( mutationTarget.getElementPersister() )
 						.getRootEntityDescriptor()
 						.getSubMappingTypes();
 		final var operationGroups = new MutationOperationGroup[subMappingTypes.size()];
@@ -117,7 +124,8 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 		return operationGroups;
 	}
 
-	private MutationOperationGroup buildOperationGroup(EntityPersister elementPersister) {
+	@Nonnull
+	private MutationOperationGroup buildOperationGroup(@Nonnull EntityPersister elementPersister) {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 

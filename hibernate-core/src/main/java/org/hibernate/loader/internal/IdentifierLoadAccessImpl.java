@@ -4,6 +4,12 @@
  */
 package org.hibernate.loader.internal;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -40,27 +46,36 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 	private final StatefulLoadAccessContext context;
 	private final EntityPersister entityPersister;
 
+	@Nullable
 	private LockOptions lockOptions;
+	@Nullable
 	private CacheMode cacheMode;
+	@Nullable
 	private Boolean readOnly;
+	@Nullable
 	private RootGraphImplementor<T> rootGraph;
+	@Nullable
 	private GraphSemantic graphSemantic;
+	@Nullable
 	private Set<String> enabledFetchProfiles;
+	@Nullable
 	private Set<String> disabledFetchProfiles;
 
-	public IdentifierLoadAccessImpl(StatefulLoadAccessContext context, EntityPersister entityPersister) {
+	public IdentifierLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityPersister entityPersister) {
 		this.context = context;
 		this.entityPersister = entityPersister;
 	}
 
+	@Nonnull
 	@Override
-	public final IdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
+	public final IdentifierLoadAccessImpl<T> with(@Nonnull LockOptions lockOptions) {
 		this.lockOptions = lockOptions;
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public IdentifierLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+	public IdentifierLoadAccess<T> with(@Nonnull LockMode lockMode, @Nonnull PessimisticLockScope lockScope) {
 		if ( lockOptions == null ) {
 			lockOptions = new LockOptions();
 		}
@@ -69,8 +84,9 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public IdentifierLoadAccess<T> with(Timeout timeout) {
+	public IdentifierLoadAccess<T> with(@Nonnull Timeout timeout) {
 		if ( lockOptions == null ) {
 			lockOptions = new LockOptions();
 		}
@@ -78,32 +94,37 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public IdentifierLoadAccess<T> with(CacheMode cacheMode) {
+	public IdentifierLoadAccess<T> with(@Nonnull CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public IdentifierLoadAccess<T> withReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public IdentifierLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
+	public IdentifierLoadAccess<T> with(@Nonnull EntityGraph<T> graph, @Nonnull GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public final T getReference(Object id) {
+	public final T getReference(@Nonnull Object id) {
 		return perform( () -> doGetReference( id ) );
 	}
 
 	// Hibernate Reactive overrides this
-	protected T perform(Supplier<T> executor) {
+	@Nonnull
+	protected T perform(@Nonnull Supplier<T> executor) {
 		final var session = context.getSession();
 		final var sessionCacheMode = session.getCacheMode();
 
@@ -123,7 +144,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 			final var effectiveEntityGraph =
 					rootGraph == null
 							? null
-							: influencers.applyEntityGraph( rootGraph, graphSemantic);
+							: influencers.applyEntityGraph( rootGraph, castNonNull( graphSemantic ));
 			try {
 				return executor.get();
 			}
@@ -143,7 +164,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 	}
 
 	// Hibernate Reactive overrides this
-	protected T doGetReference(Object id) {
+	@Nonnull
+	protected T doGetReference(@Nonnull Object id) {
 		final var session = context.getSession();
 		final var concreteType = entityPersister.resolveConcreteProxyTypeForId( id, session );
 		final Object result =
@@ -154,24 +176,28 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 	}
 
 	// Hibernate Reactive might need to call this
-	protected Boolean isReadOnly(SessionImplementor session) {
+	@Nullable
+	protected Boolean isReadOnly(@Nonnull SessionImplementor session) {
 		return readOnly != null
 				? readOnly
 				: session.getLoadQueryInfluencers().getReadOnly();
 	}
 
+	@Nonnull
 	@Override
-	public final T load(Object id) {
+	public final T load(@Nonnull Object id) {
 		return perform( () -> doLoad( id ) );
 	}
 
+	@Nonnull
 	@Override
-	public Optional<T> loadOptional(Object id) {
+	public Optional<T> loadOptional(@Nonnull Object id) {
 		return Optional.ofNullable( perform( () -> doLoad( id ) ) );
 	}
 
 	// Hibernate Reactive overrides this
-	protected T doLoad(Object id) {
+	@Nullable
+	protected T doLoad(@Nonnull Object id) {
 		final var session = context.getSession();
 		Object result;
 		try {
@@ -189,7 +215,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 	}
 
 	// Used by Hibernate Reactive
-	protected Object coerceId(Object id, SessionFactoryImplementor factory) {
+	@Nonnull
+	protected Object coerceId(@Nonnull Object id, @Nonnull SessionFactoryImplementor factory) {
 		if ( isLoadByIdComplianceEnabled( factory ) ) {
 			return id;
 		}
@@ -209,7 +236,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		}
 	}
 
-	private void initializeIfNecessary(Object result) {
+	private void initializeIfNecessary(@Nullable Object result) {
 		if ( result != null ) {
 			final var lazyInitializer = extractLazyInitializer( result );
 			if ( lazyInitializer != null ) {
@@ -228,12 +255,13 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		}
 	}
 
-	private static boolean isLoadByIdComplianceEnabled(SessionFactoryImplementor factory) {
+	private static boolean isLoadByIdComplianceEnabled(@Nonnull SessionFactoryImplementor factory) {
 		return factory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
 	}
 
+	@Nonnull
 	@Override
-	public IdentifierLoadAccess<T> enableFetchProfile(String profileName) {
+	public IdentifierLoadAccess<T> enableFetchProfile(@Nonnull String profileName) {
 		if ( !context.getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
 			throw new UnknownProfileException( profileName );
 		}
@@ -247,8 +275,9 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public IdentifierLoadAccess<T> disableFetchProfile(String profileName) {
+	public IdentifierLoadAccess<T> disableFetchProfile(@Nonnull String profileName) {
 		if ( disabledFetchProfiles == null ) {
 			disabledFetchProfiles = new HashSet<>();
 		}
@@ -261,26 +290,32 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 
 	// Getters for Hibernate Reactive
 
+	@Nullable
 	protected CacheMode getCacheMode() {
 		return cacheMode;
 	}
 
+	@Nullable
 	protected GraphSemantic getGraphSemantic() {
 		return graphSemantic;
 	}
 
+	@Nonnull
 	protected StatefulLoadAccessContext getContext() {
 		return context;
 	}
 
+	@Nonnull
 	protected EntityPersister getEntityPersister() {
 		return entityPersister;
 	}
 
+	@Nullable
 	protected LockOptions getLockOptions() {
 		return lockOptions;
 	}
 
+	@Nullable
 	public RootGraphImplementor<T> getRootGraph() {
 		return rootGraph;
 	}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collections;
@@ -57,6 +60,7 @@ public interface LazyPropertyInitializer {
 	 *
 	 * @return ?
 	 */
-	Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session);
+	@Nullable
+	Object initializeLazyProperty(@Nonnull String fieldName, @Nonnull Object entity, @Nonnull SharedSessionContractImplementor session);
 
 }

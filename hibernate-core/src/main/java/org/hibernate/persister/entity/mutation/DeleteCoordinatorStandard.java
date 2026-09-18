@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -22,16 +25,17 @@ import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilderStandard;
 @org.hibernate.Internal
 public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 
-	public DeleteCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public DeleteCoordinatorStandard(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 	}
 
+	@Nonnull
 	@Override
 	protected MutationOperationGroup generateOperationGroup(
-			Object rowId,
-			Object[] loadedState,
+			@Nullable Object rowId,
+			@Nullable Object[] loadedState,
 			boolean applyVersion,
-			SharedSessionContractImplementor session) {
+			@Nullable SharedSessionContractImplementor session) {
 		final var deleteGroupBuilder = new MutationGroupBuilder( MutationType.DELETE, entityPersister() );
 
 		entityPersister().forEachMutableTableReverse( tableMapping ->
@@ -45,11 +49,11 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 	}
 
 	private void applyTableDeleteDetails(
-			MutationGroupBuilder deleteGroupBuilder,
-			Object rowId,
-			Object[] loadedState,
+			@Nonnull MutationGroupBuilder deleteGroupBuilder,
+			@Nullable Object rowId,
+			@Nullable Object[] loadedState,
 			boolean applyVersion,
-			SharedSessionContractImplementor session) {
+			@Nullable SharedSessionContractImplementor session) {
 		// first, the table key column(s)
 		deleteGroupBuilder.forEachTableMutationBuilder( builder ->
 				applyKeyRestriction( rowId, entityPersister(), (TableDeleteBuilder) builder,

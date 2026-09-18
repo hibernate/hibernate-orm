@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -26,9 +29,9 @@ public class ExplicitSqlStringGenerationContext implements SqlStringGenerationCo
 	private final Identifier defaultSchema;
 
 	public ExplicitSqlStringGenerationContext(
-			String defaultCatalog,
-			String defaultSchema,
-			SessionFactoryImplementor factory) {
+			@Nullable String defaultCatalog,
+			@Nullable String defaultSchema,
+			@Nonnull SessionFactoryImplementor factory) {
 		this.factory = factory;
 		this.defaultCatalog = defaultCatalog != null
 				? toIdentifier( defaultCatalog )
@@ -38,56 +41,67 @@ public class ExplicitSqlStringGenerationContext implements SqlStringGenerationCo
 				: toIdentifier( factory.getSessionFactoryOptions().getDefaultSchema() );
 	}
 
+	@Nonnull
 	private JdbcEnvironment getJdbcEnvironment() {
 		return factory.getJdbcServices().getJdbcEnvironment();
 	}
 
+	@Nonnull
 	@Override
 	public Dialect getDialect() {
 		return factory.getJdbcServices().getDialect();
 	}
 
+	@Nonnull
 	@Override
-	public Identifier toIdentifier(String text) {
+	public Identifier toIdentifier(@Nonnull String text) {
 		return getJdbcEnvironment().getIdentifierHelper().toIdentifier( text );
 	}
 
+	@Nonnull
 	@Override
 	public Identifier getDefaultCatalog() {
 		return defaultCatalog;
 	}
 
+	@Nonnull
 	@Override
 	public Identifier getDefaultSchema() {
 		return defaultSchema;
 	}
 
+	@Nonnull
 	@Override
-	public String format(QualifiedTableName qualifiedName) {
+	public String format(@Nonnull QualifiedTableName qualifiedName) {
 		return nameFormater().format( withDefaults( qualifiedName ), getDialect() );
 	}
 
+	@Nonnull
 	private QualifiedObjectNameFormatter nameFormater() {
 		//noinspection deprecation
 		return getJdbcEnvironment().getQualifiedObjectNameFormatter();
 	}
 
+	@Nonnull
 	@Override
-	public String format(QualifiedSequenceName qualifiedName) {
+	public String format(@Nonnull QualifiedSequenceName qualifiedName) {
 		return nameFormater().format( withDefaults( qualifiedName ), getDialect() );
 	}
 
+	@Nonnull
 	@Override
-	public String format(QualifiedName qualifiedName) {
+	public String format(@Nonnull QualifiedName qualifiedName) {
 		return nameFormater().format( withDefaults( qualifiedName ), getDialect() );
 	}
 
+	@Nonnull
 	@Override
-	public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
+	public String formatWithoutCatalog(@Nonnull QualifiedSequenceName qualifiedName) {
 		return nameFormater().format( nameToFormat( qualifiedName ), getDialect() );
 	}
 
-	private QualifiedSequenceName nameToFormat(QualifiedSequenceName qualifiedName) {
+	@Nonnull
+	private QualifiedSequenceName nameToFormat(@Nonnull QualifiedSequenceName qualifiedName) {
 		if ( qualifiedName.getCatalogName() != null
 				|| qualifiedName.getSchemaName() == null && defaultSchema != null ) {
 			return new QualifiedSequenceName(

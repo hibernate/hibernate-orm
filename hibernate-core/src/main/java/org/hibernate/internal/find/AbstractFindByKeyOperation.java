@@ -336,21 +336,25 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// NaturalIdLoader.Options
 
+	@Nonnull
 	@Override
 	public LockMode getLockMode() {
 		return lockMode;
 	}
 
+	@Nonnull
 	@Override
 	public Timeout getLockTimeout() {
 		return lockTimeout;
 	}
 
+	@Nonnull
 	@Override
 	public PessimisticLockScope getLockScope() {
 		return lockScope;
 	}
 
+	@Nonnull
 	@Override
 	public Locking.FollowOn getLockFollowOn() {
 		return lockFollowOn;

@@ -112,7 +112,6 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 import static org.hibernate.metamodel.mapping.internal.FetchOptionsHelper.determineFetchTiming;
@@ -548,13 +547,13 @@ public class MappingModelCreationHelper {
 						StandardIdentifierBagSemantics.INSTANCE
 				);
 				indexDescriptor = null;
-				final String identifierColumnName = collectionDescriptor.getIdentifierColumnName();
+				final String identifierColumnName = castNonNull( collectionDescriptor.getIdentifierColumnName() );
 				assert identifierColumnName != null;
 				identifierDescriptor = new CollectionIdentifierDescriptorImpl(
 						collectionDescriptor,
 						tableExpression,
 						identifierColumnName,
-						(BasicType<?>) collectionDescriptor.getIdentifierType()
+						(BasicType<?>) castNonNull( collectionDescriptor.getIdentifierType() )
 				);
 				break;
 			}
@@ -730,7 +729,7 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		final String mappedByProperty = collectionDescriptor.getMappedByProperty();
 		final ModelPart attributeMappingSubPart;
-		if ( isEmpty( mappedByProperty ) ) {
+		if ( mappedByProperty == null || mappedByProperty.isEmpty() ) {
 			attributeMappingSubPart = null;
 		}
 		else {
@@ -746,7 +745,7 @@ public class MappingModelCreationHelper {
 					attributeMapping,
 					referencedAttributeMapping,
 					castNonNull( referencedAttributeMapping.findContainingEntityMapping() ).getEntityPersister(),
-					mappedByProperty,
+					castNonNull( mappedByProperty ),
 					creationProcess
 			);
 			return;
@@ -1388,7 +1387,7 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( bootMapKeyDescriptor instanceof OneToMany || bootMapKeyDescriptor instanceof ToOne ) {
-			final var indexEntityType = (EntityType) collectionDescriptor.getIndexType();
+			final var indexEntityType = (EntityType) castNonNull( collectionDescriptor.getIndexType() );
 			final var associatedEntity =
 					creationProcess.getEntityPersister( indexEntityType.getAssociatedEntityName() );
 

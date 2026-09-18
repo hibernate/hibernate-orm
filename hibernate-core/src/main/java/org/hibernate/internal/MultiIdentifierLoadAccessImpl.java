@@ -4,6 +4,9 @@
  */
 package org.hibernate.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
@@ -81,6 +84,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public LockOptions getLockOptions() {
 		return lockOptions;
@@ -111,6 +115,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		return this;
 	}
 
+	@Nullable
 	@Override
 	public Integer getBatchSize() {
 		return batchSize.batchSize();
@@ -122,6 +127,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public FindMultipleOption.SessionCheckMode getSessionCheckMode() {
 		return sessionCheckMode;
@@ -143,6 +149,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public FindMultipleOption.RemovalsMode getRemovalsMode() {
 		return removalsMode;
@@ -154,6 +161,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public FindMultipleOption.OrderingMode getOrderingMode() {
 		return orderingMode;
@@ -165,8 +173,9 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public Boolean getReadOnly(SessionImplementor session) {
+	public Boolean getReadOnly(@Nonnull SessionImplementor session) {
 		return readOnly != null
 				? readOnly
 				: session.getLoadQueryInfluencers().getReadOnly();

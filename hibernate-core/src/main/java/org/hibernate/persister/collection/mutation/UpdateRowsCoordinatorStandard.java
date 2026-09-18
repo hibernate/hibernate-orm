@@ -4,6 +4,12 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,19 +36,20 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
 public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
 	private final RowMutationOperations rowMutationOperations;
 	private final MutationExecutorService mutationExecutorService;
+	@Nullable
 	private MutationOperationGroup operationGroup;
 
 	public UpdateRowsCoordinatorStandard(
-			AbstractCollectionPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull AbstractCollectionPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, sessionFactory );
 		this.rowMutationOperations = rowMutationOperations;
 		mutationExecutorService = sessionFactory.getServiceRegistry().requireService( MutationExecutorService.class );
 	}
 
 	@Override
-	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	protected int doUpdate(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		final var operationGroup = getOperationGroup();
 
 		final var mutationExecutor = mutationExecutorService.createExecutor(
@@ -105,19 +112,19 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 	}
 
 	private boolean processRow(
-			Object key,
-			PersistentCollection<?> collection,
-			Object entry,
+			@Nonnull Object key,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object entry,
 			int entryPosition,
-			MutationExecutor mutationExecutor,
-			SharedSessionContractImplementor session) {
+			@Nonnull MutationExecutor mutationExecutor,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( rowMutationOperations.getUpdateRowOperation() != null ) {
 			final var attribute = getMutationTarget().getTargetPart();
 			if ( !collection.needsUpdating( entry, entryPosition, attribute ) ) {
 				return false;
 			}
 
-			rowMutationOperations.getUpdateRowValues().applyValues(
+			castNonNull( rowMutationOperations.getUpdateRowValues() ).applyValues(
 					collection,
 					key,
 					entry,
@@ -126,7 +133,7 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 					mutationExecutor.getJdbcValueBindings()
 			);
 
-			rowMutationOperations.getUpdateRowRestrictions().applyRestrictions(
+			castNonNull( rowMutationOperations.getUpdateRowRestrictions() ).applyRestrictions(
 					collection,
 					key,
 					entry,
@@ -143,6 +150,7 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 		}
 	}
 
+	@Nonnull
 	protected MutationOperationGroup getOperationGroup() {
 		if ( operationGroup == null ) {
 			final var updateRowOperation = rowMutationOperations.getUpdateRowOperation();

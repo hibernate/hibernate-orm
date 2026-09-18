@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
@@ -27,27 +30,32 @@ import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface LegacyEntityMutationTarget extends LegacyMutationTarget<EntityTableMapping> {
 
+	@Nonnull
 	@Override
 	EntityMappingType getTargetPart();
 
+	@Nonnull
 	@Override
 	EntityTableMapping getIdentifierTableMapping();
 
 	/**
 	 * All table mappings for this entity
 	 */
+	@Nonnull
 	@Internal
 	EntityTableMapping[] getTableMappings();
 
 	/**
 	 * The ModelPart describing the identifier/key for this target
 	 */
+	@Nonnull
 	ModelPart getIdentifierDescriptor();
 
 	/**
 	 * The physical table name to use when mutating the given selectable
 	 */
-	String physicalTableNameForMutation(SelectableMapping selectableMapping);
+	@Nonnull
+	String physicalTableNameForMutation(@Nonnull SelectableMapping selectableMapping);
 
 	/**
 	 * Add discriminator column to the insert group builder
@@ -55,17 +63,18 @@ public interface LegacyEntityMutationTarget extends LegacyMutationTarget<EntityT
 	 * @deprecated Used by legacy action queue processes.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder);
+	void addDiscriminatorToInsertGroup(@Nonnull MutationGroupBuilder insertGroupBuilder);
 
 	/**
 	 * Add auxiliary columns to the insert group builder
 	 */
-	void addAuxiliaryToInsertGroup(MutationGroupBuilder insertGroupBuilder);
+	void addAuxiliaryToInsertGroup(@Nonnull MutationGroupBuilder insertGroupBuilder);
 
 	/**
 	 * The name of the table to use when performing mutations (INSERT,UPDATE,DELETE)
 	 * for the given attribute
 	 */
+	@Nonnull
 	String getAttributeMutationTableName(int i);
 
 	/**
@@ -74,6 +83,7 @@ public interface LegacyEntityMutationTarget extends LegacyMutationTarget<EntityT
 	 *
 	 * @deprecated use {@link #getInsertDelegate()} instead
 	 */
+	@Nullable
 	@Deprecated(forRemoval = true, since = "6.5")
 	default InsertGeneratedIdentifierDelegate getIdentityInsertDelegate() {
 		final GeneratedValuesMutationDelegate insertDelegate = getInsertDelegate();
@@ -85,17 +95,20 @@ public interface LegacyEntityMutationTarget extends LegacyMutationTarget<EntityT
 	/**
 	 * The delegate for insert-generated values
 	 */
+	@Nullable
 	GeneratedValuesMutationDelegate getInsertDelegate();
 
 	/**
 	 * The delegate for update-generated values
 	 */
+	@Nullable
 	GeneratedValuesMutationDelegate getUpdateDelegate();
 
 	/**
 	 * Get the mutation delegate for the given mutation type
 	 */
-	default GeneratedValuesMutationDelegate getMutationDelegate(MutationType mutationType) {
+	@Nullable
+	default GeneratedValuesMutationDelegate getMutationDelegate(@Nonnull MutationType mutationType) {
 		return switch (mutationType) {
 			case INSERT -> getInsertDelegate();
 			case UPDATE -> getUpdateDelegate();

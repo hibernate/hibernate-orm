@@ -76,6 +76,7 @@ abstract class BaseEntityPersister implements Serializable {
 	private final EntityType entityType;
 
 	private final int subclassId;
+	@Nullable
 	private final String identifierPropertyName;
 	private final Type identifierType;
 	private final boolean identifierVirtual;
@@ -89,7 +90,7 @@ abstract class BaseEntityPersister implements Serializable {
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
-	private final @Nullable Type[] dirtyCheckablePropertyTypes;
+	private final @Nonnull Type[] dirtyCheckablePropertyTypes;
 	private final boolean[] propertyDirtyCheckability;
 	private final boolean[] propertyLaziness;
 	private final boolean[] propertyUpdateability;
@@ -125,6 +126,7 @@ abstract class BaseEntityPersister implements Serializable {
 	private final boolean hasLazyProperties;
 	private final boolean hasNonIdentifierPropertyNamedId;
 
+	@Nullable
 	private final int[] naturalIdPropertyNumbers;
 	private final boolean hasImmutableNaturalId;
 //	private final boolean hasCacheableNaturalId;
@@ -143,19 +145,21 @@ abstract class BaseEntityPersister implements Serializable {
 	private final OptimisticLockStyle optimisticLockStyle;
 
 	private final boolean polymorphic;
+	@Nullable
 	private final String superclass;  // superclass entity-name
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set<String> subclassEntityNames;
 //	private final Map<Class<?>,String> entityNameByInheritanceClassMap;
 
+	@Nullable
 	private BeforeExecutionGenerator versionGenerator;
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
 	protected BaseEntityPersister(
-			PersistentClass persistentClass,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		this( persistentClass, creationContext,
 				rootName -> creationContext.getOrCreateIdGenerator( rootName, persistentClass ) );
 	}
@@ -164,9 +168,9 @@ abstract class BaseEntityPersister implements Serializable {
 	 * Used by Hibernate Reactive to adapt the id generators
 	 */
 	protected BaseEntityPersister(
-			PersistentClass persistentClass,
-			RuntimeModelCreationContext creationContext,
-			Function<String, Generator> generatorSupplier) {
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull RuntimeModelCreationContext creationContext,
+			@Nonnull Function<String, Generator> generatorSupplier) {
 		// Improves performance of EntityKey#equals by avoiding content check in String#equals
 		name = persistentClass.getEntityName().intern();
 		rootName = persistentClass.getRootClass().getEntityName().intern();
@@ -544,7 +548,8 @@ abstract class BaseEntityPersister implements Serializable {
 //		entityNameByInheritanceClassMap = toSmallMap( entityNameByInheritanceClassMapLocal );
 	}
 
-	private Set<String> collectSubclassEntityNames(PersistentClass persistentClass) {
+	@Nonnull
+	private Set<String> collectSubclassEntityNames(@Nonnull PersistentClass persistentClass) {
 		final Set<String> entityNames = new LinkedHashSet<>(); // Need deterministic ordering
 		entityNames.add( name );
 		for ( var subclass : persistentClass.getSubclasses() ) {
@@ -553,7 +558,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return toSmallSet( entityNames );
 	}
 
-	private static boolean isAbstract(PersistentClass persistentClass) {
+	private static boolean isAbstract(@Nonnull PersistentClass persistentClass) {
 		final Boolean isAbstract = persistentClass.isAbstract();
 		if ( isAbstract == null ) {
 			// legacy behavior (with no abstract attribute specified)
@@ -570,23 +575,23 @@ abstract class BaseEntityPersister implements Serializable {
 		}
 	}
 
-	private boolean determineLazyByMetadata(PersistentClass persistentClass, BytecodeEnhancementMetadata enhancementMetadata) {
+	private boolean determineLazyByMetadata(@Nonnull PersistentClass persistentClass, @Nonnull BytecodeEnhancementMetadata enhancementMetadata) {
 		return persistentClass.isLazy()
 				// TODO: this disables laziness even in non-pojo entity modes:
 				&& ( !persistentClass.hasPojoRepresentation() || !isFinalClass( persistentClass.getProxyInterface() ) )
 			|| enhancementMetadata.isEnhancedForLazyLoading();
 	}
 
-	private boolean hasMultipleFetchGroups(BytecodeEnhancementMetadata enhancementMetadata) {
+	private boolean hasMultipleFetchGroups(@Nonnull BytecodeEnhancementMetadata enhancementMetadata) {
 		return enhancementMetadata.isEnhancedForLazyLoading()
 			&& enhancementMetadata.getLazyAttributesMetadata().getFetchGroupNames().size() > 1;
 	}
 
 	private static boolean isLazy(
-			RuntimeModelCreationContext creationContext,
-			Property property,
+			@Nonnull RuntimeModelCreationContext creationContext,
+			@Nonnull Property property,
 			boolean collectionsInDefaultFetchGroupEnabled,
-			BytecodeEnhancementMetadata enhancementMetadata) {
+			@Nonnull BytecodeEnhancementMetadata enhancementMetadata) {
 		return !includeInBaseFetchGroup(
 				property,
 				enhancementMetadata.isEnhancedForLazyLoading(),
@@ -600,9 +605,10 @@ abstract class BaseEntityPersister implements Serializable {
 		);
 	}
 
+	@Nonnull
 	private BytecodeEnhancementMetadata bytecodeEnhancementMetadata(
-			PersistentClass persistentClass,
-			RuntimeModelCreationContext creationContext,
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull RuntimeModelCreationContext creationContext,
 			boolean collectionsInDefaultFetchGroupEnabled) {
 		if ( persistentClass.hasPojoRepresentation() ) {
 			final var identifierMapperComponent = persistentClass.getIdentifierMapper();
@@ -637,11 +643,12 @@ abstract class BaseEntityPersister implements Serializable {
 	/*
 	 * Used by Hibernate Reactive
 	 */
+	@Nonnull
 	protected BytecodeEnhancementMetadata getBytecodeEnhancementMetadataPojo(
-			PersistentClass persistentClass,
-			RuntimeModelCreationContext creationContext,
-			Set<String> idAttributeNames,
-			CompositeType nonAggregatedCidMapper,
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull RuntimeModelCreationContext creationContext,
+			@Nonnull Set<String> idAttributeNames,
+			@Nonnull CompositeType nonAggregatedCidMapper,
 			boolean collectionsInDefaultFetchGroupEnabled) {
 		return BytecodeEnhancementMetadataPojoImpl.from(
 				persistentClass,
@@ -652,7 +659,7 @@ abstract class BaseEntityPersister implements Serializable {
 		);
 	}
 
-	private static boolean writePropertyValue(OnExecutionGenerator generator, EventType eventType) {
+	private static boolean writePropertyValue(@Nonnull OnExecutionGenerator generator, @Nonnull EventType eventType) {
 		final boolean writePropertyValue = generator.writePropertyValue( eventType );
 		// TODO: move this validation somewhere else!
 //		if ( !writePropertyValue && generator instanceof BeforeExecutionGenerator ) {
@@ -661,7 +668,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return writePropertyValue;
 	}
 
-	private void verifyNaturalIdProperty(Property property) {
+	private void verifyNaturalIdProperty(@Nonnull Property property) {
 		final var value = property.getValue();
 		if ( value instanceof ManyToOne toOne ) {
 			if ( toOne.getNotFoundAction() == NotFoundAction.IGNORE ) {
@@ -677,14 +684,16 @@ abstract class BaseEntityPersister implements Serializable {
 		}
 	}
 
-	private String propertyName(Property property) {
+	@Nonnull
+	private String propertyName(@Nonnull Property property) {
 		return getName() + "." + property.getName();
 	}
 
+	@Nullable
 	private static Generator buildGenerator(
-			final String entityName,
-			final Property mappingProperty,
-			final RuntimeModelCreationContext context) {
+			@Nonnull final String entityName,
+			@Nonnull final Property mappingProperty,
+			@Nonnull final RuntimeModelCreationContext context) {
 		final var generatorCreator = mappingProperty.getValueGeneratorCreator();
 		if ( generatorCreator != null ) {
 			final var generator = mappingProperty.createGenerator( context );
@@ -703,19 +712,21 @@ abstract class BaseEntityPersister implements Serializable {
 		return null;
 	}
 
+	@Nonnull
 	public Generator[] getGenerators() {
 		return generators;
 	}
 
+	@Nullable
 	public BeforeExecutionGenerator getVersionGenerator() {
 		return versionGenerator;
 	}
 
-	protected void setVersionGenerator(BeforeExecutionGenerator versionGenerator) {
+	protected void setVersionGenerator(@Nullable BeforeExecutionGenerator versionGenerator) {
 		this.versionGenerator = versionGenerator;
 	}
 
-	private void mapPropertyToIndex(Property property, int i) {
+	private void mapPropertyToIndex(@Nonnull Property property, int i) {
 		propertyIndexes.put( property.getName(), i );
 		if ( property.getValue() instanceof Component composite ) {
 			for ( var subproperty : composite.getProperties() ) {
@@ -732,7 +743,7 @@ abstract class BaseEntityPersister implements Serializable {
 	 *         is generated during the execution of an {@code insert} statement
 	 */
 	public boolean isNaturalIdentifierInsertGenerated() {
-		if ( naturalIdPropertyNumbers.length == 0 ) {
+		if ( naturalIdPropertyNumbers == null || naturalIdPropertyNumbers.length == 0 ) {
 			throw new IllegalStateException( "Entity '" + name + "' does not have a natural id" );
 		}
 		for ( int naturalIdPropertyNumber : naturalIdPropertyNumbers ) {
@@ -746,6 +757,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return false;
 	}
 
+	@Nullable
 	public int[] getNaturalIdentifierProperties() {
 		return naturalIdPropertyNumbers;
 	}
@@ -767,7 +779,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return subclassEntityNames;
 	}
 
-	private static boolean indicatesToOne(Type type) {
+	private static boolean indicatesToOne(@Nonnull Type type) {
 		if ( type.isEntityType() ) {
 			return true;
 		}
@@ -781,7 +793,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return false;
 	}
 
-	private static boolean indicatesCollection(Type type) {
+	private static boolean indicatesCollection(@Nonnull Type type) {
 		if ( type instanceof CollectionType ) {
 			return true;
 		}
@@ -795,7 +807,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return false;
 	}
 
-	private static boolean indicatesOwnedCollection(Type type, MetadataImplementor metadata) {
+	private static boolean indicatesOwnedCollection(@Nonnull Type type, @Nonnull MetadataImplementor metadata) {
 		if ( type instanceof CollectionType collectionType ) {
 			return !metadata.getCollectionBinding( collectionType.getRole() ).isInverse();
 		}
@@ -812,10 +824,12 @@ abstract class BaseEntityPersister implements Serializable {
 		}
 	}
 
+	@Nonnull
 	public String getName() {
 		return name;
 	}
 
+	@Nonnull
 	public String getRootName() {
 		return rootName;
 	}
@@ -824,14 +838,17 @@ abstract class BaseEntityPersister implements Serializable {
 		return subclassId;
 	}
 
+	@Nonnull
 	public EntityType getEntityType() {
 		return entityType;
 	}
 
+	@Nullable
 	protected String getIdentifierAttributeName() {
 		return identifierPropertyName;
 	}
 
+	@Nonnull
 	protected Type getIdentifierAttributeType() {
 		return identifierType;
 	}
@@ -848,6 +865,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return identifierAssignedByInsert;
 	}
 
+	@Nonnull
 	protected Generator getIdentifierGenerator() {
 		return identifierGenerator;
 	}
@@ -860,7 +878,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return versionPropertyIndex;
 	}
 
-	public int getPropertyIndex(String propertyName) {
+	public int getPropertyIndex(@Nonnull String propertyName) {
 		final Integer index = getPropertyIndexOrNull( propertyName );
 		if ( index == null ) {
 			throw new HibernateException( "Unable to resolve property: " + propertyName );
@@ -868,7 +886,8 @@ abstract class BaseEntityPersister implements Serializable {
 		return index;
 	}
 
-	public Integer getPropertyIndexOrNull(String propertyName) {
+	@Nullable
+	public Integer getPropertyIndexOrNull(@Nonnull String propertyName) {
 		return propertyIndexes.get( propertyName );
 	}
 
@@ -884,6 +903,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return !mutablePropertiesIndexes.isEmpty();
 	}
 
+	@Nonnull
 	public BitSet getMutablePropertiesIndexes() {
 		return mutablePropertiesIndexes;
 	}
@@ -896,6 +916,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return hasLazyProperties;
 	}
 
+	@Nonnull
 	public CascadeStyle getIdentifierCascadeStyle() {
 		return identifierCascadeStyle;
 	}
@@ -916,7 +937,8 @@ abstract class BaseEntityPersister implements Serializable {
 		return hasCascadePersist;
 	}
 
-	protected CascadePropertySelection getCascadePropertySelection(CascadingAction<?> action) {
+	@Nonnull
+	protected CascadePropertySelection getCascadePropertySelection(@Nonnull CascadingAction<?> action) {
 		if ( action == CascadingActions.REMOVE ) {
 			return removePropertySelection;
 		}
@@ -957,6 +979,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return dynamicInsert;
 	}
 
+	@Nonnull
 	public OptimisticLockStyle getOptimisticLockStyle() {
 		return optimisticLockStyle;
 	}
@@ -965,6 +988,7 @@ abstract class BaseEntityPersister implements Serializable {
 		return polymorphic;
 	}
 
+	@Nullable
 	public String getSuperclass() {
 		return superclass;
 	}
@@ -1003,56 +1027,68 @@ abstract class BaseEntityPersister implements Serializable {
 //		return entityNameByInheritanceClassMap.get( inheritanceClass );
 //	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "EntityPersisterRuntimeModel(" + name + ')';
 	}
 
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Nonnull
 	public String[] getPropertyNames() {
 		return propertyNames;
 	}
 
+	@Nonnull
 	public Type[] getPropertyTypes() {
 		return propertyTypes;
 	}
 
-	public @Nullable Type[] getDirtyCheckablePropertyTypes() {
+	public @Nonnull Type[] getDirtyCheckablePropertyTypes() {
 		return dirtyCheckablePropertyTypes;
 	}
 
+	@Nonnull
 	protected boolean[] getPropertyDirtyCheckability() {
 		return propertyDirtyCheckability;
 	}
 
+	@Nonnull
 	public boolean[] getPropertyLaziness() {
 		return propertyLaziness;
 	}
 
+	@Nonnull
 	public boolean[] getPropertyUpdateability() {
 		return propertyUpdateability;
 	}
 
+	@Nonnull
 	public boolean[] getPropertyCheckability() {
 		return propertyCheckability;
 	}
 
+	@Nonnull
 	public boolean[] getNonlazyPropertyUpdateability() {
 		return nonlazyPropertyUpdateability;
 	}
 
+	@Nonnull
 	public boolean[] getPropertyInsertability() {
 		return propertyInsertability;
 	}
 
+	@Nonnull
 	public boolean[] getPropertyNullability() {
 		return propertyNullability;
 	}
 
+	@Nonnull
 	public boolean[] getPropertyVersionability() {
 		return propertyVersionability;
 	}
 
+	@Nonnull
 	public CascadeStyle[] getCascadeStyles() {
 		return cascadeStyles;
 	}
@@ -1080,10 +1116,12 @@ abstract class BaseEntityPersister implements Serializable {
 		return bytecodeEnhancementMetadata.isEnhancedForLazyLoading();
 	}
 
+	@Nonnull
 	public BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return bytecodeEnhancementMetadata;
 	}
 
+	@Nonnull
 	public OnDeleteAction[] getPropertyOnDeleteActions() {
 		return propertyOnDeleteActions;
 	}

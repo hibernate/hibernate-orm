@@ -4,6 +4,10 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -14,13 +18,14 @@ import org.hibernate.sql.exec.internal.BaseExecutionContext;
 
 class ExecutionContextWithSubselectFetchHandler extends BaseExecutionContext {
 
+	@Nullable
 	private final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
 	private final boolean readOnly;
 	private final QueryOptions queryOptions;
 
 	public ExecutionContextWithSubselectFetchHandler(
-			SharedSessionContractImplementor session,
-			SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nullable SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler) {
 		super( session );
 		this.subSelectFetchableKeysHandler = subSelectFetchableKeysHandler;
 		this.readOnly = false;
@@ -28,27 +33,29 @@ class ExecutionContextWithSubselectFetchHandler extends BaseExecutionContext {
 	}
 
 	public ExecutionContextWithSubselectFetchHandler(
-			SharedSessionContractImplementor session,
-			SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nullable SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler,
 			boolean readOnly,
-			LockOptions lockOptions) {
+			@Nonnull LockOptions lockOptions) {
 		super( session );
 		this.subSelectFetchableKeysHandler = subSelectFetchableKeysHandler;
 		this.readOnly = readOnly;
 		this.queryOptions = determineQueryOptions( readOnly, lockOptions );
 	}
 
-	private QueryOptions determineQueryOptions(boolean readOnly, LockOptions lockOptions) {
+	@Nonnull
+	private QueryOptions determineQueryOptions(boolean readOnly, @Nonnull LockOptions lockOptions) {
 		return new SimpleQueryOptions( lockOptions, readOnly ? true : null );
 	}
 
 	@Override
-	public void registerLoadingEntityHolder(EntityHolder holder) {
+	public void registerLoadingEntityHolder(@Nonnull EntityHolder holder) {
 		if ( subSelectFetchableKeysHandler != null ) {
 			subSelectFetchableKeysHandler.addKey( holder );
 		}
 	}
 
+	@Nonnull
 	@Override
 	public QueryOptions getQueryOptions() {
 		return queryOptions;

@@ -63,7 +63,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	public EntityVersionMappingImpl(
 			RootClass bootEntityDescriptor,
-			Supplier<?> templateInstanceAccess,
+			@Nullable Supplier<?> templateInstanceAccess,
 			String attributeName,
 			String columnTableExpression,
 			String columnExpression,

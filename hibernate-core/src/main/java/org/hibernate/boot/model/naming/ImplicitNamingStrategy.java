@@ -5,6 +5,7 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.Incubating;
+import org.hibernate.SPI;
 
 /**
  * A set of rules for determining the {@linkplain PhysicalNamingStrategy logical name}
@@ -46,6 +47,7 @@ import org.hibernate.Incubating;
  * @author Steve Ebersole
  */
 @Incubating(since = "6.0")
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 public interface ImplicitNamingStrategy {
 
 	/**

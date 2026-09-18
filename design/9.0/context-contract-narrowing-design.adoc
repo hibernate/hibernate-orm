@@ -1,0 +1,183 @@
+= ORM 9 Context Contract Narrowing
+:toc2:
+:sectanchors:
+
+== Status And Scope
+
+Design direction for follow-up workstreams 1 and 5, approved by Steve.
+The user-type, binder, and implicit naming context slices are implemented and
+verified. `UserTypeCreationContext` exposes member details and parameters; binder
+contexts no longer expose metadata-building access, and tenant-id binding is an
+internal process. Implicit naming sources expose `ImplicitNamingContext`, with
+identifier handling, naming defaults, and schema charset.
+Normalizer/helper cleanup is also implemented; broader naming contract work is
+tracked in link:naming-strategy-redesign.adoc[the naming-strategy redesign proposal].
+The canonical follow-up status remains in
+link:follow-up-design.adoc[the bootstrap follow-up design].
+
+Workstream 1 narrows broad context and input contracts around concrete consumer
+needs.  Workstream 5 supplies the API/SPI and compatibility review for those
+changes.  Unrelated provider-parity and API-policy questions remain in the
+follow-up document; this effort does not assume they all need resolution first.
+
+== Goals And Constraints
+
+* Give each selected consumer the information and capabilities it needs at its
+  lifecycle phase, without requiring navigation through a general context.
+* Distinguish supported extension needs from Hibernate implementation needs.
+  An internal consumer does not automatically justify a new public SPI method.
+* Preserve supported behavior and make any intended source, binary, or
+  behavioral incompatibility an explicit specification decision.
+* Retain one authoritative source for resolved decisions; adapters must not
+  reinterpret settings or create divergent legacy and pipeline behavior.
+* Keep ownership, mutation, and resource lifetime explicit.  An immutable input
+  container does not make the referenced services or model objects immutable.
+* Coordinate factory-construction inputs with Quarkus's no-reflection boundary.
+  Narrowing signatures alone does not establish that reflection has moved
+  before that boundary.
+
+Reducing parameter counts, deleting harmless compatibility constructors, and
+extracting products without consumers are not goals.  Dedicated type-input
+extraction remains conditional and is not an active deliverable here.
+
+== Observed Starting Points
+
+The following observations record the starting inventory before the completed
+context changes. They are not a claim that all external integrations have been audited.
+
+[cols="2,4,4",options="header"]
+|===
+|Contract or path |Current evidence |Design implication
+
+|`UserTypeCreationContext`
+|`getBuildingContext()` and `getServiceRegistry()` are annotated `@Remove` and
+document removal in 9.0.  Member details and parameters are already explicit.
+`BasicValueResolutionBuilder` supplies the implementation.
+|There is an existing removal commitment to reconcile with concrete extension
+needs.  Inventory consumers before choosing focused replacements or removal.
+
+|Binder contexts
+|`AttributeBindingContext`, `EntityBindingContext`, and
+`EmbeddableBindingContext` expose a deprecated metadata-context escape hatch.
+`TenantIdBinder` uses it for type lookup, shared filter definitions, settings,
+and row-level-security materialization.
+|Removal is not a mechanical signature change.  Decide which capabilities are
+supported binder operations and which belong in internal orchestration.
+
+|Naming-source contracts
+|`ImplicitNameSource` exposes `MetadataBuildingContext`.
+`ImplicitNamingStrategyJpaCompliantImpl`, `ObjectNameNormalizer`, and
+`NamingStrategyHelper` use that broad context.
+|Identify the naming-specific values and operations actually required, while
+reviewing protected extension methods as well as interface methods.
+
+|Factory construction
+|`SessionFactoryImpl` consumes `SessionFactoryConstructionPlan`; compatibility
+constructors delegate to its builder.  `SessionFactoryConstructionState` and
+`SessionFactoryRuntimeComponentsBuilder` still receive `BootstrapContext`.
+The latter reads durable capabilities and prepares selected runtime services.
+|Focus on the preparation boundary and actual dependencies.  Do not treat every
+remaining constructor parameter as evidence that factory construction needs a
+new context contract.
+
+|Integration callbacks
+|`Integrator.Context` already exposes a managed-bean registry and class/module
+metadata registries.  `SessionFactoryIntegratorLifecycle` adapts these from
+prepared runtime components.
+|There is no demonstrated need here for another integration SPI.  Retain the
+current callback unless a concrete integration reveals a missing boundary.
+
+|`SessionFactoryOptions`
+|Construction state retains this compatibility view alongside resolved settings;
+the producer SPI receives a construction request.
+|Choose a specific consuming subsystem before proposing decomposition.  Review
+custom producer and legacy construction needs together.
+|===
+
+== Proposed Direction And Sequence
+
+=== Completed Sequence: Mapping Extension Contexts
+
+The completed sequence narrowed `UserTypeCreationContext`, then binder contexts,
+then implicit naming inputs. The user-type and binder specifications were
+explicitly approved; Steve subsequently requested implementation of the agreed
+implicit naming contracts.
+
+`UserTypeCreationContext` retains member details and parameters. Binder contexts
+retain their local mapping capabilities; tenant-id processing now receives its
+internal dependencies directly. The implicit naming slice introduces
+`ImplicitNamingContext` and `ImplicitNamingDefaults`, with the latter inherited
+by `EffectiveMappingDefaults`. Naming sources and protected strategy helpers use
+the focused context. Migration requirements are documented in the migration guide.
+
+Focused verification covers extension initialization, tenant processing, naming,
+quoting, defaults, charset hashing, subclass hooks, and metadata restoration.
+The subsequently authorized normalizer/helper cleanup removes the unused
+`NamingStrategyHelper` contract and `ObjectNameNormalizer.determineLogicalName()`.
+`ObjectNameNormalizer` receives `IdentifierHelper` and `Dialect` directly, with
+no metadata-context or database accessors. Live contexts create it on first access
+to preserve deferred database initialization. Restored contexts explicitly reject
+normalizer access because names are already resolved. Identifier conversion keeps
+the existing `false` quoting and explicit-name arguments; rendering and
+column-definition quoting retain their existing semantics.
+
+=== Second Slice: Factory Preparation Inputs
+
+Trace each `BootstrapContext` read through construction state, plan preparation,
+and runtime-component preparation.  Classify it as an already resolved value,
+a durable capability, or work still performed during preparation.  Reuse the
+existing products where they express the required lifecycle and ownership.
+
+Coordinate this slice with the Quarkus investigation before choosing which work
+must occur before the interpretation boundary.  Preserve restoration and live
+bootstrap behavior, supplied-runtime-component paths, and legacy adapters.
+The proposal does not assume a new general-purpose replacement context.
+
+Select an options subset only when a concrete consumer justifies it.  Retain
+integrator compatibility unless a specific integration requires a change.
+
+== Compatibility Review Applied To Each Slice
+
+The working specification for each slice must record:
+
+* whether each changed contract is application API, extension SPI, or internal
+  implementation, and the evidence for that classification;
+* in-repository consumers, known external consumers, and remaining uncertainty;
+* effects on implementations, callers, subclasses, and constructor signatures;
+* the intended removal, retention, adapter, or deprecation policy, including how
+  existing `@Remove` and deprecation notices are fulfilled;
+* invocation order, settings precedence, mutation ownership, failure behavior,
+  and cleanup behavior which must remain observable and unchanged; and
+* focused validation for affected native/JPA, live/restored, and custom-extension
+  paths, selected according to the actual change rather than as a blanket suite.
+
+Internal projections must not inadvertently become required implementation
+contracts for external extensions.  Conversely, classifying an implementation
+as internal does not by itself settle the compatibility policy for its public
+or protected extension points.
+
+== Alternatives And Tradeoffs
+
+Keep all broad contexts::
+Avoids immediate API churn but leaves the explicit removal notices unresolved
+and preserves access to unrelated capabilities across phase boundaries.
+
+Replace every context at once::
+Produces a large compatibility surface and encourages speculative replacement
+objects.  It also entangles mapping customization with factory preparation.
+
+Consumer-led slices (recommended)::
+Start from documented removal intent and demonstrated consumers, approve a
+bounded contract change, and then migrate it.  This takes several decisions
+but makes behavior and compatibility consequences reviewable.
+
+== Direction And Remaining Specification Decisions
+
+* Completed order: `UserTypeCreationContext`, binder contexts, and implicit
+  naming contexts. Factory preparation remains coordinated separately with Quarkus.
+* Which concrete factory-preparation consumer should lead the next slice?
+* Which known external integrations must be included in that consumer inventory
+  beyond the repository's tests and examples?
+
+Subsequent slices require their own working specifications and explicit approval
+before implementation, unless Steve explicitly requests implementation earlier.

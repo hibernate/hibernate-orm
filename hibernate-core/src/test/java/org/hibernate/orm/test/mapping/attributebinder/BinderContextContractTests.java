@@ -13,7 +13,6 @@ import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.mapping.spi.CategorizedDomainModel;
 import org.hibernate.boot.mapping.spi.EmbeddableUsageMetadata;
 import org.hibernate.boot.mapping.spi.EntityTypeMetadata;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.models.spi.ClassDetails;
@@ -68,11 +67,6 @@ class BinderContextContractTests {
 		public PersistentClass getPersistentClass() {
 			return null;
 		}
-
-		@Override
-		public MetadataBuildingContext getMetadataBuildingContext() {
-			return null;
-		}
 	}
 
 	private record EmbeddableContext(EmbeddableUsageMetadata getEmbeddableUsage)
@@ -89,11 +83,6 @@ class BinderContextContractTests {
 
 		@Override
 		public Component getComponent() {
-			return null;
-		}
-
-		@Override
-		public MetadataBuildingContext getMetadataBuildingContext() {
 			return null;
 		}
 	}

@@ -78,8 +78,7 @@ public final class GenericComponentHelper {
 			BasicValueResolutionBuilder.applyResolution(
 					details,
 					context.getServiceComponents(),
-					MappingResolutionState.from( context ),
-					context
+					MappingResolutionState.from( context )
 			);
 		}
 		final Property copy = property.copyForDeclaration( value );

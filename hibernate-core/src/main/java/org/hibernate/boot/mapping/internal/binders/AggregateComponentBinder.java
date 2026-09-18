@@ -89,8 +89,7 @@ final class AggregateComponentBinder {
 		BasicValueResolutionBuilder.applyResolution(
 				resolutionInput,
 				state.getMetadataBuildingContext().getServiceComponents(),
-				state.getMappingResolutionState(),
-				state.getMetadataBuildingContext()
+				state.getMappingResolutionState()
 		);
 		if ( !source.isNested() ) {
 			memberTarget.table().addColumn( aggregateColumn );

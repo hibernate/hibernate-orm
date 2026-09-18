@@ -15,7 +15,207 @@ leaving an open-question or follow-up section in the completed design.  A
 focused design document may remain as background for a substantial area, but
 this document owns its follow-up status and trigger.
 
-== Additional Mapping Contributions
+== Workstreams And Proposed Sequence
+
+=== Proposal Status And Goals
+
+This organization and sequence are a design proposal for planning the remaining
+work.  They do not approve implementation, make every follow-up a 9.0
+commitment, or expand the completed bootstrap design's completion boundary.
+The goal is to make independently actionable work visible while preserving the
+consumer-driven triggers and compatibility constraints below.
+
+Each substantial effort proceeds through its own design proposal, working
+specification, explicit specification approval, and implementation.  Feedback
+on this plan revises the proposal; discussion or silence is not approval.
+Small localized fixes retain the ordinary exception to that workflow.
+
+=== Categories And Dependencies
+
+[cols="1,3,4",options="header"]
+|===
+|Workstream |Scope |Dependencies and coordination
+
+|1. Bootstrap APIs and extension boundaries
+|Construction-time context narrowing, focused SPI capabilities, options, and
+dedicated type inputs.
+|Can proceed consumer by consumer.  Relevant compatibility findings from
+workstream 5 constrain API changes.  Coordinate shared inputs with 2 and 6.
+
+|2. Programmatic additional mappings
+|Hibernate-owned builders for complete isolated mapping contributions.
+|Uses the existing late contribution boundary; does not require completion of
+1.  Coordinate categorized identity and representation with 6 if both proceed.
+
+|3. Runtime mapping and model refinement
+|Aggregate storage/access, identifier conversion, compatibility views, state
+management, static metamodel, and managed-type representation.
+|Largely independent of 1 and 2.  Activate individual items from concrete
+consumer needs or the cleanup conditions specified below.
+
+|4. User and integration documentation
+|User Guide bootstrap and customization material; Integration Guide services
+and lifecycle-organized SPI contracts.
+|Completed behavior can be documented immediately.  Documentation for new
+behavior follows the decisions and implementation in the affected workstream.
+
+|5. Compatibility and API policy
+|Focused provider/API parity investigations and explicit compatibility policy.
+|Can start immediately.  Resolve relevant questions before approving affected
+API designs in 1 or 2; findings may also constrain other workstreams.
+
+|6. Interpretation boundary, metadata archives, and tooling
+|Separate settings and mapping interpretation from `SessionFactory`
+construction for Quarkus, with no reflection after the boundary as a
+central goal.  Evaluate archives and serialization as possible supporting tools.
+|Quarkus is the concrete integration use case and activates the design
+investigation.  Coordinate directly with 1 on resolved construction inputs,
+with 5 on settings compatibility, and with 2 on contribution processing;
+it does not depend on completing 1 through 5.
+|===
+
+The numbers identify categories, not execution order.  Longer-term architectural
+investigations are tracked separately from these six workstreams.
+
+=== Planned Sequence
+
+. Begin workstreams 1 and 5 together.  Select a concrete construction consumer
+  for context narrowing, identify its required resolved inputs, and investigate
+  the compatibility questions which could constrain that change.  Produce a
+  focused design and specification before implementation; neither workstream
+  must finish globally before the other can advance.
+. Begin workstream 4 alongside that work.  Document the completed bootstrap and
+  restoration boundaries, refresh service documentation, and establish the
+  extension index and integration chapter.  Update affected contracts as later
+  work stabilizes.
+. Take up workstream 2 as the next separately scoped feature proposal when
+  builder-backed contributions are selected for implementation.  Its design
+  can overlap workstream 1, but relevant compatibility decisions must be
+  resolved before specification approval.  It need not wait for all context
+  narrowing or documentation work to finish.
+. Activate items in workstream 3 when their concrete runtime consumer or cleanup
+  trigger exists.  A triggered item may proceed alongside or ahead of the
+  builder work; the category's position is not a priority barrier.
+. Begin the workstream 6 design investigation for Quarkus alongside the initial
+  workstreams; it need not wait for builder or runtime work.  Establish the
+  boundary between settings/mapping interpretation and `SessionFactory`
+  construction.  Inventory direct and indirect reflection after that
+  boundary and identify the resolved inputs needed to eliminate it.  Assess
+  existing products against that goal before selecting an archive or
+  serialization format.  Coordinate with 1 on construction inputs, 5 on settings
+  compatibility, and any active builder or model-refinement work.
+. Revisit longer-term architecture only when its own trigger exists.  Do not
+  make removal of the compatibility mapping model, resource-lifetime
+  separation, or primary-model mutation prerequisites for the six workstreams.
+
+A focused correctness or metadata-restoration failure takes precedence over
+this sequence and may make an otherwise nonblocking item blocking.
+
+=== Alternatives And Tradeoffs
+
+A strict 1-through-6 sequence would unnecessarily delay documentation and
+independent consumer fixes.  Starting every item immediately would turn
+conditional investigations into commitments and risk designing shared model
+contracts before their consumers are known.  The proposed approach starts
+context narrowing, compatibility investigation, documentation, and the Quarkus
+tooling investigation together, then admits implementation and further work at
+their explicit approval boundaries and triggers.
+
+Coordination remains necessary where workstreams share API contracts or
+categorized-model identity.  Focused specifications must identify those shared
+decisions so parallel work does not create incompatible representations.
+
+=== Decisions Still Needed
+
+* Which construction consumer should lead workstream 1, and which compatibility
+  questions from workstream 5 must be resolved for it?
+* Should builder-backed additional mappings be committed to 9.0, or remain a
+  follow-up until a concrete integration prioritizes them?
+* Which runtime consumers or cleanup conditions already activate items in
+  workstream 3?
+* Where precisely does the Quarkus interpretation boundary fall, which settings
+  may still vary afterward, and how can their application avoid interpretation
+  or reflection?
+* Which resolved mapping, type, service, and extension products must cross that
+  boundary, and can existing products satisfy it without a new archive format?
+
+== 1. Bootstrap APIs And Extension Boundaries
+
+The active direction proposal for this workstream and its workstream 5
+compatibility review is
+link:context-contract-narrowing-design.adoc[Context Contract Narrowing].
+It focuses on slimming broad contracts around demonstrated consumer needs;
+conditional extractions below are not automatically implementation commitments.
+
+The first slice, `UserTypeCreationContext` narrowing, is approved, implemented,
+and verified.  The context now exposes only member
+details and parameters; its metadata-context and service-registry accessors
+have been removed.
+The binder-context slice is also approved,
+implemented, and verified: the three metadata-context escape hatches are removed,
+embedded tenant processing is internal, and the component fixture is corrected.
+The implicit naming-context slice is also implemented and verified:
+`ImplicitNameSource` exposes `ImplicitNamingContext`, providing identifier handling,
+schema charset, and `ImplicitNamingDefaults`, inherited by `EffectiveMappingDefaults`.
+Normalizer/helper cleanup is complete: the unused strategy helper is removed,
+and the normalizer consumes identifier handling and dialect capabilities directly.
+Broader contract and invocation work
+is tracked in link:naming-strategy-redesign.adoc[the naming-strategy redesign proposal].
+
+`BootstrapContext` construction-time use (ORM 9)::
+Continue replacing construction-time access to `BootstrapContext` with focused
+resolved products.  Mapping resolution may retain the broad context for
+metadata-building compatibility, but new construction SPIs must not expose it.
+Complete a replacement when a construction consumer can receive an existing
+immutable product or a coherent new field on `SessionFactoryRuntimeComponents`
+without recreating another general-purpose context.
+
+`MetadataBuildingContext`::
+Continue capability-level narrowing only around concrete SPI requirements.
+The implicit naming-source and normalizer/helper slices are implemented.
+Reference-count reduction and removal
+of harmless compatibility constructor parameters are not goals by themselves.
+
+Integrator callbacks::
+Introduce narrower phase-specific integration SPIs only for a concrete
+integration which cannot use the existing explicit construction phases or
+retained compatibility callback.
+
+`SessionFactoryOptions`::
+Decompose the retained producer/runtime compatibility view only when a
+consumer-specific immutable product can replace a coherent subset without
+creating path-dependent construction requests.
+
+Dedicated type-customization inputs::
+This item concerns the `TypeContributor` instances, basic-type registrations,
+`UserType` registrations, and attribute converters currently carried by
+`MappingCustomizations`.  It does not refer to the annotation-driven
+`TypeBinder` and `AttributeBinder` mapping customization hooks.
++
+The current pipeline already explicitly applies these inputs through
+`MappingResolutionPipeline.applyTypeCustomizations`, with
+`TypeContributionCoordinator` coordinating dialect, service-loaded, and
+programmatic type contributions.  Application updates the building plan,
+type configuration, and metadata collector; it does not produce a separate
+immutable type-resolution result.
++
+The narrow follow-up is to extract the type-related portion of the broader
+`MappingCustomizations` parameter object into a focused input contract only
+when another consumer needs it independently.  The intended benefit is to let
+that consumer receive the relevant inputs without depending on unrelated
+mapping customizations.  No such consumer is identified by this item yet, so
+extraction is conditional rather than required cleanup.
++
+This does not by itself propose a new processing phase or a dedicated output
+product.  If a concrete consumer, including the Quarkus interpretation-boundary
+work, needs independently executable type processing or a resolved result,
+that is a broader design decision.  Its specification must define inputs,
+outputs, ordering, dialect and service dependencies, mutation ownership, and
+how later consumers use the result without replaying contributions.  Do not
+infer that phase separation is necessary merely from extracting an input
+contract.
+
+== 2. Programmatic Additional Mappings
 
 === Current Boundary
 
@@ -117,27 +317,9 @@ attribution for builder products.  Builder contributions should be accumulated
 across the complete contributor pass, just like class and XML contributions,
 so binding does not expose service-loader order accidentally.
 
-=== Later Hierarchy Or Primary-Model Mutation
+== 3. Runtime Mapping And Model Refinement
 
-Extending an existing hierarchy or changing decisions already made for the
-primary categorized model is outside the initial scope.  Do not implement a
-second categorization pass over the same bootstrap context: XML processing,
-Hibernate Models overlays, persistence-unit defaults, and bootstrap registries
-are not currently a pure replayable transformation.
-
-Revisit an earlier extension only for a concrete integration which must alter
-primary discovery or categorization.  Such a design would require either:
-
-* a pre-categorization source contribution using a deliberately limited source
-  inventory; or
-* a pure discovery/classification product followed by source contribution and
-  exactly one mutating categorization pass.
-
-Do not introduce incremental hierarchy mutation, repeated recategorization, or
-a fixed-point contributor loop without explicit ordering, duplicate, cycle,
-convergence, and diagnostic rules.
-
-== Aggregate Runtime Mapping
+=== Aggregate Runtime Mapping
 
 The boot-time aggregate design is complete.  Runtime work begins only when a
 focused SQL selection, assembly, JDBC access, or mutation consumer needs an
@@ -165,8 +347,7 @@ Completion requires runtime consumers to stop reconstructing aggregate storage
 from boot details, Java container shape, or custom SQL-expression parentage.
 Tests must cover generated SQL, JDBC/result behavior, mutation, dirty tracking,
 generated values, and optimistic locking at the migrated consumer boundaries.
-
-== Mapping And Runtime Model Refinements
+=== Mapping And Runtime Model Refinements
 
 Identifier correspondence::
 Introduce an executable runtime identifier-conversion plan only when a concrete
@@ -177,6 +358,173 @@ Flattened compatibility views::
 Replace flattened `org.hibernate.mapping` projections only when a runtime or
 tooling consumer can move to the role-based declaration, usage, application,
 and handoff products without losing supported inspection behavior.
+
+State management::
+Add a first-class whole-model state-management boot descriptor only when a
+concrete feature cannot be represented by the existing `StateManagement`,
+`AuxiliaryMapping`, `TemporalMapping`, and `AuditMapping` products.
+
+JPA static metamodel::
+Remove remaining legacy static-metamodel entry points when all callers use the
+materialization-time, role-based injection plan.
+
+Managed type representation strategy::
+Redesign `ManagedTypeRepresentationStrategy` when its required responsibilities
+and consumers are clearer.  The current strategy combines representation mode,
+mapped Java type, reflection optimization, and property-access resolution,
+while `ManagedTypeRepresentationResolver` selects entity and embeddable
+strategies using both boot descriptors and partially constructed runtime
+descriptors.  The desired replacement shape is intentionally undecided.
+Before changing it, identify which decisions belong to categorized-domain
+modeling, binding, runtime-model creation, proxy selection, bytecode
+enhancement, property access, and instantiation.  Prefer focused immutable
+inputs or phase-specific capabilities over another broad strategy contract.
+== 4. User And Integration Documentation
+
+Keep the User Guide bootstrap chapter focused on supported entry points,
+configuration and mapping-source collection, the user-visible bootstrap
+lifecycle, and a concise index of extension points.  The index should identify
+each hook's purpose, phase, intended audience, and detailed documentation
+location without turning the bootstrap chapter into an SPI reference.
+
+Keep task-oriented `AttributeBinder` and `TypeBinder` explanation and examples
+with domain-model customization in the User Guide.  Link to those examples
+from the bootstrap extension index and from integration documentation.
+Metadata serialization and restoration remain in the User Guide bootstrap
+chapter because they are supported user-facing bootstrap workflows rather than
+primarily integration SPIs.
+
+Use the existing Integration Guide as the detailed home for extension and
+integration contracts.  Rewrite its currently stale service documentation and
+add a bootstrap/factory integration chapter organized by lifecycle:
+
+* mapping resolution: `TypeContributor`, `FunctionContributor`, and
+  `AdditionalMappingContributor`;
+* annotation-driven mapping customization: `AttributeBinder` and `TypeBinder`,
+  with links to the User Guide examples;
+* factory construction: `Integrator`, `CacheFactory`,
+  `NativeQueryInterpreter`, and `StatisticsFactory`;
+* per-session extension creation: `ExtensionIntegration`; and
+* complete factory-construction replacement: `SessionFactoryProducer`.
+
+The existing services material should continue to own `ServiceContributor`,
+service-registry roles, service initiation, and service replacement.
+Documentation for each SPI must explain discovery or explicit registration,
+invocation phase, available context, ownership and cleanup, ordering or
+selection rules, and whether the contract is intended for applications,
+libraries, containers, or full bootstrap replacements.
+== 5. Compatibility And API Policy
+
+Track the following against focused compatibility failures or explicit API
+policy decisions:
+
+* provider exception-wrapping parity;
+* persistence-unit setting-precedence parity;
+* descriptor-backed source-contribution parity;
+* schema-generation script handling;
+* the long-term `Configuration` deprecation and migration policy;
+* replacement coverage for removed staged-builder contributor use cases;
+* the minimum public settings view needed by custom
+  `SessionFactoryProducer` implementations;
+* retaining `Metadata` as the resolved mapping inspection view unless a
+  concrete consumer proves it insufficient.
+== 6. Interpretation Boundary, Metadata Archives And Tooling
+
+Quarkus is the concrete integration use case for this workstream.  The primary
+purpose is to separate settings and mapping interpretation from
+`SessionFactory` construction.  A central design goal is no reflection
+after that boundary.  This activates design investigation now and makes
+the interpretation boundary, rather than serialization itself, the starting
+point.
+
+=== Quarkus Interpretation Boundary
+
+The proposed direction is to perform settings and mapping interpretation before
+the boundary and supply resolved products to `SessionFactory` construction.
+The design must account for indirect reflection through services and extensions
+as well as explicit reflective calls.  Moving reflection behind another context
+or delaying it until first use would not meet the goal.
+
+The working specification must establish:
+
+* the precise boundary and the post-boundary lifecycle covered by the
+  no-reflection requirement;
+* which settings are interpreted before the boundary, which values may vary
+  afterward, and how those values are applied without repeating interpretation
+  or requiring reflection;
+* which mapping, type, member-access, instantiation, proxy, service, and
+  extension decisions must be resolved beforehand, and which explicit products
+  carry their results into factory construction;
+* how reflective discovery, member access, and instantiation are completed
+  before the boundary or replaced by supplied capabilities that do not use
+  reflection afterward;
+* how custom integrations participate, including diagnostics for any integration
+  which cannot satisfy the boundary; and
+* verification that detects direct and indirect reflection during
+  factory construction and subsequent lifecycle paths covered by the contract,
+  including deferred first-use paths.
+
+Coordinate this design with workstream 1's focused construction inputs and
+workstream 5's settings compatibility decisions.  The required separation may
+use existing resolved products, additional products, or a persisted artifact;
+serialization is not assumed to be necessary or sufficient.
+
+=== Metadata Archives
+
+The factory-ready `MetadataArchive` is the completed restoration boundary.
+Introduce another snapshot layer only for a concrete tooling or startup use
+case which cannot consume the archive or an existing specific pipeline product.
+Any new layer must define stable identity, format/version validation, payload
+bounds, service reconstruction, and its relationship to live bootstrap.
+
+=== Categorized Domain Model Serialization
+
+Investigate serialization at the `CategorizedDomainModel` boundary as a
+possible dialect-independent modeling artifact.  This would preserve source
+discovery, Hibernate Models interpretation, generic specialization,
+inheritance, declaration/usage/application identity, and categorization while
+deferring dialect-sensitive binding and relational materialization to the
+consumer environment.
+
+Such an artifact is only a candidate for the Quarkus use case.  Categorization
+alone does not establish that later binding, service reconstruction, or runtime
+model creation can avoid settings/mapping interpretation and reflection.
+Assess those remaining phases against the interpretation boundary
+before selecting this artifact.  The restoration questions below are design
+alternatives, not permission to use reflection after that boundary.
+
+This is an alternative artifact with a different purpose from the
+factory-ready `MetadataArchive`; it must not silently replace or weaken that
+completed boundary.  A useful design must establish:
+
+* whether every categorized contract has a stable data-only representation;
+* how `ClassDetails`, annotation usages, generic type resolutions, mapping
+  roles, declarations, usages, and applications retain stable identity;
+* which persistence-unit defaults, XML overlays, converters, generators,
+  custom annotations, and contributor results belong in the artifact;
+* whether `AttributeBinder` and `TypeBinder` run only after restoration and how
+  their implementation classes and annotation values are represented;
+* how service-loaded and programmatic customizations are replayed or rejected;
+* how the consumer reconstructs a compatible Models context and validates
+  application classes;
+* archive versioning, compatibility, trust, payload limits, and diagnostics;
+  and
+* whether the reduction in producer-side work remains valuable once the
+  consumer still performs binding, dialect interpretation, materialization,
+  value resolution, schema preparation, and runtime handoff.
+
+Evaluate for Quarkus whether this artifact supports separation of interpretation
+from factory construction with no reflection after the boundary.
+Sharing categorized modeling across dialect or service environments is a
+possible additional benefit, not the primary justification for this workstream.
+The concrete consumer justifies the investigation but does not by itself select
+categorized-model serialization as the solution.  Keep live categorization and
+restored categorization convergent at the ordinary binding input boundary.
+
+== Longer-Term Architectural Investigations
+
+These investigations retain their own triggers and are not assumed 9.0
+commitments or prerequisites for the workstreams above.
 
 Remove the `org.hibernate.mapping` model (longer term)::
 Investigate removing the intermediate `org.hibernate.mapping` model and using
@@ -211,42 +559,6 @@ should have one authoritative semantic source, deterministic projections for
 schema and runtime needs, and no mutable compatibility model acting as the
 pipeline's central interchange format.
 
-State management::
-Add a first-class whole-model state-management boot descriptor only when a
-concrete feature cannot be represented by the existing `StateManagement`,
-`AuxiliaryMapping`, `TemporalMapping`, and `AuditMapping` products.
-
-JPA static metamodel::
-Remove remaining legacy static-metamodel entry points when all callers use the
-materialization-time, role-based injection plan.
-
-Dedicated type inputs::
-Extract a dedicated mapping-resolution type input product only when another
-consumer needs the type customizations independently of the current explicit
-pipeline ownership.
-
-Managed type representation strategy::
-Redesign `ManagedTypeRepresentationStrategy` when its required responsibilities
-and consumers are clearer.  The current strategy combines representation mode,
-mapped Java type, reflection optimization, and property-access resolution,
-while `ManagedTypeRepresentationResolver` selects entity and embeddable
-strategies using both boot descriptors and partially constructed runtime
-descriptors.  The desired replacement shape is intentionally undecided.
-Before changing it, identify which decisions belong to categorized-domain
-modeling, binding, runtime-model creation, proxy selection, bytecode
-enhancement, property access, and instantiation.  Prefer focused immutable
-inputs or phase-specific capabilities over another broad strategy contract.
-
-== Context And Extension Narrowing
-
-`BootstrapContext` construction-time use (ORM 9)::
-Continue replacing construction-time access to `BootstrapContext` with focused
-resolved products.  Mapping resolution may retain the broad context for
-metadata-building compatibility, but new construction SPIs must not expose it.
-Complete a replacement when a construction consumer can receive an existing
-immutable product or a coherent new field on `SessionFactoryRuntimeComponents`
-without recreating another general-purpose context.
-
 `BootstrapContext` resource separation (longer term)::
 Separate the durable boot environment (`TypeConfiguration`, Models context,
 managed-bean and class-loading capabilities) from disposable source-discovery
@@ -256,111 +568,22 @@ contract to expose both lifetimes.  The resulting lifecycle must make metadata
 materialization the explicit release boundary for source-discovery resources
 without invalidating products needed by factory construction.
 
-`MetadataBuildingContext`::
-Continue capability-level narrowing only around concrete SPI requirements.
-Current candidates are naming-source access, `UserTypeCreationContext`, and the
-deprecated binder-context escape hatch.  Reference-count reduction and removal
-of harmless compatibility constructor parameters are not goals by themselves.
+=== Later Hierarchy Or Primary-Model Mutation
 
-Integrator callbacks::
-Introduce narrower phase-specific integration SPIs only for a concrete
-integration which cannot use the existing explicit construction phases or
-retained compatibility callback.
+Extending an existing hierarchy or changing decisions already made for the
+primary categorized model is outside the initial scope.  Do not implement a
+second categorization pass over the same bootstrap context: XML processing,
+Hibernate Models overlays, persistence-unit defaults, and bootstrap registries
+are not currently a pure replayable transformation.
 
-`SessionFactoryOptions`::
-Decompose the retained producer/runtime compatibility view only when a
-consumer-specific immutable product can replace a coherent subset without
-creating path-dependent construction requests.
+Revisit an earlier extension only for a concrete integration which must alter
+primary discovery or categorization.  Such a design would require either:
 
-== User And Integration Documentation
+* a pre-categorization source contribution using a deliberately limited source
+  inventory; or
+* a pure discovery/classification product followed by source contribution and
+  exactly one mutating categorization pass.
 
-Keep the User Guide bootstrap chapter focused on supported entry points,
-configuration and mapping-source collection, the user-visible bootstrap
-lifecycle, and a concise index of extension points.  The index should identify
-each hook's purpose, phase, intended audience, and detailed documentation
-location without turning the bootstrap chapter into an SPI reference.
-
-Keep task-oriented `AttributeBinder` and `TypeBinder` explanation and examples
-with domain-model customization in the User Guide.  Link to those examples
-from the bootstrap extension index and from integration documentation.
-Metadata serialization and restoration remain in the User Guide bootstrap
-chapter because they are supported user-facing bootstrap workflows rather than
-primarily integration SPIs.
-
-Use the existing Integration Guide as the detailed home for extension and
-integration contracts.  Rewrite its currently stale service documentation and
-add a bootstrap/factory integration chapter organized by lifecycle:
-
-* mapping resolution: `TypeContributor`, `FunctionContributor`, and
-  `AdditionalMappingContributor`;
-* annotation-driven mapping customization: `AttributeBinder` and `TypeBinder`,
-  with links to the User Guide examples;
-* factory construction: `Integrator`, `CacheFactory`,
-  `NativeQueryInterpreter`, and `StatisticsFactory`;
-* per-session extension creation: `ExtensionIntegration`; and
-* complete factory-construction replacement: `SessionFactoryProducer`.
-
-The existing services material should continue to own `ServiceContributor`,
-service-registry roles, service initiation, and service replacement.
-Documentation for each SPI must explain discovery or explicit registration,
-invocation phase, available context, ownership and cleanup, ordering or
-selection rules, and whether the contract is intended for applications,
-libraries, containers, or full bootstrap replacements.
-
-== Bootstrap Compatibility And Provider Parity
-
-Track the following against focused compatibility failures or explicit API
-policy decisions:
-
-* provider exception-wrapping parity;
-* persistence-unit setting-precedence parity;
-* descriptor-backed source-contribution parity;
-* schema-generation script handling;
-* the long-term `Configuration` deprecation and migration policy;
-* replacement coverage for removed staged-builder contributor use cases;
-* the minimum public settings view needed by custom
-  `SessionFactoryProducer` implementations;
-* retaining `Metadata` as the resolved mapping inspection view unless a
-  concrete consumer proves it insufficient.
-
-== Metadata Archives And Tooling
-
-The factory-ready `MetadataArchive` is the completed restoration boundary.
-Introduce another snapshot layer only for a concrete tooling or startup use
-case which cannot consume the archive or an existing specific pipeline product.
-Any new layer must define stable identity, format/version validation, payload
-bounds, service reconstruction, and its relationship to live bootstrap.
-
-=== Categorized Domain Model Serialization
-
-Investigate serialization at the `CategorizedDomainModel` boundary as a
-possible dialect-independent modeling artifact.  This would preserve source
-discovery, Hibernate Models interpretation, generic specialization,
-inheritance, declaration/usage/application identity, and categorization while
-deferring dialect-sensitive binding and relational materialization to the
-consumer environment.
-
-This is an alternative artifact with a different purpose from the
-factory-ready `MetadataArchive`; it must not silently replace or weaken that
-completed boundary.  A useful design must establish:
-
-* whether every categorized contract has a stable data-only representation;
-* how `ClassDetails`, annotation usages, generic type resolutions, mapping
-  roles, declarations, usages, and applications retain stable identity;
-* which persistence-unit defaults, XML overlays, converters, generators,
-  custom annotations, and contributor results belong in the artifact;
-* whether `AttributeBinder` and `TypeBinder` run only after restoration and how
-  their implementation classes and annotation values are represented;
-* how service-loaded and programmatic customizations are replayed or rejected;
-* how the consumer reconstructs a compatible Models context and validates
-  application classes;
-* archive versioning, compatibility, trust, payload limits, and diagnostics;
-  and
-* whether the reduction in producer-side work remains valuable once the
-  consumer still performs binding, dialect interpretation, materialization,
-  value resolution, schema preparation, and runtime handoff.
-
-Proceed only if a concrete build-time tooling or deployment use case benefits
-from sharing categorized modeling across multiple dialect or service
-environments.  Keep live categorization and restored categorization convergent
-at the ordinary binding input boundary.
+Do not introduce incremental hierarchy mutation, repeated recategorization, or
+a fixed-point contributor loop without explicit ordering, duplicate, cycle,
+convergence, and diagnostic rules.

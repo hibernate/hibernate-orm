@@ -1058,7 +1058,6 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		CustomMappingBinder.callTypeBinders(
 				getManagedType(),
 				binding,
-				getBindingState(),
 				getBindingContext()
 		);
 	}

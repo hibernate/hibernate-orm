@@ -1064,7 +1064,7 @@ public class SimpleIdTests {
 		public Identifier determineIdentifierColumnName(ImplicitIdentifierColumnNameSource source) {
 			return toIdentifier(
 					"implicit_identifier_" + source.getIdentifierAttributePath().getProperty(),
-					source.getBuildingContext()
+					source.getNamingContext()
 			);
 		}
 	}

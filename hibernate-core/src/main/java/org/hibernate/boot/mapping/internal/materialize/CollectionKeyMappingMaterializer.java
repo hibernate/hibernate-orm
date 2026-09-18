@@ -11,6 +11,8 @@ import java.util.function.Function;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Collection;
@@ -246,8 +248,8 @@ public final class CollectionKeyMappingMaterializer {
 					}
 
 					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return buildingContext;
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( buildingContext );
 					}
 				} )
 				.render( buildingContext.getMetadataCollector().getDatabase().getDialect() );

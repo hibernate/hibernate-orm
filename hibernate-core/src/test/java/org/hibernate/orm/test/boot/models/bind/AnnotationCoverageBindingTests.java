@@ -1202,7 +1202,11 @@ public class AnnotationCoverageBindingTests {
 					assertThat( entityBinding.getBatchSize() ).isEqualTo( 37 );
 					assertThat( entityBinding.getProperty( "customBound" ).isUpdatable() ).isFalse();
 					assertThat( entityBinding.getProperty( "version" ).isUpdatable() ).isFalse();
-					assertThat( generatedDetails.isDynamic() ).isTrue();
+					assertThat( generatedDetails.isDynamic() ).isFalse();
+					assertThat( generatedDetails.isFlattened() ).isFalse();
+					assertThat( generatedDetails.getComponentClassName() )
+							.isEqualTo( GeneratedCoverageDetails.class.getName() );
+					assertThat( generatedDetails.getProperty( "embeddedStatus" ).isUpdatable() ).isFalse();
 					assertThat( generatedDetails.getProperty( "embeddedCustomBound" ).isUpdatable() ).isFalse();
 				},
 				scope.getRegistry(),
@@ -2484,7 +2488,6 @@ public class AnnotationCoverageBindingTests {
 				Objects.requireNonNull( context.getAttribute().usage() );
 				Objects.requireNonNull( context.getAttribute().role() );
 				Objects.requireNonNull( context.getPersistentClass() );
-				Objects.requireNonNull( context.getMetadataBuildingContext() );
 				context.getProperty().setUpdatable( false );
 			}
 		}
@@ -2519,10 +2522,7 @@ public class AnnotationCoverageBindingTests {
 				assertThat( context.getPersistentClass() ).isSameAs( embeddableClass.getOwner() );
 				assertThat( context.getEmbeddableUsage().sourceMember().resolveAttributeName() )
 						.isEqualTo( "generatedDetails" );
-				final var name = embeddableClass.getRoleName() == null
-						? embeddableClass.getComponentClassName()
-						: embeddableClass.getRoleName();
-				embeddableClass.setComponentClassDetails( name, true, context.getMetadataBuildingContext() );
+				embeddableClass.getProperty( "embeddedStatus" ).setUpdatable( false );
 			}
 		}
 	}

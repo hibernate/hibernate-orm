@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.dialect.unique.spi.UniqueKeyRepresentation;
 import org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest;
 import org.hibernate.annotations.SecondaryRow;
@@ -47,7 +49,6 @@ import org.hibernate.boot.mapping.internal.relational.QuotedIdentifierTarget;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -351,8 +352,8 @@ public class TableBinder {
 					}
 
 					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				}
 		);
@@ -602,8 +603,8 @@ public class TableBinder {
 					}
 
 					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				}
 		);
@@ -651,8 +652,8 @@ public class TableBinder {
 					}
 
 					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				}
 		);

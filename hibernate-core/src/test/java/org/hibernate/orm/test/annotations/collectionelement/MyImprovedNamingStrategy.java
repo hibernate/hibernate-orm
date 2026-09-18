@@ -18,12 +18,12 @@ public class MyImprovedNamingStrategy extends ImplicitNamingStrategyJpaCompliant
 				+ '_'
 				+ transformAttributePath( source.getOwningAttributePath() );
 
-		return toIdentifier( name, source.getBuildingContext() );
+		return toIdentifier( name, source.getNamingContext() );
 	}
 
 	@Override
 	public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source) {
 		final String name = source.getReferencedTableName() + "_" + source.getReferencedColumnName();
-		return toIdentifier( name, source.getBuildingContext() );
+		return toIdentifier( name, source.getNamingContext() );
 	}
 }

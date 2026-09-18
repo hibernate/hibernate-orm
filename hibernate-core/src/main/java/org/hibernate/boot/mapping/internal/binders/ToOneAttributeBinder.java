@@ -16,6 +16,8 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.PropertyRef;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
@@ -1007,8 +1009,8 @@ class ToOneAttributeBinder {
 					}
 
 					@Override
-					public org.hibernate.boot.spi.MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+					public ImplicitNamingContext getNamingContext() {
+						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
 					}
 				} )
 				.getText();

@@ -934,13 +934,13 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
 		final var builder = request.builder();
+		super.buildIdentifierHelper( request );
 		/*
 		 * HANA-specific extensions
 		 */
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.UPPER );
-
-		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( request );
+		final IdentifierHelper identifierHelper = builder.build();
 
 		return new DelegatingIdentifierHelper( identifierHelper ) {
 			@Override

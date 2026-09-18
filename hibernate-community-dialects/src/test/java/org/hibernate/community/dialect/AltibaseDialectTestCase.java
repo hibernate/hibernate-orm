@@ -7,9 +7,12 @@ package org.hibernate.community.dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.spi.PaginationRequest;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.AfterEach;
@@ -17,6 +20,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,6 +49,31 @@ public class AltibaseDialectTestCase {
 	@AfterEach
 	public void tearDown() {
 		dialect = null;
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20874")
+	public void testDirectJavaTimeJdbcSupport() {
+		final DirectJavaTimeJdbcSupport support = dialect.getDirectJavaTimeJdbcSupport();
+
+		assertThat( support.supports( LocalDate.class ) ).isTrue();
+		assertThat( support.supports( LocalTime.class ) ).isTrue();
+		assertThat( support.supports( LocalDateTime.class ) ).isTrue();
+		assertThat( support.supports( OffsetTime.class ) ).isFalse();
+		assertThat( support.supports( OffsetDateTime.class ) ).isFalse();
+		assertThat( support.supports( ZonedDateTime.class ) ).isFalse();
+		assertThat( support.supports( Instant.class ) ).isFalse();
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20874")
+	public void testTimestampPrecisionTruncation() {
+		assertThat( DateTimeUtils.adjustToDefaultPrecision(
+				Instant.parse( "2026-09-14T12:34:56.294520789Z" ), dialect
+		) ).isEqualTo( Instant.parse( "2026-09-14T12:34:56.294520Z" ) );
+		assertThat( DateTimeUtils.adjustToDefaultPrecision(
+				Instant.parse( "2026-09-14T12:34:56.999999999Z" ), dialect
+		) ).isEqualTo( Instant.parse( "2026-09-14T12:34:56.999999Z" ) );
 	}
 
 	@Test

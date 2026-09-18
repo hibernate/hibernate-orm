@@ -4,6 +4,14 @@
  */
 package org.hibernate.community.dialect;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
+
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -72,6 +80,7 @@ import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
+import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.jdbc.spi.JdbcExceptionHelper;
@@ -133,6 +142,20 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
  */
 public class AltibaseDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
 	private SchemaDropSupport schemaDropSupport;
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		// Altibase JDBC does not support direct access to OffsetTime or OffsetDateTime.
+		return DirectJavaTimeJdbcSupports.of( LocalDate.class, LocalTime.class, LocalDateTime.class );
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		// Altibase JDBC truncates nanoseconds to microseconds when binding timestamps.
+		return TemporalValueSemantics.TRUNCATING;
+	}
 
 
 	@Override
@@ -793,6 +816,8 @@ public class AltibaseDialect extends Dialect implements CurrentTemporalSupport, 
 		return (sqlException, message, sql) -> {
 			final String constraintName;
 			switch ( JdbcExceptionHelper.extractErrorCode( sqlException ) ) {
+				case 69697:        // deadlock
+					return new LockAcquisitionException( message, sqlException, sql );
 				case 334393:       // response timeout
 				case 4164:         // query timeout
 				case 69749:        // lock timeout

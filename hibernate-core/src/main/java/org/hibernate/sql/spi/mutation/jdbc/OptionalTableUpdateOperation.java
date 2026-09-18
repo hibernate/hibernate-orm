@@ -60,7 +60,7 @@ import static org.hibernate.SPI.Role.USE;
  *
  * @author Steve Ebersole
  */
-@SPI({ USE, IMPLEMENT })
+@SPI({ USE, IMPLEMENT }) // By Hibernate Reactive
 public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperation {
 	private final MutationTarget mutationTarget;
 	private final TableMapping tableMapping;
@@ -142,10 +142,9 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		return null;
 	}
 
-	/*
-	 * Hibernate Reactive overrides this to provide an error in case it's called in a reactive scenario
-	 */
+
 	@Override
+	@SPI(IMPLEMENT) // By Hibernate Reactive: throw an exception if called in a reactive scenario
 	public void performMutation(
 			JdbcValueBindings jdbcValueBindings,
 			ValuesAnalysis incomingValuesAnalysis,
@@ -313,9 +312,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	/*
-	 * Used by Hibernate Reactive
-	 */
+	@SPI(USE) // By Hibernate Reactive
 	protected JdbcDeleteMutation createJdbcDelete(SharedSessionContractImplementor session) {
 		final var deleteDetails = tableMapping.getDeleteDetails();
 		final var table = new MutatingTableReference( tableMapping );
@@ -380,9 +377,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	/*
-	 * Used by Hibernate Reactive
-	 */
+	@SPI(USE) // by Hibernate Reactive
 	protected JdbcMutationOperation createJdbcUpdate(SharedSessionContractImplementor session) {
 		final var updateValueBindings = getUpdatableValueBindings();
 		final var updateParameters = collectUpdateParameters( updateValueBindings );
@@ -462,16 +457,12 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	/*
-	 * Used by Hibernate Reactive
-	 */
+	@SPI(IMPLEMENT) // By Hibernate Reactive
 	protected JdbcMutationOperation createJdbcOptionalInsert(SharedSessionContractImplementor session) {
 		return createJdbcInsert( session );
 	}
 
-	/*
-	 * Used by Hibernate Reactive
-	 */
+	@SPI(USE)// By Hibernate Reactive
 	protected JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
 		final var insertDetails = tableMapping.getInsertDetails();
 		final var table = new MutatingTableReference( tableMapping );

@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import java.util.List;
@@ -44,9 +46,9 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 	private final int idJdbcTypeCount;
 
 	public MultiIdEntityLoaderInPredicate(
-			EntityPersister entityDescriptor,
+			@Nonnull EntityPersister entityDescriptor,
 			int idColumnSpan,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
 		idJdbcTypeCount = idColumnSpan;
 		assert idJdbcTypeCount > 0;
@@ -56,12 +58,13 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 		return getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled();
 	}
 
+	@Nonnull
 	private MultiKeyLoadSizingStrategy getBatchLoadSizingStrategy() {
 		return getJdbcServices().getJdbcEnvironment().getDialect().getBatchLoadSizingStrategy();
 	}
 
 	@Override
-	protected int maxBatchSize(Object[] ids, MultiIdLoadOptions loadOptions) {
+	protected int maxBatchSize(@Nonnull Object[] ids, @Nonnull MultiIdLoadOptions loadOptions) {
 		final Integer explicitBatchSize = loadOptions.getBatchSize();
 		return explicitBatchSize != null && explicitBatchSize > 0
 				? explicitBatchSize
@@ -72,31 +75,33 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 
 	@Override
 	protected void loadEntitiesById(
-			List<Object> idsInBatch,
-			LockOptions lockOptions,
-			MultiIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull List<Object> idsInBatch,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull MultiIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		assert idsInBatch != null;
 		assert !idsInBatch.isEmpty();
 		listEntitiesById( idsInBatch, lockOptions, loadOptions, session );
 	}
 
+	@Nonnull
 	private List<T> listEntitiesById(
-			List<Object> idsInBatch,
-			LockOptions lockOptions,
-			MultiIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull List<Object> idsInBatch,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull MultiIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		final int numberOfIdsInBatch = idsInBatch.size();
 		return numberOfIdsInBatch == 1
 				? performSingleMultiLoad( idsInBatch.get( 0 ), lockOptions, session )
 				: performRegularMultiLoad( idsInBatch, lockOptions, loadOptions, session, numberOfIdsInBatch );
 	}
 
+	@Nonnull
 	private List<T> performRegularMultiLoad(
-			List<Object> idsInBatch,
-			LockOptions lockOptions,
-			MultiIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session,
+			@Nonnull List<Object> idsInBatch,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull MultiIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session,
 			int numberOfIdsInBatch) {
 //		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 //			MULTI_KEY_LOAD_LOGGER.tracef( "#loadEntitiesById(`%s`, `%s`, ..)",
@@ -160,18 +165,20 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 		);
 	}
 
+	@Nullable
 	private SubselectFetch.RegistrationHandler fetchableKeysHandler(
-			SharedSessionContractImplementor session,
-			SelectStatement sqlAst,
-			JdbcParametersList jdbcParameters,
-			JdbcParameterBindings jdbcParameterBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull SelectStatement sqlAst,
+			@Nonnull JdbcParametersList jdbcParameters,
+			@Nonnull JdbcParameterBindings jdbcParameterBindings) {
 		final var batchFetchQueue = session.getPersistenceContext().getBatchFetchQueue();
 		return session.getLoadQueryInfluencers().hasSubselectLoadableAttributes( getLoadable().getEntityPersister() )
 				? createRegistrationHandler( batchFetchQueue, sqlAst, jdbcParameters, jdbcParameterBindings )
 				: null;
 	}
 
-	private List<T> performSingleMultiLoad(Object id, LockOptions lockOptions, SharedSessionContractImplementor session) {
+	@Nonnull
+	private List<T> performSingleMultiLoad(@Nonnull Object id, @Nonnull LockOptions lockOptions, @Nonnull SharedSessionContractImplementor session) {
 		final Object entity = getLoadable().getEntityPersister().load( id, null, lockOptions, session );
 		@SuppressWarnings("unchecked") T loaded = (T) entity;
 		return singletonList( loaded );
@@ -179,11 +186,11 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 
 	@Override
 	protected void loadEntitiesWithUnresolvedIds(
-			Object[] unresolvableIds,
-			MultiIdLoadOptions loadOptions,
-			LockOptions lockOptions,
-			List<T> results,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] unresolvableIds,
+			@Nonnull MultiIdLoadOptions loadOptions,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull List<T> results,
+			@Nonnull SharedSessionContractImplementor session) {
 		final int maxBatchSize = maxBatchSize( unresolvableIds, loadOptions );
 		int numberOfIdsLeft = unresolvableIds.length;
 		int idPosition = 0;
@@ -207,8 +214,9 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 		}
 	}
 
+	@Nonnull
 	@Override
-	protected Object[] toIdArray(List<Object> ids) {
+	protected Object[] toIdArray(@Nonnull List<Object> ids) {
 		// This loader implementation doesn't need arrays to have a specific type, Object[] will do.
 		return ids.toArray();
 	}

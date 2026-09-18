@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.spi;
 
+import jakarta.annotation.Nullable;
+
 import java.util.Collection;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -84,7 +86,7 @@ public interface NaturalIdResolutions {
 	 *
 	 * @return The cross-referenced primary key, {@link #INVALID_NATURAL_ID_REFERENCE} or {@code null}.
 	 */
-	Object findCachedIdByNaturalId(Object naturalId, EntityMappingType entityDescriptor);
+	Object findCachedIdByNaturalId(@Nullable Object naturalId, EntityMappingType entityDescriptor);
 
 	/**
 	 * Find all the locally cached primary key cross-reference entries for the given entity.

@@ -661,7 +661,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final Object[] loadedState,
 			final Object rowId,
 			final Object id,
-			final Object version,
+			@Nullable final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister) {
@@ -1484,7 +1484,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object getOwnerId(String entityName, String propertyName, Object childEntity, Map<?, ?> mergeMap) {
+	public Object getOwnerId(String entityName, String propertyName, Object childEntity, @Nullable Map<?, ?> mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
 
 		final var mappingMetamodel = session.getFactory().getMappingMetamodel();
@@ -1604,7 +1604,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object getIndexInOwner(String entity, String property, Object childEntity, Map<?, ?> mergeMap) {
+	public Object getIndexInOwner(String entity, String property, Object childEntity, @Nullable Map<?, ?> mergeMap) {
 		final var metamodel = session.getFactory().getMappingMetamodel();
 		final var persister = metamodel.getEntityDescriptor( entity );
 		final var collectionPersister = metamodel.getCollectionDescriptor( entity + '.' + property );

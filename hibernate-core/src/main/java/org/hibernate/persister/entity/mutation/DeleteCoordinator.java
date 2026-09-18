@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -16,5 +19,5 @@ public interface DeleteCoordinator extends MutationCoordinator {
 	/**
 	 * Delete a persistent instance.
 	 */
-	void delete(Object entity, Object id, Object version, SharedSessionContractImplementor session);
+	void delete(@Nonnull Object entity, @Nonnull Object id, @Nullable Object version, @Nonnull SharedSessionContractImplementor session);
 }

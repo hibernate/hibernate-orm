@@ -24,6 +24,7 @@ import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.loader.ast.internal.LoaderHelper.loadByArrayParameter;
 import static org.hibernate.loader.ast.internal.LoaderHelper.normalizeKeys;
 
@@ -33,26 +34,29 @@ import static org.hibernate.loader.ast.internal.LoaderHelper.normalizeKeys;
 public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoader<E> implements SqlArrayMultiKeyLoader {
 	private final Class<?> keyClass;
 
-	public MultiNaturalIdLoaderArrayParam(EntityMappingType entityDescriptor) {
+	public MultiNaturalIdLoaderArrayParam(@Nonnull EntityMappingType entityDescriptor) {
 		super(entityDescriptor);
 		assert entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
 		keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
 	}
 
+	@Nonnull
 	protected SimpleNaturalIdMapping getNaturalIdMapping()  {
-		return (SimpleNaturalIdMapping) getEntityDescriptor().getNaturalIdMapping();
+		return (SimpleNaturalIdMapping) castNonNull( getEntityDescriptor().getNaturalIdMapping() );
 	}
 
+	@Nonnull
 	protected BasicAttributeMapping getNaturalIdAttribute()  {
-		return (BasicAttributeMapping) getNaturalIdMapping().asAttributeMapping();
+		return (BasicAttributeMapping) castNonNull( getNaturalIdMapping().asAttributeMapping() );
 	}
 
+	@Nonnull
 	@Override
 	public List<E> loadEntitiesWithUnresolvedIds(
-			Object[] naturalIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		final var selectable = getNaturalIdAttribute().getSelectable( 0 );
 		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();

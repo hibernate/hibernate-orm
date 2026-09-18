@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
@@ -19,5 +21,6 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
  */
 @FunctionalInterface
 public interface OperationProducer {
-	JdbcMutationOperation createOperation(MutatingTableReference tableReference);
+	@Nonnull
+	JdbcMutationOperation createOperation(@Nonnull MutatingTableReference tableReference);
 }

@@ -19,6 +19,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 	private final EntityMappingType declaringType;
 	private final boolean mutable;
+	@Nullable
 	private final NaturalIdDataAccess cachesAccess;
 
 	private final NavigableRole role;

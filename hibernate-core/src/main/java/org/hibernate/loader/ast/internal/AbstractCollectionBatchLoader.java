@@ -4,6 +4,10 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -35,9 +39,9 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	public AbstractCollectionBatchLoader(
 			int domainBatchSize,
-			LoadQueryInfluencers influencers,
-			PluralAttributeMapping attributeMapping,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.domainBatchSize = domainBatchSize;
 		this.attributeMapping = attributeMapping;
 
@@ -53,15 +57,18 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		return domainBatchSize;
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getLoadable() {
 		return attributeMapping;
 	}
 
+	@Nonnull
 	public LoadQueryInfluencers getInfluencers() {
 		return influencers;
 	}
 
+	@Nonnull
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
@@ -70,14 +77,16 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		return keyJdbcCount;
 	}
 
-	abstract void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session);
+	abstract void initializeKeys(@Nonnull Object key, @Nonnull Object[] keysToInitialize, @Nonnull SharedSessionContractImplementor session);
 
-	private CollectionKey collectionKey(Object key, SharedSessionContractImplementor session) {
+	@Nonnull
+	private CollectionKey collectionKey(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		return session.generateCollectionKey( getLoadable().getCollectionDescriptor(), key );
 	}
 
+	@Nonnull
 	@Override
-	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
+	public PersistentCollection<?> load(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.batchFetchingCollection(
 					collectionInfoString( getLoadable(), key ) );
@@ -93,9 +102,9 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		return session.getPersistenceContext().getCollection( collectionKey( key, session ) );
 	}
 
-	abstract void finishInitializingKeys(Object[] key, SharedSessionContractImplementor session);
+	abstract void finishInitializingKeys(@Nonnull Object[] key, @Nonnull SharedSessionContractImplementor session);
 
-	protected void finishInitializingKey(Object key, SharedSessionContractImplementor session) {
+	protected void finishInitializingKey(@Nullable Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( key != null ) {
 			if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 				MULTI_KEY_LOAD_LOGGER.finishingInitializingBatchFetchedCollection(
@@ -119,8 +128,9 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		}
 	}
 
+	@Nonnull
 	@AllowReflection
-	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
+	Object[] resolveKeysToInitialize(@Nonnull Object keyBeingLoaded, @Nonnull SharedSessionContractImplementor session) {
 		final int length = getDomainBatchSize();
 		final Object[] keysToInitialize = new Object[length];
 		session.getPersistenceContextInternal().getBatchFetchQueue()

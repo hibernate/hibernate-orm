@@ -270,7 +270,7 @@ public interface EntityMappingType
 	/**
 	 * The discriminator value which indicates this entity mapping
 	 */
-	@Nonnull
+	@Nullable
 	DiscriminatorValue getDiscriminatorValue();
 
 	@Nullable

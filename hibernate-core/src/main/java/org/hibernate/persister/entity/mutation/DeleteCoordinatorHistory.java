@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -16,6 +19,7 @@ import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoordinator.applyTemporalEnding;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -38,12 +42,12 @@ public class DeleteCoordinatorHistory
 	private final MutationOperationGroup historyEndUpdateGroup;
 
 	public DeleteCoordinatorHistory(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory,
-			DeleteCoordinator currentDeleteCoordinator) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nonnull DeleteCoordinator currentDeleteCoordinator) {
 		super( entityPersister, factory );
 		this.currentDeleteCoordinator = currentDeleteCoordinator;
-		this.temporalMapping = entityPersister.getTemporalMapping();
+		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
 		this.historyTableMapping =
 				createAuxiliaryTableMapping( entityPersister.getIdentifierTableMapping(),
 						entityPersister, temporalMapping.getTableName() );
@@ -51,11 +55,13 @@ public class DeleteCoordinatorHistory
 		this.historyEndUpdateGroup = buildHistoryEndUpdateGroup();
 	}
 
+	@Nullable
 	@Override
 	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return currentDeleteCoordinator.getStaticMutationOperationGroup();
 	}
 
+	@Nullable
 	@Override
 	protected BatchKey getBatchKey() {
 		return historyBatchKey;
@@ -63,19 +69,19 @@ public class DeleteCoordinatorHistory
 
 	@Override
 	public void delete(
-			Object entity,
-			Object id,
-			Object version,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object version,
+			@Nonnull SharedSessionContractImplementor session) {
 		currentDeleteCoordinator.delete( entity, id, version, session );
 		performHistoryEndingUpdate( entity, id, version, session );
 	}
 
 	private void performHistoryEndingUpdate(
-			Object entity,
-			Object id,
-			Object oldVersion,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object oldVersion,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var mutationExecutor =
 				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ),
 						historyEndUpdateGroup, session );
@@ -121,6 +127,7 @@ public class DeleteCoordinatorHistory
 		}
 	}
 
+	@Nonnull
 	private MutationOperationGroup buildHistoryEndUpdateGroup() {
 		final var tableUpdateBuilder =
 				new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );

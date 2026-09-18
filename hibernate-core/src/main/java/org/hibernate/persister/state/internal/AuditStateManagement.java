@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.state.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,13 +76,15 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			StandardStateManagement.INSTANCE.getLegacyIntegration();
 
 	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
+		@Nonnull
 		@Override
-		public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
 			return new AuditEntityMutationPlanContributor( persister, persister.getFactory() );
 		}
 
+		@Nonnull
 		@Override
-		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(CollectionPersister persister) {
+		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(@Nonnull CollectionPersister persister) {
 			return new AuditCollectionMutationPlanContributor( persister, persister.getFactory() );
 		}
 	};
@@ -88,42 +92,49 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	private AuditStateManagement() {
 	}
 
+	@Nonnull
 	@Override
 	public StateManagementLegacyIntegration getLegacyIntegration() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
+	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister persister) {
 		return new InsertCoordinatorAudit( persister, persister.getFactory(),
 				standardLegacyIntegration.createInsertCoordinator( persister ) );
 	}
 
+	@Nonnull
 	@Override
-	public UpdateCoordinator createUpdateCoordinator(EntityPersister persister) {
+	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister persister) {
 		return new UpdateCoordinatorAudit( persister, persister.getFactory(),
 				standardLegacyIntegration.createUpdateCoordinator( persister ) );
 	}
 
+	@Nonnull
 	@Override
-	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
+	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister persister) {
 		return new MergeCoordinatorAudit( persister, persister.getFactory(),
 				standardLegacyIntegration.createMergeCoordinator( persister ) );
 	}
 
+	@Nonnull
 	@Override
-	public DeleteCoordinator createDeleteCoordinator(EntityPersister persister) {
+	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister) {
 		return new DeleteCoordinatorAudit( persister, persister.getFactory(),
 				standardLegacyIntegration.createDeleteCoordinator( persister ) );
 	}
 
+	@Nonnull
 	@Override
 	public StateManagementGraphIntegration getGraphIntegration() {
 		return graphIntegration;
 	}
 
+	@Nonnull
 	@Override
-	public InsertRowsCoordinator createInsertRowsCoordinator(CollectionPersister persister) {
+	public InsertRowsCoordinator createInsertRowsCoordinator(@Nonnull CollectionPersister persister) {
 		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !AbstractStateManagement.isInsertAllowed( persister ) ) {
 			return new InsertRowsCoordinatorNoOp( mutationTarget );
@@ -140,22 +151,25 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		}
 	}
 
+	@Nonnull
 	@Override
-	public UpdateRowsCoordinator createUpdateRowsCoordinator(CollectionPersister persister) {
+	public UpdateRowsCoordinator createUpdateRowsCoordinator(@Nonnull CollectionPersister persister) {
 		// Collection audit rows are always ADD/DEL (never MOD).
 		// The semantic diff in InsertRowsCoordinatorAudit handles all audit writes.
 		return standardLegacyIntegration.createUpdateRowsCoordinator( persister );
 	}
 
+	@Nonnull
 	@Override
-	public DeleteRowsCoordinator createDeleteRowsCoordinator(CollectionPersister persister) {
+	public DeleteRowsCoordinator createDeleteRowsCoordinator(@Nonnull CollectionPersister persister) {
 		// Collection audit rows are always ADD/DEL (never MOD).
 		// The semantic diff in InsertRowsCoordinatorAudit handles all audit writes.
 		return standardLegacyIntegration.createDeleteRowsCoordinator( persister );
 	}
 
+	@Nonnull
 	@Override
-	public RemoveCoordinator createRemoveCoordinator(CollectionPersister persister) {
+	public RemoveCoordinator createRemoveCoordinator(@Nonnull CollectionPersister persister) {
 		if ( !persister.needsRemove() ) {
 			return new RemoveCoordinatorNoOp( resolveMutationTarget( persister ) );
 		}
@@ -169,20 +183,22 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		);
 	}
 
+	@Nullable
 	@Override
 	public AuditMapping createAuxiliaryMapping(
-			EntityPersister persister,
-			RootClass rootClass,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull EntityPersister persister,
+			@Nonnull RootClass rootClass,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var aep = (AbstractEntityPersister) persister;
 		final var tableAuditInfoMap = buildTableAuditInfoMap( rootClass, aep, creationProcess );
 		return new AuditMappingImpl( tableAuditInfoMap, persister, creationProcess );
 	}
 
+	@Nonnull
 	private static Map<String, AuditMappingImpl.TableAuditInfo> buildTableAuditInfoMap(
-			RootClass rootClass,
-			AbstractEntityPersister persister,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull RootClass rootClass,
+			@Nonnull AbstractEntityPersister persister,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		final var changesetCoordinator =
@@ -274,11 +290,11 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	}
 
 	private static void addAuditSubquery(
-			Map<String, AuditMappingImpl.TableAuditInfo> map,
-			PersistentClass bootClass,
-			Function<String, String> tableNameResolver,
-			List<String> extraColumns,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull Map<String, AuditMappingImpl.TableAuditInfo> map,
+			@Nonnull PersistentClass bootClass,
+			@Nonnull Function<String, String> tableNameResolver,
+			@Nullable List<String> extraColumns,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		assert !bootClass.getSubclasses().isEmpty();
 		final var unionPersister = (UnionSubclassEntityPersister)
 				creationProcess.getEntityPersister( bootClass.getEntityName() );
@@ -301,14 +317,14 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	}
 
 	private static void addTableAuditInfo(
-			Map<String, AuditMappingImpl.TableAuditInfo> map,
-			Table originalTable,
-			Table auditTable,
-			AuxiliaryTableHolder holder,
-			AbstractEntityPersister persister,
-			JdbcMapping csIdJdbcMapping,
-			JdbcMapping modTypeJdbcMapping,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull Map<String, AuditMappingImpl.TableAuditInfo> map,
+			@Nonnull Table originalTable,
+			@Nonnull Table auditTable,
+			@Nonnull AuxiliaryTableHolder holder,
+			@Nonnull AbstractEntityPersister persister,
+			@Nonnull JdbcMapping csIdJdbcMapping,
+			@Nonnull JdbcMapping modTypeJdbcMapping,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final String originalTableName = persister.determineTableName( originalTable );
 		final String auditTableName = persister.determineTableName( auditTable );
 		map.put(
@@ -317,12 +333,13 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		);
 	}
 
+	@Nonnull
 	private static AuditMappingImpl.TableAuditInfo createTableAuditInfo(
-			String auditTableName,
-			AuxiliaryTableHolder holder,
-			JdbcMapping csIdJdbcMapping,
-			JdbcMapping modTypeJdbcMapping,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull String auditTableName,
+			@Nonnull AuxiliaryTableHolder holder,
+			@Nonnull JdbcMapping csIdJdbcMapping,
+			@Nonnull JdbcMapping modTypeJdbcMapping,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		return new AuditMappingImpl.TableAuditInfo(
 				auditTableName,
 				toSelectableMapping(
@@ -347,10 +364,10 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	}
 
 	private static @Nullable SelectableMapping toSelectableMapping(
-			String tableName,
+			@Nonnull String tableName,
 			@Nullable Column column,
-			JdbcMapping jdbcMapping,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull JdbcMapping jdbcMapping,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		if ( column == null ) {
 			return null;
 		}
@@ -370,16 +387,18 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		}
 	}
 
-	private static JdbcMapping resolveJdbcMapping(TypeConfiguration typeConfiguration, Class<?> javaType) {
+	@Nonnull
+	private static JdbcMapping resolveJdbcMapping(@Nonnull TypeConfiguration typeConfiguration, @Nonnull Class<?> javaType) {
 		final var basicType = typeConfiguration.getBasicTypeForJavaType( javaType );
 		return basicType != null ? basicType : typeConfiguration.standardBasicTypeForJavaType( javaType );
 	}
 
+	@Nullable
 	@Override
 	public AuditMapping createAuxiliaryMapping(
-			PluralAttributeMapping pluralAttributeMapping,
-			Collection bootDescriptor,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull Collection bootDescriptor,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var auditTable = bootDescriptor.getAuxiliaryTable();
 		if ( auditTable == null ) {
 			// No audit table for this collection (e.g. @OneToMany @JoinColumn --

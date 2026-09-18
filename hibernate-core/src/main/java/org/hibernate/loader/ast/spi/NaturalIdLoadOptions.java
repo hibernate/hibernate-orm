@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.LockOptions;
 
 /**
@@ -14,6 +16,7 @@ public interface NaturalIdLoadOptions {
 	 * Singleton access
 	 */
 	NaturalIdLoadOptions NONE = new NaturalIdLoadOptions() {
+		@Nullable
 		@Override
 		public LockOptions getLockOptions() {
 			return null;
@@ -28,6 +31,7 @@ public interface NaturalIdLoadOptions {
 	/**
 	 * The locking options for the loaded entity
 	 */
+	@Nullable
 	LockOptions getLockOptions();
 
 	/**

@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.array.spi.ArraySupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -20,15 +22,16 @@ public class MultiKeyLoadHelper {
 	private MultiKeyLoadHelper() {
 	}
 
-	public static boolean supportsSqlArrayType(Dialect dialect) {
+	public static boolean supportsSqlArrayType(@Nonnull Dialect dialect) {
 		return dialect.getArraySupport().getMultiValuedParameterStrategy()
 				== ArraySupport.MultiValuedParameterStrategy.ARRAY;
 	}
 
+	@Nonnull
 	public static JdbcMapping resolveArrayJdbcMapping(
-			JdbcMapping keyMapping,
-			Class<?> elementClass,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull JdbcMapping keyMapping,
+			@Nonnull Class<?> elementClass,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var arrayBasicType =
 				sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
 						.getRegisteredArrayType( elementClass );
@@ -58,7 +61,7 @@ public class MultiKeyLoadHelper {
 		);
 	}
 
-	static int countIds(Object[] ids) {
+	static int countIds(@Nonnull Object[] ids) {
 		int count = 0;
 		for ( int i=1; i<ids.length; i++ ) {
 			if ( ids[i] != null ) {
@@ -68,7 +71,7 @@ public class MultiKeyLoadHelper {
 		return count;
 	}
 
-	static boolean hasSingleId(Object[] ids) {
+	static boolean hasSingleId(@Nonnull Object[] ids) {
 		for ( int i=1; i<ids.length; i++ ) {
 			if ( ids[i] != null ) {
 				return false;
@@ -77,7 +80,8 @@ public class MultiKeyLoadHelper {
 		return true;
 	}
 
-	static Object[] trimIdBatch(int length, Object[] keysToInitialize) {
+	@Nonnull
+	static Object[] trimIdBatch(int length, @Nonnull Object[] keysToInitialize) {
 		int newLength = length;
 		while ( newLength>1 && keysToInitialize[newLength-1] == null ) {
 			newLength--;

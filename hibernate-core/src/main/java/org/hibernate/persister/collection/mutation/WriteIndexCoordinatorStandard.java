@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -31,20 +33,22 @@ public class WriteIndexCoordinatorStandard implements WriteIndexCoordinator {
 	private final MutationExecutorService mutationExecutorService;
 
 	public WriteIndexCoordinatorStandard(
-			AbstractCollectionPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull AbstractCollectionPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 		this.mutationExecutorService = sessionFactory.getServiceRegistry()
 				.requireService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "WriteIndexCoordinator(" + mutationTarget.getRolePath() + ")";
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -52,11 +56,11 @@ public class WriteIndexCoordinatorStandard implements WriteIndexCoordinator {
 
 	@Override
 	public void writeIndex(
-			PersistentCollection<?> collection,
-			Iterator<?> entries,
-			Object key,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Iterator<?> entries,
+			@Nonnull Object key,
 			boolean resetIndex,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 		// See HHH-5732 and HHH-18830.
 		// Claim: "If one-to-many and inverse, still need to create the index."
 		// In fact this is wrong: JPA is very clear that bidirectional associations
@@ -121,7 +125,7 @@ public class WriteIndexCoordinatorStandard implements WriteIndexCoordinator {
 		return getBaseIndex(mutationTarget);
 	}
 
-	private static int getBaseIndex(CollectionMutationTarget mutationTarget) {
+	private static int getBaseIndex(@Nonnull CollectionMutationTarget mutationTarget) {
 		final var indexMetadata = mutationTarget.getTargetPart().getIndexMetadata();
 		return indexMetadata != null ? indexMetadata.getListIndexBase() : 0;
 	}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import jakarta.persistence.PessimisticLockScope;
@@ -72,32 +75,37 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	private final EntityMappingType entityDescriptor;
 
 	public AbstractNaturalIdLoader(
-			NaturalIdMapping naturalIdMapping,
-			EntityMappingType entityDescriptor) {
+			@Nonnull NaturalIdMapping naturalIdMapping,
+			@Nonnull EntityMappingType entityDescriptor) {
 		this.naturalIdMapping = naturalIdMapping;
 		this.entityDescriptor = entityDescriptor;
 	}
 
+	@Nonnull
 	protected EntityMappingType entityDescriptor() {
 		return entityDescriptor;
 	}
 
+	@Nonnull
 	protected NaturalIdMapping naturalIdMapping() {
 		return naturalIdMapping;
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getLoadable() {
 		return entityDescriptor();
 	}
 
+	@Nullable
 	@Override
-	public T load(Object naturalIdToLoad, Options options, SharedSessionContractImplementor session) {
+	public T load(@Nullable Object naturalIdToLoad, @Nonnull Options options, @Nonnull SharedSessionContractImplementor session) {
 		final var lockOptions = makeLockOptions( options );
 		return load( naturalIdToLoad, lockOptions, session );
 	}
 
-	private LockOptions makeLockOptions(Options options) {
+	@Nonnull
+	private LockOptions makeLockOptions(@Nonnull Options options) {
 		if ( options.getLockMode() == null || options.getLockMode() == LockMode.NONE ) {
 			return LockOptions.NONE;
 		}
@@ -112,7 +120,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		return lockOptions;
 	}
 
-	private T load(Object naturalIdValue, LockOptions lockOptions, SharedSessionContractImplementor session) {
+	@Nullable
+	private T load(@Nullable Object naturalIdValue, @Nonnull LockOptions lockOptions, @Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 
 		final var sqlSelect = LoaderSelectBuilder.createSelect(
@@ -150,8 +159,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		);
 	}
 
+	@Nullable
 	@Override
-	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
+	public T load(@Nullable Object naturalIdValue, @Nonnull NaturalIdLoadOptions options, @Nonnull SharedSessionContractImplementor session) {
 		final var lockOptions = options.getLockOptions() == null
 				? new LockOptions()
 				: options.getLockOptions();
@@ -164,20 +174,21 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	 * any parameter / binding pairs.
 	 */
 	protected abstract void applyNaturalIdRestriction(
-			Object bindValue,
-			TableGroup rootTableGroup,
-			Consumer<Predicate> predicateConsumer,
-			BiConsumer<JdbcParameter, JdbcParameterBinding> jdbcParameterConsumer,
-			LoaderSqlAstCreationState sqlAstCreationState,
-			SharedSessionContractImplementor session);
+			@Nullable Object bindValue,
+			@Nonnull TableGroup rootTableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull BiConsumer<JdbcParameter, JdbcParameterBinding> jdbcParameterConsumer,
+			@Nonnull LoaderSqlAstCreationState sqlAstCreationState,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Helper to resolve ColumnReferences
 	 */
+	@Nonnull
 	protected Expression resolveColumnReference(
-			TableGroup rootTableGroup,
-			SelectableMapping selectableMapping,
-			SqlExpressionResolver sqlExpressionResolver) {
+			@Nonnull TableGroup rootTableGroup,
+			@Nonnull SelectableMapping selectableMapping,
+			@Nonnull SqlExpressionResolver sqlExpressionResolver) {
 		final var tableReference = rootTableGroup.getTableReference(
 				rootTableGroup.getNavigablePath(),
 				selectableMapping.getContainingTableExpression()
@@ -195,8 +206,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		return sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
 	}
 
+	@Nullable
 	@Override
-	public Object resolveNaturalIdToId(Object naturalIdValue, SharedSessionContractImplementor session) {
+	public Object resolveNaturalIdToId(@Nullable Object naturalIdValue, @Nonnull SharedSessionContractImplementor session) {
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.retrievingIdForNaturalId(
 					entityDescriptor.getEntityName(),
@@ -263,14 +275,15 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		);
 	}
 
+	@Nullable
 	protected <R> R executeNaturalIdQuery(
-			Object naturalIdValue,
-			LockOptions lockOptions,
-			SelectStatement sqlSelect,
-			TableGroup rootTableGroup,
-			Consumer<Predicate> predicateConsumer,
-			LoaderSqlAstCreationState sqlAstCreationState,
-			SharedSessionContractImplementor session) {
+			@Nullable Object naturalIdValue,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SelectStatement sqlSelect,
+			@Nonnull TableGroup rootTableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull LoaderSqlAstCreationState sqlAstCreationState,
+			@Nonnull SharedSessionContractImplementor session) {
 		assert naturalIdMapping.isNormalized( naturalIdValue );
 
 		final var factory = session.getFactory();
@@ -323,19 +336,21 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		};
 	}
 
+	@Nonnull
 	private static JdbcSelect createJdbcOperationQuerySelect(
-			SelectStatement sqlSelect,
-			SessionFactoryImplementor factory,
-			JdbcParameterBindings bindings,
-			QueryOptions queryOptions) {
+			@Nonnull SelectStatement sqlSelect,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nonnull JdbcParameterBindings bindings,
+			@Nonnull QueryOptions queryOptions) {
 		return factory.getJdbcServices().getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildTranslator( new SqlAstTranslationRequest.Select( factory, sqlSelect ) )
 				.translate( bindings, queryOptions );
 	}
 
+	@Nullable
 	@Override
-	public Object resolveIdToNaturalId(Object id, SharedSessionContractImplementor session) {
+	public Object resolveIdToNaturalId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		final var identifierMapping = entityDescriptor().getIdentifierMapping();
 
@@ -385,12 +400,12 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	}
 
 	void applyRestriction(
-			TableGroup rootTableGroup,
-			Consumer<Predicate> predicateConsumer,
-			BiConsumer<JdbcParameter, JdbcParameterBinding> jdbcParameterConsumer,
-			Object jdbcValue,
-			SelectableMapping jdbcValueMapping,
-			SqlExpressionResolver expressionResolver) {
+			@Nonnull TableGroup rootTableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull BiConsumer<JdbcParameter, JdbcParameterBinding> jdbcParameterConsumer,
+			@Nullable Object jdbcValue,
+			@Nonnull SelectableMapping jdbcValueMapping,
+			@Nonnull SqlExpressionResolver expressionResolver) {
 		final var columnReference =
 				resolveColumnReference( rootTableGroup, jdbcValueMapping, expressionResolver );
 		if ( jdbcValue == null ) {
@@ -411,17 +426,19 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		private final Callback callback;
 		private final QueryOptions queryOptions;
 
-		public NaturalIdLoaderWithOptionsExecutionContext(SharedSessionContractImplementor session, QueryOptions queryOptions) {
+		public NaturalIdLoaderWithOptionsExecutionContext(@Nonnull SharedSessionContractImplementor session, @Nonnull QueryOptions queryOptions) {
 			super( session );
 			this.queryOptions = queryOptions;
 			callback = new CallbackImpl();
 		}
 
+		@Nonnull
 		@Override
 		public QueryOptions getQueryOptions() {
 			return queryOptions;
 		}
 
+		@Nonnull
 		@Override
 		public Callback getCallback() {
 			return callback;

@@ -4,6 +4,10 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -23,19 +27,19 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 public class CompoundNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 
 	public CompoundNaturalIdLoader(
-			CompoundNaturalIdMapping naturalIdMapping,
-			EntityMappingType entityDescriptor) {
+			@Nonnull CompoundNaturalIdMapping naturalIdMapping,
+			@Nonnull EntityMappingType entityDescriptor) {
 		super( naturalIdMapping, entityDescriptor );
 	}
 
 	@Override
 	protected void applyNaturalIdRestriction(
-			Object bindValue,
-			TableGroup rootTableGroup,
-			Consumer<Predicate> predicateConsumer,
-			BiConsumer<JdbcParameter, JdbcParameterBinding> jdbcParameterConsumer,
-			LoaderSqlAstCreationState sqlAstCreationState,
-			SharedSessionContractImplementor session) {
+			@Nullable Object bindValue,
+			@Nonnull TableGroup rootTableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull BiConsumer<JdbcParameter, JdbcParameterBinding> jdbcParameterConsumer,
+			@Nonnull LoaderSqlAstCreationState sqlAstCreationState,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		if ( bindValue == null ) {
 			for ( var naturalIdAttribute : naturalIdMapping().getNaturalIdAttributes() ) {

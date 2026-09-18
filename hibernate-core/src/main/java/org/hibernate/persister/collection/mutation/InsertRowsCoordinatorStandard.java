@@ -4,6 +4,12 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -29,12 +35,13 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 	private final BasicBatchKey batchKey;
 	private final MutationExecutorService mutationExecutorService;
 
+	@Nullable
 	private MutationOperationGroup operationGroup;
 
 	public InsertRowsCoordinatorStandard(
-			AbstractCollectionPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
-			ServiceRegistry serviceRegistry) {
+			@Nonnull AbstractCollectionPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
+			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 
@@ -42,11 +49,13 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "InsertRowsCoordinator(" + mutationTarget.getRolePath() + ")";
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -54,10 +63,10 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 
 	@Override
 	public void insertRows(
-			PersistentCollection<?> collection,
-			Object id,
-			EntryFilter entryChecker,
-			SharedSessionContractImplementor session) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object id,
+			@Nullable EntryFilter entryChecker,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( operationGroup == null ) {
 			operationGroup = createOperationGroup();
 		}
@@ -86,7 +95,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 
 
 			int entryCount = 0;
-			final var insertRowValues = rowMutationOperations.getInsertRowValues();
+			final var insertRowValues = castNonNull( rowMutationOperations.getInsertRowValues() );
 
 			while ( entries.hasNext() ) {
 				final Object entry = entries.next();
@@ -117,6 +126,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 		}
 	}
 
+	@Nonnull
 	private MutationOperationGroup createOperationGroup() {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.HibernateException;
 
 /**
@@ -15,7 +17,7 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class NonUniqueDiscoveredSqlAliasException extends HibernateException {
-	public NonUniqueDiscoveredSqlAliasException(String message) {
+	public NonUniqueDiscoveredSqlAliasException(@Nonnull String message) {
 		super( message );
 	}
 }

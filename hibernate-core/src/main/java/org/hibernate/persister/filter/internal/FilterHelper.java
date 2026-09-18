@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.filter.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +26,7 @@ import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.predicate.FilterPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.FilterImpl.MARKER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.replace;
@@ -44,9 +48,10 @@ public class FilterHelper {
 	private final boolean[] filterAutoAliasFlags;
 	private final Map<String, String>[] filterAliasTableMaps;
 	private final List<String>[] parameterNames;
+	@Nullable
 	private final Map<String, String> tableToEntityName;
 
-	public FilterHelper(List<FilterConfiguration> filters, SessionFactoryImplementor factory) {
+	public FilterHelper(@Nonnull List<FilterConfiguration> filters, @Nonnull SessionFactoryImplementor factory) {
 		this( filters, null, factory );
 	}
 
@@ -58,7 +63,7 @@ public class FilterHelper {
 	 * @param filters The map of defined filters.
 	 * @param factory The session factory
 	 */
-	public FilterHelper(List<FilterConfiguration> filters, Map<String, String> tableToEntityName, SessionFactoryImplementor factory) {
+	public FilterHelper(@Nonnull List<FilterConfiguration> filters, @Nullable Map<String, String> tableToEntityName, @Nonnull SessionFactoryImplementor factory) {
 		final int filterCount = filters.size();
 
 		filterNames = new String[filterCount];
@@ -82,7 +87,7 @@ public class FilterHelper {
 		}
 	}
 
-	private void injectAliases(SessionFactoryImplementor factory, FilterConfiguration filter, int filterCount) {
+	private void injectAliases(@Nonnull SessionFactoryImplementor factory, @Nonnull FilterConfiguration filter, int filterCount) {
 		if ( ( filterAliasTableMaps[filterCount].isEmpty()
 				|| isTableFromPersistentClass( filterAliasTableMaps[filterCount] ) )
 				&& filter.useAutoAliasInjection() ) {
@@ -105,7 +110,7 @@ public class FilterHelper {
 	 *     in the condition</li>
 	 * </ol>
 	 */
-	private void qualifyParameterNames(int filterCount, String filterName) {
+	private void qualifyParameterNames(int filterCount, @Nonnull String filterName) {
 		final List<String> parameterNames = new ArrayList<>();
 		boolean foundAny = false;
 		final var matcher = FILTER_PARAMETER_PATTERN.matcher( filterConditions[filterCount] );
@@ -120,19 +125,20 @@ public class FilterHelper {
 		this.parameterNames[filterCount] = parameterNames;
 	}
 
-	private static boolean isTableFromPersistentClass(Map<String, String> aliasTableMap) {
+	private static boolean isTableFromPersistentClass(@Nonnull Map<String, String> aliasTableMap) {
 		return aliasTableMap.size() == 1 && aliasTableMap.containsKey( null );
 	}
 
+	@Nonnull
 	public String[] getFilterNames() {
 		return filterNames;
 	}
 
-	public boolean isAffectedBy(Map<String, Filter> enabledFilters) {
+	public boolean isAffectedBy(@Nonnull Map<String, Filter> enabledFilters) {
 		return isAffectedBy( enabledFilters, false );
 	}
 
-	public boolean isAffectedBy(Map<String, Filter> enabledFilters, boolean onlyApplyForLoadByKey) {
+	public boolean isAffectedBy(@Nonnull Map<String, Filter> enabledFilters, boolean onlyApplyForLoadByKey) {
 		for ( String filterName : filterNames ) {
 			final var filter = enabledFilters.get( filterName );
 			if ( filter != null
@@ -144,12 +150,12 @@ public class FilterHelper {
 	}
 
 	public static void applyBaseRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			Restrictable restrictable,
-			TableGroup rootTableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull Restrictable restrictable,
+			@Nonnull TableGroup rootTableGroup,
 			boolean useIdentificationVariable,
-			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationState astCreationState) {
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull SqlAstCreationState astCreationState) {
 		restrictable.applyBaseRestrictions(
 				predicateConsumer,
 				rootTableGroup,
@@ -162,12 +168,12 @@ public class FilterHelper {
 	}
 
 	public void applyEnabledFilters(
-			Consumer<Predicate> predicateConsumer,
-			FilterAliasGenerator aliasGenerator,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nullable FilterAliasGenerator aliasGenerator,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
+			@Nullable TableGroup tableGroup,
+			@Nullable SqlAstCreationState creationState) {
 		final var predicate = generateFilterPredicate(
 				aliasGenerator,
 				enabledFilters,
@@ -180,12 +186,13 @@ public class FilterHelper {
 		}
 	}
 
+	@Nullable
 	private FilterPredicate generateFilterPredicate(
-			FilterAliasGenerator aliasGenerator,
-			Map<String, Filter> enabledFilters,
+			@Nullable FilterAliasGenerator aliasGenerator,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
+			@Nullable TableGroup tableGroup,
+			@Nullable SqlAstCreationState creationState) {
 		final var filterPredicate = new FilterPredicate();
 
 		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
@@ -200,13 +207,14 @@ public class FilterHelper {
 
 	}
 
-	public String render(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
+	@Nonnull
+	public String render(@Nullable FilterAliasGenerator aliasGenerator, @Nonnull Map<String, Filter> enabledFilters) {
 		final var buffer = new StringBuilder();
 		render( buffer, aliasGenerator, enabledFilters );
 		return buffer.toString();
 	}
 
-	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
+	public void render(@Nonnull StringBuilder buffer, @Nullable FilterAliasGenerator aliasGenerator, @Nonnull Map<String, Filter> enabledFilters) {
 		if ( isNotEmpty( filterNames ) ) {
 			for ( int i = 0, max = filterNames.length; i < max; i++ ) {
 				if ( enabledFilters.containsKey( filterNames[i] )
@@ -220,11 +228,12 @@ public class FilterHelper {
 		}
 	}
 
+	@Nonnull
 	private String render(
-			FilterAliasGenerator aliasGenerator,
+			@Nullable FilterAliasGenerator aliasGenerator,
 			int filterIndex,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
+			@Nullable TableGroup tableGroup,
+			@Nullable SqlAstCreationState creationState) {
 		final String condition = filterConditions[filterIndex];
 		if ( aliasGenerator == null ) {
 			return replace( condition, MARKER + ".", "");
@@ -259,39 +268,43 @@ public class FilterHelper {
 		}
 	}
 
+	@Nonnull
 	private String replaceMarker(
-			TableGroup tableGroup, SqlAstCreationState creationState,
-			String condition, String alias, String tableName) {
+			@Nullable TableGroup tableGroup, @Nullable SqlAstCreationState creationState,
+			@Nonnull String condition, @Nullable String alias, @Nullable String tableName) {
 		final String newCondition = replace( condition, MARKER, alias );
 		if ( creationState != null
 				&& tableToEntityName != null
 				&& !newCondition.equals(condition) ) {
-			registerEntityNameUsage( tableGroup, creationState, tableName );
+			registerEntityNameUsage( castNonNull( tableGroup ), creationState, tableName );
 		}
 		return newCondition;
 	}
 
+	@Nonnull
 	private String replaceAlias(
-			TableGroup tableGroup, SqlAstCreationState creationState,
-			String condition, String placeholder, String alias, String tableName) {
+			@Nullable TableGroup tableGroup, @Nullable SqlAstCreationState creationState,
+			@Nonnull String condition, @Nonnull String placeholder, @Nullable String alias, @Nullable String tableName) {
 		final String newCondition = replace( condition, placeholder, alias );
 		if ( creationState != null
+				&& tableToEntityName != null
 				&& !newCondition.equals(condition) ) {
-			registerEntityNameUsage( tableGroup, creationState, tableName );
+			registerEntityNameUsage( castNonNull( tableGroup ), creationState, tableName );
 		}
 		return newCondition;
 	}
 
-	private void registerEntityNameUsage(TableGroup tableGroup, SqlAstCreationState creationState, String tableName) {
-		String treatTargetTypeName = tableToEntityName.get( tableName );
+	private void registerEntityNameUsage(@Nonnull TableGroup tableGroup, @Nonnull SqlAstCreationState creationState, @Nullable String tableName) {
+		String treatTargetTypeName = castNonNull( tableToEntityName ).get( tableName );
 		if (treatTargetTypeName != null) {
 			creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION,
 					treatTargetTypeName );
 		}
 	}
 
-	private static String tableName(TableGroup tableGroup, String tableName) {
-		return tableName == null
+	@Nullable
+	private static String tableName(@Nullable TableGroup tableGroup, @Nullable String tableName) {
+		return tableName == null && tableGroup != null
 				? tableGroup.getPrimaryTableReference().getTableId()
 				: tableName;
 	}

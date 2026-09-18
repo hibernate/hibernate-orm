@@ -76,7 +76,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	public BasicEntityIdentifierMappingImpl(
 			EntityPersister entityPersister,
-			Supplier<?> instanceCreator,
+			@Nullable Supplier<?> instanceCreator,
 			String attributeName,
 			String rootTable,
 			String pkColumnName,
@@ -375,7 +375,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public String getFetchableName() {
-		return entityPersister.getIdentifierPropertyName();
+		return attributeName;
 	}
 
 	@Override

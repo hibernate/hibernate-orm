@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.LockOptions;
@@ -57,26 +60,27 @@ class DatabaseSnapshotExecutor {
 
 	private final JdbcSelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
+	@Nullable
 	private final JdbcParameter tenantIdParameter;
 
 	DatabaseSnapshotExecutor(
-			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this( entityDescriptor, sessionFactory, null );
 	}
 
 	DatabaseSnapshotExecutor(
-			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor sessionFactory,
-			Filter tenantFilter) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nullable Filter tenantFilter) {
 		this( entityDescriptor, sessionFactory, tenantFilter, null );
 	}
 
 	DatabaseSnapshotExecutor(
-			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor sessionFactory,
-			Filter tenantFilter,
-			List<? extends ModelPart> partsToSelect) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nullable Filter tenantFilter,
+			@Nullable List<? extends ModelPart> partsToSelect) {
 		this.entityDescriptor = entityDescriptor;
 		var jdbcParametersBuilder =
 				JdbcParametersList.newBuilder( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
@@ -197,7 +201,8 @@ class DatabaseSnapshotExecutor {
 	/**
 	 * @param tenantId the current tenant filter parameter value, or {@code null} for an unrestricted executor
 	 */
-	Object[] loadDatabaseSnapshot(Object id, Object tenantId, SharedSessionContractImplementor session) {
+	@Nullable
+	Object[] loadDatabaseSnapshot(@Nonnull Object id, @Nullable Object tenantId, @Nonnull SharedSessionContractImplementor session) {
 		if ( LOADER_LOGGER.isTraceEnabled() ) {
 			LOADER_LOGGER.trace( "Retrieving snapshot of current persistent state for "
 					+ infoString( entityDescriptor, id ) );

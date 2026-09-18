@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
@@ -25,8 +27,9 @@ import org.hibernate.persister.spi.UnknownPersisterException;
  */
 public class StandardPersisterClassResolver implements PersisterClassResolver {
 
+	@Nonnull
 	@Override
-	public Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass model) {
+	public Class<? extends EntityPersister> getEntityPersisterClass(@Nonnull PersistentClass model) {
 		// todo : make sure this is based on an attribute kept on the metamodel in the new code,
 		//        not the concrete PersistentClass impl found!
 		if ( model instanceof RootClass ) {
@@ -54,27 +57,33 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 		}
 	}
 
+	@Nonnull
 	public Class<? extends EntityPersister> singleTableEntityPersister() {
 		return SingleTableEntityPersister.class;
 	}
 
+	@Nonnull
 	public Class<? extends EntityPersister> joinedSubclassEntityPersister() {
 		return JoinedSubclassEntityPersister.class;
 	}
 
+	@Nonnull
 	public Class<? extends EntityPersister> unionSubclassEntityPersister() {
 		return UnionSubclassEntityPersister.class;
 	}
 
+	@Nonnull
 	@Override
-	public Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata) {
+	public Class<? extends CollectionPersister> getCollectionPersisterClass(@Nonnull Collection metadata) {
 		return metadata.isOneToMany() ? oneToManyPersister() : basicCollectionPersister();
 	}
 
+	@Nonnull
 	private Class<OneToManyPersister> oneToManyPersister() {
 		return OneToManyPersister.class;
 	}
 
+	@Nonnull
 	private Class<BasicCollectionPersister> basicCollectionPersister() {
 		return BasicCollectionPersister.class;
 	}

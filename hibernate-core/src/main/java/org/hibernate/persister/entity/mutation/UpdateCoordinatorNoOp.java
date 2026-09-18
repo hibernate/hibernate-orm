@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -19,23 +22,25 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.noO
 public class UpdateCoordinatorNoOp implements UpdateCoordinator {
 	private final MutationOperationGroup operationGroup;
 
-	public UpdateCoordinatorNoOp(EntityPersister entityPersister) {
+	public UpdateCoordinatorNoOp(@Nonnull EntityPersister entityPersister) {
 		operationGroup = noOperations( MutationType.UPDATE, entityPersister );
 	}
 
+	@Nullable
 	@Override
 	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return operationGroup;
 	}
 
+	@Nullable
 	@Override
-	public GeneratedValues update(Object entity, Object id, Object rowId, Object[] values, Object oldVersion, Object[] incomingOldValues, int[] dirtyAttributeIndexes, boolean hasDirtyCollection, SharedSessionContractImplementor session) {
+	public GeneratedValues update(@Nonnull Object entity, @Nonnull Object id, @Nullable Object rowId, @Nonnull Object[] values, @Nullable Object oldVersion, @Nullable Object[] incomingOldValues, @Nullable int[] dirtyAttributeIndexes, boolean hasDirtyCollection, @Nonnull SharedSessionContractImplementor session) {
 		// nothing to do
 		return null;
 	}
 
 	@Override
-	public void forceVersionIncrement(Object id, Object currentVersion, Object nextVersion, SharedSessionContractImplementor session) {
+	public void forceVersionIncrement(@Nonnull Object id, @Nullable Object currentVersion, @Nonnull Object nextVersion, @Nonnull SharedSessionContractImplementor session) {
 		// nothing to do
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.spi;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -1085,7 +1087,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 						&& action.getEntityName().equals( entityPersister.getEntityName() )
 						&& entityPersister.getIdentifierMapping().areEqual( action.getId(), identifier, session ) ) {
 					session.getPersistenceContextInternal()
-							.removeDeletedUnloadedEntityKey( session.generateEntityKey( identifier, entityPersister ) );
+							.removeDeletedUnloadedEntityKey( session.generateEntityKey( castNonNull( identifier ), entityPersister ) );
 					deletions.remove( i );
 					return;
 				}

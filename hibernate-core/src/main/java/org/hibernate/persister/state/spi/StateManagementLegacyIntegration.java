@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.state.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
@@ -28,26 +30,34 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 @Incubating(since = "8.0")
 public interface StateManagementLegacyIntegration {
 	/// Creates the entity insert coordinator for the given persister.
-	InsertCoordinator createInsertCoordinator(EntityPersister persister);
+	@Nonnull
+	InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister persister);
 
 	/// Creates the entity update coordinator for the given persister.
-	UpdateCoordinator createUpdateCoordinator(EntityPersister persister);
+	@Nonnull
+	UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister persister);
 
 	/// Creates the entity merge coordinator for the given persister.
-	UpdateCoordinator createMergeCoordinator(EntityPersister persister);
+	@Nonnull
+	UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister persister);
 
 	/// Creates the entity delete coordinator for the given persister.
-	DeleteCoordinator createDeleteCoordinator(EntityPersister persister);
+	@Nonnull
+	DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister);
 
 	/// Creates the collection row-insert coordinator for the given persister.
-	InsertRowsCoordinator createInsertRowsCoordinator(CollectionPersister persister);
+	@Nonnull
+	InsertRowsCoordinator createInsertRowsCoordinator(@Nonnull CollectionPersister persister);
 
 	/// Creates the collection row-update coordinator for the given persister.
-	UpdateRowsCoordinator createUpdateRowsCoordinator(CollectionPersister persister);
+	@Nonnull
+	UpdateRowsCoordinator createUpdateRowsCoordinator(@Nonnull CollectionPersister persister);
 
 	/// Creates the collection row-delete coordinator for the given persister.
-	DeleteRowsCoordinator createDeleteRowsCoordinator(CollectionPersister persister);
+	@Nonnull
+	DeleteRowsCoordinator createDeleteRowsCoordinator(@Nonnull CollectionPersister persister);
 
 	/// Creates the collection remove coordinator for the given persister.
-	RemoveCoordinator createRemoveCoordinator(CollectionPersister persister);
+	@Nonnull
+	RemoveCoordinator createRemoveCoordinator(@Nonnull CollectionPersister persister);
 }

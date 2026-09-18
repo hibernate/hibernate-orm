@@ -172,6 +172,7 @@ public class LoaderHelper {
 	 * @param keys The keys to normalize
 	 * @param keyPart The ModelPart describing the key
 	 */
+	@Nonnull
 	public static <K> K[] normalizeKeys(
 			@Nonnull K[] keys,
 			@Nonnull BasicValuedModelPart keyPart,
@@ -207,8 +208,9 @@ public class LoaderHelper {
 	 * @param elementClass The type of the array elements.  See {@link Class#getComponentType()}
 	 * @param length The length to which the array should be created.  This is usually zero for Hibernate uses
 	 */
+	@Nonnull
 	@AllowReflection
-	public static <X> X[] createTypedArray(Class<X> elementClass, @SuppressWarnings("SameParameterValue") int length) {
+	public static <X> X[] createTypedArray(@Nonnull Class<X> elementClass, @SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
 		return (X[]) newInstance( elementClass, length );
 	}
@@ -221,6 +223,7 @@ public class LoaderHelper {
 	 * @param <R> The type of the model part to load
 	 * @param <K> The type of the keys
 	 */
+	@Nonnull
 	public static <R,K> List<R> loadByArrayParameter(
 			@Nonnull K[] idsToInitialize,
 			@Nonnull SelectStatement sqlAst,

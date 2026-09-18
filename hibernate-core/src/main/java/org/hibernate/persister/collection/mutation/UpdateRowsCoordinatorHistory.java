@@ -4,6 +4,12 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -32,24 +38,30 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 	private final RowMutationOperations rowMutationOperations;
 	private final BasicBatchKey historyDeleteBatchKey;
 	private final BasicBatchKey historyInsertBatchKey;
+	@Nullable
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;
 
+	@Nullable
 	private MutationOperationGroup updateOperationGroup;
+	@Nullable
 	private MutationOperationGroup historyDeleteOperationGroup;
+	@Nullable
 	private MutationOperationGroup historyInsertOperationGroup;
+	@Nullable
 	private CollectionTableMapping historyTableMapping;
+	@Nullable
 	private HistoryCollectionRowMutationHelper rowMutationHelper;
 	protected final MutationExecutorService mutationExecutorService;
 
 	public UpdateRowsCoordinatorHistory(
-			AbstractCollectionPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
-			SessionFactoryImplementor sessionFactory,
-			boolean[] indexColumnIsSettable,
-			boolean[] elementColumnIsSettable,
-			UnaryOperator<Object> indexIncrementer) {
+			@Nonnull AbstractCollectionPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nullable boolean[] indexColumnIsSettable,
+			@Nonnull boolean[] elementColumnIsSettable,
+			@Nonnull UnaryOperator<Object> indexIncrementer) {
 		super( mutationTarget, sessionFactory );
 		this.rowMutationOperations = rowMutationOperations;
 		this.indexColumnIsSettable = indexColumnIsSettable;
@@ -61,7 +73,7 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 	}
 
 	@Override
-	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	protected int doUpdate(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		if ( rowMutationOperations.getUpdateRowOperation() == null ) {
 			return 0;
 		}
@@ -151,21 +163,21 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 	}
 
 	private boolean processRow(
-			Object key,
-			PersistentCollection<?> collection,
-			Object entry,
+			@Nonnull Object key,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object entry,
 			int entryPosition,
-			MutationExecutor updateExecutor,
-			MutationExecutor historyDeleteExecutor,
-			MutationExecutor historyInsertExecutor,
-			SharedSessionContractImplementor session) {
+			@Nonnull MutationExecutor updateExecutor,
+			@Nullable MutationExecutor historyDeleteExecutor,
+			@Nullable MutationExecutor historyInsertExecutor,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var attribute = getMutationTarget().getTargetPart();
 		if ( !collection.needsUpdating( entry, entryPosition, attribute ) ) {
 			return false;
 		}
 
 		final Object deleteRowValue = resolveDeleteRowValue( collection, entry, entryPosition );
-		rowMutationOperations.getUpdateRowValues().applyValues(
+		castNonNull( rowMutationOperations.getUpdateRowValues() ).applyValues(
 				collection,
 				key,
 				entry,
@@ -173,7 +185,7 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 				session,
 				updateExecutor.getJdbcValueBindings()
 		);
-		rowMutationOperations.getUpdateRowRestrictions().applyRestrictions(
+		castNonNull( rowMutationOperations.getUpdateRowRestrictions() ).applyRestrictions(
 				collection,
 				key,
 				entry,
@@ -209,6 +221,7 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 		return true;
 	}
 
+	@Nonnull
 	private MutationOperationGroup getUpdateOperationGroup() {
 		if ( updateOperationGroup == null ) {
 			final var updateRowOperation = rowMutationOperations.getUpdateRowOperation();
@@ -220,6 +233,7 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 		return updateOperationGroup;
 	}
 
+	@Nullable
 	private MutationOperationGroup getHistoryDeleteOperationGroup() {
 		if ( historyDeleteOperationGroup == null ) {
 			final var operation = rowMutationOperations.getDeleteRowOperation( getHistoryTableMapping() );
@@ -230,6 +244,7 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 		return historyDeleteOperationGroup;
 	}
 
+	@Nullable
 	private MutationOperationGroup getHistoryInsertOperationGroup() {
 		if ( historyInsertOperationGroup == null ) {
 			final var operation = rowMutationOperations.getInsertRowOperation( getHistoryTableMapping() );
@@ -240,6 +255,7 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 		return historyInsertOperationGroup;
 	}
 
+	@Nonnull
 	private CollectionTableMapping getHistoryTableMapping() {
 		if ( historyTableMapping == null ) {
 			final var mutationTarget = getMutationTarget();
@@ -250,6 +266,7 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 		return historyTableMapping;
 	}
 
+	@Nonnull
 	private HistoryCollectionRowMutationHelper getRowMutationHelper() {
 		if ( rowMutationHelper == null ) {
 			rowMutationHelper = new HistoryCollectionRowMutationHelper(

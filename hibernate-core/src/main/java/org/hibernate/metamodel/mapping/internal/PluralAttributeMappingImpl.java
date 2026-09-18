@@ -121,6 +121,7 @@ public class PluralAttributeMappingImpl
 	@Nullable private final CollectionIdentifierDescriptor identifierDescriptor;
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
+	@Nullable
 	private final AuxiliaryMapping auxiliaryMapping;
 
 	private final String bidirectionalAttributeName;
@@ -520,6 +521,7 @@ public class PluralAttributeMappingImpl
 				? auditMapping : null;
 	}
 
+	@Nullable
 	private AuxiliaryMapping getAuxiliaryMapping() {
 		return auxiliaryMapping;
 	}
@@ -1294,12 +1296,12 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+	public boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
 	}
 
 	@Override
-	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		if ( PluralAttributeMapping.super.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters )
 				|| auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers )) {
 			return true;
@@ -1316,7 +1318,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByEntityGraph(@Nonnull LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEntityGraph( influencers );
 	}
 
@@ -1328,10 +1330,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByEnabledFetchProfiles(@Nonnull LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEnabledFetchProfiles( influencers );
 	}
 
+	@Nonnull
 	@Override
 	public String getRootPathName() {
 		return getCollectionDescriptor().getRole();

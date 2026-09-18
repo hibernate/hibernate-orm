@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -21,15 +23,16 @@ import org.hibernate.sql.results.spi.RowTransformer;
 public class SingleIdArrayLoadPlan extends SingleIdLoadPlan<Object[]> {
 
 	public SingleIdArrayLoadPlan(
-			EntityMappingType entityMappingType,
-			ModelPart restrictivePart,
-			SelectStatement sqlAst,
-			JdbcParametersList jdbcParameters,
-			LockOptions lockOptions,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull EntityMappingType entityMappingType,
+			@Nonnull ModelPart restrictivePart,
+			@Nonnull SelectStatement sqlAst,
+			@Nonnull JdbcParametersList jdbcParameters,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( entityMappingType, restrictivePart, sqlAst, jdbcParameters, lockOptions, sessionFactory );
 	}
 
+	@Nonnull
 	@Override
 	protected RowTransformer<Object[]> getRowTransformer() {
 		return RowTransformerArrayImpl.instance();

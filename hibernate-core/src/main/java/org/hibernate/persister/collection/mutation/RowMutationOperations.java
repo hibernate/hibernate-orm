@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -37,32 +40,43 @@ public class RowMutationOperations {
 	};
 	private final CollectionMutationTarget target;
 
+	@Nullable
 	private final OperationProducer insertRowOperationProducer;
+	@Nullable
 	private final Values insertRowValues;
 
+	@Nullable
 	private final OperationProducer updateRowOperationProducer;
+	@Nullable
 	private final Values updateRowValues;
+	@Nullable
 	private final Restrictions updateRowRestrictions;
 
+	@Nullable
 	private final OperationProducer deleteRowOperationProducer;
+	@Nullable
 	private final Restrictions deleteRowRestrictions;
 
+	@Nullable
 	private final OperationProducer deleteAllRowsOperationProducer;
 
+	@Nullable
 	private JdbcMutationOperation insertRowOperation;
+	@Nullable
 	private JdbcMutationOperation updateRowOperation;
+	@Nullable
 	private JdbcMutationOperation deleteRowOperation;
 
 	public RowMutationOperations(
-			CollectionMutationTarget target,
-			OperationProducer insertRowOperationProducer,
-			Values insertRowValues,
-			OperationProducer updateRowOperationProducer,
-			Values updateRowValues,
-			Restrictions updateRowRestrictions,
-			OperationProducer deleteRowOperationProducer,
-			Restrictions deleteRowRestrictions,
-			OperationProducer deleteAllRowsOperationProducer) {
+			@Nonnull CollectionMutationTarget target,
+			@Nullable OperationProducer insertRowOperationProducer,
+			@Nullable Values insertRowValues,
+			@Nullable OperationProducer updateRowOperationProducer,
+			@Nullable Values updateRowValues,
+			@Nullable Restrictions updateRowRestrictions,
+			@Nullable OperationProducer deleteRowOperationProducer,
+			@Nullable Restrictions deleteRowRestrictions,
+			@Nullable OperationProducer deleteAllRowsOperationProducer) {
 		this.target = target;
 
 		assert areSameNullness( insertRowOperationProducer, insertRowValues );
@@ -82,6 +96,7 @@ public class RowMutationOperations {
 		this.deleteAllRowsOperationProducer = deleteAllRowsOperationProducer;
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "RowMutationOperations(" + target.getRolePath() + ")";
@@ -95,12 +110,14 @@ public class RowMutationOperations {
 		return insertRowOperationProducer != null;
 	}
 
+	@Nullable
 	public Values getInsertRowValues() {
 		return insertRowValues;
 	}
 
+	@Nullable
 	public JdbcMutationOperation getInsertRowOperation() {
-		if ( !hasInsertRow() ) {
+		if ( insertRowOperationProducer == null ) {
 			return null;
 		}
 		else {
@@ -113,8 +130,9 @@ public class RowMutationOperations {
 		}
 	}
 
-	public JdbcMutationOperation getInsertRowOperation(TableMapping tableMapping) {
-		if ( !hasInsertRow() ) {
+	@Nullable
+	public JdbcMutationOperation getInsertRowOperation(@Nonnull TableMapping tableMapping) {
+		if ( insertRowOperationProducer == null ) {
 			return null;
 		}
 		else {
@@ -131,8 +149,9 @@ public class RowMutationOperations {
 		return updateRowOperationProducer != null;
 	}
 
+	@Nullable
 	public JdbcMutationOperation getUpdateRowOperation() {
-		if ( !hasUpdateRow() ) {
+		if ( updateRowOperationProducer == null ) {
 			return null;
 		}
 		else {
@@ -145,10 +164,12 @@ public class RowMutationOperations {
 		}
 	}
 
+	@Nullable
 	public Values getUpdateRowValues() {
 		return updateRowValues;
 	}
 
+	@Nullable
 	public Restrictions getUpdateRowRestrictions() {
 		return updateRowRestrictions;
 	}
@@ -161,12 +182,14 @@ public class RowMutationOperations {
 		return deleteRowOperationProducer != null;
 	}
 
+	@Nullable
 	public Restrictions getDeleteRowRestrictions() {
 		return deleteRowRestrictions;
 	}
 
+	@Nullable
 	public JdbcMutationOperation getDeleteRowOperation() {
-		if ( !hasDeleteRow() ) {
+		if ( deleteRowOperationProducer == null ) {
 			return null;
 		}
 		else {
@@ -179,8 +202,9 @@ public class RowMutationOperations {
 		}
 	}
 
-	public JdbcMutationOperation getDeleteRowOperation(TableMapping tableMapping) {
-		if ( !hasInsertRow() ) {
+	@Nullable
+	public JdbcMutationOperation getDeleteRowOperation(@Nonnull TableMapping tableMapping) {
+		if ( deleteRowOperationProducer == null ) {
 			return null;
 		}
 		else {
@@ -189,6 +213,7 @@ public class RowMutationOperations {
 		}
 	}
 
+	@Nullable
 	public OperationProducer getDeleteAllRowsOperationProducer() {
 		return deleteAllRowsOperationProducer;
 	}
@@ -196,23 +221,23 @@ public class RowMutationOperations {
 	@FunctionalInterface
 	public interface Restrictions {
 		void applyRestrictions(
-				PersistentCollection<?> collection,
-				Object key,
-				Object rowValue,
+				@Nonnull PersistentCollection<?> collection,
+				@Nonnull Object key,
+				@Nonnull Object rowValue,
 				int rowPosition,
-				SharedSessionContractImplementor session,
-				JdbcValueBindings jdbcValueBindings);
+				@Nonnull SharedSessionContractImplementor session,
+				@Nonnull JdbcValueBindings jdbcValueBindings);
 	}
 
 	@FunctionalInterface
 	public interface Values {
 		void applyValues(
-				PersistentCollection<?> collection,
-				Object key,
-				Object rowValue,
+				@Nonnull PersistentCollection<?> collection,
+				@Nonnull Object key,
+				@Nonnull Object rowValue,
 				int rowPosition,
-				SharedSessionContractImplementor session,
-				JdbcValueBindings jdbcValueBindings);
+				@Nonnull SharedSessionContractImplementor session,
+				@Nonnull JdbcValueBindings jdbcValueBindings);
 	}
 
 }

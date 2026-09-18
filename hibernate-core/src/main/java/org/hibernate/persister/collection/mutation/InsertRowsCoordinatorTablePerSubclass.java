@@ -4,6 +4,10 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -18,6 +22,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -32,24 +37,26 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 	private final MutationExecutorService mutationExecutorService;
 
 	public InsertRowsCoordinatorTablePerSubclass(
-			OneToManyPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
-			ServiceRegistry serviceRegistry) {
+			@Nonnull OneToManyPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
+			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 		subclassEntries =
-				new SubclassEntry[mutationTarget.getElementPersister()
+				new SubclassEntry[castNonNull( mutationTarget.getElementPersister() )
 						.getRootEntityDescriptor()
 						.getSubclassEntityNames()
 						.size()];
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "InsertRowsCoordinator(" + mutationTarget.getRolePath() + ")";
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -57,10 +64,10 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 
 	@Override
 	public void insertRows(
-			PersistentCollection<?> collection,
-			Object id,
-			EntryFilter entryChecker,
-			SharedSessionContractImplementor session) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object id,
+			@Nullable EntryFilter entryChecker,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.insertingNewCollectionRows( mutationTarget.getRolePath(), id );
 		}
@@ -96,7 +103,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 						mutationExecutor = executors[subclassId];
 					}
 					// if the entry is included, perform the "insert"
-					rowMutationOperations.getInsertRowValues().applyValues(
+					castNonNull( rowMutationOperations.getInsertRowValues() ).applyValues(
 							collection,
 							id,
 							entry,
@@ -122,7 +129,8 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		}
 	}
 
-	private SubclassEntry getSubclassEntry(EntityPersister elementPersister) {
+	@Nonnull
+	private SubclassEntry getSubclassEntry(@Nonnull EntityPersister elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
 		final var subclassEntry = subclassEntries[subclassId];
 		if ( subclassEntry != null ) {
@@ -136,7 +144,8 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		);
 	}
 
-	private MutationOperationGroup createOperationGroup(EntityPersister elementPersister) {
+	@Nonnull
+	private MutationOperationGroup createOperationGroup(@Nonnull EntityPersister elementPersister) {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
@@ -163,7 +172,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 
 		private final MutationOperationGroup operationGroup;
 
-		public SubclassEntry(BatchKeyAccess batchKeySupplier, MutationOperationGroup operationGroup) {
+		public SubclassEntry(@Nonnull BatchKeyAccess batchKeySupplier, @Nonnull MutationOperationGroup operationGroup) {
 			this.batchKeySupplier = batchKeySupplier;
 			this.operationGroup = operationGroup;
 		}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.SQLException;
 
 import org.hibernate.Internal;
@@ -20,6 +23,7 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.model.MutationOperationGroup;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Merge coordinator for
@@ -36,15 +40,16 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 	private final UpdateCoordinator versionUpdateDelegate;
 	private final String currentRowSelectSql;
 
-	public MergeCoordinatorTemporal(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public MergeCoordinatorTemporal(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
-		this.temporalMapping = entityPersister.getTemporalMapping();
+		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
 		this.endingUpdateGroup = buildEndingUpdateGroup( entityPersister.getIdentifierTableMapping(), temporalMapping );
 		this.batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#TEMPORAL_MERGE" );
 		this.versionUpdateDelegate = new MergeCoordinatorStandard( entityPersister, factory );
 		this.currentRowSelectSql = buildCurrentRowSelect();
 	}
 
+	@Nonnull
 	private String buildCurrentRowSelect() {
 		final var tableMapping = entityPersister().getIdentifierTableMapping();
 		final var select = new SimpleSelect( factory() )
@@ -57,27 +62,30 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 				.toStatementString();
 	}
 
+	@Nullable
 	@Override
 	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return endingUpdateGroup;
 	}
 
+	@Nullable
 	@Override
 	protected BasicBatchKey getBatchKey() {
 		return batchKey;
 	}
 
+	@Nullable
 	@Override
 	public GeneratedValues update(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object[] values,
-			Object oldVersion,
-			Object[] incomingOldValues,
-			int[] dirtyAttributeIndexes,
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nonnull Object[] values,
+			@Nullable Object oldVersion,
+			@Nullable Object[] incomingOldValues,
+			@Nullable int[] dirtyAttributeIndexes,
 			boolean hasDirtyCollection,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( entityPersister()
 				.excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection ) ) {
 			return versionUpdateDelegate.update(
@@ -102,15 +110,15 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 	}
 
 	boolean performRowEndUpdate(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object oldVersion,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nullable Object oldVersion,
+			@Nonnull SharedSessionContractImplementor session) {
 		class Result implements OperationResultChecker {
 			private boolean updated;
 			@Override
-			public boolean checkResult(PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
+			public boolean checkResult(@Nonnull PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
 				updated = affectedRowCount > 0;
 				return !updated
 					|| resultCheck( id, statementDetails, affectedRowCount, batchPosition );
@@ -131,7 +139,7 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 		return resultChecker.updated;
 	}
 
-	private boolean currentRowExists(Object id, SharedSessionContractImplementor session) {
+	private boolean currentRowExists(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		// A snapshot filtered by tenant cannot distinguish an absent row from a foreign row.
 		// Only a missing current row permits insertion, regardless of tenant or application filters.
 		final var coordinator = session.getJdbcCoordinator();
@@ -160,7 +168,7 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 	}
 
 	@Override
-	void bindVersionRestriction(Object oldVersion, JdbcValueBindings jdbcValueBindings, String temporalTableName) {
+	void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName) {
 		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
 			jdbcValueBindings.bindValue( oldVersion, versionMapping, ParameterUsage.RESTRICT );
@@ -169,10 +177,10 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 
 	@Override
 	public void forceVersionIncrement(
-			Object id,
-			Object currentVersion,
-			Object nextVersion,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
+			@Nonnull Object nextVersion,
+			@Nonnull SharedSessionContractImplementor session) {
 		versionUpdateDelegate.forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
 }

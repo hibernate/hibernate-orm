@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -18,15 +20,17 @@ import java.util.Iterator;
 public class WriteIndexCoordinatorNoOp implements WriteIndexCoordinator {
 	private final CollectionMutationTarget mutationTarget;
 
-	public WriteIndexCoordinatorNoOp(CollectionMutationTarget mutationTarget) {
+	public WriteIndexCoordinatorNoOp(@Nonnull CollectionMutationTarget mutationTarget) {
 		this.mutationTarget = mutationTarget;
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "WriteIndexCoordinator(" + mutationTarget.getRolePath() + " (no-op))";
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -34,11 +38,11 @@ public class WriteIndexCoordinatorNoOp implements WriteIndexCoordinator {
 
 	@Override
 	public void writeIndex(
-			PersistentCollection<?> collection,
-			Iterator<?> entries,
-			Object key,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Iterator<?> entries,
+			@Nonnull Object key,
 			boolean resetIndex,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 		// nothing to do - collection has no index column
 	}
 }

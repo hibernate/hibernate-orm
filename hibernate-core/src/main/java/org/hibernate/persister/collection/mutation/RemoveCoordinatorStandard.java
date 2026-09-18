@@ -4,6 +4,10 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -32,6 +36,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	private final BasicBatchKey batchKey;
 	private final MutationExecutorService mutationExecutorService;
 
+	@Nullable
 	private MutationOperationGroup operationGroup;
 
 	/**
@@ -41,21 +46,23 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	 * of timing (chicken-egg) back on the persister.
 	 */
 	public RemoveCoordinatorStandard(
-			AbstractCollectionPersister mutationTarget,
-			RowMutationOperations mutationOperations,
-			ServiceRegistry serviceRegistry) {
+			@Nonnull AbstractCollectionPersister mutationTarget,
+			@Nonnull RowMutationOperations mutationOperations,
+			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
-		this.operationProducer = mutationOperations.getDeleteAllRowsOperationProducer();
+		this.operationProducer = castNonNull( mutationOperations.getDeleteAllRowsOperationProducer() );
 
 		batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#REMOVE" );
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "RemoveCoordinator(" + mutationTarget.getRolePath() + ")";
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -73,7 +80,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	}
 
 	@Override
-	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
+	public void deleteAllRows(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.removingCollection( mutationTarget.getRolePath(), key );
 		}
@@ -121,6 +128,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		}
 	}
 
+	@Nonnull
 	private MutationOperationGroup buildOperationGroup() {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;

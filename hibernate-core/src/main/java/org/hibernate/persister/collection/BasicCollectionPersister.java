@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.collection;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.HibernateException;
@@ -70,6 +73,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private final RowMutationOperations rowMutationOperations;
 	private final StateManagement stateManagement;
 
+	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private CollectionDecomposer decomposer;
 
 	private final InsertRowsCoordinator insertRowsCoordinator;
@@ -78,9 +82,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private final RemoveCoordinator removeCoordinator;
 
 	public BasicCollectionPersister(
-			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
-			RuntimeModelCreationContext creationContext)
+			@Nonnull Collection collectionBinding,
+			@Nullable CollectionDataAccess cacheAccessStrategy,
+			@Nonnull RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 
@@ -102,6 +106,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		decomposer = buildCollectionDecomposer();
 	}
 
+	@Nonnull
 	protected CollectionDecomposer buildCollectionDecomposer() {
 		return new BasicCollectionDecomposer(
 				this,
@@ -110,61 +115,69 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		);
 	}
 
+	@Nonnull
 	public RowMutationOperations getRowMutationOperations() {
 		return rowMutationOperations;
 	}
 
+	@Nonnull
 	public InsertRowsCoordinator getCreateEntryCoordinator() {
 		return insertRowsCoordinator;
 	}
 
+	@Nonnull
 	public InsertRowsCoordinator getInsertRowsCoordinator() {
 		return insertRowsCoordinator;
 	}
 	@Override
-	public void recreate(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session) {
+	public void recreate(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		getCreateEntryCoordinator().insertRows( collection, id, collection::includeInRecreate, session );
 	}
 
 	@Override
-	public void insertRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
+	public void insertRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session)
 			throws HibernateException {
 		getCreateEntryCoordinator().insertRows( collection, id, collection::includeInInsert, session );
 	}
 
+	@Nonnull
 	public UpdateRowsCoordinator getUpdateEntryCoordinator() {
 		return updateCoordinator;
 	}
 
+	@Nonnull
 	public UpdateRowsCoordinator getUpdateRowsCoordinator() {
 		return updateCoordinator;
 	}
 
 	@Override
-	public void updateRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session) {
+	public void updateRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		getUpdateEntryCoordinator().updateRows( id, collection, session );
 	}
 
+	@Nonnull
 	public DeleteRowsCoordinator getRemoveEntryCoordinator() {
 		return deleteRowsCoordinator;
 	}
 
+	@Nonnull
 	public DeleteRowsCoordinator getDeleteRowsCoordinator() {
 		return deleteRowsCoordinator;
 	}
 
 	@Override
-	public void deleteRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session) {
+	public void deleteRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		getRemoveEntryCoordinator().deleteRows( collection, id, session );
 	}
 
+	@Nonnull
 	@Override
 	public RemoveCoordinator getRemoveCoordinator() {
 		return removeCoordinator;
 	}
 
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session) {
+	protected void doProcessQueuedOps(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		// nothing to do
 	}
 
@@ -174,8 +187,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			&& isAnyTrue( elementColumnIsSettable );
 	}
 
+	@Nonnull
 	@Override
-	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(MutatingTableReference tableReference) {
+	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(@Nonnull MutatingTableReference tableReference) {
 		final var attributeMapping = getAttributeMapping();
 		assert attributeMapping != null;
 		final var temporalMapping = attributeMapping.getTemporalMapping();
@@ -208,7 +222,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 	}
 
-	protected RestrictedTableMutation<JdbcMutationOperation> generateTemporalDeleteAllAst(MutatingTableReference tableReference) {
+	@Nonnull
+	protected RestrictedTableMutation<JdbcMutationOperation> generateTemporalDeleteAllAst(@Nonnull MutatingTableReference tableReference) {
 		final var attributeMapping = getAttributeMapping();
 		final var temporalMapping = attributeMapping.getTemporalMapping();
 		assert temporalMapping != null;
@@ -232,6 +247,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		);
 	}
 
+	@Nonnull
 	protected RowMutationOperations buildRowMutationOperations() {
 		final OperationProducer insertRowOperationProducer;
 		final RowMutationOperations.Values insertRowValues;
@@ -294,21 +310,23 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 
 
-	private JdbcMutationOperation generateInsertRowOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcMutationOperation generateInsertRowOperation(@Nonnull MutatingTableReference tableReference) {
 		return getIdentifierTableMapping().getInsertDetails().getCustomSql() != null
 				? buildCustomSqlInsertRowOperation( tableReference )
 				: buildGeneratedInsertRowOperation( tableReference );
 
 	}
 
-	private JdbcMutationOperation buildCustomSqlInsertRowOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcMutationOperation buildCustomSqlInsertRowOperation(@Nonnull MutatingTableReference tableReference) {
 		final var factory = getFactory();
 		final var insertBuilder = new TableInsertBuilderStandard( this, tableReference, factory );
 		applyInsertDetails( insertBuilder );
 		return insertBuilder.buildMutation().createMutationOperation( null, factory );
 	}
 
-	private void applyInsertDetails(TableInsertBuilderStandard insertBuilder) {
+	private void applyInsertDetails(@Nonnull TableInsertBuilderStandard insertBuilder) {
 		final var attributeMapping = getAttributeMapping();
 		attributeMapping.getKeyDescriptor().getKeyPart().forEachSelectable( insertBuilder );
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
@@ -336,13 +354,15 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 	}
 
-	private JdbcMutationOperation buildGeneratedInsertRowOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcMutationOperation buildGeneratedInsertRowOperation(@Nonnull MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
 				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateInsertRowAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
-	private TableMutation<JdbcMutationOperation> generateInsertRowAst(MutatingTableReference tableReference) {
+	@Nonnull
+	private TableMutation<JdbcMutationOperation> generateInsertRowAst(@Nonnull MutatingTableReference tableReference) {
 		final var pluralAttribute = getAttributeMapping();
 		assert pluralAttribute != null;
 		final var foreignKeyDescriptor = pluralAttribute.getKeyDescriptor();
@@ -354,12 +374,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	private void applyInsertRowValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: " + getNavigableRole().getFullPath() );
 		}
@@ -440,13 +460,15 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Update handling
 
-	private JdbcMutationOperation generateUpdateRowOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcMutationOperation generateUpdateRowOperation(@Nonnull MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
 				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateUpdateRowAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
-	private RestrictedTableMutation<JdbcMutationOperation> generateUpdateRowAst(MutatingTableReference tableReference) {
+	@Nonnull
+	private RestrictedTableMutation<JdbcMutationOperation> generateUpdateRowAst(@Nonnull MutatingTableReference tableReference) {
 		final var attribute = getAttributeMapping();
 		assert attribute != null;
 
@@ -486,12 +508,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	private void applyUpdateRowValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object entry,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object entry,
 			int entryPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		getAttributeMapping().getElementDescriptor().decompose(
 				collection.getElement( entry ),
 				0,
@@ -507,12 +529,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	private void applyUpdateRowRestrictions(
-			PersistentCollection<?> collection,
-			Object key,
-			Object entry,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object entry,
 			int entryPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
@@ -564,13 +586,15 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Delete handling
 
-	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcMutationOperation generateDeleteRowOperation(@Nonnull MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
 				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateDeleteRowAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
-	private RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(MutatingTableReference tableReference) {
+	@Nonnull
+	private RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(@Nonnull MutatingTableReference tableReference) {
 		final var pluralAttribute = getAttributeMapping();
 		assert pluralAttribute != null;
 		final var temporalMapping = pluralAttribute.getTemporalMapping();
@@ -610,7 +634,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 	}
 
-	protected RestrictedTableMutation<JdbcMutationOperation> generateSoftDeleteRowsAst(MutatingTableReference tableReference) {
+	@Nonnull
+	protected RestrictedTableMutation<JdbcMutationOperation> generateSoftDeleteRowsAst(@Nonnull MutatingTableReference tableReference) {
 		final var attributeMapping = getAttributeMapping();
 		final var softDeleteMapping = attributeMapping.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
@@ -645,7 +670,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return updateBuilder.buildMutation();
 	}
 
-	protected RestrictedTableMutation<JdbcMutationOperation> generateTemporalDeleteRowsAst(MutatingTableReference tableReference) {
+	@Nonnull
+	protected RestrictedTableMutation<JdbcMutationOperation> generateTemporalDeleteRowsAst(@Nonnull MutatingTableReference tableReference) {
 		final var attributeMapping = getAttributeMapping();
 		final var temporalMapping = attributeMapping.getTemporalMapping();
 		assert temporalMapping != null;
@@ -679,12 +705,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	private void applyDeleteRowRestrictions(
-			PersistentCollection<?> collection,
-			Object keyValue,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object keyValue,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
 		final var temporalMapping = attributeMapping.getTemporalMapping();
 		if ( temporalMapping != null && isUsingTransactionIdParameters( session ) ) {
@@ -751,7 +777,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return elementType instanceof EntityType; //instanceof AssociationType;
 	}
 
-	private static boolean isUsingTransactionIdParameters(SharedSessionContractImplementor session) {
+	private static boolean isUsingTransactionIdParameters(@Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		return factory.getSessionFactoryOptions().getTemporalTableStrategy() == SINGLE_TABLE
 			&& !factory.getChangesetCoordinator().useServerTimestamp( session.getDialect() );
@@ -761,7 +787,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == NATIVE;
 	}
 
-	private boolean shouldApplyTemporalOperations(MutatingTableReference tableReference) {
+	private boolean shouldApplyTemporalOperations(@Nonnull MutatingTableReference tableReference) {
 		final var attributeMapping = getAttributeMapping();
 		if ( attributeMapping == null ) {
 			return false;
@@ -774,23 +800,25 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+	public FilterAliasGenerator getFilterAliasGenerator(@Nonnull String rootAlias) {
 		return new StaticFilterAliasGenerator( rootAlias );
 	}
 
+	@Nonnull
 	@Override
-	public FilterAliasGenerator getFilterAliasGenerator(TableGroup tableGroup) {
+	public FilterAliasGenerator getFilterAliasGenerator(@Nonnull TableGroup tableGroup) {
 		return getFilterAliasGenerator( tableGroup.getPrimaryTableReference().getIdentificationVariable() );
 	}
 
 	@Override
 	public void decompose(
-			PreparedCollectionMutation mutation,
+			@Nonnull PreparedCollectionMutation mutation,
 			int ordinalBase,
-			SharedSessionContractImplementor session,
-			DecompositionContext decompositionContext,
-			Consumer<FlushOperation> operationConsumer) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull DecompositionContext decompositionContext,
+			@Nonnull Consumer<FlushOperation> operationConsumer) {
 		switch ( mutation.kind() ) {
 			case CREATE -> decomposer.decomposeRecreate(
 					mutation, ordinalBase, session, decompositionContext, operationConsumer );

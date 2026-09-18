@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 import jakarta.annotation.Nonnull;
 
 import java.util.Locale;
@@ -476,7 +478,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			final Value index = ( (IndexedCollection) bootCollectionDescriptor ).getIndex();
 			foreignKey = createForeignKeyDescriptor(
 					index,
-					(EntityType) collectionDescriptor.getIndexType(),
+					(EntityType) castNonNull( collectionDescriptor.getIndexType() ),
 					fkTargetModelPart,
 					null, // No @MapKeyFormula or @OrderFormula
 					creationProcess

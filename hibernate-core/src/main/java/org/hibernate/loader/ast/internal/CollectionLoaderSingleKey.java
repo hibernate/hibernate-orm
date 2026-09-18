@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.LockOptions;
@@ -43,9 +45,9 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 	private final JdbcParametersList jdbcParameters;
 
 	public CollectionLoaderSingleKey(
-			PluralAttributeMapping attributeMapping,
-			LoadQueryInfluencers influencers,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.attributeMapping = attributeMapping;
 
 		keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
@@ -82,25 +84,30 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 						.translate( NO_BINDINGS, QueryOptions.NONE );
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getLoadable() {
 		return getAttributeMapping();
 	}
 
+	@Nonnull
 	public PluralAttributeMapping getAttributeMapping() {
 		return attributeMapping;
 	}
 
+	@Nonnull
 	public SelectStatement getSqlAst() {
 		return sqlAst;
 	}
 
+	@Nonnull
 	public JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
 
+	@Nonnull
 	@Override
-	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
+	public PersistentCollection<?> load(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		final var collectionKey = session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), key );
 
 		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
@@ -135,21 +142,22 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		private final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
 
 		CollectionLoaderSingleKeyExecutionContext(
-				SharedSessionContractImplementor session,
-				CollectionKey collectionKey,
-				SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler) {
+				@Nonnull SharedSessionContractImplementor session,
+				@Nonnull CollectionKey collectionKey,
+				@Nonnull SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler) {
 			super( session );
 			this.collectionKey = collectionKey;
 			this.subSelectFetchableKeysHandler = subSelectFetchableKeysHandler;
 		}
 
+		@Nonnull
 		@Override
 		public CollectionKey getCollectionKey() {
 			return collectionKey;
 		}
 
 		@Override
-		public void registerLoadingEntityHolder(EntityHolder holder) {
+		public void registerLoadingEntityHolder(@Nonnull EntityHolder holder) {
 			subSelectFetchableKeysHandler.addKey( holder );
 		}
 	}

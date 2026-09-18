@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -31,12 +33,13 @@ class DirtyHelper {
 	 *
 	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
 	 */
+	@Nullable
 	public static int[] findDirty(
-			@Nullable Type[] propertyTypes,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final SharedSessionContractImplementor session) {
+			@Nonnull Type[] propertyTypes,
+			@Nonnull final Object[] currentState,
+			@Nonnull final Object[] previousState,
+			@Nonnull final boolean[][] includeColumns,
+			@Nonnull final SharedSessionContractImplementor session) {
 		int[] results = null;
 		int count = 0;
 		int span = propertyTypes.length;
@@ -52,11 +55,11 @@ class DirtyHelper {
 	}
 
 	private static boolean isDirty(
-			@Nullable Type[] propertyTypes,
-			Object[] currentState,
-			Object[] previousState,
-			boolean[][] includeColumns,
-			SharedSessionContractImplementor session, int i) {
+			@Nonnull Type[] propertyTypes,
+			@Nonnull Object[] currentState,
+			@Nonnull Object[] previousState,
+			@Nonnull boolean[][] includeColumns,
+			@Nonnull SharedSessionContractImplementor session, int i) {
 		final Type propertyType;
 		if ( currentState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
 				|| ( propertyType = propertyTypes[i] ) == null ) {
@@ -86,14 +89,15 @@ class DirtyHelper {
 	 *
 	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
 	 **/
+	@Nullable
 	public static int[] findModified(
-			final Type[] propertyTypes,
-			final boolean[] propertyCheckability,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final boolean[] includeProperties,
-			final SharedSessionContractImplementor session) {
+			@Nonnull final Type[] propertyTypes,
+			@Nonnull final boolean[] propertyCheckability,
+			@Nonnull final Object[] currentState,
+			@Nonnull final Object[] previousState,
+			@Nonnull final boolean[][] includeColumns,
+			@Nonnull final boolean[] includeProperties,
+			@Nonnull final SharedSessionContractImplementor session) {
 		int[] results = null;
 		int count = 0;
 		int span = propertyTypes.length;
@@ -126,13 +130,13 @@ class DirtyHelper {
 	}
 
 	private static boolean isModified(
-			Type[] propertyTypes,
-			boolean[] propertyCheckability,
-			Object[] currentState,
-			Object[] previousState,
-			boolean[][] includeColumns,
-			boolean[] includeProperties,
-			SharedSessionContractImplementor session,
+			@Nonnull Type[] propertyTypes,
+			@Nonnull boolean[] propertyCheckability,
+			@Nonnull Object[] currentState,
+			@Nonnull Object[] previousState,
+			@Nonnull boolean[][] includeColumns,
+			@Nonnull boolean[] includeProperties,
+			@Nonnull SharedSessionContractImplementor session,
 			int i) {
 		return currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
 			&& includeProperties[i]

@@ -131,7 +131,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		return null;
 	}
 
-	public boolean containsColumn(String[] columns, String columnExpression) {
+	public boolean containsColumn(@Nullable String[] columns, String columnExpression) {
 		if ( columns != null ) {
 			return contains( columns, columnExpression );
 		}

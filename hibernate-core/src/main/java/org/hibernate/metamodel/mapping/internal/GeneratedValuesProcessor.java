@@ -162,7 +162,7 @@ public class GeneratedValuesProcessor {
 			Object entity,
 			Object id,
 			Object[] state,
-			GeneratedValues generatedValues,
+			@Nullable GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( hasActualGeneratedValuesToSelect( session, entity ) ) {
 			if ( selectStatement != null ) {

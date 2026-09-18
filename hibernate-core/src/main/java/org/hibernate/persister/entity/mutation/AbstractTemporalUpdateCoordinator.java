@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
@@ -27,18 +30,19 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  */
 @Internal
 abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordinator implements UpdateCoordinator {
-	AbstractTemporalUpdateCoordinator(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+	AbstractTemporalUpdateCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 	}
 
-	static void applyTemporalEnding(TableUpdateBuilder<?> tableUpdateBuilder, TemporalMapping temporalMapping) {
+	static void applyTemporalEnding(@Nonnull TableUpdateBuilder<?> tableUpdateBuilder, @Nonnull TemporalMapping temporalMapping) {
 		final var endingColumnReference =
 				new ColumnReference( tableUpdateBuilder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
 		tableUpdateBuilder.addValueColumn( temporalMapping.createEndingValueBinding( endingColumnReference ) );
 		tableUpdateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumnReference ) );
 	}
 
-	MutationOperationGroup buildEndingUpdateGroup(EntityTableMapping tableMapping, TemporalMapping temporalMapping) {
+	@Nonnull
+	MutationOperationGroup buildEndingUpdateGroup(@Nonnull EntityTableMapping tableMapping, @Nonnull TemporalMapping temporalMapping) {
 		final var tableUpdateBuilder =
 				new TableUpdateBuilderStandard<>( entityPersister(), tableMapping, factory() );
 
@@ -51,7 +55,8 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 		return createMutationOperationGroup( tableUpdateBuilder );
 	}
 
-	MutationOperationGroup createMutationOperationGroup(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
+	@Nonnull
+	MutationOperationGroup createMutationOperationGroup(@Nonnull TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
 		final var tableMutation = tableUpdateBuilder.buildMutation();
 		return singleOperation(
 				new MutationGroupSingle( MutationType.UPDATE, entityPersister(), tableMutation ),
@@ -59,18 +64,18 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 		);
 	}
 
-	abstract void bindVersionRestriction(Object oldVersion, JdbcValueBindings jdbcValueBindings, String temporalTableName);
+	abstract void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName);
 
 	void performRowEndUpdate(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object oldVersion,
-			SharedSessionContractImplementor session,
-			TemporalMapping temporalMapping,
-			MutationOperationGroup endUpdateGroup,
-			String temporalTableName,
-			OperationResultChecker resultChecker) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nullable Object oldVersion,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull TemporalMapping temporalMapping,
+			@Nonnull MutationOperationGroup endUpdateGroup,
+			@Nonnull String temporalTableName,
+			@Nonnull OperationResultChecker resultChecker) {
 		final var mutationExecutor =
 				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ),
 						endUpdateGroup, session );

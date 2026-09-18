@@ -4,6 +4,8 @@
  */
 package org.hibernate.stat.internal;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -560,7 +562,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 		if ( isLongestQuery && rootEntityPersister.hasNaturalIdCache() ) {
 			naturalIdQueryExecutionMaxTimeRegion
-					= rootEntityPersister.getNaturalIdCacheAccessStrategy().getRegion().getName();
+					= castNonNull( rootEntityPersister.getNaturalIdCacheAccessStrategy() ).getRegion().getName();
 		}
 	}
 

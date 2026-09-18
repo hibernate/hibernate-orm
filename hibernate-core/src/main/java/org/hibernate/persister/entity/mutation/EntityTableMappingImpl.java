@@ -60,23 +60,23 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	private final MutationDetails deleteDetails;
 
 	public EntityTableMappingImpl(
-			String tableName,
+			@Nonnull String tableName,
 			int relativePosition,
-			KeyMapping keyMapping,
+			@Nonnull KeyMapping keyMapping,
 			boolean isOptional,
 			boolean isInverse,
 			boolean isIdentifierTable,
 			boolean isSecondaryTable,
-			int[] attributeIndexes,
-			Expectation insertExpectation,
-			String insertCustomSql,
+			@Nonnull int[] attributeIndexes,
+			@Nonnull Expectation insertExpectation,
+			@Nullable String insertCustomSql,
 			boolean insertCallable,
-			Expectation updateExpectation,
-			String updateCustomSql,
+			@Nonnull Expectation updateExpectation,
+			@Nullable String updateCustomSql,
 			boolean updateCallable,
 			boolean cascadeDeleteEnabled,
-			Expectation deleteExpectation,
-			String deleteCustomSql,
+			@Nonnull Expectation deleteExpectation,
+			@Nullable String deleteCustomSql,
 			boolean deleteCallable,
 			boolean dynamicUpdate,
 			boolean dynamicInsert) {
@@ -158,6 +158,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return flags.get( Flag.SECONDARY_TABLE.ordinal() );
 	}
 
+	@Nonnull
 	@Override
 	public KeyMapping getKeyMapping() {
 		return keyMapping;
@@ -173,20 +174,24 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return contains( attributeIndexes, attributeIndex );
 	}
 
+	@Nonnull
 	@Override
 	public int[] getAttributeIndexes() {
 		return attributeIndexes;
 	}
 
+	@Nonnull
 	@Override public MutationDetails getInsertDetails() {
 		return insertDetails;
 	}
 
+	@Nonnull
 	@Override
 	public Expectation getInsertExpectation() {
 		return getInsertDetails().getExpectation();
 	}
 
+	@Nullable
 	@Override
 	public String getInsertCustomSql() {
 		return getInsertDetails().getCustomSql();
@@ -197,15 +202,18 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return getInsertDetails().isCallable();
 	}
 
+	@Nonnull
 	@Override public MutationDetails getUpdateDetails() {
 		return updateDetails;
 	}
 
+	@Nonnull
 	@Override
 	public Expectation getUpdateExpectation() {
 		return getUpdateDetails().getExpectation();
 	}
 
+	@Nullable
 	@Override
 	public String getUpdateCustomSql() {
 		return getUpdateDetails().getCustomSql();
@@ -220,15 +228,18 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return flags.get( Flag.CASCADE_DELETE.ordinal() );
 	}
 
+	@Nonnull
 	@Override public MutationDetails getDeleteDetails() {
 		return deleteDetails;
 	}
 
+	@Nonnull
 	@Override
 	public Expectation getDeleteExpectation() {
 		return getDeleteDetails().getExpectation();
 	}
 
+	@Nullable
 	@Override
 	public String getDeleteCustomSql() {
 		return getDeleteDetails().getCustomSql();
@@ -240,7 +251,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		if ( this == object ) {
 			return true;
 		}
@@ -257,6 +268,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return Objects.hash( tableName );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "TableMapping(" + tableName + ")";
@@ -269,7 +281,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		protected final List<KeyColumn> keyColumns;
 		protected final ModelPart identifierPart;
 
-		public AbstractKeyMapping(List<KeyColumn> keyColumns, ModelPart identifierPart) {
+		public AbstractKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull ModelPart identifierPart) {
 			this.keyColumns = keyColumns;
 			this.identifierPart = identifierPart;
 		}
@@ -335,10 +347,11 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			);
 		}
 
+		@Nonnull
 		protected SqlSelection resolveSqlSelection(
-				TableReference tableReference,
-				KeyColumn keyColumn,
-				SqlAstCreationState creationState) {
+				@Nonnull TableReference tableReference,
+				@Nonnull KeyColumn keyColumn,
+				@Nonnull SqlAstCreationState creationState) {
 			final var expressionResolver = creationState.getSqlExpressionResolver();
 			return expressionResolver.resolveSqlSelection(
 					expressionResolver.resolveSqlExpression( tableReference, keyColumn ),
@@ -358,7 +371,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	public static class SimpleKeyMapping extends AbstractKeyMapping {
 		private final KeyColumn keyColumn;
 
-		public SimpleKeyMapping(List<KeyColumn> keyColumns, BasicValuedModelPart identifierPart) {
+		public SimpleKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull BasicValuedModelPart identifierPart) {
 			super( keyColumns, identifierPart );
 			this.keyColumn = keyColumns.get( 0 );
 		}
@@ -392,7 +405,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	public static class CompositeKeyMapping extends AbstractKeyMapping {
-		public CompositeKeyMapping(List<KeyColumn> keyColumns, EmbeddableValuedModelPart identifierPart) {
+		public CompositeKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull EmbeddableValuedModelPart identifierPart) {
 			super( keyColumns, identifierPart );
 		}
 
@@ -411,7 +424,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 
 	public static class KeyColumn extends SelectableMappingImpl implements TableDetails.KeyColumn {
 
-		public KeyColumn(String tableName, SelectableMapping originalMapping) {
+		public KeyColumn(@Nonnull String tableName, @Nonnull SelectableMapping originalMapping) {
 			super(
 					tableName,
 					originalMapping.getSelectionExpression(),

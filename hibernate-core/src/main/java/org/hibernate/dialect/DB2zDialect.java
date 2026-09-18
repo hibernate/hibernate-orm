@@ -201,7 +201,11 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public String getRowIdColumnString(String rowId) {
-		return rowId( rowId ) + " rowid not null generated always";
+		final String ddl =
+				getVersion().isSameOrAfter( 13 )
+						? " rowid not null implicitly hidden generated always"
+						: " rowid not null generated always";
+		return rowId( rowId ) + ddl;
 	}
 
 	@Override

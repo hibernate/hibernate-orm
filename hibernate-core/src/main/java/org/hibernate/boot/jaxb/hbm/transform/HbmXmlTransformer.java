@@ -3871,6 +3871,10 @@ public class HbmXmlTransformer {
 				joinTable.getName()
 		);
 
+		if ( isNotEmpty( manyToMany.getForeignKey() ) ) {
+			joinTable.setInverseForeignKey( transformForeignKey( manyToMany.getForeignKey() ) );
+		}
+
 		transferCollectionCommonInfo( hbmCollection, target, propertyInfo );
 		target.setTargetEntity( isNotEmpty( manyToMany.getClazz() )
 				? manyToMany.getClazz()

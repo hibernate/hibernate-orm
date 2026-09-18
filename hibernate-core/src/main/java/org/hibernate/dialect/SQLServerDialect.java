@@ -684,15 +684,15 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
 		final var builder = request.builder();
+		super.buildIdentifierHelper( request );
 
-		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
-			// TODO: if DatabaseMetaData != null, unquoted case strategy is set to IdentifierCaseStrategy.UPPER
-			//       Check to see if this setting is correct.
+		final var jdbcMetadata = request.jdbcMetadata();
+		if ( !jdbcMetadata.isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
-		}
 
-		return super.buildIdentifierHelper( request );
+		}
+		return builder.build();
 	}
 
 	@Override

@@ -1303,11 +1303,12 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
 		final var builder = request.builder();
+		super.buildIdentifierHelper( request );
 		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
-		return super.buildIdentifierHelper( request );
+		return builder.build();
 	}
 
 	@Override

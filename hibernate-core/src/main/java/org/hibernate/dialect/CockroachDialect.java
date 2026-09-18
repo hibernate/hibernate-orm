@@ -1104,13 +1104,14 @@ public class CockroachDialect extends Dialect implements CurrentTemporalSupport,
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
 		final var builder = request.builder();
+		super.buildIdentifierHelper( request );
 
 		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( request );
+		return builder.build();
 	}
 
 	@Override

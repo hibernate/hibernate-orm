@@ -69,9 +69,10 @@ public interface MetadataBuildingContext {
 	InFlightMetadataCollector getMetadataCollector();
 
 	/**
-	 * Not sure how I feel about this exposed here
+	 * Access to identifier normalization during mapping interpretation.
 	 *
 	 * @return The ObjectNameNormalizer
+	 * @throws IllegalStateException if this context represents restored metadata with resolved names
 	 */
 	ObjectNameNormalizer getObjectNameNormalizer();
 

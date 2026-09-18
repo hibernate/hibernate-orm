@@ -378,6 +378,10 @@ class BootModelSerializationTest {
 		assertThat( restoredView ).isInstanceOf( ResolvedMappingImplementor.class );
 		final var restoredResolvedMapping = (ResolvedMappingImplementor) restoredView;
 		final MetadataImpl restored = (MetadataImpl) restoredResolvedMapping.getResolvedMapping().metadata();
+		assertThatThrownBy( () -> restored.getBootstrapContext().getTypeConfiguration()
+				.getMetadataBuildingContext().getObjectNameNormalizer() )
+				.isInstanceOf( IllegalStateException.class )
+				.hasMessage( "Restored metadata has resolved names and does not support name normalization" );
 		assertThat( MappingModelGraphIndex.from( restored ).basicValuesByRole().values() )
 				.flatExtracting( values -> values )
 				.allSatisfy( value -> assertThat( value.getResolution() ).isNotNull() );

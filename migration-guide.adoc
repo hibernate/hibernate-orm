@@ -805,3 +805,20 @@ calls of `toIdentifier(String, MetadataBuildingContext)` and
 The `toIdentifier(String, IdentifierHelper)` overload remains available.
 The old protected signatures are removed, so already compiled subclasses must
 be rebuilt. Naming algorithms and the physical naming signatures are unchanged.
+
+=== Object name normalization
+
+`NamingStrategyHelper` and the unused
+`ObjectNameNormalizer.determineLogicalName(String, NamingStrategyHelper)` callback
+have been removed without replacement.
+
+`ObjectNameNormalizer` now accepts `IdentifierHelper` and `Dialect` in its
+constructor instead of `MetadataBuildingContext`. Its protected `database()`
+and `getBuildingContext()` accessors have been removed. Custom callers and
+subclasses must migrate and recompile; quoting and rendering behavior is unchanged.
+
+Live metadata-building contexts create their normalizer on first access,
+preserving deferred database initialization. Restored metadata already contains
+resolved names: calling `getObjectNameNormalizer()` on its building context now
+throws `IllegalStateException` immediately, instead of returning a normalizer
+that fails when it tries to access the unavailable metadata collector.

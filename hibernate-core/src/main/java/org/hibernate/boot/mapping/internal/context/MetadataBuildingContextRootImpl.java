@@ -33,7 +33,7 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	private final MappingResolutionOptions buildingPlan;
 	private final EffectiveMappingDefaults mappingDefaults;
 	private final InFlightMetadataCollector metadataCollector;
-	private final ObjectNameNormalizer objectNameNormalizer;
+	private ObjectNameNormalizer objectNameNormalizer;
 	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
 	private final TemporalTableStrategy temporalTableStrategy;
 	private final AuditStrategy auditStrategy;
@@ -46,7 +46,6 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 		this.buildingPlan = input.buildingPlan();
 		this.mappingDefaults = input.mappingDefaults();
 		this.metadataCollector = input.metadataCollector();
-		this.objectNameNormalizer = new ObjectNameNormalizer(this);
 		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
 		this.temporalTableStrategy = temporalTableStrategy( serviceComponents );
 		this.auditStrategy = auditStrategy( serviceComponents );
@@ -89,6 +88,11 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 
 	@Override
 	public ObjectNameNormalizer getObjectNameNormalizer() {
+		if ( objectNameNormalizer == null ) {
+			final var database = metadataCollector.getDatabase();
+			objectNameNormalizer = new ObjectNameNormalizer(
+					database.getJdbcEnvironment().getIdentifierHelper(), database.getDialect() );
+		}
 		return objectNameNormalizer;
 	}
 

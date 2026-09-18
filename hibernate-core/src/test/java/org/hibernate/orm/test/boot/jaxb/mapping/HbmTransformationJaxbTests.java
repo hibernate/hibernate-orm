@@ -2234,4 +2234,40 @@ public class HbmTransformationJaxbTests {
 					.isEqualTo( OnDeleteAction.CASCADE );
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20900" )
+	public void testManyToManyForeignKeyTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/many-to-many-fk/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl studentEntity = transformed.getEntities().stream()
+					.filter( e -> "Student".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( studentEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+			final JaxbManyToManyImpl courses = studentEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( courses.getName() ).isEqualTo( "courses" );
+
+			assertThat( courses.getJoinTable() )
+					.as( "Owning side should have a join-table" )
+					.isNotNull();
+			assertThat( courses.getJoinTable().getName() ).isEqualTo( "student_course" );
+
+			assertThat( courses.getJoinTable().getForeignKey() )
+					.as( "Foreign key from <key foreign-key='...'> should be set on join-table" )
+					.isNotNull();
+			assertThat( courses.getJoinTable().getForeignKey().getName() )
+					.as( "Foreign key name from join table to owning entity should be preserved" )
+					.isEqualTo( "fk_student_course" );
+
+			assertThat( courses.getJoinTable().getInverseForeignKey() )
+					.as( "Inverse foreign key from <many-to-many foreign-key='...'> should be set on join-table" )
+					.isNotNull();
+			assertThat( courses.getJoinTable().getInverseForeignKey().getName() )
+					.as( "Inverse foreign key name from join table to target entity should be preserved" )
+					.isEqualTo( "fk_course_student" );
+		} );
+	}
 }

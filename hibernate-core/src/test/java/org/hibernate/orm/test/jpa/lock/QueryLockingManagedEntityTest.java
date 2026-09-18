@@ -13,6 +13,7 @@ import jakarta.persistence.RollbackException;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.Session;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 @Jpa(annotatedClasses = { Lockable.class, UnversionedLock.class })
 class QueryLockingManagedEntityTest {
@@ -70,6 +72,10 @@ class QueryLockingManagedEntityTest {
 	@ParameterizedTest
 	@EnumSource(LockModeType.class)
 	void testManagedAndNewStreamResults(LockModeType mode, EntityManagerFactoryScope scope) {
+		assumeFalse(
+				scope.getDialect() instanceof AltibaseDialect && LockMode.fromJpaLockMode( mode ).isPessimistic(),
+				"Altibase requires follow-on locking for joins, which this streamed query disallows"
+		);
 		testManagedAndNewQueryResults( mode, Locking.FollowOn.DISALLOW, true, scope );
 	}
 

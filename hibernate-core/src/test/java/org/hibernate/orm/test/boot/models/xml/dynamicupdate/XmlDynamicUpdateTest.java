@@ -33,6 +33,7 @@ public class XmlDynamicUpdateTest {
 
 		scope.inTransaction( session -> {
 			final DynamicEntity entity = new DynamicEntity();
+			entity.setId( 1L );
 			entity.setName( "initial" );
 			session.persist( entity );
 			session.flush();
@@ -52,6 +53,7 @@ public class XmlDynamicUpdateTest {
 	public void testDynamicUpdateFromXmlMapping(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final DynamicEntity entity = new DynamicEntity();
+			entity.setId( 1L );
 			entity.setName( "initial" );
 			entity.setDescription( "desc" );
 			entity.setNotes( "notes" );

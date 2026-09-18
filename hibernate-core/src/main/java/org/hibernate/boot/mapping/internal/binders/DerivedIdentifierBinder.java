@@ -274,7 +274,8 @@ class DerivedIdentifierBinder {
 				targetColumns,
 				bindingState.getDatabase(),
 				derivedIdentifierBinding.ownerBinding().getClassName(),
-				derivedIdentifierBinding.property().getName()
+				derivedIdentifierBinding.property().getName(),
+			bindingState.getRelationalModelCorrespondences().columnNames()
 		);
 		for ( int i = 0; i < orderedJoinColumns.size(); i++ ) {
 			final JoinColumn joinColumn = orderedJoinColumns.get( i );

@@ -112,7 +112,8 @@ class ForeignKeyBinder {
 								referencedProperty.getColumns(),
 								foreignKeyBinding.referencedColumnNames(),
 								entityBinder.getBindingState().getDatabase(),
-								sourceRole
+								sourceRole,
+							entityBinder.getBindingState().getRelationalModelCorrespondences().columnNames()
 						),
 						referencedProperty.getValue().getTable()
 				),

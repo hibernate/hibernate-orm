@@ -340,7 +340,7 @@ class AssociationIdentifierBinder {
 			return TargetColumns.primaryKey( targetIdentifierColumns );
 		}
 
-		if ( ToOneAttributeBinder.referencesPrimaryKey( joinColumns, targetIdentifierColumns, bindingState.getDatabase() ) ) {
+		if ( ToOneAttributeBinder.referencesPrimaryKey( joinColumns, targetIdentifierColumns, bindingState.getDatabase(), bindingState.getRelationalModelCorrespondences().columnNames() ) ) {
 			return TargetColumns.primaryKey( targetIdentifierColumns );
 		}
 		if ( referencesSomePrimaryKeyColumns( joinColumns, targetIdentifierColumns ) ) {
@@ -381,8 +381,8 @@ class AssociationIdentifierBinder {
 				return false;
 			}
 			for ( Column targetIdentifierColumn : targetIdentifierColumns ) {
-				if ( targetIdentifierColumn.getNameIdentifier( bindingState.getDatabase() )
-						.matches( bindingState.getDatabase().toIdentifier( joinColumn.referencedColumnName() ) ) ) {
+				if ( bindingState.getRelationalModelCorrespondences().columnNames()
+						.matches( targetIdentifierColumn, bindingState.getDatabase().toIdentifier( joinColumn.referencedColumnName() ) ) ) {
 					return true;
 				}
 			}
@@ -415,7 +415,7 @@ class AssociationIdentifierBinder {
 		}
 	}
 
-	private static List<JoinColumn> orderJoinColumns(
+	private List<JoinColumn> orderJoinColumns(
 			List<JoinColumn> joinColumns,
 			List<Column> targetColumns,
 			Database database,
@@ -441,14 +441,14 @@ class AssociationIdentifierBinder {
 		return orderedJoinColumns;
 	}
 
-	private static JoinColumn findJoinColumn(
+	private JoinColumn findJoinColumn(
 			Column targetColumn,
 			List<JoinColumn> joinColumns,
 			Database database,
 			String ownerClassName,
 			String propertyName) {
 		for ( JoinColumn joinColumn : joinColumns ) {
-			if ( targetColumn.getNameIdentifier( database ).matches( database.toIdentifier( joinColumn.referencedColumnName() ) ) ) {
+			if ( bindingState.getRelationalModelCorrespondences().columnNames().matches( targetColumn, database.toIdentifier( joinColumn.referencedColumnName() ) ) ) {
 				return joinColumn;
 			}
 		}

@@ -805,7 +805,7 @@ class PluralAssociationAttributeBinder {
 			return false;
 		}
 		for ( int i = 0; i < columns.size(); i++ ) {
-			if ( !columns.get( i ).getNameIdentifier( bindingState.getDatabase() ).matches( referencedColumnNames.get( i ) ) ) {
+			if ( !bindingState.getRelationalModelCorrespondences().columnNames().matches( columns.get( i ), referencedColumnNames.get( i ) ) ) {
 				return false;
 			}
 		}
@@ -904,7 +904,8 @@ class PluralAssociationAttributeBinder {
 						targetColumns,
 						bindingState.getDatabase(),
 						ownerType.getClassDetails().getClassName(),
-						propertyName
+						propertyName,
+					bindingState.getRelationalModelCorrespondences().columnNames()
 				)
 				: joinColumnAnns;
 		final int columnCount = referenceToPrimaryKey ? targetColumns.size() : joinColumnAnns.size();
@@ -981,7 +982,7 @@ class PluralAssociationAttributeBinder {
 	}
 
 	private boolean referencesPrimaryKey(List<JoinColumn> joinColumns, TargetEntityBinding target) {
-		return ToOneAttributeBinder.referencesPrimaryKey( joinColumns, target.identifierColumns(), bindingState.getDatabase() )
+		return ToOneAttributeBinder.referencesPrimaryKey( joinColumns, target.identifierColumns(), bindingState.getDatabase(), bindingState.getRelationalModelCorrespondences().columnNames() )
 			|| referencesPrimaryKeyJoinColumns( joinColumns, targetPrimaryKeyJoinColumns( target ) );
 	}
 
@@ -990,7 +991,7 @@ class PluralAssociationAttributeBinder {
 			TargetEntityBinding target,
 			boolean referenceToPrimaryKey) {
 		if ( !referenceToPrimaryKey
-				|| ToOneAttributeBinder.referencesPrimaryKey( joinColumns, target.identifierColumns(), bindingState.getDatabase() ) ) {
+				|| ToOneAttributeBinder.referencesPrimaryKey( joinColumns, target.identifierColumns(), bindingState.getDatabase(), bindingState.getRelationalModelCorrespondences().columnNames() ) ) {
 			return target.identifierColumns();
 		}
 		final PrimaryKeyJoinColumn[] primaryKeyJoinColumns = targetPrimaryKeyJoinColumns( target );

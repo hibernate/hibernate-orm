@@ -321,9 +321,8 @@ class AssociationTargetBinder {
 			List<Identifier> referencedColumnNames) {
 		int columnIndex = 0;
 		for ( Identifier referencedColumnName : referencedColumnNames ) {
-			if ( columns.get( columnIndex )
-					.getNameIdentifier( entityBinder.getBindingState().getDatabase() )
-					.matches( referencedColumnName ) ) {
+			if ( entityBinder.getBindingState().getRelationalModelCorrespondences().columnNames()
+					.matches( columns.get( columnIndex ), referencedColumnName ) ) {
 				columnIndex++;
 				if ( columnIndex == columns.size() ) {
 					return true;
@@ -359,9 +358,9 @@ class AssociationTargetBinder {
 	}
 
 	private boolean containsColumn(Value value, Identifier referencedColumnName) {
-		final Database database = entityBinder.getBindingState().getDatabase();
 		for ( Column column : value.getColumns() ) {
-			if ( column.getNameIdentifier( database ).matches( referencedColumnName ) ) {
+			if ( entityBinder.getBindingState().getRelationalModelCorrespondences().columnNames()
+					.matches( column, referencedColumnName ) ) {
 				return true;
 			}
 		}
@@ -425,9 +424,9 @@ class AssociationTargetBinder {
 		if ( columns.size() != referencedColumnNames.size() ) {
 			return false;
 		}
-		final Database database = entityBinder.getBindingState().getDatabase();
 		for ( int i = 0; i < columns.size(); i++ ) {
-			if ( !columns.get( i ).getNameIdentifier( database ).matches( referencedColumnNames.get( i ) ) ) {
+			if ( !entityBinder.getBindingState().getRelationalModelCorrespondences().columnNames()
+					.matches( columns.get( i ), referencedColumnNames.get( i ) ) ) {
 				return false;
 			}
 		}

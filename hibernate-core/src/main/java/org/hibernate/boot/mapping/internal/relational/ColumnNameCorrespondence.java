@@ -88,6 +88,34 @@ public class ColumnNameCorrespondence {
 		return null;
 	}
 
+	/// Matches a logical referenced name to a materialized target column without
+	/// applying physical naming a second time. Synthetic columns without a
+	/// registered correspondence retain their source-name matching behavior.
+	public boolean matches(Column column, Identifier logicalName) {
+		if ( logicalName == null ) {
+			return false;
+		}
+		final Identifier physicalName = column.getNameIdentifier( database );
+		Table table = column.getValue() == null ? null : column.getValue().getTable();
+		boolean registered = false;
+		while ( table != null ) {
+			final TableColumnNames names = tableColumnNames.get( table );
+			if ( names != null ) {
+				for ( var entry : names.physicalColumnByLogicalName.entrySet() ) {
+					if ( entry.getValue().getNameIdentifier( database ).matches( physicalName ) ) {
+						registered = true;
+						if ( entry.getKey().matches( logicalName ) ) {
+							return true;
+						}
+					}
+				}
+			}
+			table = table instanceof DenormalizedTable denormalizedTable
+					? denormalizedTable.getIncludedTable() : null;
+		}
+		return !registered && physicalName.matches( logicalName );
+	}
+
 	private class TableColumnNames {
 		private final Map<Identifier, Column> physicalColumnByLogicalName = new HashMap<>();
 		private final Map<String, Identifier> logicalByPhysicalName = new HashMap<>();

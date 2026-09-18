@@ -6,14 +6,19 @@ package org.hibernate.type.descriptor.java;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.ObjectInputFilter;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.util.SerializationHelper;
@@ -119,14 +124,14 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 			return null;
 		}
 		else if (value instanceof byte[] bytes) {
-			return fromBytes( bytes );
+			return fromBytes( bytes, deserializationFilter( options ) );
 		}
 		else if (value instanceof InputStream inputStream) {
-			return fromBytes( DataHelper.extractBytes( inputStream ) );
+			return fromBytes( DataHelper.extractBytes( inputStream ), deserializationFilter( options ) );
 		}
 		else if (value instanceof Blob blob) {
 			try {
-				return fromBytes( DataHelper.extractBytes( blob.getBinaryStream() ) );
+				return fromBytes( DataHelper.extractBytes( blob.getBinaryStream() ), deserializationFilter( options ) );
 			}
 			catch ( SQLException e ) {
 				throw new HibernateException( e );
@@ -143,6 +148,26 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 	}
 
 	protected T fromBytes(byte[] bytes) {
-		return cast( SerializationHelper.deserialize( bytes, getJavaTypeClass().getClassLoader() ) );
+		return fromBytes( bytes, null );
+	}
+
+	protected T fromBytes(byte[] bytes, ObjectInputFilter filter) {
+		return cast( SerializationHelper.deserialize( bytes, getJavaTypeClass().getClassLoader(), filter ) );
+	}
+
+	private static final ConcurrentHashMap<String, ObjectInputFilter> DESERIALIZATION_FILTERS = new ConcurrentHashMap<>();
+
+	/**
+	 * Resolves the optional {@link ObjectInputFilter} configured via
+	 * {@link MappingSettings#SERIALIZATION_DESERIALIZATION_FILTER}. Returns {@code null} when no
+	 * filter is configured, preserving the previous (unfiltered) behaviour.
+	 */
+	private static ObjectInputFilter deserializationFilter(WrapperOptions options) {
+		final String pattern = options.getSessionFactory().getServiceRegistry()
+				.requireService( ConfigurationService.class )
+				.getSetting( MappingSettings.SERIALIZATION_DESERIALIZATION_FILTER, StandardConverters.STRING );
+		return pattern == null || pattern.isBlank()
+				? null
+				: DESERIALIZATION_FILTERS.computeIfAbsent( pattern, ObjectInputFilter.Config::createFilter );
 	}
 }

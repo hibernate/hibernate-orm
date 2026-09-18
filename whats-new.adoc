@@ -18,3 +18,10 @@ IMPORTANT: If migrating from earlier versions, be sure to also check out the lin
 Schema management DDL now uses `CREATE SCHEMA IF NOT EXISTS` and `DROP SCHEMA IF EXISTS` for dialects which support these clauses, avoiding warnings when a schema already exists or has already been dropped.
 
 Supported dialects: PostgreSQL, CockroachDB, H2, HSQLDB, SAP HANA, and SQL Server (DROP only, version 13+).
+
+[[serializable-deserialization-filter]]
+== Deserialization filter for `Serializable` basic values
+
+A new setting, `hibernate.serialization.deserialization_filter`, accepts a JEP-290 `java.io.ObjectInputFilter` pattern that is applied when deserializing basic values mapped as `Serializable` (for example, values stored as `VARBINARY` or `BLOB` and read back through `SerializableType`).
+
+The setting is opt-in and provides defense-in-depth: when it is unset there is no filter and behaviour is unchanged. When set, the configured filter constrains which classes may be deserialized from the database, which is useful when the database is shared or otherwise not fully trusted.

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.util;
 import java.io.InputStream;
+import java.io.ObjectInputFilter;
 import java.io.Serializable;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -11,12 +12,14 @@ import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.spi.ByteCodeHelper;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.type.SerializationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * This is basically a test to assert the expectations of {@link org.hibernate.type.SerializableType}
@@ -79,6 +82,32 @@ public class SerializationHelperTest {
 
 		assertSame( instance.getClass(), instance2.getClass() );
 		assertSame( instance.getClass().getClassLoader(), instance2.getClass().getClassLoader() );
+	}
+
+
+	@Test
+	public void testDeserializeRejectedByFilter() {
+		final Serializable instance = LockMode.OPTIMISTIC;
+		final byte[] bytes = SerializationHelper.serialize( instance );
+
+		// a filter allowing only java.* classes rejects org.hibernate.LockMode
+		final ObjectInputFilter filter = ObjectInputFilter.Config.createFilter( "java.**;!*" );
+		assertThrows(
+				SerializationException.class,
+				() -> SerializationHelper.deserialize( bytes, SerializationHelper.hibernateClassLoader(), filter )
+		);
+	}
+
+	@Test
+	public void testDeserializeAllowedByFilter() {
+		final Serializable instance = LockMode.OPTIMISTIC;
+		final byte[] bytes = SerializationHelper.serialize( instance );
+
+		final ObjectInputFilter filter =
+				ObjectInputFilter.Config.createFilter( "org.hibernate.LockMode;java.**;!*" );
+		final Object instance2 =
+				SerializationHelper.deserialize( bytes, SerializationHelper.hibernateClassLoader(), filter );
+		assertSame( instance.getClass(), instance2.getClass() );
 	}
 
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.metamodel;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.metamodel.ManagedType;
 import java.util.Arrays;
@@ -46,7 +47,7 @@ public class MappedSuperclassType2Test {
 		final Map<String,Object> settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
-		try ( EntityManagerFactory emf = BootstrapPipeline.build( pu, settings ) ) {
+		try ( EntityManagerFactory emf = BootstrapPipeline.build( PersistenceUnitSources.standalone( pu ), settings ) ) {
 			ManagedType<SomeMappedSuperclass> type = emf.getMetamodel().managedType( SomeMappedSuperclass.class );
 			// the issue was in regards to throwing an exception, but also check for nullness
 			assertNotNull( type );

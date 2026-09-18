@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.schemagen;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +160,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 		// Unfortunately we have to use this dirty hack because the db seems not to be closed otherwise
 		settings.put( "hibernate.connection.url", "jdbc:h2:mem:db-schemagen" + schemagenNumber++
 				+ ";DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
-		try ( EntityManagerFactory emf = BootstrapPipeline.build( buildPersistenceUnitDescriptor(), settings ) ) {
+		try ( EntityManagerFactory emf = BootstrapPipeline.build( PersistenceUnitSources.standalone( buildPersistenceUnitDescriptor() ), settings ) ) {
 			try ( EntityManager em = emf.createEntityManager() ) {
 				Assertions.assertNotNull( em.find( Item.class, encodedName() ) );
 				Assertions.assertNotNull( em.find( Item.class, "multi-file-test" ) );

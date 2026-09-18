@@ -13,4 +13,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 /// @author Steve Ebersole
 public record ContributionDiscoveryContext(
 		ClassLoaderService classLoaderService) {
+	public ContributionDiscoveryContext {
+		java.util.Objects.requireNonNull( classLoaderService );
+	}
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.bootstrap;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -334,7 +335,7 @@ public class BootstrapTest {
 		);
 
 			EntityManagerFactory emf = BootstrapPipeline.build(
-				new PersistenceUnitInfoDescriptor(persistenceUnitInfo),
+				PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor(persistenceUnitInfo) ),
 				integrationSettings
 			);
 			//end::bootstrap-native-EntityManagerFactory-example[]
@@ -348,14 +349,14 @@ public class BootstrapTest {
 	@JiraKey("HHH-17154")
 	public void build_EntityManagerFactory_with_NewTempClassLoader() {
 		try (var ignored = BootstrapPipeline.resolveMetadata(
-				new PersistenceUnitInfoDescriptor(
+				PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor(
 						new PersistenceUnitInfoImpl( "", new ArrayList<>(), new Properties() ) {
 							@Override
 							public ClassLoader getNewTempClassLoader() {
 								return Thread.currentThread().getContextClassLoader();
 							}
 						}
-				),
+				) ),
 				ServiceRegistryUtil.createBaseSettings()
 		)) {
 		}

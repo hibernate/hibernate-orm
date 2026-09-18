@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.boot;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FetchType;
@@ -55,7 +56,7 @@ public class DefaultToOneFetchTypeTests {
 				.parse( List.of( xml ) )
 				.get( unitName );
 		try (var metadataResolution = BootstrapPipeline.resolveMetadata(
-				persistenceUnitDescriptor,
+				PersistenceUnitSources.standalone( persistenceUnitDescriptor ),
 				(Map) Environment.getProperties()
 		)) {
 			verify( metadataResolution.metadata(), expectation );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.nameddescriptor;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,8 +28,8 @@ public class PackageDescriptorXmlNamedQueriesTest {
 		final Map<String, Object> settings = new HashMap<>();
 		Environment.getProperties().forEach( (key, value) -> settings.put( key.toString(), value ) );
 		ServiceRegistryUtil.applySettings( settings );
-		try ( var factory = BootstrapPipeline.build( PersistenceXmlParser.create().parse( java.util.List.of( xml ) )
-				.get( "package-descriptor-queries" ), settings ) ) {
+		try ( var factory = BootstrapPipeline.build( PersistenceUnitSources.standalone( PersistenceXmlParser.create().parse( java.util.List.of( xml ) )
+				.get( "package-descriptor-queries" ) ), settings ) ) {
 			PackageDescriptorNamedQueriesTest.verifyNamedQueriesAndStatement( factory );
 		}
 	}

@@ -5,10 +5,6 @@
 package org.hibernate.boot.pipeline.internal.source;
 
 import jakarta.persistence.PersistenceConfiguration;
-import org.hibernate.InvalidMappingException;
-import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
@@ -16,15 +12,11 @@ import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.boot.model.process.internal.ManagedClassDetails;
 import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModuleDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -71,17 +63,17 @@ public record PreparedMappingSources(
 	/// file names are located through the bootstrap class-loading service and bound
 	/// immediately.
 	///
-	/// @param persistenceUnitDescriptor The persistence-unit wrapper
+	/// @param persistenceUnitSources The persistence-unit source adapter
 	/// @param context Context used to resolve model details and load resources
 	public static PreparedMappingSources from(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			PersistenceUnitSources persistenceUnitSources,
 			MappingSourcePreparationContext context) {
 		return from(
-				persistenceUnitDescriptor,
+				persistenceUnitSources,
 				context,
 				SettingsResolver.resolveMappingSettings(
-						SettingsResolver.resolveBootstrapSettings( persistenceUnitDescriptor, Map.of() ),
-						persistenceUnitDescriptor.getDefaultToOneFetchType()
+						SettingsResolver.resolveBootstrapSettings( persistenceUnitSources.descriptor(), Map.of() ),
+						persistenceUnitSources.descriptor().getDefaultToOneFetchType()
 				)
 		);
 	}
@@ -93,14 +85,16 @@ public record PreparedMappingSources(
 	/// file names are located through the bootstrap class-loading service and bound
 	/// immediately when XML mappings are enabled.
 	///
-	/// @param persistenceUnitDescriptor The persistence-unit wrapper
+	/// @param persistenceUnitSources The persistence-unit source adapter
 	/// @param context Context used to resolve model details and load resources
 	/// @param mappingSettings Resolved mapping settings used during source collection
 	public static PreparedMappingSources from(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			PersistenceUnitSources persistenceUnitSources,
 			MappingSourcePreparationContext context,
 			ResolvedMappingSettings mappingSettings) {
-		return from( MappingSources.from( persistenceUnitDescriptor ), context, mappingSettings );
+		return from( persistenceUnitSources.collect(
+				SettingsResolver.resolveBootstrapSettings( persistenceUnitSources.descriptor(), Map.of() ), mappingSettings,
+				new ContributionDiscoveryContext( context.getClassLoaderService() ) ), context, mappingSettings );
 	}
 
 	/// Creates prepared mapping sources from Hibernate's JPA
@@ -141,7 +135,7 @@ public record PreparedMappingSources(
 			ResolvedMappingSettings mappingSettings) {
 		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration );
 		return from(
-				MappingSources.from(
+				ConfigurationMappingProcessor.discover(
 						persistenceConfiguration,
 						bootstrapSettings,
 						mappingSettings,
@@ -190,34 +184,25 @@ public record PreparedMappingSources(
 
 		final var xmlBindings = new ArrayList<Binding<JaxbEntityMappingsImpl>>();
 		if ( mappingSettings.xmlMappingEnabled() ) {
-				mappingSources.mappingResources().forEach( (mappingResource) -> {
-					final var origin = new Origin( SourceType.RESOURCE, mappingResource );
-					try (var mappingFileStream = classLoading.locateResourceStream( mappingResource )) {
-						xmlBindings.add( mappingFileBinder.bind(
-								mappingFileStream,
-								origin
-						) );
+			final var known = new java.util.HashSet<URI>();
+			final var declarations = mappingSources.xmlMappingSources();
+			if ( declarations.stream().anyMatch( XmlMappingSource::discovered ) ) {
+				declarations.stream().filter( source -> !source.discovered() ).forEach( source -> {
+					final var identity = source.identity( classLoading );
+					if ( identity != null ) {
+						known.add( identity );
 					}
-					catch (org.hibernate.boot.MappingException e) {
-						throw new InvalidMappingException(
-								"Could not parse mapping document: " + mappingResource,
-								origin.getType().getLegacyTypeText(),
-								origin.getName(),
-								e
-						);
+				} );
+			}
+			for ( var source : declarations ) {
+				if ( source.discovered() ) {
+					final var identity = source.identity( classLoading );
+					if ( identity != null && !known.add( identity ) ) {
+						continue;
 					}
-					catch (IOException e) {
-						throw new RuntimeException( "Error accessing mapping resource - " + mappingResource, e );
-					}
-			} );
-			mappingSources.mappingFileUris().forEach( (mappingFileUri) -> {
-				xmlBindings.add( bindMappingFile( mappingFileUri, mappingFileBinder ) );
-			} );
-			mappingSources.mappingFileUrls().forEach( (mappingFileUrl) -> {
-				xmlBindings.add( bindMappingFile( mappingFileUrl, mappingFileBinder ) );
-			} );
-			mappingSources.xmlMappingSources().forEach( (xmlMappingSource) ->
-					xmlMappingSource.bind( mappingFileBinder, classLoading, xmlBindings::add ) );
+				}
+				source.bind( mappingFileBinder, classLoading, xmlBindings::add );
+			}
 		}
 
 		return new PreparedMappingSources(
@@ -242,7 +227,7 @@ public record PreparedMappingSources(
 			PersistenceConfiguration persistenceConfiguration,
 			MappingSourcePreparationContext context) {
 		final var settings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration.properties(), true );
-		return from( MappingSources.from( persistenceConfiguration ), context,
+		return from( ConfigurationMappingProcessor.declared( persistenceConfiguration ), context,
 				SettingsResolver.resolveMappingSettings( settings, persistenceConfiguration.defaultToOneFetchType() ) );
 	}
 
@@ -262,20 +247,4 @@ public record PreparedMappingSources(
 		packageDetails.add( classDetailsRegistry.resolveExplicitPackageDetails( packageName ) );
 	}
 
-	private static Binding<JaxbEntityMappingsImpl> bindMappingFile(
-			URI mappingFile,
-			MappingBinder mappingFileBinder) {
-		try {
-			return org.hibernate.boot.jaxb.internal.UrlXmlSource.fromUrl( mappingFile.toURL(), mappingFileBinder );
-		}
-		catch (MalformedURLException e) {
-			throw new RuntimeException( "Error accessing mapping file - " + mappingFile, e );
-		}
-	}
-
-	private static Binding<JaxbEntityMappingsImpl> bindMappingFile(
-			URL mappingFile,
-			MappingBinder mappingFileBinder) {
-		return org.hibernate.boot.jaxb.internal.UrlXmlSource.fromUrl( mappingFile, mappingFileBinder );
-	}
 }

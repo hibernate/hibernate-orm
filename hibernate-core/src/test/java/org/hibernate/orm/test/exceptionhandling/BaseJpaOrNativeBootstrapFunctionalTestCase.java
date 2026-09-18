@@ -100,12 +100,12 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase {
 
 		sessionFactory = org.hibernate.boot.pipeline.internal.BootstrapPipeline
 				.build(
-						new PersistenceUnitDescriptorAdapter() {
+						org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources.standalone( new PersistenceUnitDescriptorAdapter() {
 							@Override
 							public List<String> getManagedClassNames() {
 								return Arrays.stream( getAnnotatedClasses() ).map( Class::getName ).toList();
 							}
-						},
+						} ),
 						properties
 				)
 				.unwrap( SessionFactoryImplementor.class );

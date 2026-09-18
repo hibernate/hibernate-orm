@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,7 +79,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	@Before
 	public void buildEntityManagerFactory() {
 		log.trace( "Building EntityManagerFactory" );
-		entityManagerFactory = BootstrapPipeline.build( buildPersistenceUnitDescriptor(), buildSettings() )
+		entityManagerFactory = BootstrapPipeline.build( PersistenceUnitSources.standalone( buildPersistenceUnitDescriptor() ), buildSettings() )
 				.unwrap( SessionFactoryImplementor.class );
 		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getServiceRegistry();
 		afterEntityManagerFactoryBuilt();

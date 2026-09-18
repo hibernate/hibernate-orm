@@ -82,7 +82,11 @@ public class IndexBuildingScanner implements Scanner {
 		IndexScanner.scanForResources( candidates, lookup, collector );
 	}
 
-	private static void collectMapping(ArchiveDescriptor archive, ResultCollector collector) {
+	private void collectMapping(ArchiveDescriptor archive, ResultCollector collector) {
+		if ( !org.hibernate.internal.util.config.ConfigurationHelper.getBoolean(
+				org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED, scanningContext.getProperties(), true ) ) {
+			return;
+		}
 		final var mapping = archive.findEntry( "META-INF/orm.xml" );
 		if ( mapping != null ) {
 			collector.addMapping( mapping.getUri() );

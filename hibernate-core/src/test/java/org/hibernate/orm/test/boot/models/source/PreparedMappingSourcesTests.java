@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.boot.models.source;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.net.URL;
 import java.net.URI;
 import java.util.ArrayList;
@@ -165,10 +166,10 @@ public class PreparedMappingSourcesTests {
 
 	@Test
 	@SuppressWarnings("deprecation")
-	void testHibernatePersistenceConfigurationScanning(ServiceRegistryScope registryScope) throws Exception {
+	void testHibernatePersistenceConfigurationScanning(ServiceRegistryScope registryScope, @org.junit.jupiter.api.io.TempDir java.nio.file.Path directory) throws Exception {
 		var buildingContext = new MetadataBuildingContextTestingImpl( registryScope.getRegistry() );
 
-		var config = new HibernatePersistenceConfiguration( "test", new URL( "file:/does-not-need-to-exist/" ) );
+		var config = new HibernatePersistenceConfiguration( "test", directory.toUri().toURL() );
 		config.property(
 				PersistenceSettings.SCANNER,
 				new Scanner() {
@@ -252,7 +253,7 @@ public class PreparedMappingSourcesTests {
 
 		var puiWrapper = new PersistenceUnitInfoDescriptor( pui );
 		var modelSources = PreparedMappingSources.from(
-				puiWrapper,
+				PersistenceUnitSources.container( puiWrapper ),
 				new MappingSourcePreparationContext(
 						buildingContext.getModelsContext(),
 						buildingContext.getServiceRegistry()
@@ -275,7 +276,7 @@ public class PreparedMappingSourcesTests {
 
 		var puiWrapper = new PersistenceUnitInfoDescriptor( pui );
 		var modelSources = PreparedMappingSources.from(
-				puiWrapper,
+				PersistenceUnitSources.container( puiWrapper ),
 				new MappingSourcePreparationContext(
 						buildingContext.getModelsContext(),
 						buildingContext.getServiceRegistry()

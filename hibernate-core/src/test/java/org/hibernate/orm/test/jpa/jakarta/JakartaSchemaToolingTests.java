@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.jakarta;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -168,6 +169,6 @@ public class JakartaSchemaToolingTests {
 		};
 
 
-		return BootstrapPipeline.build( puDescriptor, settings ).unwrap( SessionFactoryImplementor.class );
+		return BootstrapPipeline.build( PersistenceUnitSources.standalone( puDescriptor ), settings ).unwrap( SessionFactoryImplementor.class );
 	}
 }

@@ -65,6 +65,37 @@ class DescriptorScanningTests {
 		}
 	}
 
+	@Test
+	void disabledXmlDoesNotReadDefaultMappings(@TempDir Path directory) throws Exception {
+		final var visits = new java.util.concurrent.atomic.AtomicInteger();
+		final var factory = new StandardArchiveDescriptorFactory() {
+			@Override
+			public org.hibernate.boot.archive.spi.ArchiveDescriptor buildArchiveDescriptor(java.net.URL url) {
+				return new org.hibernate.boot.archive.spi.ArchiveDescriptor() {
+					@Override public java.net.URL getUrl() { return url; }
+					@Override public void visitClassEntries(java.util.function.Consumer<org.hibernate.boot.archive.spi.ArchiveEntry> consumer) {
+						visits.incrementAndGet();
+					}
+					@Override public org.hibernate.boot.archive.spi.ArchiveEntry findEntry(String path) {
+						throw new AssertionError( "Disabled XML must not be read" );
+					}
+					@Override public org.hibernate.boot.archive.spi.ArchiveDescriptor resolveJarFileReference(String name) {
+						return this;
+					}
+				};
+			}
+		};
+		final var context = new ScanningContextImpl( factory,
+				Map.of( org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED, false ) );
+		final var scanner = new ScanningProviderImpl().builderScanner( context );
+		final var root = directory.toUri().toURL();
+		assertThat( scanner.scan( root ).mappingFiles() ).isEmpty();
+		final var unit = new JaxbPersistenceUnitImpl();
+		unit.setExcludeUnlistedClasses( false );
+		assertThat( scanner.jpaScan( factory.buildArchiveDescriptor( root ), unit ).mappingFiles() ).isEmpty();
+		assertThat( visits.get() ).isEqualTo( 2 );
+	}
+
 	private JavaArchive module(Path directory, String suffix, boolean discoverable, Indexer indexer) throws Exception {
 		final var packageName = "fixture." + suffix;
 		final var archive = ShrinkWrap.create( JavaArchive.class, suffix + ".jar" )

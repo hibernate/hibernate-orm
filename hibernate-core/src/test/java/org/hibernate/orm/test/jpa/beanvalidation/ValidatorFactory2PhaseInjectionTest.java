@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.jpa.beanvalidation;
 
+import java.nio.file.Path;
+import org.junit.jupiter.api.io.TempDir;
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.net.URL;
 import java.util.Map;
 
@@ -13,7 +16,6 @@ import jakarta.validation.ValidatorFactory;
 
 import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -51,20 +53,20 @@ public class ValidatorFactory2PhaseInjectionTest {
 	}
 
 	@Test
-	public void testInjectionAvailabilityFromEmf() {
+	public void testInjectionAvailabilityFromEmf(@TempDir Path directory) throws Exception {
+		final var root = directory.toUri().toURL();
 		final Map<String,Object> settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put( AvailableSettings.JPA_VALIDATION_FACTORY, vf );
 
 		EntityManagerFactory emf = BootstrapPipeline.build(
-				new PersistenceUnitInfoDescriptor(
+				PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor(
 						new JpaXsdVersionsTest.PersistenceUnitInfoImpl( "my-test" ) {
 							@Override
 							public URL getPersistenceUnitRootUrl() {
-								// just get any known url...
-								return HibernatePersistenceProvider.class.getResource( "/org/hibernate/jpa/persistence_1_0.xsd" );
+								return root;
 							}
 						}
-				),
+				) ),
 				settings
 		);
 		try {

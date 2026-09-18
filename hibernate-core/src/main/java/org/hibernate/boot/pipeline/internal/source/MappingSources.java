@@ -10,23 +10,13 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
-import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.MappingException;
+import java.util.LinkedHashSet;
 import java.util.List;
 
-import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
-import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
-import org.hibernate.boot.scan.spi.ScanningResult;
-import org.hibernate.jpa.HibernatePersistenceConfiguration;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-
-import jakarta.persistence.PersistenceConfiguration;
-
-import static java.util.Collections.addAll;
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
+import org.hibernate.models.spi.ClassDetails;
 
 /// Mapping sources collected from a bootstrap entry point.
 ///
@@ -44,9 +34,6 @@ public class MappingSources {
 	private final LinkedHashSet<String> managedClassNames = new LinkedHashSet<>();
 	private final LinkedHashSet<String> moduleNames = new LinkedHashSet<>();
 	private final LinkedHashSet<String> packageNames = new LinkedHashSet<>();
-	private final List<String> mappingResources = new ArrayList<>();
-	private final List<URI> mappingFileUris = new ArrayList<>();
-	private final List<URL> mappingFileUrls = new ArrayList<>();
 	private final List<XmlMappingSource> xmlMappingSources = new ArrayList<>();
 	private boolean includeUnlistedStructuralTypes = true;
 
@@ -241,7 +228,7 @@ public class MappingSources {
 	/// Add a classpath mapping resource name.
 	public MappingSources addMappingResource(String mappingResource) {
 		if ( mappingResource != null ) {
-			mappingResources.add( mappingResource );
+			xmlMappingSources.add( XmlMappingSource.fromResource( mappingResource ) );
 		}
 		return this;
 	}
@@ -249,7 +236,7 @@ public class MappingSources {
 	/// Add classpath mapping resource names.
 	public MappingSources addMappingResources(String... mappingResources) {
 		if ( mappingResources != null && mappingResources.length > 0 ) {
-			addAll( this.mappingResources, mappingResources );
+			java.util.Arrays.stream( mappingResources ).forEach( this::addMappingResource );
 		}
 		return this;
 	}
@@ -265,7 +252,7 @@ public class MappingSources {
 	/// Add a mapping file path.
 	public MappingSources addMappingFile(Path mappingFile) {
 		if ( mappingFile != null ) {
-			mappingFileUris.add( mappingFile.toUri() );
+			addMappingUri( mappingFile.toUri() );
 		}
 		return this;
 	}
@@ -278,7 +265,7 @@ public class MappingSources {
 	/// Add a mapping file URI.
 	public MappingSources addMappingUri(URI mappingFileUri) {
 		if ( mappingFileUri != null ) {
-			mappingFileUris.add( mappingFileUri );
+			xmlMappingSources.add( XmlMappingSource.fromUri( mappingFileUri ) );
 		}
 		return this;
 	}
@@ -294,7 +281,7 @@ public class MappingSources {
 	/// Add a mapping file URL.
 	public MappingSources addMappingUrl(URL mappingFileUrl) {
 		if ( mappingFileUrl != null ) {
-			mappingFileUrls.add( mappingFileUrl );
+			xmlMappingSources.add( XmlMappingSource.fromUrl( mappingFileUrl ) );
 		}
 		return this;
 	}
@@ -345,22 +332,25 @@ public class MappingSources {
 
 	/// XML mapping resources contributed by name.
 	public List<String> mappingResources() {
-		return List.copyOf( mappingResources );
+		return xmlMappingSources.stream().filter( XmlMappingSource.Resource.class::isInstance )
+				.map( XmlMappingSource.Resource.class::cast ).map( XmlMappingSource.Resource::name ).toList();
 	}
 
 	/// XML mapping files contributed by URI.
 	public List<URI> mappingFileUris() {
-		return List.copyOf( mappingFileUris );
+		return xmlMappingSources.stream().filter( XmlMappingSource.Uri.class::isInstance )
+				.map( XmlMappingSource.Uri.class::cast ).map( XmlMappingSource.Uri::uri ).toList();
 	}
 
 	/// XML mapping files contributed by URL.
 	public List<URL> mappingFileUrls() {
-		return List.copyOf( mappingFileUrls );
+		return xmlMappingSources.stream().filter( XmlMappingSource.Url.class::isInstance )
+				.map( XmlMappingSource.Url.class::cast ).map( XmlMappingSource.Url::url ).toList();
 	}
 
 	/// XML mapping sources which bind lazily during source resolution.
 	public List<XmlMappingSource> xmlMappingSources() {
-		return List.copyOf( xmlMappingSources );
+		return xmlMappingSources.stream().sorted( java.util.Comparator.comparingInt( XmlMappingSource::bindingOrder ) ).toList();
 	}
 
 	public boolean includeUnlistedStructuralTypes() {
@@ -400,155 +390,15 @@ public class MappingSources {
 				mappingSources.managedClasses(),
 				mappingSources.managedClassNames(),
 				mappingSources.packageNames(),
-				mappingSources.mappingResources(),
-				mappingSources.mappingFileUris(),
-				mappingSources.mappingFileUrls(),
+				List.of(),
+				List.of(),
+				List.of(),
 				mappingSources.xmlMappingSources(),
 				mappingSources.includeUnlistedStructuralTypes()
 		).addModules( mappingSources.moduleNames() );
 		mappingSources.managedClassDetails().forEach( copy::addClassDetails );
 		mappingSources.modules().forEach( copy::addModule );
 		return copy;
-	}
-
-	/// Adapts Jakarta Persistence's programmatic bootstrap configuration to
-	/// neutral mapping sources.
-	public static MappingSources from(PersistenceConfiguration persistenceConfiguration) {
-		if ( persistenceConfiguration instanceof HibernatePersistenceConfiguration hibernatePersistenceConfiguration ) {
-			final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( hibernatePersistenceConfiguration );
-			return from(
-					hibernatePersistenceConfiguration,
-					bootstrapSettings,
-					SettingsResolver.resolveMappingSettings(
-							bootstrapSettings,
-							hibernatePersistenceConfiguration.defaultToOneFetchType()
-					),
-					(ContributionDiscoveryContext) null
-			);
-		}
-		return new MappingSources(
-				persistenceConfiguration.managedClasses(),
-				persistenceConfiguration.mappingFiles()
-		).addPackages( persistenceConfiguration.managedPackageDescriptors() )
-				.addModules( persistenceConfiguration.managedModuleDescriptors() );
-	}
-
-	/// Adapts Hibernate's persistence-unit descriptor abstraction to neutral
-	/// mapping sources.
-	public static MappingSources from(PersistenceUnitDescriptor persistenceUnitDescriptor) {
-		return from( persistenceUnitDescriptor, null, null );
-	}
-
-	/// Adapts Hibernate's persistence-unit descriptor abstraction to neutral
-	/// mapping sources.
-	public static MappingSources from(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			ResolvedBootstrapSettings bootstrapSettings,
-			ContributionDiscoveryContext context) {
-		final var managedClassNames = new ArrayList<>( persistenceUnitDescriptor.getAllClassNames() );
-		persistenceUnitDescriptor.getManagedClassNames().forEach( ManagedResourceValidation::validateClassName );
-		final var packageNames = new ArrayList<>( persistenceUnitDescriptor.getAllPackageDescriptors() );
-		final var classLoaderService = context == null ? null : context.classLoaderService();
-		final var scanningResult = classLoaderService == null || bootstrapSettings == null
-				|| persistenceUnitDescriptor instanceof org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor
-				? ScanningResult.NONE
-				: HibernatePersistenceConfigurationScanner.performScanning(
-						persistenceUnitDescriptor,
-						bootstrapSettings,
-						classLoaderService
-				);
-		managedClassNames.addAll( scanningResult.discoveredClasses() );
-		packageNames.addAll( scanningResult.discoveredPackages() );
-
-		final var mappingResources = new ArrayList<>( persistenceUnitDescriptor.getMappingFileNames() );
-
-		final var mappingFileUrls = classLoaderService == null
-				? List.<URL>of()
-				: classLoaderService.locateResources( "META-INF/orm.xml" );
-
-		return new MappingSources(
-				List.of(),
-				managedClassNames,
-				packageNames,
-				mappingResources,
-				List.of(),
-				List.of(),
-				List.of(),
-				!persistenceUnitDescriptor.isExcludeUnlistedClasses()
-		).addModules( persistenceUnitDescriptor.getAllModuleDescriptors() )
-				.addModules( scanningResult.discoveredModules() )
-				.addDiscoveredMappings( scanningResult.mappingFiles(), mappingFileUrls, classLoaderService );
-	}
-
-	/// Adapts Hibernate's programmatic JPA bootstrap configuration to neutral
-	/// mapping sources, including archive scanning.
-	public static MappingSources from(
-			HibernatePersistenceConfiguration persistenceConfiguration,
-			ResolvedBootstrapSettings bootstrapSettings,
-			ResolvedMappingSettings mappingSettings,
-			ContributionDiscoveryContext context) {
-		if ( context == null ) {
-			return new MappingSources(
-					persistenceConfiguration.managedClasses(),
-					persistenceConfiguration.managedClassNames(),
-					persistenceConfiguration.packageNames(),
-					persistenceConfiguration.mappingFiles(),
-					persistenceConfiguration.mappingFileUris(),
-					persistenceConfiguration.mappingFileUrls()
-			).addPackages( persistenceConfiguration.managedPackageDescriptors() )
-					.addModules( persistenceConfiguration.managedModuleDescriptors() );
-		}
-		final ScanningResult scanningResult = HibernatePersistenceConfigurationScanner.performScanning(
-				persistenceConfiguration,
-				bootstrapSettings,
-				mappingSettings,
-				context.classLoaderService()
-		);
-		final var managedClassNames = new ArrayList<>( persistenceConfiguration.managedClassNames() );
-		managedClassNames.addAll( scanningResult.discoveredClasses() );
-		final var packageNames = new ArrayList<>( persistenceConfiguration.packageNames() );
-		packageNames.addAll( persistenceConfiguration.managedPackageDescriptors() );
-		packageNames.addAll( scanningResult.discoveredPackages() );
-		return new MappingSources(
-				persistenceConfiguration.managedClasses(),
-				managedClassNames,
-				packageNames,
-				persistenceConfiguration.mappingFiles(),
-				persistenceConfiguration.mappingFileUris(),
-				persistenceConfiguration.mappingFileUrls()
-		).addModules( persistenceConfiguration.managedModuleDescriptors() )
-				.addModules( scanningResult.discoveredModules() )
-				.addDiscoveredMappings( scanningResult.mappingFiles(), List.of(), context.classLoaderService() );
-	}
-	private MappingSources addDiscoveredMappings(
-			Collection<URI> discoveredUris,
-			Collection<URL> discoveredUrls,
-			org.hibernate.boot.registry.classloading.spi.ClassLoaderService classLoading) {
-		if ( discoveredUris.isEmpty() && discoveredUrls.isEmpty() ) {
-			return this;
-		}
-		final var known = new LinkedHashSet<URI>();
-		mappingFileUris.forEach( uri -> known.add( uri.normalize() ) );
-		mappingFileUrls.forEach( url -> known.add( URI.create( url.toExternalForm() ).normalize() ) );
-		if ( classLoading != null ) {
-			mappingResources.forEach( name -> {
-				final var url = classLoading.locateResource( name );
-				if ( url != null ) {
-					known.add( URI.create( url.toExternalForm() ).normalize() );
-				}
-			} );
-		}
-		discoveredUris.forEach( uri -> {
-			if ( known.add( uri.normalize() ) ) {
-				addMappingUri( uri );
-			}
-		} );
-		discoveredUrls.forEach( url -> {
-			if ( known.add( URI.create( url.toExternalForm() ).normalize() ) ) {
-				addMappingUrl( url );
-			}
-		} );
-		return this;
 	}
 
 }

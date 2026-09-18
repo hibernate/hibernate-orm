@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.boot.models.source;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
+import org.hibernate.boot.pipeline.internal.source.ConfigurationMappingProcessor;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
@@ -77,6 +79,14 @@ public class MappingSourcesTests {
 	}
 
 	@Test
+	void preservesProgrammaticPackageDeclarationOrder() {
+		final var configuration = new HibernatePersistenceConfiguration( "packages" );
+		configuration.packageName( "legacy.first" ).managedPackageDescriptor( "jpa.second" );
+		assertThat( ConfigurationMappingProcessor.declared( configuration ).packageNames() )
+				.containsExactly( "legacy.first", "jpa.second" );
+	}
+
+	@Test
 	void appliesMetadataCustomizationQueryImports(ServiceRegistryScope registryScope) {
 		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( Map.of() );
 		final var mappingSettings = SettingsResolver.resolveMappingSettings( bootstrapSettings, FetchType.EAGER );
@@ -116,7 +126,7 @@ public class MappingSourcesTests {
 				persistenceConfiguration.defaultToOneFetchType()
 		);
 
-		final var mappingSources = MappingSources.from(
+		final var mappingSources = ConfigurationMappingProcessor.discover(
 				persistenceConfiguration,
 				bootstrapSettings,
 				mappingSettings,
@@ -131,7 +141,7 @@ public class MappingSourcesTests {
 	}
 
 	@Test
-	void adaptsPersistenceUnitDescriptorSources() {
+	void adaptsPersistenceUnitDescriptorSources(ServiceRegistryScope registryScope) {
 		final var persistenceUnitDescriptor = new TestPersistenceUnitDescriptor(
 				new Properties(),
 				List.of( MappedEntity.class.getName() ),
@@ -142,10 +152,9 @@ public class MappingSourcesTests {
 				persistenceUnitDescriptor,
 				Map.of()
 		);
-		final var mappingSources = MappingSources.from(
-				persistenceUnitDescriptor,
+		final var mappingSources = PersistenceUnitSources.standalone( persistenceUnitDescriptor ).collect(
 				bootstrapSettings,
-				null
+				new ContributionDiscoveryContext( registryScope.getRegistry().requireService( ClassLoaderService.class ) )
 		);
 
 		assertThat( mappingSources.managedClasses() ).isEmpty();
@@ -158,12 +167,12 @@ public class MappingSourcesTests {
 	}
 
 	@Test
-	void adaptsPersistenceUnitDescriptorJarFileScanning(ServiceRegistryScope registryScope) throws Exception {
+	void adaptsPersistenceUnitDescriptorJarFileScanning(ServiceRegistryScope registryScope, @org.junit.jupiter.api.io.TempDir Path directory) throws Exception {
 		final var scanner = new CapturingScanner();
 		final var persistenceUnitProperties = new Properties();
 		persistenceUnitProperties.put( PersistenceSettings.SCANNER, scanner );
-		final var rootUrl = URI.create( "file:/persistence-root/" ).toURL();
-		final var jarFileUrl = URI.create( "file:/persistence-root/lib/model.jar" ).toURL();
+		final var rootUrl = directory.toUri().toURL();
+		final var jarFileUrl = java.nio.file.Files.createDirectory( directory.resolve( "model" ) ).toUri().toURL();
 		final var descriptor = new TestPersistenceUnitDescriptor(
 				persistenceUnitProperties,
 				List.of(),
@@ -177,8 +186,7 @@ public class MappingSourcesTests {
 				Map.of()
 		);
 
-		final var mappingSources = MappingSources.from(
-				descriptor,
+		final var mappingSources = PersistenceUnitSources.standalone( descriptor ).collect(
 				bootstrapSettings,
 				new ContributionDiscoveryContext( registryScope.getRegistry().requireService( ClassLoaderService.class ) )
 		);
@@ -192,7 +200,7 @@ public class MappingSourcesTests {
 	}
 
 	@Test
-	void discoveryDoesNotDuplicateExplicitXml(ServiceRegistryScope registryScope) throws Exception {
+	void discoveryDoesNotDuplicateExplicitXml(ServiceRegistryScope registryScope, @org.junit.jupiter.api.io.TempDir Path directory) throws Exception {
 		final var loading = registryScope.getRegistry().requireService( ClassLoaderService.class );
 		final var resource = "org/hibernate/orm/test/boot/models/source/available.xml";
 		final var uri = loading.locateResource( resource ).toURI();
@@ -208,15 +216,18 @@ public class MappingSourcesTests {
 				throw new AssertionError( "Programmatic configuration uses boundary scanning" );
 			}
 		};
-		final var configuration = new HibernatePersistenceConfiguration( "xml-discovery", URI.create( "file:/root/" ).toURL() );
+		final var configuration = new HibernatePersistenceConfiguration( "xml-discovery", directory.toUri().toURL() );
 		configuration.mappingFile( resource ).mappingFile( resource );
 		configuration.property( PersistenceSettings.SCANNER, scanner );
 		final var settings = SettingsResolver.resolveBootstrapSettings( configuration );
-		final var sources = MappingSources.from( configuration, settings,
+		final var sources = ConfigurationMappingProcessor.discover( configuration, settings,
 				SettingsResolver.resolveMappingSettings( settings, configuration.defaultToOneFetchType() ),
 				new ContributionDiscoveryContext( loading ) );
 		assertThat( sources.mappingResources() ).containsExactly( resource, resource );
-		assertThat( sources.mappingFileUris() ).isEmpty();
+		final var context = new org.hibernate.testing.boot.MetadataBuildingContextTestingImpl( registryScope.getRegistry() );
+		assertThat( org.hibernate.boot.pipeline.internal.source.PreparedMappingSources.from( sources,
+				new org.hibernate.boot.pipeline.internal.source.MappingSourcePreparationContext( context.getModelsContext(), registryScope.getRegistry() ),
+				SettingsResolver.resolveMappingSettings( settings, configuration.defaultToOneFetchType() ) ).xmlMappings() ).hasSize( 2 );
 	}
 
 	private record TestPersistenceUnitDescriptor(

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.util.Map;
 
 import org.hibernate.SessionFactory;
@@ -31,7 +32,7 @@ public class SessionFactoryObserverTest {
 
 		try {
 			final EntityManagerFactory entityManagerFactory = BootstrapPipeline.build(
-					new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ),
+					PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ) ),
 					settings
 			);
 			entityManagerFactory.close();

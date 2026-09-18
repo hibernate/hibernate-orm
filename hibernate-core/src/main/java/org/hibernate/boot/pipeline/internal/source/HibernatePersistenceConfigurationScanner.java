@@ -54,30 +54,26 @@ class HibernatePersistenceConfigurationScanner {
 			ResolvedBootstrapSettings bootstrapSettings,
 			ResolvedMappingSettings mappingSettings,
 			ClassLoaderService classLoaderService) {
-		final URL[] boundaries = collectUrls( persistenceConfiguration );
-		if ( boundaries == null ) {
-			return ScanningResult.NONE;
-		}
-
-		final Map<String, Object> configurationValues = bootstrapSettings.configurationValues();
-		final var archiveDescriptorFactory = determineArchiveDescriptorFactory( configurationValues, classLoaderService );
-		final var scanningContext = new ScanningContextImpl( archiveDescriptorFactory, configurationValues );
-		final ScanningProvider scanningProvider = determineScanningProvider( configurationValues, classLoaderService );
-		final Scanner scanner = scanningProvider.builderScanner( scanningContext );
-		return scanner.scan( boundaries );
+		return performScanning( collectUrls( persistenceConfiguration ), bootstrapSettings, mappingSettings, classLoaderService );
 	}
 
 	@Nonnull
 	static ScanningResult performScanning(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
 			ClassLoaderService classLoaderService) {
-		final URL[] boundaries = collectUrls( persistenceUnitDescriptor );
+		return performScanning( collectUrls( persistenceUnitDescriptor ), bootstrapSettings, mappingSettings, classLoaderService );
+	}
+
+	private static ScanningResult performScanning(URL[] boundaries, ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings, ClassLoaderService classLoaderService) {
 		if ( boundaries == null ) {
 			return ScanningResult.NONE;
 		}
 
-		final Map<String, Object> configurationValues = bootstrapSettings.configurationValues();
+		final Map<String, Object> configurationValues = new java.util.HashMap<>( bootstrapSettings.configurationValues() );
+		configurationValues.put( org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED, mappingSettings.xmlMappingEnabled() );
 		final var archiveDescriptorFactory = determineArchiveDescriptorFactory( configurationValues, classLoaderService );
 		final var scanningContext = new ScanningContextImpl( archiveDescriptorFactory, configurationValues );
 		final ScanningProvider scanningProvider = determineScanningProvider( configurationValues, classLoaderService );
@@ -218,7 +214,7 @@ class HibernatePersistenceConfigurationScanner {
 		}
 	}
 
-	private static ArchiveDescriptorFactory determineArchiveDescriptorFactory(
+	static ArchiveDescriptorFactory determineArchiveDescriptorFactory(
 			Map<?, ?> settings,
 			ClassLoaderService classLoaderService) {
 		final Object setting = settings.get( PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER );

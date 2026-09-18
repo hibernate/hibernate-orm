@@ -177,12 +177,37 @@ locations. Disabling XML prevents binding explicit and discovered XML alike,
 including through the direct preparation overloads.
 
 Container bootstrap consumes the container's complete inventories without provider
-scanning. Programmatic discovery runs once when archive boundaries are available.
+program-element scanning. Programmatic discovery runs once when archive boundaries are available.
 Archive discovery and `includeUnlistedStructuralTypes` remain independent: the
 latter controls categorization of reachable structural types, not archive scope.
 Both container transformer entry points share creation and discovery logic, using
 only the complete ordinary-class inventory. Package and module descriptors never
 become enhancement candidates.
+
+=== Entry-point source authority and XML declarations
+
+`PersistenceUnitSources.standalone(...)` selects provider discovery for persistence-unit
+declarations. `PersistenceUnitSources.container(...)` consumes a container's complete
+class/package/module inventory and registers its transformer without type scanning.
+Factory construction, schema generation, and metadata inspection all carry this
+explicit adapter into bootstrap. `ConfigurationMappingProcessor` separates declared
+programmatic inputs from Hibernate's archive-discovery extension.
+
+Default XML lookup is independent of type scanning. It uses archive descriptors to
+find `META-INF/orm.xml` in the persistence-unit root and referenced archives, even
+when unlisted classes are excluded. It does not search unrelated classloader-visible
+archives. With no archive boundaries, only explicit XML declarations are used.
+
+`MappingSources` stores XML declarations uniformly as `XmlMappingSource` values.
+Preparation preserves the historical resource/URI/URL/stream binding order and all
+explicit duplicates. Known resource identities suppress discovered duplicates only;
+identity resolution never consumes a stream. XML-disabled preparation does not bind
+or open XML inputs, and each source retains its existing stream-ownership contract.
+
+Global annotation registrations share one `AnnotationTarget` collection path.
+Class imports, converter recognition, callbacks, and persistent-type categorization
+remain class-specific; package/module descriptors never enter the ordinary-class map.
+
 
 === Package and module metadata
 

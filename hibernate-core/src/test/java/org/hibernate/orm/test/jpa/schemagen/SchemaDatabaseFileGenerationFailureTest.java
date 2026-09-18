@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.schemagen;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
@@ -69,7 +70,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "on gauss we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
-			BootstrapPipeline.generateSchema( persistenceUnitDescriptor, config );
+			BootstrapPipeline.generateSchema( PersistenceUnitSources.standalone( persistenceUnitDescriptor ), config );
 			fail( "Should have thrown IOException" );
 		}
 		catch (Exception e) {

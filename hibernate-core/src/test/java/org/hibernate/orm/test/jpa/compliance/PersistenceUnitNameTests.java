@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.compliance;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -51,8 +52,10 @@ public class PersistenceUnitNameTests {
 		var descriptors = PersistenceXmlParser.create().parse( List.of( puFile ) );
 		assertThat( descriptors ).containsKey( name );
 		final PersistenceUnitDescriptor descriptor = descriptors.get( name );
+		assertThat( java.nio.file.Path.of( java.net.URI.create( descriptor.getPersistenceUnitRootUrl().toExternalForm() ) ) )
+				.isEqualTo( java.nio.file.Path.of( java.net.URI.create( puFile.toExternalForm() ) ).getParent() );
 		return BootstrapPipeline.build(
-				descriptor,
+				PersistenceUnitSources.standalone( descriptor ),
 				buildSettings( scope )
 		);
 	}

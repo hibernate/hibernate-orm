@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +51,7 @@ class CompositePrimaryKeyColumnOrderTest {
 
 		Path ddlScript = tempDir.resolve( "ddl.sql" );
 
-		try (var metadataResolution = BootstrapPipeline.resolveMetadata( puDescriptor, settings )) {
+		try (var metadataResolution = BootstrapPipeline.resolveMetadata( PersistenceUnitSources.standalone( puDescriptor ), settings )) {
 			new SchemaExport()
 					.setHaltOnError( true )
 					.setOutputFile( ddlScript.toString() )

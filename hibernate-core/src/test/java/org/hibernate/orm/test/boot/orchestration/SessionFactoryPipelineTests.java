@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.boot.orchestration;
 
+import org.hibernate.boot.pipeline.internal.source.ConfigurationMappingProcessor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
@@ -11,7 +12,6 @@ import java.util.Map;
 import org.hibernate.boot.serial.MetadataSerialization;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.pipeline.internal.source.ContributionDiscoveryContext;
-import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.pipeline.internal.MappingResolutionPipeline;
 import org.hibernate.boot.pipeline.internal.ResolvedMapping;
 import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
@@ -224,7 +224,7 @@ public class SessionFactoryPipelineTests {
 			HibernatePersistenceConfiguration persistenceConfiguration,
 			ResolvedBootstrapSettings bootstrapSettings,
 			ResolvedMappingSettings mappingSettings) {
-		final var mappingSources = MappingSources.from(
+		final var mappingSources = ConfigurationMappingProcessor.discover(
 				persistenceConfiguration,
 				bootstrapSettings,
 				mappingSettings,

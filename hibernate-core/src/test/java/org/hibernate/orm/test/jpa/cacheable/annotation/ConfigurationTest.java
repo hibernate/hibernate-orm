@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.cacheable.annotation;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.util.List;
 import java.util.Map;
 
@@ -129,7 +130,7 @@ public class ConfigurationTest {
 		};
 
 		mappingResolutionResult = BootstrapPipeline.resolveMetadata(
-				new PersistenceUnitInfoDescriptor( adapter ),
+				PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( adapter ) ),
 				settings
 		);
 		return mappingResolutionResult.metadata();

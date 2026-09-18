@@ -744,3 +744,17 @@ Such changes typically do not impact programs using a relational schema managed 
 == Changes in Dependencies
 
 This section describes changes to dependencies used by Hibernate ORM.
+
+[[default-orm-xml-discovery]]
+== Default XML mapping discovery
+
+Persistence-unit bootstrap discovers `META-INF/orm.xml` in the persistence-unit
+root and archives referenced by its `jar-file` declarations. A same-named resource
+in another archive is no longer included merely because the application classloader
+can see it. List such a mapping explicitly using `mapping-file` to include it.
+Explicit mapping resources may still be located anywhere on the application classpath.
+
+`exclude-unlisted-classes` does not disable default XML mapping discovery.
+Container-provided class/package/module inventories remain authoritative; Hibernate
+loads XML mappings without repeating program-element scanning. If no root or
+referenced archives are supplied, no ambient classpath search is performed.

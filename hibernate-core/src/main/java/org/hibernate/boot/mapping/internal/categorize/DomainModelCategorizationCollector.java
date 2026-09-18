@@ -21,6 +21,7 @@ import org.hibernate.boot.models.spi.PersistenceUnitLifecycleEventHandler;
 import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.ModelsException;
 
@@ -84,6 +85,7 @@ public class DomainModelCategorizationCollector {
 		final String className = classDetails.getClassName();
 		if ( className != null && !mappedSuperclasses.containsKey( className ) ) {
 			collectGlobalRegistrations( classDetails );
+			collectClassRegistrations( classDetails );
 			mappedSuperclasses.put( className, classDetails );
 		}
 	}
@@ -92,6 +94,7 @@ public class DomainModelCategorizationCollector {
 		final String className = classDetails.getClassName();
 		if ( className != null && !embeddables.containsKey( className ) ) {
 			collectGlobalRegistrations( classDetails );
+			collectClassRegistrations( classDetails );
 			embeddables.put( className, classDetails );
 		}
 	}
@@ -129,32 +132,18 @@ public class DomainModelCategorizationCollector {
 	}
 
 	public void apply(org.hibernate.models.spi.ModuleDetails moduleDetails) {
-		getGlobalRegistrations().collectJavaTypeRegistrations( moduleDetails );
-		getGlobalRegistrations().collectJdbcTypeRegistrations( moduleDetails );
-		getGlobalRegistrations().collectConverterRegistrations( moduleDetails );
-		getGlobalRegistrations().collectUserTypeRegistrations( moduleDetails );
-		getGlobalRegistrations().collectCompositeUserTypeRegistrations( moduleDetails );
-		getGlobalRegistrations().collectCollectionTypeRegistrations( moduleDetails );
-		getGlobalRegistrations().collectEmbeddableInstantiatorRegistrations( moduleDetails );
-		getGlobalRegistrations().collectFilterDefinitions( moduleDetails );
-		getGlobalRegistrations().collectFetchProfiles( moduleDetails );
-		getGlobalRegistrations().collectNamedQueryRegistrations( moduleDetails );
-		getGlobalRegistrations().collectSqlResultSetMappingRegistrations( moduleDetails );
-		getGlobalRegistrations().collectIdGenerators( moduleDetails );
-		getGlobalRegistrations().collectNamedEntityGraphRegistrations( moduleDetails );
+		collectManagedGlobalRegistrations( moduleDetails );
 	}
 
 	public void applyPackageDescriptor(ClassDetails packageDetails) {
-		collectGlobalRegistrations( packageDetails );
-		getGlobalRegistrations().collectIdGenerators( packageDetails );
+		collectManagedGlobalRegistrations( packageDetails );
 	}
 
 	public void apply(ClassDetails classDetails) {
 		org.hibernate.boot.model.process.internal.ManagedResourceValidation.validateClassName( classDetails.getName() );
 		sourceClasses.putIfAbsent( classDetails.getName(), classDetails );
-		collectGlobalRegistrations( classDetails );
-
-		getGlobalRegistrations().collectIdGenerators( classDetails );
+		collectManagedGlobalRegistrations( classDetails );
+		collectClassRegistrations( classDetails );
 
 		validateManagedTypeCategory( classDetails );
 		if ( classDetails.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
@@ -178,19 +167,29 @@ public class DomainModelCategorizationCollector {
 		getGlobalRegistrations().collectConverter( classDetails );
 	}
 
-	private void collectGlobalRegistrations(ClassDetails classDetails) {
-		getGlobalRegistrations().collectJavaTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectJdbcTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectConverterRegistrations( classDetails );
-		getGlobalRegistrations().collectUserTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectCompositeUserTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectCollectionTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectEmbeddableInstantiatorRegistrations( classDetails );
-		getGlobalRegistrations().collectFilterDefinitions( classDetails );
-		getGlobalRegistrations().collectFetchProfiles( classDetails );
-		getGlobalRegistrations().collectNamedQueryRegistrations( classDetails );
-		getGlobalRegistrations().collectSqlResultSetMappingRegistrations( classDetails );
-		getGlobalRegistrations().collectNamedEntityGraphRegistrations( classDetails );
+	/// Generator declarations are admitted for managed sources, while implicitly
+	/// reached structural types retain their existing registration behavior.
+	private void collectManagedGlobalRegistrations(AnnotationTarget target) {
+		collectGlobalRegistrations( target );
+		getGlobalRegistrations().collectIdGenerators( target );
+	}
+
+	private void collectGlobalRegistrations(AnnotationTarget target) {
+		getGlobalRegistrations().collectJavaTypeRegistrations( target );
+		getGlobalRegistrations().collectJdbcTypeRegistrations( target );
+		getGlobalRegistrations().collectConverterRegistrations( target );
+		getGlobalRegistrations().collectUserTypeRegistrations( target );
+		getGlobalRegistrations().collectCompositeUserTypeRegistrations( target );
+		getGlobalRegistrations().collectCollectionTypeRegistrations( target );
+		getGlobalRegistrations().collectEmbeddableInstantiatorRegistrations( target );
+		getGlobalRegistrations().collectFilterDefinitions( target );
+		getGlobalRegistrations().collectFetchProfiles( target );
+		getGlobalRegistrations().collectNamedQueryRegistrations( target );
+		getGlobalRegistrations().collectSqlResultSetMappingRegistrations( target );
+		getGlobalRegistrations().collectNamedEntityGraphRegistrations( target );
+	}
+
+	private void collectClassRegistrations(ClassDetails classDetails) {
 		getGlobalRegistrations().collectImportRename( classDetails );
 		if ( classDetails.hasDirectAnnotationUsage( EntityListener.class ) ) {
 			final var listeners = JpaEventListener.listenerMethodsOrEmpty( classDetails );

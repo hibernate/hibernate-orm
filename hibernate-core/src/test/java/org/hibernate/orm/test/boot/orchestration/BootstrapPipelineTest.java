@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.boot.orchestration;
 
+import org.hibernate.boot.pipeline.internal.source.ConfigurationMappingProcessor;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -11,7 +12,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
 import org.hibernate.boot.pipeline.internal.source.ContributionDiscoveryContext;
-import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.pipeline.internal.MappingResolutionPipeline;
 import org.hibernate.boot.pipeline.internal.ResolvedMapping;
 import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
@@ -166,7 +166,7 @@ class BootstrapPipelineTest {
 			HibernatePersistenceConfiguration persistenceConfiguration,
 			org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings bootstrapSettings,
 			org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings mappingSettings) {
-		final var mappingSources = MappingSources.from(
+		final var mappingSources = ConfigurationMappingProcessor.discover(
 				persistenceConfiguration,
 				bootstrapSettings,
 				mappingSettings,

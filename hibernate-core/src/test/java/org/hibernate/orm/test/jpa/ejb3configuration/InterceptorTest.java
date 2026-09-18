@@ -274,7 +274,7 @@ public class InterceptorTest {
 	private void buildEntityManagerFactory(Map<String,Object> settings) {
 		entityManagerFactory = org.hibernate.boot.pipeline.internal.BootstrapPipeline
 				.build(
-						new PersistenceUnitDescriptorAdapter() {
+						org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources.standalone( new PersistenceUnitDescriptorAdapter() {
 							@Override
 							public List<String> getManagedClassNames() {
 								return List.of(
@@ -282,7 +282,7 @@ public class InterceptorTest {
 										Item.class.getName()
 								);
 							}
-						},
+						} ),
 						settings
 				);
 	}

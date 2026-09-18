@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.boot.models;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
+import org.hibernate.boot.pipeline.internal.source.ConfigurationMappingProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
@@ -100,7 +102,7 @@ class ManagedResourcesTests {
 			try ( var registry = new StandardServiceRegistryBuilder().build() ) {
 				final var settings = SettingsResolver.resolveBootstrapSettings( configuration );
 				final var mappingSettings = SettingsResolver.resolveMappingSettings( settings, configuration.defaultToOneFetchType() );
-				final var sources = MappingSources.from( configuration, settings, mappingSettings,
+				final var sources = ConfigurationMappingProcessor.discover( configuration, settings, mappingSettings,
 						new ContributionDiscoveryContext( registry.requireService( ClassLoaderService.class ) ) );
 				assertThat( calls.get() ).isEqualTo( withBoundary ? 1 : 0 );
 				if ( withBoundary ) {
@@ -330,7 +332,7 @@ class ManagedResourcesTests {
 	void explicitAndCompleteConfigurationViewsRemainSeparate() {
 		final var configuration = new PersistenceConfiguration( "unit" )
 				.managedClass( String.class ).managedPackageDescriptor( "explicit" ).managedModuleDescriptor( "explicit.module" );
-		final var source = MappingSources.from( configuration );
+		final var source = ConfigurationMappingProcessor.declared( configuration );
 		assertThat( source.managedClasses() ).containsExactly( String.class );
 		assertThat( source.packageNames() ).containsExactly( "explicit" );
 		assertThat( source.moduleNames() ).containsExactly( "explicit.module" );
@@ -340,7 +342,15 @@ class ManagedResourcesTests {
 			@Override public List<String> getAllPackageDescriptors() { return List.of( "explicit", "scanned" ); }
 			@Override public List<String> getAllModuleDescriptors() { return List.of( "explicit.module", "scanned.module" ); }
 		};
-		final var container = MappingSources.from( new PersistenceUnitInfoDescriptor( unit ) );
+		final MappingSources container;
+		var loading = new org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl();
+		try {
+			container = PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( unit ) ).collect(
+					SettingsResolver.resolveBootstrapSettings( Map.of() ), new ContributionDiscoveryContext( loading ) );
+		}
+		finally {
+			loading.stop();
+		}
 		assertThat( container.managedClassNames() ).containsExactly( String.class.getName(), Integer.class.getName() );
 		assertThat( container.packageNames() ).containsExactly( "explicit", "scanned" );
 		assertThat( container.moduleNames() ).containsExactly( "explicit.module", "scanned.module" );

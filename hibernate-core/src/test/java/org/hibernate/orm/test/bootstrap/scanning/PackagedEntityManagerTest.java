@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
+import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -72,7 +73,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	private EntityManagerFactory emf;
 
 	private static EntityManagerFactory buildEntityManagerFactory(ScannedPersistenceUnitInfo unitInfo, Map<?, ?> settings) {
-		return BootstrapPipeline.build( new PersistenceUnitInfoDescriptor( unitInfo ), settings );
+		return BootstrapPipeline.build( PersistenceUnitSources.container( new PersistenceUnitInfoDescriptor( unitInfo ) ), settings );
 	}
 
 	@AfterEach

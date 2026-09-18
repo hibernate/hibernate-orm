@@ -296,7 +296,9 @@ public abstract class JsonMappingTests {
 			reason = "Blobs are not allowed in this expression")
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support comparing JSONB type")
 	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner doesn't support comparing JSON type")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode json type has no = operator; A mode (PG kernel) supports it.")
+	// Probe-verified on GaussDB 505.2: the json type has no = operator in A mode (openGauss)
+	// either, not only in M mode, so this test is excluded for the whole dialect.
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDB.class)
 	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

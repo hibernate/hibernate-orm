@@ -40,24 +40,19 @@ public class GaussDBArrayJdbcType extends ArrayJdbcType {
 
 	@Override
 	protected String getElementTypeName(JavaType<?> javaType, SharedSessionContractImplementor session) {
-		// GaussDB M mode stores DATE columns as the non-standard `datea` type, so a date array
-		// column is `datea[]`. The base implementation resolves the element type name through the
-		// DDL type registry, which yields "date" for DATE — `createArrayOf("date", ...)` then
-		// produces a `date[]` array that GaussDB M mode rejects ("column ... is of type datea[] but
-		// expression is of type date[]"). Return "datea" for date elements so the array is built
-		// as `datea[]`, matching the column type.
-		// A mode (openGauss PG kernel) stores DATE as the standard `date` (reported as timestamp by
-		// the JDBC driver), and createArrayOf("date") works — so fall through to the base
-		// implementation, which yields "date". Without this guard A mode passed "datea" to
-		// createArrayOf and failed with "Unable to find server array type for provided name datea".
+		// GaussDB stores date arrays under the non-standard internal type name `datea[]` in BOTH
+		// compatibility modes: in M mode (MySQL-compatible) DATE columns are `datea`, and in A mode
+		// (openGauss, verified on 505.2 centralized) a `date[]` column is cataloged as `datea[]`.
+		// The base implementation resolves the element type name through the DDL type registry,
+		// which yields "date" for DATE — `createArrayOf("date", ...)` then produces a `date[]`
+		// array that GaussDB rejects ("column ... is of type datea[] but expression is of type
+		// date[]"). Return "datea" for date elements so the array is built as `datea[]`, matching
+		// the column type in both modes (probe-verified: createArrayOf("datea") works in A mode).
 		// The array element is the standard LocalDateJdbcType (jdbc code DATE), not
 		// GaussDBLocalDateJdbcType (which is OTHER/1111 and only used to read `datea` columns
 		// directly), so check the jdbc type code rather than the concrete class.
 		if ( getElementJdbcType().getJdbcTypeCode() == Types.DATE ) {
-			final var dialect = session.getJdbcServices().getDialect();
-			if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
-				return "datea";
-			}
+			return "datea";
 		}
 		return super.getElementTypeName( javaType, session );
 	}

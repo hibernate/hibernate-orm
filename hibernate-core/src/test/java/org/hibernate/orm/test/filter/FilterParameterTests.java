@@ -21,6 +21,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -36,6 +37,7 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.YesNoConverter;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -153,6 +155,11 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts strings to integral types")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts strings to integral types")
 	public void testMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		// GaussDB M mode (MySQL-compatible) silently converts the YesNoConverter string 'N' to integral 0
+		// (like MySQL/MariaDB/TiDB/PostgresPlus skipped above), so `mismatch = :mismatch` (smallint = 'N')
+		// raises no exception; the test expects one. A mode (openGauss PG kernel) is type-strict and raises
+		// "operator does not exist: smallint = text", so it is not skipped (preserves A-mode zero regression).
+		Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
 			final EntityThree loaded = session.find( EntityThree.class, 1 );

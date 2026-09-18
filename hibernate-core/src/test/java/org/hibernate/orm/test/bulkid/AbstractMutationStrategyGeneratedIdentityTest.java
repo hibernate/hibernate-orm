@@ -56,6 +56,12 @@ public abstract class AbstractMutationStrategyGeneratedIdentityTest {
 			reason = "T-SQL complains IDENTITY_INSERT is off when a value for an identity column is provided")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix counts from 1 like a normal person")
 	public void testInsertStatic(SessionFactoryScope scope) {
+		// GaussDB M mode (MySQL kernel) ignores the explicitly-provided id=0 for an IDENTITY (auto_increment)
+		// column and generates its own value, so the joined-subclass INSERT into Person(id=0) and Engineer(id=0)
+		// end up with mismatched ids -> FK violation "insert or update on table Engineer". Same root cause as the
+		// @SkipForDialect(MySQLDialect matchSubTypes) above (GaussDBDialect is not a MySQLDialect subtype, so it
+		// does not apply). A mode (PG kernel) accepts an explicit id for IDENTITY/SERIAL, so M-only skip.
+		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( session -> {
 			session.createMutationQuery(
 							"insert into Engineer(id, name, employed, fellow) values (0, :name, :employed, false)" )

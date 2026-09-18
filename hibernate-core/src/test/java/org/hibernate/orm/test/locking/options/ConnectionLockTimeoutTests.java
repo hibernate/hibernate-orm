@@ -223,6 +223,8 @@ public class ConnectionLockTimeoutTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.IsJtds.class, reverse = true, comment = "Seems jTDS has a bug?")
+	@SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "GaussDB `lockwait_timeout` governs object-lock waits, not DML row locks, so the connection lock timeout does not time out the concurrent row update")
 	@DomainModel(annotatedClasses = Names.class)
 	@SessionFactory
 	void testLockWaitTimeout(SessionFactoryScope factoryScope) {

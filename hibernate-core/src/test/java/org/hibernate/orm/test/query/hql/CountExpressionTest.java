@@ -11,11 +11,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -94,6 +96,11 @@ public class CountExpressionTest {
 //	@SkipForDialect(dialectClass = InformixDialect.class,
 //			reason = "Informix allows only one column in count(distinct)")
 	public void testCountDistinctTuple(SessionFactoryScope scope) {
+		// GaussDB M mode (MySQL-compatible kernel) rejects `count(distinct (a,b))` with "Unsupport type",
+		// and Hibernate's concat+chr emulation can't apply because M mode treats `||` as logical OR (not
+		// string concat) and rejects `cast(... as text)`. A mode (openGauss PG kernel) supports tuple
+		// distinct counts natively, so it is not skipped (preserves A-mode zero regression).
+		Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( session -> {
 			List results = session.createQuery(
 							"SELECT " +
@@ -118,6 +125,10 @@ public class CountExpressionTest {
 //	@SkipForDialect(dialectClass = InformixDialect.class,
 //			reason = "Informix allows only one column in count(distinct)")
 	public void testCountDistinctTupleSanity(SessionFactoryScope scope) {
+		// GaussDB M mode: see testCountDistinctTuple — tuple distinct counts are unsupported and the
+		// concat+chr emulation is unusable (`||` is OR, `cast as text` rejected). A mode supports it
+		// natively; not skipped (preserves A-mode zero regression).
+		Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( session -> {
 			// A simple concatenation of tuple arguments would produce a distinct count of 1 in this case
 			// This test checks if the chr(0) count tuple distinct emulation works correctly

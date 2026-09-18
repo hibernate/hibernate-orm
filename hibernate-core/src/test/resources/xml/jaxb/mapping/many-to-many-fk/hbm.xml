@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping">
+
+    <class name="Student" table="student">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name"/>
+        <set name="courses" table="student_course">
+            <key column="student_id" foreign-key="fk_student_course"/>
+            <many-to-many class="Course" column="course_id" foreign-key="fk_course_student"/>
+        </set>
+    </class>
+
+    <class name="Course" table="course">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="title"/>
+    </class>
+
+</hibernate-mapping>

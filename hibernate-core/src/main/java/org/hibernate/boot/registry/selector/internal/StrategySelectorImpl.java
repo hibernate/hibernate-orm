@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -86,12 +88,12 @@ public class StrategySelectorImpl implements StrategySelector {
 	}
 
 	@Override
-	public <T> T resolveStrategy(Class<T> strategy, Object strategyReference) {
+	public <T> T resolveStrategy(Class<T> strategy, @Nullable Object strategyReference) {
 		return resolveDefaultableStrategy( strategy, strategyReference, (T) null );
 	}
 
 	@Override
-	public <T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, final T defaultValue) {
+	public <T> T resolveDefaultableStrategy(Class<T> strategy, @Nullable Object strategyReference, final T defaultValue) {
 		return resolveDefaultableStrategy(
 				strategy,
 				strategyReference,
@@ -103,7 +105,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	@SuppressWarnings("unchecked")
 	public <T> T resolveDefaultableStrategy(
 			Class<T> strategy,
-			Object strategyReference,
+			@Nullable Object strategyReference,
 			Callable<T> defaultResolver) {
 		return resolveStrategy( strategy, strategyReference, defaultResolver,
 				(StrategyCreator<T>) STANDARD_STRATEGY_CREATOR );
@@ -112,7 +114,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	@Override
 	public <T> T resolveStrategy(
 			Class<T> strategy,
-			Object strategyReference,
+			@Nullable Object strategyReference,
 			T defaultValue,
 			StrategyCreator<T> creator) {
 		return resolveStrategy(
@@ -155,7 +157,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	@Override
 	public <T> T resolveStrategy(
 			Class<T> strategy,
-			Object strategyReference,
+			@Nullable Object strategyReference,
 			Callable<T> defaultResolver,
 			StrategyCreator<T> creator) {
 		if ( strategyReference == null ) {

@@ -86,7 +86,7 @@ public interface StrategySelector extends Service, Stoppable {
 	 *
 	 * @return The strategy instance
 	 */
-	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, T defaultValue);
+	<T> T resolveDefaultableStrategy(Class<T> strategy, @Nullable Object strategyReference, T defaultValue);
 
 	/**
 	 * Resolve strategy instances. The incoming reference might be:<ul>
@@ -114,11 +114,11 @@ public interface StrategySelector extends Service, Stoppable {
 	 *
 	 * @return The strategy instance
 	 */
-	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Callable<T> defaultResolver);
+	<T> T resolveDefaultableStrategy(Class<T> strategy, @Nullable Object strategyReference, Callable<T> defaultResolver);
 
-	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, Callable<T> defaultResolver, StrategyCreator<T> creator);
+	<T> T resolveStrategy(Class<T> strategy, @Nullable Object strategyReference, Callable<T> defaultResolver, StrategyCreator<T> creator);
 
-	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, T defaultValue, StrategyCreator<T> creator);
+	<T> T resolveStrategy(Class<T> strategy, @Nullable Object strategyReference, T defaultValue, StrategyCreator<T> creator);
 
 	/**
 	 * Retrieve all the registered implementors of the given strategy.

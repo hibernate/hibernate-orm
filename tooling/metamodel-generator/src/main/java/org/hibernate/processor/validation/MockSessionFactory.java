@@ -453,6 +453,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nullable
 	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return null;
 	}
@@ -463,7 +464,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+	public boolean isDirectJavaTimeJdbcAccessEnabled(@Nonnull Class<?> javaTimeType) {
 		return MetadataBuildingContext.super.isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
 	}
 
@@ -489,6 +490,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return ValueHandlingMode.BIND;
 	}
@@ -601,14 +603,17 @@ public abstract class MockSessionFactory
 	private static final SessionFactoryObserver[] NO_OBSERVERS = new SessionFactoryObserver[0];
 	private static final EntityNameResolver[] NO_RESOLVERS = new EntityNameResolver[0];
 
+	@Nonnull
 	static MutableJpaCompliance jpaCompliance = new MutableJpaComplianceImpl(emptyMap());
 
 	@Override
+	@Nonnull
 	public MutableJpaCompliance getJpaCompliance() {
 		return jpaCompliance;
 	}
 
 	@Override
+	@Nonnull
 	public String getSessionFactoryName() {
 		return "mock";
 	}
@@ -632,6 +637,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nullable
 	public Integer getMaximumFetchDepth() {
 		return null;
 	}

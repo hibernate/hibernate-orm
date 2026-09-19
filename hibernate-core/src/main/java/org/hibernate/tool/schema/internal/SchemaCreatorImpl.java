@@ -42,12 +42,12 @@ import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
 import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Basic implementation of {@link SchemaCreator}.
@@ -126,7 +126,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 					target.release();
 				}
 				catch (Exception e) {
-					CORE_LOGGER.problemReleasingGenerationTarget( target, e );
+					SCHEMA_LOGGER.problemReleasingGenerationTarget( target, e );
 				}
 			}
 		}

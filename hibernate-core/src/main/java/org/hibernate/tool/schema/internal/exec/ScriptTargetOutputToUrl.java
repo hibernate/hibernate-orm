@@ -13,7 +13,7 @@ import java.net.URL;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 import static org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile.toFileWriter;
 
 /**
@@ -79,7 +79,7 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 
 
 	private static Writer toWriter( URL url, String charsetName, boolean append ) {
-		CORE_LOGGER.attemptingToCreateWriter( url );
+		SCHEMA_LOGGER.attemptingToCreateWriter( url );
 		// Spec says only "strings corresponding to file URLs" are supported,
 		// which I take to mean URLs whose protocol is "file"
 		try {

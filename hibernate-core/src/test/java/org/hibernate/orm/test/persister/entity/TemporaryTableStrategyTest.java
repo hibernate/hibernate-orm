@@ -20,12 +20,12 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
-import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Set;
 
+import static org.hibernate.query.internal.QueryLogging.QUERY_MESSAGE_LOGGER;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
@@ -43,11 +43,11 @@ public class TemporaryTableStrategyTest {
 
 	@RegisterExtension
 	public LoggerInspectionExtension logInspection =
-			LoggerInspectionExtension.builder().setLogger(  Logger.getLogger( GlobalTemporaryTableStrategy.class ) ).build();
+			LoggerInspectionExtension.builder().setLogger( QUERY_MESSAGE_LOGGER ).build();
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( Set.of(
-			"Creating global-temp ID table",
-			"Dropping global-temp ID table"
+			"HHH90003010:",
+			"HHH90003011:"
 	) );
 
 	@Test

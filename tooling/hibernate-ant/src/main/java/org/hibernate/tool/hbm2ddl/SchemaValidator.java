@@ -32,7 +32,7 @@ import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * A commandline tool to update a database schema. May also be called from
@@ -47,7 +47,7 @@ public class SchemaValidator {
 	}
 
 	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
-		CORE_LOGGER.runningSchemaValidator();
+		SCHEMA_LOGGER.runningSchemaValidator();
 
 		Map<String, Object> config =
 				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
@@ -76,7 +76,7 @@ public class SchemaValidator {
 			}
 		}
 		catch (Exception e) {
-			CORE_LOGGER.unableToRunSchemaUpdate( e );
+			SCHEMA_LOGGER.unableToRunSchemaUpdate( e );
 		}
 	}
 

@@ -304,12 +304,12 @@ public class FlushCoordinator {
 
 		if ( canSkipGraphBuilding( operationGroups ) ) {
 			// Fast path triggered - skip expensive graph building and planning
-			ActionLogging.ACTION_LOGGER.trace( "Skipping graph building - no statement dependencies" );
+			ActionLogging.ACTION_LOGGER.skippingGraphBuilding();
 			return createSimplePlan( operationGroups );
 		}
 		else {
 			// Complex scenario - use full graph-based planning
-			ActionLogging.ACTION_LOGGER.trace( "Building graph - statement dependencies found" );
+			ActionLogging.ACTION_LOGGER.buildingDependencyGraph();
 			final var graph = graphBuilder.build( operationGroups, deferrableConstraintMode );
 			return flushPlanner.plan( graph, deferrableConstraintMode );
 		}

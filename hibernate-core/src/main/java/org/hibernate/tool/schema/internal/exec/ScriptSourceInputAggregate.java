@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * A script source input that aggregates over multiple other {@link ScriptSourceInput}.
@@ -43,7 +43,7 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 			if ( scriptSourceInput.exists() ) {
 				final var reader = scriptSourceInput.prepareReader();
 				try {
-					CORE_LOGGER.executingScript( scriptSourceInput.getScriptDescription() );
+					SCHEMA_LOGGER.executingScript( scriptSourceInput.getScriptDescription() );
 					lists[i] = extractor.apply( reader );
 					size += lists[i].size();
 				}

@@ -13,7 +13,7 @@ import java.net.URL;
 
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * ScriptSourceInput implementation for File references.
@@ -21,8 +21,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
-	private static final Logger LOG = Logger.getLogger( ScriptSourceInputFromFile.class );
-
 	private final File file;
 	private final String charsetName;
 
@@ -49,7 +47,7 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 
 	private static Reader toReader(File file, String charsetName) {
 		if ( ! file.exists() ) {
-			LOG.warnf( "Specified schema generation script file [%s] did not exist for reading", file );
+			SCHEMA_LOGGER.schemaGenerationScriptFileNotFound( file );
 			return new Reader() {
 				@Override
 				public int read(char[] cbuf, int off, int len) {
@@ -82,7 +80,7 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 			reader.close();
 		}
 		catch (IOException e) {
-			LOG.warn( "Unable to close file reader for generation script source" );
+			SCHEMA_LOGGER.unableToCloseSchemaScriptReader( e );
 		}
 	}
 

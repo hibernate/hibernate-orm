@@ -22,8 +22,8 @@ import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 
 import org.hibernate.query.sqm.tree.spi.from.SqmTreatedAttributeJoin;
-import org.jboss.logging.Logger;
 
+import static org.hibernate.query.hql.internal.HqlLogging.QUERY_LOGGER;
 import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
 
 /**
@@ -32,8 +32,6 @@ import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
  * @author Steve Ebersole
  */
 public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
-	private static final Logger LOG = Logger.getLogger( QualifiedJoinPathConsumer.class );
-
 	private final SqmCreationState creationState;
 	private final SqmRoot<?> sqmRoot;
 
@@ -386,7 +384,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				assert ! ( joinedEntityType instanceof SqmPolymorphicRootDescriptor );
 
 				if ( fetch ) {
-					LOG.debugf( "Ignoring fetch on entity join: %s(%s)", joinedEntityType.getHibernateEntityName(), alias );
+					QUERY_LOGGER.ignoringFetchOnEntityJoin( joinedEntityType.getHibernateEntityName(), alias );
 				}
 
 				join = new SqmEntityJoin<>( joinedEntityType, alias, joinType, sqmRoot );

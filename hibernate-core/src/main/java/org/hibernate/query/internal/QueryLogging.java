@@ -17,8 +17,10 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.sql.SQLException;
 import java.util.Locale;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -85,4 +87,36 @@ public interface QueryLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(value = "Destroying query interpretation cache", id = 90003009)
 	void destroyingQueryInterpretationCache();
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90003010, value = "Creating global-temp ID table: %s")
+	void creatingGlobalTemporaryIdTable(String tableName);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90003011, value = "Dropping global-temp ID table: %s")
+	void droppingGlobalTemporaryIdTable(String tableName);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 90003012, value = "Creating persistent ID table : %s")
+	void creatingPersistentIdTable(String tableName);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90003013, value = "Dropping persistent ID table: %s")
+	void droppingPersistentIdTable(String tableName);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 90003014, value = "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed")
+	void idTableConnectionUnavailable();
+
+	@LogMessage(level = ERROR)
+	@Message(id = 90003015, value = "Unable obtain JDBC Connection")
+	void unableToObtainIdTableConnection(@Cause SQLException exception);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 90003016, value = "Unable to obtain JDBC connection; unable to drop global-temp ID table : %s")
+	void unableToDropGlobalTemporaryIdTable(String tableName);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 90003017, value = "Unable to obtain JDBC connection; unable to drop persistent ID table : %s")
+	void unableToDropPersistentIdTable(String tableName);
 }

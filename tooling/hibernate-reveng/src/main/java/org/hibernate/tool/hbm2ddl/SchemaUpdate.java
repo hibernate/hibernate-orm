@@ -17,7 +17,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerCollectingImpl;
@@ -38,7 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * A commandline tool to update a database schema. May also be called from inside an application.
@@ -63,12 +63,12 @@ public class SchemaUpdate {
 
 	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata, ServiceRegistry serviceRegistry) {
 		if ( targetTypes.isEmpty() ) {
-			CORE_LOGGER.debug( "Skipping SchemaExport as no targets were specified" );
+			SCHEMA_LOGGER.skippingSchemaUpdateWithNoTargets();
 			return;
 		}
 
 		exceptions.clear();
-		CORE_LOGGER.runningHbm2ddlSchemaUpdate();
+		SCHEMA_LOGGER.runningHbm2ddlSchemaUpdate();
 
 		Map<String,Object> config =
 				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
@@ -163,7 +163,7 @@ public class SchemaUpdate {
 			}
 		}
 		catch (Exception e) {
-			CORE_LOGGER.unableToRunSchemaUpdate( e );
+			SCHEMA_LOGGER.unableToRunSchemaUpdate( e );
 		}
 	}
 
@@ -262,7 +262,7 @@ public class SchemaUpdate {
 						parsedArgs.outputFile = arg.substring( 9 );
 					}
 					else if ( arg.startsWith( "--naming=" ) ) {
-						DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyArgument();
+						DEPRECATION_LOGGER.logDeprecatedNamingStrategyArgument();
 					}
 					else if ( arg.startsWith( "--delimiter=" ) ) {
 						parsedArgs.delimiter = arg.substring( 12 );
@@ -289,7 +289,7 @@ public class SchemaUpdate {
 			}
 			else {
 				if ( !script || !doUpdate ) {
-					CORE_LOGGER.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
+					DEPRECATION_LOGGER.deprecatedSchemaToolTargetArguments();
 				}
 				parsedArgs.targetTypes = TargetTypeHelper.parseCommandLineOptions( targetText );
 			}

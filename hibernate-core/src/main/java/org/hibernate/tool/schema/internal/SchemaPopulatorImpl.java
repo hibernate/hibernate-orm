@@ -16,8 +16,8 @@ import org.hibernate.tool.schema.spi.SchemaPopulator;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Basic implementation of {@link SchemaPopulator}.
@@ -68,7 +68,7 @@ public class SchemaPopulatorImpl extends AbstractSchemaPopulator implements Sche
 					target.release();
 				}
 				catch (Exception e) {
-					CORE_LOGGER.problemReleasingGenerationTarget( target, e );
+					SCHEMA_LOGGER.problemReleasingGenerationTarget( target, e );
 				}
 			}
 		}

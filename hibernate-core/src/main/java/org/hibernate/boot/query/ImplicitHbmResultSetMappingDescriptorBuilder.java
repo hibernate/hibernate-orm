@@ -21,7 +21,7 @@ import org.hibernate.boot.query.HbmResultSetMappingDescriptor.HbmFetchParent;
 import org.hibernate.boot.query.HbmResultSetMappingDescriptor.JoinDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
-import static org.hibernate.boot.query.BootQueryLogging.BOOT_QUERY_LOGGER;
+import static org.hibernate.boot.query.internal.BootQueryLogging.BOOT_QUERY_LOGGER;
 import static org.hibernate.boot.query.HbmResultSetMappingDescriptor.*;
 
 /**
@@ -47,10 +47,7 @@ public class ImplicitHbmResultSetMappingDescriptorBuilder {
 	public ImplicitHbmResultSetMappingDescriptorBuilder(String queryRegistrationName, MetadataBuildingContext metadataBuildingContext) {
 		this.registrationName = queryRegistrationName;
 
-		BOOT_QUERY_LOGGER.tracef(
-				"Creating implicit HbmResultSetMappingDescriptor for named-native-query : %s",
-				registrationName
-		);
+		BOOT_QUERY_LOGGER.creatingImplicitHbmResultSetMapping( registrationName );
 
 		this.metadataBuildingContext = metadataBuildingContext;
 

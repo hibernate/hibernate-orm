@@ -130,8 +130,7 @@ public class Decomposer implements DecompositionContext {
 		}
 
 		if ( ACTION_LOGGER.isTraceEnabled() ) {
-			ACTION_LOGGER.tracef(
-					"Beginning flush with %d INSERT actions, %d DELETE actions",
+			ACTION_LOGGER.beginningFlush(
 					entitiesBeingInserted == null ? 0 : entitiesBeingInserted.size(),
 					entitiesBeingDeleted == null ? 0 : entitiesBeingDeleted.size()
 			);
@@ -208,10 +207,7 @@ public class Decomposer implements DecompositionContext {
 			}
 			else {
 				if ( ACTION_LOGGER.isTraceEnabled() ) {
-					ACTION_LOGGER.tracef(
-							"  -> Filtering out dependency on %s (being inserted in this flush)",
-							transientEntity.getClass().getSimpleName()
-					);
+					ACTION_LOGGER.filteringDependencyBeingInserted( transientEntity.getClass().getSimpleName() );
 				}
 			}
 		}
@@ -227,7 +223,7 @@ public class Decomposer implements DecompositionContext {
 		if (executable instanceof AbstractEntityInsertAction insert) {
 			final boolean traceEnabled = ACTION_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
-				ACTION_LOGGER.tracef( "Decomposing INSERT for %s", insert.getEntityName() );
+				ACTION_LOGGER.decomposingInsert( insert.getEntityName() );
 			}
 			final NonNullableTransientDependencies transientDeps = insert.findNonNullableTransientEntities();
 
@@ -237,14 +233,14 @@ public class Decomposer implements DecompositionContext {
 			if (unresolvedDeps != null && !unresolvedDeps.isEmpty()) {
 				// This insert has unresolved dependencies - defer decomposition
 				if ( traceEnabled ) {
-					ACTION_LOGGER.tracef( "  -> Has unresolved dependencies, deferring" );
+					ACTION_LOGGER.deferringInsertWithUnresolvedDependencies();
 				}
 				trackUnresolvedInsert(insert, unresolvedDeps);
 				return;
 			}
 
 			if ( traceEnabled ) {
-				ACTION_LOGGER.tracef( "  -> No unresolved dependencies, decomposing" );
+				ACTION_LOGGER.decomposingInsertWithoutUnresolvedDependencies();
 			}
 			insert.getPersister().getInsertDecomposer().decompose(
 					insert,
@@ -402,10 +398,9 @@ public class Decomposer implements DecompositionContext {
 	/// @param dependencies the non-nullable transient dependencies
 	public void trackUnresolvedInsert(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
 		if ( ACTION_LOGGER.isTraceEnabled() ) {
-			ACTION_LOGGER.tracef( "Tracking unresolved insert for %s", insert.getEntityName() );
+			ACTION_LOGGER.trackingUnresolvedInsert( insert.getEntityName() );
 			for (Object transientEntity : dependencies.getNonNullableTransientEntities()) {
-				ACTION_LOGGER.tracef(
-						"  - depends on: %s@%s",
+				ACTION_LOGGER.unresolvedInsertDependency(
 						transientEntity.getClass().getSimpleName(),
 						System.identityHashCode(transientEntity)
 				);

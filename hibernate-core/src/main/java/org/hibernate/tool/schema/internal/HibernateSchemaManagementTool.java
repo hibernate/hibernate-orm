@@ -43,7 +43,6 @@ import org.hibernate.tool.schema.spi.SchemaTruncator;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
-import org.jboss.logging.Logger;
 
 import java.sql.Connection;
 import java.util.Map;
@@ -65,6 +64,7 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * The standard Hibernate implementation of {@link SchemaManagementTool}
@@ -73,8 +73,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * @author Steve Ebersole
  */
 public class HibernateSchemaManagementTool implements SchemaManagementTool, ServiceRegistryAwareService {
-	private static final Logger LOG = Logger.getLogger( HibernateSchemaManagementTool.class );
-
 	private ServiceRegistry serviceRegistry;
 	private GenerationTarget customTarget;
 
@@ -351,12 +349,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			);
 
 			if ( indicatedDialect == null ) {
-				LOG.debugf(
-						"Unable to resolve indicated Dialect resolution info (%s, %s, %s)",
-						dbName,
-						dbMajor,
-						dbMinor
-				);
+				SCHEMA_LOGGER.unableToResolveSchemaDialect( dbName, dbMajor, dbMinor );
 			}
 			else {
 				jdbcContextBuilder.dialect = indicatedDialect;

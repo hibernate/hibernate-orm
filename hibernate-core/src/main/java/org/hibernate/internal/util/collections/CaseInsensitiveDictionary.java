@@ -5,6 +5,7 @@
 package org.hibernate.internal.util.collections;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -67,6 +68,20 @@ public final class CaseInsensitiveDictionary<V> {
 
 	public void clear() {
 		map.clear();
+	}
+
+	/**
+	 * Retains only the entries whose key (case-insensitive) is in the provided set.
+	 * All other entries are removed.
+	 *
+	 * @param keys the keys to retain (compared case-insensitively)
+	 */
+	public void retainAll(Set<String> keys) {
+		final Set<String> lowercasedKeys = new HashSet<>( keys.size() );
+		for ( String key : keys ) {
+			lowercasedKeys.add( trueKey( key ) );
+		}
+		map.keySet().retainAll( lowercasedKeys );
 	}
 
 	public void forEach(final BiConsumer<? super String, ? super V> action) {

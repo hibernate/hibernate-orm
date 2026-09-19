@@ -204,6 +204,18 @@ Element collections are unaffected: a null element of an `@ElementCollection` li
 and such lists still load back without it.
 
 
+[[secondary-table-owned-optional-defaults]]
+=== Default `owned`/`optional` for XML `<secondary-table>`
+
+A `<secondary-table>` declared in an `orm.xml` mapping that omits the `owned` and/or `optional`
+attributes now adopts the `@SecondaryRow` annotation defaults (`owned=true`, `optional=true`), consistent
+with the annotation-based mapping. Previously an omitted attribute was treated as `false`, so such a
+secondary table was mapped as an inverse join (Hibernate did not write its row) and as an inner join.
+
+Mappings that intentionally relied on the previous `false` behaviour must now declare the attributes
+explicitly, e.g. `<secondary-table name="..." owned="false" optional="false"/>`.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

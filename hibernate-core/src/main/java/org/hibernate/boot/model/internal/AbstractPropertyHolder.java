@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.AnnotationException;
@@ -222,18 +223,32 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	/**
-	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&amp;&amp;element' with nothing
-	 * <p>
+	 * Internal path segment inserted by Hibernate between a collection attribute
+	 * name and an attribute of its element type ({@code items.{element}.name}).
+	 * JPA {@link AttributeOverride}/{@link AssociationOverride} keys don't include
+	 * it, so override lookups retry with the segment elided to collapse the path.
+	 */
+	private static final String COLLECTION_ELEMENT_SEGMENT = ".{element}.";
+
+	/**
+	 * Look up an override by exact property path, falling back to a lookup with the
+	 * synthetic {@linkplain #COLLECTION_ELEMENT_SEGMENT element segment} elided (to
+	 * support the non-map collection case where JPA overrides carry no element prefix).
+	 */
+	private <T> T findOverride(String propertyName, Function<String, T> exactLookup) {
+		final T result = exactLookup.apply( propertyName );
+		return result == null && propertyName.contains( COLLECTION_ELEMENT_SEGMENT )
+				? exactLookup.apply( propertyName.replace( COLLECTION_ELEMENT_SEGMENT, "." ) )
+				: result;
+	}
+
+	/**
+	 * Get column overriding, property first, then parent, then holder.
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	@Override
 	public Column[] getOverriddenColumn(String propertyName) {
-		final var overriddenColumn = getExactOverriddenColumn( propertyName );
-		// support for non-map collections where no prefix is needed
-		return overriddenColumn == null && propertyName.contains( ".{element}." )
-				? getExactOverriddenColumn( propertyName.replace( ".{element}.", "." ) )
-				: overriddenColumn;
+		return findOverride( propertyName, this::getExactOverriddenColumn );
 	}
 
 	@Override
@@ -292,22 +307,12 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	/**
-	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&amp;&amp;element' with nothing
-	 * <p>
+	 * Get column overriding, property first, then parent, then holder.
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	@Override
 	public JoinColumn[] getOverriddenJoinColumn(String propertyName) {
-		final var result = getExactOverriddenJoinColumn( propertyName );
-		if ( result == null && propertyName.contains( ".{element}." ) ) {
-			//support for non map collections where no prefix is needed
-			//TODO cache the underlying regexp
-			return getExactOverriddenJoinColumn( propertyName.replace( ".{element}.", "."  ) );
-		}
-		else {
-			return result;
-		}
+		return findOverride( propertyName, this::getExactOverriddenJoinColumn );
 	}
 
 	/**
@@ -340,15 +345,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	@Override
 	public ForeignKey getOverriddenForeignKey(String propertyName) {
-		final var result = getExactOverriddenForeignKey( propertyName );
-		if ( result == null && propertyName.contains( ".{element}." ) ) {
-			//support for non map collections where no prefix is needed
-			//TODO cache the underlying regexp
-			return getExactOverriddenForeignKey( propertyName.replace( ".{element}.", "." ) );
-		}
-		else {
-			return result;
-		}
+		return findOverride( propertyName, this::getExactOverriddenForeignKey );
 	}
 
 	private ForeignKey getExactOverriddenForeignKey(String propertyName) {
@@ -374,9 +371,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	/**
-	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&amp;&amp;element' with nothing
-	 * <p>
+	 * Get column overriding, property first, then parent, then holder.
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	@Override
@@ -389,21 +384,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	/**
-	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&amp;&amp;element' with nothing
-	 *
+	 * Get column overriding, property first, then parent, then holder.
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	public JoinTable getOverriddenJoinTable(String propertyName) {
-		final var result = getExactOverriddenJoinTable( propertyName );
-		if ( result == null && propertyName.contains( ".{element}." ) ) {
-			//support for non map collections where no prefix is needed
-			//TODO cache the underlying regexp
-			return getExactOverriddenJoinTable( propertyName.replace( ".{element}.", "."  ) );
-		}
-		else {
-			return result;
-		}
+		return findOverride( propertyName, this::getExactOverriddenJoinTable );
 	}
 
 	/**

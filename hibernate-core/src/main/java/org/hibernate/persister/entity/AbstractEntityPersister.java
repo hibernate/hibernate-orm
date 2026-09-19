@@ -2132,7 +2132,12 @@ public abstract class AbstractEntityPersister
 				true,
 				new LoadQueryInfluencers( factory ),
 				factory.getSqlTranslationEngine()
-		);
+		) {
+			@Override
+			public boolean isProcedureOrNativeQuery() {
+				return true;
+			}
+		};
 
 		final var entityPath = new NavigablePath( getRootPathName() );
 		final var rootTableGroup = createSelectFragmentRootTableGroup(

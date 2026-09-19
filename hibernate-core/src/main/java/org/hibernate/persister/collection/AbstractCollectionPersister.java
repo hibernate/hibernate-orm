@@ -83,6 +83,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.FilterHelper;
+import org.hibernate.sql.RestrictionRendering;
 import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
@@ -1299,15 +1300,22 @@ public abstract class AbstractCollectionPersister
 						: tableGroup.getTableReference( tableGroup.getNavigablePath(),
 								elementPersister != null ? elementPersister.getTableName() : qualifiedTableName );
 		final String alias = aliasForWhereRestriction( tableReference, useQualifier );
-		applyWhereFragments( predicateConsumer, alias, tableGroup, creationState );
+		applyWhereFragments( predicateConsumer, alias, tableGroup, useQualifier, creationState );
 	}
 
 	protected void applyWhereFragments(
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nullable String alias,
 			@Nonnull TableGroup tableGroup,
+			boolean useQualifier,
 			@Nullable SqlAstCreationState astCreationState) {
-		applyWhereFragments( predicateConsumer, alias, sqlWhereStringTemplate );
+		if ( sqlWhereStringTemplate != null && !isManyToMany() && elementPersister != null ) {
+			predicateConsumer.accept( new SqlFragmentPredicate( RestrictionRendering.render(
+					sqlWhereStringTemplate, alias, useQualifier, elementPersister, tableGroup, astCreationState ) ) );
+		}
+		else {
+			applyWhereFragments( predicateConsumer, alias, sqlWhereStringTemplate );
+		}
 	}
 
 	/**
@@ -1367,7 +1375,8 @@ public abstract class AbstractCollectionPersister
 			if ( manyToManyWhereString != null ) {
 				final var tableReference = tableGroup.resolveTableReference( castNonNull( elementPersister ).getTableName() );
 				final String alias = aliasForWhereRestriction( tableReference, useQualifier );
-				applyWhereFragments( predicateConsumer, alias, manyToManyWhereTemplate );
+				predicateConsumer.accept( new SqlFragmentPredicate( RestrictionRendering.render(
+						manyToManyWhereTemplate, alias, useQualifier, elementPersister, tableGroup, creationState ) ) );
 			}
 		}
 	}

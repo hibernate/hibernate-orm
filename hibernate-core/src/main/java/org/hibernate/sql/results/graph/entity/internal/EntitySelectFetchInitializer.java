@@ -7,7 +7,6 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
@@ -111,6 +110,14 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	@Override
 	public @Nullable InitializerParent<?> getParent() {
 		return parent;
+	}
+
+	@Override
+	public Object getFilteredAssociationKey(RowProcessingState rowProcessingState) {
+		return keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?> assembler
+				? assembler.getFilteredKey( rowProcessingState )
+				: affectedByFilter && getData( rowProcessingState ).getInstance() == null
+						? getData( rowProcessingState ).entityIdentifier : null;
 	}
 
 	@Override
@@ -264,7 +271,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 								entityName,
 								data.entityIdentifier,
 								true,
-								toOneMapping.isInternalLoadNullable()
+								toOneMapping.isInternalLoadNullable() || affectedByFilter
 						)
 				);
 		data.setInstance( instance );
@@ -298,11 +305,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			String entityName, Object identifier) {
 		final var notFoundAction = toOneMapping.getNotFoundAction();
 		if ( notFoundAction != NotFoundAction.IGNORE ) {
-			if ( affectedByFilter ) {
-				throw new EntityFilterException( entityName, identifier,
-						toOneMapping.getNavigableRole().getFullPath() );
-			}
-			if ( notFoundAction == NotFoundAction.EXCEPTION ) {
+			if ( !affectedByFilter && notFoundAction == NotFoundAction.EXCEPTION ) {
 				throw new FetchNotFoundException( entityName, identifier );
 			}
 		}
@@ -331,9 +334,14 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
-		final var initializer = keyAssembler.getInitializer();
-		if ( initializer != null ) {
-			consumer.accept( initializer, data.getRowProcessingState() );
+		if ( keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?> assembler ) {
+			assembler.forEachInitializer( consumer, data.getRowProcessingState() );
+		}
+		else {
+			final var initializer = keyAssembler.getInitializer();
+			if ( initializer != null ) {
+				consumer.accept( initializer, data.getRowProcessingState() );
+			}
 		}
 	}
 

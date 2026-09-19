@@ -6,6 +6,8 @@ package org.hibernate.loader.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -23,6 +25,9 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.LoadEventListener;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -138,7 +143,9 @@ public class CacheLoadHelper {
 			@Nonnull final EntityKey entityKey) {
 		final boolean useCache =
 				source.getCacheMode().isGetEnabled()
-						&& lockMode.lessThan( LockMode.READ );
+						&& lockMode.lessThan( LockMode.READ )
+						&& !persister.isAffectedByEnabledFilters( source.getLoadQueryInfluencers(), true )
+						&& !hasSqlRestrictedAssociations( persister, new HashSet<>() );
 		if ( useCache ) {
 			final Object cacheEntry = readingFromCache(
 					persister,
@@ -153,6 +160,28 @@ public class CacheLoadHelper {
 			// we can't use cache here
 			return null;
 		}
+	}
+
+	// Association nullness must be determined by the same SQL restrictions as its target.
+	// A cached association key alone cannot establish that nullness.
+	private static boolean hasSqlRestrictedAssociations(
+			ManagedMappingType mapping, Set<ManagedMappingType> visited) {
+		if ( !visited.add( mapping ) ) {
+			return false;
+		}
+		if ( mapping instanceof EntityPersister persister && persister.hasWhereRestrictions() ) {
+			return true;
+		}
+		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
+			final var attribute = mapping.getAttributeMapping( i );
+			if ( attribute instanceof ToOneAttributeMapping toOne
+					&& hasSqlRestrictedAssociations( toOne.getEntityMappingType(), visited )
+					|| attribute instanceof EmbeddedAttributeMapping embedded
+					&& hasSqlRestrictedAssociations( embedded.getEmbeddableTypeDescriptor(), visited ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Nullable

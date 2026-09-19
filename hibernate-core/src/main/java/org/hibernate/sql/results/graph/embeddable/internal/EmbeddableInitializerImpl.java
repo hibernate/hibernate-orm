@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.function.BiConsumer;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -479,6 +480,13 @@ public class EmbeddableInitializerImpl
 		}
 
 //		EMBEDDED_LOAD_LOGGER.tracef( "Created composite instance [%s]", navigablePath );
+	}
+
+	@Override
+	public FilteredAssociationState getFilteredAssociationState(RowProcessingState rowProcessingState) {
+		final var data = getData( rowProcessingState );
+		return FilteredAssociationState.from(
+				assemblers[data.getSubclassId()], data.rowState, rowProcessingState );
 	}
 
 	protected void extractRowState(EmbeddableInitializerData data) {

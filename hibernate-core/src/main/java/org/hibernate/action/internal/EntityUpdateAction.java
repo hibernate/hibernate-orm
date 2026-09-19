@@ -6,6 +6,7 @@ package org.hibernate.action.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -346,7 +347,8 @@ public class EntityUpdateAction extends EntityAction {
 		writingToCache( persister, cache -> {
 			final var session = getSession();
 			assert cacheKey != null;
-			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
+			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED
+					|| FilteredAssociationState.hasFilteredAssociations( entry ) ) {
 				cache.remove( session, cacheKey );
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {

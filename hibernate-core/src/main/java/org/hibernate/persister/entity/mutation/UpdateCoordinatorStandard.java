@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.jdbc.Expectation;
@@ -241,8 +242,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final boolean temporalExcludedUpdate =
 				entityPersister().excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection );
 
-		final boolean[] attributeUpdateability;
-		final boolean forceDynamicUpdate;
+		boolean[] attributeUpdateability;
+		boolean forceDynamicUpdate;
 		if ( temporalExcludedUpdate ) {
 			attributeUpdateability = getPropertiesToUpdate( dirtyAttributeIndexes, hasDirtyCollection );
 			for ( int i = 0; i < attributeUpdateability.length; i++ ) {
@@ -283,6 +284,23 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		else {
 			attributeUpdateability = getPropertyUpdateability( entity );
 			forceDynamicUpdate = entityPersister().hasUninitializedLazyProperties( entity );
+		}
+
+		final var filteredState = entry == null ? null : entry.getExtraState( FilteredAssociationState.class );
+		if ( filteredState != null ) {
+			attributeUpdateability = attributeUpdateability.clone();
+			for ( int i = 0; i < values.length; i++ ) {
+				if ( values[i] == null && filteredState.isFiltered( i ) ) {
+					final var attribute = (SingularAttributeMapping) entityPersister().getAttributeMapping( i );
+					final var tableMapping = physicalTableMappingForMutation( entityPersister(), attribute.getSelectable( 0 ) );
+					if ( tableMapping.getUpdateDetails().getCustomSql() == null ) {
+						attributeUpdateability[i] = false;
+						forceDynamicUpdate = true;
+					}
+				}
+			}
+			values = filteredState.physicalState( values, entityPersister() );
+			incomingOldValues = filteredState.physicalState( incomingOldValues, entityPersister() );
 		}
 
 		return performUpdate(

@@ -22,6 +22,7 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -61,7 +62,6 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.trim;
-
 
 /// Decomposer for entity update operations.
 ///
@@ -205,14 +205,18 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 //			identifier = decompositionContext.getGeneratedIdentifierHandle( entity );
 //		}
 		final Object rowId = action.getRowId();
-		final Object[] state = action.getState();
-		final Object[] previousState = action.getPreviousState();
+		Object[] state = action.getState();
+		Object[] previousState = action.getPreviousState();
 		final Object previousVersion = action.getPreviousVersion();
 
 		// Capture the EntityEntry now, at decomposition time, because for entities being deleted
 		// in the same flush, the DELETE operation may remove the entity from the persistence context
 		// before the UPDATE's post-execution callback runs.
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
+		final var filteredState = entityEntry == null ? null : entityEntry.getExtraState( FilteredAssociationState.class );
+		if ( filteredState != null ) {
+			previousState = filteredState.physicalState( previousState, entityPersister );
+		}
 
 		// Skip UPDATE operations for entities with DELETED status ONLY if there are no dirty fields.
 		// When an entity is marked for deletion in the same flush, UPDATEs with no dirty fields
@@ -300,13 +304,29 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		// apply any pre-update in-memory value generation
 		final int[] preUpdateGeneratedAttributeIndexes = preUpdateInMemoryValueGeneration( entity, state, session );
 		final int[] dirtyAttributeIndexes = combine( action.getDirtyFields(), preUpdateGeneratedAttributeIndexes );
+		if ( filteredState != null ) {
+			state = filteredState.physicalState( state, entityPersister );
+		}
 
 		// Determine if we need to apply optimistic locking
 		final var effectiveOptLockStyle = effectiveOptLockStyle( previousVersion, previousState );
 
 		// Determine which fields are updateable
-		final boolean[] updateability = entityPersister.getPropertyUpdateability();
+		boolean[] updateability = entityPersister.getPropertyUpdateability();
 		logImmutablePropertyModifications( dirtyAttributeIndexes, updateability );
+		if ( filteredState != null && !filteredState.isEmpty() ) {
+			updateability = updateability.clone();
+			for ( var table : entityPersister.getTableDescriptors() ) {
+				if ( table.updateDetails().getCustomSql() == null ) {
+					for ( var attribute : table.attributes() ) {
+						final int position = attribute.getStateArrayPosition();
+						if ( state[position] instanceof FilteredAssociationState.Key ) {
+							updateability[position] = false;
+						}
+					}
+				}
+			}
+		}
 
 		// Create values analysis to track which tables need updating
 		final var valuesAnalysis = new UpdateValuesAnalysis(
@@ -322,7 +342,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		// 		1. Entity specifies dynamic-update
 		// 		2. We need optimistic locking with DIRTY check
 		//		3. The entity has any uninitialized state
-		final boolean needsDynamicUpdate = entityPersister.isDynamicUpdate()
+		final boolean needsDynamicUpdate = filteredState != null && !filteredState.isEmpty()
+				|| entityPersister.isDynamicUpdate()
 				|| rowId != null
 				|| effectiveOptLockStyle.isAllOrDirty()
 				|| preUpdateGeneratedAttributeIndexes.length > 0
@@ -906,7 +927,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			if ( builder != null ) {// Apply SET clause columns for attributes
 				for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 					final var attribute = tableDescriptor.attributes().get( i );
-					if ( shouldIncludeInDynamicUpdate( attribute, updateable, valuesAnalysis ) ) {
+					if ( tableDescriptor.updateDetails().getCustomSql() != null
+							? updateable[attribute.getStateArrayPosition()]
+							: shouldIncludeInDynamicUpdate( attribute, updateable, valuesAnalysis ) ) {
 						if ( state[attribute.getStateArrayPosition()] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 							// it was not fetched and so could not have changed, skip it
 							continue;
@@ -1087,7 +1110,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				updateable,
 				effectiveOptLockStyle,
 				valuesAnalysis,
-				needsDynamicUpdate,
+				needsDynamicUpdate && tableDescriptor.updateDetails().getCustomSql() == null,
 				generatedValuesCollector
 		);
 	}

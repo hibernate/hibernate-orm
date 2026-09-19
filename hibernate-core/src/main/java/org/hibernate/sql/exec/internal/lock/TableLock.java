@@ -38,6 +38,7 @@ import org.hibernate.sql.exec.internal.StandardStatementCreator;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -259,7 +260,8 @@ public class TableLock {
 								ListResultsConsumer.instance( ListResultsConsumer.UniqueSemantic.ALLOW )
 						);
 
-		if ( isEmpty( results ) ) {
+		if ( isEmpty( results )
+				&& !(tableDetails instanceof TableMapping tableMapping && tableMapping.isOptional()) ) {
 			throw new AssertionFailure( "Expecting results" );
 		}
 

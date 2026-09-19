@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
@@ -28,19 +31,21 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 	private final NamedQueryMemento<T> namedQueryMemento;
 
 	public SingleIdEntityLoaderProvidedQueryImpl(
-			EntityMappingType entityDescriptor,
-			NamedQueryMemento<T> namedQueryMemento) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull NamedQueryMemento<T> namedQueryMemento) {
 		this.entityDescriptor = entityDescriptor;
 		this.namedQueryMemento = namedQueryMemento;
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getLoadable() {
 		return entityDescriptor;
 	}
 
+	@Nullable
 	@Override @SuppressWarnings("unchecked")
-	public T load(Object pkValue, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session) {
+	public T load(@Nonnull Object pkValue, @Nonnull LockOptions lockOptions, @Nullable Boolean readOnly, @Nonnull SharedSessionContractImplementor session) {
 		final var mappedJavaType = (JavaType<T>) entityDescriptor.getMappedJavaType();
 		final var query = namedQueryMemento.toSelectionQuery( session, mappedJavaType.getJavaTypeClass() );
 		query.setParameter( (Parameter<Object>) query.getParameters().iterator().next(), pkValue );
@@ -49,21 +54,23 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 		return query.uniqueResult();
 	}
 
+	@Nullable
 	@Override
 	public T load(
-			Object pkValue,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object pkValue,
+			@Nullable Object entityInstance,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( entityInstance != null ) {
 			throw new UnsupportedOperationException("null entity instance");
 		}
 		return load( pkValue, lockOptions, readOnly, session );
 	}
 
+	@Nullable
 	@Override
-	public Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
+	public Object[] loadDatabaseSnapshot(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		return EMPTY_OBJECT_ARRAY;
 	}
 }

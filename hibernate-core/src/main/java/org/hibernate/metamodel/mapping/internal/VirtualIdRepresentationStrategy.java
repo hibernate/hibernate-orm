@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.mapping.Component;
 import org.hibernate.accessor.MultiValueReader;
@@ -61,11 +63,13 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 		return RepresentationMode.POJO;
 	}
 
+	@Nullable
 	@Override
 	public MultiValueReader getMultiValueReader() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public MultiValueWriter getMultiValueWriter() {
 		return null;

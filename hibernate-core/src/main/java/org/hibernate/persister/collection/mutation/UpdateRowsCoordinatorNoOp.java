@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -14,22 +16,24 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public class UpdateRowsCoordinatorNoOp implements UpdateRowsCoordinator {
 	private final CollectionMutationTarget mutationTarget;
 
-	public UpdateRowsCoordinatorNoOp(CollectionMutationTarget mutationTarget) {
+	public UpdateRowsCoordinatorNoOp(@Nonnull CollectionMutationTarget mutationTarget) {
 		this.mutationTarget = mutationTarget;
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "UpdateRowsCoordinator(" + mutationTarget.getRolePath() + " (no-op))";
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
 
 	@Override
-	public void updateRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	public void updateRows(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		// nothing to do
 	}
 

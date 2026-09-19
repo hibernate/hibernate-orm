@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Locale;
 
 import jakarta.annotation.Nullable;
@@ -13,6 +15,8 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Christian Beikov
@@ -138,7 +142,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			isNullable = true;
 			isLob = false;
 			assert propertyPath != null : "Property path must be non-null for formulas";
-			selectablePath = new SelectablePath( propertyPath );
+			selectablePath = new SelectablePath( castNonNull( propertyPath ) );
 		}
 		else {
 			var column = (Column) selectable;
@@ -187,21 +191,25 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		);
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return containingTableExpression;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return selectionExpression;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectableName() {
 		return selectablePath.getSelectableName();
 	}
 
+	@Nonnull
 	@Override
 	public SelectablePath getSelectablePath() {
 		return selectablePath;

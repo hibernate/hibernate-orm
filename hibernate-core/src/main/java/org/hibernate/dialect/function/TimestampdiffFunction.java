@@ -137,7 +137,7 @@ public class TimestampdiffFunction
 
 		@Override
 		public ReturnableType<?> resolveFunctionReturnType(
-				ReturnableType<?> impliedType,
+				@Nullable ReturnableType<?> impliedType,
 				@Nullable SqmToSqlAstConverter converter,
 				List<? extends SqmTypedNode<?>> arguments,
 				TypeConfiguration typeConfiguration) {

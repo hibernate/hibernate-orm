@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.exec.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -49,11 +51,13 @@ public abstract class AbstractJdbcParameter
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return jdbcMapping;
@@ -69,6 +73,7 @@ public abstract class AbstractJdbcParameter
 		sqlTreeWalker.visitParameter( this );
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getSingleJdbcMapping() {
 		return jdbcMapping;
@@ -147,6 +152,7 @@ public abstract class AbstractJdbcParameter
 		return typeConfiguration.getBasicTypeRegistry().resolve( enumJavaType, jdbcType );
 	}
 
+	@Nonnull
 	@Override
 	public MappingModelExpressible<?> getExpressionType() {
 		return this;
@@ -158,29 +164,30 @@ public abstract class AbstractJdbcParameter
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return BasicValuedMapping.super.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		BasicValuedMapping.super.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, jdbcMapping );
 		return getJdbcTypeCount();
 	}

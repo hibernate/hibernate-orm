@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -22,28 +25,30 @@ public abstract class AbstractEntityBatchLoader<T>
 
 	private final SingleIdEntityLoaderStandardImpl<T> singleIdLoader;
 
-	public AbstractEntityBatchLoader(EntityMappingType entityDescriptor, LoadQueryInfluencers influencers) {
+	public AbstractEntityBatchLoader(@Nonnull EntityMappingType entityDescriptor, @Nonnull LoadQueryInfluencers influencers) {
 		super( entityDescriptor, influencers.getSessionFactory() );
 		singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, influencers );
 	}
 
 	protected abstract void initializeEntities(
-			Object[] idsToInitialize,
-			Object pkValue,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session);
+			@Nonnull Object[] idsToInitialize,
+			@Nonnull Object pkValue,
+			@Nullable Object entityInstance,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session);
 
-	protected abstract Object[] resolveIdsToInitialize(Object id, SharedSessionContractImplementor session);
+	@Nonnull
+	protected abstract Object[] resolveIdsToInitialize(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session);
 
+@Nullable
 @Override
 	public final T load(
-			Object id,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nullable Object entityInstance,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.batchFetchingEntity( infoString( getLoadable(), id ) );
 		}
@@ -52,12 +57,13 @@ public abstract class AbstractEntityBatchLoader<T>
 		return load( id, ids, hasSingleId( ids ), entityInstance, lockOptions, readOnly, session );
 	}
 
+@Nullable
 @Override
 	public T load(
-			Object id,
-			Object entityInstance,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nullable Object entityInstance,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.batchFetchingEntity( infoString( getLoadable(), id ) );
 		}
@@ -76,14 +82,15 @@ public abstract class AbstractEntityBatchLoader<T>
 		}
 	}
 
+	@Nullable
 	private T load(
-			Object id,
-			Object[] ids,
+			@Nonnull Object id,
+			@Nonnull Object[] ids,
 			boolean hasSingleId,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
+			@Nullable Object entityInstance,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		// We disable batching if lockMode != NONE
 		if ( hasSingleId || lockOptions.getLockMode() != LockMode.NONE ) {
 			return singleIdLoader.load( id, entityInstance, lockOptions, readOnly, session );

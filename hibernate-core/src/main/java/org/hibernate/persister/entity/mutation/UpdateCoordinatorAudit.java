@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,29 +23,31 @@ public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements 
 	final UpdateCoordinator currentUpdateCoordinator;
 
 	public UpdateCoordinatorAudit(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory,
-			UpdateCoordinator currentUpdateCoordinator) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nonnull UpdateCoordinator currentUpdateCoordinator) {
 		super( entityPersister, factory );
 		this.currentUpdateCoordinator = currentUpdateCoordinator;
 	}
 
+	@Nullable
 	@Override
 	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return currentUpdateCoordinator.getStaticMutationOperationGroup();
 	}
 
+	@Nullable
 	@Override
 	public GeneratedValues update(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object[] values,
-			Object oldVersion,
-			Object[] incomingOldValues,
-			int[] dirtyAttributeIndexes,
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nonnull Object[] values,
+			@Nullable Object oldVersion,
+			@Nullable Object[] incomingOldValues,
+			@Nullable int[] dirtyAttributeIndexes,
 			boolean hasDirtyCollection,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 		final var generatedValues = currentUpdateCoordinator.update(
 				entity,
 				id,
@@ -62,14 +67,14 @@ public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements 
 
 	@Override
 	public void forceVersionIncrement(
-			Object id,
-			Object currentVersion,
-			Object nextVersion,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
+			@Nonnull Object nextVersion,
+			@Nonnull SharedSessionContractImplementor session) {
 		currentUpdateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
 
-	boolean shouldAuditUpdate(int[] dirtyAttributeIndexes, boolean hasDirtyCollection) {
+	boolean shouldAuditUpdate(@Nullable int[] dirtyAttributeIndexes, boolean hasDirtyCollection) {
 		if ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) {
 			return true;
 		}

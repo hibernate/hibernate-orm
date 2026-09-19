@@ -4,6 +4,9 @@
  */
 package org.hibernate.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
@@ -152,21 +155,25 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 		);
 	}
 
+	@Nonnull
 	@Override
 	public FindMultipleOption.RemovalsMode getRemovalsMode() {
 		return removalsMode;
 	}
 
+	@Nonnull
 	@Override
 	public FindMultipleOption.OrderingMode getOrderingMode() {
 		return orderingMode;
 	}
 
+	@Nonnull
 	@Override
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}
 
+	@Nullable
 	@Override
 	public Integer getBatchSize() {
 		return batchSize;

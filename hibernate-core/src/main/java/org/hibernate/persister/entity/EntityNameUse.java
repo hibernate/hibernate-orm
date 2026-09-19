@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 
 /**
@@ -20,14 +23,16 @@ public final class EntityNameUse {
 	public static final EntityNameUse FILTER = new EntityNameUse( UseKind.FILTER, true );
 
 	private final UseKind kind;
+	@Nullable
 	private final Boolean requiresRestriction;
 
-	private EntityNameUse(UseKind kind, Boolean requiresRestriction) {
+	private EntityNameUse(@Nonnull UseKind kind, @Nullable Boolean requiresRestriction) {
 		this.kind = kind;
 		this.requiresRestriction = requiresRestriction;
 	}
 
-	private static EntityNameUse get(UseKind kind) {
+	@Nonnull
+	private static EntityNameUse get(@Nonnull UseKind kind) {
 		switch ( kind ) {
 			case PROJECTION:
 				return PROJECTION;
@@ -41,6 +46,7 @@ public final class EntityNameUse {
 		throw new IllegalArgumentException( "Unknown kind: " + kind );
 	}
 
+	@Nonnull
 	public UseKind getKind() {
 		return kind;
 	}
@@ -49,7 +55,8 @@ public final class EntityNameUse {
 		return requiresRestriction != Boolean.FALSE;
 	}
 
-	public EntityNameUse stronger(EntityNameUse other) {
+	@Nonnull
+	public EntityNameUse stronger(@Nullable EntityNameUse other) {
 		if ( other == null || kind.isStrongerThan( other.kind ) ) {
 			return this;
 		}
@@ -59,7 +66,8 @@ public final class EntityNameUse {
 		return other.kind.isStrongerThan( kind ) ? other : get( other.kind );
 	}
 
-	public EntityNameUse weaker(EntityNameUse other) {
+	@Nonnull
+	public EntityNameUse weaker(@Nullable EntityNameUse other) {
 		if ( other == null || kind.isWeakerThan( other.kind ) ) {
 			return this;
 		}
@@ -88,19 +96,21 @@ public final class EntityNameUse {
 		 */
 		FILTER;
 
-		public boolean isStrongerThan(UseKind other) {
+		public boolean isStrongerThan(@Nonnull UseKind other) {
 			return ordinal() > other.ordinal();
 		}
 
-		public UseKind stronger(UseKind other) {
+		@Nonnull
+		public UseKind stronger(@Nullable UseKind other) {
 			return other == null || isStrongerThan( other ) ? this : other;
 		}
 
-		public boolean isWeakerThan(UseKind other) {
+		public boolean isWeakerThan(@Nonnull UseKind other) {
 			return ordinal() < other.ordinal();
 		}
 
-		public UseKind weaker(UseKind other) {
+		@Nonnull
+		public UseKind weaker(@Nullable UseKind other) {
 			return other == null || isWeakerThan( other ) ? this : other;
 		}
 	}

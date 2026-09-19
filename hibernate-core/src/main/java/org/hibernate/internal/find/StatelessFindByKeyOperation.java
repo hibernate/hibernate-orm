@@ -116,6 +116,7 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 		return getLockMode() == null ? LockMode.NONE : getLockMode();
 	}
 
+	@Nonnull
 	@Override
 	public LockMode getLockMode() {
 		return StatelessLocking.getEffectiveLockMode( super.getLockMode(), getSession() );

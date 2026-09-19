@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.LockOptions;
@@ -41,9 +43,9 @@ public class CollectionBatchLoaderInPredicate
 
 	public CollectionBatchLoaderInPredicate(
 			int domainBatchSize,
-			LoadQueryInfluencers influencers,
-			PluralAttributeMapping attributeMapping,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( domainBatchSize, influencers, attributeMapping, sessionFactory );
 
 		keyColumnCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
@@ -94,7 +96,7 @@ public class CollectionBatchLoaderInPredicate
 	}
 
 	@Override
-	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
+	void initializeKeys(@Nonnull Object key, @Nonnull Object[] keysToInitialize, @Nonnull SharedSessionContractImplementor session) {
 		final boolean loggerDebugEnabled = MULTI_KEY_LOAD_LOGGER.isDebugEnabled();
 		if ( loggerDebugEnabled ) {
 			MULTI_KEY_LOAD_LOGGER.collectionKeysToInitialize(
@@ -161,7 +163,7 @@ public class CollectionBatchLoaderInPredicate
 	}
 
 	@Override
-	void finishInitializingKeys(Object[] key, SharedSessionContractImplementor session) {
+	void finishInitializingKeys(@Nonnull Object[] key, @Nonnull SharedSessionContractImplementor session) {
 		// do nothing
 	}
 }

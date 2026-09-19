@@ -150,7 +150,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return new FormatSqmFunction<>(
 				this,

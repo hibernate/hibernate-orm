@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.query.options;
 
+import java.util.List;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
@@ -23,6 +25,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel( standardModels = StandardDomainModel.CONTACTS )
 @SessionFactory
 public class CacheModeTests {
+	@Test
+	public void testNullCacheModeRestoresSessionDefaults(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var queries = List.of(
+					session.createQuery( "select c from Contact c", Contact.class ),
+					session.createSelectionQuery( "select c from Contact c", Contact.class ),
+					session.createNativeQuery( "select id from contacts", Integer.class ),
+					session.createQuery( "select c from Contact c" )
+			);
+			for ( var query : queries ) {
+				session.setCacheMode( CacheMode.IGNORE );
+				query.setCacheMode( CacheMode.REFRESH_SESSION );
+				query.setCacheMode( null );
+
+				assertEquals( CacheMode.IGNORE, query.getCacheMode() );
+				query.getResultList();
+				assertEquals( CacheMode.IGNORE, session.getCacheMode() );
+
+				session.setCacheMode( CacheMode.GET );
+				assertEquals( CacheMode.GET, query.getCacheMode() );
+				query.getResultList();
+				assertEquals( CacheMode.GET, session.getCacheMode() );
+			}
+		} );
+	}
+
 	@Test
 	public void testNullCacheMode(SessionFactoryScope scope) {
 		// tests passing null as CacheMode

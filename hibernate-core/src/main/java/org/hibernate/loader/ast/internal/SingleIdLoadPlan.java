@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import jakarta.annotation.Nonnull;
@@ -46,12 +48,12 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	private final JdbcParametersList jdbcParameters;
 
 	public SingleIdLoadPlan(
-			EntityMappingType entityMappingType,
-			ModelPart restrictivePart,
-			SelectStatement sqlAst,
-			JdbcParametersList jdbcParameters,
-			LockOptions lockOptions,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull EntityMappingType entityMappingType,
+			@Nonnull ModelPart restrictivePart,
+			@Nonnull SelectStatement sqlAst,
+			@Nonnull JdbcParametersList jdbcParameters,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.entityMappingType = entityMappingType;
 		this.restrictivePart = restrictivePart;
 		this.lockOptions = lockOptions.makeDefensiveCopy();
@@ -72,55 +74,65 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 						);
 	}
 
+	@Nonnull
 	protected LockOptions getLockOptions() {
 		return lockOptions;
 	}
 
+	@Nonnull
 	protected JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
 
+	@Nonnull
 	@Override
 	public Loadable getLoadable() {
 		return entityMappingType;
 	}
 
+	@Nonnull
 	@Override
 	public ModelPart getRestrictivePart() {
 		return restrictivePart;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcSelect getJdbcSelect() {
 		return jdbcSelect;
 	}
 
+	@Nonnull
 	protected RowTransformer<T> getRowTransformer() {
 		return RowTransformerStandardImpl.instance();
 	}
 
-	public T load(Object restrictedValue, SharedSessionContractImplementor session) {
+	@Nullable
+	public T load(@Nonnull Object restrictedValue, @Nonnull SharedSessionContractImplementor session) {
 		return load( restrictedValue, null, null, false, session );
 	}
 
-	public T load(Object restrictedValue, Boolean readOnly, SharedSessionContractImplementor session) {
+	@Nullable
+	public T load(@Nonnull Object restrictedValue, @Nullable Boolean readOnly, @Nonnull SharedSessionContractImplementor session) {
 		return load( restrictedValue, null, readOnly, false, session );
 	}
 
+	@Nullable
 	public T load(
-			Object restrictedValue,
-			Boolean readOnly,
-			Boolean singleResultExpected,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object restrictedValue,
+			@Nullable Boolean readOnly,
+			@Nonnull Boolean singleResultExpected,
+			@Nonnull SharedSessionContractImplementor session) {
 		return load( restrictedValue, null, readOnly, singleResultExpected, session );
 	}
 
+	@Nullable
 	public T load(
-			Object restrictedValue,
-			Object entityInstance,
-			Boolean readOnly,
-			Boolean singleResultExpected,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object restrictedValue,
+			@Nullable Object entityInstance,
+			@Nullable Boolean readOnly,
+			@Nonnull Boolean singleResultExpected,
+			@Nonnull SharedSessionContractImplementor session) {
 		final int jdbcTypeCount = restrictivePart.getJdbcTypeCount();
 		assert jdbcParameters.size() % jdbcTypeCount == 0;
 
@@ -170,6 +182,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	}
 
 	private static class SingleIdExecutionContext extends BaseExecutionContext {
+		@Nullable
 		private final Object entityInstance;
 		private final Object restrictedValue;
 		private final EntityMappingType rootEntityDescriptor;
@@ -177,11 +190,11 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		private final Callback callback;
 
 		public SingleIdExecutionContext(
-				SharedSessionContractImplementor session,
-				Object entityInstance,
-				Object restrictedValue,
-				EntityMappingType rootEntityDescriptor, QueryOptions queryOptions,
-				Callback callback) {
+				@Nonnull SharedSessionContractImplementor session,
+				@Nullable Object entityInstance,
+				@Nonnull Object restrictedValue,
+				@Nonnull EntityMappingType rootEntityDescriptor, @Nonnull QueryOptions queryOptions,
+				@Nonnull Callback callback) {
 			super( session );
 			this.entityInstance = entityInstance;
 			this.restrictedValue = restrictedValue;
@@ -190,26 +203,31 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			this.callback = callback;
 		}
 
+		@Nullable
 		@Override
 		public Object getEntityInstance() {
 			return entityInstance;
 		}
 
+		@Nonnull
 		@Override
 		public Object getEntityId() {
 			return restrictedValue;
 		}
 
+		@Nonnull
 		@Override
 		public EntityMappingType getRootEntityDescriptor() {
 			return rootEntityDescriptor;
 		}
 
+		@Nonnull
 		@Override
 		public QueryOptions getQueryOptions() {
 			return queryOptions;
 		}
 
+		@Nonnull
 		@Override
 		public Callback getCallback() {
 			return callback;

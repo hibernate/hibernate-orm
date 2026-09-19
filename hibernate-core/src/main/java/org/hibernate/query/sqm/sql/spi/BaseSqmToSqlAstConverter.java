@@ -5246,8 +5246,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					arguments,
 					null,
 					(ReturnableType<?>)
-							functionDescriptor.getReturnTypeResolver()
-									.resolveFunctionReturnType( () -> null, arguments )
+							castNonNull( functionDescriptor.getReturnTypeResolver()
+									.resolveFunctionReturnType( () -> null, arguments ) )
 									.getJdbcMapping(),
 					modelPart
 			);
@@ -5414,8 +5414,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							arguments,
 							null,
 							(ReturnableType<?>)
-									functionDescriptor.getReturnTypeResolver()
-											.resolveFunctionReturnType( () -> null, arguments )
+									castNonNull( functionDescriptor.getReturnTypeResolver()
+											.resolveFunctionReturnType( () -> null, arguments ) )
 											.getJdbcMapping(),
 							modelPart
 					);
@@ -9261,7 +9261,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
 				JavaType<?> javaType,
-				FetchParent fetchParent,
+				@Nullable FetchParent fetchParent,
 				TypeConfiguration typeConfiguration) {
 			return delegate.resolveSqlSelection( expression, javaType, fetchParent, typeConfiguration );
 		}
@@ -9340,7 +9340,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
 				JavaType<?> javaType,
-				FetchParent fetchParent,
+				@Nullable FetchParent fetchParent,
 				TypeConfiguration typeConfiguration) {
 			final var selection =
 					delegate.resolveSqlSelection( expression, javaType, fetchParent, typeConfiguration );

@@ -4,6 +4,10 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
@@ -25,19 +29,20 @@ final class AuditCollectionRowMutationHelper {
 	private final String auditTableName;
 	private final SelectableMapping changesetIdMapping;
 	private final SelectableMapping modificationTypeMapping;
+	@Nullable
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;
 	private final boolean useServerTransactionTimestamps;
 
 	AuditCollectionRowMutationHelper(
-			CollectionMutationTarget mutationTarget,
-			String auditTableName,
-			SelectableMapping changesetIdMapping,
-			SelectableMapping modificationTypeMapping,
-			boolean[] indexColumnIsSettable,
-			boolean[] elementColumnIsSettable,
-			UnaryOperator<Object> indexIncrementer,
+			@Nonnull CollectionMutationTarget mutationTarget,
+			@Nonnull String auditTableName,
+			@Nonnull SelectableMapping changesetIdMapping,
+			@Nonnull SelectableMapping modificationTypeMapping,
+			@Nullable boolean[] indexColumnIsSettable,
+			@Nonnull boolean[] elementColumnIsSettable,
+			@Nonnull UnaryOperator<Object> indexIncrementer,
 			boolean useServerTransactionTimestamps) {
 		this.mutationTarget = mutationTarget;
 		this.attributeMapping = mutationTarget.getTargetPart();
@@ -51,13 +56,13 @@ final class AuditCollectionRowMutationHelper {
 	}
 
 	void bindInsertValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			ModificationType modificationType,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull ModificationType modificationType,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: " + mutationTarget.getRolePath() );
 		}
@@ -90,14 +95,14 @@ final class AuditCollectionRowMutationHelper {
 	}
 
 	void bindInsertValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			ModificationType modificationType,
-			Object changesetId,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
+			@Nonnull ModificationType modificationType,
+			@Nonnull Object changesetId,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: " + mutationTarget.getRolePath() );
 		}
@@ -132,12 +137,12 @@ final class AuditCollectionRowMutationHelper {
 	 * as the INSERT, but with {@link ParameterUsage#RESTRICT}.
 	 */
 	void bindRestrictValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		decomposeRowIdentity(
 				collection,
 				key,
@@ -150,12 +155,12 @@ final class AuditCollectionRowMutationHelper {
 	}
 
 	void bindRestrictValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
 		decomposeRowIdentity(
 				collection,
 				key,
@@ -172,13 +177,13 @@ final class AuditCollectionRowMutationHelper {
 	 * into JDBC value bindings with the given {@link ParameterUsage}.
 	 */
 	private void decomposeRowIdentity(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings,
-			ParameterUsage parameterUsage) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings,
+			@Nonnull ParameterUsage parameterUsage) {
 		attributeMapping.getKeyDescriptor().getKeyPart().decompose(
 				key, 0, jdbcValueBindings, null,
 				(valueIndex, bindings, unused, jdbcValue, mapping) ->
@@ -223,13 +228,13 @@ final class AuditCollectionRowMutationHelper {
 	}
 
 	private void decomposeRowIdentity(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings,
-			ParameterUsage parameterUsage) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings,
+			@Nonnull ParameterUsage parameterUsage) {
 		attributeMapping.getKeyDescriptor().getKeyPart().decompose(
 				key, 0, jdbcValueBindings, null,
 				(valueIndex, bindings, unused, jdbcValue, mapping) ->
@@ -274,35 +279,37 @@ final class AuditCollectionRowMutationHelper {
 	}
 
 	private void bindValue(
-			JdbcValueBindings bindings,
-			Object jdbcValue,
-			SelectableMapping mapping,
-			ParameterUsage parameterUsage) {
+			@Nonnull JdbcValueBindings bindings,
+			@Nullable Object jdbcValue,
+			@Nonnull SelectableMapping mapping,
+			@Nonnull ParameterUsage parameterUsage) {
 		if ( !mapping.isFormula() ) {
 			bindings.bindValue( jdbcValue, auditTableName, mapping.getSelectionExpression(), parameterUsage );
 		}
 	}
 
+	@Nonnull
 	private Object resolveIdentifier(
-			PersistentCollection<?> collection,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object rowValue,
 			int rowPosition) {
 		return rowValue instanceof Map.Entry<?, ?> entry
 				? entry.getKey()
 				: collection.getIdentifier( rowValue, rowPosition );
 	}
 
-	private Object resolveElement(PersistentCollection<?> collection, Object rowValue) {
+	@Nonnull
+	private Object resolveElement(@Nonnull PersistentCollection<?> collection, @Nonnull Object rowValue) {
 		return rowValue instanceof Map.Entry<?, ?> entry
 				? entry.getValue()
 				: collection.getElement( rowValue );
 	}
 
 	private void bindValue(
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings bindings,
-			Object jdbcValue,
-			SelectableMapping mapping,
-			ParameterUsage parameterUsage) {
+			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings bindings,
+			@Nullable Object jdbcValue,
+			@Nonnull SelectableMapping mapping,
+			@Nonnull ParameterUsage parameterUsage) {
 		if ( !mapping.isFormula() ) {
 			bindings.bindValue( jdbcValue, mapping.getSelectionExpression(), parameterUsage );
 		}
@@ -310,11 +317,11 @@ final class AuditCollectionRowMutationHelper {
 
 	private void bindSettableValue(
 			int valueIndex,
-			boolean[] settable,
-			JdbcValueBindings bindings,
-			Object jdbcValue,
-			SelectableMapping mapping,
-			ParameterUsage parameterUsage) {
+			@Nonnull boolean[] settable,
+			@Nonnull JdbcValueBindings bindings,
+			@Nullable Object jdbcValue,
+			@Nonnull SelectableMapping mapping,
+			@Nonnull ParameterUsage parameterUsage) {
 		if ( settable[valueIndex] && !mapping.isFormula() ) {
 			bindings.bindValue( jdbcValue, auditTableName, mapping.getSelectionExpression(), parameterUsage );
 		}
@@ -322,11 +329,11 @@ final class AuditCollectionRowMutationHelper {
 
 	private void bindSettableValue(
 			int valueIndex,
-			boolean[] settable,
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings bindings,
-			Object jdbcValue,
-			SelectableMapping mapping,
-			ParameterUsage parameterUsage) {
+			@Nonnull boolean[] settable,
+			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings bindings,
+			@Nullable Object jdbcValue,
+			@Nonnull SelectableMapping mapping,
+			@Nonnull ParameterUsage parameterUsage) {
 		if ( settable[valueIndex] && !mapping.isFormula() ) {
 			bindings.bindValue( jdbcValue, mapping.getSelectionExpression(), parameterUsage );
 		}

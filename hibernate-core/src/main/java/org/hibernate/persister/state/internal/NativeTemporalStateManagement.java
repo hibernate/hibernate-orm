@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.state.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
@@ -26,19 +29,21 @@ public final class NativeTemporalStateManagement extends AbstractStateManagement
 	private NativeTemporalStateManagement() {
 	}
 
+	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			EntityPersister persister,
-			RootClass rootClass,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull EntityPersister persister,
+			@Nonnull RootClass rootClass,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		return TemporalStateManagement.INSTANCE.createAuxiliaryMapping( persister, rootClass, creationProcess);
 	}
 
+	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			PluralAttributeMapping pluralAttributeMapping,
-			Collection bootDescriptor,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull Collection bootDescriptor,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		return TemporalStateManagement.INSTANCE.createAuxiliaryMapping( pluralAttributeMapping, bootDescriptor, creationProcess);
 	}
 }

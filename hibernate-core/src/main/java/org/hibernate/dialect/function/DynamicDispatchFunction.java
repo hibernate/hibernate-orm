@@ -66,7 +66,7 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 	@Override
 	public <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return validateGetFunction( arguments, queryEngine )
 				.generateSqmExpression( arguments, impliedResultType, queryEngine );
@@ -76,7 +76,7 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 	public <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return validateGetFunction( arguments, queryEngine )
 				.generateAggregateSqmExpression(
@@ -92,7 +92,7 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return validateGetFunction( arguments, queryEngine )
 				.generateOrderedSetAggregateSqmExpression(
@@ -110,7 +110,7 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			SqmPredicate filter,
 			@Nullable Boolean respectNulls,
 			@Nullable Boolean fromFirst,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return validateGetFunction( arguments, queryEngine )
 				.generateWindowSqmExpression(

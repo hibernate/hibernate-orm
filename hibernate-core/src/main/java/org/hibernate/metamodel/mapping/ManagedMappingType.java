@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -17,17 +20,21 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * Mapping-model corollary to {@link jakarta.persistence.metamodel.ManagedType}
  *
  * @author Steve Ebersole
  */
 public interface ManagedMappingType extends MappingType, FetchableContainer {
+	@Nonnull
 	@Override
 	default JavaType<?> getJavaType() {
 		return getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
 	default MappingType getPartMappingType() {
 		return this;
@@ -41,6 +48,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	/**
 	 * Retrieve an attribute by its contributor position
 	 */
+	@Nonnull
 	AttributeMapping getAttributeMapping(int position);
 
 	/**
@@ -48,49 +56,53 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 *
 	 * @return The named attribute, or {@code null} if no match was found
 	 */
-	default AttributeMapping findAttributeMapping(String name) {
+	@Nullable
+	default AttributeMapping findAttributeMapping(@Nonnull String name) {
 		return null;
 	}
 
 	/**
 	 * Get access to the attributes defined on this class and any supers
 	 */
+	@Nonnull
 	AttributeMappingsList getAttributeMappings();
 
 	/**
 	 * Visit attributes defined on this class and any supers
 	 */
-	void forEachAttributeMapping(Consumer<? super AttributeMapping> action);
+	void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action);
 
 	/**
 	 * Visit attributes defined on this class and any supers
 	 */
-	default void forEachAttributeMapping(IndexedConsumer<? super AttributeMapping> consumer) {
+	default void forEachAttributeMapping(@Nonnull IndexedConsumer<? super AttributeMapping> consumer) {
 		getAttributeMappings().indexedForEach( consumer );
 	}
 
 	/**
 	 * Extract the individual attribute values from the entity instance
 	 */
-	Object[] getValues(Object instance);
+	@Nonnull
+	Object[] getValues(@Nonnull Object instance);
 
 	/**
 	 * Extract a specific attribute value from the entity instance, by position
 	 */
-	default Object getValue(Object instance, int position) {
-		return getAttributeMapping( position ).getPropertyAccess().getPropertyValueAccessor().get( instance );
+	@Nullable
+	default Object getValue(@Nonnull Object instance, int position) {
+		return castNonNull( getAttributeMapping( position ).getPropertyAccess() ).getPropertyValueAccessor().get( instance );
 	}
 
 	/**
 	 * Inject the attribute values into the entity instance
 	 */
-	void setValues(Object instance, Object[] resolvedValues);
+	void setValues(@Nonnull Object instance, @Nonnull Object[] resolvedValues);
 
 	/**
 	 * Inject a specific attribute value into the entity instance, by position
 	 */
-	default void setValue(Object instance, int position, Object value) {
-		getAttributeMapping( position ).getPropertyAccess().getPropertyValueAccessor().set( instance, value );
+	default void setValue(@Nonnull Object instance, int position, @Nullable Object value) {
+		castNonNull( getAttributeMapping( position ).getPropertyAccess() ).getPropertyValueAccessor().set( instance, value );
 	}
 
 	default boolean anyRequiresAggregateColumnWriter() {
@@ -118,8 +130,8 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	}
 
 	default boolean isAffectedByEnabledFilters(
-			Set<ManagedMappingType> visitedTypes,
-			LoadQueryInfluencers influencers,
+			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		if ( !visitedTypes.add( this ) ) {
 			return false;
@@ -129,8 +141,8 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	}
 
 	default boolean areAttributesAffectedByEnabledFilters(
-			Set<ManagedMappingType> visitedTypes,
-			LoadQueryInfluencers influencers,
+			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		// we still need to verify collection fields to be eagerly loaded by join
 		final AttributeMappingsList attributeMappings = getAttributeMappings();

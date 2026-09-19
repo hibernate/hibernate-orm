@@ -132,20 +132,28 @@ import static org.hibernate.type.format.jaxb.JaxbIntegration.getJaxbXmlFormatMap
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private static final SessionEventListener[] EMPTY_SESSION_EVENT_LISTENERS = new SessionEventListener[0];
 
+	@Nonnull
 	private final String uuid = generateLocalObjectUuid();
+	@Nonnull
 	private final StandardServiceRegistry serviceRegistry;
 
 	// integration
+	@Nullable
 	private Object beanManagerReference;
+	@Nullable
 	private Object validatorFactoryReference;
+	@Nullable
 	private FormatMapper jsonFormatMapper;
+	@Nullable
 	private FormatMapper xmlFormatMapper;
 	private final boolean xmlFormatMapperLegacyFormatEnabled;
 	private final boolean safeModeEnabled;
 
 	// SessionFactory behavior
 	private final boolean jpaBootstrap;
+	@Nullable
 	private String sessionFactoryName;
+	@Nullable
 	private Boolean sessionFactoryNameAlsoJndiName;
 
 	// Session behavior
@@ -160,11 +168,17 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	// Statistics/Interceptor/observers
 	private boolean statisticsEnabled;
+	@Nullable
 	private Interceptor interceptor;
+	@Nullable
 	private StatementObserver statementObserver;
+	@Nullable
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
+	@Nullable
 	private StatementInspector statementInspector;
+	@Nullable
 	private final Class<? extends SessionEventListener> autoSessionEventListener;
+	@Nonnull
 	private final List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
 
 	// persistence behavior
@@ -180,6 +194,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean initializeLazyStateOutsideTransactions;
 	private final boolean bidirectionalAssociationManagementEnabled;
 	private int defaultBatchFetchSize;
+	@Nullable
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
 	private boolean orderUpdatesEnabled;
@@ -201,21 +216,32 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	// multi-tenancy
 	private boolean multiTenancyEnabled;
+	@Nullable
 	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
+	@Nullable
 	private TenantSchemaMapper<Object> tenantSchemaMapper;
+	@Nullable
 	private TenantCredentialsMapper<Object> tenantCredentialsMapper;
 
 	// Queries
+	@Nullable
 	private SqmFunctionRegistry sqmFunctionRegistry;
+	@Nullable
 	private final HqlTranslator hqlTranslator;
+	@Nullable
 	private final SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
+	@Nullable
 	private final SqmMultiTableInsertStrategy sqmMultiTableInsertStrategy;
+	@Nullable
 	private final Constructor<SqmMultiTableMutationStrategy> sqmMultiTableMutationStrategyConstructor;
+	@Nullable
 	private final Constructor<SqmMultiTableInsertStrategy> sqmMultiTableInsertStrategyConstructor;
+	@Nullable
 	private final SqmTranslatorFactory sqmTranslatorFactory;
 	private final Boolean useOfJdbcNamedParametersEnabled;
 	private boolean namedQueryStartupCheckingEnabled;
 	private final boolean preferJavaTimeJdbcTypes;
+	@Nonnull
 	private final DirectJavaTimeJdbcSupport directJavaTimeJdbcSupport;
 	private final boolean preferNativeEnumTypes;
 	private final boolean preferLocaleLanguageTagEnabled;
@@ -231,8 +257,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// Caching
 	private boolean secondLevelCacheEnabled;
 	private boolean queryCacheEnabled;
+	@Nonnull
 	private CacheLayout queryCacheLayout;
+	@Nullable
 	private TimestampsCacheFactory timestampsCacheFactory;
+	@Nullable
 	private String cacheRegionPrefix;
 	private boolean minimalPutsEnabled;
 	private boolean structuredCacheEntriesEnabled;
@@ -242,10 +271,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// JDBC Handling
 	private boolean getGeneratedKeysEnabled;
 	private int jdbcBatchSize;
+	@Nullable
 	private Integer jdbcFetchSize;
 	private boolean scrollableResultSetsEnabled;
 	private boolean commentsEnabled;
 	private boolean connectionProviderDisablesAutoCommit;
+	@Nullable
 	private final TimeZone jdbcTimeZone;
 	private final boolean criteriaCopyTreeEnabled;
 	private final boolean criteriaPlanCacheEnabled;
@@ -254,7 +285,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// in order to maintain consistency.
 	// Indeed, other components (the schema tools) also make use of these settings,
 	// and THOSE do not have access to session factory options.
+	@Nullable
 	private final String defaultCatalog;
+	@Nullable
 	private final String defaultSchema;
 
 	@Nonnull
@@ -264,8 +297,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Nonnull
 	private final ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
+	@Nullable
 	private Map<String, SqmFunctionDescriptor> sqlFunctions;
 
+	@Nonnull
 	private JpaCompliance jpaCompliance;
 
 	private final boolean failOnPaginationOverCollectionFetchEnabled;
@@ -275,9 +310,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private final int queryStatisticsMaxSize;
 
+	@Nonnull
 	private final Map<String, Object> defaultSessionProperties;
+	@Nullable
 	private final CacheStoreMode defaultCacheStoreMode;
+	@Nullable
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
+	@Nonnull
 	private final CacheMode initialSessionCacheMode;
 
 	@Nonnull
@@ -290,7 +329,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final GraphParserMode graphParserMode;
 
 
-	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
+	public SessionFactoryOptionsBuilder(
+			@Nonnull StandardServiceRegistry serviceRegistry,
+			@Nonnull BootstrapContext context) {
 		this.serviceRegistry = serviceRegistry;
 		jpaBootstrap = context.isJpaBootstrap();
 
@@ -619,7 +660,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Nullable
-	private TimeZone getJdbcTimeZone(Object jdbcTimeZoneValue) {
+	private TimeZone getJdbcTimeZone(@Nullable Object jdbcTimeZoneValue) {
 		if ( jdbcTimeZoneValue instanceof TimeZone timeZone ) {
 			return timeZone;
 		}
@@ -639,7 +680,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Nonnull
-	private Nulls getDefaultNullPrecedence(Object defaultNullPrecedence) {
+	private Nulls getDefaultNullPrecedence(@Nullable Object defaultNullPrecedence) {
 		if ( defaultNullPrecedence instanceof Nulls jpaValue ) {
 			return jpaValue;
 		}
@@ -682,7 +723,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@SuppressWarnings("unchecked")
 	@Nullable
 	private SqmMultiTableMutationStrategy resolveSqmMutationStrategy(
-			String strategyName,
+			@Nullable String strategyName,
 			StandardServiceRegistry serviceRegistry,
 			StrategySelector strategySelector) {
 		if ( strategyName == null ) {
@@ -745,7 +786,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@SuppressWarnings("unchecked")
 	@Nullable
 	private Constructor<SqmMultiTableMutationStrategy> resolveSqmMutationStrategyConstructor(
-			String strategyName,
+			@Nullable String strategyName,
 			StrategySelector strategySelector) {
 		if ( strategyName != null ) {
 			final var strategyClass =
@@ -763,7 +804,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@SuppressWarnings("unchecked")
 	@Nullable
 	private SqmMultiTableInsertStrategy resolveSqmInsertStrategy(
-			String strategyName,
+			@Nullable String strategyName,
 			StandardServiceRegistry serviceRegistry,
 			StrategySelector strategySelector) {
 		if ( strategyName == null ) {
@@ -827,7 +868,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@SuppressWarnings("unchecked")
 	@Nullable
 	private Constructor<SqmMultiTableInsertStrategy> resolveSqmInsertStrategyConstructor(
-			String strategyName,
+			@Nullable String strategyName,
 			StrategySelector strategySelector) {
 		if ( strategyName != null ) {
 			final var strategyClass =
@@ -844,10 +885,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Nullable
 	private HqlTranslator resolveHqlTranslator(
-			String producerName,
+			@Nullable String producerName,
 			StandardServiceRegistry serviceRegistry,
 			StrategySelector strategySelector) {
-		return isEmpty( producerName )
+		return producerName == null || producerName.isEmpty()
 				? null
 				: strategySelector.<HqlTranslator>resolveDefaultableStrategy(
 						HqlTranslator.class,
@@ -860,7 +901,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Nullable
 	private SqmTranslatorFactory resolveSqmTranslator(
-			String translatorImplFqn,
+			@Nullable String translatorImplFqn,
 			StrategySelector strategySelector) {
 		if ( isEmpty( translatorImplFqn ) ) {
 			return null;
@@ -873,6 +914,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 	}
 
+	@Nullable
 	private static Interceptor determineInterceptor(
 			Map<String, Object> configurationSettings,
 			StrategySelector strategySelector) {
@@ -935,8 +977,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						.getDefaultConnectionHandlingMode();
 	}
 
+	@Nullable
 	private static FormatMapper jsonFormatMapper(
-			Object setting,
+			@Nullable Object setting,
 			boolean osonExtensionEnabled,
 			StrategySelector selector, FormatMapperCreationContext creationContext) {
 		return formatMapper(
@@ -967,7 +1010,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	private static FormatMapper xmlFormatMapper(Object setting, StrategySelector selector, boolean legacyFormat, FormatMapperCreationContext creationContext) {
+	@Nullable
+	private static FormatMapper xmlFormatMapper(@Nullable Object setting, StrategySelector selector, boolean legacyFormat, FormatMapperCreationContext creationContext) {
 		return formatMapper(
 				setting,
 				selector,
@@ -990,8 +1034,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
+	@Nullable
 	private static FormatMapper formatMapper(
-			Object setting,
+			@Nullable Object setting,
 			StrategySelector selector,
 			Callable<FormatMapper> defaultResolver, FormatMapperCreationContext creationContext) {
 		return selector.resolveStrategy( FormatMapper.class, setting, defaultResolver, strategyClass -> {
@@ -1067,11 +1112,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public String getSessionFactoryName() {
 		return sessionFactoryName;
 	}
 
 	@Override
+	@Nullable
 	public Boolean isSessionFactoryNameAlsoJndiName() {
 		return sessionFactoryNameAlsoJndiName;
 	}
@@ -1092,44 +1139,52 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public Interceptor getInterceptor() {
 		return interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
 	}
 
 	@Override
+	@Nullable
 	public StatementObserver getStatementObserver() {
 		return statementObserver;
 	}
 
 	@Override
+	@Nullable
 	public Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
 		return statelessInterceptorSupplier;
 	}
 
 	@Override
+	@Nullable
 	public HqlTranslator getCustomHqlTranslator() {
 		return hqlTranslator;
 	}
 
 	@Override
+	@Nullable
 	public SqmTranslatorFactory getCustomSqmTranslatorFactory() {
 		return sqmTranslatorFactory;
 	}
 
 	@Override
+	@Nullable
 	public SqmMultiTableMutationStrategy getCustomSqmMultiTableMutationStrategy() {
 		return sqmMultiTableMutationStrategy;
 	}
 
 	@Override
+	@Nullable
 	public SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy() {
 		return sqmMultiTableInsertStrategy;
 	}
 
 	@Override
+	@Nullable
 	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull EntityMappingType rootEntityDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		if ( sqmMultiTableMutationStrategyConstructor != null ) {
 			try {
 				return sqmMultiTableMutationStrategyConstructor.newInstance( rootEntityDescriptor, creationContext );
@@ -1148,9 +1203,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull EntityMappingType rootEntityDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		if ( sqmMultiTableInsertStrategyConstructor != null ) {
 			try {
 				return sqmMultiTableInsertStrategyConstructor.newInstance( rootEntityDescriptor, creationContext );
@@ -1174,11 +1230,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public SqmFunctionRegistry getCustomSqmFunctionRegistry() {
 		return sqmFunctionRegistry;
 	}
 
 	@Override
+	@Nullable
 	public StatementInspector getStatementInspector() {
 		return statementInspector;
 	}
@@ -1195,22 +1253,24 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		if ( StatisticalLoggingSessionEventListener.isLoggingEnabled() ) {
 			return autoSessionEventListener == null
 					? new SessionEventListener[] { statsListener() }
-					: new SessionEventListener[] { statsListener(), instantiateAutoSessionEventListener() };
+					: new SessionEventListener[] { statsListener(), instantiateAutoSessionEventListener( autoSessionEventListener ) };
 		}
 		else {
 			return autoSessionEventListener == null
 					? EMPTY_SESSION_EVENT_LISTENERS
-					: new SessionEventListener[] { instantiateAutoSessionEventListener() };
+					: new SessionEventListener[] { instantiateAutoSessionEventListener( autoSessionEventListener ) };
 		}
 	}
 
-	private SessionEventListener instantiateAutoSessionEventListener() {
+	@Nonnull
+	private static SessionEventListener instantiateAutoSessionEventListener(
+			@Nonnull Class<? extends SessionEventListener> listenerClass) {
 		try {
-			return autoSessionEventListener.getConstructor().newInstance();
+			return listenerClass.getConstructor().newInstance();
 		}
 		catch (Exception e) {
 			throw new HibernateException(
-					"Unable to instantiate specified auto SessionEventListener: " + autoSessionEventListener.getName(),
+					"Unable to instantiate specified auto SessionEventListener: " + listenerClass.getName(),
 					e
 			);
 		}
@@ -1258,6 +1318,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public Integer getMaximumFetchDepth() {
 		return maximumFetchDepth;
 	}
@@ -1327,16 +1388,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public CacheLayout getQueryCacheLayout() {
 		return queryCacheLayout;
 	}
 
 	@Override
+	@Nullable
 	public TimestampsCacheFactory getTimestampsCacheFactory() {
 		return timestampsCacheFactory;
 	}
 
 	@Override
+	@Nullable
 	public String getCacheRegionPrefix() {
 		return cacheRegionPrefix;
 	}
@@ -1377,6 +1441,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public Integer getJdbcFetchSize() {
 		return jdbcFetchSize;
 	}
@@ -1421,6 +1486,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, SqmFunctionDescriptor> getCustomSqlFunctionMap() {
 		return sqlFunctions == null ? Collections.emptyMap() : sqlFunctions;
 	}
@@ -1431,6 +1497,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public TimeZone getJdbcTimeZone() {
 		return jdbcTimeZone;
 	}
@@ -1468,11 +1535,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public String getDefaultCatalog() {
 		return defaultCatalog;
 	}
 
 	@Override
+	@Nullable
 	public String getDefaultSchema() {
 		return defaultSchema;
 	}
@@ -1493,6 +1562,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public JpaCompliance getJpaCompliance() {
 		return jpaCompliance;
 	}
@@ -1549,7 +1619,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+	public boolean isDirectJavaTimeJdbcAccessEnabled(@Nonnull Class<?> javaTimeType) {
 		return preferJavaTimeJdbcTypes && directJavaTimeJdbcSupport.supports( javaTimeType );
 	}
 
@@ -1609,23 +1679,23 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access
 
-	public void applyBeanManager(Object beanManager) {
+	public void applyBeanManager(@Nullable Object beanManager) {
 		this.beanManagerReference = beanManager;
 	}
 
-	public void applyValidatorFactory(Object validatorFactory) {
+	public void applyValidatorFactory(@Nullable Object validatorFactory) {
 		this.validatorFactoryReference = validatorFactory;
 	}
 
-	public void applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+	public void applyJsonFormatMapper(@Nullable FormatMapper jsonFormatMapper) {
 		this.jsonFormatMapper = jsonFormatMapper;
 	}
 
-	public void applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+	public void applyXmlFormatMapper(@Nullable FormatMapper xmlFormatMapper) {
 		this.xmlFormatMapper = xmlFormatMapper;
 	}
 
-	public void applySessionFactoryName(String sessionFactoryName) {
+	public void applySessionFactoryName(@Nullable String sessionFactoryName) {
 		this.sessionFactoryName = sessionFactoryName;
 	}
 
@@ -1653,15 +1723,15 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.statisticsEnabled = enabled;
 	}
 
-	public void addSessionFactoryObservers(SessionFactoryObserver... observers) {
+	public void addSessionFactoryObservers(@Nonnull SessionFactoryObserver... observers) {
 		Collections.addAll( sessionFactoryObserverList, observers );
 	}
 
-	public void applyInterceptor(Interceptor interceptor) {
+	public void applyInterceptor(@Nullable Interceptor interceptor) {
 		this.interceptor = interceptor;
 	}
 
-	public void applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
+	public void applyStatelessInterceptor(@Nonnull Class<? extends Interceptor> statelessInterceptorClass) {
 		applyStatelessInterceptorSupplier(
 				() -> {
 					try {
@@ -1677,31 +1747,31 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	public void applyStatelessInterceptorSupplier(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
+	public void applyStatelessInterceptorSupplier(@Nullable Supplier<? extends Interceptor> statelessInterceptorSupplier) {
 		this.statelessInterceptorSupplier = statelessInterceptorSupplier;
 	}
 
-	public void applySqmFunctionRegistry(SqmFunctionRegistry sqmFunctionRegistry) {
+	public void applySqmFunctionRegistry(@Nullable SqmFunctionRegistry sqmFunctionRegistry) {
 		this.sqmFunctionRegistry = sqmFunctionRegistry;
 	}
 
-	public void applyStatementObserver(StatementObserver statementObserver) {
+	public void applyStatementObserver(@Nullable StatementObserver statementObserver) {
 		this.statementObserver = statementObserver;
 	}
 
-	public void applyStatementInspector(StatementInspector statementInspector) {
+	public void applyStatementInspector(@Nullable StatementInspector statementInspector) {
 		this.statementInspector = statementInspector;
 	}
 
-	public void applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy) {
+	public void applyCustomEntityDirtinessStrategy(@Nonnull CustomEntityDirtinessStrategy strategy) {
 		this.customEntityDirtinessStrategy = strategy;
 	}
 
-	public void addEntityNameResolvers(EntityNameResolver... entityNameResolvers) {
+	public void addEntityNameResolvers(@Nonnull EntityNameResolver... entityNameResolvers) {
 		Collections.addAll( this.entityNameResolvers, entityNameResolvers );
 	}
 
-	public void applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
+	public void applyEntityNotFoundDelegate(@Nonnull EntityNotFoundDelegate entityNotFoundDelegate) {
 		this.entityNotFoundDelegate = entityNotFoundDelegate;
 	}
 
@@ -1717,11 +1787,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.initializeLazyStateOutsideTransactions = enabled;
 	}
 
-	public void applyTemporalTableStrategy(TemporalTableStrategy strategy) {
+	public void applyTemporalTableStrategy(@Nonnull TemporalTableStrategy strategy) {
 		this.temporalTableStrategy = strategy;
 	}
 
-	public void applyAuditStrategy(AuditStrategy strategy) {
+	public void applyAuditStrategy(@Nonnull AuditStrategy strategy) {
 		this.auditStrategy = strategy;
 	}
 
@@ -1737,7 +1807,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.subselectFetchEnabled = subselectFetchEnabled;
 	}
 
-	public void applyDefaultNullPrecedence(Nulls nullPrecedence) {
+	public void applyDefaultNullPrecedence(@Nonnull Nulls nullPrecedence) {
 		this.defaultNullPrecedence = nullPrecedence;
 	}
 
@@ -1753,17 +1823,17 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.multiTenancyEnabled = enabled;
 	}
 
-	public void applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
+	public void applyCurrentTenantIdentifierResolver(@Nullable CurrentTenantIdentifierResolver<?> resolver) {
 		//noinspection unchecked
 		this.currentTenantIdentifierResolver = (CurrentTenantIdentifierResolver<Object>) resolver;
 	}
 
-	public void applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
+	public void applyTenantSchemaMapper(@Nullable TenantSchemaMapper<?> mapper) {
 		//noinspection unchecked
 		this.tenantSchemaMapper = (TenantSchemaMapper<Object>) mapper;
 	}
 
-	public void applyTenantCredentialsMapper(TenantCredentialsMapper<?> mapper) {
+	public void applyTenantCredentialsMapper(@Nullable TenantCredentialsMapper<?> mapper) {
 		//noinspection unchecked
 		this.tenantCredentialsMapper = (TenantCredentialsMapper<Object>) mapper;
 	}
@@ -1780,15 +1850,15 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.queryCacheEnabled = enabled;
 	}
 
-	public void applyQueryCacheLayout(CacheLayout queryCacheLayout) {
+	public void applyQueryCacheLayout(@Nonnull CacheLayout queryCacheLayout) {
 		this.queryCacheLayout = queryCacheLayout;
 	}
 
-	public void applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
+	public void applyTimestampsCacheFactory(@Nullable TimestampsCacheFactory factory) {
 		this.timestampsCacheFactory = factory;
 	}
 
-	public void applyCacheRegionPrefix(String prefix) {
+	public void applyCacheRegionPrefix(@Nullable String prefix) {
 		this.cacheRegionPrefix = prefix;
 	}
 
@@ -1836,7 +1906,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.commentsEnabled = enabled;
 	}
 
-	public void applySqlFunction(String registrationName, SqmFunctionDescriptor sqlFunction) {
+	public void applySqlFunction(@Nonnull String registrationName, @Nonnull SqmFunctionDescriptor sqlFunction) {
 		if ( sqlFunctions == null ) {
 			sqlFunctions = new HashMap<>();
 		}
@@ -1894,6 +1964,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.jtaTransactionAccessEnabled = false;
 	}
 
+	@Nonnull
 	public SessionFactoryOptions buildOptions() {
 		if ( jpaCompliance instanceof MutableJpaCompliance mutableJpaCompliance ) {
 			jpaCompliance = mutableJpaCompliance.immutableCopy();
@@ -1902,15 +1973,18 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public CacheStoreMode getCacheStoreMode(@Nullable Map<String, Object> properties) {
 		return properties == null ? defaultCacheStoreMode : defaultCacheStoreMode( properties );
 	}
 
 	@Override
+	@Nullable
 	public CacheRetrieveMode getCacheRetrieveMode(@Nullable Map<String, Object> properties) {
 		return properties == null ? defaultCacheRetrieveMode : defaultCacheRetrieveMode( properties );
 	}
 
+	@Nullable
 	private static CacheRetrieveMode defaultCacheRetrieveMode(Map<String, Object> settings) {
 		final var cacheRetrieveMode = (CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
 		return cacheRetrieveMode == null
@@ -1918,6 +1992,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				: cacheRetrieveMode;
 	}
 
+	@Nullable
 	private static CacheStoreMode defaultCacheStoreMode(Map<String, Object> settings) {
 		final var cacheStoreMode = (CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 		return cacheStoreMode == null
@@ -1926,6 +2001,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public CacheMode getInitialSessionCacheMode() {
 		return initialSessionCacheMode;
 	}

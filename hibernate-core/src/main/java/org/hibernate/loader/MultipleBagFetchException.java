@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader;
+
+import jakarta.annotation.Nonnull;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -16,7 +18,7 @@ import org.hibernate.HibernateException;
 public class MultipleBagFetchException extends HibernateException {
 	private final List bagRoles;
 
-	public MultipleBagFetchException(List bagRoles) {
+	public MultipleBagFetchException(@Nonnull List bagRoles) {
 		super( "cannot simultaneously fetch multiple bags: " + bagRoles );
 		this.bagRoles = bagRoles;
 	}
@@ -26,6 +28,7 @@ public class MultipleBagFetchException extends HibernateException {
 	 *
 	 * @return The bag collection roles.
 	 */
+	@Nonnull
 	public List getBagRoles() {
 		return bagRoles;
 	}

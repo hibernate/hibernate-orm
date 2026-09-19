@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
 /**
@@ -12,6 +14,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  * @author Steve Ebersole
  */
 public interface EntityLoader extends Loader {
+	@Nonnull
 	@Override
 	EntityMappingType getLoadable();
 }

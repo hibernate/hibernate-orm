@@ -2056,7 +2056,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Nonnull
 	@Override
-	public <T> List<? extends SqmExpression<T>> literals(@Nullable T[] values) {
+	public <T> List<? extends SqmExpression<T>> literals(@Nonnull T[] values) {
 		if ( values == null || values.length == 0 ) {
 			return emptyList();
 		}
@@ -2071,7 +2071,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Nonnull
 	@Override
-	public <T> List<? extends SqmExpression<T>> literals(@Nullable List<T> values) {
+	public <T> List<? extends SqmExpression<T>> literals(@Nonnull List<T> values) {
 		if ( values == null || values.isEmpty() ) {
 			return emptyList();
 		}
@@ -2137,12 +2137,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Nonnull
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(@Nonnull Class<T> paramClass) {
-		return parameter( paramClass, null );
+		return createParameter( paramClass, null );
 	}
 
 	@Nonnull
 	@Override
-	public <T> JpaCriteriaParameter<T> parameter(@Nonnull Class<T> paramClass, @Nullable String name) {
+	public <T> JpaCriteriaParameter<T> parameter(@Nonnull Class<T> paramClass, @Nonnull String name) {
+		return createParameter( paramClass, name );
+	}
+
+	@Nonnull
+	private <T> JpaCriteriaParameter<T> createParameter(@Nonnull Class<T> paramClass, @Nullable String name) {
 		final var basicType = getTypeConfiguration().getBasicTypeForJavaType( paramClass );
 		final boolean notBasic = basicType == null;
 		final var parameterType =

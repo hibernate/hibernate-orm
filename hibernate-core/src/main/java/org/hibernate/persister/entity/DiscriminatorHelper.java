@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
@@ -33,7 +36,8 @@ public class DiscriminatorHelper {
 	 * The underlying BasicType as the "JDBC mapping" between the relational {@link org.hibernate.type.descriptor.java.JavaType}
 	 * and the {@link org.hibernate.type.descriptor.jdbc.JdbcType}.
 	 */
-	static BasicType<?> getDiscriminatorType(PersistentClass persistentClass) {
+	@Nonnull
+	static BasicType<?> getDiscriminatorType(@Nonnull PersistentClass persistentClass) {
 		final Type discriminatorType = persistentClass.getDiscriminator().getType();
 		if ( discriminatorType instanceof BasicType<?> basicType ) {
 			return basicType;
@@ -43,7 +47,8 @@ public class DiscriminatorHelper {
 		}
 	}
 
-	public static BasicType<?> getDiscriminatorType(Component component) {
+	@Nonnull
+	public static BasicType<?> getDiscriminatorType(@Nonnull Component component) {
 		final Type discriminatorType = component.getDiscriminator().getType();
 		if ( discriminatorType instanceof BasicType<?> basicType ) {
 			return basicType;
@@ -53,7 +58,8 @@ public class DiscriminatorHelper {
 		}
 	}
 
-	public static String getDiscriminatorSQLValue(PersistentClass persistentClass, Dialect dialect) {
+	@Nonnull
+	public static String getDiscriminatorSQLValue(@Nonnull PersistentClass persistentClass, @Nonnull Dialect dialect) {
 		if ( persistentClass.isDiscriminatorValueNull() ) {
 			return InFragment.NULL;
 		}
@@ -65,7 +71,8 @@ public class DiscriminatorHelper {
 		}
 	}
 
-	private static DiscriminatorValue parseDiscriminatorValue(PersistentClass persistentClass) {
+	@Nonnull
+	private static DiscriminatorValue parseDiscriminatorValue(@Nonnull PersistentClass persistentClass) {
 		final BasicType<?> discriminatorType = getDiscriminatorType( persistentClass );
 		final String discriminatorValue = persistentClass.getDiscriminatorValue();
 		try {
@@ -79,7 +86,8 @@ public class DiscriminatorHelper {
 		}
 	}
 
-	public static DiscriminatorValue getDiscriminatorValue(PersistentClass persistentClass) {
+	@Nonnull
+	public static DiscriminatorValue getDiscriminatorValue(@Nonnull PersistentClass persistentClass) {
 		if ( persistentClass.isDiscriminatorValueNull() ) {
 			return DiscriminatorValue.Special.NULL;
 		}
@@ -91,7 +99,8 @@ public class DiscriminatorHelper {
 		}
 	}
 
-	public static Object toRelationalValue(DiscriminatorValue discriminatorValue) {
+	@Nullable
+	public static Object toRelationalValue(@Nonnull DiscriminatorValue discriminatorValue) {
 		if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
 			return literal.value();
 		}
@@ -103,10 +112,11 @@ public class DiscriminatorHelper {
 		}
 	}
 
+	@Nonnull
 	private static <T> String discriminatorSqlLiteral(
-			BasicType<T> discriminatorType,
-			PersistentClass persistentClass,
-			Dialect dialect) {
+			@Nonnull BasicType<T> discriminatorType,
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull Dialect dialect) {
 		return jdbcLiteral(
 				discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() ),
 				discriminatorType.getJdbcLiteralFormatter(),
@@ -114,7 +124,8 @@ public class DiscriminatorHelper {
 		);
 	}
 
-	public static <T> String jdbcLiteral(T value, JdbcLiteralFormatter<T> formatter, Dialect dialect) {
+	@Nonnull
+	public static <T> String jdbcLiteral(@Nonnull T value, @Nonnull JdbcLiteralFormatter<T> formatter, @Nonnull Dialect dialect) {
 		try {
 			return formatter.toJdbcLiteral( value, dialect, null );
 		}
@@ -128,8 +139,9 @@ public class DiscriminatorHelper {
 	 * either the {@link org.hibernate.metamodel.mapping.DiscriminatorType}, for polymorphic
 	 * domain types, or to {@link StandardBasicTypes#CLASS Class} for non-inherited ones.
 	 */
+	@Nonnull
 	public static <T> SqmBindableType<? super T> getDiscriminatorType(
-			SqmPathSource<T> domainType, NodeBuilder nodeBuilder) {
+			@Nonnull SqmPathSource<T> domainType, @Nonnull NodeBuilder nodeBuilder) {
 		final SqmPathSource<?> subPathSource = domainType.findSubPathSource( DISCRIMINATOR_ROLE_NAME );
 		final SqmBindableType<?> type = subPathSource != null
 				? subPathSource.getPathType()

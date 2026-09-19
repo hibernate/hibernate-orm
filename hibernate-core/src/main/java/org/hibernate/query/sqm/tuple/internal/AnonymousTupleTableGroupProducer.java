@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -271,43 +274,50 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		return compatibleTableExpressions;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return javaTypeDescriptor;
 	}
 
+	@Nullable
 	@Override
 	public String getPartName() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public NavigableRole getNavigableRole() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return null;
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		return findSubPart( name );
 	}
 
+	@Nullable
 	@Override
 	public ModelPart findSubPart(String name) {
 		return modelParts.get( name );
 	}
 
 	@Override
-	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
 		int i = 0;
 		for ( Map.Entry<String, ModelPart> entry : modelParts.entrySet() ) {
 			consumer.accept( i++, entry.getValue() );
@@ -315,7 +325,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	}
 
 	@Override
-	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
 		for ( ModelPart modelPart : modelParts.values() ) {
 			consumer.accept( modelPart );
 		}
@@ -330,13 +340,14 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		return aliasStem;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return javaTypeDescriptor;
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		final int originalOffset = offset;
 		for ( ModelPart modelPart : modelParts.values() ) {
 			offset += modelPart.forEachSelectable( offset, consumer );
@@ -354,71 +365,74 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	// Support for using the anonymous tuple as table reference directly somewhere is not yet implemented
 	//--------------------------------
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Nullable
+	@Override
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
-	}
-
-	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return sqlTypedMappings[index].getJdbcMapping();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 

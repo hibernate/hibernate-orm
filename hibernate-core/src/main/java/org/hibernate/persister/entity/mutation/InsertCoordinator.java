@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 
@@ -22,7 +24,7 @@ public interface InsertCoordinator extends MutationCoordinator {
 	 *
 	 * @return The {@linkplain GeneratedValues generated values} if any, {@code null} otherwise.
 	 */
-	@Nullable GeneratedValues insert(Object entity, Object[] values, SharedSessionContractImplementor session);
+	@Nullable GeneratedValues insert(@Nonnull Object entity, @Nonnull Object[] values, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Persist an entity instance using the provided identifier.
@@ -30,8 +32,8 @@ public interface InsertCoordinator extends MutationCoordinator {
 	 * @return The {@linkplain GeneratedValues generated values} if any, {@code null} otherwise.
 	 */
 	@Nullable GeneratedValues insert(
-			Object entity,
-			Object id,
-			Object[] values,
-			SharedSessionContractImplementor session);
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] values,
+			@Nonnull SharedSessionContractImplementor session);
 }

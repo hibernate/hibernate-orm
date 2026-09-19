@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
@@ -22,27 +25,27 @@ public abstract class AbstractStateArrayContributorMapping
 	private final FetchStyle fetchStyle;
 
 	public AbstractStateArrayContributorMapping(
-			String name,
-			AttributeMetadata attributeMetadata,
+			@Nullable String name,
+			@Nullable AttributeMetadata attributeMetadata,
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			int stateArrayPosition,
 			int fetchableIndex,
-			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
+			@Nullable ManagedMappingType declaringType,
+			@Nullable PropertyAccess propertyAccess) {
 		super( name, fetchableIndex, declaringType, attributeMetadata, stateArrayPosition, propertyAccess );
 		this.fetchTiming = fetchTiming;
 		this.fetchStyle = fetchStyle;
 	}
 
 	public AbstractStateArrayContributorMapping(
-			String name,
-			AttributeMetadata attributeMetadata,
+			@Nullable String name,
+			@Nullable AttributeMetadata attributeMetadata,
 			FetchOptions mappedFetchOptions,
 			int stateArrayPosition,
 			int fetchableIndex,
-			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
+			@Nullable ManagedMappingType declaringType,
+			@Nullable PropertyAccess propertyAccess) {
 		this(
 				name,
 				attributeMetadata,
@@ -64,6 +67,7 @@ public abstract class AbstractStateArrayContributorMapping
 		this.fetchStyle = original.fetchStyle;
 	}
 
+	@Nullable
 	@Override
 	public String getFetchableName() {
 		return getAttributeName();

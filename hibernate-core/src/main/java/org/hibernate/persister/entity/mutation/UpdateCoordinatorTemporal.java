@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -15,6 +18,7 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Update coordinator for
@@ -31,36 +35,39 @@ public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator
 	private final UpdateCoordinator versionUpdateDelegate;
 
 	public UpdateCoordinatorTemporal(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
-		this.temporalMapping = entityPersister.getTemporalMapping();
+		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
 		this.endingUpdateGroup = buildEndingUpdateGroup( entityPersister.getIdentifierTableMapping(), temporalMapping );
 		this.batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#TEMPORAL_UPDATE" );
 		this.versionUpdateDelegate = new UpdateCoordinatorStandard( entityPersister, factory );
 	}
 
+	@Nullable
 	@Override
 	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return endingUpdateGroup;
 	}
 
+	@Nullable
 	@Override
 	protected BasicBatchKey getBatchKey() {
 		return batchKey;
 	}
 
+	@Nullable
 	@Override
 	public GeneratedValues update(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object[] values,
-			Object oldVersion,
-			Object[] incomingOldValues,
-			int[] dirtyAttributeIndexes,
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nonnull Object[] values,
+			@Nullable Object oldVersion,
+			@Nullable Object[] incomingOldValues,
+			@Nullable int[] dirtyAttributeIndexes,
 			boolean hasDirtyCollection,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( entityPersister()
 				.excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection ) ) {
 			return versionUpdateDelegate.update(
@@ -95,7 +102,7 @@ public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator
 	}
 
 	@Override
-	void bindVersionRestriction(Object oldVersion, JdbcValueBindings jdbcValueBindings, String temporalTableName) {
+	void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName) {
 		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
 			jdbcValueBindings.bindValue( oldVersion, versionMapping, ParameterUsage.RESTRICT );
@@ -104,10 +111,10 @@ public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator
 
 	@Override
 	public void forceVersionIncrement(
-			Object id,
-			Object currentVersion,
-			Object nextVersion,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
+			@Nonnull Object nextVersion,
+			@Nonnull SharedSessionContractImplementor session) {
 		versionUpdateDelegate.forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
 }

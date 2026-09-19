@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 
 import org.hibernate.LockOptions;
@@ -17,25 +19,27 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  */
 public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLoader<E> implements SqlInPredicateMultiKeyLoader {
 
-	public MultiNaturalIdLoaderInPredicate(EntityMappingType entityDescriptor) {
+	public MultiNaturalIdLoaderInPredicate(@Nonnull EntityMappingType entityDescriptor) {
 		super(entityDescriptor);
 	}
 
+	@Nonnull
 	@Override
 	public List<E> loadEntitiesWithUnresolvedIds(
-			Object[] naturalIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		return getBatcher( naturalIds, loadOptions, lockOptions, session )
 				.multiLoad( naturalIds, session );
 	}
 
+	@Nonnull
 	private MultiNaturalIdLoadingBatcher getBatcher(
-			Object[] naturalIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var entityDescriptor = getEntityDescriptor();
 		return new MultiNaturalIdLoadingBatcher(
 				entityDescriptor,
@@ -50,9 +54,9 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 	}
 
 	private int getMaxBatchSize(
-			Object[] naturalIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		final Integer batchSize = loadOptions.getBatchSize();
 		if ( batchSize != null && batchSize > 0 ) {
 			return batchSize;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
@@ -18,5 +20,5 @@ import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 @Incubating(since = "5.4")
 public interface LegacyAuxiliaryMutationSupport {
 	/// Adds auxiliary columns to the legacy entity insert mutation group.
-	void addToInsertGroup(MutationGroupBuilder insertGroupBuilder, EntityPersister persister);
+	void addToInsertGroup(@Nonnull MutationGroupBuilder insertGroupBuilder, @Nonnull EntityPersister persister);
 }

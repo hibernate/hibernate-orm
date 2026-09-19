@@ -74,7 +74,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return switch (functionKind) {
 			case ORDERED_SET_AGGREGATE ->
@@ -119,7 +119,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	public <T> SelfRenderingSqmAggregateFunction<T> generateSqmAggregateFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		if ( functionKind != FunctionKind.AGGREGATE ) {
 			throw new UnsupportedOperationException( "The function " + getName() + " is not an aggregate function" );
@@ -142,7 +142,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		if ( functionKind != FunctionKind.ORDERED_SET_AGGREGATE ) {
 			throw new UnsupportedOperationException( "The function " + getName() + " is not an ordered set-aggregate function" );
@@ -167,7 +167,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			SqmPredicate filter,
 			@Nullable Boolean respectNulls,
 			@Nullable Boolean fromFirst,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		if ( functionKind != FunctionKind.WINDOW ) {
 			throw new UnsupportedOperationException( "The function " + getName() + " is not a window function" );

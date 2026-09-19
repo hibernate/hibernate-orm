@@ -4,6 +4,10 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.function.UnaryOperator;
 
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
@@ -15,6 +19,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Binds collection row values and restrictions for history table mutations.
@@ -25,19 +30,20 @@ final class HistoryCollectionRowMutationHelper {
 	private final TemporalMapping temporalMapping;
 	private final String historyTableName;
 	private final String currentTableName;
+	@Nullable
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;
 
 	HistoryCollectionRowMutationHelper(
-			CollectionMutationTarget mutationTarget,
-			String historyTableName,
-			boolean[] indexColumnIsSettable,
-			boolean[] elementColumnIsSettable,
-			UnaryOperator<Object> indexIncrementer) {
+			@Nonnull CollectionMutationTarget mutationTarget,
+			@Nonnull String historyTableName,
+			@Nullable boolean[] indexColumnIsSettable,
+			@Nonnull boolean[] elementColumnIsSettable,
+			@Nonnull UnaryOperator<Object> indexIncrementer) {
 		this.mutationTarget = mutationTarget;
 		this.attributeMapping = mutationTarget.getTargetPart();
-		this.temporalMapping = attributeMapping.getTemporalMapping();
+		this.temporalMapping = castNonNull( attributeMapping.getTemporalMapping() );
 		this.historyTableName = historyTableName;
 		this.currentTableName = mutationTarget.getCollectionTableMapping().getTableName();
 		this.indexColumnIsSettable = indexColumnIsSettable;
@@ -46,12 +52,12 @@ final class HistoryCollectionRowMutationHelper {
 	}
 
 	void bindInsertValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object key,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: " + mutationTarget.getRolePath() );
 		}
@@ -60,7 +66,8 @@ final class HistoryCollectionRowMutationHelper {
 				0,
 				jdbcValueBindings,
 				null,
-				this::bindSetValue,
+				(valueIndex, bindings, unused, jdbcValue, mapping) ->
+						bindSetValue( valueIndex, castNonNull( bindings ), unused, jdbcValue, mapping ),
 				session
 		);
 
@@ -71,7 +78,8 @@ final class HistoryCollectionRowMutationHelper {
 					0,
 					jdbcValueBindings,
 					null,
-					this::bindSetValue,
+					(valueIndex, bindings, unused, jdbcValue, mapping) ->
+						bindSetValue( valueIndex, castNonNull( bindings ), unused, jdbcValue, mapping ),
 					session
 			);
 		}
@@ -132,12 +140,12 @@ final class HistoryCollectionRowMutationHelper {
 	}
 
 	void bindDeleteRowRestrictions(
-			PersistentCollection<?> collection,
-			Object keyValue,
-			Object rowValue,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object keyValue,
+			@Nonnull Object rowValue,
 			int rowPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
 			jdbcValueBindings.bindValue(
 					session.getCurrentChangesetIdentifier(),
@@ -154,7 +162,8 @@ final class HistoryCollectionRowMutationHelper {
 					0,
 					jdbcValueBindings,
 					null,
-					this::bindRestrictValue,
+					(valueIndex, bindings, unused, jdbcValue, mapping) ->
+						bindRestrictValue( valueIndex, castNonNull( bindings ), unused, jdbcValue, mapping ),
 					session
 			);
 		}
@@ -164,7 +173,8 @@ final class HistoryCollectionRowMutationHelper {
 					0,
 					jdbcValueBindings,
 					null,
-					this::bindRestrictValue,
+					(valueIndex, bindings, unused, jdbcValue, mapping) ->
+						bindRestrictValue( valueIndex, castNonNull( bindings ), unused, jdbcValue, mapping ),
 					session
 			);
 
@@ -174,7 +184,8 @@ final class HistoryCollectionRowMutationHelper {
 						0,
 						jdbcValueBindings,
 						null,
-						this::bindRestrictValue,
+						(valueIndex, bindings, unused, jdbcValue, mapping) ->
+						bindRestrictValue( valueIndex, castNonNull( bindings ), unused, jdbcValue, mapping ),
 						session
 				);
 			}
@@ -201,15 +212,16 @@ final class HistoryCollectionRowMutationHelper {
 	}
 
 	void bindDeleteAllRestrictions(
-			Object keyValue,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull Object keyValue,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		attributeMapping.getKeyDescriptor().getKeyPart().decompose(
 				keyValue,
 				0,
 				jdbcValueBindings,
 				null,
-				this::bindRestrictValue,
+				(valueIndex, bindings, unused, jdbcValue, mapping) ->
+						bindRestrictValue( valueIndex, castNonNull( bindings ), unused, jdbcValue, mapping ),
 				session
 		);
 		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
@@ -224,27 +236,27 @@ final class HistoryCollectionRowMutationHelper {
 
 	private void bindSetValue(
 			int valueIndex,
-			JdbcValueBindings jdbcValueBindings,
-			Object unused,
-			Object jdbcValue,
-			SelectableMapping selectableMapping) {
+			@Nonnull JdbcValueBindings jdbcValueBindings,
+			@Nullable Object unused,
+			@Nullable Object jdbcValue,
+			@Nonnull SelectableMapping selectableMapping) {
 		bindValue( jdbcValueBindings, jdbcValue, selectableMapping, ParameterUsage.SET );
 	}
 
 	private void bindRestrictValue(
 			int valueIndex,
-			JdbcValueBindings jdbcValueBindings,
-			Object unused,
-			Object jdbcValue,
-			SelectableMapping selectableMapping) {
+			@Nonnull JdbcValueBindings jdbcValueBindings,
+			@Nullable Object unused,
+			@Nullable Object jdbcValue,
+			@Nonnull SelectableMapping selectableMapping) {
 		bindValue( jdbcValueBindings, jdbcValue, selectableMapping, ParameterUsage.RESTRICT );
 	}
 
 	private void bindValue(
-			JdbcValueBindings jdbcValueBindings,
-			Object jdbcValue,
-			SelectableMapping selectableMapping,
-			ParameterUsage usage) {
+			@Nonnull JdbcValueBindings jdbcValueBindings,
+			@Nullable Object jdbcValue,
+			@Nonnull SelectableMapping selectableMapping,
+			@Nonnull ParameterUsage usage) {
 		if ( selectableMapping.isFormula() ) {
 			return;
 		}

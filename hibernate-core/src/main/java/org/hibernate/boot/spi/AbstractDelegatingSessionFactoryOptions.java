@@ -60,12 +60,14 @@ import jakarta.persistence.criteria.Nulls;
  * @author Steve Ebersole
  */
 public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOptions {
+	@Nonnull
 	private final SessionFactoryOptions delegate;
 
-	public AbstractDelegatingSessionFactoryOptions(SessionFactoryOptions delegate) {
+	public AbstractDelegatingSessionFactoryOptions(@Nonnull SessionFactoryOptions delegate) {
 		this.delegate = delegate;
 	}
 
+	@Nonnull
 	protected SessionFactoryOptions delegate() {
 		return delegate;
 	}
@@ -93,21 +95,25 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nullable
 	public Object getBeanManagerReference() {
 		return delegate.getBeanManagerReference();
 	}
 
 	@Override
+	@Nullable
 	public Object getValidatorFactoryReference() {
 		return delegate.getValidatorFactoryReference();
 	}
 
 	@Override
+	@Nullable
 	public String getSessionFactoryName() {
 		return delegate.getSessionFactoryName();
 	}
 
 	@Override
+	@Nullable
 	public Boolean isSessionFactoryNameAlsoJndiName() {
 		return delegate.isSessionFactoryNameAlsoJndiName();
 	}
@@ -128,36 +134,43 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nullable
 	public Interceptor getInterceptor() {
 		return delegate.getInterceptor();
 	}
 
 	@Override
+	@Nullable
 	public StatementObserver getStatementObserver() {
 		return delegate().getStatementObserver();
 	}
 
 	@Override
+	@Nullable
 	public SqmMultiTableMutationStrategy getCustomSqmMultiTableMutationStrategy() {
 		return delegate.getCustomSqmMultiTableMutationStrategy();
 	}
 
 	@Override
+	@Nullable
 	public SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy() {
 		return delegate.getCustomSqmMultiTableInsertStrategy();
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext) {
+	@Nullable
+	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(@Nonnull EntityMappingType rootEntityDescriptor, @Nonnull RuntimeModelCreationContext creationContext) {
 		return delegate.resolveCustomSqmMultiTableMutationStrategy( rootEntityDescriptor, creationContext );
 	}
 
 	@Override
-	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext) {
+	@Nullable
+	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(@Nonnull EntityMappingType rootEntityDescriptor, @Nonnull RuntimeModelCreationContext creationContext) {
 		return delegate.resolveCustomSqmMultiTableInsertStrategy( rootEntityDescriptor, creationContext );
 	}
 
 	@Override
+	@Nullable
 	public StatementInspector getStatementInspector() {
 		return delegate.getStatementInspector();
 	}
@@ -200,6 +213,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nullable
 	public Integer getMaximumFetchDepth() {
 		return delegate.getMaximumFetchDepth();
 	}
@@ -280,16 +294,19 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public CacheLayout getQueryCacheLayout() {
 		return delegate.getQueryCacheLayout();
 	}
 
 	@Override
+	@Nullable
 	public TimestampsCacheFactory getTimestampsCacheFactory() {
 		return delegate.getTimestampsCacheFactory();
 	}
 
 	@Override
+	@Nullable
 	public String getCacheRegionPrefix() {
 		return delegate.getCacheRegionPrefix();
 	}
@@ -330,6 +347,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nullable
 	public Integer getJdbcFetchSize() {
 		return delegate.getJdbcFetchSize();
 	}
@@ -369,6 +387,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, SqmFunctionDescriptor> getCustomSqlFunctionMap() {
 		return delegate.getCustomSqlFunctionMap();
 	}
@@ -384,21 +403,25 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nullable
 	public Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
 		return delegate.getStatelessInterceptorImplementorSupplier();
 	}
 
 	@Override
+	@Nullable
 	public HqlTranslator getCustomHqlTranslator() {
 		return delegate.getCustomHqlTranslator();
 	}
 
 	@Override
+	@Nullable
 	public SqmTranslatorFactory getCustomSqmTranslatorFactory() {
 		return delegate.getCustomSqmTranslatorFactory();
 	}
 
 	@Override
+	@Nullable
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
 	}
@@ -416,6 +439,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return delegate.getCriteriaValueHandlingMode();
 	}
@@ -435,6 +459,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public JpaCompliance getJpaCompliance() {
 		return delegate.getJpaCompliance();
 	}
@@ -456,11 +481,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nullable
 	public String getDefaultCatalog() {
 		return delegate.getDefaultCatalog();
 	}
 
 	@Override
+	@Nullable
 	public String getDefaultSchema() {
 		return delegate.getDefaultSchema();
 	}
@@ -501,6 +528,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nullable
 	public SqmFunctionRegistry getCustomSqmFunctionRegistry() {
 		return delegate().getCustomSqmFunctionRegistry();
 	}
@@ -537,7 +565,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+	public boolean isDirectJavaTimeJdbcAccessEnabled(@Nonnull Class<?> javaTimeType) {
 		return delegate.isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
 	}
 
@@ -585,11 +613,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nullable
 	public CacheStoreMode getCacheStoreMode(@Nullable Map<String, Object> properties) {
 		return delegate.getCacheStoreMode( properties );
 	}
 
 	@Override
+	@Nullable
 	public CacheRetrieveMode getCacheRetrieveMode(@Nullable Map<String, Object> properties) {
 		return delegate.getCacheRetrieveMode( properties );
 	}
@@ -607,6 +637,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public CacheMode getInitialSessionCacheMode() {
 		return delegate.getInitialSessionCacheMode();
 	}

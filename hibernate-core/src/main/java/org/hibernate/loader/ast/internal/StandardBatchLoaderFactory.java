@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Map;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -25,14 +27,15 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlAr
  */
 public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 	@SuppressWarnings("unused")
-	public StandardBatchLoaderFactory(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public StandardBatchLoaderFactory(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 	}
 
+	@Nonnull
 	@Override
 	public <T> EntityBatchLoader<T> createEntityBatchLoader(
 			int domainBatchSize,
-			EntityMappingType entityDescriptor,
-			LoadQueryInfluencers influencers) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull LoadQueryInfluencers influencers) {
 		final var factory = influencers.getSessionFactory();
 		// NOTE: don't use the EntityIdentifierMapping here because it will not be known until later
 		final var identifierType = entityDescriptor.getEntityPersister().getIdentifierType();
@@ -47,12 +50,13 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 		}
 	}
 
+	@Nonnull
 	@Override
 	public CollectionBatchLoader createCollectionBatchLoader(
 			int domainBatchSize,
-			LoadQueryInfluencers influencers,
-			PluralAttributeMapping attributeMapping,
-			SessionFactoryImplementor factory) {
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull SessionFactoryImplementor factory) {
 		if ( attributeMapping.getKeyDescriptor().getJdbcTypeCount() == 1
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {
 			// we can use a single ARRAY parameter to send all the ids

@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -108,12 +110,12 @@ public class CollectionAuditSupport {
 	private final @Nullable EntityAuditSupport ownerMutationSupport;
 
 	public CollectionAuditSupport(
-			CollectionMutationTarget mutationTarget,
-			SessionFactoryImplementor sessionFactory,
-			boolean[] indexColumnIsSettable,
-			boolean[] elementColumnIsSettable,
-			UnaryOperator<Object> indexIncrementer,
-			AuditMapping auditMapping) {
+			@Nonnull CollectionMutationTarget mutationTarget,
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nullable boolean[] indexColumnIsSettable,
+			@Nonnull boolean[] elementColumnIsSettable,
+			@Nonnull UnaryOperator<Object> indexIncrementer,
+			@Nonnull AuditMapping auditMapping) {
 		this.mutationTarget = mutationTarget;
 		this.auditHelper = new AuditCollectionHelper(
 				mutationTarget,
@@ -129,6 +131,7 @@ public class CollectionAuditSupport {
 				: new EntityAuditSupport( ownerPersister, sessionFactory );
 	}
 
+	@Nonnull
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
@@ -145,10 +148,11 @@ public class CollectionAuditSupport {
 	/// first, then from the collection wrapper, and finally by entity key lookup.
 	/// If the owner cannot be resolved, no owner MOD change is produced; the
 	/// collection row audit work can still be recorded.
+	@Nullable
 	public OwnerAuditChange resolveOwnerAuditChange(
-			Object ownerId,
-			PersistentCollection<?> collection,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object ownerId,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var collectionDescriptor = mutationTarget.getTargetPart().getCollectionDescriptor();
 		final var ownerPersister = collectionDescriptor.getOwnerEntityPersister();
 		if ( ownerMutationSupport == null ) {
@@ -172,18 +176,22 @@ public class CollectionAuditSupport {
 		);
 	}
 
+	@Nonnull
 	AuditCollectionRowMutationHelper getRowMutationHelper() {
 		return auditHelper.getRowMutationHelper();
 	}
 
+	@Nullable
 	public MutationOperationGroup getAuditInsertOperationGroup() {
 		return auditHelper.getAuditInsertOperationGroup();
 	}
 
+	@Nullable
 	public MutationOperationGroup getTransactionEndUpdateGroup() {
 		return auditHelper.getTransactionEndUpdateGroup();
 	}
 
+	@Nullable
 	private AuditCollectionOperation resolveAuditInsertOperation() {
 		final var group = getAuditInsertOperationGroup();
 		return group == null ? null : createOperation( group.getSingleOperation() );
@@ -194,11 +202,13 @@ public class CollectionAuditSupport {
 	/// The returned plan is execution-agnostic. It identifies the JDBC mutation
 	/// operation that inserts audit rows, while queue-specific code decides how
 	/// to materialize and execute that operation.
+	@Nullable
 	public AuditInsertPlan resolveAuditInsertPlan() {
 		final var operation = resolveAuditInsertOperation();
 		return operation == null ? null : new AuditInsertPlan( operation );
 	}
 
+	@Nullable
 	private AuditCollectionOperation resolveTransactionEndUpdateOperation() {
 		final var group = getTransactionEndUpdateGroup();
 		return group == null ? null : createOperation( group.getSingleOperation() );
@@ -209,12 +219,14 @@ public class CollectionAuditSupport {
 	/// The returned plan describes the update operation used to close previous
 	/// audit rows for changed collection-row identities. A {@code null} result
 	/// means the active audit strategy does not require this update.
+	@Nullable
 	public TransactionEndPlan resolveTransactionEndUpdatePlan() {
 		final var operation = resolveTransactionEndUpdateOperation();
 		return operation == null ? null : new TransactionEndPlan( operation );
 	}
 
-	private AuditCollectionOperation createOperation(MutationOperation operation) {
+	@Nonnull
+	private AuditCollectionOperation createOperation(@Nonnull MutationOperation operation) {
 		return new AuditCollectionOperation(
 				createAuditTableDescriptor( operation ),
 				operation
@@ -227,7 +239,8 @@ public class CollectionAuditSupport {
 	/// participate in graph dependency analysis. The descriptor therefore carries
 	/// only the stable table identity, mutation details, and collection key
 	/// metadata needed for batching and binding.
-	private CollectionTableDescriptor createAuditTableDescriptor(MutationOperation operation) {
+	@Nonnull
+	private CollectionTableDescriptor createAuditTableDescriptor(@Nonnull MutationOperation operation) {
 		final var sourceDescriptor = mutationTarget.getCollectionTableDescriptor();
 		final var tableMapping = operation.getTableDetails();
 		return new CollectionTableDescriptor(
@@ -246,9 +259,10 @@ public class CollectionAuditSupport {
 		);
 	}
 
+	@Nonnull
 	public List<AuditCollectionChange> resolveChanges(
-			PersistentCollection<?> collection,
-			Object originalSnapshot) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nullable Object originalSnapshot) {
 		final var collectionDescriptor = mutationTarget.getTargetPart().getCollectionDescriptor();
 		if ( originalSnapshot == null ) {
 			final List<AuditCollectionChange> changes = new ArrayList<>();
@@ -268,11 +282,11 @@ public class CollectionAuditSupport {
 	/// the row mutation helper can use the collection wrapper's normal row access
 	/// methods for list, map, id-bag, element, and association rows.
 	public void bindAuditInsertValues(
-			PersistentCollection<?> collection,
-			Object ownerId,
-			AuditCollectionChange change,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object ownerId,
+			@Nonnull AuditCollectionChange change,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		getRowMutationHelper().bindInsertValues(
 				collection,
 				ownerId,
@@ -290,12 +304,12 @@ public class CollectionAuditSupport {
 	/// which are keyed by column name because the surrounding flush operation
 	/// already carries the mutating audit table descriptor.
 	public void bindAuditInsertValues(
-			PersistentCollection<?> collection,
-			Object ownerId,
-			AuditCollectionChange change,
-			Object changesetId,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object ownerId,
+			@Nonnull AuditCollectionChange change,
+			@Nonnull Object changesetId,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
 		getRowMutationHelper().bindInsertValues(
 				collection,
 				ownerId,
@@ -314,11 +328,11 @@ public class CollectionAuditSupport {
 	/// identity. Zero affected rows are tolerated by callers because a row being
 	/// added for the first time has no previous audit row to close.
 	public void bindTransactionEndValues(
-			PersistentCollection<?> collection,
-			Object ownerId,
-			AuditCollectionChange change,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object ownerId,
+			@Nonnull AuditCollectionChange change,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var tableName = auditHelper.getAuditTableMapping().getTableName();
 		final var txId = session.getCurrentChangesetIdentifier();
 		final var auditMapping = mutationTarget.getTargetPart().getAuditMapping();
@@ -343,12 +357,12 @@ public class CollectionAuditSupport {
 	///
 	/// @see #bindTransactionEndValues(PersistentCollection, Object, AuditCollectionChange, SharedSessionContractImplementor, JdbcValueBindings)
 	public void bindTransactionEndValues(
-			PersistentCollection<?> collection,
-			Object ownerId,
-			AuditCollectionChange change,
-			Object changesetId,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object ownerId,
+			@Nonnull AuditCollectionChange change,
+			@Nonnull Object changesetId,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
 		final var auditMapping = mutationTarget.getTargetPart().getAuditMapping();
 		final var collectionTableName = mutationTarget.getCollectionTableMapping().getTableName();
 		final var revEndMapping = auditMapping.getInvalidatingChangesetIdMapping( collectionTableName );
@@ -378,10 +392,11 @@ public class CollectionAuditSupport {
 	/// ADD/DEL changes intentionally describe audit rows, not SQL DML operations;
 	/// replacements are represented as both a DEL of the old row and an ADD of
 	/// the new row.
+	@Nonnull
 	private List<AuditCollectionChange> computeCollectionChanges(
-			PersistentCollection<?> collection,
-			CollectionPersister collectionDescriptor,
-			Object snapshot) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull CollectionPersister collectionDescriptor,
+			@Nonnull Object snapshot) {
 		final Type elementType = collectionDescriptor.getElementType();
 		if ( collectionDescriptor.hasIndex() ) {
 			return snapshot instanceof Map<?, ?> ?
@@ -394,11 +409,12 @@ public class CollectionAuditSupport {
 		return computeUnindexedChanges( collection, collectionDescriptor, (Collection<?>) snapshot, elementType );
 	}
 
+	@Nonnull
 	private List<AuditCollectionChange> computeMapChanges(
-			PersistentCollection<?> collection,
-			CollectionPersister collectionDescriptor,
-			Map<?, ?> snapshot,
-			Type elementType) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull CollectionPersister collectionDescriptor,
+			@Nonnull Map<?, ?> snapshot,
+			@Nonnull Type elementType) {
 		final List<AuditCollectionChange> changes = new ArrayList<>();
 		final var currentMap = (Map<?, ?>) collection;
 
@@ -427,11 +443,12 @@ public class CollectionAuditSupport {
 		return changes;
 	}
 
+	@Nonnull
 	private List<AuditCollectionChange> computeListChanges(
-			PersistentCollection<?> collection,
-			CollectionPersister collectionDescriptor,
-			Object snapshot,
-			Type elementType) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull CollectionPersister collectionDescriptor,
+			@Nonnull Object snapshot,
+			@Nonnull Type elementType) {
 		final List<AuditCollectionChange> changes = new ArrayList<>();
 		final List<?> snapshotList = snapshot instanceof List<?> list ? list : null;
 		final int snapshotSize = snapshotList != null ? snapshotList.size() : Array.getLength( snapshot );
@@ -461,11 +478,12 @@ public class CollectionAuditSupport {
 		return changes;
 	}
 
+	@Nonnull
 	private List<AuditCollectionChange> computeUnindexedChanges(
-			PersistentCollection<?> collection,
-			CollectionPersister collectionDescriptor,
-			Collection<?> snapshotElements,
-			Type elementType) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull CollectionPersister collectionDescriptor,
+			@Nonnull Collection<?> snapshotElements,
+			@Nonnull Type elementType) {
 		final var remaining = new ArrayList<>( snapshotElements );
 		final List<AuditCollectionChange> changes = new ArrayList<>();
 
@@ -497,11 +515,12 @@ public class CollectionAuditSupport {
 		return changes;
 	}
 
+	@Nonnull
 	private List<AuditCollectionChange> computeUnindexedMapChanges(
-			PersistentCollection<?> collection,
-			CollectionPersister collectionDescriptor,
-			Map<?, ?> snapshot,
-			Type elementType) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull CollectionPersister collectionDescriptor,
+			@Nonnull Map<?, ?> snapshot,
+			@Nonnull Type elementType) {
 		final var remaining = new ArrayList<>( snapshot.entrySet() );
 		final List<AuditCollectionChange> changes = new ArrayList<>();
 

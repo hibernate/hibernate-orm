@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.BitSet;
 import java.util.Collection;
@@ -63,6 +66,7 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.lang.System.arraycopy;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildBasicAttributeMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildEmbeddedAttributeMapping;
@@ -77,6 +81,7 @@ import static org.hibernate.type.SqlTypes.STRUCT;
 import static org.hibernate.type.SqlTypes.STRUCT_ARRAY;
 import static org.hibernate.type.SqlTypes.STRUCT_TABLE;
 import static org.hibernate.type.SqlTypes.XML_ARRAY;
+
 
 /**
  * Describes a "normal" embeddable.
@@ -110,10 +115,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	public static EmbeddableMappingTypeImpl from(
 			Component bootDescriptor,
 			CompositeType compositeType,
-			String rootTableExpression,
-			String[] rootTableKeyColumnNames,
-			Property componentProperty,
-			DependantValue dependantValue,
+			@Nullable String rootTableExpression,
+			@Nullable String[] rootTableKeyColumnNames,
+			@Nullable Property componentProperty,
+			@Nullable DependantValue dependantValue,
 			int dependantColumnIndex,
 			boolean[] insertability,
 			boolean[] updateability,
@@ -133,7 +138,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 
 		creationProcess.registerInitializationCallback(
-				"EmbeddableMappingType(" + mappingType.getNavigableRole().getFullPath() + ")#finishInitialization",
+				"EmbeddableMappingType(" + castNonNull( mappingType.getNavigableRole() ).getFullPath() + ")#finishInitialization",
 				() ->
 						mappingType.finishInitialization(
 								bootDescriptor,
@@ -155,18 +160,18 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
 	private final EmbeddableValuedModelPart valueMapping;
-	private final EmbeddableDiscriminatorMapping discriminatorMapping;
-	private final Map<String, ConcreteEmbeddableTypeImpl> concreteEmbeddableBySubclass;
-	private final Map<Object, ConcreteEmbeddableTypeImpl> concreteEmbeddableByDiscriminator;
+	@Nullable private final EmbeddableDiscriminatorMapping discriminatorMapping;
+	@Nullable private final Map<String, ConcreteEmbeddableTypeImpl> concreteEmbeddableBySubclass;
+	@Nullable private final Map<Object, ConcreteEmbeddableTypeImpl> concreteEmbeddableByDiscriminator;
 
-	private final SelectableMapping aggregateMapping;
+	@Nullable private final SelectableMapping aggregateMapping;
 	private final boolean aggregateMappingRequiresColumnWriter;
 	private final boolean preferSelectAggregateMapping;
 	private final boolean preferBindAggregateMapping;
 
 	private EmbeddableMappingTypeImpl(
 			Component bootDescriptor,
-			Property componentProperty,
+			@Nullable Property componentProperty,
 			Function<EmbeddableMappingType, EmbeddableValuedModelPart> embeddedPartBuilder,
 			RuntimeModelCreationContext creationContext) {
 		super( 5 );
@@ -330,6 +335,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return resolvedJdbcMapping;
 	}
 
+	@Nullable
 	private static String structTypeName(Component bootDescriptor, BasicValue.Resolution<?> resolution) {
 		final var structName = bootDescriptor.getStructName();
 		if ( structName != null ) {
@@ -371,7 +377,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
 				"EmbeddableMappingType("
-						+ inverseMappingType.getNavigableRole().getFullPath()
+						+ castNonNull( inverseMappingType.getNavigableRole() ).getFullPath()
 						+ ".{inverse})#finishInitialization",
 				() -> inverseInitializeCallback(
 						declaringTableGroupProducer,
@@ -383,11 +389,12 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		);
 	}
 
+	@Nonnull
 	public EmbeddableMappingType createInverseMappingType(
-			EmbeddedAttributeMapping valueMapping,
-			TableGroupProducer declaringTableGroupProducer,
-			SelectableMappings selectableMappings,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull EmbeddedAttributeMapping valueMapping,
+			@Nonnull TableGroupProducer declaringTableGroupProducer,
+			@Nonnull SelectableMappings selectableMappings,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		return new EmbeddableMappingTypeImpl(
 				valueMapping,
 				declaringTableGroupProducer,
@@ -400,9 +407,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private boolean finishInitialization(
 			Component bootDescriptor,
 			CompositeType compositeType,
-			String rootTableExpression,
-			String[] rootTableKeyColumnNames,
-			DependantValue dependantValue,
+			@Nullable String rootTableExpression,
+			@Nullable String[] rootTableKeyColumnNames,
+			@Nullable DependantValue dependantValue,
 			int dependantColumnIndex,
 			boolean[] insertability,
 			boolean[] updateability,
@@ -477,7 +484,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					columnExpression = rootTableKeyColumnNames[columnPosition];
 				}
 				final var role =
-						valueMapping.getNavigableRole()
+						castNonNull( valueMapping.getNavigableRole() )
 								.append( bootPropertyDescriptor.getName() );
 				final SelectablePath selectablePath;
 				final Long length;
@@ -516,7 +523,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						bootPropertyDescriptor,
 						this,
 						basicValue.getResolution().getLegacyResolvedBasicType(),
-						containingTableExpression,
+						castNonNull( containingTableExpression ),
 						columnExpression,
 						selectablePath,
 						selectable.isFormula(),
@@ -556,7 +563,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				);
 
 				attributeMapping = new DiscriminatedAssociationAttributeMapping(
-						valueMapping.getNavigableRole()
+						castNonNull( valueMapping.getNavigableRole() )
 								.append( bootPropertyDescriptor.getName() ),
 						typeConfiguration.getJavaTypeRegistry()
 								.resolveDescriptor( Object.class ),
@@ -595,7 +602,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						dependantColumnIndex + columnPosition,
 						this,
 						subCompositeType,
-						subTableExpression,
+						castNonNull( subTableExpression ),
 						subRootTableKeyColumnNames,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
@@ -620,7 +627,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			else if ( subtype instanceof EntityType subentityType ) {
 				attributeMapping = buildSingularAssociationAttributeMapping(
 						bootPropertyDescriptor.getName(),
-						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
+						castNonNull( valueMapping.getNavigableRole() ).append( bootPropertyDescriptor.getName() ),
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
@@ -646,7 +653,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 			if ( isPolymorphic() ) {
 				final String declaringClass = bootDescriptor.getPropertyDeclaringClass( bootPropertyDescriptor );
-				for ( var entry : concreteEmbeddableBySubclass.entrySet() ) {
+				for ( var entry : castNonNull( concreteEmbeddableBySubclass ).entrySet() ) {
 					if ( isDefinedInClassOrSuperclass( bootDescriptor, declaringClass, entry.getKey() ) ) {
 						entry.getValue().declaredAttributes.set( attributeMapping.getStateArrayPosition() );
 					}
@@ -662,7 +669,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		// We need the attribute mapping types to finish initialization first before we can build the column mappings
 		creationProcess.registerInitializationCallback(
-				"EmbeddableMappingType(" + valueMapping.getNavigableRole().getFullPath() + ")#initColumnMappings",
+				"EmbeddableMappingType(" + castNonNull( valueMapping.getNavigableRole() ).getFullPath() + ")#initColumnMappings",
 				this::initColumnMappings
 		);
 
@@ -687,18 +694,21 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					return true;
 				}
 
-				@Override
-				public Object deepCopy(Object value) {
+				@Nullable
+	@Override
+				public Object deepCopy(@Nullable Object value) {
 					return value;
 				}
 
-				@Override
-				public Serializable disassemble(Object value, SharedSessionContract session) {
+				@Nonnull
+	@Override
+				public Serializable disassemble(@Nullable Object value, SharedSessionContract session) {
 					throw new UnsupportedOperationException();
 				}
 
-				@Override
-				public Object assemble(Serializable cached, SharedSessionContract session) {
+				@Nonnull
+	@Override
+				public Object assemble(@Nullable Serializable cached, SharedSessionContract session) {
 					throw new UnsupportedOperationException();
 				}
 			};
@@ -708,6 +718,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 	}
 
+	@Nullable
 	private EmbeddableDiscriminatorMapping generateDiscriminatorMapping(
 			Component bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
@@ -764,40 +775,47 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		);
 	}
 
+	@Nonnull
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
 		return valueMapping;
 	}
 
+	@Nullable
 	@Override
 	public EmbeddableDiscriminatorMapping getDiscriminatorMapping() {
 		return discriminatorMapping;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return embeddableJtd;
 	}
 
+	@Nonnull
 	public EmbeddableRepresentationStrategy getRepresentationStrategy() {
 		return representationStrategy;
 	}
 
+	@Nullable
 	@Override
 	public String getPartName() {
 		return getEmbeddedValueMapping().getPartName();
 	}
 
+	@Nullable
 	@Override
 	public NavigableRole getNavigableRole() {
 		return valueMapping.getNavigableRole();
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		return new EmbeddableResultImpl<>(
 				navigablePath,
 				valueMapping,
@@ -819,11 +837,13 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			this.declaredAttributes = new BitSet();
 		}
 
+		@Nonnull
 		@Override
 		public EmbeddableInstantiator getInstantiator() {
 			return instantiator;
 		}
 
+		@Nullable
 		@Override
 		public Object getDiscriminatorValue() {
 			return discriminatorValue;
@@ -835,7 +855,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 
 		@Override
-		public boolean declaresAttribute(AttributeMapping attributeMapping) {
+		public boolean declaresAttribute(@Nonnull AttributeMapping attributeMapping) {
 			return declaredAttributes.get( attributeMapping.getStateArrayPosition() );
 		}
 
@@ -845,16 +865,19 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 	}
 
+	@Nullable
 	@Override
-	public ConcreteEmbeddableType findSubtypeByDiscriminator(Object discriminatorValue) {
+	public ConcreteEmbeddableType findSubtypeByDiscriminator(@Nonnull Object discriminatorValue) {
 		return concreteEmbeddableByDiscriminator == null ? this : concreteEmbeddableByDiscriminator.get( discriminatorValue );
 	}
 
+	@Nullable
 	@Override
-	public ConcreteEmbeddableType findSubtypeBySubclass(String subclassName) {
+	public ConcreteEmbeddableType findSubtypeBySubclass(@Nonnull String subclassName) {
 		return concreteEmbeddableBySubclass == null ? this : concreteEmbeddableBySubclass.get( subclassName );
 	}
 
+	@Nonnull
 	@Override
 	public Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
 		//noinspection unchecked
@@ -875,7 +898,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			int i = 0;
 			for ( ; i < numberOfAttributes; i++ ) {
 				results[i] =
-						concreteEmbeddableType.declaresAttribute( i )
+						castNonNull( concreteEmbeddableType ).declaresAttribute( i )
 								? getValue( compositeInstance, i )
 								: null;
 			}
@@ -894,7 +917,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final var concreteEmbeddableType = findSubtypeBySubclass( compositeClassName );
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
 				final AttributeMapping attributeMapping = getAttributeMapping( i );
-				if ( concreteEmbeddableType.declaresAttribute( attributeMapping ) ) {
+				if ( castNonNull( concreteEmbeddableType ).declaresAttribute( attributeMapping ) ) {
 					setValue( component, i, values[i] );
 				}
 				else if ( values[i] != null ) {
@@ -907,8 +930,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		return EntityDiscriminatorMapping.matchesRoleName( name )
 				? discriminatorMapping
 				: super.findSubPart( name, treatTargetType );
@@ -917,12 +941,12 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		final int size = attributeMappings.size();
 		int span = 0;
 		if ( domainValue instanceof Object[] values ) {
@@ -943,7 +967,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				}
 			}
 			if ( isPolymorphic() ) {
-				span += discriminatorMapping.breakDownJdbcValues( values[i], offset + span, x, y, valueConsumer, session );
+				span += castNonNull( discriminatorMapping ).breakDownJdbcValues( values[i], offset + span, x, y, valueConsumer, session );
 			}
 		}
 		else {
@@ -955,8 +979,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final var attributeMapping = attributeMappings.get( i );
 				if ( !attributeMapping.isPluralAttributeMapping() ) {
 					final Object attributeValue =
-							concreteEmbeddableType == null
-								|| !concreteEmbeddableType.declaresAttribute( attributeMapping )
+							domainValue == null || concreteEmbeddableType == null
+								|| !castNonNull( concreteEmbeddableType ).declaresAttribute( attributeMapping )
 									? null
 									: getValue( domainValue, i );
 					span += attributeMapping.breakDownJdbcValues(
@@ -971,7 +995,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 			if ( isPolymorphic() ) {
 				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();
-				span += discriminatorMapping.breakDownJdbcValues( d, offset + span, x, y, valueConsumer, session );
+				span += castNonNull( discriminatorMapping ).breakDownJdbcValues( d, offset + span, x, y, valueConsumer, session );
 			}
 		}
 		return span;
@@ -979,12 +1003,12 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( value == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -994,7 +1018,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				}
 			}
 			if ( isPolymorphic() ) {
-				span += discriminatorMapping.forEachJdbcValue( null, offset + span, x, y, valuesConsumer, session );
+				span += castNonNull( discriminatorMapping ).forEachJdbcValue( null, offset + span, x, y, valuesConsumer, session );
 			}
 		}
 		else {
@@ -1004,7 +1028,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
 					final Object attributeValue =
 							concreteEmbeddableType == null
-								|| !concreteEmbeddableType.declaresAttribute( attributeMapping )
+								|| !castNonNull( concreteEmbeddableType ).declaresAttribute( attributeMapping )
 									? null
 									: getValue( value, i );
 					span += attributeMapping.forEachJdbcValue( attributeValue, span + offset, x, y, valuesConsumer, session );
@@ -1012,7 +1036,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 			if ( isPolymorphic() ) {
 				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();
-				span += discriminatorMapping.forEachJdbcValue( d, offset + span, x, y, valuesConsumer, session );
+				span += castNonNull( discriminatorMapping ).forEachJdbcValue( d, offset + span, x, y, valuesConsumer, session );
 			}
 		}
 		return span;
@@ -1020,14 +1044,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public <X, Y> int decompose(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		if ( shouldBindAggregateMapping() ) {
-			valueConsumer.consume( offset, x, y, domainValue, aggregateMapping );
+			valueConsumer.consume( offset, x, y, domainValue, castNonNull( aggregateMapping ) );
 			return 1;
 		}
 		final int size = attributeMappings.size();
@@ -1041,7 +1065,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				span += attributeMapping.decompose( attributeValue, offset + span, x, y, valueConsumer, session );
 			}
 			if ( isPolymorphic() ) {
-				span += discriminatorMapping.decompose( values[i], offset + span, x, y, valueConsumer, session );
+				span += castNonNull( discriminatorMapping ).decompose( values[i], offset + span, x, y, valueConsumer, session );
 			}
 		}
 		else {
@@ -1053,26 +1077,26 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final var attributeMapping = attributeMappings.get( i );
 				if ( !attributeMapping.isPluralAttributeMapping() ) {
 					final Object attributeValue =
-							concreteEmbeddableType == null
-								|| !concreteEmbeddableType.declaresAttribute( attributeMapping )
+							domainValue == null || concreteEmbeddableType == null
+								|| !castNonNull( concreteEmbeddableType ).declaresAttribute( attributeMapping )
 									? null
-									: attributeMapping.getPropertyAccess().getPropertyValueAccessor().get( domainValue );
+									: castNonNull( attributeMapping.getPropertyAccess() ).getPropertyValueAccessor().get( domainValue );
 					span += attributeMapping.decompose( attributeValue, offset + span, x, y, valueConsumer, session );
 				}
 			}
 			if ( isPolymorphic() ) {
 				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();
-				span += discriminatorMapping.decompose( d, offset + span, x, y, valueConsumer, session );
+				span += castNonNull( discriminatorMapping ).decompose( d, offset + span, x, y, valueConsumer, session );
 			}
 		}
 		return span;
 	}
 
 	@Override
-	public void forEachInsertable(int offset, SelectableConsumer consumer) {
+	public void forEachInsertable(int offset, @Nonnull SelectableConsumer consumer) {
 		if ( shouldMutateAggregateMapping() ) {
-			if ( aggregateMapping.isInsertable() ) {
-				consumer.accept( offset, aggregateMapping );
+			if ( castNonNull( aggregateMapping ).isInsertable() ) {
+				consumer.accept( offset, castNonNull( aggregateMapping ) );
 			}
 		}
 		else {
@@ -1087,10 +1111,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public void forEachUpdatable(int offset, SelectableConsumer consumer) {
+	public void forEachUpdatable(int offset, @Nonnull SelectableConsumer consumer) {
 		if ( shouldMutateAggregateMapping() ) {
-			if ( aggregateMapping.isUpdateable() ) {
-				consumer.accept( offset, aggregateMapping );
+			if ( castNonNull( aggregateMapping ).isUpdateable() ) {
+				consumer.accept( offset, castNonNull( aggregateMapping ) );
 			}
 		}
 		else {
@@ -1104,12 +1128,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return valueMapping.findContainingEntityMapping();
 	}
 
 
+	@Nullable
 	@Override
 	public SelectableMapping getAggregateMapping() {
 		return aggregateMapping;

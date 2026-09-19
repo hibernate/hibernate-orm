@@ -9,9 +9,9 @@ import java.util.TimeZone;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
@@ -103,6 +103,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.JpaComplianceSettings
 	 */
 	@Override
+	@Nonnull
 	JpaCompliance getJpaCompliance();
 
 	/**
@@ -120,11 +121,12 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * depending on {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_JNDI_NAME} and
 	 * {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI}.
 	 *
-	 * @return The session factory name
+	 * @return The session factory name, or {@code null} if none was specified
 	 *
 	 * @see org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME
 	 */
 	@Override
+	@Nullable
 	String getSessionFactoryName();
 
 	/**
@@ -374,14 +376,16 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.CacheSettings#QUERY_CACHE_LAYOUT
 	 */
 	@Incubating(since = "6.5")
+	@Nonnull
 	CacheLayout getQueryCacheLayout();
 
 	/**
 	 * A factory for the {@link TimestampsCache} used to track invalidation
-	 * of cached query result sets.
+	 * of cached query result sets. May be {@code null} when caching is disabled.
 	 *
 	 * @see org.hibernate.cfg.CacheSettings#QUERY_CACHE_FACTORY
 	 */
+	@Nullable
 	TimestampsCacheFactory getTimestampsCacheFactory();
 
 	/**
@@ -389,6 +393,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.CacheSettings#CACHE_REGION_PREFIX
 	 */
+	@Nullable
 	String getCacheRegionPrefix();
 
 	/**
@@ -491,7 +496,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * Returns {@link org.hibernate.boot.internal.StandardEntityNotFoundDelegate}
 	 * by default.
 	 *
-	 * @return The specific {@link EntityNotFoundDelegate} to use, may be {@code null}
+	 * @return The specific {@link EntityNotFoundDelegate} to use
 	 *
 	 * @see org.hibernate.cfg.Configuration#setEntityNotFoundDelegate
 	 */
@@ -530,6 +535,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.SessionBuilder#jdbcTimeZone(TimeZone)
 	 */
+	@Nullable
 	TimeZone getJdbcTimeZone();
 
 	/**
@@ -577,6 +583,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_CATALOG
 	 */
+	@Nullable
 	default String getDefaultCatalog() {
 		return null;
 	}
@@ -589,6 +596,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_SCHEMA
 	 */
+	@Nullable
 	default String getDefaultSchema() {
 		return null;
 	}
@@ -698,7 +706,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @since 8.0
 	 * @see org.hibernate.cfg.MappingSettings#JAVA_TIME_USE_DIRECT_JDBC
 	 */
-	default boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+	default boolean isDirectJavaTimeJdbcAccessEnabled(@Nonnull Class<?> javaTimeType) {
 		return isPreferJavaTimeJdbcTypesEnabled()
 				&& getServiceRegistry().requireService( JdbcServices.class )
 						.getDialect()
@@ -792,20 +800,24 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * Determine the default {@link CacheStoreMode}, given the current
 	 * {@linkplain org.hibernate.Session#getProperties session properties}.
 	 *
-	 * @param properties the Session properties
+	 * @param properties the Session properties, or {@code null} to use the factory defaults
 	 * @return either the {@link CacheStoreMode} as defined in the session-specific properties,
-	 *         or as defined in the properties shared across all sessions (the defaults).
+	 *         or the factory default when {@code properties} is {@code null}.
+	 *         Returns {@code null} if neither the Jakarta nor legacy property is set.
 	 */
+	@Nullable
 	CacheStoreMode getCacheStoreMode(@Nullable Map<String, Object> properties);
 
 	/**
 	 * Determine the default {@link CacheRetrieveMode}, given the current
 	 * {@linkplain org.hibernate.Session#getProperties session properties}.
 	 *
-	 * @param properties the Session properties
+	 * @param properties the Session properties, or {@code null} to use the factory defaults
 	 * @return either the {@link CacheRetrieveMode} as defined in the session-specific properties,
-	 *         or as defined in the properties shared across all sessions (the defaults).
+	 *         or the factory default when {@code properties} is {@code null}.
+	 *         Returns {@code null} if neither the Jakarta nor legacy property is set.
 	 */
+	@Nullable
 	CacheRetrieveMode getCacheRetrieveMode(@Nullable Map<String, Object> properties);
 
 	/**
@@ -816,6 +828,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.Session#setCacheMode(CacheMode)
 	 */
+	@Nonnull
 	CacheMode getInitialSessionCacheMode();
 
 	/**

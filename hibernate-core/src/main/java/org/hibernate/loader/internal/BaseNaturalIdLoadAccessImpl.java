@@ -4,6 +4,11 @@
  */
 package org.hibernate.loader.internal;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,16 +43,21 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 	private final StatefulLoadAccessContext context;
 	private final EntityMappingType entityDescriptor;
 
+	@Nullable
 	private LockOptions lockOptions;
 	private boolean synchronizationEnabled = true;
 
+	@Nullable
 	private Set<String> enabledFetchProfiles;
+	@Nullable
 	private Set<String> disabledFetchProfiles;
 
+	@Nullable
 	private RootGraphImplementor<T> rootGraph;
+	@Nullable
 	private GraphSemantic graphSemantic;
 
-	protected BaseNaturalIdLoadAccessImpl(StatefulLoadAccessContext context, EntityMappingType entityDescriptor) {
+	protected BaseNaturalIdLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityMappingType entityDescriptor) {
 		this.context = context;
 		this.entityDescriptor = entityDescriptor;
 
@@ -58,11 +68,13 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		}
 	}
 
+	@Nullable
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}
 
-	protected Object with(LockMode lockMode, PessimisticLockScope lockScope) {
+	@Nonnull
+	protected Object with(@Nonnull LockMode lockMode, @Nonnull PessimisticLockScope lockScope) {
 		if ( lockOptions == null ) {
 			lockOptions = new LockOptions();
 		}
@@ -71,7 +83,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		return this;
 	}
 
-	protected Object with(PessimisticLockScope lockScope) {
+	@Nonnull
+	protected Object with(@Nonnull PessimisticLockScope lockScope) {
 		if ( lockOptions == null ) {
 			lockOptions = new LockOptions();
 		}
@@ -80,7 +93,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 	}
 
 
-	protected Object with(Timeout timeout) {
+	@Nonnull
+	protected Object with(@Nonnull Timeout timeout) {
 		if ( lockOptions == null ) {
 			lockOptions = new LockOptions();
 		}
@@ -88,13 +102,15 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		return this;
 	}
 
-	public Object with(EntityGraph<T> graph, GraphSemantic semantic) {
+	@Nonnull
+	public Object with(@Nonnull EntityGraph<T> graph, @Nonnull GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;
 	}
 
-	public Object enableFetchProfile(String profileName) {
+	@Nonnull
+	public Object enableFetchProfile(@Nonnull String profileName) {
 		if ( !context.getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
 			throw new UnknownProfileException( profileName );
 		}
@@ -108,7 +124,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		return this;
 	}
 
-	public Object disableFetchProfile(String profileName) {
+	@Nonnull
+	public Object disableFetchProfile(@Nonnull String profileName) {
 		if ( disabledFetchProfiles == null ) {
 			disabledFetchProfiles = new HashSet<>();
 		}
@@ -123,7 +140,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		return synchronizationEnabled;
 	}
 
-	public BaseNaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
+	@Nonnull
+	public BaseNaturalIdLoadAccessImpl<T> with(@Nonnull LockOptions lockOptions) {
 		this.lockOptions = lockOptions;
 		return this;
 	}
@@ -144,7 +162,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 //				: resolvedId;
 //	}
 
-	private Object getCachedResolution(Object normalizedNaturalIdValue) {
+	@Nonnull
+	private Object getCachedResolution(@Nullable Object normalizedNaturalIdValue) {
 		final SessionImplementor session = context.getSession();
 
 		performAnyNeededCrossReferenceSynchronizations( synchronizationEnabled, entityDescriptor, session );
@@ -157,7 +176,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 				.findCachedIdByNaturalId( normalizedNaturalIdValue, entityPersister() );
 	}
 
-	protected final T doGetReference(Object normalizedNaturalIdValue) {
+	@Nullable
+	protected final T doGetReference(@Nullable Object normalizedNaturalIdValue) {
 		final Object cachedResolution = getCachedResolution( normalizedNaturalIdValue );
 		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
 			// the entity is deleted, although not yet flushed - return null
@@ -174,7 +194,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		}
 	}
 
-	protected final T doLoad(Object normalizedNaturalIdValue) {
+	@Nullable
+	protected final T doLoad(@Nullable Object normalizedNaturalIdValue) {
 		final Object cachedResolution = getCachedResolution( normalizedNaturalIdValue );
 		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
 			return null;
@@ -186,7 +207,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 			final var effectiveEntityGraph =
 					rootGraph == null
 							? null
-							: influencers.applyEntityGraph( rootGraph, graphSemantic );
+							: influencers.applyEntityGraph( rootGraph, castNonNull( graphSemantic ) );
 			try {
 				@SuppressWarnings("unchecked")
 				final T loaded = cachedResolution != null
@@ -215,6 +236,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		}
 	}
 
+	@Nonnull
 	protected final IdentifierLoadAccess<T> identifierLoadAccess() {
 		final IdentifierLoadAccessImpl<T> loadAccess =
 				new IdentifierLoadAccessImpl<>( context, entityPersister() );
@@ -224,14 +246,17 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		return loadAccess;
 	}
 
+	@Nonnull
 	protected StatefulLoadAccessContext getContext() {
 		return context;
 	}
 
+	@Nonnull
 	public EntityMappingType getEntityDescriptor() {
 		return entityDescriptor;
 	}
 
+	@Nonnull
 	protected EntityPersister entityPersister() {
 		return entityDescriptor.getEntityPersister();
 	}

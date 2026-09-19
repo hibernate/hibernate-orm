@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -24,16 +26,18 @@ public interface EntityDiscriminatorMapping extends DiscriminatorMapping, FetchO
 	String DISCRIMINATOR_ROLE_NAME = "{discriminator}";
 	String LEGACY_DISCRIMINATOR_NAME = "class";
 
-	static boolean matchesRoleName(String name) {
+	static boolean matchesRoleName(@Nonnull String name) {
 		return DISCRIMINATOR_ROLE_NAME.equals( name )
 			|| LEGACY_DISCRIMINATOR_NAME.equalsIgnoreCase( name );
 	}
 
+	@Nonnull
 	@Override
 	default String getPartName() {
 		return DISCRIMINATOR_ROLE_NAME;
 	}
 
+	@Nonnull
 	@Override
 	default String getFetchableName() {
 		return getPartName();
@@ -49,16 +53,19 @@ public interface EntityDiscriminatorMapping extends DiscriminatorMapping, FetchO
 		return -2;
 	}
 
+	@Nonnull
 	@Override
 	default FetchOptions getMappedFetchOptions() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	default FetchStyle getStyle() {
 		return FetchStyle.JOIN;
 	}
 
+	@Nonnull
 	@Override
 	default FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;

@@ -4,6 +4,11 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.metamodel.model.domain.NavigableRole;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -35,46 +40,60 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  */
 public interface PluralAttributeMapping
 		extends AttributeMapping, TableGroupJoinProducer, FetchableContainer, Loadable, Restrictable, SoftDeletableModelPart {
+	@Nonnull
+	@Override
+	NavigableRole getNavigableRole();
 
+
+	@Nonnull
 	CollectionPersister getCollectionDescriptor();
 
+	@Nonnull
 	ForeignKeyDescriptor getKeyDescriptor();
 
+	@Nullable
 	CollectionPart getIndexDescriptor();
 
+	@Nonnull
 	@Override
 	CollectionMappingType<?> getMappedType();
 
 	@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 	@FunctionalInterface
 	interface PredicateConsumer {
-		void applyPredicate(Predicate predicate);
+		void applyPredicate(@Nonnull Predicate predicate);
 	}
 
 	/**
 	 * Apply auxiliary restrictions (soft delete, temporal, audit) in a single pass.
 	 */
 	void applyAuxiliaryRestrictions(
-			TableGroup tableGroup,
-			PredicateConsumer predicateConsumer,
-			LoadQueryInfluencers influencers,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator);
+			@Nonnull TableGroup tableGroup,
+			@Nonnull PredicateConsumer predicateConsumer,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator);
 
 	interface IndexMetadata {
+		@Nullable
 		CollectionPart getIndexDescriptor();
 		int getListIndexBase();
+		@Nullable
 		String getIndexPropertyName();
 	}
 
+	@Nullable
 	IndexMetadata getIndexMetadata();
 
+	@Nonnull
 	CollectionPart getElementDescriptor();
 
+	@Nullable
 	CollectionIdentifierDescriptor getIdentifierDescriptor();
 
 	/**
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
+	@Nullable
 	@Incubating(since = "5.4")
 	default SoftDeleteMapping getSoftDeleteMapping() {
 		return null;
@@ -83,6 +102,7 @@ public interface PluralAttributeMapping
 	/**
 	 * Mapping for temporal support, or {@code null} if temporal not defined
 	 */
+	@Nullable
 	@Incubating(since = "5.4")
 	default TemporalMapping getTemporalMapping() {
 		return null;
@@ -91,16 +111,19 @@ public interface PluralAttributeMapping
 	/**
 	 * Mapping for audit support, or {@code null} if audit not defined
 	 */
+	@Nullable
 	@Incubating(since = "5.4")
 	default AuditMapping getAuditMapping() {
 		return null;
 	}
 
+	@Nullable
 	OrderByFragment getOrderByFragment();
+	@Nullable
 	OrderByFragment getManyToManyOrderByFragment();
 
 	@Override
-	default void visitKeyFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default void visitKeyFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
 		final CollectionPart indexDescriptor = getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			fetchableConsumer.accept( indexDescriptor );
@@ -112,6 +135,7 @@ public interface PluralAttributeMapping
 		return getIndexDescriptor() == null ? 0 : 1;
 	}
 
+	@Nonnull
 	@Override
 	default Fetchable getKeyFetchable(int position) {
 		final CollectionPart indexDescriptor = getIndexDescriptor();
@@ -122,7 +146,7 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
-	default void visitKeyFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default void visitKeyFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
 		final CollectionPart indexDescriptor = getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			fetchableConsumer.accept( 0, indexDescriptor );
@@ -130,7 +154,7 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
-	default void visitFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default void visitFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( getElementDescriptor() );
 	}
 
@@ -145,10 +169,11 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
-	default void visitFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default void visitFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( 0, getElementDescriptor() );
 	}
 
+	@Nonnull
 	@Override
 	default Fetchable getFetchable(int position) {
 		if ( position == 0 ) {
@@ -157,21 +182,23 @@ public interface PluralAttributeMapping
 		throw new IndexOutOfBoundsException( position );
 	}
 
+	@Nonnull
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default <T> DomainResult<T> createSnapshotDomainResult(
-			NavigablePath navigablePath,
-			TableGroup parentTableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup parentTableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		return new BasicResult( 0, null, getJavaType(), null, null, false, false );
 	}
 
+	@Nullable
 	String getSeparateCollectionTable();
 
 	@org.hibernate.Internal
-	boolean isBidirectionalAttributeName(NavigablePath fetchablePath, ToOneAttributeMapping modelPart);
+	boolean isBidirectionalAttributeName(@Nonnull NavigablePath fetchablePath, @Nonnull ToOneAttributeMapping modelPart);
 
 	@Override
 	default boolean incrementFetchDepth(){
@@ -180,12 +207,12 @@ public interface PluralAttributeMapping
 
 	@Override
 	default void applyFilterRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		getCollectionDescriptor().applyFilterRestrictions(
 				predicateConsumer,
 				tableGroup,
@@ -198,13 +225,13 @@ public interface PluralAttributeMapping
 
 	@Override
 	default void applyBaseRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState) {
+			@Nullable Set<String> treatAsDeclarations,
+			@Nullable SqlAstCreationState creationState) {
 		getCollectionDescriptor().applyBaseRestrictions(
 				predicateConsumer,
 				tableGroup,
@@ -217,12 +244,12 @@ public interface PluralAttributeMapping
 	}
 
 	default void applyBaseManyToManyRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState) {
+			@Nonnull Map<String, Filter> enabledFilters,
+			@Nullable Set<String> treatAsDeclarations,
+			@Nullable SqlAstCreationState creationState) {
 		getCollectionDescriptor().applyBaseManyToManyRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, treatAsDeclarations, creationState );
 	}
 
@@ -233,13 +260,14 @@ public interface PluralAttributeMapping
 
 	@Override
 	default void applyWhereRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		getCollectionDescriptor().applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
 	}
 
+	@Nonnull
 	@Override
 	default PluralAttributeMapping asPluralAttributeMapping() {
 		return this;

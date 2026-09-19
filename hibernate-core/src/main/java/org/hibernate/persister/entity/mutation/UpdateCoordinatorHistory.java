@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -31,6 +34,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -52,13 +56,13 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	private final MutationOperationGroup historyInsertGroup;
 
 	public UpdateCoordinatorHistory(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory,
-			UpdateCoordinator currentUpdateCoordinator) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nonnull UpdateCoordinator currentUpdateCoordinator) {
 		super( entityPersister, factory );
 		this.currentUpdateCoordinator = currentUpdateCoordinator;
 		this.identifierTableMapping = entityPersister.getIdentifierTableMapping();
-		this.temporalMapping = entityPersister.getTemporalMapping();
+		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
 		this.historyTableMapping =
 				createAuxiliaryTableMapping( identifierTableMapping, entityPersister,
 						temporalMapping.getTableName() );
@@ -69,27 +73,30 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		this.historyInsertGroup = buildHistoryInsertGroup( entityPersister.getPropertyInsertability() );
 	}
 
+	@Nullable
 	@Override
 	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return currentUpdateCoordinator.getStaticMutationOperationGroup();
 	}
 
+	@Nullable
 	@Override
 	protected BasicBatchKey getBatchKey() {
 		return historyUpdateBatchKey;
 	}
 
+	@Nullable
 	@Override
 	public GeneratedValues update(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object[] values,
-			Object oldVersion,
-			Object[] incomingOldValues,
-			int[] dirtyAttributeIndexes,
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nonnull Object[] values,
+			@Nullable Object oldVersion,
+			@Nullable Object[] incomingOldValues,
+			@Nullable int[] dirtyAttributeIndexes,
 			boolean hasDirtyCollection,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 		final var generatedValues = currentUpdateCoordinator.update(
 				entity,
 				id,
@@ -134,14 +141,14 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	}
 
 	private void performHistoryExcludedUpdate(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object[] values,
-			Object oldVersion,
-			Object[] incomingOldValues,
-			int[] dirtyAttributeIndexes,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nonnull Object[] values,
+			@Nullable Object oldVersion,
+			@Nullable Object[] incomingOldValues,
+			@Nullable int[] dirtyAttributeIndexes,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var updateDetails =
 				buildHistoryExcludedUpdateDetails( entity, rowId, dirtyAttributeIndexes, session );
 		if ( updateDetails != null ) {
@@ -182,11 +189,12 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		}
 	}
 
+	@Nullable
 	private HistoryExcludedUpdateDetails buildHistoryExcludedUpdateDetails(
-			Object entity,
-			Object rowId,
-			int[] dirtyAttributeIndexes,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nullable Object rowId,
+			@Nullable int[] dirtyAttributeIndexes,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) {
 			return null;
 		}
@@ -259,17 +267,17 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	}
 
 	private static boolean isGeneratedBeforeExecution(
-			Object entity, SharedSessionContractImplementor session, Generator generator) {
+			@Nonnull Object entity, @Nonnull SharedSessionContractImplementor session, @Nullable Generator generator) {
 		return generator != null
 			&& generator.generatesOnUpdate()
 			&& generator.generatedBeforeExecution( entity, session );
 	}
 
 	private void bindHistoryExcludedUpdateValues(
-			Object[] values,
-			HistoryExcludedUpdateDetails updateDetails,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull Object[] values,
+			@Nonnull HistoryExcludedUpdateDetails updateDetails,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var attributeMappings = entityPersister().getAttributeMappings();
 		for ( final int attributeIndex : updateDetails.attributeIndexes ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
@@ -295,14 +303,14 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		}
 	}
 
-	private void applyCurrentRowRestriction(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
+	private void applyCurrentRowRestriction(@Nonnull TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
 		final var endingColumnReference =
 				new ColumnReference( tableUpdateBuilder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
 		tableUpdateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumnReference ) );
 	}
 
 	@Override
-	void bindVersionRestriction(Object oldVersion, JdbcValueBindings jdbcValueBindings, String temporalTableName) {
+	void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName) {
 		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
 			jdbcValueBindings.bindValue(
@@ -315,9 +323,9 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	}
 
 	private void insertHistoryRow(
-			Object id,
-			Object[] values,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nonnull Object[] values,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var mutationExecutor =
 				mutationExecutorService.createExecutor( () -> historyInsertBatchKey, historyInsertGroup, session );
 		try {
@@ -331,7 +339,8 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		}
 	}
 
-	private MutationOperationGroup buildHistoryInsertGroup(boolean[] propertyInclusions) {
+	@Nonnull
+	private MutationOperationGroup buildHistoryInsertGroup(@Nonnull boolean[] propertyInclusions) {
 		final var insertBuilder =
 				new TableInsertBuilderStandard( entityPersister(), historyTableMapping, factory() );
 		applyHistoryInsertDetails( insertBuilder, propertyInclusions );
@@ -343,8 +352,8 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	}
 
 	private void applyHistoryInsertDetails(
-			TableInsertBuilderStandard insertBuilder,
-			boolean[] propertyInclusions) {
+			@Nonnull TableInsertBuilderStandard insertBuilder,
+			@Nonnull boolean[] propertyInclusions) {
 		final var attributeMappings = entityPersister().getAttributeMappings();
 		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
@@ -353,7 +362,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 			}
 			else {
 				final var generator = attributeMapping.getGenerator();
-				if ( isValueGeneratedOnInsert( generator ) ) {
+				if ( generator != null && isValueGeneratedOnInsert( generator ) ) {
 //					if ( session != null && generator.generatedBeforeExecution( entity, session ) ) {
 //						propertyInclusions[attributeIndex] = true;
 //						attributeMapping.forEachInsertable( insertBuilder );
@@ -376,9 +385,9 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	}
 
 	private void addSqlGeneratedValue(
-			AssigningTableMutationBuilder<?> updateBuilder,
-			AttributeMapping attributeMapping,
-			OnExecutionGenerator generator) {
+			@Nonnull AssigningTableMutationBuilder<?> updateBuilder,
+			@Nonnull AttributeMapping attributeMapping,
+			@Nonnull OnExecutionGenerator generator) {
 		final boolean writePropertyValue = generator.writePropertyValue();
 		final var columnValues =
 				writePropertyValue
@@ -389,11 +398,11 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	}
 
 	private void bindHistoryInsertValues(
-			Object id,
-			Object[] values,
-			boolean[] propertyInclusions,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull Object id,
+			@Nonnull Object[] values,
+			@Nonnull boolean[] propertyInclusions,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final String historyTableName = historyTableMapping.getTableName();
 		historyTableMapping.getKeyMapping().breakDownKeyJdbcValues(
 				id,
@@ -442,38 +451,39 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		}
 	}
 
-	private static boolean isValueGeneratedOnInsert(Generator generator) {
+	private static boolean isValueGeneratedOnInsert(@Nullable Generator generator) {
 		return generator != null
 			&& generator.generatesOnInsert()
 			&& generator.generatedOnExecution();
 	}
 
-	private static boolean isValueGeneratedOnUpdate(Generator generator) {
+	private static boolean isValueGeneratedOnUpdate(@Nullable Generator generator) {
 		return generator != null
 			&& generator.generatesOnUpdate()
 			&& generator.generatedOnExecution();
 	}
 
-	private boolean isValueGenerationInSql(Generator generator) {
+	private boolean isValueGenerationInSql(@Nonnull Generator generator) {
 		assert isValueGeneratedOnInsert( generator );
 		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect() );
 	}
 
-	private boolean isUpdateValueGenerationInSql(Generator generator) {
+	private boolean isUpdateValueGenerationInSql(@Nonnull Generator generator) {
 		assert isValueGeneratedOnUpdate( generator );
 		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect() );
 	}
 
 	private boolean needsUpdateValueGeneration(
-			Object entity,
-			SharedSessionContractImplementor session,
-			Generator generator) {
-		return isValueGeneratedOnUpdate( generator )
+			@Nonnull Object entity,
+			@Nullable SharedSessionContractImplementor session,
+			@Nullable Generator generator) {
+		return generator != null && isValueGeneratedOnUpdate( generator )
 			&& (session == null && generator.generatedOnExecution() || generator.generatedOnExecution( entity, session ) )
 			&& isUpdateValueGenerationInSql( generator );
 	}
 
-	private static int[] toIntArray(List<Integer> values) {
+	@Nonnull
+	private static int[] toIntArray(@Nonnull List<Integer> values) {
 		final int[] result = new int[values.size()];
 		for ( int i = 0; i < values.size(); i++ ) {
 			result[i] = values.get( i );
@@ -487,8 +497,8 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		private final boolean applyVersionRestriction;
 
 		private HistoryExcludedUpdateDetails(
-				MutationOperationGroup operationGroup,
-				int[] attributeIndexes,
+				@Nonnull MutationOperationGroup operationGroup,
+				@Nonnull int[] attributeIndexes,
 				boolean applyVersionRestriction) {
 			this.operationGroup = operationGroup;
 			this.attributeIndexes = attributeIndexes;
@@ -497,7 +507,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	}
 
 	private static boolean verifyOutcome(
-			PreparedStatementDetails statementDetails,
+			@Nonnull PreparedStatementDetails statementDetails,
 			int affectedRowCount,
 			int batchPosition) throws SQLException {
 		statementDetails.getExpectation().verifyOutcome(
@@ -511,10 +521,10 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 	@Override
 	public void forceVersionIncrement(
-			Object id,
-			Object currentVersion,
-			Object nextVersion,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
+			@Nonnull Object nextVersion,
+			@Nonnull SharedSessionContractImplementor session) {
 		currentUpdateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
 }

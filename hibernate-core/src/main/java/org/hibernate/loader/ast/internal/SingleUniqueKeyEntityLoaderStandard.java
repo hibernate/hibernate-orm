@@ -4,6 +4,11 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.HibernateException;
@@ -44,14 +49,15 @@ import static java.util.Collections.singletonList;
 public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
 	private final ModelPart uniqueKeyAttribute;
+	@Nonnull
 	private final String uniqueKeyAttributePath;
 	private final JdbcParametersList jdbcParameters;
 	private final JdbcSelect jdbcSelect;
 
 	public SingleUniqueKeyEntityLoaderStandard(
-			EntityMappingType entityDescriptor,
-			SingularAttributeMapping uniqueKeyMapping,
-			LoadQueryInfluencers loadQueryInfluencers) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull SingularAttributeMapping uniqueKeyMapping,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		this.entityDescriptor = entityDescriptor;
 		uniqueKeyAttributePath = getAttributePath( uniqueKeyMapping );
 		uniqueKeyAttribute =
@@ -76,11 +82,12 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		jdbcSelect = getJdbcSelect( factory, sqlAst, JdbcParameterBindings.NO_BINDINGS );
 	}
 
-	private static String getAttributePath(AttributeMapping attribute) {
+	@Nonnull
+	private static String getAttributePath(@Nonnull AttributeMapping attribute) {
 		ManagedMappingType declaringType = attribute.getDeclaringType();
 		if ( declaringType instanceof EmbeddableMappingType ) {
 			final var path = new StringBuilder();
-			path.append( attribute.getAttributeName() );
+			path.append( castNonNull( attribute.getAttributeName() ) );
 			do {
 				// declaringType must be cast each time (not a pattern variable) as it's updated each iteration
 				final var valueMapping = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
@@ -89,25 +96,27 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 					break;
 				}
 				path.insert( 0, '.' );
-				path.insert( 0, attribute.getAttributeName() );
+				path.insert( 0, castNonNull( attribute.getAttributeName() ) );
 				declaringType = attribute.getDeclaringType();
 			} while ( declaringType instanceof EmbeddableMappingType );
 			return path.toString();
 		}
-		return attribute.getAttributeName();
+		return castNonNull( attribute.getAttributeName() );
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getLoadable() {
 		return entityDescriptor;
 	}
 
+	@Nullable
 	@Override
 	public T load(
-			Object ukValue,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object ukValue,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var bindings = jdbcParameterBindings( ukValue, jdbcParameters, session );
 		final List<T> list = list( jdbcSelect, bindings,
 				new SingleUKEntityLoaderExecutionContext( uniqueKeyAttributePath, ukValue, session, readOnly ) );
@@ -119,8 +128,9 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		};
 	}
 
+	@Nullable
 	@Override
-	public Object resolveId(Object ukValue, SharedSessionContractImplementor session) {
+	public Object resolveId(@Nonnull Object ukValue, @Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		// todo (6.0) : cache the SQL AST and JdbcParameters
 		final var builder = JdbcParametersList.newBuilder();
@@ -142,20 +152,22 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		return list.get( 0 );
 	}
 
+	@Nonnull
 	private JdbcParameterBindings jdbcParameterBindings(
-			Object ukValue,
-			JdbcParametersList parameters,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object ukValue,
+			@Nonnull JdbcParametersList parameters,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var bindings = new JdbcParameterBindingsImpl( parameters.size() );
 		final int offset = bindings.registerParametersForEachJdbcValue( ukValue, uniqueKeyAttribute, parameters, session );
 		assert offset == parameters.size();
 		return bindings;
 	}
 
+	@Nonnull
 	private static <T> List<T> list(
-			JdbcSelect jdbcSelect,
-			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext) {
+			@Nonnull JdbcSelect jdbcSelect,
+			@Nonnull JdbcParameterBindings jdbcParameterBindings,
+			@Nonnull ExecutionContext executionContext) {
 		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor()
 				.list(
 						jdbcSelect,
@@ -168,8 +180,9 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				);
 	}
 
+	@Nonnull
 	private static JdbcSelect getJdbcSelect
-			(SessionFactoryImplementor factory, SelectStatement sqlAst, JdbcParameterBindings jdbcParameterBindings) {
+			(@Nonnull SessionFactoryImplementor factory, @Nonnull SelectStatement sqlAst, @Nonnull JdbcParameterBindings jdbcParameterBindings) {
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 				.buildTranslator( new SqlAstTranslationRequest.Select( factory, sqlAst ) )
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
@@ -182,10 +195,10 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		private final QueryOptions queryOptions;
 
 		public SingleUKEntityLoaderExecutionContext(
-				String uniqueKeyAttributePath,
-				Object uniqueKey,
-				SharedSessionContractImplementor session,
-				Boolean readOnly) {
+				@Nonnull String uniqueKeyAttributePath,
+				@Nonnull Object uniqueKey,
+				@Nonnull SharedSessionContractImplementor session,
+				@Nullable Boolean readOnly) {
 			super( session );
 			this.uniqueKeyAttributePath = uniqueKeyAttributePath;
 			this.uniqueKey = uniqueKey;
@@ -198,21 +211,25 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 			callback = new CallbackImpl();
 		}
 
+		@Nonnull
 		@Override
 		public QueryOptions getQueryOptions() {
 			return queryOptions;
 		}
 
+		@Nonnull
 		@Override
 		public Callback getCallback() {
 			return callback;
 		}
 
+		@Nonnull
 		@Override
 		public String getEntityUniqueKeyAttributePath() {
 			return uniqueKeyAttributePath;
 		}
 
+		@Nonnull
 		@Override
 		public Object getEntityUniqueKey() {
 			return uniqueKey;

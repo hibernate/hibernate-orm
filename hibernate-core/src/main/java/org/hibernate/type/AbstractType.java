@@ -4,10 +4,9 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.SPI;
+import jakarta.annotation.Nullable;
 
-import static org.hibernate.SPI.Role.IMPLEMENT;
-import static org.hibernate.SPI.Role.USE;
+import org.hibernate.SPI;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -16,6 +15,9 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 
 /**
  * Abstract superclass of the built-in {@link Type} hierarchy.
@@ -50,7 +52,7 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public int compare(Object x, Object y) {
+	public int compare(@Nullable Object x, @Nullable Object y) {
 		return ( (Comparable) x ).compareTo(y);
 	}
 
@@ -73,7 +75,7 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
-	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session)
+	public boolean isDirty(@Nullable Object old, @Nullable Object current, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return !isSame( old, current );
 	}
@@ -84,18 +86,18 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
-	public boolean isModified(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
+	public boolean isModified(@Nullable Object old, @Nullable Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return isDirty( old, current, session );
 	}
 
 	@Override
-	public boolean isSame(Object x, Object y) throws HibernateException {
+	public boolean isSame(@Nullable Object x, @Nullable Object y) throws HibernateException {
 		return isEqual(x, y );
 	}
 
 	@Override
-	public boolean isEqual(Object x, Object y) {
+	public boolean isEqual(@Nullable Object x, @Nullable Object y) {
 		return Objects.equals( x, y );
 	}
 
@@ -105,7 +107,7 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
-	public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
+	public boolean isEqual(@Nullable Object x, @Nullable Object y, SessionFactoryImplementor factory) {
 		return isEqual( x, y );
 	}
 
@@ -115,9 +117,10 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
+	@Nullable
 	public Object replace(
-			Object original,
-			Object target,
+			@Nullable Object original,
+			@Nullable Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache,

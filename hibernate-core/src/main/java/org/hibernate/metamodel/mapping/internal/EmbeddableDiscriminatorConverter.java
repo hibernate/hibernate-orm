@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -64,8 +67,9 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 		} );
 	}
 
+	@Nonnull
 	@Override
-	public O toDomainValue(R relationalForm) {
+	public O toDomainValue(@Nullable R relationalForm) {
 		assert relationalForm == null || getRelationalJavaType().isInstance( relationalForm );
 		final var matchingValueDetails = getDetailsForDiscriminatorValue( relationalForm );
 		if ( matchingValueDetails == null ) {
@@ -75,8 +79,9 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 		return (O) matchingValueDetails.getEmbeddableClass();
 	}
 
+	@Nonnull
 	@Override
-	public EmbeddableDiscriminatorValueDetailsImpl getDetailsForDiscriminatorValue(Object relationalValue) {
+	public EmbeddableDiscriminatorValueDetailsImpl getDetailsForDiscriminatorValue(@Nullable Object relationalValue) {
 		final var valueMatch = discriminatorValueToDetailsMap.get( relationalValue );
 		if ( valueMatch != null ) {
 			return valueMatch;
@@ -84,8 +89,9 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 		throw new HibernateException( "Unrecognized discriminator value: " + relationalValue );
 	}
 
+	@Nonnull
 	@Override
-	public DiscriminatorValueDetails getDetailsForEntityName(String embeddableClassName) {
+	public DiscriminatorValueDetails getDetailsForEntityName(@Nonnull String embeddableClassName) {
 		final var valueDetails = embeddableClassNameToDetailsMap.get( embeddableClassName );
 		if ( valueDetails != null ) {
 			return valueDetails;
@@ -94,12 +100,13 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 	}
 
 	@Override
-	public void forEachValueDetail(Consumer<DiscriminatorValueDetails> consumer) {
+	public void forEachValueDetail(@Nonnull Consumer<DiscriminatorValueDetails> consumer) {
 		discriminatorValueToDetailsMap.forEach( (value, detail) -> consumer.accept( detail ) );
 	}
 
+	@Nullable
 	@Override
-	public <X> X fromValueDetails(Function<DiscriminatorValueDetails, X> handler) {
+	public <X> X fromValueDetails(@Nonnull Function<DiscriminatorValueDetails, X> handler) {
 		for ( var detail : discriminatorValueToDetailsMap.values() ) {
 			final X result = handler.apply( detail );
 			if ( result != null ) {
@@ -109,8 +116,9 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 		return null;
 	}
 
+	@Nullable
 	@Override
-	protected String getEntityName(O domainForm) {
+	protected String getEntityName(@Nullable O domainForm) {
 		if ( domainForm == null ) {
 			return null;
 		}

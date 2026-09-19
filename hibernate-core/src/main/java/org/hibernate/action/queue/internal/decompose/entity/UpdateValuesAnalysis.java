@@ -4,6 +4,10 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.action.queue.spi.decompose.entity.GraphEntityMutationTarget;
 
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
@@ -141,11 +145,13 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 		return hasDirtyAttributes;
 	}
 
+	@Nullable
 	@Override
 	public Object[] getValues() {
 		return values;
 	}
 
+	@Nonnull
 	@Override
 	public TableSet getTablesNeedingUpdate() {
 		if ( legacyTablesNeedingUpdate == null ) {
@@ -154,6 +160,7 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 		return legacyTablesNeedingUpdate;
 	}
 
+	@Nonnull
 	@Override
 	public TableSet getTablesWithNonNullValues() {
 		if ( legacyTablesWithNonNullValues == null ) {
@@ -162,6 +169,7 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 		return legacyTablesWithNonNullValues;
 	}
 
+	@Nonnull
 	@Override
 	public TableSet getTablesWithPreviousNonNullValues() {
 		if ( legacyTablesWithPreviousNonNullValues == null ) {
@@ -170,6 +178,7 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 		return legacyTablesWithPreviousNonNullValues;
 	}
 
+	@Nonnull
 	@Override
 	public TableSet getTablesNeedingDynamicUpdate() {
 		if ( legacyTablesNeedingDynamicUpdate == null ) {
@@ -190,6 +199,7 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 		return legacySet;
 	}
 
+	@Nonnull
 	@Override
 	public List<AttributeAnalysis> getAttributeAnalyses() {
 		return List.of();

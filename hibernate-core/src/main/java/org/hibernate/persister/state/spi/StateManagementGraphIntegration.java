@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.state.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
@@ -27,12 +29,14 @@ public interface StateManagementGraphIntegration {
 	};
 
 	/// Creates the entity mutation-plan contributor for the given persister.
-	default EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+	@Nonnull
+	default EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
 		return EntityMutationPlanContributor.STANDARD;
 	}
 
 	/// Creates the collection mutation-plan contributor for the given persister.
-	default CollectionMutationPlanContributor createCollectionMutationPlanContributor(CollectionPersister persister) {
+	@Nonnull
+	default CollectionMutationPlanContributor createCollectionMutationPlanContributor(@Nonnull CollectionPersister persister) {
 		return CollectionMutationPlanContributor.STANDARD;
 	}
 }

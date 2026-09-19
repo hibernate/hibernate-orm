@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -16,7 +19,7 @@ public final class EmptyAttributeMappingsMap implements AttributeMappingsMap {
 	public static final EmptyAttributeMappingsMap INSTANCE = new EmptyAttributeMappingsMap();
 
 	@Override
-	public void forEachValue(Consumer<? super AttributeMapping> action) {
+	public void forEachValue(@Nonnull Consumer<? super AttributeMapping> action) {
 		//no-op
 	}
 
@@ -25,11 +28,13 @@ public final class EmptyAttributeMappingsMap implements AttributeMappingsMap {
 		return 0;
 	}
 
+	@Nullable
 	@Override
-	public AttributeMapping get(String name) {
+	public AttributeMapping get(@Nonnull String name) {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public Iterable<AttributeMapping> valueIterator() {
 		return emptyList();

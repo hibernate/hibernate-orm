@@ -292,7 +292,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	@Override
 	@SuppressWarnings("deprecation")
 	@Nonnull
-	public MutationOrSelectionQuery setFlushMode(@Nonnull FlushModeType flushMode) {
+	public MutationOrSelectionQuery setFlushMode(@Nullable FlushModeType flushMode) {
 		delegate.setFlushMode( flushMode );
 		return this;
 	}
@@ -424,7 +424,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	@Override @Deprecated
 	@SuppressWarnings("removal")
 	@Nonnull
-	public MutationOrSelectionQuery setCacheMode(@Nonnull CacheMode cacheMode) {
+	public MutationOrSelectionQuery setCacheMode(@Nullable CacheMode cacheMode) {
 		delegate.setCacheMode( cacheMode );
 		return this;
 	}

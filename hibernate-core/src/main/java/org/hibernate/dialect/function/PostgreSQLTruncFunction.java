@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +42,7 @@ public class PostgreSQLTruncFunction extends TruncFunction {
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
 		if ( arguments.size() != 2 || !( arguments.get( 1 ) instanceof SqmExtractUnit ) ) {

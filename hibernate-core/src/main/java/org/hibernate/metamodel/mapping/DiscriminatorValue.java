@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -12,24 +15,27 @@ import java.util.Objects;
  */
 public sealed interface DiscriminatorValue extends Serializable {
 
+	@Nullable
 	Object value();
 
-	static DiscriminatorValue of(Object value) {
+	@Nonnull
+	static DiscriminatorValue of(@Nullable Object value) {
 		return value == null ? Special.NULL : new Literal( value );
 	}
 
-	record Literal(Object value) implements DiscriminatorValue {
+	record Literal(@Nonnull Object value) implements DiscriminatorValue {
 		public Literal {
 			Objects.requireNonNull( value, "discriminator literal value must not be null" );
 		}
 
+		@Nonnull
 		@Override
 		public String toString() {
 			return value.toString();
 		}
 
 		@Override
-		public boolean equals(Object object) {
+		public boolean equals(@Nullable Object object) {
 			return this == object
 				|| object instanceof Literal that && this.value.equals(that.value);
 		}
@@ -44,6 +50,7 @@ public sealed interface DiscriminatorValue extends Serializable {
 		NULL,
 		NOT_NULL;
 
+		@Nullable
 		@Override
 		public Object value() {
 			return switch ( this ) {
@@ -53,6 +60,7 @@ public sealed interface DiscriminatorValue extends Serializable {
 			};
 		}
 
+		@Nonnull
 		@Override
 		public String toString() {
 			return switch ( this ) {

@@ -4,6 +4,10 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.function.UnaryOperator;
 
 import jakarta.annotation.Nullable;
@@ -33,24 +37,29 @@ public class RemoveCoordinatorHistory implements RemoveCoordinator {
 	private final MutationExecutorService mutationExecutorService;
 	private final BasicBatchKey batchKey;
 	private final BasicBatchKey historyBatchKey;
+	@Nullable
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;
 
+	@Nullable
 	private MutationOperationGroup operationGroup;
+	@Nullable
 	private MutationOperationGroup historyOperationGroup;
+	@Nullable
 	private CollectionTableMapping historyTableMapping;
+	@Nullable
 	private HistoryCollectionRowMutationHelper rowMutationHelper;
 
 	public RemoveCoordinatorHistory(
-			CollectionMutationTarget mutationTarget,
-			RowMutationOperations mutationOperations,
-			boolean[] indexColumnIsSettable,
-			boolean[] elementColumnIsSettable,
-			UnaryOperator<Object> indexIncrementer,
-			ServiceRegistry serviceRegistry) {
+			@Nonnull CollectionMutationTarget mutationTarget,
+			@Nonnull RowMutationOperations mutationOperations,
+			@Nullable boolean[] indexColumnIsSettable,
+			@Nonnull boolean[] elementColumnIsSettable,
+			@Nonnull UnaryOperator<Object> indexIncrementer,
+			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
-		this.operationProducer = mutationOperations.getDeleteAllRowsOperationProducer();
+		this.operationProducer = castNonNull( mutationOperations.getDeleteAllRowsOperationProducer() );
 		this.indexColumnIsSettable = indexColumnIsSettable;
 		this.elementColumnIsSettable = elementColumnIsSettable;
 		this.indexIncrementer = indexIncrementer;
@@ -59,6 +68,7 @@ public class RemoveCoordinatorHistory implements RemoveCoordinator {
 		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -74,7 +84,7 @@ public class RemoveCoordinatorHistory implements RemoveCoordinator {
 	}
 
 	@Override
-	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
+	public void deleteAllRows(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.removingCollection( mutationTarget.getRolePath(), key );
 		}
@@ -123,11 +133,13 @@ public class RemoveCoordinatorHistory implements RemoveCoordinator {
 		}
 	}
 
-	private MutationOperationGroup buildOperationGroup(CollectionTableMapping tableMapping) {
+	@Nonnull
+	private MutationOperationGroup buildOperationGroup(@Nonnull CollectionTableMapping tableMapping) {
 		final var tableReference = new MutatingTableReference( tableMapping );
 		return singleOperation( MutationType.DELETE, mutationTarget, operationProducer.createOperation( tableReference ) );
 	}
 
+	@Nonnull
 	private CollectionTableMapping getHistoryTableMapping() {
 		if ( historyTableMapping == null ) {
 			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
@@ -138,6 +150,7 @@ public class RemoveCoordinatorHistory implements RemoveCoordinator {
 		return historyTableMapping;
 	}
 
+	@Nonnull
 	private HistoryCollectionRowMutationHelper getRowMutationHelper() {
 		if ( rowMutationHelper == null ) {
 			rowMutationHelper = new HistoryCollectionRowMutationHelper(

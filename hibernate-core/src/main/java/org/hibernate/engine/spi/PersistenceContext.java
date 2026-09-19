@@ -250,7 +250,7 @@ public interface PersistenceContext {
 			final Object[] loadedState,
 			final Object rowId,
 			final Object id,
-			final Object version,
+			@Nullable final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister);
@@ -703,13 +703,13 @@ public interface PersistenceContext {
 	 * @return The id of the entityName instance which is said to own the child; null if an appropriate owner not
 	 * located.
 	 */
-	Object getOwnerId(String entityName, String propertyName, Object childEntity, Map<?, ?> mergeMap);
+	Object getOwnerId(String entityName, String propertyName, Object childEntity, @Nullable Map<?, ?> mergeMap);
 
 	/**
 	 * Search the persistence context for an index of the child object,
 	 * given a collection role
 	 */
-	Object getIndexInOwner(String entity, String property, Object childObject, Map<?, ?> mergeMap);
+	Object getIndexInOwner(String entity, String property, Object childObject, @Nullable Map<?, ?> mergeMap);
 
 	/**
 	 * Record the fact that the association belonging to the keyed

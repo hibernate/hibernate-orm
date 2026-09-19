@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -138,30 +140,33 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return modelParts;
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		return modelPartMap.get( name );
 	}
 
 	@Override
-	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
 		for ( int i = 0; i < modelParts.length; i++ ) {
 			consumer.accept( i, modelParts[i] );
 		}
 	}
 
 	@Override
-	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
 		for ( int i = 0; i < modelParts.length; i++ ) {
 			consumer.accept( modelParts[i] );
 		}
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return domainType.getExpressibleJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return componentName;
@@ -172,28 +177,32 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return existingModelPartContainer.getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableRepresentationStrategy getRepresentationStrategy() {
 		return existingModelPartContainer.getEmbeddableTypeDescriptor()
 				.getRepresentationStrategy();
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType createInverseMappingType(
-			EmbeddedAttributeMapping valueMapping,
-			TableGroupProducer declaringTableGroupProducer,
-			SelectableMappings selectableMappings,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull EmbeddedAttributeMapping valueMapping,
+			@Nonnull TableGroupProducer declaringTableGroupProducer,
+			@Nonnull SelectableMappings selectableMappings,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -202,57 +211,62 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return modelParts.length;
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMapping getAttributeMapping(int position) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMappingsList getAttributeMappings() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public <X, Y> int decompose(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nonnull
 	@Override
-	public Object[] getValues(Object instance) {
+	public Object[] getValues(@Nonnull Object instance) {
 		return existingModelPartContainer.getEmbeddableTypeDescriptor().getValues( instance );
 	}
 
+	@Nullable
 	@Override
-	public Object getValue(Object instance, int position) {
+	public Object getValue(@Nonnull Object instance, int position) {
 		return existingModelPartContainer.getEmbeddableTypeDescriptor().getValue( instance, position );
 	}
 
 	@Override
-	public void setValues(Object instance, Object[] resolvedValues) {
+	public void setValues(@Nonnull Object instance, @Nonnull Object[] resolvedValues) {
 		existingModelPartContainer.getEmbeddableTypeDescriptor().setValues( instance, resolvedValues );
 	}
 
 	@Override
-	public void setValue(Object instance, int position, Object value) {
+	public void setValue(@Nonnull Object instance, int position, @Nullable Object value) {
 		existingModelPartContainer.getEmbeddableTypeDescriptor().setValue( instance, position, value );
 	}
 
 	@Override
-	public int getSelectableIndex(String selectableName) {
+	public int getSelectableIndex(@Nonnull String selectableName) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		final List<SelectableMapping> results = new ArrayList<>();
@@ -260,23 +274,25 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return results.get( columnIndex );
 	}
 
+	@Nonnull
 	@Override
 	public Fetchable getFetchable(int position) {
 		return (Fetchable) modelParts[position];
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return getSelectable( index ).getJdbcMapping();
 	}
 
 	@Override
-	public int forEachSelectable(SelectableConsumer consumer) {
+	public int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		int span = 0;
 		for ( ModelPart mapping : modelParts ) {
 			span += mapping.forEachSelectable( offset + span, consumer );
@@ -285,26 +301,28 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public void forEachInsertable(int offset, SelectableConsumer consumer) {
+	public void forEachInsertable(int offset, @Nonnull SelectableConsumer consumer) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void forEachUpdatable(int offset, SelectableConsumer consumer) {
+	public void forEachUpdatable(int offset, @Nonnull SelectableConsumer consumer) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return "";
 	}
 
+	@Nonnull
 	@Override
 	public SqlTuple toSqlExpression(
-			TableGroup tableGroup,
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
+			@Nonnull TableGroup tableGroup,
+			@Nonnull Clause clause,
+			@Nonnull SqmToSqlAstConverter walker,
+			@Nonnull SqlAstCreationState sqlAstCreationState) {
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( getJdbcTypeCount() );
 		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( componentName );
 		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, this, getContainingTableExpression() );
@@ -322,6 +340,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return new SqlTuple( columnReferences, this );
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return existingModelPartContainer.getJavaType();
@@ -411,11 +430,13 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return modelParts.length;
 	}
 
+	@Nullable
 	@Override
 	public NavigableRole getNavigableRole() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return null;
@@ -426,12 +447,13 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		return new EmbeddableResultImpl<>(
 				navigablePath,
 				this,
@@ -442,9 +464,9 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		for ( ModelPart mapping : modelParts ) {
 			mapping.applySqlSelections( navigablePath, tableGroup, creationState );
 		}
@@ -452,10 +474,10 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		for ( ModelPart mapping : modelParts ) {
 			mapping.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 		}
@@ -463,12 +485,12 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( domainValue == null ) {
 			for ( ModelPart mapping : modelParts ) {
@@ -486,8 +508,9 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return span;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
 		}
@@ -502,7 +525,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			for ( ModelPart mapping : modelParts ) {
 				mapping.addToCacheKey( cacheKey, null, session );
@@ -520,12 +543,12 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( value == null ) {
 			for ( ModelPart mapping : modelParts ) {
@@ -543,12 +566,12 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> consumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> consumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( value == null ) {
 			for ( ModelPart mapping : modelParts ) {
@@ -566,7 +589,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		int span = 0;
 		for ( ModelPart attributeMapping : modelParts ) {
 			span += attributeMapping.forEachJdbcType( span + offset, action );

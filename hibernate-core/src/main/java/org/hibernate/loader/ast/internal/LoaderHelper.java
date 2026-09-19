@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -164,6 +166,7 @@ public class LoaderHelper {
 	 *
 	 * @param <K> The key type
 	 */
+	@Nonnull
 	public static <K> K[] normalizeKeys(
 			K[] keys,
 			BasicValuedModelPart keyPart,
@@ -200,8 +203,9 @@ public class LoaderHelper {
 	 * @param elementClass The type of the array elements.  See {@link Class#getComponentType()}
 	 * @param length The length to which the array should be created.  This is usually zero for Hibernate uses
 	 */
+	@Nonnull
 	@AllowReflection
-	public static <X> X[] createTypedArray(Class<X> elementClass, @SuppressWarnings("SameParameterValue") int length) {
+	public static <X> X[] createTypedArray(@Nonnull Class<X> elementClass, @SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
 		return (X[]) newInstance( elementClass, length );
 	}
@@ -214,6 +218,7 @@ public class LoaderHelper {
 	 * @param <R> The type of the model part to load
 	 * @param <K> The type of the keys
 	 */
+	@Nonnull
 	public static <R,K> List<R> loadByArrayParameter(
 			K[] idsToInitialize,
 			SelectStatement sqlAst,

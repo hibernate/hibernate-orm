@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 
@@ -55,9 +57,9 @@ public class CollectionBatchLoaderArrayParam
 
 	public CollectionBatchLoaderArrayParam(
 			int domainBatchSize,
-			LoadQueryInfluencers loadQueryInfluencers,
-			PluralAttributeMapping attributeMapping,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( domainBatchSize, loadQueryInfluencers, attributeMapping, sessionFactory );
 
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
@@ -114,8 +116,9 @@ public class CollectionBatchLoaderArrayParam
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
+	@Nonnull
 	@Override
-	public PersistentCollection<?> load(Object keyBeingLoaded, SharedSessionContractImplementor session) {
+	public PersistentCollection<?> load(@Nonnull Object keyBeingLoaded, @Nonnull SharedSessionContractImplementor session) {
 		final var keyDescriptor = getLoadable().getKeyDescriptor();
 		if ( keyDescriptor.isEmbedded()
 			|| keyDescriptor.getKeyPart().getSingleJdbcMapping().getValueConverter() != null ) {
@@ -127,11 +130,12 @@ public class CollectionBatchLoaderArrayParam
 		}
 	}
 
+	@Nonnull
 	@AllowReflection
 	private PersistentCollection<?> loadWithConversion(
-			Object keyBeingLoaded,
-			SharedSessionContractImplementor session,
-			ForeignKeyDescriptor keyDescriptor) {
+			@Nonnull Object keyBeingLoaded,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull ForeignKeyDescriptor keyDescriptor) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.batchFetchingCollection(
 					collectionInfoString( getLoadable(), keyBeingLoaded ) );
@@ -174,12 +178,13 @@ public class CollectionBatchLoaderArrayParam
 				.getCollection( collectionKey( keyBeingLoaded, session ) );
 	}
 
-	private CollectionKey collectionKey(Object keyBeingLoaded, SharedSessionContractImplementor session) {
+	@Nonnull
+	private CollectionKey collectionKey(@Nonnull Object keyBeingLoaded, @Nonnull SharedSessionContractImplementor session) {
 		return session.generateCollectionKey( getLoadable().getCollectionDescriptor(), keyBeingLoaded );
 	}
 
 	@Override
-	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
+	void initializeKeys(@Nonnull Object key, @Nonnull Object[] keysToInitialize, @Nonnull SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.collectionKeysToInitialize(
 					collectionInfoString( getLoadable(), key ), keysToInitialize );
@@ -212,14 +217,15 @@ public class CollectionBatchLoaderArrayParam
 	}
 
 	@Override
-	void finishInitializingKeys(Object[] keys, SharedSessionContractImplementor session) {
+	void finishInitializingKeys(@Nonnull Object[] keys, @Nonnull SharedSessionContractImplementor session) {
 		for ( Object initializedKey : keys ) {
 			finishInitializingKey( initializedKey, session );
 		}
 	}
 
+	@Nonnull
 	@Override
-	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
+	Object[] resolveKeysToInitialize(@Nonnull Object keyBeingLoaded, @Nonnull SharedSessionContractImplementor session) {
 		assert !getLoadable().getKeyDescriptor().isEmbedded()
 			&& getLoadable().getKeyDescriptor().getKeyPart().getSingleJdbcMapping().getValueConverter() == null
 				: "Should use loadWithConversion() instead";

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.Consumer;
 
 import org.hibernate.annotations.NotFoundAction;
@@ -33,7 +35,9 @@ import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.util.Objects.requireNonNullElse;
+
 
 /**
  * order( id, ... )
@@ -47,8 +51,8 @@ import static java.util.Objects.requireNonNullElse;
  * @author Steve Ebersole
  */
 public class OneToManyCollectionPart extends AbstractEntityCollectionPart implements TableGroupJoinProducer {
-	private final String mapKeyPropertyName;
-	private AssociationKey fetchAssociationKey;
+	@Nullable private final String mapKeyPropertyName;
+	@Nullable private AssociationKey fetchAssociationKey;
 
 	public OneToManyCollectionPart(
 			Nature nature,
@@ -89,12 +93,12 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return getAssociatedEntityMappingType().getIdentifierMapping().breakDownJdbcValues(
 				disassemble( domainValue, session ),
 				offset,
@@ -109,24 +113,26 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor();
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return getKeyDescriptor().getContainingTableExpression();
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		return getKeyDescriptor().getSelectable( columnIndex );
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		return getKeyDescriptor().getKeyPart().forEachSelectable( offset, consumer );
 	}
 
 	@Override
 	protected AssociationKey resolveFetchAssociationKey() {
-		return fetchAssociationKey;
+		return castNonNull( fetchAssociationKey );
 	}
 
 	@Override
@@ -271,7 +277,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			boolean canUseInnerJoins,
 			NavigablePath append,
 			boolean fetched,
-			String sourceAlias,
+			@Nullable String sourceAlias,
 			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
 		return createTableGroupInternal(
@@ -310,6 +316,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		}
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(final int index) {
 		return getEntityMappingType().getJdbcMapping( index );

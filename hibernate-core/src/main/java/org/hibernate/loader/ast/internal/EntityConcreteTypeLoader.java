@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 
@@ -40,7 +42,7 @@ public class EntityConcreteTypeLoader {
 	private final SelectStatement sqlSelect;
 	private final JdbcParametersList jdbcParameters;
 
-	public EntityConcreteTypeLoader(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
+	public EntityConcreteTypeLoader(@Nonnull EntityMappingType entityDescriptor, @Nonnull SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		final var builder = JdbcParametersList.newBuilder();
 		sqlSelect = LoaderSelectBuilder.createSelect(
@@ -58,7 +60,8 @@ public class EntityConcreteTypeLoader {
 		jdbcParameters = builder.build();
 	}
 
-	public EntityPersister getConcreteType(Object id, SharedSessionContractImplementor session) {
+	@Nonnull
+	public EntityPersister getConcreteType(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getSessionFactory();
 		final var jdbcServices = factory.getJdbcServices();
 

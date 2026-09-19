@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.state.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
@@ -58,11 +61,12 @@ public interface StateManagement {
 	/// Auxiliary mappings are rooted in the mapping model.  Legacy-only mutation
 	/// behavior is exposed separately through
 	/// [org.hibernate.metamodel.mapping.LegacyAuxiliaryMutationSupport].
+	@Nullable
 	@org.hibernate.Internal
 	AuxiliaryMapping createAuxiliaryMapping(
-			EntityPersister persister,
-			RootClass bootDescriptor,
-			MappingModelCreationProcess creationProcess);
+			@Nonnull EntityPersister persister,
+			@Nonnull RootClass bootDescriptor,
+			@Nonnull MappingModelCreationProcess creationProcess);
 
 	/// Creates the auxiliary collection mapping required by this
 	/// state-management strategy, or `null` when the collection does not need
@@ -71,17 +75,19 @@ public interface StateManagement {
 	/// Auxiliary mappings are rooted in the mapping model.  Legacy-only mutation
 	/// behavior is exposed separately through
 	/// [org.hibernate.metamodel.mapping.LegacyAuxiliaryMutationSupport].
+	@Nullable
 	@org.hibernate.Internal
 	AuxiliaryMapping createAuxiliaryMapping(
-			PluralAttributeMapping pluralAttributeMapping,
-			Collection bootDescriptor,
-			MappingModelCreationProcess creationProcess);
+			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull Collection bootDescriptor,
+			@Nonnull MappingModelCreationProcess creationProcess);
 
 	/// Provides the graph action-queue integration for this state-management
 	/// strategy.
 	///
 	/// The default integration contributes standard entity and collection
 	/// mutation plans.
+	@Nonnull
 	default StateManagementGraphIntegration getGraphIntegration() {
 		return StateManagementGraphIntegration.STANDARD;
 	}
@@ -92,5 +98,6 @@ public interface StateManagement {
 	/// This is the coordinator-based integration used by the legacy queue.  It
 	/// is intentionally isolated from the root contract so the legacy surface can
 	/// be retired without disturbing mapping semantics or graph integration.
+	@Nonnull
 	StateManagementLegacyIntegration getLegacyIntegration();
 }

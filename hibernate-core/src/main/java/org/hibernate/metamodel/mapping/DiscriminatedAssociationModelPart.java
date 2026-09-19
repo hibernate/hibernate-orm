@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -20,13 +23,20 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface DiscriminatedAssociationModelPart extends Discriminable, Fetchable, FetchableContainer, TableGroupJoinProducer {
+	@Nonnull
+	@Override
+	DiscriminatorMapping getDiscriminatorMapping();
+
+	@Nonnull
 	BasicValuedModelPart getKeyPart();
 
-	EntityMappingType resolveDiscriminatorValue(Object discriminatorValue);
-	Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType);
+	@Nullable
+	EntityMappingType resolveDiscriminatorValue(@Nullable Object discriminatorValue);
+	@Nullable
+	Object resolveDiscriminatorForEntityType(@Nonnull EntityMappingType entityMappingType);
 
 	@Override
-	default boolean isSimpleJoinPredicate(Predicate predicate) {
+	default boolean isSimpleJoinPredicate(@Nullable Predicate predicate) {
 		return predicate == null;
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -33,6 +35,6 @@ public interface RemoveCoordinator extends CollectionOperationCoordinator {
 	/**
 	 * Delete all rows based on the collection-key
 	 */
-	void deleteAllRows(Object key, SharedSessionContractImplementor session);
+	void deleteAllRows(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session);
 
 }

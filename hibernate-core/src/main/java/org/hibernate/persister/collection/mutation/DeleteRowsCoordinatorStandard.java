@@ -4,6 +4,12 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -29,13 +35,14 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 	private final BasicBatchKey batchKey;
 	private final MutationExecutorService mutationExecutorService;
 
+	@Nullable
 	private MutationOperationGroup operationGroup;
 
 	public DeleteRowsCoordinatorStandard(
-			AbstractCollectionPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
+			@Nonnull AbstractCollectionPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
 			boolean deleteByIndex,
-			ServiceRegistry serviceRegistry) {
+			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 		this.deleteByIndex = deleteByIndex;
@@ -44,13 +51,14 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
 
 	@Override
-	public void deleteRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+	public void deleteRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( operationGroup == null ) {
 			operationGroup = createOperationGroup();
 		}
@@ -78,7 +86,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 
 				int deletionCount = 0;
 
-				final var restrictions = rowMutationOperations.getDeleteRowRestrictions();
+				final var restrictions = castNonNull( rowMutationOperations.getDeleteRowRestrictions() );
 
 				while ( deletes.hasNext() ) {
 					final Object removal = deletes.next();
@@ -106,6 +114,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 		}
 	}
 
+	@Nonnull
 	private MutationOperationGroup createOperationGroup() {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;

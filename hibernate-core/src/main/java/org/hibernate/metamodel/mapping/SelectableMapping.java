@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.annotations.ColumnTransformer;
@@ -18,15 +20,19 @@ public interface SelectableMapping extends SqlTypedMapping {
 	/**
 	 * The name of the table to which this selectable is mapped
 	 */
+	@Nonnull
 	String getContainingTableExpression();
 
 	/**
 	 * The selection's expression.  This is the column name or formula
 	 */
+	@Nonnull
 	String getSelectionExpression();
+	@Nonnull
 	default String getSelectableName() {
 		return getSelectionExpression();
 	}
+	@Nonnull
 	default SelectablePath getSelectablePath() {
 		return new SelectablePath( getSelectableName() );
 	}
@@ -44,6 +50,7 @@ public interface SelectableMapping extends SqlTypedMapping {
 	 */
 	@Nullable String getCustomWriteExpression();
 
+	@Nullable
 	default String getWriteExpression() {
 		final String customWriteExpression = getCustomWriteExpression();
 		return customWriteExpression != null

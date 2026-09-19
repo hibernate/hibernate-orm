@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -83,9 +85,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.util.Locale.ROOT;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
+
 
 /**
  * @author Steve Ebersole
@@ -110,28 +114,30 @@ public class PluralAttributeMappingImpl
 
 	private final CollectionMappingType<?> collectionMappingType;
 	private final String referencedPropertyName;
-	private final String mapKeyPropertyName;
+	@Nullable private final String mapKeyPropertyName;
 
 	private final CollectionPart elementDescriptor;
-	private final CollectionPart indexDescriptor;
-	private final CollectionIdentifierDescriptor identifierDescriptor;
+	@Nullable private final CollectionPart indexDescriptor;
+	@Nullable private final CollectionIdentifierDescriptor identifierDescriptor;
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
+	@Nullable
 	private final AuxiliaryMapping auxiliaryMapping;
 
 	private final String bidirectionalAttributeName;
 
 	private final CollectionPersister collectionDescriptor;
-	private final String separateCollectionTable;
+	@Nullable private final String separateCollectionTable;
 
 	private final String sqlAliasStem;
 
 	private final IndexMetadata indexMetadata;
 
+	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
 	private ForeignKeyDescriptor fkDescriptor;
 
-	private OrderByFragment orderByFragment;
-	private OrderByFragment manyToManyOrderByFragment;
+	@Nullable private OrderByFragment orderByFragment;
+	@Nullable private OrderByFragment manyToManyOrderByFragment;
 
 	public PluralAttributeMappingImpl(
 			String attributeName,
@@ -142,8 +148,8 @@ public class PluralAttributeMappingImpl
 			int stateArrayPosition,
 			int fetchableIndex,
 			CollectionPart elementDescriptor,
-			CollectionPart indexDescriptor,
-			CollectionIdentifierDescriptor identifierDescriptor,
+			@Nullable CollectionPart indexDescriptor,
+			@Nullable CollectionIdentifierDescriptor identifierDescriptor,
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			CascadeStyle cascadeStyle,
@@ -170,6 +176,7 @@ public class PluralAttributeMappingImpl
 
 		final int baseIndex = bootDescriptor instanceof List list ? list.getBaseIndex() : -1;
 		indexMetadata = new IndexMetadata() {
+			@Nullable
 			@Override
 			public CollectionPart getIndexDescriptor() {
 				return indexDescriptor;
@@ -180,6 +187,7 @@ public class PluralAttributeMappingImpl
 				return baseIndex;
 			}
 
+			@Nullable
 			@Override
 			public String getIndexPropertyName() {
 				return mapKeyPropertyName;
@@ -249,7 +257,7 @@ public class PluralAttributeMappingImpl
 								ROOT,
 								"Plural attribute [%s.%s] was mapped with targetEntity=`%s`,"
 										+ " but the attribute is declared as `%s`",
-								declaringType.getNavigableRole().getFullPath(),
+								castNonNull( declaringType.getNavigableRole() ).getFullPath(),
 								attributeName,
 								targetType.getName(),
 								elementType.getName()
@@ -295,6 +303,7 @@ public class PluralAttributeMappingImpl
 	 * @implNote See `implNote` on {@linkplain #validateTargetEntity} for details
 	 * about why we return {@code null} instead of throwing an exception.
 	 */
+	@Nullable
 	private static FieldDetails locateField(ClassDetails declaringClassDetails, String attributeName) {
 		assert declaringClassDetails != null;
 		var classDetails = declaringClassDetails;
@@ -316,6 +325,7 @@ public class PluralAttributeMappingImpl
 	 * @implNote See `implNote` on {@linkplain #validateTargetEntity} for details
 	 * about why we return {@code null} instead of throwing an exception.
 	 */
+	@Nullable
 	private static MethodDetails locateGetter(ClassDetails declaringClassDetails, Method method) {
 		assert declaringClassDetails != null;
 		var classDetails = declaringClassDetails;
@@ -360,7 +370,7 @@ public class PluralAttributeMappingImpl
 
 	private static void injectAttributeMapping(
 			CollectionPart elementDescriptor,
-			CollectionPart indexDescriptor,
+			@Nullable CollectionPart indexDescriptor,
 			CollectionPersister collectionDescriptor,
 			PluralAttributeMapping mapping) {
 		if ( collectionDescriptor instanceof Aware aware ) {
@@ -377,7 +387,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isBidirectionalAttributeName(NavigablePath fetchablePath, ToOneAttributeMapping modelPart) {
+	public boolean isBidirectionalAttributeName(@Nonnull NavigablePath fetchablePath, @Nonnull ToOneAttributeMapping modelPart) {
 		return bidirectionalAttributeName == null
 				// If the FK-target of the to-one mapping is the same as the FK-target of this one-to-many mapping,
 				// and the FK-key refer to the same column then we say this is bidirectional,
@@ -436,84 +446,100 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return getCollectionDescriptor().getNavigableRole();
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMappingType<?> getMappedType() {
 		return collectionMappingType;
 	}
 
+	@Nonnull
 	@Override
 	public ForeignKeyDescriptor getKeyDescriptor() {
 		return fkDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public CollectionPersister getCollectionDescriptor() {
 		return collectionDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public CollectionPart getElementDescriptor() {
 		return elementDescriptor;
 	}
 
+	@Nullable
 	@Override
 	public CollectionPart getIndexDescriptor() {
 		return indexDescriptor;
 	}
 
+	@Nullable
 	@Override
 	public IndexMetadata getIndexMetadata() {
 		return indexMetadata;
 	}
 
+	@Nullable
 	@Override
 	public CollectionIdentifierDescriptor getIdentifierDescriptor() {
 		return identifierDescriptor;
 	}
 
+	@Nullable
 	@Override
 	public SoftDeleteMapping getSoftDeleteMapping() {
 		return auxiliaryMapping instanceof SoftDeleteMapping softDeleteMapping
 				? softDeleteMapping : null;
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getSoftDeleteTableDetails() {
 		return ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping();
 	}
 
+	@Nullable
 	@Override
 	public TemporalMapping getTemporalMapping() {
 		return auxiliaryMapping instanceof TemporalMapping temporalMapping
 				? temporalMapping : null;
 	}
 
+	@Nullable
 	@Override
 	public AuditMapping getAuditMapping() {
 		return auxiliaryMapping instanceof AuditMapping auditMapping
 				? auditMapping : null;
 	}
 
+	@Nullable
 	private AuxiliaryMapping getAuxiliaryMapping() {
 		return auxiliaryMapping;
 	}
 
 
+	@Nullable
 	@Override
 	public OrderByFragment getOrderByFragment() {
 		return orderByFragment;
 	}
 
+	@Nullable
 	@Override
 	public OrderByFragment getManyToManyOrderByFragment() {
 		return manyToManyOrderByFragment;
 	}
 
+	@Nullable
 	@Override
 	public String getSeparateCollectionTable() {
 		return separateCollectionTable;
@@ -524,6 +550,7 @@ public class PluralAttributeMappingImpl
 		return tableExpression.equals( separateCollectionTable );
 	}
 
+	@Nullable
 	@Override
 	public Generator getGenerator() {
 		// can never be a generated value
@@ -532,7 +559,7 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public String getFetchableName() {
-		return getAttributeName();
+		return castNonNull( getAttributeName() );
 	}
 
 	@Override
@@ -557,10 +584,10 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public void applyAuxiliaryRestrictions(
-			TableGroup tableGroup,
-			PredicateConsumer predicateConsumer,
-			LoadQueryInfluencers influencers,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator) {
+			@Nonnull TableGroup tableGroup,
+			@Nonnull PredicateConsumer predicateConsumer,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator) {
 		final var descriptor = getCollectionDescriptor();
 		if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
 			final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
@@ -589,12 +616,13 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var collectionTableGroup =
 				creationState.getSqlAstCreationState().getFromClauseAccess()
 						.getTableGroup( navigablePath );
@@ -692,7 +720,7 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			FetchParent fetchParent,
-			DomainResult<?> collectionKeyResult,
+			@Nullable DomainResult<?> collectionKeyResult,
 			boolean unfetched,
 			org.hibernate.engine.spi.FetchOptions fetchOptions) {
 		return new DelayedCollectionFetch(
@@ -725,7 +753,7 @@ public class PluralAttributeMappingImpl
 	protected Fetch buildSelectEagerCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
-			DomainResult<?> collectionKeyDomainResult,
+			@Nullable DomainResult<?> collectionKeyDomainResult,
 			FetchParent fetchParent,
 			org.hibernate.engine.spi.FetchOptions fetchOptions) {
 		return new SelectEagerCollectionFetch(
@@ -757,6 +785,7 @@ public class PluralAttributeMappingImpl
 		);
 	}
 
+	@Nullable
 	@Override
 	public Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
@@ -1014,12 +1043,12 @@ public class PluralAttributeMappingImpl
 	private TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 
 		final var tableGroup =
@@ -1055,7 +1084,7 @@ public class PluralAttributeMappingImpl
 	private TableGroup rootTableGroup(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
+			@Nullable String explicitSourceAlias,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState,
@@ -1098,7 +1127,7 @@ public class PluralAttributeMappingImpl
 			NavigablePath navigablePath,
 			boolean fetched,
 			boolean addsPredicate,
-			String sourceAlias,
+			@Nullable String sourceAlias,
 			SqlAliasBase explicitSqlAliasBase,
 			SqlAstCreationState creationState) {
 		final var oneToManyCollectionPart = (OneToManyCollectionPart) elementDescriptor;
@@ -1156,7 +1185,7 @@ public class PluralAttributeMappingImpl
 			NavigablePath navigablePath,
 			boolean fetched,
 			boolean addsPredicate,
-			String sourceAlias,
+			@Nullable String sourceAlias,
 			SqlAliasBase explicitSqlAliasBase,
 			SqlAstCreationState creationState) {
 		final var sqlAliasBase = SqlAliasBase.from(
@@ -1267,12 +1296,12 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+	public boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
 	}
 
 	@Override
-	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		if ( PluralAttributeMapping.super.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters )
 				|| auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers )) {
 			return true;
@@ -1289,7 +1318,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByEntityGraph(@Nonnull LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEntityGraph( influencers );
 	}
 
@@ -1301,17 +1330,19 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByEnabledFetchProfiles(@Nonnull LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEnabledFetchProfiles( influencers );
 	}
 
+	@Nonnull
 	@Override
 	public String getRootPathName() {
 		return getCollectionDescriptor().getRole();
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		if ( elementDescriptor instanceof ModelPartContainer modelPartContainer ) {
 			final var subPart = modelPartContainer.findSubPart( name, null );
 			if ( subPart != null ) {
@@ -1331,7 +1362,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
 		consumer.accept( 0, elementDescriptor );
 
 		int position = 1;
@@ -1346,38 +1377,39 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nonnull DomainResultCreationState creationState) {
 		elementDescriptor.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		elementDescriptor.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
 		consumer.accept( elementDescriptor );
 		if ( indexDescriptor != null ) {
 			consumer.accept( indexDescriptor );
 		}
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return getKeyDescriptor().getKeyTable();
@@ -1388,39 +1420,42 @@ public class PluralAttributeMappingImpl
 		return 0;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		throw new IndexOutOfBoundsException( index );
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
-		return null;
+		throw new IndexOutOfBoundsException( columnIndex );
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		return 0;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return elementDescriptor.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		elementDescriptor.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return elementDescriptor.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 
 import jakarta.annotation.Nullable;
@@ -34,6 +36,8 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Steve Ebersole
  */
@@ -45,7 +49,7 @@ public class BasicAttributeMapping
 
 	private final String tableExpression;
 	private final String mappedColumnExpression;
-	private final Integer temporalPrecision;
+	@Nullable private final Integer temporalPrecision;
 	private final SelectablePath selectablePath;
 	private final boolean isFormula;
 	private final @Nullable String customReadExpression;
@@ -66,16 +70,16 @@ public class BasicAttributeMapping
 	private final JavaType domainTypeDescriptor;
 
 	public BasicAttributeMapping(
-			String attributeName,
-			NavigableRole navigableRole,
+			@Nullable String attributeName,
+			@Nonnull NavigableRole navigableRole,
 			int stateArrayPosition,
 			int fetchableIndex,
-			AttributeMetadata attributeMetadata,
+			@Nullable AttributeMetadata attributeMetadata,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			String tableExpression,
 			String mappedColumnExpression,
-			SelectablePath selectablePath,
+			@Nullable SelectablePath selectablePath,
 			boolean isFormula,
 			@Nullable String customReadExpression,
 			@Nullable String customWriteExpression,
@@ -90,8 +94,8 @@ public class BasicAttributeMapping
 			boolean updateable,
 			boolean partitioned,
 			JdbcMapping jdbcMapping,
-			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
+			@Nullable ManagedMappingType declaringType,
+			@Nullable PropertyAccess propertyAccess) {
 		super(
 				attributeName,
 				stateArrayPosition,
@@ -108,7 +112,7 @@ public class BasicAttributeMapping
 		this.temporalPrecision = temporalPrecision;
 		this.selectablePath =
 				selectablePath == null
-						? new SelectablePath( isFormula ? attributeName : mappedColumnExpression )
+						? new SelectablePath( isFormula ? castNonNull( attributeName ) : mappedColumnExpression )
 						: selectablePath;
 		this.isFormula = isFormula;
 		this.length = length;
@@ -125,8 +129,9 @@ public class BasicAttributeMapping
 		this.customReadExpression = customReadExpression;
 		this.customWriteExpression = isFormula ? null : customWriteExpression;
 		this.isLazy =
-				navigableRole.getParent().getParent() == null
-					&& declaringType.findContainingEntityMapping()
+				declaringType != null
+					&& navigableRole.getParent().getParent() == null
+					&& castNonNull( declaringType.findContainingEntityMapping() )
 							.getEntityPersister()
 							.getBytecodeEnhancementMetadata()
 							.getLazyAttributesMetadata()
@@ -134,9 +139,9 @@ public class BasicAttributeMapping
 	}
 
 	public static BasicAttributeMapping withSelectableMapping(
-			ManagedMappingType declaringType,
+			@Nullable ManagedMappingType declaringType,
 			BasicValuedModelPart original,
-			PropertyAccess propertyAccess,
+			@Nullable PropertyAccess propertyAccess,
 			boolean insertable,
 			boolean updateable,
 			SelectableMapping selectableMapping) {
@@ -146,7 +151,7 @@ public class BasicAttributeMapping
 		if ( original instanceof SingleAttributeIdentifierMapping mapping ) {
 			attributeName = mapping.getAttributeName();
 			attributeMetadata = new SimpleAttributeMetadata(
-					propertyAccess,
+					castNonNull( propertyAccess ),
 					mapping.getExpressibleJavaType().getMutabilityPlan(),
 					selectableMapping.isNullable(),
 					insertable,
@@ -165,7 +170,7 @@ public class BasicAttributeMapping
 		}
 		return new BasicAttributeMapping(
 				attributeName,
-				original.getNavigableRole(),
+				castNonNull( original.getNavigableRole() ),
 				stateArrayPosition,
 				original.getFetchableKey(),
 				attributeMetadata,
@@ -193,31 +198,37 @@ public class BasicAttributeMapping
 		);
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return getJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return domainTypeDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return mappedColumnExpression;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectableName() {
 		return selectablePath.getSelectableName();
 	}
 
+	@Nonnull
 	@Override
 	public SelectablePath getSelectablePath() {
 		return selectablePath;
@@ -267,6 +278,7 @@ public class BasicAttributeMapping
 		return customWriteExpression;
 	}
 
+	@Nullable
 	@Override
 	public String getWriteExpression() {
 		return customWriteExpression;
@@ -297,11 +309,13 @@ public class BasicAttributeMapping
 		return temporalPrecision;
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return tableExpression;
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
@@ -313,12 +327,13 @@ public class BasicAttributeMapping
 			+ System.identityHashCode( this );
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection =
 				resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 		return new BasicResult<>(
@@ -334,7 +349,7 @@ public class BasicAttributeMapping
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			FetchParent fetchParent,
+			@Nullable FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
@@ -351,18 +366,18 @@ public class BasicAttributeMapping
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, null, creationState ),
 				getJdbcMapping() );
 	}
@@ -419,36 +434,36 @@ public class BasicAttributeMapping
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		consumer.accept( offset, this );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), this );
 		return getJdbcTypeCount();
 	}

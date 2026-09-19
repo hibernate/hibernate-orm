@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,8 +46,8 @@ public class MappingModelCreationProcess {
 	private final Map<String, CollectionPersister> collectionPersisterMap;
 	private final RuntimeModelCreationContext creationContext;
 
-	private String currentlyProcessingRole;
-	private List<PostInitCallbackEntry> postInitCallbacks;
+	@Nullable private String currentlyProcessingRole;
+	@Nullable private List<PostInitCallbackEntry> postInitCallbacks;
 
 	private MappingModelCreationProcess(
 			EntityPersisterConcurrentMap entityPersisterMap,

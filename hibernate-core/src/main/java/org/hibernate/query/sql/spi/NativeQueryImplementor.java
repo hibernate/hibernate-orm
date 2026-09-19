@@ -210,7 +210,7 @@ public interface NativeQueryImplementor<R>
 
 	@Override @Deprecated(since = "7")
 	@Nonnull
-	NativeQueryImplementor<R> setFlushMode(@Nonnull FlushModeType flushMode);
+	NativeQueryImplementor<R> setFlushMode(@Nullable FlushModeType flushMode);
 
 	@Override
 	@Nonnull
@@ -222,7 +222,7 @@ public interface NativeQueryImplementor<R>
 
 	@Override @SuppressWarnings("removal")
 	@Nonnull
-	NativeQueryImplementor<R> setCacheMode(@Nonnull CacheMode cacheMode);
+	NativeQueryImplementor<R> setCacheMode(@Nullable CacheMode cacheMode);
 
 	@Override @SuppressWarnings("removal")
 	@Nonnull

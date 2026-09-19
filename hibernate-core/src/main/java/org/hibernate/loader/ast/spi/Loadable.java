@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.ast.spi.query.from.RootTableGroupProducer;
@@ -24,24 +26,25 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 	 * The name for this loadable, for use as the root when generating
 	 * {@linkplain org.hibernate.spi.NavigablePath relative paths}
 	 */
+	@Nonnull
 	String getRootPathName();
 
 	/**
 	 * @deprecated Use {@link #isAffectedByInfluencers(LoadQueryInfluencers, boolean)} instead
 	 */
 	@Deprecated(forRemoval = true)
-	default boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
 		return isAffectedByInfluencers( influencers, false );
 	}
 
-	default boolean isAffectedByInfluencers(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+	default boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return isAffectedByEntityGraph( influencers )
 			|| isAffectedByEnabledFetchProfiles( influencers )
 			|| isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters )
 			|| isAffectedByBatchSize( influencers );
 	}
 
-	default boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
+	default boolean isNotAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
 		return !isAffectedByEntityGraph( influencers )
 			&& !isAffectedByEnabledFetchProfiles( influencers )
 			&& !isAffectedByEnabledFilters( influencers )
@@ -49,7 +52,7 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 			&& influencers.getEnabledCascadingFetchProfile() == null;
 	}
 
-	default boolean isAffectedByBatchSize(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByBatchSize(@Nonnull LoadQueryInfluencers influencers) {
 		return influencers.hasBatchSizeOverride()
 			|| influencers.getBatchSize() > 0
 			&& influencers.getBatchSize() != getBatchSize();
@@ -62,24 +65,24 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 	 * @deprecated Use {@link #isAffectedByEnabledFilters(LoadQueryInfluencers, boolean)} instead
 	 */
 	@Deprecated(forRemoval = true)
-	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers) {
 		return isAffectedByEnabledFilters( influencers, false );
 	}
 
 	/**
 	 * Whether any of the "influencers" affect this loadable.
 	 */
-	boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters);
+	boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters);
 
 	/**
 	 * Whether the {@linkplain LoadQueryInfluencers#getEffectiveEntityGraph() effective entity-graph}
 	 * applies to this loadable
 	 */
-	boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers);
+	boolean isAffectedByEntityGraph(@Nonnull LoadQueryInfluencers influencers);
 
 	/**
 	 * Whether any of the {@linkplain LoadQueryInfluencers#getEnabledFetchProfileNames()}
 	 * apply to this loadable
 	 */
-	boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers);
+	boolean isAffectedByEnabledFetchProfiles(@Nonnull LoadQueryInfluencers influencers);
 }

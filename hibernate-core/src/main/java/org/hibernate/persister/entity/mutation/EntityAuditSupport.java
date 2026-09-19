@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -83,12 +86,13 @@ public class EntityAuditSupport {
 	/// insert planning may update this mask while resolving generated values, so
 	/// the plan takes an owned copy after resolution.
 	public record AuditInsertPlan(
-			AuditMutationOperation operation,
-			boolean[] propertyInclusions) {
+			@Nonnull AuditMutationOperation operation,
+			@Nonnull boolean[] propertyInclusions) {
 		public AuditInsertPlan {
 			propertyInclusions = propertyInclusions.clone();
 		}
 
+		@Nonnull
 		@Override
 		public boolean[] propertyInclusions() {
 			return propertyInclusions.clone();
@@ -107,19 +111,23 @@ public class EntityAuditSupport {
 	private final EntityTableMapping[] auditTableMappings;
 	private final boolean[] auditedPropertyMask;
 	private final boolean useServerTransactionTimestamps;
+	@Nullable
 	private final String currentTimestampFunctionName;
+	@Nullable
 	private final MutationGroup staticAuditInsertMutationGroup;
+	@Nullable
 	private final MutationGroup transactionEndUpdateMutationGroup;
 
 	public EntityAuditSupport(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull SessionFactoryImplementor factory) {
 		this.entityPersister = entityPersister;
 		this.factory = factory;
-		this.auditMapping = entityPersister.getAuditMapping();
+		final var auditMapping = entityPersister.getAuditMapping();
 		if ( auditMapping == null ) {
 			throw new MappingException( "No audit mapping available for " + entityPersister.getEntityName() );
 		}
+		this.auditMapping = auditMapping;
 		this.auditTableMappings = buildAuditTableMappings();
 		this.auditedPropertyMask = new boolean[entityPersister.getPropertySpan()];
 		for ( int i = 0; i < auditedPropertyMask.length; i++ ) {
@@ -136,6 +144,7 @@ public class EntityAuditSupport {
 		this.transactionEndUpdateMutationGroup = buildTransactionEndUpdateMutationGroup();
 	}
 
+	@Nonnull
 	public EntityPersister getEntityPersister() {
 		return entityPersister;
 	}
@@ -148,22 +157,26 @@ public class EntityAuditSupport {
 	/// Code that needs to alter the mask should first clone it, as
 	/// [#resolvePropertyInclusions(Object, Object[], SharedSessionContractImplementor)]
 	/// does.
+	@Nonnull
 	public boolean[] getAuditedPropertyMask() {
 		return auditedPropertyMask;
 	}
 
+	@Nullable
 	public MutationGroup getStaticAuditInsertMutationGroup() {
 		return staticAuditInsertMutationGroup;
 	}
 
+	@Nullable
 	public MutationGroup getTransactionEndUpdateMutationGroup() {
 		return transactionEndUpdateMutationGroup;
 	}
 
+	@Nonnull
 	public boolean[] resolvePropertyInclusions(
-			Object entity,
-			Object[] values,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nonnull Object[] values,
+			@Nonnull SharedSessionContractImplementor session) {
 		return applyAuditMask(
 				entityPersister.isDynamicInsert()
 						? getPropertiesToInsert( entityPersister, values )
@@ -171,19 +184,21 @@ public class EntityAuditSupport {
 		);
 	}
 
+	@Nullable
 	public MutationGroup resolveAuditInsertMutationGroup(
-			boolean[] propertyInclusions,
-			Object entity,
-			SharedSessionContractImplementor session) {
+			@Nonnull boolean[] propertyInclusions,
+			@Nonnull Object entity,
+			@Nonnull SharedSessionContractImplementor session) {
 		return entityPersister.isDynamicInsert()
 				? buildAuditInsertMutationGroup( propertyInclusions, entity, session )
 				: staticAuditInsertMutationGroup;
 	}
 
+	@Nonnull
 	private List<AuditMutationOperation> resolveAuditInsertOperations(
-			boolean[] propertyInclusions,
-			Object entity,
-			SharedSessionContractImplementor session) {
+			@Nonnull boolean[] propertyInclusions,
+			@Nonnull Object entity,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var mutationGroup = resolveAuditInsertMutationGroup( propertyInclusions, entity, session );
 		return mutationGroup == null
 				? List.of()
@@ -197,10 +212,11 @@ public class EntityAuditSupport {
 	/// operation, but they do not create graph queue [FlushOperation][org.hibernate.action.queue.spi.plan.FlushOperation]
 	/// instances or legacy mutation executors. The returned insert plans retain
 	/// an owned copy of the resolved property inclusion mask.
+	@Nonnull
 	public List<AuditInsertPlan> resolveAuditInsertPlans(
-			boolean[] propertyInclusions,
-			Object entity,
-			SharedSessionContractImplementor session) {
+			@Nonnull boolean[] propertyInclusions,
+			@Nonnull Object entity,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var operations = resolveAuditInsertOperations( propertyInclusions, entity, session );
 		if ( operations.isEmpty() ) {
 			return List.of();
@@ -212,6 +228,7 @@ public class EntityAuditSupport {
 		return plans;
 	}
 
+	@Nonnull
 	private List<AuditMutationOperation> resolveTransactionEndUpdateOperations() {
 		return transactionEndUpdateMutationGroup == null
 				? List.of()
@@ -222,6 +239,7 @@ public class EntityAuditSupport {
 	///
 	/// The returned plans describe the update operations needed to close the
 	/// previous audit rows. Queue-specific code decides how to execute them.
+	@Nonnull
 	public List<TransactionEndPlan> resolveTransactionEndUpdatePlans() {
 		final var operations = resolveTransactionEndUpdateOperations();
 		if ( operations.isEmpty() ) {
@@ -236,12 +254,12 @@ public class EntityAuditSupport {
 
 	public void bindAuditInsertValues(
 			int tableIndex,
-			Object id,
-			Object[] values,
-			boolean[] propertyInclusions,
-			ModificationType modificationType,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull Object id,
+			@Nonnull Object[] values,
+			@Nonnull boolean[] propertyInclusions,
+			@Nonnull ModificationType modificationType,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		if ( auditTableMappings[tableIndex] == null ) {
 			return;
 		}
@@ -299,9 +317,9 @@ public class EntityAuditSupport {
 
 	public void bindTransactionEndValues(
 			int tableIndex,
-			Object id,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull Object id,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		if ( auditTableMappings[tableIndex] == null ) {
 			return;
 		}
@@ -333,13 +351,13 @@ public class EntityAuditSupport {
 
 	public void bindAuditInsertValues(
 			int tableIndex,
-			Object id,
-			Object[] values,
-			boolean[] propertyInclusions,
-			ModificationType modificationType,
-			Object changesetId,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
+			@Nonnull Object id,
+			@Nonnull Object[] values,
+			@Nonnull boolean[] propertyInclusions,
+			@Nonnull ModificationType modificationType,
+			@Nonnull Object changesetId,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
 		if ( auditTableMappings[tableIndex] == null ) {
 			return;
 		}
@@ -395,10 +413,10 @@ public class EntityAuditSupport {
 
 	public void bindTransactionEndValues(
 			int tableIndex,
-			Object id,
-			Object changesetId,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
+			@Nonnull Object id,
+			@Nonnull Object changesetId,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings jdbcValueBindings) {
 		if ( auditTableMappings[tableIndex] == null ) {
 			return;
 		}
@@ -428,9 +446,9 @@ public class EntityAuditSupport {
 
 	public static boolean verifyTransactionEndOutcome(
 			int affectedRowCount,
-			ModificationType modificationType,
-			String entityName,
-			Object id) {
+			@Nonnull ModificationType modificationType,
+			@Nonnull String entityName,
+			@Nonnull Object id) {
 		if ( affectedRowCount > 1
 				|| affectedRowCount == 0 && modificationType != ModificationType.ADD ) {
 			throw new AuditException(
@@ -442,6 +460,7 @@ public class EntityAuditSupport {
 		return true;
 	}
 
+	@Nonnull
 	private EntityTableMapping[] buildAuditTableMappings() {
 		final EntityTableMapping[] sourceMappings = entityPersister.getTableMappings();
 		final EntityTableMapping[] result = new EntityTableMapping[sourceMappings.length];
@@ -456,10 +475,11 @@ public class EntityAuditSupport {
 		return result;
 	}
 
+	@Nullable
 	private MutationGroup buildAuditInsertMutationGroup(
-			boolean[] propertyInclusions,
-			Object entity,
-			SharedSessionContractImplementor session) {
+			@Nonnull boolean[] propertyInclusions,
+			@Nullable Object entity,
+			@Nullable SharedSessionContractImplementor session) {
 		final EntityTableMapping[] sourceMappings = entityPersister.getTableMappings();
 		final var attributeMappings = entityPersister.getAttributeMappings();
 		final List<TableMutation<?>> mutations = new ArrayList<>( auditTableMappings.length );
@@ -478,7 +498,7 @@ public class EntityAuditSupport {
 				}
 				else {
 					final var generator = attributeMapping.getGenerator();
-					if ( isValueGenerated( generator ) ) {
+					if ( generator != null && isValueGenerated( generator ) ) {
 						if ( entity != null && generator.generatedBeforeExecution( entity, session ) ) {
 							propertyInclusions[attributeIndex] = true;
 							attributeMapping.forEachInsertable( insertBuilder );
@@ -521,6 +541,7 @@ public class EntityAuditSupport {
 				: new MutationGroupStandard( MutationType.INSERT, entityPersister, mutations );
 	}
 
+	@Nullable
 	private MutationGroup buildTransactionEndUpdateMutationGroup() {
 		final EntityTableMapping[] sourceMappings = entityPersister.getTableMappings();
 		final List<TableMutation<?>> mutations = new ArrayList<>();
@@ -556,7 +577,8 @@ public class EntityAuditSupport {
 				: new MutationGroupStandard( MutationType.UPDATE, entityPersister, mutations );
 	}
 
-	private List<AuditMutationOperation> createMutationOperations(MutationGroup mutationGroup) {
+	@Nonnull
+	private List<AuditMutationOperation> createMutationOperations(@Nonnull MutationGroup mutationGroup) {
 		final List<AuditMutationOperation> operations = new ArrayList<>( mutationGroup.getNumberOfTableMutations() );
 		for ( int i = 0; i < mutationGroup.getNumberOfTableMutations(); i++ ) {
 			final var tableMutation = mutationGroup.getTableMutation( i );
@@ -573,9 +595,10 @@ public class EntityAuditSupport {
 		return operations;
 	}
 
+	@Nonnull
 	private EntityTableDescriptor createAuditTableDescriptor(
-			EntityTableMapping auditTableMapping,
-			MutationOperation operation) {
+			@Nonnull EntityTableMapping auditTableMapping,
+			@Nonnull MutationOperation operation) {
 		final var tableMapping = operation.getTableDetails();
 		final var identifierTableDescriptor = entityPersister.getIdentifierTableDescriptor();
 		return new EntityTableDescriptor(
@@ -597,7 +620,7 @@ public class EntityAuditSupport {
 		);
 	}
 
-	private int resolveAuditTableIndex(String tableName) {
+	private int resolveAuditTableIndex(@Nonnull String tableName) {
 		for ( int i = 0; i < auditTableMappings.length; i++ ) {
 			if ( auditTableMappings[i] != null
 					&& auditTableMappings[i].getTableName().equals( tableName ) ) {
@@ -607,7 +630,8 @@ public class EntityAuditSupport {
 		throw new MappingException( "Unable to resolve audit table mapping for " + tableName );
 	}
 
-	private boolean[] applyAuditMask(boolean[] propertyInclusions) {
+	@Nonnull
+	private boolean[] applyAuditMask(@Nonnull boolean[] propertyInclusions) {
 		final boolean[] masked = propertyInclusions.clone();
 		for ( int i = 0; i < masked.length; i++ ) {
 			if ( !auditedPropertyMask[i] ) {
@@ -617,21 +641,21 @@ public class EntityAuditSupport {
 		return masked;
 	}
 
-	private static boolean isValueGenerated(Generator generator) {
+	private static boolean isValueGenerated(@Nullable Generator generator) {
 		return generator != null
 				&& generator.generatesOnInsert()
 				&& generator.generatedOnExecution();
 	}
 
-	private boolean isValueGenerationInSql(Generator generator) {
+	private boolean isValueGenerationInSql(@Nonnull Generator generator) {
 		assert isValueGenerated( generator );
 		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( factory.getJdbcServices().getDialect() );
 	}
 
 	private void addSqlGeneratedValue(
-			TableInsertBuilderStandard insertBuilder,
-			AttributeMapping attributeMapping,
-			OnExecutionGenerator generator) {
+			@Nonnull TableInsertBuilderStandard insertBuilder,
+			@Nonnull AttributeMapping attributeMapping,
+			@Nonnull OnExecutionGenerator generator) {
 		final boolean writePropertyValue = generator.writePropertyValue();
 		final String[] columnValues = writePropertyValue
 				? null

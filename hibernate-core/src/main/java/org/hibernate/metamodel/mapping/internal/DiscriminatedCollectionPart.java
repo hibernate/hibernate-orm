@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -76,43 +78,49 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 		);
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return nature;
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getCollectionAttribute() {
 		return collectionDescriptor.getAttributeMapping();
 	}
 
+	@Nonnull
 	@Override
 	public DiscriminatorMapping getDiscriminatorMapping() {
 		return associationMapping.getDiscriminatorMapping();
 	}
 
 	@Override
-	public void applyDiscriminator(Consumer<Predicate> predicateConsumer, String alias, TableGroup tableGroup, SqlAstCreationState creationState) {
+	public void applyDiscriminator(@Nonnull Consumer<Predicate> predicateConsumer, @Nullable String alias, @Nonnull TableGroup tableGroup, @Nonnull SqlAstCreationState creationState) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nonnull
 	@Override
 	public BasicValuedModelPart getKeyPart() {
 		return associationMapping.getKeyPart();
 	}
 
+	@Nullable
 	@Override
-	public EntityMappingType resolveDiscriminatorValue(Object discriminatorValue) {
+	public EntityMappingType resolveDiscriminatorValue(@Nullable Object discriminatorValue) {
 		return associationMapping.resolveDiscriminatorValueToEntityMapping( discriminatorValue );
 	}
 
+	@Nullable
 	@Override
-	public Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType) {
+	public Object resolveDiscriminatorForEntityType(@Nonnull EntityMappingType entityMappingType) {
 		return associationMapping.resolveDiscriminatorValueToEntityMapping( entityMappingType );
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		associationMapping.getDiscriminatorMapping().forEachSelectable( offset, consumer );
 		associationMapping.getKeyPart().forEachSelectable( offset + 1, consumer );
 		return 2;
@@ -162,12 +170,13 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 		);
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		return associationMapping.createDomainResult(
 				navigablePath,
 				tableGroup,
@@ -178,64 +187,71 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		associationMapping.getDiscriminatorMapping().applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		associationMapping.getDiscriminatorMapping().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return associationMapping;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return associationMapping.getJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return getPartMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return partRole;
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		return associationMapping.findSubPart( name, treatTargetType );
 	}
 
 	@Override
-	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
 		consumer.accept( 0, getDiscriminatorMapping() );
 		consumer.accept( 1, getKeyPart() );
 	}
 
 	@Override
-	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
 		consumer.accept( getDiscriminatorMapping() );
 		consumer.accept( getKeyPart() );
 	}
@@ -254,6 +270,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 		};
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return getDiscriminatorMapping().getContainingTableExpression();
@@ -264,6 +281,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 		return getDiscriminatorMapping().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(final int index) {
 		final int base = getDiscriminatorMapping().getJdbcTypeCount();
@@ -272,29 +290,31 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 				: getDiscriminatorMapping().getJdbcMapping( index );
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		return getDiscriminatorMapping().getSelectable( columnIndex );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return associationMapping.getDiscriminatorMapping().disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		associationMapping.getDiscriminatorMapping().addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return associationMapping.getDiscriminatorMapping().forEachDisassembledJdbcValue(
 				value,
 				offset,
@@ -307,28 +327,28 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return associationMapping.breakDownJdbcValues( offset, x, y, domainValue, valueConsumer, session );
 	}
 
 	@Override
 	public <X, Y> int decompose(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return associationMapping.decompose( offset, x, y, domainValue, valueConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		int span = getDiscriminatorMapping().forEachJdbcType( offset, action );
 		return span + getKeyPart().forEachJdbcType( offset + span, action );
 	}

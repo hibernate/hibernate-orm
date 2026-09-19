@@ -4,6 +4,10 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -34,10 +38,10 @@ public interface InsertRowsCoordinator extends CollectionOperationCoordinator {
 	 * "recreate" operations based on the checker's inclusion/exclusion of each entry
 	 */
 	void insertRows(
-			PersistentCollection<?> collection,
-			Object id,
-			EntryFilter entryChecker,
-			SharedSessionContractImplementor session);
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object id,
+			@Nullable EntryFilter entryChecker,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * A tri-predicate for including / excluding collection entries
@@ -51,13 +55,13 @@ public interface InsertRowsCoordinator extends CollectionOperationCoordinator {
 		 * @return {@code true} indicates the entry should be included and {@code false}
 		 * indicates it should be excluded
 		 */
-		boolean include(Object entry, int position, PersistentCollection<?> collection, PluralAttributeMapping attributeDescriptor);
+		boolean include(@Nonnull Object entry, int position, @Nonnull PersistentCollection<?> collection, @Nonnull PluralAttributeMapping attributeDescriptor);
 
 		/**
 		 * The inverse of {@link #include}.  Here, {@code true} indicates exclusion and
 		 * {@code false} indicates inclusion
 		 */
-		default boolean exclude(Object entry, int i, PersistentCollection<?> collection, PluralAttributeMapping attributeDescriptor) {
+		default boolean exclude(@Nonnull Object entry, int i, @Nonnull PersistentCollection<?> collection, @Nonnull PluralAttributeMapping attributeDescriptor) {
 			return !include( entry, i, collection, attributeDescriptor );
 		}
 	}

@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -24,10 +28,10 @@ public interface FilterRestrictable {
 	 * values enabled for the associated entity
 	 */
 	void applyFilterRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			SqlAstCreationState creationState);
+			@Nullable SqlAstCreationState creationState);
 }

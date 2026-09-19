@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.jdbc.Size;
 
 import jakarta.annotation.Nullable;
@@ -23,8 +25,10 @@ public interface SqlTypedMapping {
 	default boolean isLob() {
 		return getJdbcMapping().getJdbcType().isLob();
 	}
+	@Nonnull
 	JdbcMapping getJdbcMapping();
 
+	@Nonnull
 	default Size toSize() {
 		final Size size = new Size();
 		size.setArrayLength( getArrayLength() );

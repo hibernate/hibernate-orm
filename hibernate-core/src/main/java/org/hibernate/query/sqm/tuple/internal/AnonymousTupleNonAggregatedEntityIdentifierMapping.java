@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Set;
 
 import org.hibernate.engine.FetchStyle;
@@ -55,37 +57,43 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 		this.delegate = delegate;
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return Nature.VIRTUAL;
 	}
 
+	@Nullable
 	@Override
 	public String getAttributeName() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public IdentifierValue getUnsavedStrategy() {
 		return delegate.getUnsavedStrategy();
 	}
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity) {
+	public Object getIdentifier(@Nonnull Object entity) {
 		return delegate.getIdentifier( entity );
 	}
 
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+	public Object getIdentifier(@Nonnull Object entity, @Nullable MergeContext mergeContext) {
 		return delegate.getIdentifier( entity, mergeContext );
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+	public void setIdentifier(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		delegate.setIdentifier( entity, id, session );
 	}
 
+	@Nullable
 	@Override
 	public Object instantiate() {
 		return delegate.instantiate();
@@ -96,31 +104,37 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getPartMappingType() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public VirtualIdEmbeddable getVirtualIdEmbeddable() {
 		return delegate.getVirtualIdEmbeddable();
 	}
 
+	@Nullable
 	@Override
 	public IdClassEmbeddable getIdClassEmbeddable() {
 		return delegate.getIdClassEmbeddable();
 	}
 
+	@Nonnull
 	@Override
 	public IdentifierValueMapper getIdentifierValueMapper() {
 		return delegate.getIdentifierValueMapper();
@@ -137,7 +151,7 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	}
 
 	@Override
-	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, @Nullable SharedSessionContractImplementor session) {
 		return delegate.areEqual( one, other, session );
 	}
 }

@@ -4,6 +4,9 @@
  */
 package org.hibernate.action.queue.spi.meta;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -30,6 +33,7 @@ public record TableDescriptorAsTableMapping(
 		boolean isIdentifierTable,
 		boolean isInverse) implements TableMapping {
 
+	@Nonnull
 	@Override
 	public String getTableName() {
 		return descriptor.name();
@@ -63,6 +67,7 @@ public record TableDescriptorAsTableMapping(
 	}
 
 
+	@Nonnull
 	@Override
 	public KeyDetails getKeyDetails() {
 		// Adapt TableKeyDescriptor to KeyDetails
@@ -87,18 +92,20 @@ public record TableDescriptorAsTableMapping(
 			return keyDescriptor.getJdbcTypeCount();
 		}
 
+		@Nonnull
 		@Override
 		public List<? extends KeyColumn> getKeyColumns() {
 			return keyColumns;
 		}
 
+		@Nonnull
 		@Override
 		public KeyColumn getKeyColumn(int position) {
 			return keyColumns.get( position );
 		}
 
 		@Override
-		public void forEachKeyColumn(KeyColumnConsumer consumer) {
+		public void forEachKeyColumn(@Nonnull KeyColumnConsumer consumer) {
 			for ( int i = 0; i < keyColumns.size(); i++ ) {
 				consumer.consume( i, keyColumns.get( i ) );
 			}
@@ -106,9 +113,9 @@ public record TableDescriptorAsTableMapping(
 
 		@Override
 		public void breakDownKeyJdbcValues(
-				Object domainValue,
-				KeyValueConsumer valueConsumer,
-				SharedSessionContractImplementor session) {
+				@Nonnull Object domainValue,
+				@Nonnull KeyValueConsumer valueConsumer,
+				@Nonnull SharedSessionContractImplementor session) {
 			// For simple keys, the domain value is the JDBC value
 			// For composite keys, this would need more complex handling
 			if ( keyColumns.size() == 1 ) {
@@ -119,12 +126,13 @@ public record TableDescriptorAsTableMapping(
 			}
 		}
 
+		@Nonnull
 		@Override
 		public <K> DomainResult<K> createDomainResult(
-				NavigablePath navigablePath,
-				TableReference tableReference,
-				String resultVariable,
-				DomainResultCreationState creationState) {
+				@Nonnull NavigablePath navigablePath,
+				@Nonnull TableReference tableReference,
+				@Nullable String resultVariable,
+				@Nonnull DomainResultCreationState creationState) {
 			throw new UnsupportedOperationException( "Domain result creation not needed for mutations" );
 		}
 
@@ -133,13 +141,14 @@ public record TableDescriptorAsTableMapping(
 			return keyDescriptor.getJdbcTypeCount();
 		}
 
+		@Nonnull
 		@Override
 		public SelectableMapping getSelectable(int columnIndex) {
 			return keyDescriptor.getSelectable( columnIndex );
 		}
 
 		@Override
-		public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 			return keyDescriptor.forEachSelectable( offset, consumer );
 		}
 	}
@@ -152,31 +161,37 @@ public record TableDescriptorAsTableMapping(
 			this.columnDescriptor = columnDescriptor;
 		}
 
+		@Nonnull
 		@Override
 		public String getColumnName() {
 			return columnDescriptor.name();
 		}
 
+		@Nonnull
 		@Override
 		public JdbcMapping getJdbcMapping() {
 			return columnDescriptor.jdbcMapping();
 		}
 
+		@Nonnull
 		@Override
 		public String getContainingTableExpression() {
 			return columnDescriptor.getContainingTableExpression();
 		}
 
+		@Nonnull
 		@Override
 		public String getSelectionExpression() {
 			return columnDescriptor.getSelectionExpression();
 		}
 
+		@Nullable
 		@Override
 		public String getCustomReadExpression() {
 			return columnDescriptor.getCustomReadExpression();
 		}
 
+		@Nullable
 		@Override
 		public String getCustomWriteExpression() {
 			return columnDescriptor.getCustomWriteExpression();
@@ -207,26 +222,31 @@ public record TableDescriptorAsTableMapping(
 			return columnDescriptor.isPartitioned();
 		}
 
+		@Nullable
 		@Override
 		public Long getLength() {
 			return columnDescriptor.getLength();
 		}
 
+		@Nullable
 		@Override
 		public Integer getPrecision() {
 			return columnDescriptor.getPrecision();
 		}
 
+		@Nullable
 		@Override
 		public Integer getScale() {
 			return columnDescriptor.getScale();
 		}
 
+		@Nullable
 		@Override
 		public Integer getTemporalPrecision() {
 			return columnDescriptor.getTemporalPrecision();
 		}
 
+		@Nullable
 		@Override
 		public Integer getArrayLength() {
 			return columnDescriptor.getArrayLength();

@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -26,6 +29,7 @@ import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.getPropertiesToInsert;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -43,16 +47,17 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 	private final EntityTableMapping historyTableMapping;
 	private final TemporalMapping temporalMapping;
 	private final BasicBatchKey historyBatchKey;
+	@Nullable
 	private final MutationOperationGroup staticHistoryInsertGroup;
 
 	public InsertCoordinatorHistory(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory,
-			InsertCoordinator currentInsertCoordinator) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nonnull InsertCoordinator currentInsertCoordinator) {
 		super( entityPersister, factory );
 		this.currentInsertCoordinator = currentInsertCoordinator;
 		identifierTableMapping = entityPersister.getIdentifierTableMapping();
-		temporalMapping = entityPersister.getTemporalMapping();
+		temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
 		historyTableMapping =
 				createAuxiliaryTableMapping( identifierTableMapping,
 						entityPersister, temporalMapping.getTableName()
@@ -63,41 +68,45 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 				: buildHistoryInsertGroup( entityPersister.getPropertyInsertability(), null, null );
 	}
 
+	@Nullable
 	@Override
 	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return currentInsertCoordinator.getStaticMutationOperationGroup();
 	}
 
+	@Nullable
 	@Override
 	protected BatchKey getBatchKey() {
 		return historyBatchKey;
 	}
 
+	@Nullable
 	@Override
-	public GeneratedValues insert(Object entity, Object[] values, SharedSessionContractImplementor session) {
+	public GeneratedValues insert(@Nonnull Object entity, @Nonnull Object[] values, @Nonnull SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, values, session );
-		final Object id = entityPersister().getIdentifier( entity, session );
+		final Object id = resolveInsertedIdentifier( entity, null, generatedValues, session );
 		insertHistoryRow( entity, id, values, session );
 		return generatedValues;
 	}
 
+	@Nullable
 	@Override
 	public GeneratedValues insert(
-			Object entity,
-			Object id,
-			Object[] values,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] values,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, id, values, session );
-		final Object resolvedId = id == null ? entityPersister().getIdentifier( entity, session ) : id;
+		final Object resolvedId = resolveInsertedIdentifier( entity, id, generatedValues, session );
 		insertHistoryRow( entity, resolvedId, values, session );
 		return generatedValues;
 	}
 
 	private void insertHistoryRow(
-			Object entity,
-			Object id,
-			Object[] values,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] values,
+			@Nonnull SharedSessionContractImplementor session) {
 		final boolean dynamicInsert = entityPersister().isDynamicInsert();
 		final boolean[] propertyInclusions = dynamicInsert
 				? getPropertiesToInsert( entityPersister(), values )
@@ -118,10 +127,11 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 		}
 	}
 
+	@Nonnull
 	private MutationOperationGroup buildHistoryInsertGroup(
-			boolean[] propertyInclusions,
-			Object entity,
-			SharedSessionContractImplementor session) {
+			@Nonnull boolean[] propertyInclusions,
+			@Nullable Object entity,
+			@Nullable SharedSessionContractImplementor session) {
 		final var insertBuilder =
 				new TableInsertBuilderStandard( entityPersister(), historyTableMapping, factory() );
 		applyHistoryInsertDetails( insertBuilder, propertyInclusions, entity, session );
@@ -133,10 +143,10 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 	}
 
 	private void applyHistoryInsertDetails(
-			TableInsertBuilderStandard insertBuilder,
-			boolean[] propertyInclusions,
-			Object entity,
-			SharedSessionContractImplementor session) {
+			@Nonnull TableInsertBuilderStandard insertBuilder,
+			@Nonnull boolean[] propertyInclusions,
+			@Nullable Object entity,
+			@Nullable SharedSessionContractImplementor session) {
 		final var attributeMappings = entityPersister().getAttributeMappings();
 		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
@@ -145,7 +155,7 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 			}
 			else {
 				final var generator = attributeMapping.getGenerator();
-				if ( isValueGenerated( generator ) ) {
+				if ( generator != null && isValueGenerated( generator ) ) {
 					if ( session != null && generator.generatedBeforeExecution( entity, session ) ) {
 						propertyInclusions[attributeIndex] = true;
 						attributeMapping.forEachInsertable( insertBuilder );
@@ -167,9 +177,9 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 	}
 
 	private void addSqlGeneratedValue(
-			TableInsertBuilderStandard insertBuilder,
-			AttributeMapping attributeMapping,
-			OnExecutionGenerator generator) {
+			@Nonnull TableInsertBuilderStandard insertBuilder,
+			@Nonnull AttributeMapping attributeMapping,
+			@Nonnull OnExecutionGenerator generator) {
 		final boolean writePropertyValue = generator.writePropertyValue();
 		final var columnValues =
 				writePropertyValue
@@ -180,11 +190,11 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 	}
 
 	private void bindHistoryValues(
-			Object id,
-			Object[] values,
-			boolean[] propertyInclusions,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nonnull Object id,
+			@Nonnull Object[] values,
+			@Nonnull boolean[] propertyInclusions,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final String historyTableName = historyTableMapping.getTableName();
 		historyTableMapping.getKeyMapping().breakDownKeyJdbcValues(
 				id,
@@ -233,19 +243,19 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 		}
 	}
 
-	private static boolean isValueGenerated(Generator generator) {
+	private static boolean isValueGenerated(@Nullable Generator generator) {
 		return generator != null
 			&& generator.generatesOnInsert()
 			&& generator.generatedOnExecution();
 	}
 
-	private boolean isValueGenerationInSql(Generator generator) {
+	private boolean isValueGenerationInSql(@Nonnull Generator generator) {
 		assert isValueGenerated( generator );
 		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect() );
 	}
 
 	private static boolean verifyOutcome(
-			PreparedStatementDetails statementDetails,
+			@Nonnull PreparedStatementDetails statementDetails,
 			int affectedRowCount,
 			int batchPosition) throws SQLException {
 		statementDetails.getExpectation().verifyOutcome(

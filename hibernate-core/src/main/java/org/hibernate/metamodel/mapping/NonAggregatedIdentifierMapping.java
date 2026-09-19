@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
@@ -31,18 +34,21 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 	/**
 	 * The virtual-id representation of this id mapping
 	 */
+	@Nonnull
 	@org.hibernate.Internal
 	VirtualIdEmbeddable getVirtualIdEmbeddable();
 
 	/**
 	 * The id-class representation of this id mapping
 	 */
+	@Nullable
 	@org.hibernate.Internal
 	IdClassEmbeddable getIdClassEmbeddable();
 
 	/**
 	 * The id-class, if there is one, otherwise the virtual-id.
 	 */
+	@Nonnull
 	IdentifierValueMapper getIdentifierValueMapper();
 
 	@Override
@@ -55,24 +61,26 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 	 * difference between virtual and id-class mappings
 	 */
 	interface IdentifierValueMapper extends EmbeddableMappingType {
+		@Nonnull
 		EmbeddableValuedModelPart getEmbeddedPart();
 
 		/**
 		 * Extract the identifier out of the given entity, returning the mapper's
 		 * representation
 		 */
-		Object getIdentifier(Object entity, SharedSessionContractImplementor session);
+		@Nonnull
+		Object getIdentifier(@Nonnull Object entity, @Nullable SharedSessionContractImplementor session);
 
 		/**
 		 * Extract the identifier out of the given entity, returning the mapper's
 		 * representation
 		 */
-		void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
+		void setIdentifier(@Nonnull Object entity, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session);
 
 		/**
 		 * Convenience method to iterate the attributes for this mapper's representation
 		 */
-		default void forEachAttribute(IndexedConsumer<SingularAttributeMapping> consumer) {
+		default void forEachAttribute(@Nonnull IndexedConsumer<SingularAttributeMapping> consumer) {
 			//noinspection unchecked,rawtypes
 			getEmbeddedPart().getEmbeddableTypeDescriptor().forEachAttributeMapping( (IndexedConsumer) consumer );
 		}

@@ -68,7 +68,7 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	@Nonnull
-	QueryImplementor<T> setFlushMode(@Nonnull FlushModeType flushMode);
+	QueryImplementor<T> setFlushMode(@Nullable FlushModeType flushMode);
 
 	@Override
 	@Nonnull

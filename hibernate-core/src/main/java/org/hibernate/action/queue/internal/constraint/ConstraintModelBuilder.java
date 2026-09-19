@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.queue.internal.constraint;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -285,13 +287,14 @@ public final class ConstraintModelBuilder {
 			return selectables.size();
 		}
 
+		@Nonnull
 		@Override
 		public SelectableMapping getSelectable(int columnIndex) {
 			return selectables.get(columnIndex);
 		}
 
 		@Override
-		public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 			for (int i = 0; i < selectables.size(); i++) {
 				consumer.accept(offset + i, selectables.get(i));
 			}

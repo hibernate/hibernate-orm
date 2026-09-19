@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import java.util.ArrayList;
@@ -42,9 +45,9 @@ public class CollectionElementLoaderByIndex implements Loader {
 	 * which applied the collection mapping's {@linkplain PluralAttributeMapping.IndexMetadata#getListIndexBase()}
 	 */
 	public CollectionElementLoaderByIndex(
-			PluralAttributeMapping attributeMapping,
-			LoadQueryInfluencers influencers,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this( attributeMapping, attributeMapping.getIndexMetadata().getListIndexBase(), influencers, sessionFactory );
 	}
 
@@ -52,10 +55,10 @@ public class CollectionElementLoaderByIndex implements Loader {
 	 * @param baseIndex A base value to apply to the relational index values processed on {@link #incrementIndexByBase}
 	 */
 	public CollectionElementLoaderByIndex(
-			PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping attributeMapping,
 			int baseIndex,
-			LoadQueryInfluencers influencers,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.attributeMapping = attributeMapping;
 		this.baseIndex = baseIndex;
 
@@ -96,24 +99,29 @@ public class CollectionElementLoaderByIndex implements Loader {
 		jdbcParameters = jdbcParametersBuilder.build();
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getLoadable() {
 		return getAttributeMapping();
 	}
 
+	@Nonnull
 	public PluralAttributeMapping getAttributeMapping() {
 		return attributeMapping;
 	}
 
+	@Nonnull
 	public SelectStatement getSqlAst() {
 		return sqlAst;
 	}
 
+	@Nonnull
 	public JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
 
-	public Object load(Object key, Object index, SharedSessionContractImplementor session) {
+	@Nullable
+	public Object load(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session) {
 
 		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
 
@@ -160,7 +168,8 @@ public class CollectionElementLoaderByIndex implements Loader {
 	 *
 	 * @return The appropriately incremented base
 	 */
-	protected Object incrementIndexByBase(Object index) {
+	@Nonnull
+	protected Object incrementIndexByBase(@Nonnull Object index) {
 		if ( baseIndex > 0 ) {
 			return (Integer) index + baseIndex;
 		}

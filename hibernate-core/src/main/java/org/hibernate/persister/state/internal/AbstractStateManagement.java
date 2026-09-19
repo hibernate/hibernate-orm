@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.state.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
@@ -54,18 +57,21 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Legacy ActionQueue integration
 
+	@Nonnull
 	@Override
 	public StateManagementLegacyIntegration getLegacyIntegration() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
+	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister persister) {
 		return new InsertCoordinatorStandard( persister, persister.getFactory() );
 	}
 
+	@Nonnull
 	@Override
-	public UpdateCoordinator createUpdateCoordinator(EntityPersister persister) {
+	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister persister) {
 		final var attributeMappings = persister.getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			if ( attributeMappings.get( i ) instanceof SingularAttributeMapping ) {
@@ -75,18 +81,21 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 		return new UpdateCoordinatorNoOp( persister );
 	}
 
+	@Nonnull
 	@Override
-	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
+	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister persister) {
 		return new MergeCoordinatorStandard( persister, persister.getFactory() );
 	}
 
+	@Nonnull
 	@Override
-	public DeleteCoordinator createDeleteCoordinator(EntityPersister persister) {
+	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister) {
 		return new DeleteCoordinatorStandard( persister, persister.getFactory() );
 	}
 
+	@Nonnull
 	@Override
-	public InsertRowsCoordinator createInsertRowsCoordinator(CollectionPersister persister) {
+	public InsertRowsCoordinator createInsertRowsCoordinator(@Nonnull CollectionPersister persister) {
 		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !isInsertAllowed( persister ) ) {
 			return new InsertRowsCoordinatorNoOp( mutationTarget );
@@ -107,8 +116,9 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 		}
 	}
 
+	@Nonnull
 	@Override
-	public UpdateRowsCoordinator createUpdateRowsCoordinator(CollectionPersister persister) {
+	public UpdateRowsCoordinator createUpdateRowsCoordinator(@Nonnull CollectionPersister persister) {
 		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !isUpdatePossible( persister ) ) {
 			return new UpdateRowsCoordinatorNoOp( mutationTarget );
@@ -138,8 +148,9 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 		}
 	}
 
+	@Nonnull
 	@Override
-	public DeleteRowsCoordinator createDeleteRowsCoordinator(CollectionPersister persister) {
+	public DeleteRowsCoordinator createDeleteRowsCoordinator(@Nonnull CollectionPersister persister) {
 		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !persister.needsRemove() ) {
 			return new DeleteRowsCoordinatorNoOp( mutationTarget );
@@ -163,8 +174,9 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 		}
 	}
 
+	@Nonnull
 	@Override
-	public RemoveCoordinator createRemoveCoordinator(CollectionPersister persister) {
+	public RemoveCoordinator createRemoveCoordinator(@Nonnull CollectionPersister persister) {
 		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !persister.needsRemove() ) {
 			return new RemoveCoordinatorNoOp( mutationTarget );
@@ -185,7 +197,7 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 		}
 	}
 
-	protected static boolean isUpdatePossible(CollectionPersister persister) {
+	protected static boolean isUpdatePossible(@Nonnull CollectionPersister persister) {
 		if ( persister.isOneToMany() ) {
 			return persister.isRowDeleteEnabled()
 				|| persister.isRowInsertEnabled();
@@ -197,18 +209,19 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 		}
 	}
 
-	protected static boolean isInsertAllowed(CollectionPersister persister) {
+	protected static boolean isInsertAllowed(@Nonnull CollectionPersister persister) {
 		return !persister.isInverse() && persister.isRowInsertEnabled();
 	}
 
-	protected boolean isTablePerSubclass(CollectionPersister persister) {
+	protected boolean isTablePerSubclass(@Nonnull CollectionPersister persister) {
 		final var elementPersister = persister.getElementPersister();
 		return elementPersister != null
 			&& elementPersister.hasSubclasses()
 			&& elementPersister instanceof UnionSubclassEntityPersister;
 	}
 
-	protected static AbstractCollectionPersister resolveMutationTarget(CollectionPersister persister) {
+	@Nonnull
+	protected static AbstractCollectionPersister resolveMutationTarget(@Nonnull CollectionPersister persister) {
 		if ( persister instanceof AbstractCollectionPersister collectionMutationTarget ) {
 			return collectionMutationTarget;
 		}
@@ -216,19 +229,21 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 	}
 
 
+	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			EntityPersister persister,
-			RootClass bootDescriptor,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull EntityPersister persister,
+			@Nonnull RootClass bootDescriptor,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			PluralAttributeMapping pluralAttributeMapping,
-			Collection bootDescriptor,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull Collection bootDescriptor,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		return null;
 	}
 }

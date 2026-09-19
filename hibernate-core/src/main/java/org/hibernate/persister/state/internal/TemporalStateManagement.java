@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.state.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -45,13 +48,15 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 	public static final TemporalStateManagement INSTANCE = new TemporalStateManagement();
 
 	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
+		@Nonnull
 		@Override
-		public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
 			return new TemporalEntityMutationPlanContributor( persister, persister.getFactory() );
 		}
 
+		@Nonnull
 		@Override
-		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(CollectionPersister persister) {
+		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(@Nonnull CollectionPersister persister) {
 			return new TemporalCollectionMutationPlanContributor();
 		}
 	};
@@ -63,6 +68,7 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Graph ActionQueue integration
 
+	@Nonnull
 	@Override
 	public StateManagementGraphIntegration getGraphIntegration() {
 		return graphIntegration;
@@ -72,28 +78,33 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Legacy ActionQueue integration
 
+	@Nonnull
 	@Override
-	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
+	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister persister) {
 		return new InsertCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
+	@Nonnull
 	@Override
-	public UpdateCoordinator createUpdateCoordinator(EntityPersister persister) {
+	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister persister) {
 		return new UpdateCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
+	@Nonnull
 	@Override
-	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
+	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister persister) {
 		return new MergeCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
+	@Nonnull
 	@Override
-	public DeleteCoordinator createDeleteCoordinator(EntityPersister persister) {
+	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister) {
 		return new DeleteCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
+	@Nonnull
 	@Override
-	public UpdateRowsCoordinator createUpdateRowsCoordinator(CollectionPersister persister) {
+	public UpdateRowsCoordinator createUpdateRowsCoordinator(@Nonnull CollectionPersister persister) {
 		if ( !isUpdatePossible( persister ) ) {
 			return new UpdateRowsCoordinatorNoOp( resolveMutationTarget( persister ) );
 		}
@@ -109,11 +120,12 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 		}
 	}
 
+	@Nullable
 	@Override
 	public TemporalMapping createAuxiliaryMapping(
-			EntityPersister persister,
-			RootClass rootClass,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull EntityPersister persister,
+			@Nonnull RootClass rootClass,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var temporalTable = rootClass.getAuxiliaryTable();
 		final String tableName = temporalTable == null
 				? persister.getIdentifierTableName()
@@ -122,11 +134,12 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 		return new TemporalMappingImpl( rootClass, tableName, creationProcess );
 	}
 
+	@Nullable
 	@Override
 	public TemporalMapping createAuxiliaryMapping(
-			PluralAttributeMapping pluralAttributeMapping,
-			Collection bootDescriptor,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull Collection bootDescriptor,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var temporalTable = bootDescriptor.getAuxiliaryTable();
 		final String tableName = temporalTable == null
 				? pluralAttributeMapping.getSeparateCollectionTable()

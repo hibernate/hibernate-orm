@@ -280,7 +280,7 @@ public final class PropertyValueAccessor {
 
 	public @Nullable Object getForInsert(
 			Object owner,
-			Map<Object, Object> mergeMap,
+			@Nullable Map<Object, Object> mergeMap,
 			SharedSessionContractImplementor session) {
 		return switch ( kind ) {
 			case BACK_REF -> session.getPersistenceContextInternal()

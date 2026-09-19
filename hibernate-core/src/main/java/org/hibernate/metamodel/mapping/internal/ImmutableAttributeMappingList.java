@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -30,20 +32,21 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 		return list.length;
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMapping get(final int i) {
 		return list[i]; //intentional unguarded array access: let it explode
 	}
 
 	@Override
-	public void forEach(Consumer<? super AttributeMapping> attributeMappingConsumer) {
+	public void forEach(@Nonnull Consumer<? super AttributeMapping> attributeMappingConsumer) {
 		for ( var attributeMapping : list ) {
 			attributeMappingConsumer.accept( attributeMapping );
 		}
 	}
 
 	@Override
-	public void indexedForEach(final IndexedConsumer<? super AttributeMapping> consumer) {
+	public void indexedForEach(@Nonnull final IndexedConsumer<? super AttributeMapping> consumer) {
 		for ( int i = 0; i < list.length; i++ ) {
 			consumer.accept( i, list[i] );
 		}

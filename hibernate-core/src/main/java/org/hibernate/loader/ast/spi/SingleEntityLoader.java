@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -14,11 +17,13 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  * @author Steve Ebersole
  */
 public interface SingleEntityLoader<T> extends EntityLoader {
+	@Nonnull
 	@Override
 	EntityMappingType getLoadable();
 
 	/**
 	 * Load an entity by a primary or unique key value.
 	 */
-	T load(Object key, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session);
+	@Nullable
+	T load(@Nonnull Object key, @Nonnull LockOptions lockOptions, @Nullable Boolean readOnly, @Nonnull SharedSessionContractImplementor session);
 }

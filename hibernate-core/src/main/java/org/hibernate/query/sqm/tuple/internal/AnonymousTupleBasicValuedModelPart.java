@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 
 import jakarta.annotation.Nullable;
@@ -97,66 +99,79 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 		this.fetchableIndex = fetchableIndex;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return expressible.getExpressibleJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return expressible.getExpressibleJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getDeclaringType() {
 		return declaringType;
 	}
 
+	@Nonnull
 	@Override
 	public String getPartName() {
 		return partName;
 	}
 
+	@Nullable
 	@Override
 	public NavigableRole getNavigableRole() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectableName() {
 		return selectableMapping.getSelectableName();
 	}
 
+	@Nonnull
 	@Override
 	public SelectablePath getSelectablePath() {
 		return selectableMapping.getSelectablePath();
 	}
 
+	@Nullable
 	@Override
 	public String getWriteExpression() {
 		return selectableMapping.getWriteExpression();
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return selectableMapping.getJdbcMapping();
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return selectableMapping.getContainingTableExpression();
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionExpression() {
 		return selectableMapping.getSelectionExpression();
@@ -227,6 +242,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 		return selectableMapping.getTemporalPrecision();
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getMappedType() {
 		return this;
@@ -247,12 +263,13 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 		return FETCH_OPTIONS;
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection(
 				navigablePath,
 				tableGroup,
@@ -324,18 +341,18 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		resolveSqlSelection( navigablePath, tableGroup, null, creationState.getSqlAstCreationState() );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept(
 				resolveSqlSelection( navigablePath, tableGroup, null, creationState.getSqlAstCreationState() ),
 				getJdbcMapping()
@@ -344,41 +361,42 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valueConsumer.consume( offset, x, y, domainValue, this );
 		return getJdbcTypeCount();
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return value;
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return;
 		}
@@ -388,24 +406,24 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		consumer.accept( offset, this );
 		return getJdbcTypeCount();
 	}
 
 	@Override
-	public int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( 0, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 
 import org.hibernate.Incubating;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
@@ -21,13 +23,18 @@ import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 @Incubating(since = "5.4")
 public interface TemporalMapping extends AuxiliaryMapping {
 
+	@Nonnull
 	SelectableMapping getStartingColumnMapping();
 
+	@Nonnull
 	SelectableMapping getEndingColumnMapping();
 
-	ColumnValueBinding createStartingValueBinding(ColumnReference startingColumnReference);
+	@Nonnull
+	ColumnValueBinding createStartingValueBinding(@Nonnull ColumnReference startingColumnReference);
 
-	ColumnValueBinding createEndingValueBinding(ColumnReference endingColumnReference);
+	@Nonnull
+	ColumnValueBinding createEndingValueBinding(@Nonnull ColumnReference endingColumnReference);
 
-	ColumnValueBinding createNullEndingValueBinding(ColumnReference endingColumnReference);
+	@Nonnull
+	ColumnValueBinding createNullEndingValueBinding(@Nonnull ColumnReference endingColumnReference);
 }

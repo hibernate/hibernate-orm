@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
@@ -32,6 +34,7 @@ public class DomainPathContinuation extends AbstractDomainPath {
 		return navigablePath;
 	}
 
+	@Nonnull
 	@Override
 	public DomainPath getLhs() {
 		return lhs;
@@ -42,6 +45,7 @@ public class DomainPathContinuation extends AbstractDomainPath {
 		return referencedModelPart;
 	}
 
+	@Nonnull
 	@Override
 	public SequencePart resolvePathPart(
 			String name,

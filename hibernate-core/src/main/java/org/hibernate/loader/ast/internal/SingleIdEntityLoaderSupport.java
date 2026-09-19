@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
@@ -19,21 +22,25 @@ public abstract class SingleIdEntityLoaderSupport<T> implements SingleIdEntityLo
 	private final EntityMappingType entityDescriptor;
 	protected final SessionFactoryImplementor sessionFactory;
 
+	@Nullable
 	private DatabaseSnapshotExecutor databaseSnapshotExecutor;
+	@Nullable
 	private DatabaseSnapshotExecutor tenantDatabaseSnapshotExecutor;
 
-	public SingleIdEntityLoaderSupport(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
+	public SingleIdEntityLoaderSupport(@Nonnull EntityMappingType entityDescriptor, @Nonnull SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = sessionFactory;
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getLoadable() {
 		return entityDescriptor;
 	}
 
+	@Nullable
 	@Override
-	public Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
+	public Object[] loadDatabaseSnapshot(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		final var tenantFilter = session.getLoadQueryInfluencers().getEnabledFilter( FILTER_NAME );
 		if ( tenantFilter != null ) {
 			if ( tenantDatabaseSnapshotExecutor == null ) {

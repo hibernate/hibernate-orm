@@ -4,6 +4,10 @@
  */
 package org.hibernate.processor.validation;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -41,16 +45,19 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 		return ownerEntityName;
 	}
 
+	@Nonnull
 	@Override
 	public String getRole() {
 		return role;
 	}
 
+	@Nonnull
 	@Override
 	public CollectionType getCollectionType() {
 		return collectionType;
 	}
 
+	@Nonnull
 	@Override
 	public EntityPersister getOwnerEntityPersister() {
 		return factory.getMetamodel().getEntityDescriptor(ownerEntityName);
@@ -58,11 +65,13 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 
 	abstract Type getElementPropertyType(String propertyPath);
 
+	@Nonnull
 	@Override
 	public Type getKeyType() {
 		return getOwnerEntityPersister().getIdentifierType();
 	}
 
+	@Nullable
 	@Override
 	public Type getIndexType() {
 		if (collectionType instanceof ListType) {
@@ -77,11 +86,13 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 		}
 	}
 
+	@Nonnull
 	@Override
 	public Type getElementType() {
 		return elementType;
 	}
 
+	@Nullable
 	@Override
 	public Type getIdentifierType() {
 		return factory.getTypeConfiguration().getBasicTypeForJavaType(Long.class);
@@ -93,6 +104,7 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 			|| getCollectionType() instanceof MapType;
 	}
 
+	@Nullable
 	@Override
 	public EntityPersister getElementPersister() {
 		if (elementType instanceof EntityType ) {
@@ -104,6 +116,7 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 		}
 	}
 
+	@Nonnull
 	@Override
 	public SessionFactoryImplementor getFactory() {
 		return factory;
@@ -114,16 +127,19 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 		return elementType instanceof EntityType;
 	}
 
+	@Nonnull
 	@Override
 	public String[] getCollectionSpaces() {
 		return new String[] {role};
 	}
 
+	@Nullable
 	@Override
 	public String getMappedByProperty() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName() {
 		return role;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -38,7 +40,9 @@ import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifi
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+
 
 /**
  * A "non-aggregated" composite identifier.
@@ -52,7 +56,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	private final EntityPersister entityDescriptor;
 
 	private final VirtualIdEmbeddable virtualIdEmbeddable;
-	private final IdClassEmbeddable idClassEmbeddable;
+	@Nullable private final IdClassEmbeddable idClassEmbeddable;
 
 	private final IdentifierValueMapper identifierValueMapper;
 
@@ -120,26 +124,31 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		identifierValueMapper = original.identifierValueMapper;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return virtualIdEmbeddable;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getPartMappingType() {
 		return getMappedType();
 	}
 
+	@Nullable
 	@Override
 	public IdClassEmbeddable getIdClassEmbeddable() {
 		return idClassEmbeddable;
 	}
 
+	@Nonnull
 	@Override
 	public VirtualIdEmbeddable getVirtualIdEmbeddable() {
 		return virtualIdEmbeddable;
 	}
 
+	@Nonnull
 	@Override
 	public IdentifierValueMapper getIdentifierValueMapper() {
 		return identifierValueMapper;
@@ -150,41 +159,44 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		return idClassEmbeddable != null;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
 		return identifierValueMapper;
 	}
 
 	@Override
-	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, @Nullable SharedSessionContractImplementor session) {
 		return identifierValueMapper.areEqual( one, other, session );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return identifierValueMapper.disassemble( value, session );
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		identifierValueMapper.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x, Y y, JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x, @Nullable Y y, @Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return identifierValueMapper.forEachJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
+	@Nonnull
 	@Override
 	public SqlTuple toSqlExpression(
-			TableGroup tableGroup,
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
+			@Nonnull TableGroup tableGroup,
+			@Nonnull Clause clause,
+			@Nonnull SqmToSqlAstConverter walker,
+			@Nonnull SqlAstCreationState sqlAstCreationState) {
 		if ( hasContainingClass() ) {
 			final var selectableMappings = getEmbeddableTypeDescriptor();
 			final List<ColumnReference> columnReferences = arrayList( selectableMappings.getJdbcTypeCount() );
@@ -211,23 +223,27 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		return super.toSqlExpression( tableGroup, clause, walker, sqlAstCreationState );
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return Nature.VIRTUAL;
 	}
 
+	@Nullable
 	@Override
 	public String getAttributeName() {
 		return null;
 	}
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity) {
+	public Object getIdentifier(@Nonnull Object entity) {
 		return getIdentifier( entity, null );
 	}
 
+	@Nullable
 	@Override
-	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+	public Object getIdentifier(@Nonnull Object entity, @Nullable MergeContext mergeContext) {
 		if ( hasContainingClass() ) {
 			final var lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
 			if ( lazyInitializer != null ) {
@@ -241,7 +257,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				if ( o == null ) {
 					final var idClassAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 					propertyValues[i] =
-							idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive()
+							castNonNull( idClassAttributeMapping.getPropertyAccess() ).getGetter().getReturnTypeClass().isPrimitive()
 									? idClassAttributeMapping.getExpressibleJavaType().getDefaultValue()
 									: null;
 				}
@@ -268,7 +284,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		}
 	}
 
-	private static Object getIfMerged(Object o, MergeContext mergeContext) {
+	private static Object getIfMerged(Object o, @Nullable MergeContext mergeContext) {
 		if ( mergeContext != null ) {
 			final Object merged = mergeContext.get( o );
 			if ( merged != null ) {
@@ -279,14 +295,15 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+	public void setIdentifier(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		final var propertyValues = new Object[identifierValueMapper.getNumberOfAttributeMappings()];
 		final var embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 		for ( int i = 0; i < propertyValues.length; i++ ) {
 			final var attribute = embeddableTypeDescriptor.getAttributeMapping( i );
 			final var mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( i );
-			Object object = mappedIdAttributeMapping.getValue( id );
-			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping
+			Object object = id == null ? mappedIdAttributeMapping.getExpressibleJavaType().getDefaultValue()
+					: mappedIdAttributeMapping.getValue( id );
+			if ( object != null && attribute instanceof ToOneAttributeMapping toOneAttributeMapping
 					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
 				final var entityPersister = toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 				final var entityKey = session.generateEntityKey( object, entityPersister );
@@ -322,37 +339,38 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer, @Nullable SharedSessionContractImplementor session) {
 		return identifierValueMapper.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState) {
 		identifierValueMapper.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		identifierValueMapper.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		return new NonAggregatedIdentifierMappingResult<>(
 				navigablePath,
 				this,
@@ -397,6 +415,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		return getPartMappingType().getNumberOfFetchables();
 	}
 
+	@Nonnull
 	@Override
 	public Fetchable getFetchable(int position) {
 		return getPartMappingType().getFetchable( position );

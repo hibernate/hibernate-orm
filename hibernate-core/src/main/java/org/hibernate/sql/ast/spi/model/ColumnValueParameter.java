@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.ast.spi.model;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -45,6 +47,7 @@ public class ColumnValueParameter extends AbstractJdbcParameter {
 		this( columnReference, ParameterUsage.SET );
 	}
 
+	@Nonnull
 	@Override
 	public ColumnReference getColumnReference() {
 		return columnReference;
@@ -74,6 +77,7 @@ public class ColumnValueParameter extends AbstractJdbcParameter {
 	/// The JDBC mapping of the referenced column.
 	///
 	/// @since 8.0
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return columnReference.getJdbcMapping();

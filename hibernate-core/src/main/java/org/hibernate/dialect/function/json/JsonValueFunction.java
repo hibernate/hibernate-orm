@@ -66,7 +66,7 @@ public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescripto
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return new SqmJsonValueExpression<>(
 				this,

@@ -40,8 +40,8 @@ public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
 	public StandardSQLFunction(String name, boolean useParentheses, BasicTypeReference<?> type) {
 		super( name, useParentheses, null, new FunctionReturnTypeResolver() {
 			@Override
-			public ReturnableType<?> resolveFunctionReturnType(
-					ReturnableType<?> impliedType,
+			public @Nullable ReturnableType<?> resolveFunctionReturnType(
+					@Nullable ReturnableType<?> impliedType,
 					@Nullable SqmToSqlAstConverter converter,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
@@ -49,7 +49,7 @@ public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
 			}
 
 			@Override
-			public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+			public @Nullable BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
 				return type == null || impliedTypeAccess == null ? null : impliedTypeAccess.get();
 			}
 		} );

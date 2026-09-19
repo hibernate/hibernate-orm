@@ -4,6 +4,10 @@
  */
 package org.hibernate.processor.validation;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import jakarta.persistence.AccessType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
@@ -64,7 +68,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 
 	private Type getSubclassPropertyType(String propertyPath) {
 		return subclassPersisters.stream()
-				.map(sp -> sp.getPropertyType(propertyPath))
+				.map(sp -> sp.propertyType(propertyPath))
 				.filter(Objects::nonNull)
 				.findAny()
 				.orElse(null);
@@ -75,30 +79,35 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	abstract boolean isSubclassPersister(MockEntityPersister entityPersister);
 
 	@Override
-	public boolean isSubclassEntityName(String name) {
+	public boolean isSubclassEntityName(@Nonnull String name) {
 		return isSubclassPersister(subclassPersisters.stream()
 				.filter(persister -> persister.entityName.equals(name))
 				.findFirst().orElseThrow());
 	}
 
+	@Nonnull
 	@Override
 	public SessionFactoryImplementor getFactory() {
 		return factory;
 	}
 
+	@Nonnull
 	@Override
 	public String getEntityName() {
 		return entityName;
 	}
 
+	@Nonnull
 	@Override
-	public final Type getPropertyType(String propertyPath) {
+	public final Type getPropertyType(@Nonnull String propertyPath) {
 		final var cached = propertyTypesByName.get(propertyPath);
 		if ( cached == null ) {
 			final var type = propertyType( propertyPath );
-			if ( type != null ) {
-				propertyTypesByName.put( propertyPath, type );
+			if ( type == null ) {
+				throw new org.hibernate.MappingException( "Unknown property '" + propertyPath
+						+ "' of entity '" + entityName + "'" );
 			}
+			propertyTypesByName.put( propertyPath, type );
 			return type;
 		}
 		else {
@@ -130,6 +139,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	/**
 	 * Override on subclasses!
 	 */
+	@Nullable
 	@Override
 	public String getIdentifierPropertyName() {
 		return getRootEntityPersister().identifierPropertyName();
@@ -140,6 +150,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	/**
 	 * Override on subclasses!
 	 */
+	@Nonnull
 	@Override
 	public Type getIdentifierType() {
 		return getRootEntityPersister().identifierType();
@@ -150,6 +161,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	/**
 	 * Override on subclasses!
 	 */
+	@Nullable
 	@Override
 	public BasicType<?> getVersionType() {
 		return getRootEntityPersister().versionType();
@@ -157,6 +169,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 
 	protected abstract BasicType<?> versionType();
 
+	@Nonnull
 	@Override
 	public abstract String getRootEntityName();
 
@@ -164,6 +177,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 		return factory.createMockEntityPersister(getRootEntityName());
 	}
 
+	@Nonnull
 	@Override
 	public Set<String> getSubclassEntityNames() {
 		final var names = new HashSet<String>();
@@ -176,31 +190,37 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 		return names;
 	}
 
+	@Nonnull
 	@Override
-	public String[] toColumns(String propertyName) {
+	public String[] toColumns(@Nonnull String propertyName) {
 		return new String[] { "" };
 	}
 
+	@Nonnull
 	@Override
 	public String[] getPropertySpaces() {
 		return new String[] {entityName};
 	}
 
+	@Nonnull
 	@Override
 	public Serializable[] getQuerySpaces() {
 		return new Serializable[] {entityName};
 	}
 
+	@Nonnull
 	@Override
 	public EntityPersister getEntityPersister() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public String[] getIdentifierColumnNames() {
 		return ID_COLUMN;
 	}
 
+	@Nullable
 	@Override
 	public DiscriminatorType<?> getDiscriminatorDomainType() {
 		var type = getDiscriminatorType();
@@ -218,6 +238,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 		);
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName() {
 		return entityName;
@@ -238,11 +259,13 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 		return true;
 	}
 
+	@Nullable
 	@Override
 	public String getMappedSuperclass() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public BasicType<String> getDiscriminatorType() {
 		return factory.getTypeConfiguration().getBasicTypeForJavaType(String.class);

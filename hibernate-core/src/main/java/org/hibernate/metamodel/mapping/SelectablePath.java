@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -19,23 +22,24 @@ import static org.hibernate.internal.util.StringHelper.split;
  */
 @Incubating(since = "5.4")
 public class SelectablePath implements Serializable, DotIdentifierSequence {
-	private final SelectablePath parent;
+	@Nullable private final SelectablePath parent;
 	private final String name;
 	private final int index;
 
-	public SelectablePath(String root) {
+	public SelectablePath(@Nonnull String root) {
 		this.parent = null;
 		this.name = root.intern();
 		this.index = 0;
 	}
 
-	private SelectablePath(SelectablePath parent, String name) {
+	private SelectablePath(@Nonnull SelectablePath parent, @Nonnull String name) {
 		this.parent = parent;
 		this.name = name;
 		this.index = parent.index + 1;
 	}
 
-	public static SelectablePath parse(String path) {
+	@Nullable
+	public static SelectablePath parse(@Nullable String path) {
 		if ( path == null || path.isEmpty() ) {
 			return null;
 		}
@@ -49,26 +53,28 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 		}
 	}
 
+	@Nonnull
 	public SelectablePath[] getParts() {
 		final var array = new SelectablePath[index + 1];
 		parts( array );
 		return array;
 	}
 
-	private void parts(SelectablePath[] array) {
+	private void parts(@Nonnull SelectablePath[] array) {
 		if ( parent != null ) {
 			parent.parts( array );
 		}
 		array[index] = this;
 	}
 
-	public SelectablePath[] relativize(SelectablePath basePath) {
+	@Nonnull
+	public SelectablePath[] relativize(@Nonnull SelectablePath basePath) {
 		final var array = new SelectablePath[index - basePath.index];
 		relativize( array, basePath );
 		return array;
 	}
 
-	private boolean relativize(SelectablePath[] array, SelectablePath basePath) {
+	private boolean relativize(@Nonnull SelectablePath[] array, @Nonnull SelectablePath basePath) {
 		if ( equals( basePath ) ) {
 			return true;
 		}
@@ -81,30 +87,36 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 		return false;
 	}
 
+	@Nonnull
 	public String getSelectableName() {
 		return name;
 	}
 
+	@Nullable
 	@Override
 	public SelectablePath getParent() {
 		return parent;
 	}
 
+	@Nonnull
 	@Override
-	public SelectablePath append(String selectableName) {
+	public SelectablePath append(@Nonnull String selectableName) {
 		return new SelectablePath( this, selectableName );
 	}
 
+	@Nonnull
 	@Override
 	public String getLocalName() {
 		return name;
 	}
 
+	@Nonnull
 	@Override
 	public String getFullPath() {
 		return toString();
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		final var string = new StringBuilder( name.length() * index );
@@ -112,7 +124,7 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 		return string.toString();
 	}
 
-	private void toString(StringBuilder sb) {
+	private void toString(@Nonnull StringBuilder sb) {
 		if ( parent != null ) {
 			parent.toString( sb );
 			sb.append( '.' );
@@ -121,7 +133,7 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if ( this == o ) {
 			return true;
 		}

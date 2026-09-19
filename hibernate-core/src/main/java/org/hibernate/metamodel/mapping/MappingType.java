@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -16,5 +18,6 @@ public interface MappingType {
 	/**
 	 * The {@linkplain JavaType descriptor} descriptor for the mapped Java type
 	 */
+	@Nonnull
 	JavaType<?> getMappedJavaType();
 }

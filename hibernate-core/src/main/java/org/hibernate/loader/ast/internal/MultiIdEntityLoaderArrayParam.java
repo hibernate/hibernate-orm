@@ -57,8 +57,8 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	@AllowReflection
 	public MultiIdEntityLoaderArrayParam(
-			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		final SelectableMapping selectable = identifierMapping.getSelectable( 0 );
@@ -80,13 +80,14 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
 	}
 
+	@Nonnull
 	@Override
 	public BasicEntityIdentifierMapping getIdentifierMapping() {
 		return (BasicEntityIdentifierMapping) super.getIdentifierMapping();
 	}
 
 	@Override
-	protected int maxBatchSize(Object[] ids, MultiIdLoadOptions loadOptions) {
+	protected int maxBatchSize(@Nonnull Object[] ids, @Nonnull MultiIdLoadOptions loadOptions) {
 		final Integer explicitBatchSize = loadOptions.getBatchSize();
 		return explicitBatchSize != null && explicitBatchSize > 0
 				? explicitBatchSize
@@ -96,10 +97,10 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	@Override
 	protected void loadEntitiesById(
-			List<Object> idsInBatch,
-			LockOptions lockOptions,
-			MultiIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull List<Object> idsInBatch,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull MultiIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var sqlAst =
 				createSelectBySingleArrayParameter(
 						getLoadable(),
@@ -157,11 +158,11 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	@Override
 	protected void loadEntitiesWithUnresolvedIds(
-			Object[] unresolvableIds,
-			MultiIdLoadOptions loadOptions,
-			LockOptions lockOptions,
-			List<E> results,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] unresolvableIds,
+			@Nonnull MultiIdLoadOptions loadOptions,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull List<E> results,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var sqlAst =
 				createSelectBySingleArrayParameter(
 						getLoadable(),
@@ -193,12 +194,14 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		results.addAll( databaseResults );
 	}
 
+	@Nonnull
 	@Override
-	protected Object[] toIdArray(List<Object> ids) {
+	protected Object[] toIdArray(@Nonnull List<Object> ids) {
 		return ids.toArray( idArray );
 	}
 
-	protected Object[] toIdArray(Object[] ids) {
+	@Nonnull
+	protected Object[] toIdArray(@Nonnull Object[] ids) {
 		if ( ids.getClass().equals( idArray.getClass() ) ) {
 			return ids;
 		}

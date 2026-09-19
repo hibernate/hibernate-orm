@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nonnull;
+
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -52,7 +56,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 	public Expression resolve(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String modelPartName,
+			@Nullable String modelPartName,
 			SqlAstCreationState creationState) {
 		final TableReference tableReference = getTableReference( tableGroup );
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
@@ -70,6 +74,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		);
 	}
 
+	@Nonnull
 	@Override
 	public SequencePart resolvePathPart(
 			String name,
@@ -83,7 +88,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 	public void apply(
 			QuerySpec ast,
 			TableGroup tableGroup,
-			String collation,
+			@Nullable String collation,
 			String modelPartName,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
@@ -104,6 +109,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
+	@Nullable
 	TableReference getTableReference(TableGroup tableGroup) {
 		if ( tableGroup.getModelPart() instanceof PluralAttributeMapping pluralAttribute ) {
 			if ( pluralAttribute.getElementDescriptor().getPartMappingType() instanceof EntityPersister entityPersister
@@ -125,7 +131,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		return null;
 	}
 
-	public boolean containsColumn(String[] columns, String columnExpression) {
+	public boolean containsColumn(@Nullable String[] columns, String columnExpression) {
 		if ( columns != null ) {
 			return contains( columns, columnExpression );
 		}

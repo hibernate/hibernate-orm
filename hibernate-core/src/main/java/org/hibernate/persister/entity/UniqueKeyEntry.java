@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Objects;
 
 import org.hibernate.type.Type;
@@ -17,12 +19,13 @@ public final class UniqueKeyEntry {
 	private final int stateArrayPosition;
 	private final Type propertyType;
 
-	public UniqueKeyEntry(final String uniqueKeyName, final int stateArrayPosition, final Type propertyType) {
+	public UniqueKeyEntry(@Nonnull final String uniqueKeyName, final int stateArrayPosition, @Nonnull final Type propertyType) {
 		this.uniqueKeyName = Objects.requireNonNull( uniqueKeyName );
 		this.stateArrayPosition = stateArrayPosition;
 		this.propertyType = Objects.requireNonNull( propertyType );
 	}
 
+	@Nonnull
 	public String getUniqueKeyName() {
 		return this.uniqueKeyName;
 	}
@@ -31,6 +34,7 @@ public final class UniqueKeyEntry {
 		return this.stateArrayPosition;
 	}
 
+	@Nonnull
 	public Type getPropertyType() {
 		return this.propertyType;
 	}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.query.sqm.CastType;
@@ -55,26 +58,31 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * The descriptor for the Java type represented by this
 	 * expressible type
 	 */
+	@Nonnull
 	JavaType<?> getJavaTypeDescriptor();
 
 	/**
 	 * The descriptor for the SQL type represented by this
 	 * expressible type
 	 */
+	@Nonnull
 	JdbcType getJdbcType();
 
 	/**
 	 * The strategy for extracting values of this expressible
 	 * type from JDBC ResultSets, CallableStatements, etc
 	 */
+	@Nonnull
 	ValueExtractor<?> getJdbcValueExtractor();
 
 	/**
 	 * The strategy for binding values of this expressible type to
 	 * JDBC {@code PreparedStatement}s and {@code CallableStatement}s.
 	 */
+	@Nonnull
 	ValueBinder getJdbcValueBinder();
 
+	@Nonnull
 	default CastType getCastType() {
 		return getJdbcType().getCastType();
 	}
@@ -83,16 +91,19 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * The strategy for formatting values of this expressible type to
 	 * a SQL literal.
 	 */
+	@Nullable
 	@Incubating(since = "5.4")
 	default JdbcLiteralFormatter getJdbcLiteralFormatter() {
 		return getJdbcType().getJdbcLiteralFormatter( getMappedJavaType() );
 	}
 
+	@Nonnull
 	@Override
 	default JavaType<?> getMappedJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
+	@Nonnull
 	@Incubating(since = "5.4")
 	default JavaType<?> getJdbcJavaType() {
 		return getJavaTypeDescriptor();
@@ -102,6 +113,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * Returns the converter that this basic type uses for transforming from the domain type, to the relational type,
 	 * or <code>null</code> if there is no conversion.
 	 */
+	@Nullable
 	@Incubating(since = "5.4")
 	default BasicValueConverter<?,?> getValueConverter() {
 		return null;
@@ -110,7 +122,8 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	//TODO: would it be better to just give JdbcMapping a
 	//      noop converter by default, instead of having
 	//      to deal with null here?
-	default <T> Object convertToRelationalValue(T value) {
+	@Nullable
+	default <T> Object convertToRelationalValue(@Nullable T value) {
 		final var converter = getValueConverter();
 		if ( converter == null ) {
 			return value;
@@ -124,7 +137,8 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 		}
 	}
 
-	default <T> Object convertToDomainValue(T value) {
+	@Nullable
+	default <T> Object convertToDomainValue(@Nullable T value) {
 		var converter = getValueConverter();
 		if ( converter == null ) {
 			return value;
@@ -143,6 +157,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 		return 1;
 	}
 
+	@Nonnull
 	@Override
 	default JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
@@ -151,19 +166,20 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	default JdbcMapping getSingleJdbcMapping() {
 		return this;
 	}
 
 	@Override
-	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( 0, this );
 		return 1;
 	}
 
 	@Override
-	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( 0, this );
 		return 1;
 	}

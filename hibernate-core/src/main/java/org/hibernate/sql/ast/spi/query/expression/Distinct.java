@@ -4,6 +4,9 @@
  */
 package org.hibernate.sql.ast.spi.query.expression;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -25,6 +28,7 @@ public class Distinct implements Expression, SqlExpressible, SqlAstNode {
 		return expression;
 	}
 
+	@Nullable
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		if ( expression instanceof SqlExpressible sqlExpressible) {
@@ -43,6 +47,7 @@ public class Distinct implements Expression, SqlExpressible, SqlAstNode {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public JdbcMappingContainer getExpressionType() {
 		return expression.getExpressionType();
@@ -54,7 +59,7 @@ public class Distinct implements Expression, SqlExpressible, SqlAstNode {
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

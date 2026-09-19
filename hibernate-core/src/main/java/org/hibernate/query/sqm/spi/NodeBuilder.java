@@ -1351,11 +1351,11 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<T> List<? extends SqmExpression<T>> literals(@Nullable T[] values);
+	<T> List<? extends SqmExpression<T>> literals(@Nonnull T[] values);
 
 	@Nonnull
 	@Override
-	<T> List<? extends SqmExpression<T>> literals(@Nullable List<T> values);
+	<T> List<? extends SqmExpression<T>> literals(@Nonnull List<T> values);
 
 	@Nonnull
 	@Override

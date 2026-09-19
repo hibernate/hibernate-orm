@@ -27,6 +27,11 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 	}
 
 	@Override
+	public boolean isBootstrapSafe() {
+		return true;
+	}
+
+	@Override
 	protected <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,

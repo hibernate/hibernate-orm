@@ -37,4 +37,14 @@ public interface BeanContainer extends Stoppable {
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer);
+
+	/**
+	 * Whether this container safely defers bean creation, making it
+	 * usable during bootstrap before the container is fully available.
+	 *
+	 * @since 8.0
+	 */
+	default boolean isBootstrapSafe() {
+		return false;
+	}
 }

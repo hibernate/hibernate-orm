@@ -4,12 +4,17 @@
  */
 package org.hibernate.resource.beans.internal;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
+import org.hibernate.resource.beans.spi.BeanInstanceAccess;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -22,11 +27,29 @@ import org.hibernate.service.spi.Stoppable;
  */
 public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContainer.LifecycleOptions, Stoppable {
 	private final Map<String,ManagedBean<?>> registrations = new HashMap<>();
+	private final Set<ManagedBean<?>> distinctBeans =
+			Collections.newSetFromMap( new IdentityHashMap<>() );
 
 	private final BeanContainer beanContainer;
 
+	private static final BeanContainer.LifecycleOptions DISTINCT_LIFECYCLE_OPTIONS =
+			new BeanContainer.LifecycleOptions() {
+				@Override
+				public boolean canUseCachedReferences() {
+					return false;
+				}
+				@Override
+				public boolean useJpaCompliantCreation() {
+					return true;
+				}
+			};
+
 	public ManagedBeanRegistryImpl(BeanContainer beanContainer) {
 		this.beanContainer = beanContainer;
+	}
+
+	private boolean isContainerBootstrapSafe(){
+		return beanContainer == null || beanContainer.isBootstrapSafe();
 	}
 
 	@Override
@@ -34,6 +57,34 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 		return beanContainer;
 	}
 
+	@Override
+	public <T> ManagedBean<T> getBootstrapSafeBean(Class<T> beanClass) {
+		if ( isContainerBootstrapSafe() ) {
+			return getBean( beanClass );
+		}
+		final String beanClassName = beanClass.getName();
+		//Check if beanClassName already exists
+		final var existingBean = registrations.get( beanClassName );
+		if ( existingBean != null ) {
+			//if beans have same key but different class
+			if ( !beanClass.equals( existingBean.getBeanClass() ) ) {
+				throw new AssertionFailure( "Wrong bean type: " + beanClassName );
+			}
+			//noinspection unchecked
+			return (ManagedBean<T>) existingBean;
+		}
+		else {
+			final var bean = new DeferredContainerBean<>(
+					beanClass,
+					beanContainer,
+					//the registry itself, implements lifecycle options
+					this,
+					FallbackBeanInstanceProducer.INSTANCE
+			);
+			registrations.put( beanClassName, bean );
+			return bean;
+		}
+	}
 	@Override
 	public boolean canUseCachedReferences() {
 		return true;
@@ -107,10 +158,44 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 	}
 
 	@Override
+	public <T> ManagedBean<T> getBean(Class<T> beanClass, BeanInstanceAccess access) {
+		if ( access == BeanInstanceAccess.REUSE ) {
+			return getBean( beanClass );
+		}
+		final ManagedBean<T> bean = createDistinctBean( beanClass, FallbackBeanInstanceProducer.INSTANCE );
+		distinctBeans.add( bean );
+		return bean;
+	}
+
+	private <T> ManagedBean<T> createDistinctBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
+		return beanContainer == null
+				? new FallbackContainedBean<>( beanClass, fallbackBeanInstanceProducer )
+				: beanContainer.getBean( beanClass, DISTINCT_LIFECYCLE_OPTIONS, fallbackBeanInstanceProducer );
+	}
+
+	@Override
+	public void releaseBean(ManagedBean<?> bean) {
+		if ( !distinctBeans.remove( bean ) ) {
+			return;
+		}
+		if ( bean instanceof ContainedBeanImplementor<?> containedBean ) {
+			containedBean.release();
+		}
+	}
+
+	@Override
 	public void stop() {
+		for ( ManagedBean<?> bean : distinctBeans ) {
+			if ( bean instanceof ContainedBeanImplementor<?> containedBean ) {
+				containedBean.release();
+			}
+		}
+		distinctBeans.clear();
+
 		if ( beanContainer != null ) {
 			beanContainer.stop();
 		}
 		registrations.clear();
 	}
+
 }

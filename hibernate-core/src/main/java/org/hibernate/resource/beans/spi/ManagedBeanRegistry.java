@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.beans.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.service.Service;
 
@@ -44,4 +45,26 @@ public interface ManagedBeanRegistry extends Service {
 	 * May return {@code null}, indicating that no back-end container has been configured
 	 */
 	BeanContainer getBeanContainer();
+
+	/**
+	 * Get a bean reference that is safe to acquire during bootstrap.
+	 */
+	<T> ManagedBean<T> getBootstrapSafeBean(Class<T> beanClass);
+
+	/**
+	 * Get a bean reference by class, with control over instance reuse.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0", group = "bootstrap-safe-beans")
+	<T> ManagedBean<T> getBean(Class<T> beanClass, BeanInstanceAccess access);
+
+	/**
+	 * Release and unregister a bean previously obtained from this registry.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0", group = "bootstrap-safe-beans")
+	void releaseBean(ManagedBean<?> bean);
+
 }

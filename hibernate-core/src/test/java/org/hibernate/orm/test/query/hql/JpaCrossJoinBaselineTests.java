@@ -5,7 +5,9 @@
 package org.hibernate.orm.test.query.hql;
 
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SessionFactory( useCollectingStatementObserver = true )
 public class JpaCrossJoinBaselineTests {
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's grammar has no production for a parenthesized joined table")
 	public void testCrossJoin(SessionFactoryScope scope) {
 		final String qry = "from LineItem i cross join Order o join o.salesAssociate a on i.product.vendor.name = a.name.familyName";
 		scope.inTransaction( (session) -> session.createQuery( qry, Object[].class ).list() );

@@ -6,6 +6,8 @@ package org.hibernate.orm.test.query.hql;
 
 import java.util.List;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -32,6 +34,7 @@ import jakarta.persistence.ManyToOne;
 public class ImplicitJoinInOnClauseTest {
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's grammar has no production for a parenthesized joined table")
 	public void testImplicitJoinInEntityJoinPredicate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

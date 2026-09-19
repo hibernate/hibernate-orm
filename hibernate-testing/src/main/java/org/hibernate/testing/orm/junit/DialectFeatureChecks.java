@@ -49,6 +49,7 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
@@ -235,7 +236,8 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJdbcEscapes implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
-			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
+			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect
+					|| dialect instanceof CUBRIDDialect);
 		}
 	}
 
@@ -840,14 +842,15 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsSubqueryInOnClause implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			// TiDB db does not support subqueries for ON condition
-			return !( dialect instanceof TiDBDialect );
+			// TiDB and CUBRID do not support subqueries in an ON condition
+			return !( dialect instanceof TiDBDialect || dialect instanceof CUBRIDDialect );
 		}
 	}
 
 	public static class SupportsFullJoin implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof DerbyDialect );
+			// Derby and CUBRID do not support FULL [OUTER] JOIN
+			return !( dialect instanceof DerbyDialect || dialect instanceof CUBRIDDialect );
 		}
 	}
 
@@ -1154,7 +1157,8 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsArrayComparison implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
+			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect
+					|| dialect instanceof CUBRIDDialect);
 		}
 	}
 

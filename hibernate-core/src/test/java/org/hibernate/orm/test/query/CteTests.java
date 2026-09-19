@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.community.dialect.TiDBDialect;
@@ -195,6 +196,7 @@ public class CteTests {
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "The emulation of CTEs in subqueries results in correlation in nesting level 2, which is not possible with Sybase ASE")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "The TiDB version on CI seems to be buggy")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID cannot reference an outer query alias from inside a subquery's with clause")
 	public void testSubquery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -501,6 +503,7 @@ public class CteTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRecursiveCtes.class)
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the search clause emulation adds a 'depth' column to the CTE column list, and DEPTH is a CUBRID reserved word")
 	public void testRecursiveSearchClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

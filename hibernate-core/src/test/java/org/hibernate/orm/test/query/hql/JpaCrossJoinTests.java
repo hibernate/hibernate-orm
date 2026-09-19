@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
@@ -62,6 +63,7 @@ public class JpaCrossJoinTests {
 	@Test
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase dialect emulate cross join with inner join")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not have cross joins")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's grammar has no production for a parenthesized joined table")
 	public void test2Roots2(SessionFactoryScope scope) {
 		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();

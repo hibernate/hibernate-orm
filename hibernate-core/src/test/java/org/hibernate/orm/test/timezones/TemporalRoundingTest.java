@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"))
 @SkipForDialect(dialectClass =  SybaseDialect.class, matchSubTypes = true)
+@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's datetime keeps only milliseconds, so the microseconds this test asserts are truncated")
 public class TemporalRoundingTest {
 
 	@Test void test(SessionFactoryScope scope) {

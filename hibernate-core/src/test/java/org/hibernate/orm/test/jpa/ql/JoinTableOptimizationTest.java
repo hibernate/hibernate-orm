@@ -7,6 +7,8 @@ package org.hibernate.orm.test.jpa.ql;
 import java.util.Set;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.community.dialect.CUBRIDDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -118,6 +120,7 @@ public class JoinTableOptimizationTest {
 
 	@Test
 	@JiraKey("HHH-16691")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no parenthesized joined table, and this outer join of a nested group cannot be flattened without changing which rows are null-extended")
 	public void testLeftJoinCustomOnClause(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();

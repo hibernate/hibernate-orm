@@ -7,6 +7,7 @@ package org.hibernate.orm.test.schemaupdate;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
@@ -45,6 +46,7 @@ import java.util.EnumSet;
 @DomainModel(annotatedClasses = SchemaUpdateHaltOnErrorTest.From.class)
 public class SchemaUpdateHaltOnErrorTest {
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRIDDialect auto-quotes reserved keywords, so the reserved-word DDL this test expects to fail is instead quoted and succeeds")
 	public void testHaltOnError(DomainModelScope modelScope) {
 		var model = modelScope.getDomainModel();
 		model.orderColumns( false );

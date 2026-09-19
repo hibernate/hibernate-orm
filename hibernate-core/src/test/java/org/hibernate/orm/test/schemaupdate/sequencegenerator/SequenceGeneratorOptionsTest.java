@@ -18,7 +18,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +52,7 @@ public class SequenceGeneratorOptionsTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no CREATE SEQUENCE; its sequences are created with 'create serial', which this test's literal statement matcher does not accept")
 	public void testSequenceOptionsAreCreated() throws Exception {
 		createSchema( TestEntity.class );
 		assertTrue(
@@ -59,6 +62,7 @@ public class SequenceGeneratorOptionsTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no CREATE SEQUENCE; its sequences are created with 'create serial', which this test's literal statement matcher does not accept")
 	public void testXmlMappingSequenceOptionsAreCreated() throws Exception {
 		createSchema( "org/hibernate/orm/test/schemaupdate/sequencegenerator/TestEntity.xml" );
 		assertTrue(

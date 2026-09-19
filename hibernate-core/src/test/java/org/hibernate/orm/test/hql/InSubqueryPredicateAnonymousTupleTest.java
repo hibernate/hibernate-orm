@@ -4,7 +4,9 @@
  */
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -53,6 +55,7 @@ public class InSubqueryPredicateAnonymousTupleTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID rejects a reserved word used as a derived table column alias, and Hibernate emits that list unquoted")
 	public void testSimpleInSubqueryPredicate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final String result = session.createQuery(
@@ -65,6 +68,7 @@ public class InSubqueryPredicateAnonymousTupleTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID rejects a reserved word used as a derived table column alias, and Hibernate emits that list unquoted")
 	public void testTupleInSubqueryPredicate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			// note : without cast(sub.data as string) Sybase jTDS fails with "TDS Protocol error: Invalid TDS data type"

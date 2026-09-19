@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
@@ -135,6 +136,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID datetime takes no precision, so @FractionalSeconds(0) is ignored and the stored value keeps its milliseconds instead of being rounded to a whole second")
 	void testUsage0(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
@@ -204,6 +206,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix only supports precision from 1 to 5")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird only supports precision of 4")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID datetime has millisecond precision, so a nanosecond fractional-second precision cannot round-trip")
 	void testUsage9(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;

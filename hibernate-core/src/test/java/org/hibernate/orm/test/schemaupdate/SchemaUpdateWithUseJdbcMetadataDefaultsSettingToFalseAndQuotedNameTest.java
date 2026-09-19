@@ -21,7 +21,9 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -78,6 +80,7 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 
 	@ParameterizedTest
 	@EnumSource(JdbcMetadataAccessStrategy.class)
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver's DatabaseMetaData does not implement the JDBC 4.x methods required here")
 	public void testSchemaUpdateDoesNotTryToRecreateExistingTables(JdbcMetadataAccessStrategy strategy)
 			throws Exception {
 		setUp( strategy.toString() );

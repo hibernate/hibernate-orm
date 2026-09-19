@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
@@ -54,7 +56,7 @@ public class LpadRpadPadEmulation
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		SqmTrimSpecification padSpec = (SqmTrimSpecification) arguments.get(2);
 		String padName = padSpec.getSpecification() == TrimSpec.LEADING ? "lpad" : "rpad";

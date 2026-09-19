@@ -366,11 +366,11 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	protected void decomposeAttribute(
-			@Nonnull Object value,
+			@Nullable Object value,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings,
 			@Nonnull AttributeMapping mapping,
-			@Nonnull Generator generator,
+			@Nullable Generator generator,
 			@Nonnull Object entity) {
 		if ( !(mapping instanceof PluralAttributeMapping) ) {
 			final OnExecutionGenerator onExecutionGenerator;

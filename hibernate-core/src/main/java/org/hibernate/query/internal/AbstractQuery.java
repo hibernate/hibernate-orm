@@ -304,7 +304,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@Nonnull
-	public QueryImplementor<T> setFlushMode(@Nonnull FlushModeType flushMode) {
+	public QueryImplementor<T> setFlushMode(@Nullable FlushModeType flushMode) {
 		super.setFlushMode( flushMode );
 		return this;
 	}
@@ -414,7 +414,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override @SuppressWarnings("removal")
 	@Nonnull
-	public Query<T> setCacheMode(@Nonnull CacheMode cacheMode) {
+	public Query<T> setCacheMode(@Nullable CacheMode cacheMode) {
 		verifySelectionOption( "Result caching" );
 		queryOptions.setCacheMode( cacheMode );
 		return this;

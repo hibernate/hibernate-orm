@@ -107,7 +107,7 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	 * Set the restriction.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setRestriction(@Nullable Predicate... restrictions);
+	JpaQueryStructure<T> setRestriction(@Nonnull Predicate... restrictions);
 
 	/**
 	 * Set the restriction.

@@ -394,7 +394,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Nonnull
-	public SqmQuerySpec<T> setRestriction(@Nullable Predicate... restrictions) {
+	public SqmQuerySpec<T> setRestriction(@Nonnull Predicate... restrictions) {
 		if ( restrictions == null ) {
 			throw new IllegalArgumentException( "The predicate array cannot be null" );
 		}

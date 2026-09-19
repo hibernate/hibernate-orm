@@ -89,7 +89,7 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		//noinspection unchecked
 		return (SelfRenderingSqmFunction<T>) new SqmXmlElementExpression(

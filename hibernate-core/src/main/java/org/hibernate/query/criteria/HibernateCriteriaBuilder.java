@@ -1166,13 +1166,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create literal expressions for each of the given values.
 	 */
 	@Nonnull
-	<T> List<? extends JpaExpression<T>> literals(@Nullable T... values);
+	<T> List<? extends JpaExpression<T>> literals(@Nonnull T... values);
 
 	/**
 	 * Create literal expressions for each value in the given list.
 	 */
 	@Nonnull
-	<T> List<? extends JpaExpression<T>> literals(@Nullable List<T> values);
+	<T> List<? extends JpaExpression<T>> literals(@Nonnull List<T> values);
 
 	/**
 	 * Create a null literal expression of the given type.

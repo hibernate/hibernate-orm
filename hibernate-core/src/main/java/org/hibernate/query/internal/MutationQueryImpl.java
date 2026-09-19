@@ -491,7 +491,7 @@ public class MutationQueryImpl<T>
 
 	@Override
 	@Nonnull
-	public MutationQueryImplementor<T> setFlushMode(@Nonnull FlushModeType flushMode) {
+	public MutationQueryImplementor<T> setFlushMode(@Nullable FlushModeType flushMode) {
 		super.setFlushMode( flushMode );
 		return this;
 	}

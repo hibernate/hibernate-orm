@@ -25,7 +25,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  */
 public class ExplicitSqlStringGenerationContext implements SqlStringGenerationContext {
 	private final SessionFactoryImplementor factory;
+	@Nullable
 	private final Identifier defaultCatalog;
+	@Nullable
 	private final Identifier defaultSchema;
 
 	public ExplicitSqlStringGenerationContext(
@@ -52,19 +54,19 @@ public class ExplicitSqlStringGenerationContext implements SqlStringGenerationCo
 		return factory.getJdbcServices().getDialect();
 	}
 
-	@Nonnull
+	@Nullable
 	@Override
-	public Identifier toIdentifier(@Nonnull String text) {
+	public Identifier toIdentifier(@Nullable String text) {
 		return getJdbcEnvironment().getIdentifierHelper().toIdentifier( text );
 	}
 
-	@Nonnull
+	@Nullable
 	@Override
 	public Identifier getDefaultCatalog() {
 		return defaultCatalog;
 	}
 
-	@Nonnull
+	@Nullable
 	@Override
 	public Identifier getDefaultSchema() {
 		return defaultSchema;

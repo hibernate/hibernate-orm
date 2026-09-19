@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -93,7 +95,7 @@ public class SqlAstQueryPartProcessingStateImpl
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
 			JavaType<?> javaType,
-			FetchParent fetchParent,
+			@Nullable FetchParent fetchParent,
 			TypeConfiguration typeConfiguration) {
 		if ( nestingFetchParent != null ) {
 			final String selectableName;

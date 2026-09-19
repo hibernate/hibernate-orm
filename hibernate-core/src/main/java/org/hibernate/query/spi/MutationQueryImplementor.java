@@ -401,7 +401,7 @@ public interface MutationQueryImplementor<T>
 
 	@Override @Deprecated
 	@Nonnull
-	MutationQueryImplementor<T> setFlushMode(@Nonnull FlushModeType flushMode);
+	MutationQueryImplementor<T> setFlushMode(@Nullable FlushModeType flushMode);
 
 	@Override @Deprecated
 	@Nonnull

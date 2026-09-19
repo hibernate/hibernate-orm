@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +104,7 @@ public class SqlAstProcessingStateImpl
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
 			JavaType<?> javaType,
-			FetchParent fetchParent, TypeConfiguration typeConfiguration) {
+			@Nullable FetchParent fetchParent, TypeConfiguration typeConfiguration) {
 		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
 	}
 

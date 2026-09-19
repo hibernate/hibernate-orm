@@ -1005,6 +1005,12 @@ public class ToOneAttributeMapping
 
 	@Nonnull
 	@Override
+	public String getPartName() {
+		return getAttributeName();
+	}
+
+	@Nonnull
+	@Override
 	public String getFetchableName() {
 		return getAttributeName();
 	}

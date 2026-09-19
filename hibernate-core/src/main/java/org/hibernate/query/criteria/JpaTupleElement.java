@@ -51,9 +51,10 @@ public interface JpaTupleElement<T> extends TupleElement<T>, JpaCriteriaNode {
 	}
 
 	/**
-	 * Return the Java type name of this tuple element.
+	 * Return the Java type name of this tuple element, or {@code null}
+	 * while type inference is incomplete.
 	 */
-	@Nonnull
+	@Nullable
 	default String getJavaTypeName() {
 		final var javaType = getJavaTypeDescriptor();
 		return javaType == null ? null : javaType.getTypeName();

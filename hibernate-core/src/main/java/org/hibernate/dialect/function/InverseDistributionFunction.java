@@ -62,7 +62,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return new SelfRenderingInverseDistributionFunction<>(
 				arguments,

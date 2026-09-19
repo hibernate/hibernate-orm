@@ -400,7 +400,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@Nonnull
-	public ProcedureCallImplementor<R> setFlushMode(@Nonnull FlushModeType flushModeType) {
+	public ProcedureCallImplementor<R> setFlushMode(@Nullable FlushModeType flushModeType) {
 		checkNotClosed();
 		super.setFlushMode( flushModeType );
 		return this;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -86,7 +88,7 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 	@Override
 	protected <T> SelfRenderingSqmFunction generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		final SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get( 0 );
 		final SqmExpression<?> originalExpression = (SqmExpression<?>) arguments.get( 1 );

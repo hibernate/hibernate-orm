@@ -865,13 +865,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Nonnull
 	@Override @SafeVarargs
-	public final <T> List<? extends JpaExpression<T>> literals(@Nullable T... values) {
+	public final <T> List<? extends JpaExpression<T>> literals(@Nonnull T... values) {
 		return criteriaBuilder.literals( values );
 	}
 
 	@Nonnull
 	@Override
-	public <T> List<? extends JpaExpression<T>> literals(@Nullable List<T> values) {
+	public <T> List<? extends JpaExpression<T>> literals(@Nonnull List<T> values) {
 		return criteriaBuilder.literals( values );
 	}
 

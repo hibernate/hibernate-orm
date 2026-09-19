@@ -74,11 +74,11 @@ public interface NaturalIdMapping extends VirtualModelPart {
 
 	/// Given an array of "full entity state", extract the normalized natural id representation.
 	///
-	/// @param state The attribute state array
+	/// @param state The attribute state array, or {@code null} if no database snapshot exists
 	///
-	/// @return The extracted natural id values.
+	/// @return The extracted natural id values, or {@code null} if the state or natural id is null.
 	@Nullable
-	Object extractNaturalIdFromEntityState(@Nonnull Object[] state);
+	Object extractNaturalIdFromEntityState(@Nullable Object[] state);
 
 	/// Given an entity instance, extract the normalized natural-id representation.
 	///

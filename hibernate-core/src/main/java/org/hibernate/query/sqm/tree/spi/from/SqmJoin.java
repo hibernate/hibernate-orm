@@ -104,15 +104,19 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	@Override
 	@Nonnull
 	default SqmJoin<L, R> on(@Nullable JpaExpression<Boolean> restriction) {
-		setJoinPredicate( restriction == null ? null : nodeBuilder().wrap( restriction ) );
+		applyOn( restriction );
 		return this;
 	}
 
 	@Nonnull
 	@Override
 	default SqmJoin<L, R> on(@Nonnull Expression<Boolean> restriction) {
-		setJoinPredicate( restriction == null ? null : nodeBuilder().wrap( restriction ) );
+		applyOn( restriction );
 		return this;
+	}
+
+	private void applyOn(@Nullable Expression<Boolean> restriction) {
+		setJoinPredicate( restriction == null ? null : nodeBuilder().wrap( restriction ) );
 	}
 
 	@Override

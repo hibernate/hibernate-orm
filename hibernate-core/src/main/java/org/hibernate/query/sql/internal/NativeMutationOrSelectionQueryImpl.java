@@ -146,7 +146,7 @@ public class NativeMutationOrSelectionQueryImpl
 
 	@Override
 	@Nonnull
-	public NativeMutationOrSelectionQueryImpl setFlushMode(@Nonnull FlushModeType flushMode) {
+	public NativeMutationOrSelectionQueryImpl setFlushMode(@Nullable FlushModeType flushMode) {
 		super.setFlushMode( flushMode );
 		return this;
 	}
@@ -248,7 +248,6 @@ public class NativeMutationOrSelectionQueryImpl
 	@Override
 	@Nonnull
 	public <P> NativeMutationOrSelectionQueryImpl setConvertedParameter(
-			@Nonnull
 			int position,
 			@Nullable P value,
 			@Nonnull Class<? extends AttributeConverter<P, ?>> converter) {
@@ -396,7 +395,6 @@ public class NativeMutationOrSelectionQueryImpl
 	@Override
 	@Nonnull
 	public NativeMutationOrSelectionQueryImpl setParameterList(
-			@Nonnull
 			int position,
 			@Nonnull @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( position, values );
@@ -406,7 +404,6 @@ public class NativeMutationOrSelectionQueryImpl
 	@Override
 	@Nonnull
 	public <P> NativeMutationOrSelectionQueryImpl setParameterList(
-			@Nonnull
 			int position,
 			@Nonnull Collection<? extends P> values,
 			@Nonnull Class<P> javaType) {
@@ -417,7 +414,6 @@ public class NativeMutationOrSelectionQueryImpl
 	@Override
 	@Nonnull
 	public <P> NativeMutationOrSelectionQueryImpl setParameterList(
-			@Nonnull
 			int position,
 			@Nonnull Collection<? extends P> values,
 			@Nonnull Type<P> type) {
@@ -601,7 +597,7 @@ public class NativeMutationOrSelectionQueryImpl
 	@Override @Deprecated
 	@SuppressWarnings("removal")
 	@Nonnull
-	public NativeMutationOrSelectionQueryImpl setCacheMode(@Nonnull CacheMode cacheMode) {
+	public NativeMutationOrSelectionQueryImpl setCacheMode(@Nullable CacheMode cacheMode) {
 		super.setCacheMode( cacheMode );
 		return this;
 	}

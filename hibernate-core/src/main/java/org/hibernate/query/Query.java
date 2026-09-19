@@ -576,7 +576,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * Set the current {@link CacheMode} in effect for this query.
 	 * <p>
 	 * Set it to {@code null} to indicate that the {@code CacheMode}
-	 * of the {@link Session#getCacheMode() session} should be used.
+	 * of the {@linkplain Session#getCacheMode() session} should be used.
 	 *
 	 * @see #getCacheMode()
 	 * @see Session#setCacheMode(CacheMode)
@@ -586,7 +586,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
 	@Nonnull
-	Query<T> setCacheMode(@Nonnull CacheMode cacheMode);
+	Query<T> setCacheMode(@Nullable CacheMode cacheMode);
 
 	/**
 	 * Obtain the name of the second level query cache region in which query
@@ -1040,7 +1040,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override @Deprecated(since = "7")
 	@Nonnull
-	default Query<T> setFlushMode(@Nonnull FlushModeType flushMode) {
+	default Query<T> setFlushMode(@Nullable FlushModeType flushMode) {
 		setQueryFlushMode( queryFlushModeFromFlushModeType( flushMode ) );
 		return this;
 	}

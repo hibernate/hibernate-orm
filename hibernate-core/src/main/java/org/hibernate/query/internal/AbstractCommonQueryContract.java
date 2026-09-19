@@ -271,7 +271,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	@Nonnull
-	public CommonQueryContractImplementor setFlushMode(@Nonnull FlushModeType flushMode) {
+	public CommonQueryContractImplementor setFlushMode(@Nullable FlushModeType flushMode) {
 		session.checkOpen();
 		queryOptions.setQueryFlushMode( FlushModeTypeHelper.queryFlushModeFromFlushModeType( flushMode ) );
 		return this;

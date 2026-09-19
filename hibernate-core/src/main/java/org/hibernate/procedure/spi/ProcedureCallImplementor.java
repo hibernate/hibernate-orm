@@ -43,7 +43,7 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 
 	@Override
 	@Nonnull
-	ProcedureCallImplementor<R> setFlushMode(@Nonnull FlushModeType flushMode);
+	ProcedureCallImplementor<R> setFlushMode(@Nullable FlushModeType flushMode);
 
 	@Override
 	@Nonnull

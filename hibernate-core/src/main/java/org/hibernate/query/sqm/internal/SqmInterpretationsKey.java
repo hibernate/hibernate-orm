@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
@@ -89,6 +91,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	}
 
 	private final Object query;
+	@Nullable
 	private final int[] unnamedParameterIndices;
 	private final Class<?> resultType;
 	private final LockOptions lockOptions;
@@ -98,7 +101,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 
 	private SqmInterpretationsKey(
 			Object query,
-			int[] unnamedParameterIndices,
+			@Nullable int[] unnamedParameterIndices,
 			int hashCode,
 			Class<?> resultType,
 			LockOptions lockOptions,

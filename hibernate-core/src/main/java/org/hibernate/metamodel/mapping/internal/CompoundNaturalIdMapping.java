@@ -130,7 +130,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Nullable
 	@Override
-	public Object[] extractNaturalIdFromEntityState(@Nonnull Object[] state) {
+	public Object[] extractNaturalIdFromEntityState(@Nullable Object[] state) {
 		if ( state == null ) {
 			return null;
 		}

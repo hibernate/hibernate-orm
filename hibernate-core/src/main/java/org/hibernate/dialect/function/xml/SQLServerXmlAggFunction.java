@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function.xml;
 
+import jakarta.annotation.Nullable;
+
 import jakarta.annotation.Nonnull;
 
 import java.util.HashSet;
@@ -56,7 +58,7 @@ public class SQLServerXmlAggFunction extends XmlAggFunction {
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return new SelfRenderingSqmOrderedSetAggregateFunction<>(
 				this,

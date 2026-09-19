@@ -84,6 +84,7 @@ public abstract class AbstractSqmQuery<R>
 		}
 	}
 
+	@Nullable
 	@Override
 	public Class<?> getResultType() {
 		return null;

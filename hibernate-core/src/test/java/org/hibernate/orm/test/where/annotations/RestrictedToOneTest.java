@@ -88,6 +88,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 @JiraKey("HHH-19568")
 class RestrictedToOneTest {
+	private Mapping preparedMapping;
+
 	record Mapping(Class<? extends Owner> ownerType, Class<? extends Target> targetType, boolean lazy) {
 		@Override
 		public String toString() {
@@ -138,11 +140,30 @@ class RestrictedToOneTest {
 
 	@AfterEach
 	void cleanup(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		if ( preparedMapping != null ) {
+			// Delete only this fixture. Truncating the entire matrix repeatedly drops and
+			// recreates foreign keys on some databases and can exhaust their transaction logs.
+			final var metamodel = scope.getSessionFactory().getMappingMetamodel();
+			final var owner = metamodel.getEntityDescriptor( preparedMapping.ownerType );
+			final var target = metamodel.getEntityDescriptor( preparedMapping.targetType );
+			final var association = (ToOneAttributeMapping) owner.findAttributeMapping( "target" );
+			final String ownerTable = owner.getMappedTableDetails().getTableName();
+			final String keyTable = association.getForeignKeyDescriptor().getKeyTable();
+			scope.inTransaction( session -> {
+				if ( !ownerTable.equals( keyTable ) ) {
+					session.createNativeMutationQuery( "delete from " + keyTable ).executeUpdate();
+				}
+				session.createNativeMutationQuery( "delete from " + ownerTable ).executeUpdate();
+				session.createNativeMutationQuery( "delete from " + target.getMappedTableDetails().getTableName() )
+						.executeUpdate();
+			} );
+			preparedMapping = null;
+		}
 		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 
-	static void prepare(SessionFactoryScope scope, Mapping mapping) {
+	void prepare(SessionFactoryScope scope, Mapping mapping) {
+		preparedMapping = mapping;
 		scope.inTransaction( session -> {
 			for ( long id = 1; id <= 3; id++ ) {
 				final Target target = instantiate( mapping.targetType );

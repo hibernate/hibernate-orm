@@ -12,6 +12,7 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -59,7 +60,7 @@ class RestrictedJoinedInheritanceTest {
 		} );
 		for ( boolean fetch : new boolean[] { false, true } ) {
 			scope.inTransaction( session -> {
-				session.enableFilter( "activeVersion" );
+				session.enableFilter( "activeVersion" ).setParameter( "active", true );
 				final Project project = fetch
 						? session.createQuery( "from Project p left join fetch p.versions left join fetch p.filteredVersions", Project.class )
 								.getSingleResult()
@@ -79,14 +80,14 @@ class RestrictedJoinedInheritanceTest {
 		@SQLRestriction("ACTIVE = true and `published version` = true")
 		List<SpecialVersion> versions = new ArrayList<>();
 		@OneToMany(mappedBy = "project")
-		@Filter(name = "activeVersion", condition = "{v}.active = true", deduceAliasInjectionPoints = false,
+		@Filter(name = "activeVersion", condition = "{v}.active = :active", deduceAliasInjectionPoints = false,
 				aliases = @SqlFragmentAlias(alias = "v", table = "restriction_version"))
 		Set<SpecialVersion> filteredVersions = new HashSet<>();
 	}
 	@Entity(name = "Version")
 	@Table(name = "restriction_version")
 	@Inheritance(strategy = InheritanceType.JOINED)
-	@FilterDef(name = "activeVersion")
+	@FilterDef(name = "activeVersion", parameters = @ParamDef(name = "active", type = Boolean.class))
 	static class Version {
 		@Id Long id;
 		boolean active;

@@ -246,6 +246,10 @@ Second-level entity cache reads are bypassed for loads affected by enabled load-
 entities with SQL restrictions on themselves or on reachable to-one associations, including associations
 inside embeddables. Entity state containing filtered null associations is not stored in the second-level
 cache, and updates invalidate such entries instead of publishing the incomplete state.
+The built-in tenant filter on the loaded entity does not by itself cause this bypass, since entity cache
+keys already include the tenant identifier. Tenant restrictions on association targets still require SQL
+to establish their visibility. Other enabled load-by-key filters which affect the load still cause a bypass
+when tenant filtering is also active.
 Full query-cache entries retain the association keys needed for this distinction.
 Shallow query-cache hits obtain the distinction when reloading the entity.
 Consequently, applications may observe additional SQL and fewer second-level entity cache hits.

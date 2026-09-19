@@ -28,7 +28,6 @@ import java.util.Set;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static org.hibernate.query.internal.QueryLogging.QUERY_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -47,8 +46,8 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private Boolean readOnlyEnabled;
 
 	private Boolean resultCachingEnabled;
-	private CacheRetrieveMode cacheRetrieveMode;
-	private CacheStoreMode cacheStoreMode;
+	private @Nullable CacheRetrieveMode cacheRetrieveMode;
+	private @Nullable CacheStoreMode cacheStoreMode;
 	private String resultCacheRegionName;
 	private boolean refreshSession;
 
@@ -233,13 +232,8 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 
 	@Override
 	public void setCacheMode(@Nullable CacheMode cacheMode) {
-		if ( cacheMode == null ) {
-			QUERY_LOGGER.debug( "Null CacheMode passed to #setCacheMode; falling back to 'NORMAL'" );
-			cacheMode = CacheMode.NORMAL;
-		}
-
-		this.cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
-		this.cacheStoreMode = cacheMode.getJpaStoreMode();
+		this.cacheRetrieveMode = cacheMode == null ? null : cacheMode.getJpaRetrieveMode();
+		this.cacheStoreMode = cacheMode == null ? null : cacheMode.getJpaStoreMode();
 		this.refreshSession = cacheMode == CacheMode.REFRESH_SESSION;
 	}
 

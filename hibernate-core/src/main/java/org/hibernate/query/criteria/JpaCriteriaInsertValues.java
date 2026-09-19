@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 
 import jakarta.annotation.Nonnull;
@@ -51,6 +53,6 @@ public interface JpaCriteriaInsertValues<T> extends JpaCriteriaInsert<T> {
 	 */
 	@Override
 	@Nonnull
-	JpaCriteriaInsertValues<T> onConflict(@Nonnull JpaConflictClause<T> conflictClause);
+	JpaCriteriaInsertValues<T> onConflict(@Nullable JpaConflictClause<T> conflictClause);
 
 }

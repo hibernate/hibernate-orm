@@ -408,7 +408,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	@Override
 	@SuppressWarnings("deprecation")
 	@Nonnull
-	SelectionQuery<R> setFlushMode(@Nonnull FlushModeType flushMode);
+	SelectionQuery<R> setFlushMode(@Nullable FlushModeType flushMode);
 
 	/**
 	 * {@inheritDoc}
@@ -634,7 +634,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
-	SelectionQuery<R> setCacheMode(@Nonnull CacheMode cacheMode);
+	SelectionQuery<R> setCacheMode(@Nullable CacheMode cacheMode);
 
 	/**
 	 * @see #setCacheMode(CacheMode)

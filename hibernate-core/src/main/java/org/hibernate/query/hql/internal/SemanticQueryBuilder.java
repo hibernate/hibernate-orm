@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.hql.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -2705,7 +2707,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmExpression<?> resolveEnumShorthandLiteral(
 			HqlParser.ExpressionContext expressionContext,
-			String enumValue, String enumType, Set<String> enumTypes) {
+			String enumValue, @Nullable String enumType, Set<String> enumTypes) {
 		if ( enumValue != null && enumType != null && enumTypes.contains(enumType) ) {
 			final var dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
 			dotIdentifierConsumer.consumeIdentifier( enumType, true, false );

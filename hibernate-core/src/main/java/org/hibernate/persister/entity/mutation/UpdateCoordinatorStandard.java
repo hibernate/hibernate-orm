@@ -1724,7 +1724,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		/**
 		 * Callback to register the setting of a column value
 		 */
-		public void registerColumnSet(@Nonnull EntityTableMapping table, @Nonnull String readExpression, @Nonnull String writeExpression) {
+		public void registerColumnSet(@Nonnull EntityTableMapping table, @Nonnull String readExpression, @Nullable String writeExpression) {
 			final var includedAttributeAnalysis = (IncludedAttributeAnalysis) castNonNull( currentAttributeAnalysis );
 			includedAttributeAnalysis.columnValueAnalyses.add( new ColumnSetAnalysis( readExpression, writeExpression ) );
 
@@ -1897,9 +1897,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private static class ColumnSetAnalysis {
 		private final String readExpression;
+		@Nullable
 		private final String writeExpression;
 
-		public ColumnSetAnalysis(@Nonnull String readExpression, @Nonnull String writeExpression) {
+		public ColumnSetAnalysis(@Nonnull String readExpression, @Nullable String writeExpression) {
 			this.readExpression = readExpression;
 			this.writeExpression = writeExpression;
 		}
@@ -1910,7 +1911,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return readExpression;
 		}
 
-		@Nonnull
+		@Nullable
 		@SuppressWarnings("unused")
 		public String getWriteExpression() {
 			return writeExpression;

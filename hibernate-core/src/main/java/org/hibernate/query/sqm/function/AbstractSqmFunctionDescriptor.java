@@ -110,7 +110,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	@Override
 	public final <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		argumentsValidator.validate( arguments, getName(), queryEngine );
 
@@ -125,7 +125,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	public final <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		argumentsValidator.validate( arguments, getName(), queryEngine );
 
@@ -142,7 +142,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		argumentsValidator.validate( arguments, getName(), queryEngine );
 
@@ -161,7 +161,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			SqmPredicate filter,
 			@Nullable Boolean respectNulls,
 			@Nullable Boolean fromFirst,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		argumentsValidator.validate( arguments, getName(), queryEngine );
 
@@ -185,7 +185,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 */
 	protected abstract <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine);
 
 	/**
@@ -199,7 +199,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	protected <T> SelfRenderingSqmAggregateFunction<T> generateSqmAggregateFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return (SelfRenderingSqmAggregateFunction<T>) generateSqmExpression(
 				arguments,
@@ -220,7 +220,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return (SelfRenderingSqmAggregateFunction<T>) generateSqmExpression(
 				arguments,
@@ -242,7 +242,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			SqmPredicate filter,
 			@Nullable Boolean respectNulls,
 			@Nullable Boolean fromFirst,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return (SelfRenderingSqmWindowFunction<T>) generateSqmExpression(
 				arguments,

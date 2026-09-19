@@ -384,7 +384,7 @@ public abstract class AbstractDeleteCoordinator
 			@Nonnull Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull AttributeMapping attribute,
-			@Nonnull Object loadedValue) {
+			@Nullable Object loadedValue) {
 		final var tableMutationBuilder =
 				resolver.apply( attribute.getContainingTableExpression() );
 		if ( tableMutationBuilder != null ) {

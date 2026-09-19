@@ -35,8 +35,8 @@ public class CastTargetReturnTypeResolver implements FunctionReturnTypeResolver 
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public ReturnableType<?> resolveFunctionReturnType(
-			ReturnableType<?> impliedType,
+	public @Nullable ReturnableType<?> resolveFunctionReturnType(
+			@Nullable ReturnableType<?> impliedType,
 			@Nullable SqmToSqlAstConverter converter,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {

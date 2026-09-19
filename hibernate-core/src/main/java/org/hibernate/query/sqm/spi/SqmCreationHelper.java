@@ -109,8 +109,9 @@ public class SqmCreationHelper {
 		return buildSubNavigablePath( buildParentNavigablePath( lhs, subNavigable ), subNavigable, alias );
 	}
 
-	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, List<Predicate> incomingRestrictions) {
-		if ( isEmpty( incomingRestrictions ) ) {
+	@Nullable
+	public static SqmPredicate combinePredicates(@Nullable SqmPredicate baseRestriction, @Nullable List<Predicate> incomingRestrictions) {
+		if ( incomingRestrictions == null || incomingRestrictions.isEmpty() ) {
 			return baseRestriction;
 		}
 
@@ -121,7 +122,8 @@ public class SqmCreationHelper {
 		return combined;
 	}
 
-	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, JpaPredicate... incomingRestrictions) {
+	@Nullable
+	public static SqmPredicate combinePredicates(@Nullable SqmPredicate baseRestriction, @Nullable JpaPredicate... incomingRestrictions) {
 		if ( isEmpty( incomingRestrictions ) ) {
 			return baseRestriction;
 		}
@@ -133,7 +135,8 @@ public class SqmCreationHelper {
 		return combined;
 	}
 
-	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, Predicate... incomingRestrictions) {
+	@Nullable
+	public static SqmPredicate combinePredicates(@Nullable SqmPredicate baseRestriction, @Nullable Predicate... incomingRestrictions) {
 		if ( isEmpty( incomingRestrictions ) ) {
 			return baseRestriction;
 		}
@@ -146,7 +149,8 @@ public class SqmCreationHelper {
 	}
 
 
-	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, SqmPredicate incomingRestriction) {
+	@Nullable
+	public static SqmPredicate combinePredicates(@Nullable SqmPredicate baseRestriction, @Nullable SqmPredicate incomingRestriction) {
 		if ( baseRestriction == null ) {
 			return incomingRestriction;
 		}

@@ -1088,7 +1088,7 @@ public abstract class AbstractEntityPersister
 		return entityQueryCacheLayout == null ? options.getQueryCacheLayout() : entityQueryCacheLayout;
 	}
 
-	private boolean shouldUseShallowCacheLayout(@Nonnull CacheLayout entityQueryCacheLayout, @Nonnull SessionFactoryOptions options) {
+	private boolean shouldUseShallowCacheLayout(@Nullable CacheLayout entityQueryCacheLayout, @Nonnull SessionFactoryOptions options) {
 		return switch ( queryCacheLayout( entityQueryCacheLayout, options ) ) {
 			case FULL -> false;
 			case AUTO -> canUseReferenceCacheEntries() || canReadFromCache();
@@ -1097,7 +1097,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private static boolean shouldStoreDiscriminatorInShallowQueryCacheLayout(
-			@Nonnull CacheLayout entityQueryCacheLayout, @Nonnull SessionFactoryOptions options) {
+			@Nullable CacheLayout entityQueryCacheLayout, @Nonnull SessionFactoryOptions options) {
 		return queryCacheLayout( entityQueryCacheLayout, options ) == CacheLayout.SHALLOW_WITH_DISCRIMINATOR;
 	}
 
@@ -1968,13 +1968,12 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Called by Hibernate Reactive
 	 */
-	@Nullable
 	protected boolean initializeLazyProperty(
 			@Nonnull final String fieldName,
 			@Nonnull final Object entity,
 			@Nonnull final EntityEntry entry,
 			final int index,
-			@Nonnull final Object propValue) {
+			@Nullable final Object propValue) {
 		final int propertyNumber = lazyPropertyNumbers[index];
 		setPropertyValue( entity, propertyNumber, propValue );
 		final var maybeLazySet = entry.getMaybeLazySet();
@@ -1997,7 +1996,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nullable
-	private Object copiedLazyPropertyValue(int index, @Nonnull Object propValue) {
+	private Object copiedLazyPropertyValue(int index, @Nullable Object propValue) {
 		return lazyPropertyTypes[index].deepCopy( propValue, factory );
 	}
 
@@ -2005,14 +2004,13 @@ public abstract class AbstractEntityPersister
 	 * Used by Hibernate Reactive
 	 * @deprecated
 	 */
-	@Nullable
 	@Deprecated(since = "7.2", forRemoval = true)
 	protected boolean initializeLazyProperty(
 			@Nonnull final String fieldName,
 			@Nonnull final Object entity,
 			@Nonnull final EntityEntry entry,
 			@Nonnull final LazyAttributeDescriptor fetchGroupAttributeDescriptor,
-			@Nonnull final Object propValue) {
+			@Nullable final Object propValue) {
 		final String name = fetchGroupAttributeDescriptor.getName();
 		initializeLazyProperty( entity, entry, propValue,
 				getPropertyIndex( name ),
@@ -2021,8 +2019,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	// Used by Hibernate Reactive
-	@Nullable
-	protected void initializeLazyProperty(@Nonnull Object entity, @Nonnull EntityEntry entry, @Nonnull Object propValue, int index, @Nonnull Type type) {
+	protected void initializeLazyProperty(@Nonnull Object entity, @Nonnull EntityEntry entry, @Nullable Object propValue, int index, @Nonnull Type type) {
 		setPropertyValue( entity, index, propValue );
 		final var maybeLazySet = entry.getMaybeLazySet();
 		if ( maybeLazySet != null ) {
@@ -3305,7 +3302,7 @@ public abstract class AbstractEntityPersister
 			@Nullable String explicitSourceAlias,
 			@Nullable SqlAliasBase explicitSqlAliasBase,
 			@Nullable Supplier<Consumer<Predicate>> additionalPredicateCollector,
-			@Nullable SqlAstCreationState creationState) {
+			@Nonnull SqlAstCreationState creationState) {
 		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
 
 		final var sqlAliasBase = SqlAliasBase.from(
@@ -6976,12 +6973,12 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitKeyFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nonnull EntityMappingType treatTargetType) {
+	public void visitKeyFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
 		// No-op
 	}
 
 	@Override
-	public void visitKeyFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nonnull EntityMappingType treatTargetType) {
+	public void visitKeyFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
 		// No-op
 	}
 
@@ -7008,7 +7005,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nonnull EntityMappingType treatTargetType) {
+	public void visitFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
 		if ( treatTargetType == null ) {
 			getStaticFetchableList().forEach( fetchableConsumer );
 //			staticFetchableList.forEach( fetchableConsumer );
@@ -7024,7 +7021,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nonnull EntityMappingType treatTargetType) {
+	public void visitFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
 		if ( treatTargetType == null ) {
 			getStaticFetchableList().indexedForEach( fetchableConsumer );
 		}

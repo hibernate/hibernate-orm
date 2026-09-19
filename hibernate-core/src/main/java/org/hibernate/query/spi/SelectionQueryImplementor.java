@@ -69,7 +69,7 @@ public interface SelectionQueryImplementor<R>
 
 	@Override
 	@Nonnull
-	SelectionQueryImplementor<R> setFlushMode(@Nonnull FlushModeType flushMode);
+	SelectionQueryImplementor<R> setFlushMode(@Nullable FlushModeType flushMode);
 
 	@Override
 	@Nonnull
@@ -116,7 +116,7 @@ public interface SelectionQueryImplementor<R>
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
-	SelectionQueryImplementor<R> setCacheMode(@Nonnull CacheMode cacheMode);
+	SelectionQueryImplementor<R> setCacheMode(@Nullable CacheMode cacheMode);
 
 	@Override
 	@Nonnull

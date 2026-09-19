@@ -653,7 +653,7 @@ public interface EntityMappingType
 			@Nullable String explicitSourceAlias,
 			@Nullable SqlAliasBase explicitSqlAliasBase,
 			@Nullable Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			@Nullable SqlAstCreationState creationState) {
+			@Nonnull SqlAstCreationState creationState) {
 		return getEntityPersister().createRootTableGroup(
 				canUseInnerJoins,
 				navigablePath,

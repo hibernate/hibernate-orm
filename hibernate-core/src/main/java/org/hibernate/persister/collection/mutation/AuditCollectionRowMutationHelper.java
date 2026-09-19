@@ -280,7 +280,7 @@ final class AuditCollectionRowMutationHelper {
 
 	private void bindValue(
 			@Nonnull JdbcValueBindings bindings,
-			@Nonnull Object jdbcValue,
+			@Nullable Object jdbcValue,
 			@Nonnull SelectableMapping mapping,
 			@Nonnull ParameterUsage parameterUsage) {
 		if ( !mapping.isFormula() ) {
@@ -307,7 +307,7 @@ final class AuditCollectionRowMutationHelper {
 
 	private void bindValue(
 			@Nonnull org.hibernate.action.queue.spi.bind.JdbcValueBindings bindings,
-			@Nonnull Object jdbcValue,
+			@Nullable Object jdbcValue,
 			@Nonnull SelectableMapping mapping,
 			@Nonnull ParameterUsage parameterUsage) {
 		if ( !mapping.isFormula() ) {

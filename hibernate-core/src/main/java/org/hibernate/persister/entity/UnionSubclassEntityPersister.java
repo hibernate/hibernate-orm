@@ -240,7 +240,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Nonnull
 	@Override
 	public UnionTableReference createPrimaryTableReference(
-			@Nonnull SqlAliasBase sqlAliasBase,
+			@Nullable SqlAliasBase sqlAliasBase,
 			@Nonnull SqlAstCreationState creationState) {
 		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
 		final var auxMapping = getAuxiliaryMapping();
@@ -285,7 +285,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			@Nullable String explicitSourceAlias,
 			@Nullable SqlAliasBase sqlAliasBase,
 			@Nullable Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			@Nullable SqlAstCreationState creationState) {
+			@Nonnull SqlAstCreationState creationState) {
 		final var tableGroup = new UnionTableGroup(
 				canUseInnerJoins,
 				navigablePath,

@@ -17,8 +17,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 
-import static org.hibernate.query.internal.QueryLogging.QUERY_LOGGER;
-
 /**
  * Extension to QueryOptions providing ability to mutate the values.
  * Generally used by the query instances to collect the options set
@@ -46,13 +44,8 @@ public interface MutableQueryOptions extends QueryOptions {
 	 * Corollary to {@link #getCacheMode()}
 	 */
 	default void setCacheMode(@Nullable CacheMode cacheMode) {
-		if ( cacheMode == null ) {
-			QUERY_LOGGER.debug( "Null CacheMode passed to #setCacheMode; falling back to 'NORMAL'" );
-			cacheMode = CacheMode.NORMAL;
-		}
-
-		setCacheRetrieveMode( cacheMode.getJpaRetrieveMode() );
-		setCacheStoreMode( cacheMode.getJpaStoreMode() );
+		setCacheRetrieveMode( cacheMode == null ? null : cacheMode.getJpaRetrieveMode() );
+		setCacheStoreMode( cacheMode == null ? null : cacheMode.getJpaStoreMode() );
 	}
 
 	/**

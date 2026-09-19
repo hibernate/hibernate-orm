@@ -298,7 +298,7 @@ public class DomainResultCreationStateImpl
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
 			JavaType<?> javaType,
-			FetchParent fetchParent, TypeConfiguration typeConfiguration) {
+			@Nullable FetchParent fetchParent, TypeConfiguration typeConfiguration) {
 		if ( expression == null ) {
 			throw new IllegalArgumentException( "Expression cannot be null" );
 		}

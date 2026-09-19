@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
@@ -50,7 +52,7 @@ public class CastStrEmulation
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		final SqmTypedNode<?> argument = arguments.get( 0 );
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "cast" )

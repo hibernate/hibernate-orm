@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -67,7 +69,7 @@ public class DateTruncEmulation extends AbstractSqmFunctionDescriptor implements
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		final NodeBuilder nodeBuilder = queryEngine.getCriteriaBuilder();
 		final TemporalUnit temporalUnit = ( (SqmExtractUnit<?>) arguments.get( 1 ) ).getUnit();

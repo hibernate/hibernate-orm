@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.type.SqlTypes.isCharacterOrClobType;
@@ -48,17 +49,18 @@ public class StandardFunctionReturnTypeResolvers {
 		}
 
 		return new FunctionReturnTypeResolver() {
+			@Nonnull
 			@Override
 			public ReturnableType<?> resolveFunctionReturnType(
-					ReturnableType<?> impliedType,
+					@Nullable ReturnableType<?> impliedType,
 					@Nullable SqmToSqlAstConverter converter,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
-				return isAssignableTo( invariantType, impliedType ) ? impliedType : invariantType;
+				return impliedType != null && isAssignableTo( invariantType, impliedType ) ? impliedType : invariantType;
 			}
 
 			@Override
-			public BasicValuedMapping resolveFunctionReturnType(
+			public @Nonnull BasicValuedMapping resolveFunctionReturnType(
 					Supplier<BasicValuedMapping> impliedTypeAccess,
 					List<? extends SqlAstNode> arguments) {
 				return useImpliedTypeIfPossible( invariantType, impliedTypeAccess.get() );
@@ -73,9 +75,10 @@ public class StandardFunctionReturnTypeResolvers {
 
 	public static FunctionReturnTypeResolver useArgType(int argPosition) {
 		return new FunctionReturnTypeResolver() {
+			@Nullable
 			@Override
 			public ReturnableType<?> resolveFunctionReturnType(
-					ReturnableType<?> impliedType,
+					@Nullable ReturnableType<?> impliedType,
 					@Nullable SqmToSqlAstConverter converter,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
@@ -84,7 +87,7 @@ public class StandardFunctionReturnTypeResolvers {
 			}
 
 			@Override
-			public BasicValuedMapping resolveFunctionReturnType(
+			public @Nonnull BasicValuedMapping resolveFunctionReturnType(
 					Supplier<BasicValuedMapping> impliedTypeAccess,
 					List<? extends SqlAstNode> arguments) {
 				final var specifiedArgType = extractArgumentValuedMapping( arguments, argPosition );
@@ -95,6 +98,7 @@ public class StandardFunctionReturnTypeResolvers {
 
 	public static FunctionReturnTypeResolver useFirstNonNull() {
 		return new FunctionReturnTypeResolver() {
+			@Nullable
 			@Override
 			public BasicValuedMapping resolveFunctionReturnType(
 					Supplier<BasicValuedMapping> impliedTypeAccess,
@@ -108,9 +112,10 @@ public class StandardFunctionReturnTypeResolvers {
 				return impliedTypeAccess.get();
 			}
 
+			@Nullable
 			@Override
 			public ReturnableType<?> resolveFunctionReturnType(
-					ReturnableType<?> impliedType,
+					@Nullable ReturnableType<?> impliedType,
 					@Nullable SqmToSqlAstConverter converter,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
@@ -132,7 +137,7 @@ public class StandardFunctionReturnTypeResolvers {
 	// Internal helpers
 
 	@Internal
-	public static boolean isAssignableTo(ReturnableType<?> defined, ReturnableType<?> implied) {
+	public static boolean isAssignableTo(@Nullable ReturnableType<?> defined, @Nullable ReturnableType<?> implied) {
 		if ( implied == null ) {
 			return false;
 		}

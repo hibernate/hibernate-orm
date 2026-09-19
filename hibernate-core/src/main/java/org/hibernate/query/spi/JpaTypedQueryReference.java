@@ -29,12 +29,14 @@ public interface JpaTypedQueryReference<R> extends JpaReference, TypedQueryRefer
 	}
 
 	/// {@inheritDoc}
+	@Nullable
 	@Override
 	default List<String> getParameterNames() {
 		return null;
 	}
 
 	/// {@inheritDoc}
+	@Nullable
 	@Override
 	default List<Object> getArguments() {
 		return null;

@@ -73,6 +73,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import jakarta.annotation.Nullable;
 
 import static java.util.Objects.requireNonNullElse;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -161,7 +162,7 @@ public class AnonymousTupleEntityValuedModelPart
 	@Nonnull
 	@Override
 	public String getPartName() {
-		return delegate.getPartName();
+		return castNonNull( delegate.getPartName() );
 	}
 
 	@Nonnull
@@ -520,7 +521,7 @@ public class AnonymousTupleEntityValuedModelPart
 	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
-		return delegate.getNavigableRole();
+		return castNonNull( delegate.getNavigableRole() );
 	}
 
 	@Nonnull
@@ -668,7 +669,7 @@ public class AnonymousTupleEntityValuedModelPart
 		return delegate.getEntityMappingType().getDiscriminatorMapping();
 	}
 
-	@Nonnull
+	@Nullable
 	@Override
 	public DiscriminatorValue getDiscriminatorValue() {
 		return delegate.getEntityMappingType().getDiscriminatorValue();

@@ -44,6 +44,7 @@ public final class AuditCollectionHelper {
 	private final boolean useServerTransactionTimestamps;
 	@Nullable
 	private final String currentTimestampFunctionName;
+	@Nullable
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;

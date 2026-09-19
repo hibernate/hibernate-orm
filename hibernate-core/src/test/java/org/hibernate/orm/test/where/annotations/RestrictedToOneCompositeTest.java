@@ -17,6 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -82,6 +83,7 @@ class RestrictedToOneCompositeTest {
 	@Embeddable
 	static class Key implements Serializable {
 		String part;
+		@Column(name = "key_number")
 		Long number;
 		Key() {}
 		Key(String part, Long number) { this.part = part; this.number = number; }
@@ -110,11 +112,11 @@ class RestrictedToOneCompositeTest {
 		String name;
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "sql_part", referencedColumnName = "part")
-		@JoinColumn(name = "sql_number", referencedColumnName = "number")
+		@JoinColumn(name = "sql_number", referencedColumnName = "key_number")
 		SqlTarget sql;
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "filter_part", referencedColumnName = "part")
-		@JoinColumn(name = "filter_number", referencedColumnName = "number")
+		@JoinColumn(name = "filter_number", referencedColumnName = "key_number")
 		FilterTarget filter;
 	}
 }

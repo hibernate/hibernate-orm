@@ -105,6 +105,21 @@ initialized collection has no queued commands while its snapshot still represent
 the persisted comparison baseline.  Wrappers derived from
 `AbstractPersistentCollection` inherit this sequencing automatically.
 
+[[filtered-association-initializer-spi]]
+=== Initializers for filtered associations
+
+`EntityInitializer` now has a default `getFilteredAssociationKey(RowProcessingState)` method.
+It exposes the stored association key when a restriction hides the target.
+The default returns `null`, so existing implementations remain source compatible.
+Custom entity initializers which represent restricted targets as null must supply this information during hydration
+to participate in the <<filtered-to-one-associations,stored-reference preservation described below>>.
+
+`AbstractCollectionPersister` is an internal implementation class. Its protected `applyWhereFragments()`
+method which accepts a `TableGroup`
+now also accepts a `boolean useQualifier` parameter immediately before `SqlAstCreationState`.
+Custom collection persisters overriding this method must update their signature and forward this argument
+when calling the superclass implementation.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,6 +128,141 @@ the persisted comparison baseline.  Wrappers derived from
 == Changes in Behavior
 
 This section describes changes in behavior that applications should be aware of.
+
+[[filtered-to-one-associations]]
+=== Filters and SQL restrictions on to-one associations
+
+Hibernate now applies a target entity's `@SQLRestriction`, and enabled filters declared with
+`@FilterDef(applyToLoadByKey = true)`, consistently when fetching `@ManyToOne` and `@OneToOne` associations.
+This includes eager and lazy fetching, entity queries, fetch joins, `find()`, and entity graphs.
+Previously, a SQL restriction could hide a join-fetched target while leaving a lazily fetched target visible.
+An applicable filter could instead cause `EntityFilterException` during eager fetching or an
+`EntityNotFoundException` when initializing a lazy reference.
+
+A target excluded by an applicable restriction is now represented as `null`.
+Applications must handle this null value instead of relying on those exceptions.
+This is also possible for an association declared `optional = false` or mapped to a non-nullable foreign key.
+The Java value describes the visible association, while the database may still contain a non-null reference.
+An explicit inner fetch join still excludes an owner whose target does not satisfy the restriction.
+Use a left fetch join to retain that owner with a null association.
+
+The default value of `applyToLoadByKey` remains `false`.
+A filter does not begin affecting association fetching merely because it is enabled for entity queries.
+`@SQLRestriction` remains unconditional and cannot be disabled.
+The change does not extend to `@Any` fetching, which may still throw `EntityFilterException`.
+
+==== Stored references and updates
+
+For an owning to-one association, Hibernate now distinguishes an absent reference from a reference whose
+target was filtered out, even though both are represented as null in Java.
+The distinction is recorded in the persistence context while hydrating the owner, together with the stored key.
+It applies both to foreign keys in the owner table and to associations mapped using `@JoinTable`, including
+associations inside embeddables and associations using composite or non-primary unique keys.
+
+The resulting update rules are:
+
+[cols="2,2,3",options="header"]
+|===
+|Reference when loaded |Value at flush |Result
+
+|Absent
+|`null`
+|The reference remains absent. An unrelated update does not create a join-table row.
+
+|Visible target
+|`null`
+|The reference is cleared according to the mapping.
+
+|Filtered target
+|`null`
+|The stored reference is preserved, including its join-table row.
+
+|Absent, visible, or filtered target
+|A newly assigned non-null target
+|The association is set to the assigned target according to the mapping.
+|===
+
+In particular, calling a setter with null when the association already appears null does not clear a hidden
+reference. Neither does assigning a replacement and then assigning null again before flushing.
+Once a non-null replacement has been flushed, subsequently assigning null clears that replacement normally.
+For example, given an owner whose stored `target_id` is `2` and whose target is hidden:
+
+[source,java]
+----
+assert owner.getTarget() == null;
+owner.setTarget(null);
+owner.setName("changed");
+session.flush(); // target_id is still 2
+
+owner.setTarget(visibleReplacement);
+session.flush(); // target_id now identifies visibleReplacement
+owner.setTarget(null);
+session.flush(); // the replacement reference is cleared
+----
+
+These rules apply to ordinary updates without `@DynamicUpdate`, as well as dynamic updates and `@SQLUpdate`.
+Hibernate may generate a dynamic update to omit a hidden foreign key even when the entity does not declare
+`@DynamicUpdate`. Custom update SQL retains its declared parameter structure and receives the stored key
+when binding a hidden association. Update nullability checks and optimistic locking also use the stored
+reference instead of mistaking a filtered Java null for a database null.
+Join-table updates preserve the same distinction with native upsert support and with upsert emulation.
+Deleting the owner still removes its join-table row.
+
+==== Merge and orphan removal
+
+Merging detached state assumes that the source was loaded under the same enabled filters and parameter
+values as the managed merge target. This requirement also applies when the merge target is already present
+in the persistence context. Hibernate does not validate this precondition.
+Under these conditions, a null association in the source preserves a hidden reference in the target,
+while it clears a reference which was visible when the target was loaded.
+Detached entities need no additional metadata. Hibernate obtains the distinction from the managed target.
+
+With `orphanRemoval = true`, a filtered-out target is preserved, including when a new target replaces it.
+Leaving the association null, assigning null to it again, or removing the owner does not orphan-remove
+that hidden target. Removing or replacing a visible target continues to apply the usual orphan-removal rules.
+
+Changing an enabled filter or its parameters does not reinterpret association state already loaded in the
+persistence context. To clear a reference hidden by a filter, first make it visible and refresh or reload
+the owner under those conditions, then assign null. Disabling a filter alone is insufficient.
+There is no corresponding switch for `@SQLRestriction`.
+The stored-reference information survives refresh under the same restrictions, a change from read-only to
+modifiable state, and serialization of the session.
+
+==== Query results, generated SQL, and caching
+
+Navigating to an association's identifier, for example `where owner.target.id = :id`, now retains the target
+join when needed to apply an applicable filter or SQL restriction.
+Use the HQL `fk()` function, for example `where fk(owner.target) = :id`, when the intention is to test the
+stored foreign key independently of whether the target is visible.
+
+Loading a lazy association may now add a left join and select the target identifier to determine visibility
+without initializing the target entity. The owner query also retains the physical foreign key needed for
+later updates. Applications which inspect generated SQL or count joins should account for these changes.
+For native queries and stored procedure results, Hibernate cannot add these selections to the supplied SQL.
+It instead resolves an affected association by an immediate separate fetch, even if the mapping requests
+lazy fetching. This does not add filtering predicates to the application's native SQL itself.
+
+Second-level entity cache reads are bypassed for loads affected by enabled load-by-key filters and for
+entities with SQL restrictions on themselves or on reachable to-one associations, including associations
+inside embeddables. Entity state containing filtered null associations is not stored in the second-level
+cache, and updates invalidate such entries instead of publishing the incomplete state.
+Full query-cache entries retain the association keys needed for this distinction.
+Shallow query-cache hits obtain the distinction when reloading the entity.
+Consequently, applications may observe additional SQL and fewer second-level entity cache hits.
+
+These changes address the inconsistencies described in https://hibernate.atlassian.net/browse/HHH-19568[HHH-19568]
+and its related issues.
+
+[[collection-restriction-inherited-columns]]
+=== SQL restrictions on inherited collection-element columns
+
+When rendering a collection-element `@SQLRestriction`, Hibernate now qualifies an unambiguous mapped column
+using the table which declares it. This fixes restrictions on collections of `JOINED` subclasses which
+refer to a column stored in a superclass table, as described in
+https://hibernate.atlassian.net/browse/HHH-12016[HHH-12016].
+The qualification handles quoted column names and case differences in unquoted names.
+Unmapped or ambiguous column names retain the existing default qualification.
+This does not introduce an explicit alias declaration facility for `@SQLRestriction`.
 
 [[collection-remove-create-callback-order]]
 === Collection remove/create callback order

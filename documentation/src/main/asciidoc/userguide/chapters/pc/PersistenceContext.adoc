@@ -479,12 +479,15 @@ include::{extrasdir}/pc-filter-entity-example.sql[]
 include::{extrasdir}/pc-filter-entity-find-example.sql[]
 ----
 
-[WARNING]
-====
-Using `@NotFound(action = NotFoundAction.IGNORE)` on associations that are filtered via a `FilterDef` with `applyToLoadByKey` set to `true`
-is dangerous, because the association will be set to `null` if the filter excludes the target row.
-On flush, this can lead to the foreign key column be set to `null` and hence lead to data loss.
-====
+When an applicable filter excludes a `@ManyToOne` or `@OneToOne` target, the association is represented as `null`.
+Hibernate remembers the stored reference in the persistence context, so flushing unrelated changes preserves it.
+This applies to foreign keys and to associations mapped with `@JoinTable`, and to targets excluded by `@SQLRestriction`.
+
+Leaving such an association null, or assigning null to it again, does not clear the hidden reference.
+Assigning a non-null target replaces the reference. An association which was visible when loaded can be cleared normally.
+Orphan removal preserves a filtered-out target, including when a new target replaces it.
+When merging detached state, use the same enabled filters and parameter values as when that state was loaded.
+Hibernate reconstructs the distinction while loading the managed merge target, so detached instances need no additional metadata.
 
 As you can see from the example above, contrary to an entity query, the `activeAccount` filter does not prevent the entity from being loaded,
 but the `minimumAmount` filter limits the results to the ones with an amount that is greater than the specified one.

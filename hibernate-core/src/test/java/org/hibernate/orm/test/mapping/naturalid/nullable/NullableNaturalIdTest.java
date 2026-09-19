@@ -36,6 +36,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class NullableNaturalIdTest {
 
 	@Test
+	public void loadNullSimpleNaturalId(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new C( 1, null ) ) );
+		scope.inTransaction( session -> {
+			final C entity = session.bySimpleNaturalId( C.class ).load( null );
+			Assertions.assertNotNull( entity );
+			Assertions.assertSame( entity, session.bySimpleNaturalId( C.class ).load( null ) );
+		} );
+	}
+
+	@Test
+	public void rejectNullCompoundNaturalId(SessionFactoryScope scope) {
+		scope.inTransaction( session -> Assertions.assertThrows(
+				org.hibernate.HibernateException.class,
+				() -> session.bySimpleNaturalId( A.class ).load( null )
+		) );
+	}
+
+	@Test
 	@JiraKey( value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		// A, B, C, and D are mapped using annotations;

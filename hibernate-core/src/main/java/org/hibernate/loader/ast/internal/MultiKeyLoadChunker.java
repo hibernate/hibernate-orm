@@ -4,6 +4,10 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Bindable;
@@ -26,14 +30,15 @@ import org.hibernate.sql.results.spi.ManagedResultConsumer;
 public class MultiKeyLoadChunker<K> {
 	@FunctionalInterface
 	interface SqlExecutionContextCreator {
+		@Nonnull
 		ExecutionContext createContext(
-				JdbcParameterBindings parameterBindings,
-				SharedSessionContractImplementor session);
+				@Nonnull JdbcParameterBindings parameterBindings,
+				@Nonnull SharedSessionContractImplementor session);
 	}
 
 	@FunctionalInterface
 	interface KeyCollector<K> {
-		void collect(K key, int relativePosition, int absolutePosition);
+		void collect(@Nullable K key, int relativePosition, int absolutePosition);
 	}
 
 	@FunctionalInterface
@@ -57,10 +62,10 @@ public class MultiKeyLoadChunker<K> {
 	public MultiKeyLoadChunker(
 			int chunkSize,
 			int keyColumnCount,
-			Bindable bindable,
-			JdbcParametersList jdbcParameters,
-			SelectStatement sqlAst,
-			JdbcSelect jdbcSelect) {
+			@Nonnull Bindable bindable,
+			@Nonnull JdbcParametersList jdbcParameters,
+			@Nonnull SelectStatement sqlAst,
+			@Nonnull JdbcSelect jdbcSelect) {
 		this.chunkSize = chunkSize;
 		this.keyColumnCount = keyColumnCount;
 		this.bindable = bindable;
@@ -80,13 +85,13 @@ public class MultiKeyLoadChunker<K> {
 	 * @param boundaryListener Notifications that processing a chunk has completed
 	 */
 	public void processChunks(
-			K[] keys,
+			@Nonnull K[] keys,
 			int nonNullElementCount,
-			SqlExecutionContextCreator sqlExecutionContextCreator,
-			KeyCollector<K> keyCollector,
-			ChunkStartListener startListener,
-			ChunkBoundaryListener boundaryListener,
-			SharedSessionContractImplementor session) {
+			@Nonnull SqlExecutionContextCreator sqlExecutionContextCreator,
+			@Nonnull KeyCollector<K> keyCollector,
+			@Nonnull ChunkStartListener startListener,
+			@Nonnull ChunkBoundaryListener boundaryListener,
+			@Nonnull SharedSessionContractImplementor session) {
 		int numberOfKeysLeft = nonNullElementCount;
 		int start = 0;
 		while ( numberOfKeysLeft > 0 ) {
@@ -97,13 +102,13 @@ public class MultiKeyLoadChunker<K> {
 	}
 
 	private void processChunk(
-			K[] keys,
+			@Nonnull K[] keys,
 			int startIndex,
-			SqlExecutionContextCreator sqlExecutionContextCreator,
-			KeyCollector<K> keyCollector,
-			ChunkStartListener startListener,
-			ChunkBoundaryListener boundaryListener,
-			SharedSessionContractImplementor session) {
+			@Nonnull SqlExecutionContextCreator sqlExecutionContextCreator,
+			@Nonnull KeyCollector<K> keyCollector,
+			@Nonnull ChunkStartListener startListener,
+			@Nonnull ChunkBoundaryListener boundaryListener,
+			@Nonnull SharedSessionContractImplementor session) {
 		startListener.chunkStartNotification( startIndex );
 
 		final int parameterCount = chunkSize * keyColumnCount;

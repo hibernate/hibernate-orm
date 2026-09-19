@@ -4,6 +4,10 @@
  */
 package org.hibernate.action.queue.internal.graph;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 
 import org.hibernate.action.queue.internal.constraint.Constraint;
 import org.hibernate.action.queue.internal.constraint.Deferrability;
@@ -22,22 +26,26 @@ import static org.hibernate.action.queue.internal.graph.Util.EMPTY_SELECTABLES;
 public class GraphTestUtils {
 	private static SelectableMappings selectable(String tableName, String columnName) {
 		final SelectableMapping selectableMapping = new SelectableMapping() {
-			@Override
+			@Nonnull
+	@Override
 			public String getContainingTableExpression() {
 				return tableName;
 			}
 
-			@Override
+			@Nonnull
+	@Override
 			public String getSelectionExpression() {
 				return columnName;
 			}
 
-			@Override
+			@Nullable
+	@Override
 			public String getCustomReadExpression() {
 				return null;
 			}
 
-			@Override
+			@Nullable
+	@Override
 			public String getCustomWriteExpression() {
 				return null;
 			}
@@ -67,34 +75,40 @@ public class GraphTestUtils {
 				return false;
 			}
 
-			@Override
+			@Nullable
+	@Override
 			public Long getLength() {
 				return null;
 			}
 
-			@Override
+			@Nullable
+	@Override
 			public Integer getArrayLength() {
 				return null;
 			}
 
-			@Override
+			@Nullable
+	@Override
 			public Integer getPrecision() {
 				return null;
 			}
 
-			@Override
+			@Nullable
+	@Override
 			public Integer getScale() {
 				return null;
 			}
 
-			@Override
+			@Nullable
+	@Override
 			public Integer getTemporalPrecision() {
 				return null;
 			}
 
-			@Override
+			@Nonnull
+	@Override
 			public JdbcMapping getJdbcMapping() {
-				return null;
+				throw new UnsupportedOperationException( "This graph test mapping has no JDBC type" );
 			}
 		};
 		return new SelectableMappings() {
@@ -103,7 +117,8 @@ public class GraphTestUtils {
 				return 1;
 			}
 
-			@Override
+			@Nonnull
+	@Override
 			public SelectableMapping getSelectable(int columnIndex) {
 				if ( columnIndex != 0 ) {
 					throw new IndexOutOfBoundsException( columnIndex );
@@ -112,7 +127,7 @@ public class GraphTestUtils {
 			}
 
 			@Override
-			public int forEachSelectable(int offset, SelectableConsumer consumer) {
+			public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 				consumer.accept( offset, selectableMapping );
 				return 1;
 			}

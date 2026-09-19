@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
 import jakarta.annotation.Nonnull;
 import org.hibernate.mapping.Column;
 import org.hibernate.dialect.temporal.spi.TemporalRestrictionRequest;
@@ -64,8 +66,8 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	private final SelectableMapping startingColumnMapping;
 	private final SelectableMapping endingColumnMapping;
 	private final JdbcMapping jdbcMapping;
-	private final String currentTimestampFunctionName;
-	private final Expression currentTimestampExpression;
+	@Nullable private final String currentTimestampFunctionName;
+	@Nullable private final Expression currentTimestampExpression;
 	private final TemporalTableStrategy temporalTableStrategy;
 
 	public TemporalMappingImpl(
@@ -147,21 +149,25 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		);
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName() {
 		return tableName;
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getStartingColumnMapping() {
 		return startingColumnMapping;
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getEndingColumnMapping() {
 		return endingColumnMapping;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
@@ -171,7 +177,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		return createCurrentRestriction( tableReference, null );
 	}
 
-	private Predicate createCurrentRestriction(TableReference tableReference, SqlExpressionResolver expressionResolver) {
+	private Predicate createCurrentRestriction(TableReference tableReference, @Nullable SqlExpressionResolver expressionResolver) {
 		final var endingColumn = resolveColumn( tableReference, expressionResolver, endingColumnMapping );
 		return new NullnessPredicate( endingColumn, false, jdbcMapping );
 	}
@@ -182,7 +188,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	private Predicate createRestriction(
 			TableReference tableReference,
-			SqlExpressionResolver expressionResolver,
+			@Nullable SqlExpressionResolver expressionResolver,
 			Object temporalValue) {
 		final var startingColumn = resolveColumn( tableReference, expressionResolver, startingColumnMapping );
 		final var endingColumn = resolveColumn( tableReference, expressionResolver, endingColumnMapping );
@@ -213,13 +219,15 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		return predicate;
 	}
 
+	@Nonnull
 	@Override
-	public ColumnValueBinding createStartingValueBinding(ColumnReference startingColumnReference) {
+	public ColumnValueBinding createStartingValueBinding(@Nonnull ColumnReference startingColumnReference) {
 		return createTemporalValueBinding( startingColumnReference, startingColumnMapping );
 	}
 
+	@Nonnull
 	@Override
-	public ColumnValueBinding createEndingValueBinding(ColumnReference endingColumnReference) {
+	public ColumnValueBinding createEndingValueBinding(@Nonnull ColumnReference endingColumnReference) {
 		return createTemporalValueBinding( endingColumnReference, endingColumnMapping );
 	}
 
@@ -233,15 +241,16 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 								columnMapping ) );
 	}
 
+	@Nonnull
 	@Override
-	public ColumnValueBinding createNullEndingValueBinding(ColumnReference endingColumnReference) {
+	public ColumnValueBinding createNullEndingValueBinding(@Nonnull ColumnReference endingColumnReference) {
 		return new ColumnValueBinding( endingColumnReference,
 				new ColumnWriteFragment( null, emptyList(), endingColumnMapping ) );
 	}
 
 	private Expression resolveColumn(
 			TableReference tableReference,
-			SqlExpressionResolver expressionResolver,
+			@Nullable SqlExpressionResolver expressionResolver,
 			SelectableMapping selectableMapping) {
 		return expressionResolver != null
 				? expressionResolver.resolveSqlExpression( tableReference, selectableMapping )
@@ -249,7 +258,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	}
 
 	@Override
-	public void addToInsertGroup(MutationGroupBuilder insertGroupBuilder, EntityPersister persister) {
+	public void addToInsertGroup(@Nonnull MutationGroupBuilder insertGroupBuilder, @Nonnull EntityPersister persister) {
 		if ( temporalTableStrategy == TemporalTableStrategy.SINGLE_TABLE ) {
 			final TableInsertBuilder insertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( persister.getIdentifierTableName() );
@@ -265,11 +274,11 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Override
 	public void applyPredicate(
-			EntityMappingType associatedEntityMappingType,
-			Consumer<Predicate> predicateConsumer,
-			LazyTableGroup lazyTableGroup,
-			NavigablePath navigablePath,
-			SqlAstCreationState creationState) {
+			@Nonnull EntityMappingType associatedEntityMappingType,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull LazyTableGroup lazyTableGroup,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqlAstCreationState creationState) {
 		if ( useTemporalRestriction( creationState ) ) {
 			final var tableReference = lazyTableGroup.resolveTableReference( navigablePath, getTableName() );
 			final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
@@ -284,11 +293,11 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Override
 	public void applyPredicate(
-			EntityMappingType associatedEntityDescriptor,
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			LoadQueryInfluencers influencers) {
+			@Nonnull EntityMappingType associatedEntityDescriptor,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers) {
 		if ( useTemporalRestriction( influencers ) ) {
 			final var instant = influencers.getTemporalIdentifier();
 			final var primaryTableReference =
@@ -301,11 +310,11 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Override
 	public void applyPredicate(
-			PluralAttributeMapping associatedEntityDescriptor,
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			LoadQueryInfluencers influencers) {
+			@Nonnull PluralAttributeMapping associatedEntityDescriptor,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers) {
 		if ( useTemporalRestriction( influencers ) ) {
 			final var instant = influencers.getTemporalIdentifier();
 			final var tableReference = tableGroup.resolveTableReference( getTableName() );
@@ -316,7 +325,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	}
 
 	@Override
-	public void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers) {
+	public void applyPredicate(@Nonnull TableGroupJoin tableGroupJoin, @Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		if ( useTemporalRestriction( loadQueryInfluencers ) ) {
 			final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
 			final var tableReference = tableGroupJoin.getJoinedGroup().resolveTableReference( getTableName() );
@@ -328,11 +337,11 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Override
 	public void applyPredicate(
-			Supplier<Consumer<Predicate>> predicateCollector,
-			SqlAstCreationState creationState,
-			TableGroup tableGroup,
-			NamedTableReference rootTableReference,
-			EntityMappingType entityMappingType) {
+			@Nonnull Supplier<Consumer<Predicate>> predicateCollector,
+			@Nonnull SqlAstCreationState creationState,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull NamedTableReference rootTableReference,
+			@Nonnull EntityMappingType entityMappingType) {
 		if ( useTemporalRestriction( creationState ) ) {
 			final var tableReference =
 					tableGroup.resolveTableReference( getTableName() );
@@ -373,14 +382,14 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	}
 
 	@Override
-	public boolean useAuxiliaryTable(LoadQueryInfluencers influencers) {
+	public boolean useAuxiliaryTable(@Nonnull LoadQueryInfluencers influencers) {
 		return temporalTableStrategy == TemporalTableStrategy.HISTORY_TABLE
 			&& influencers.getTemporalIdentifier() != null
 			&& !influencers.isAllRevisions();
 	}
 
 	@Override
-	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
 		return influencers.getTemporalIdentifier() != null
 			&& !influencers.isAllRevisions();
 	}

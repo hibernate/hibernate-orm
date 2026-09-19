@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -17,6 +19,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -32,26 +35,27 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 	private final MutationExecutorService mutationExecutorService;
 
 	public DeleteRowsCoordinatorTablePerSubclass(
-			OneToManyPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
+			@Nonnull OneToManyPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
 			boolean deleteByIndex,
-			ServiceRegistry serviceRegistry) {
+			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 		this.deleteByIndex = deleteByIndex;
 		subclassEntries =
-				new SubclassEntry[mutationTarget.getElementPersister()
+				new SubclassEntry[castNonNull( mutationTarget.getElementPersister() )
 						.getRootEntityDescriptor().getSubclassEntityNames().size()];
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
 
 	@Override
-	public void deleteRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+	public void deleteRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.deletingRemovedCollectionRows( mutationTarget.getRolePath(), key );
 		}
@@ -68,7 +72,7 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 		try {
 			int deletionCount = 0;
 
-			final RowMutationOperations.Restrictions restrictions = rowMutationOperations.getDeleteRowRestrictions();
+			final RowMutationOperations.Restrictions restrictions = castNonNull( rowMutationOperations.getDeleteRowRestrictions() );
 
 			while ( deletes.hasNext() ) {
 				final Object removal = deletes.next();
@@ -112,7 +116,8 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 		}
 	}
 
-	private SubclassEntry getSubclassEntry(EntityPersister elementPersister) {
+	@Nonnull
+	private SubclassEntry getSubclassEntry(@Nonnull EntityPersister elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
 		final var subclassEntry = subclassEntries[subclassId];
 		if ( subclassEntry != null ) {
@@ -126,7 +131,8 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 		);
 	}
 
-	private MutationOperationGroup createOperationGroup(EntityPersister elementPersister) {
+	@Nonnull
+	private MutationOperationGroup createOperationGroup(@Nonnull EntityPersister elementPersister) {
 		assert mutationTarget.getTargetPart() != null
 			&&  mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
@@ -153,7 +159,7 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 
 		private final MutationOperationGroup operationGroup;
 
-		public SubclassEntry(BatchKeyAccess batchKeySupplier, MutationOperationGroup operationGroup) {
+		public SubclassEntry(@Nonnull BatchKeyAccess batchKeySupplier, @Nonnull MutationOperationGroup operationGroup) {
 			this.batchKeySupplier = batchKeySupplier;
 			this.operationGroup = operationGroup;
 		}

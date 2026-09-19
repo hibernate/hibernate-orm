@@ -135,7 +135,7 @@ public interface MutationQuery extends CommonQueryContract, Statement {
 	@Override
 	@Deprecated(since = "7")
 	@Nonnull
-	MutationQuery setFlushMode(@Nonnull FlushModeType flushMode);
+	MutationQuery setFlushMode(@Nullable FlushModeType flushMode);
 
 	/**
 	 * {@inheritDoc}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -56,8 +59,10 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildBasicAttributeMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getPropertyPath;
+
 
 /**
  * Base support for EmbeddableMappingType implementations
@@ -65,13 +70,15 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType,
 		EmbeddableMappingType.ConcreteEmbeddableType {
 	protected AttributeMappingsList attributeMappings;
+	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
 	protected SelectableMappings selectableMappings;
-	protected PropertyValueAccessor[] accessorCache;
+	@Nullable protected PropertyValueAccessor[] accessorCache;
 
 	public AbstractEmbeddableMapping(int attributeMappingSizeHint) {
 		attributeMappings = new ImmutableAttributeMappingList.Builder( attributeMappingSizeHint ).build();
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableInstantiator getInstantiator() {
 		return getRepresentationStrategy().getInstantiator();
@@ -82,13 +89,14 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		return 0;
 	}
 
+	@Nonnull
 	@Override
 	public Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
 		return Collections.singleton( this );
 	}
 
 	@Override
-	public boolean declaresAttribute(AttributeMapping attributeMapping) {
+	public boolean declaresAttribute(@Nonnull AttributeMapping attributeMapping) {
 		return true;
 	}
 
@@ -97,28 +105,32 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		return true;
 	}
 
+	@Nullable
 	@Override
-	public Object getValue(Object instance, int position) {
-		return accessorCache[position].get( instance );
+	public Object getValue(@Nonnull Object instance, int position) {
+		return castNonNull( accessorCache )[position].get( instance );
 	}
 
 	@Override
-	public void setValue(Object instance, int position, Object value) {
-		accessorCache[position].set( instance, value );
+	public void setValue(@Nonnull Object instance, int position, @Nullable Object value) {
+		castNonNull( accessorCache )[position].set( instance, value );
 	}
 
+	@Nullable
 	@Override
 	public Object getDiscriminatorValue() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return getRepresentationStrategy().getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
-	public Object[] getValues(Object compositeInstance) {
+	public Object[] getValues(@Nonnull Object compositeInstance) {
 		if ( compositeInstance == PropertyValueAccessor.UNKNOWN ) {
 			return new Object[getNumberOfAttributeMappings()];
 		}
@@ -140,7 +152,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
-	public void setValues(Object component, Object[] values) {
+	public void setValues(@Nonnull Object component, @Nonnull Object[] values) {
 		final var writer = getRepresentationStrategy().getMultiValueWriter();
 		if ( writer != null ) {
 			writer.set( component, values );
@@ -495,7 +507,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	protected String determineEmbeddablePrefix() {
-		return getPropertyPath( getNavigableRole() );
+		return getPropertyPath( castNonNull( getNavigableRole() ) );
 	}
 
 	@Override
@@ -523,13 +535,15 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		return getAttributeMappings().size();
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMapping getAttributeMapping(int position) {
 		return getAttributeMappings().get( position );
 	}
 
+	@Nullable
 	@Override
-	public AttributeMapping findAttributeMapping(String name) {
+	public AttributeMapping findAttributeMapping(@Nonnull String name) {
 		final var attributes = getAttributeMappings();
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final var attribute = attributes.get( i );
@@ -540,6 +554,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public AttributeMappingsList getAttributeMappings() {
 		checkIsReady();
@@ -557,18 +572,19 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		}
 	}
 
+	@Nonnull
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		return getSelectableMappings().getSelectable( columnIndex );
 	}
 
 	@Override
-	public int forEachSelectable(SelectableConsumer consumer) {
+	public int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 		return getSelectableMappings().forEachSelectable( 0, consumer );
 	}
 
 	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		return getSelectableMappings().forEachSelectable( offset, consumer );
 	}
 
@@ -578,35 +594,37 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		return getSelectableMappings().forEachSelectable(
 				offset,
 				(index, selectable) -> action.accept( index, selectable.getJdbcMapping() )
 		);
 	}
 
+	@Nonnull
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return getSelectable( index ).getJdbcMapping();
 	}
 
 	@Override
-	public void forEachAttributeMapping(final IndexedConsumer<? super AttributeMapping> consumer) {
+	public void forEachAttributeMapping(@Nonnull final IndexedConsumer<? super AttributeMapping> consumer) {
 		getAttributeMappings().indexedForEach( consumer );
 	}
 
 	@Override
-	public void forEachAttributeMapping(final Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(@Nonnull final Consumer<? super AttributeMapping> action) {
 		getAttributeMappings().forEach( action );
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		return findAttributeMapping( name );
 	}
 
 	@Override
-	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
 		final var attributes = getAttributeMappings();
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			consumer.accept( i, attributes.get(i) );
@@ -614,17 +632,17 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
-	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
 		forEachAttributeMapping( consumer );
 	}
 
 	@Override
 	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer, @Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( domainValue == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -642,8 +660,9 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		return span;
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
 		}
@@ -659,7 +678,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	public void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		final int size = attributeMappings.size();
 		if ( value == null ) {
 			for ( int i = 0; i < size; i++ ) {
@@ -675,20 +694,20 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		if ( isPolymorphic() ) {
 			final EmbeddableDiscriminatorMapping discriminatorMapping = getDiscriminatorMapping();
 			final Object discriminatorValue = value != null ?
-					discriminatorMapping.getDiscriminatorValue( value.getClass().getName() )
+					castNonNull( discriminatorMapping ).getDiscriminatorValue( value.getClass().getName() )
 					: null;
-			discriminatorMapping.addToCacheKey( cacheKey, discriminatorValue, session );
+			castNonNull( discriminatorMapping ).addToCacheKey( cacheKey, discriminatorValue, session );
 		}
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( value == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -708,12 +727,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		if ( value == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -740,7 +759,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		// check if we've already seen this attribute...
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final var previous = attributeMappings.get( i );
-			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
+			if ( castNonNull( attributeMapping.getAttributeName() ).equals( previous.getAttributeName() ) ) {
 				attributeMappings.set( i, attributeMapping );
 				return;
 			}
@@ -779,7 +798,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		final PropertyValueAccessor[] accessorCache = new PropertyValueAccessor[propertySpan];
 		for ( int i = 0; i < propertySpan; i++ ) {
 			final PropertyAccess propertyAccess = attributeMappings.get( i ).getPropertyAccess();
-			accessorCache[i] = propertyAccess.getPropertyValueAccessor();
+			accessorCache[i] = castNonNull( propertyAccess ).getPropertyValueAccessor();
 		}
 		this.accessorCache = accessorCache;
 	}
@@ -792,18 +811,21 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					return true;
 				}
 
-				@Override
-				public Object deepCopy(Object value) {
+				@Nullable
+	@Override
+				public Object deepCopy(@Nullable Object value) {
 					return value;
 				}
 
-				@Override
-				public Serializable disassemble(Object value, SharedSessionContract session) {
+				@Nonnull
+	@Override
+				public Serializable disassemble(@Nullable Object value, SharedSessionContract session) {
 					throw new UnsupportedOperationException();
 				}
 
-				@Override
-				public Object assemble(Serializable cached, SharedSessionContract session) {
+				@Nonnull
+	@Override
+				public Object assemble(@Nullable Serializable cached, SharedSessionContract session) {
 					throw new UnsupportedOperationException();
 				}
 			};

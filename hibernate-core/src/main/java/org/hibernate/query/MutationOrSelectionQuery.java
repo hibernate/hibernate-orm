@@ -216,7 +216,7 @@ public interface MutationOrSelectionQuery
 	@Deprecated
 	@SuppressWarnings("deprecation")
 	@Nonnull
-	MutationOrSelectionQuery setFlushMode(@Nonnull FlushModeType flushMode);
+	MutationOrSelectionQuery setFlushMode(@Nullable FlushModeType flushMode);
 
 	@Override
 	@Deprecated(forRemoval = true)
@@ -321,7 +321,7 @@ public interface MutationOrSelectionQuery
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
 	@Nonnull
-	MutationOrSelectionQuery setCacheMode(@Nonnull CacheMode cacheMode);
+	MutationOrSelectionQuery setCacheMode(@Nullable CacheMode cacheMode);
 
 	@Override
 	@Deprecated(forRemoval = true)

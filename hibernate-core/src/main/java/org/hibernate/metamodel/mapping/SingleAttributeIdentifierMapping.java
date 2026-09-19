@@ -4,10 +4,15 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.generator.Generator;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -17,15 +22,19 @@ public interface SingleAttributeIdentifierMapping extends EntityIdentifierMappin
 	/**
 	 * Access to the identifier attribute's PropertyAccess
 	 */
+	@Nonnull
 	PropertyAccess getPropertyAccess();
 
+	@Nonnull
 	String getAttributeName();
 
+	@Nonnull
 	@Override
 	default String getPartName() {
 		return ID_ROLE_NAME;
 	}
 
+	@Nullable
 	@Override
 	default Generator getGenerator() {
 		return null;
@@ -36,14 +45,16 @@ public interface SingleAttributeIdentifierMapping extends EntityIdentifierMappin
 		return -1;
 	}
 
+	@Nonnull
 	@Override
 	default AttributeMetadata getAttributeMetadata() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	default ManagedMappingType getDeclaringType() {
-		return findContainingEntityMapping();
+		return castNonNull( findContainingEntityMapping() );
 	}
 
 	@Override
@@ -76,6 +87,7 @@ public interface SingleAttributeIdentifierMapping extends EntityIdentifierMappin
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	default MutabilityPlan getMutabilityPlan() {
 		return ImmutableMutabilityPlan.instance();

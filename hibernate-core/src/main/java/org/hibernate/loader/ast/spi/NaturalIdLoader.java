@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
@@ -15,9 +18,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /// @author Steve Ebersole
 public interface NaturalIdLoader<T> extends EntityLoader, MultiKeyLoader {
 	interface Options {
+		@Nonnull
 		LockMode getLockMode();
+		@Nonnull
 		Timeout getLockTimeout();
+		@Nonnull
 		PessimisticLockScope getLockScope();
+		@Nonnull
 		Locking.FollowOn getLockFollowOn();
 	}
 
@@ -34,8 +41,9 @@ public interface NaturalIdLoader<T> extends EntityLoader, MultiKeyLoader {
 	/// @param session The session into which the entity is being loaded
 	///
 	/// @deprecated (since 7.3) : use [#load(Object, Options, SharedSessionContractImplementor)] instead.
+	@Nullable
 	@Deprecated
-	T load(Object naturalIdToLoad, NaturalIdLoadOptions options, SharedSessionContractImplementor session);
+	T load(@Nullable Object naturalIdToLoad, @Nonnull NaturalIdLoadOptions options, @Nonnull SharedSessionContractImplementor session);
 
 	/// Perform the load of the entity by its natural-id
 	///
@@ -43,15 +51,18 @@ public interface NaturalIdLoader<T> extends EntityLoader, MultiKeyLoader {
 	/// 	form of the natural-id.
 	/// @param options The options to apply to the load operation
 	/// @param session The session into which the entity is being loaded
-	T load(Object naturalIdToLoad, Options options, SharedSessionContractImplementor session);
+	@Nullable
+	T load(@Nullable Object naturalIdToLoad, @Nonnull Options options, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Resolve the id from natural-id value
 	 */
-	Object resolveNaturalIdToId(Object naturalIdValue, SharedSessionContractImplementor session);
+	@Nullable
+	Object resolveNaturalIdToId(@Nullable Object naturalIdValue, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Resolve the natural-id value(s) from an id
 	 */
-	Object resolveIdToNaturalId(Object id, SharedSessionContractImplementor session);
+	@Nullable
+	Object resolveIdToNaturalId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session);
 }

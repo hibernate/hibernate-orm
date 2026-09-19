@@ -220,7 +220,7 @@ public interface CommonQueryContractImplementor extends CommonQueryContract {
 
 	@Override
 	@Nonnull
-	CommonQueryContractImplementor setFlushMode(@Nonnull FlushModeType flushMode);
+	CommonQueryContractImplementor setFlushMode(@Nullable FlushModeType flushMode);
 
 	@SuppressWarnings("removal")
 	@Override

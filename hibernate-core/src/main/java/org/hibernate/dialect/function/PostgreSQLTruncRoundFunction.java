@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -158,7 +160,7 @@ public class PostgreSQLTruncRoundFunction extends AbstractSqmFunctionDescriptor 
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			ReturnableType<T> impliedResultType,
+			@Nullable ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return new SelfRenderingSqmFunction<>(
 				this,

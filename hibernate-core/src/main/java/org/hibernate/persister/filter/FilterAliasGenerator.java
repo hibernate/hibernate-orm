@@ -3,11 +3,14 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.filter;
+
+import jakarta.annotation.Nullable;
 /**
  *
  * @author Rob Worsnop
  *
  */
 public interface FilterAliasGenerator {
-	String getAlias(String table);
+	@Nullable
+	String getAlias(@Nullable String table);
 }

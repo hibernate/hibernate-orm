@@ -533,7 +533,7 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	@Nonnull
-	public SelectionQueryImplementor<R> setCacheMode(@Nonnull CacheMode cacheMode) {
+	public SelectionQueryImplementor<R> setCacheMode(@Nullable CacheMode cacheMode) {
 		queryOptions.setCacheMode( cacheMode );
 		return this;
 	}
@@ -703,7 +703,7 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	@Nonnull
-	public SelectionQueryImplementor<R> setFlushMode(@Nonnull FlushModeType flushMode) {
+	public SelectionQueryImplementor<R> setFlushMode(@Nullable FlushModeType flushMode) {
 		super.setFlushMode( flushMode );
 		return this;
 	}

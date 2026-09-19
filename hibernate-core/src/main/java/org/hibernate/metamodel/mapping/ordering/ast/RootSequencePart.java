@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 
@@ -21,6 +23,7 @@ public class RootSequencePart implements SequencePart {
 		this.pluralAttributePath = new PluralAttributePath( pluralAttributeMapping );
 	}
 
+	@Nonnull
 	@Override
 	public SequencePart resolvePathPart(
 			String name,

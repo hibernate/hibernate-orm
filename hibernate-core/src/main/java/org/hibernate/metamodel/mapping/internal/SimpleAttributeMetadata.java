@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadeStyles;
 import org.hibernate.mapping.Property;
@@ -79,11 +81,13 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 		this.cascadeStyle = cascadeStyle;
 	}
 
+	@Nonnull
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return propertyAccess;
 	}
 
+	@Nonnull
 	@Override
 	public MutabilityPlan getMutabilityPlan() {
 		return mutabilityPlan;
@@ -120,6 +124,7 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 		return includeInOptimisticLocking;
 	}
 
+	@Nonnull
 	@Override
 	public CascadeStyle getCascadeStyle() {
 		return cascadeStyle;

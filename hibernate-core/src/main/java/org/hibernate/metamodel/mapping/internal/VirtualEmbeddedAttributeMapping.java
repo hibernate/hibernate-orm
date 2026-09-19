@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
@@ -34,8 +36,8 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
-			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
+			@Nullable ManagedMappingType declaringType,
+			@Nullable PropertyAccess propertyAccess) {
 		super(
 				propertyAccessorService,
 				name,
@@ -64,8 +66,8 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
-			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
+			@Nullable ManagedMappingType declaringType,
+			@Nullable PropertyAccess propertyAccess) {
 		super(
 				name,
 				navigableRole,
@@ -84,7 +86,7 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 
 	// Constructor is only used for creating the inverse attribute mapping
 	VirtualEmbeddedAttributeMapping(
-			ManagedMappingType keyDeclaringType,
+			@Nullable ManagedMappingType keyDeclaringType,
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			EmbeddableValuedModelPart inverseModelPart,

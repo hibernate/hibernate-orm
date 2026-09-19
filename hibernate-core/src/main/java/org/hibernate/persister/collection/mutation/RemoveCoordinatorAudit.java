@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.UnaryOperator;
 
 import jakarta.annotation.Nullable;
@@ -29,19 +31,21 @@ public class RemoveCoordinatorAudit implements RemoveCoordinator, CollectionAudi
 	private final SessionFactoryImplementor sessionFactory;
 	private final BasicBatchKey auditBatchKey;
 	private final MutationExecutorService mutationExecutorService;
+	@Nullable
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;
 
+	@Nullable
 	private AuditCollectionHelper auditHelper;
 
 	public RemoveCoordinatorAudit(
-			CollectionMutationTarget mutationTarget,
-			RemoveCoordinator standardCoordinator,
-			boolean[] indexColumnIsSettable,
-			boolean[] elementColumnIsSettable,
-			UnaryOperator<Object> indexIncrementer,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull CollectionMutationTarget mutationTarget,
+			@Nonnull RemoveCoordinator standardCoordinator,
+			@Nullable boolean[] indexColumnIsSettable,
+			@Nonnull boolean[] elementColumnIsSettable,
+			@Nonnull UnaryOperator<Object> indexIncrementer,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.mutationTarget = mutationTarget;
 		this.standardCoordinator = standardCoordinator;
 		this.sessionFactory = sessionFactory;
@@ -53,6 +57,7 @@ public class RemoveCoordinatorAudit implements RemoveCoordinator, CollectionAudi
 				.getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -64,7 +69,7 @@ public class RemoveCoordinatorAudit implements RemoveCoordinator, CollectionAudi
 	}
 
 	@Override
-	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
+	public void deleteAllRows(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		final var collectionDescriptor = mutationTarget.getTargetPart().getCollectionDescriptor();
 
 		// Get the collection from the persistence context BEFORE bulk removal
@@ -93,10 +98,10 @@ public class RemoveCoordinatorAudit implements RemoveCoordinator, CollectionAudi
 
 	@Override
 	public void writeCollectionAuditRows(
-			PersistentCollection<?> collection,
-			Object ownerId,
-			Object originalSnapshot,
-			SharedSessionContractImplementor session) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object ownerId,
+			@Nonnull Object originalSnapshot,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var operationGroup = getAuditHelper().getAuditInsertOperationGroup();
 		if ( operationGroup == null ) {
 			return;
@@ -132,7 +137,7 @@ public class RemoveCoordinatorAudit implements RemoveCoordinator, CollectionAudi
 		}
 	}
 
-	private boolean isEntityDeletion(Object key, SharedSessionContractImplementor session) {
+	private boolean isEntityDeletion(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		final var pc = session.getPersistenceContextInternal();
 		final var collectionDescriptor = mutationTarget.getTargetPart().getCollectionDescriptor();
 		final var owner = pc.getCollectionOwner( key, collectionDescriptor );
@@ -143,6 +148,7 @@ public class RemoveCoordinatorAudit implements RemoveCoordinator, CollectionAudi
 		return true;
 	}
 
+	@Nonnull
 	private AuditCollectionHelper getAuditHelper() {
 		if ( auditHelper == null ) {
 			auditHelper = new AuditCollectionHelper(

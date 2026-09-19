@@ -4,6 +4,9 @@
  */
 package org.hibernate.sql.ast.spi.query.expression;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
@@ -31,10 +34,11 @@ public class Collation implements SqlExpressible, SqlAstNode {
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		return 0;
 	}
 
+	@Nullable
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return null;

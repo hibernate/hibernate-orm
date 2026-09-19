@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -17,15 +19,18 @@ public interface LoadPlan {
 	/**
 	 * The thing being loaded
 	 */
+	@Nonnull
 	Loadable getLoadable();
 
 	/**
 	 * The part of the thing being loaded used to restrict which loadables get loaded
 	 */
+	@Nonnull
 	ModelPart getRestrictivePart();
 
 	/**
 	 * The JdbcSelect for the load
 	 */
+	@Nonnull
 	JdbcSelect getJdbcSelect();
 }

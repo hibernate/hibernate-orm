@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -49,17 +51,21 @@ public interface ModelPart extends MappingModelExpressible {
 	/// @apiNote Whereas [#getPartName()] is local to this part, NavigableRole can be a compound path
 	///
 	/// @see #getPartName()
+	@Nullable
 	NavigableRole getNavigableRole();
 
 	/// The local part name, which is generally the unqualified role name
+	@Nullable
 	String getPartName();
 
 	/// The type for this part.
+	@Nonnull
 	MappingType getPartMappingType();
 
 	/// The Java type for this part.  Generally equivalent to
 	/// [MappingType#getMappedJavaType()] relative to
 	/// [#getPartMappingType()]
+	@Nonnull
 	JavaType<?> getJavaType();
 
 	/// Whether this model part describes something that physically
@@ -81,30 +87,31 @@ public interface ModelPart extends MappingModelExpressible {
 	boolean hasPartitionedSelectionMapping();
 
 	/// Create a [DomainResult] for a specific reference to this [ModelPart].
+	@Nonnull
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	<T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState);
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState);
 
 	/// Apply SQL selections for a specific reference to this [ModelPart]
 	/// outside the domain query's root select clause.
 	void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState);
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState);
 
 	/// Apply SQL selections for a specific reference to this [ModelPart]
 	/// outside the domain query's root select clause.
 	void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer);
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull DomainResultCreationState creationState,
+			@Nonnull BiConsumer<SqlSelection,JdbcMapping> selectionConsumer);
 
 	/// Visits each physical (non-formula)  column.
-	default int forEachColumn(SelectableConsumer consumer) {
+	default int forEachColumn(@Nonnull SelectableConsumer consumer) {
 		final int[] count = new int[] {0};
 		forEachSelectable( 0, (index, selectableMapping) -> {
 			if ( !selectableMapping.isFormula() ) {
@@ -116,20 +123,22 @@ public interface ModelPart extends MappingModelExpressible {
 	}
 
 	/// A shorthand form of [#forEachSelectable(int,SelectableConsumer)], that passes `0` as offset.
-	default int forEachSelectable(SelectableConsumer consumer) {
+	default int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );
 	}
 
 	/// Visits each selectable mapping with the selectable index offset by the given value.
 	/// Returns the amount of jdbc types that have been visited.
-	default int forEachSelectable(int offset, SelectableConsumer consumer) {
+	default int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		return 0;
 	}
 
+	@Nullable
 	default AttributeMapping asAttributeMapping() {
 		return null;
 	}
 
+	@Nullable
 	default EntityMappingType asEntityMappingType(){
 		return null;
 	}
@@ -141,9 +150,9 @@ public interface ModelPart extends MappingModelExpressible {
 	/// A shorthand form of [#breakDownJdbcValues(Object,int,Object,Object,JdbcValueBiConsumer,SharedSessionContractImplementor)],
 	/// that passes `0` as offset and null for the two values `X` and `Y`.
 	default int breakDownJdbcValues(
-			Object domainValue,
-			JdbcValueConsumer valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable Object domainValue,
+			@Nonnull JdbcValueConsumer valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return breakDownJdbcValues( domainValue, 0, null, null, valueConsumer, session );
 	}
 
@@ -153,19 +162,19 @@ public interface ModelPart extends MappingModelExpressible {
 	/// Additionally, it passes through the values `X` and `Y` to the consumer.
 	/// Returns the amount of jdbc types that have been visited.
 	<X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session);
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session);
 
 	/// A shorthand form of [#decompose(Object,int,Object,Object,JdbcValueBiConsumer,SharedSessionContractImplementor)],
 	/// that passes `0` as offset and null for the two values `X` and `Y`.
 	default int decompose(
-			Object domainValue,
-			JdbcValueConsumer valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable Object domainValue,
+			@Nonnull JdbcValueConsumer valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return decompose( domainValue, 0, null, null, valueConsumer, session );
 	}
 
@@ -173,18 +182,19 @@ public interface ModelPart extends MappingModelExpressible {
 	/// but this method is supposed to be used for decomposing values for assignment expressions.
 	/// Returns the amount of jdbc types that have been visited.
 	default <X, Y> int decompose(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
+	@Nullable
 	EntityMappingType findContainingEntityMapping();
 
-	default boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+	default boolean areEqual(@Nullable Object one, @Nullable Object other, @Nullable SharedSessionContractImplementor session) {
 		// NOTE : deepEquals to account for arrays (compound natural-id)
 		return Objects.deepEquals( one, other );
 	}
@@ -194,12 +204,12 @@ public interface ModelPart extends MappingModelExpressible {
 	@FunctionalInterface
 	interface JdbcValueConsumer extends JdbcValueBiConsumer<Object, Object> {
 		@Override
-		default void consume(int valueIndex, Object x, Object y, Object value, SelectableMapping jdbcValueMapping) {
+		default void consume(int valueIndex, @Nullable Object x, @Nullable Object y, @Nullable Object value, @Nonnull SelectableMapping jdbcValueMapping) {
 			consume( valueIndex, value, jdbcValueMapping );
 		}
 
 		/// Consume a JDBC-level jdbcValue. The JDBC jdbcMapping descriptor is also passed in
-		void consume(int valueIndex, Object value, SelectableMapping jdbcValueMapping);
+		void consume(int valueIndex, @Nullable Object value, @Nonnull SelectableMapping jdbcValueMapping);
 	}
 
 	/// Functional interface for consuming the JDBC values, along with two values of type `X` and `Y`.
@@ -207,6 +217,6 @@ public interface ModelPart extends MappingModelExpressible {
 	@FunctionalInterface
 	interface JdbcValueBiConsumer<X, Y> {
 		/// Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
-		void consume(int valueIndex, X x, Y y, Object value, SelectableMapping jdbcValueMapping);
+		void consume(int valueIndex, @Nullable X x, @Nullable Y y, @Nullable Object value, @Nonnull SelectableMapping jdbcValueMapping);
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -84,21 +86,25 @@ public abstract class AbstractCompositeIdentifierMapping
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return getPartMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
 		return getPartMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
 		return tableExpression;
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
@@ -159,26 +165,27 @@ public abstract class AbstractCompositeIdentifierMapping
 		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
+	@Nullable
 	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		return getPartMappingType().findSubPart( name, treatTargetType );
 	}
 
 	@Override
 	public void visitSubParts(
-			Consumer<ModelPart> consumer,
-			EntityMappingType treatTargetType) {
+			@Nonnull Consumer<ModelPart> consumer,
+			@Nullable EntityMappingType treatTargetType) {
 		getPartMappingType().visitSubParts( consumer, treatTargetType );
 	}
 
 	@Override
 	public <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		int span = 0;
 		final var embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 		final int size = embeddableTypeDescriptor.getNumberOfAttributeMappings();
@@ -214,12 +221,13 @@ public abstract class AbstractCompositeIdentifierMapping
 		return span;
 	}
 
+	@Nonnull
 	@Override
 	public SqlTuple toSqlExpression(
-			TableGroup tableGroup,
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
+			@Nonnull TableGroup tableGroup,
+			@Nonnull Clause clause,
+			@Nonnull SqmToSqlAstConverter walker,
+			@Nonnull SqlAstCreationState sqlAstCreationState) {
 		final List<ColumnReference> columnReferences = arrayList( getEmbeddableTypeDescriptor().getJdbcTypeCount() );
 		final var navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
 		final var defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
@@ -239,12 +247,13 @@ public abstract class AbstractCompositeIdentifierMapping
 		return new SqlTuple( columnReferences, this );
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		return new EmbeddableResultImpl<>(
 				navigablePath,
 				this,
@@ -253,11 +262,13 @@ public abstract class AbstractCompositeIdentifierMapping
 		);
 	}
 
+	@Nullable
 	@Override
 	public Object instantiate() {
 		return getEntityMapping().getRepresentationStrategy().getInstantiator().instantiate();
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return entityMapping;

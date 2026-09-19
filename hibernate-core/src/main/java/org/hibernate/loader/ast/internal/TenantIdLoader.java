@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.SQLException;
 import java.util.List;
 
@@ -27,9 +30,10 @@ public class TenantIdLoader {
 	private final String tenantSql;
 	private final String lockedTenantSql;
 	private final SingleIdArrayLoadPlan existencePlan;
+	@Nullable
 	private final DatabaseSnapshotExecutor cacheInvalidationPlan;
 
-	public TenantIdLoader(EntityPersister persister) {
+	public TenantIdLoader(@Nonnull EntityPersister persister) {
 		this.persister = persister;
 		ownerSql = createSql( false, false );
 		tenantSql = createSql( true, false );
@@ -41,15 +45,16 @@ public class TenantIdLoader {
 						List.of( tenantAttribute, persister.getVersionMapping() ) ) : null;
 	}
 
-	public Object loadTenantId(Object id, SharedSessionContractImplementor session) {
+	@Nullable
+	public Object loadTenantId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		return selectTenantId( id, false, false, session );
 	}
 
-	public boolean belongsToTenant(Object id, boolean lock, SharedSessionContractImplementor session) {
+	public boolean belongsToTenant(@Nonnull Object id, boolean lock, @Nonnull SharedSessionContractImplementor session) {
 		return selectTenantId( id, true, lock, session ) != null;
 	}
 
-	public boolean rowExists(Object id, SharedSessionContractImplementor session) {
+	public boolean rowExists(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		// A tenant-restricted query cannot distinguish an absent row from another tenant's row.
 		return existencePlan.load( id, session ) != null;
 	}
@@ -57,7 +62,8 @@ public class TenantIdLoader {
 	/**
 	 * Read only the stored owner and cache version, never detached entity state.
 	 */
-	public Snapshot loadCacheSnapshot(Object id, SharedSessionContractImplementor session) {
+	@Nonnull
+	public Snapshot loadCacheSnapshot(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		if ( cacheInvalidationPlan == null ) {
 			return new Snapshot( loadTenantId( id, session ), null );
 		}
@@ -65,9 +71,12 @@ public class TenantIdLoader {
 		return row == null ? new Snapshot( null, null ) : new Snapshot( row[0], row[1] );
 	}
 
-	public record Snapshot(Object tenantId, Object version) {}
+	public record Snapshot(@Nullable
+	Object tenantId, @Nullable
+	Object version) {}
 
-	private SingleIdArrayLoadPlan createLoadPlan(List<? extends ModelPart> parts) {
+	@Nonnull
+	private SingleIdArrayLoadPlan createLoadPlan(@Nonnull List<? extends ModelPart> parts) {
 		final var factory = persister.getFactory();
 		final var identifier = persister.getIdentifierMapping();
 		final var parameters = JdbcParametersList.newBuilder();
@@ -79,6 +88,7 @@ public class TenantIdLoader {
 		return new SingleIdArrayLoadPlan( persister, identifier, select, parameters.build(), LockOptions.NONE, factory );
 	}
 
+	@Nonnull
 	private String createSql(boolean restrictTenant, boolean lock) {
 		final var selectable = persister.getTenantIdMapping().getAttributeMapping().getSelectable( 0 );
 		final String tableName = persister.physicalTableNameForMutation( selectable );
@@ -106,8 +116,9 @@ public class TenantIdLoader {
 		return select.toStatementString();
 	}
 
+	@Nullable
 	private Object selectTenantId(
-			Object id, boolean restrictTenant, boolean lock, SharedSessionContractImplementor session) {
+			@Nonnull Object id, boolean restrictTenant, boolean lock, @Nonnull SharedSessionContractImplementor session) {
 		final String sql = restrictTenant ? lock ? lockedTenantSql : tenantSql : ownerSql;
 		final var jdbcMapping = persister.getTenantIdMapping().getAttributeMapping().getSelectable( 0 ).getJdbcMapping();
 		final var coordinator = session.getJdbcCoordinator();

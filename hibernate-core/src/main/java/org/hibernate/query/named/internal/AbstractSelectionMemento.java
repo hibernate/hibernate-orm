@@ -76,7 +76,7 @@ public abstract class AbstractSelectionMemento<R>
 	}
 
 	@Override
-	@Nullable //FIXME: declared @Nonnull by JPA
+	@Nullable
 	public Class<R> getResultType() {
 		return queryType;
 	}

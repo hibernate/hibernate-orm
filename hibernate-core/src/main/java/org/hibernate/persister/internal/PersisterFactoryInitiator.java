@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.util.Map;
 
 import jakarta.annotation.Nonnull;
@@ -27,6 +29,7 @@ public class PersisterFactoryInitiator implements StandardServiceInitiator<Persi
 		return PersisterFactory.class;
 	}
 
+	@Nullable
 	@Override
 	public PersisterFactory initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
@@ -51,7 +54,8 @@ public class PersisterFactoryInitiator implements StandardServiceInitiator<Persi
 		}
 	}
 
-	private Class<? extends PersisterFactory> locate(ServiceRegistryImplementor registry, String className) {
+	@Nonnull
+	private Class<? extends PersisterFactory> locate(@Nonnull ServiceRegistryImplementor registry, @Nonnull String className) {
 		return registry.requireService( ClassLoaderService.class ).classForName( className );
 	}
 }

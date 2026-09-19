@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.LockMode;
@@ -33,7 +35,9 @@ import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.FILTER;
+
 
 /**
  * Responsible for retrieving {@linkplain OnExecutionGenerator database-generated}
@@ -52,10 +56,10 @@ import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.F
  * @author Marco Belladelli
  */
 public class GeneratedValuesProcessor {
-	private final SelectStatement selectStatement;
-	private final JdbcSelect jdbcSelect;
+	@Nullable private final SelectStatement selectStatement;
+	@Nullable private final JdbcSelect jdbcSelect;
 	private final List<AttributeMapping> generatedValuesToSelect;
-	private final JdbcParametersList jdbcParameters;
+	@Nullable private final JdbcParametersList jdbcParameters;
 
 	private final EntityPersister entityDescriptor;
 
@@ -158,7 +162,7 @@ public class GeneratedValuesProcessor {
 			Object entity,
 			Object id,
 			Object[] state,
-			GeneratedValues generatedValues,
+			@Nullable GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( hasActualGeneratedValuesToSelect( session, entity ) ) {
 			if ( selectStatement != null ) {
@@ -176,7 +180,7 @@ public class GeneratedValuesProcessor {
 
 	private boolean hasActualGeneratedValuesToSelect(SharedSessionContractImplementor session, Object entity) {
 		for ( var attributeMapping : generatedValuesToSelect ) {
-			if ( attributeMapping.getGenerator().generatedOnExecution( entity, session ) ) {
+			if ( castNonNull( attributeMapping.getGenerator() ).generatedOnExecution( entity, session ) ) {
 				return true;
 			}
 		}
@@ -197,7 +201,7 @@ public class GeneratedValuesProcessor {
 	}
 
 	private JdbcParameterBindings getJdbcParameterBindings(Object id, SharedSessionContractImplementor session) {
-		final var jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		final var jdbcParamBindings = new JdbcParameterBindingsImpl( castNonNull( jdbcParameters ).size() );
 		final int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
 				entityDescriptor.getIdentifierMapping(),
@@ -213,10 +217,11 @@ public class GeneratedValuesProcessor {
 			final var attribute = generatedValuesToSelect.get( i );
 			final Object generatedValue = selectionResults[i];
 			state[ attribute.getStateArrayPosition() ] = generatedValue;
-			attribute.getAttributeMetadata().getPropertyAccess().getPropertyValueAccessor().set( entity, generatedValue );
+			castNonNull( attribute.getAttributeMetadata() ).getPropertyAccess().getPropertyValueAccessor().set( entity, generatedValue );
 		}
 	}
 
+	@Nullable
 	public SelectStatement getSelectStatement() {
 		return selectStatement;
 	}
@@ -225,6 +230,7 @@ public class GeneratedValuesProcessor {
 		return generatedValuesToSelect;
 	}
 
+	@Nullable
 	public JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
@@ -233,6 +239,7 @@ public class GeneratedValuesProcessor {
 		return entityDescriptor;
 	}
 
+	@Nullable
 	public JdbcSelect getJdbcSelect() {
 		return jdbcSelect;
 	}

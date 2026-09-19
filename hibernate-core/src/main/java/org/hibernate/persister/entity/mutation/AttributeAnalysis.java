@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 
@@ -18,6 +20,7 @@ public interface AttributeAnalysis {
 	/**
 	 * The attribute analyzed here
 	 */
+	@Nonnull
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	AttributeMapping getAttribute();
 
@@ -36,6 +39,7 @@ public interface AttributeAnalysis {
 	/**
 	 * Whether the attribute is considered dirty
 	 */
+	@Nonnull
 	DirtynessStatus getDirtynessStatus();
 
 	/**

@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.ordering;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
 
@@ -14,8 +15,10 @@ import org.hibernate.jpa.spi.JpaCompliance;
  */
 public interface TranslationContext {
 
+	@Nonnull
 	SessionFactoryImplementor getFactory();
 
+	@Nonnull
 	default JpaCompliance getJpaCompliance() {
 		return getFactory().getSessionFactoryOptions().getJpaCompliance();
 	}

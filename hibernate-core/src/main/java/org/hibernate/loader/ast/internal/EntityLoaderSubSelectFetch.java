@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.LockOptions;
@@ -28,10 +30,10 @@ public class EntityLoaderSubSelectFetch implements EntityLoader {
 	private final SelectStatement sqlAst;
 
 	public EntityLoaderSubSelectFetch(
-			EntityMappingType entityMapping,
-			ToOneAttributeMapping attributeMapping,
-			SubselectFetch subselect,
-			SharedSessionContractImplementor session) {
+			@Nonnull EntityMappingType entityMapping,
+			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull SubselectFetch subselect,
+			@Nonnull SharedSessionContractImplementor session) {
 		this.entityMapping = entityMapping;
 		this.subselect = subselect;
 
@@ -48,12 +50,13 @@ public class EntityLoaderSubSelectFetch implements EntityLoader {
 		);
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getLoadable() {
 		return entityMapping;
 	}
 
-	public void load(SharedSessionContractImplementor session) {
+	public void load(@Nonnull SharedSessionContractImplementor session) {
 		final var sessionFactory = session.getFactory();
 		final var jdbcServices = sessionFactory.getJdbcServices();
 		final var batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();

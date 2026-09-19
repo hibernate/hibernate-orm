@@ -4,6 +4,12 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,13 +40,15 @@ public class UpdateRowsCoordinatorTemporal extends AbstractUpdateRowsCoordinator
 
 	protected final MutationExecutorService mutationExecutorService;
 
+	@Nullable
 	private MutationOperationGroup deleteOperationGroup;
+	@Nullable
 	private MutationOperationGroup insertOperationGroup;
 
 	public UpdateRowsCoordinatorTemporal(
-			AbstractCollectionPersister mutationTarget,
-			RowMutationOperations rowMutationOperations,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull AbstractCollectionPersister mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, sessionFactory );
 		this.rowMutationOperations = rowMutationOperations;
 		this.deleteBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#DELETE" );
@@ -50,7 +58,7 @@ public class UpdateRowsCoordinatorTemporal extends AbstractUpdateRowsCoordinator
 	}
 
 	@Override
-	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
+	protected int doUpdate(@Nonnull Object key, @Nonnull PersistentCollection<?> collection, @Nonnull SharedSessionContractImplementor session) {
 		if ( rowMutationOperations.getDeleteRowOperation() == null
 				|| rowMutationOperations.getInsertRowOperation() == null ) {
 			return 0;
@@ -118,20 +126,20 @@ public class UpdateRowsCoordinatorTemporal extends AbstractUpdateRowsCoordinator
 	}
 
 	private boolean processRow(
-			Object key,
-			PersistentCollection<?> collection,
-			Object entry,
+			@Nonnull Object key,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object entry,
 			int entryPosition,
-			MutationExecutor deleteExecutor,
-			MutationExecutor insertExecutor,
-			SharedSessionContractImplementor session) {
+			@Nonnull MutationExecutor deleteExecutor,
+			@Nonnull MutationExecutor insertExecutor,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var attribute = getMutationTarget().getTargetPart();
 		if ( !collection.needsUpdating( entry, entryPosition, attribute ) ) {
 			return false;
 		}
 
 		final Object deleteRowValue = resolveDeleteRowValue( collection, entry, entryPosition );
-		rowMutationOperations.getDeleteRowRestrictions().applyRestrictions(
+		castNonNull( rowMutationOperations.getDeleteRowRestrictions() ).applyRestrictions(
 				collection,
 				key,
 				deleteRowValue,
@@ -141,7 +149,7 @@ public class UpdateRowsCoordinatorTemporal extends AbstractUpdateRowsCoordinator
 		);
 		deleteExecutor.execute( deleteRowValue, null, null, null, session );
 
-		rowMutationOperations.getInsertRowValues().applyValues(
+		castNonNull( rowMutationOperations.getInsertRowValues() ).applyValues(
 				collection,
 				key,
 				entry,

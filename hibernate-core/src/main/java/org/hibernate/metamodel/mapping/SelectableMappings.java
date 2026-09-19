@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * A container for multiple selectable (column, formula) mappings.
  *
@@ -18,6 +20,7 @@ public interface SelectableMappings {
 	/**
 	 * Get the selectable at the given position
 	 */
+	@Nonnull
 	SelectableMapping getSelectable(int columnIndex);
 
 	/**
@@ -30,13 +33,13 @@ public interface SelectableMappings {
 	 *
 	 * @see SelectableConsumer#accept(int, SelectableMapping)
 	 */
-	int forEachSelectable(int offset, SelectableConsumer consumer);
+	int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer);
 
 	/**
 	 * Same as {@link #forEachSelectable(int, SelectableConsumer)}, with
 	 * an implicit offset of `0`
 	 */
-	default int forEachSelectable(SelectableConsumer consumer) {
+	default int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );
 	}
 

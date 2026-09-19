@@ -1641,14 +1641,14 @@ public class NativeQueryImpl<R>
 
 	@Override
 	@Nonnull
-	public NativeQueryImplementor<R> setFlushMode(@Nonnull FlushModeType flushModeType) {
+	public NativeQueryImplementor<R> setFlushMode(@Nullable FlushModeType flushModeType) {
 		super.setFlushMode( flushModeType );
 		return this;
 	}
 
 	@Override
 	@Nonnull
-	public NativeQueryImplementor<R> setCacheMode(@Nonnull CacheMode cacheMode) {
+	public NativeQueryImplementor<R> setCacheMode(@Nullable CacheMode cacheMode) {
 		errorIfNotSelectForSure();
 		queryOptions.setCacheMode( cacheMode );
 		return this;

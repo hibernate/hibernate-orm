@@ -4,6 +4,11 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.function.UnaryOperator;
 
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
@@ -29,6 +34,7 @@ public class DeleteRowsCoordinatorHistory implements DeleteRowsCoordinator {
 	private final CollectionMutationTarget mutationTarget;
 	private final RowMutationOperations rowMutationOperations;
 	private final boolean deleteByIndex;
+	@Nullable
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;
@@ -36,19 +42,23 @@ public class DeleteRowsCoordinatorHistory implements DeleteRowsCoordinator {
 	private final BasicBatchKey deleteBatchKey;
 	private final BasicBatchKey historyBatchKey;
 
+	@Nullable
 	private MutationOperationGroup deleteOperationGroup;
+	@Nullable
 	private MutationOperationGroup historyOperationGroup;
+	@Nullable
 	private CollectionTableMapping historyTableMapping;
+	@Nullable
 	private HistoryCollectionRowMutationHelper rowMutationHelper;
 
 	public DeleteRowsCoordinatorHistory(
-			CollectionMutationTarget mutationTarget,
-			RowMutationOperations rowMutationOperations,
+			@Nonnull CollectionMutationTarget mutationTarget,
+			@Nonnull RowMutationOperations rowMutationOperations,
 			boolean deleteByIndex,
-			boolean[] indexColumnIsSettable,
-			boolean[] elementColumnIsSettable,
-			UnaryOperator<Object> indexIncrementer,
-			ServiceRegistry serviceRegistry) {
+			@Nullable boolean[] indexColumnIsSettable,
+			@Nonnull boolean[] elementColumnIsSettable,
+			@Nonnull UnaryOperator<Object> indexIncrementer,
+			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 		this.deleteByIndex = deleteByIndex;
@@ -60,13 +70,14 @@ public class DeleteRowsCoordinatorHistory implements DeleteRowsCoordinator {
 		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
 
 	@Override
-	public void deleteRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+	public void deleteRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( deleteOperationGroup == null ) {
 			deleteOperationGroup = createOperationGroup();
 		}
@@ -103,7 +114,7 @@ public class DeleteRowsCoordinatorHistory implements DeleteRowsCoordinator {
 			}
 
 			int deletionCount = 0;
-			final var restrictions = rowMutationOperations.getDeleteRowRestrictions();
+			final var restrictions = castNonNull( rowMutationOperations.getDeleteRowRestrictions() );
 			final var historyBindings = getRowMutationHelper();
 
 			while ( deletes.hasNext() ) {
@@ -144,16 +155,19 @@ public class DeleteRowsCoordinatorHistory implements DeleteRowsCoordinator {
 		}
 	}
 
+	@Nullable
 	private MutationOperationGroup createOperationGroup() {
 		final var operation = rowMutationOperations.getDeleteRowOperation();
 		return operation == null ? null : singleOperation( MutationType.DELETE, mutationTarget, operation );
 	}
 
+	@Nullable
 	private MutationOperationGroup createHistoryOperationGroup() {
 		final var operation = rowMutationOperations.getDeleteRowOperation( getHistoryTableMapping() );
 		return operation == null ? null : singleOperation( MutationType.DELETE, mutationTarget, operation );
 	}
 
+	@Nonnull
 	private CollectionTableMapping getHistoryTableMapping() {
 		if ( historyTableMapping == null ) {
 			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
@@ -164,6 +178,7 @@ public class DeleteRowsCoordinatorHistory implements DeleteRowsCoordinator {
 		return historyTableMapping;
 	}
 
+	@Nonnull
 	private HistoryCollectionRowMutationHelper getRowMutationHelper() {
 		if ( rowMutationHelper == null ) {
 			rowMutationHelper = new HistoryCollectionRowMutationHelper(

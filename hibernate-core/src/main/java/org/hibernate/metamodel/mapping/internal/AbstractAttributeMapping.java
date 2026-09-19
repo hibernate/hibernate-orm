@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -12,25 +16,26 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
+
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeMapping implements AttributeMapping {
-	private final String name;
+	@Nullable private final String name;
 	private final int fetchableIndex;
 	private final int stateArrayPosition;
 
-	private final ManagedMappingType declaringType;
-	private final AttributeMetadata attributeMetadata;
-	private final PropertyAccess propertyAccess;
+	@Nullable private final ManagedMappingType declaringType;
+	@Nullable private final AttributeMetadata attributeMetadata;
+	@Nullable private final PropertyAccess propertyAccess;
 
 	public AbstractAttributeMapping(
-			String name,
+			@Nullable String name,
 			int fetchableIndex,
-			ManagedMappingType declaringType,
-			AttributeMetadata attributeMetadata,
+			@Nullable ManagedMappingType declaringType,
+			@Nullable AttributeMetadata attributeMetadata,
 			int stateArrayPosition,
-			PropertyAccess propertyAccess) {
+			@Nullable PropertyAccess propertyAccess) {
 		this.name = name;
 		this.fetchableIndex = fetchableIndex;
 		this.declaringType = declaringType;
@@ -53,16 +58,19 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 		);
 	}
 
+	@Nullable
 	@Override
 	public ManagedMappingType getDeclaringType() {
 		return declaringType;
 	}
 
+	@Nullable
 	@Override
 	public String getAttributeName() {
 		return name;
 	}
 
+	@Nullable
 	@Override
 	public AttributeMetadata getAttributeMetadata() {
 		return attributeMetadata;
@@ -73,6 +81,7 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 		return stateArrayPosition;
 	}
 
+	@Nullable
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return propertyAccess;
@@ -83,11 +92,13 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 		return fetchableIndex;
 	}
 
+	@Nonnull
 	@Override
 	public MappingType getPartMappingType() {
 		return getMappedType();
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJavaType() {
 		return getMappedType().getMappedJavaType();

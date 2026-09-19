@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -18,14 +20,14 @@ import org.hibernate.persister.entity.EntityPersister;
 @org.hibernate.Internal
 public class MergeCoordinatorHistory extends UpdateCoordinatorHistory {
 	public MergeCoordinatorHistory(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory,
-			UpdateCoordinator currentMergeCoordinator) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nonnull UpdateCoordinator currentMergeCoordinator) {
 		super( entityPersister, factory, currentMergeCoordinator );
 	}
 
 	@Override
-	boolean resultCheck(Object id, PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
+	boolean resultCheck(@Nonnull Object id, @Nonnull PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
 		return affectedRowCount != 0
 			&& super.resultCheck( id, statementDetails, affectedRowCount, batchPosition );
 	}

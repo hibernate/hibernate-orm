@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 
 /**
@@ -15,5 +17,6 @@ public interface CollectionOperationCoordinator {
 	/**
 	 * The collection being mutated
 	 */
+	@Nonnull
 	CollectionMutationTarget getMutationTarget();
 }

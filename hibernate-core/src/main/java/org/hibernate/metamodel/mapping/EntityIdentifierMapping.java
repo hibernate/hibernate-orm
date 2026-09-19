@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.IdentifierValue;
@@ -28,11 +32,12 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 	String ID_ROLE_NAME = "{id}";
 	String LEGACY_ID_NAME = "id";
 
-	static boolean matchesRoleName(String name) {
+	static boolean matchesRoleName(@Nonnull String name) {
 		return LEGACY_ID_NAME.equalsIgnoreCase( name )
 			|| ID_ROLE_NAME.equals( name );
 	}
 
+	@Nonnull
 	@Override
 	default String getPartName() {
 		return ID_ROLE_NAME;
@@ -41,11 +46,13 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 	/**
 	 * @see Nature
 	 */
+	@Nonnull
 	Nature getNature();
 
 	/**
 	 * The name of the attribute defining the id, if one
 	 */
+	@Nullable
 	String getAttributeName();
 
 	/**
@@ -54,6 +61,7 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 	 *
 	 * @see EntityVersionMapping#getUnsavedStrategy()
 	 */
+	@Nonnull
 	IdentifierValue getUnsavedStrategy();
 
 	/**
@@ -61,19 +69,22 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 	 *
 	 * @apiNote This is really only valid on {@linkplain CompositeIdentifierMapping composite identifiers}
 	 */
+	@Nullable
 	Object instantiate();
 
 	/**
 	 * Extract the identifier from an instance of the entity
 	 */
-	Object getIdentifier(Object entity);
+	@Nullable
+	Object getIdentifier(@Nonnull Object entity);
 
 	/**
 	 * Extract the identifier from an instance of the entity
 	 *
 	 * @apiNote Intended for use during the merging process
 	 */
-	default Object getIdentifier(Object entity, MergeContext mergeContext){
+	@Nullable
+	default Object getIdentifier(@Nonnull Object entity, @Nullable MergeContext mergeContext){
 		return getIdentifier( entity );
 	}
 
@@ -97,7 +108,8 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 	 * @see org.hibernate.engine.internal.ForeignKeys#getEntityIdentifierIfNotUnsaved
 	 * @since 6.1.1
 	 */
-	default Object getIdentifierIfNotUnsaved(Object entity, SharedSessionContractImplementor session) {
+	@Nullable
+	default Object getIdentifierIfNotUnsaved(@Nullable Object entity, @Nullable SharedSessionContractImplementor session) {
 		if ( entity == null ) {
 			return null;
 		}
@@ -110,7 +122,7 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 			// getContextEntityIdentifier() returned null, indicating that
 			// the entity is not associated with the persistence context,
 			// so look deeper for its id
-			final String entityName = findContainingEntityMapping().getEntityName();
+			final String entityName = org.hibernate.internal.util.NullnessUtil.castNonNull( findContainingEntityMapping() ).getEntityName();
 			if ( ForeignKeys.isTransient( entityName, entity, Boolean.FALSE, session ) ) {
 				// TODO should be a TransientPropertyValueException
 				throw new TransientObjectException( "object references an unsaved transient instance of '"
@@ -127,7 +139,7 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 	/**
 	 * Inject an identifier value into an instance of the entity
 	 */
-	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
+	void setIdentifier(@Nonnull Object entity, @Nullable Object id, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * The style of identifier used.

@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -57,23 +60,23 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	private final MutationDetails deleteDetails;
 
 	public EntityTableMappingImpl(
-			String tableName,
+			@Nonnull String tableName,
 			int relativePosition,
-			KeyMapping keyMapping,
+			@Nonnull KeyMapping keyMapping,
 			boolean isOptional,
 			boolean isInverse,
 			boolean isIdentifierTable,
 			boolean isSecondaryTable,
-			int[] attributeIndexes,
-			Expectation insertExpectation,
-			String insertCustomSql,
+			@Nonnull int[] attributeIndexes,
+			@Nonnull Expectation insertExpectation,
+			@Nullable String insertCustomSql,
 			boolean insertCallable,
-			Expectation updateExpectation,
-			String updateCustomSql,
+			@Nonnull Expectation updateExpectation,
+			@Nullable String updateCustomSql,
 			boolean updateCallable,
 			boolean cascadeDeleteEnabled,
-			Expectation deleteExpectation,
-			String deleteCustomSql,
+			@Nonnull Expectation deleteExpectation,
+			@Nullable String deleteCustomSql,
 			boolean deleteCallable,
 			boolean dynamicUpdate,
 			boolean dynamicInsert) {
@@ -123,10 +126,12 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		}
 	}
 
+	@Nonnull
 	@Override public String getTableName() {
 		return tableName;
 	}
 
+	@Nullable
 	@Override
 	public KeyDetails getKeyDetails() {
 		return keyMapping;
@@ -153,6 +158,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return flags.get( Flag.SECONDARY_TABLE.ordinal() );
 	}
 
+	@Nonnull
 	@Override
 	public KeyMapping getKeyMapping() {
 		return keyMapping;
@@ -168,20 +174,24 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return contains( attributeIndexes, attributeIndex );
 	}
 
+	@Nonnull
 	@Override
 	public int[] getAttributeIndexes() {
 		return attributeIndexes;
 	}
 
+	@Nonnull
 	@Override public MutationDetails getInsertDetails() {
 		return insertDetails;
 	}
 
+	@Nonnull
 	@Override
 	public Expectation getInsertExpectation() {
 		return getInsertDetails().getExpectation();
 	}
 
+	@Nullable
 	@Override
 	public String getInsertCustomSql() {
 		return getInsertDetails().getCustomSql();
@@ -192,15 +202,18 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return getInsertDetails().isCallable();
 	}
 
+	@Nonnull
 	@Override public MutationDetails getUpdateDetails() {
 		return updateDetails;
 	}
 
+	@Nonnull
 	@Override
 	public Expectation getUpdateExpectation() {
 		return getUpdateDetails().getExpectation();
 	}
 
+	@Nullable
 	@Override
 	public String getUpdateCustomSql() {
 		return getUpdateDetails().getCustomSql();
@@ -215,15 +228,18 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return flags.get( Flag.CASCADE_DELETE.ordinal() );
 	}
 
+	@Nonnull
 	@Override public MutationDetails getDeleteDetails() {
 		return deleteDetails;
 	}
 
+	@Nonnull
 	@Override
 	public Expectation getDeleteExpectation() {
 		return getDeleteDetails().getExpectation();
 	}
 
+	@Nullable
 	@Override
 	public String getDeleteCustomSql() {
 		return getDeleteDetails().getCustomSql();
@@ -235,7 +251,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		if ( this == object ) {
 			return true;
 		}
@@ -252,6 +268,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		return Objects.hash( tableName );
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return "TableMapping(" + tableName + ")";
@@ -264,11 +281,12 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		protected final List<KeyColumn> keyColumns;
 		protected final ModelPart identifierPart;
 
-		public AbstractKeyMapping(List<KeyColumn> keyColumns, ModelPart identifierPart) {
+		public AbstractKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull ModelPart identifierPart) {
 			this.keyColumns = keyColumns;
 			this.identifierPart = identifierPart;
 		}
 
+		@Nonnull
 		@Override
 		public List<? extends KeyColumn> getKeyColumns() {
 			return keyColumns;
@@ -279,13 +297,14 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			return getKeyColumns().size();
 		}
 
+		@Nonnull
 		@Override
 		public KeyColumn getKeyColumn(int position) {
 			return getKeyColumns().get( position );
 		}
 
 		@Override
-		public void forEachKeyColumn(KeyColumnConsumer consumer) {
+		public void forEachKeyColumn(@Nonnull KeyColumnConsumer consumer) {
 			final var keyColumns = getKeyColumns();
 			for ( int i = 0; i < keyColumns.size(); i++ ) {
 				consumer.consume( i, keyColumns.get( i ) );
@@ -297,13 +316,14 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			return getKeyColumns().size();
 		}
 
+		@Nonnull
 		@Override
 		public SelectableMapping getSelectable(int columnIndex) {
 			return getKeyColumns().get( columnIndex );
 		}
 
 		@Override
-		public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 			final var keyColumns = getKeyColumns();
 			for ( int i = 0; i < keyColumns.size(); i++ ) {
 				consumer.accept( i, keyColumns.get( i ) );
@@ -312,9 +332,9 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		}
 
 		public void breakDownKeyJdbcValues(
-				Object domainValue,
-				KeyValueConsumer valueConsumer,
-				SharedSessionContractImplementor session) {
+				@Nonnull Object domainValue,
+				@Nonnull KeyValueConsumer valueConsumer,
+				@Nonnull SharedSessionContractImplementor session) {
 			identifierPart.forEachJdbcValue(
 					domainValue,
 					getKeyColumns(),
@@ -327,10 +347,11 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			);
 		}
 
+		@Nonnull
 		protected SqlSelection resolveSqlSelection(
-				TableReference tableReference,
-				KeyColumn keyColumn,
-				SqlAstCreationState creationState) {
+				@Nonnull TableReference tableReference,
+				@Nonnull KeyColumn keyColumn,
+				@Nonnull SqlAstCreationState creationState) {
 			final var expressionResolver = creationState.getSqlExpressionResolver();
 			return expressionResolver.resolveSqlSelection(
 					expressionResolver.resolveSqlExpression( tableReference, keyColumn ),
@@ -341,7 +362,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 		}
 
 		@Override
-		public int forEachSelectable(SelectableConsumer consumer) {
+		public int forEachSelectable(@Nonnull SelectableConsumer consumer) {
 			forEachKeyColumn( consumer::accept );
 			return getJdbcTypeCount();
 		}
@@ -350,17 +371,18 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	public static class SimpleKeyMapping extends AbstractKeyMapping {
 		private final KeyColumn keyColumn;
 
-		public SimpleKeyMapping(List<KeyColumn> keyColumns, BasicValuedModelPart identifierPart) {
+		public SimpleKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull BasicValuedModelPart identifierPart) {
 			super( keyColumns, identifierPart );
 			this.keyColumn = keyColumns.get( 0 );
 		}
 
+		@Nonnull
 		@Override
 		public <K> DomainResult<K> createDomainResult(
-				NavigablePath navigablePath,
-				TableReference tableReference,
-				String resultVariable,
-				DomainResultCreationState creationState) {
+				@Nonnull NavigablePath navigablePath,
+				@Nonnull TableReference tableReference,
+				@Nullable String resultVariable,
+				@Nonnull DomainResultCreationState creationState) {
 			// create SqlSelection based on the underlying JdbcMapping
 			final var sqlSelection = resolveSqlSelection(
 					tableReference,
@@ -383,16 +405,17 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	public static class CompositeKeyMapping extends AbstractKeyMapping {
-		public CompositeKeyMapping(List<KeyColumn> keyColumns, EmbeddableValuedModelPart identifierPart) {
+		public CompositeKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull EmbeddableValuedModelPart identifierPart) {
 			super( keyColumns, identifierPart );
 		}
 
+		@Nonnull
 		@Override
 		public <K> DomainResult<K> createDomainResult(
-				NavigablePath navigablePath,
-				TableReference tableReference,
-				String resultVariable,
-				DomainResultCreationState creationState) {
+				@Nonnull NavigablePath navigablePath,
+				@Nonnull TableReference tableReference,
+				@Nullable String resultVariable,
+				@Nonnull DomainResultCreationState creationState) {
 			// this will be challenging if the embeddable defines to-ones.
 			// just error for now.
 			throw new UnsupportedOperationException( "Not implemented yet" );
@@ -401,7 +424,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 
 	public static class KeyColumn extends SelectableMappingImpl implements TableDetails.KeyColumn {
 
-		public KeyColumn(String tableName, SelectableMapping originalMapping) {
+		public KeyColumn(@Nonnull String tableName, @Nonnull SelectableMapping originalMapping) {
 			super(
 					tableName,
 					originalMapping.getSelectionExpression(),
@@ -422,6 +445,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			);
 		}
 
+		@Nonnull
 		@Override
 		public String getColumnName() {
 			return getSelectionExpression();

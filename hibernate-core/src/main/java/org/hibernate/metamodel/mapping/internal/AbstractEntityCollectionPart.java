@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -102,26 +105,31 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		return collectionDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getMappedType() {
 		return getAssociatedEntityMappingType();
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
 
+	@Nonnull
 	@Override
 	public Nature getNature() {
 		return nature;
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getCollectionAttribute() {
 		return collectionDescriptor.getAttributeMapping();
 	}
 
+	@Nonnull
 	@Override
 	public String getFetchableName() {
 		return nature.getName();
@@ -132,6 +140,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		return nature == Nature.INDEX || !collectionDescriptor.hasIndex() ? 0 : 1;
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getAssociatedEntityMappingType() {
 		return associatedEntityTypeDescriptor;
@@ -173,6 +182,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		return false;
 	}
 
+	@Nullable
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
@@ -183,18 +193,20 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		return getAssociatedEntityMappingType().getNumberOfFetchables();
 	}
 
+	@Nonnull
 	@Override
 	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull TableGroup tableGroup,
+			@Nullable String resultVariable,
+			@Nonnull DomainResultCreationState creationState) {
 		final var partTableGroup = resolveTableGroup( navigablePath, creationState );
 		return associatedEntityTypeDescriptor.createDomainResult( navigablePath, partTableGroup, resultVariable, creationState );
 	}
 
+	@Nullable
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return value == null ? null
 				// should be an instance of the associated entity
 				: getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( value );
@@ -298,7 +310,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			boolean fetched,
-			String sourceAlias,
+			@Nullable String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
 		final var creationContext = creationState.getCreationContext();

@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.util.List;
@@ -24,5 +26,6 @@ public interface MultiNaturalIdLoader<E> extends EntityMultiLoader<E> {
 	/// @param <K> The basic form for a natural-id is a Map of its attribute values, or an array of the
 	/// values positioned according to "attribute ordering".  Simple natural-ids can also be expressed
 	/// by their simple (basic/embedded) type.
-	<K> List<E> multiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, SharedSessionContractImplementor session);
+	@Nonnull
+	<K> List<E> multiLoad(@Nonnull K[] naturalIds, @Nonnull MultiNaturalIdLoadOptions options, @Nonnull SharedSessionContractImplementor session);
 }

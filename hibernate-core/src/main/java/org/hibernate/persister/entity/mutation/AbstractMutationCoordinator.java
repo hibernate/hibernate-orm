@@ -4,6 +4,13 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.generator.values.GeneratedValues;
+
+import org.hibernate.AssertionFailure;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
@@ -55,17 +62,40 @@ public abstract class AbstractMutationCoordinator {
 	protected final MutationExecutorService mutationExecutorService;
 	protected final Dialect dialect;
 
-	public AbstractMutationCoordinator(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public AbstractMutationCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		this.entityPersister = entityPersister;
 		this.factory = factory;
 		dialect = factory.getJdbcServices().getDialect();
 		mutationExecutorService = factory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
+	protected Object resolveInsertedIdentifier(
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nullable GeneratedValues generatedValues,
+			@Nonnull SharedSessionContractImplementor session) {
+		if ( id != null ) {
+			return id;
+		}
+		final Object generatedId = generatedValues == null
+				? null
+				: generatedValues.getGeneratedValue( entityPersister.getIdentifierMapping() );
+		if ( generatedId != null ) {
+			return generatedId;
+		}
+		final Object entityId = entityPersister.getIdentifier( entity, session );
+		if ( entityId == null ) {
+			throw new AssertionFailure( "No identifier after insert of '"
+					+ entityPersister.getEntityName() + "'" );
+		}
+		return entityId;
+	}
+
 	static boolean hasValueGenerationOnExecution(
-			OnExecutionGenerator generator,
-			Dialect dialect,
-			EventType eventType) {
+			@Nonnull OnExecutionGenerator generator,
+			@Nonnull Dialect dialect,
+			@Nonnull EventType eventType) {
 		if ( generator.getEventTypes().contains( eventType ) ) {
 			final boolean[] columnInclusions = generator.getColumnInclusions( dialect, eventType );
 			if ( columnInclusions != null ) {
@@ -99,12 +129,12 @@ public abstract class AbstractMutationCoordinator {
 		}
 	}
 
-	protected void applyTenantRestriction(RestrictedTableMutationBuilder<?, ?> builder) {
+	protected void applyTenantRestriction(@Nonnull RestrictedTableMutationBuilder<?, ?> builder) {
 		TenantIdHelper.applyTenantRestriction( entityPersister(), builder );
 	}
 
 	protected void bindTenantRestriction(
-			SharedSessionContractImplementor session, JdbcValueBindings bindings, MutationOperationGroup operationGroup) {
+			@Nonnull SharedSessionContractImplementor session, @Nonnull JdbcValueBindings bindings, @Nonnull MutationOperationGroup operationGroup) {
 		final var tenantMapping = TenantIdHelper.tenantIdAttribute( entityPersister() );
 		if ( tenantMapping != null ) {
 			final var selectable = tenantMapping.getSelectable( 0 );
@@ -119,19 +149,23 @@ public abstract class AbstractMutationCoordinator {
 		}
 	}
 
+	@Nonnull
 	protected EntityPersister entityPersister() {
 		return entityPersister;
 	}
 
+	@Nonnull
 	protected SessionFactoryImplementor factory() {
 		return factory;
 	}
 
+	@Nonnull
 	protected Dialect dialect() {
 		return dialect;
 	}
 
-	protected BatchKeyAccess resolveBatchKeyAccess(boolean dynamicUpdate, SharedSessionContractImplementor session) {
+	@Nonnull
+	protected BatchKeyAccess resolveBatchKeyAccess(boolean dynamicUpdate, @Nonnull SharedSessionContractImplementor session) {
 		if ( !dynamicUpdate && !entityPersister().optimisticLockStyle().isAllOrDirty() ) {
 			final var transactionCoordinator = session.getTransactionCoordinator();
 			if ( transactionCoordinator != null && transactionCoordinator.isTransactionActive() ) {
@@ -142,9 +176,11 @@ public abstract class AbstractMutationCoordinator {
 		return NoBatchKeyAccess.INSTANCE;
 	}
 
+	@Nullable
 	protected abstract BatchKey getBatchKey();
 
-	protected MutationOperationGroup createOperationGroup(ValuesAnalysis valuesAnalysis, MutationGroup mutationGroup) {
+	@Nonnull
+	protected MutationOperationGroup createOperationGroup(@Nullable ValuesAnalysis valuesAnalysis, @Nonnull MutationGroup mutationGroup) {
 		final int numberOfTableMutations = mutationGroup.getNumberOfTableMutations();
 		switch ( numberOfTableMutations ) {
 			case 0:
@@ -183,16 +219,17 @@ public abstract class AbstractMutationCoordinator {
 	/*
 	 * Used by Hibernate Reactive
 	 */
-	protected MutationOperation createOperation(ValuesAnalysis valuesAnalysis, TableMutation<?> singleTableMutation) {
+	@Nonnull
+	protected MutationOperation createOperation(@Nullable ValuesAnalysis valuesAnalysis, @Nonnull TableMutation<?> singleTableMutation) {
 		return singleTableMutation.createMutationOperation( valuesAnalysis, factory() );
 	}
 
 	// Used by Hibernate Reactive
 	protected boolean hasValueGenerationOnExecution(
-			Object entity,
-			SharedSessionContractImplementor session,
-			OnExecutionGenerator generator,
-			EventType eventType) {
+			@Nullable Object entity,
+			@Nullable SharedSessionContractImplementor session,
+			@Nonnull OnExecutionGenerator generator,
+			@Nonnull EventType eventType) {
 		final boolean generatedOnExecution =
 				session == null
 						? generator.generatedOnExecution()
@@ -202,10 +239,10 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	protected void handleValueGeneration(
-			AttributeMapping attributeMapping,
-			MutationGroupBuilder mutationGroupBuilder,
-			OnExecutionGenerator generator,
-			EventType eventType) {
+			@Nonnull AttributeMapping attributeMapping,
+			@Nonnull MutationGroupBuilder mutationGroupBuilder,
+			@Nonnull OnExecutionGenerator generator,
+			@Nonnull EventType eventType) {
 		final var dialect = dialect();
 		final var columnValues = generator.getReferencedColumnValues( dialect, eventType );
 		final var columnInclusions = generator.getColumnInclusions( dialect, eventType );
@@ -224,11 +261,15 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	protected void bindPartitionColumnValueBindings(
-			Object[] loadedState,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nullable Object[] loadedState,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
+			if ( loadedState == null ) {
+				throw new AssertionFailure( "No loaded state for partitioned entity '"
+						+ persister.getEntityName() + "'" );
+			}
 			final var attributeMappings = persister.getAttributeMappings();
 			final int size = attributeMappings.size();
 			for ( int i = 0; i < size; i++ ) {
@@ -255,16 +296,16 @@ public abstract class AbstractMutationCoordinator {
 		}
 	}
 
-	protected static boolean needsRowId(EntityPersister entityPersister, EntityTableMapping tableMapping) {
+	protected static boolean needsRowId(@Nonnull EntityPersister entityPersister, @Nonnull EntityTableMapping tableMapping) {
 		return entityPersister.getRowIdMapping() != null
 			&& tableMapping.isIdentifierTable();
 	}
 
 	protected static void applyKeyRestriction(
-			Object rowId,
-			EntityPersister entityPersister,
-			RestrictedTableMutationBuilder<?, ?> tableMutationBuilder,
-			EntityTableMapping tableMapping) {
+			@Nullable Object rowId,
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull RestrictedTableMutationBuilder<?, ?> tableMutationBuilder,
+			@Nonnull EntityTableMapping tableMapping) {
 		if ( rowId != null && needsRowId( entityPersister, tableMapping ) ) {
 			tableMutationBuilder.addKeyRestrictionLeniently( entityPersister.getRowIdMapping() );
 		}
@@ -274,11 +315,11 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	protected void breakDownKeyJdbcValues(
-			Object id,
-			Object rowId,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings,
-			EntityTableMapping tableMapping) {
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings,
+			@Nonnull EntityTableMapping tableMapping) {
 		if ( rowId != null && needsRowId( entityPersister(), tableMapping ) ) {
 			jdbcValueBindings.bindValue(
 					rowId,
@@ -304,8 +345,8 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	boolean resultCheck(
-			Object id,
-			PreparedStatementDetails statementDetails,
+			@Nonnull Object id,
+			@Nonnull PreparedStatementDetails statementDetails,
 			int affectedRowCount,
 			int batchPosition) {
 		return identifiedResultsCheck(
@@ -318,24 +359,25 @@ public abstract class AbstractMutationCoordinator {
 		);
 	}
 
-	void applyOptimisticLocking(RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
+	void applyOptimisticLocking(@Nonnull RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
 		if ( entityPersister().optimisticLockStyle() == OptimisticLockStyle.VERSION ) {
 			applyVersionOptimisticLocking( tableMutationBuilder );
 		}
 	}
 
-	void applyVersionOptimisticLocking(RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
+	void applyVersionOptimisticLocking(@Nonnull RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
 		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null ) {
 			tableMutationBuilder.addOptimisticLockRestriction( versionMapping );
 		}
 	}
 
-	StaleObjectStateException staleObjectStateException(Object id, StaleStateException cause) {
+	@Nonnull
+	StaleObjectStateException staleObjectStateException(@Nonnull Object id, @Nonnull StaleStateException cause) {
 		return new StaleObjectStateException( entityPersister().getEntityName(), id, cause );
 	}
 
-	void applyPartitionKeyRestriction(RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
+	void applyPartitionKeyRestriction(@Nonnull RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
 		final var persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
 			final var attributeMappings = persister.getAttributeMappings();
@@ -355,10 +397,11 @@ public abstract class AbstractMutationCoordinator {
 	/**
 	 * For temporal history tables and audit log tables.
 	 */
+	@Nonnull
 	public static EntityTableMapping createAuxiliaryTableMapping(
-			EntityTableMapping identifierTableMapping,
-			EntityPersister persister,
-			String tableName) {
+			@Nonnull EntityTableMapping identifierTableMapping,
+			@Nonnull EntityPersister persister,
+			@Nonnull String tableName) {
 		return new EntityTableMappingImpl(
 				tableName,
 				identifierTableMapping.relativePosition(),

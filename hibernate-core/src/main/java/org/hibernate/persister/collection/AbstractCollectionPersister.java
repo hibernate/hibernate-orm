@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import jakarta.persistence.metamodel.PluralAttribute;
@@ -167,17 +169,23 @@ public abstract class AbstractCollectionPersister
 	protected final String qualifiedTableName;
 	private final CollectionTableMapping tableMapping;
 
+	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private String sqlSelectSizeString;
+	@Nullable
 	private String sqlDetectRowByIndexString;
+	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private String sqlDetectRowByElementString;
 
 	protected boolean hasWhere;
+	@Nullable
 	protected String sqlWhereString;
+	@Nullable
 	private String sqlWhereStringTemplate;
 
 	private final boolean hasOrder;
 	private final boolean hasManyToManyOrder;
 
+	@Nullable
 	private final String mappedByProperty;
 
 	protected final boolean indexContainsFormula;
@@ -187,10 +195,15 @@ public abstract class AbstractCollectionPersister
 	protected final String[] keyColumnNames;
 	protected final String[] keyFormulaTemplates;
 	protected final String[] keyFormulas;
+	@Nullable
 	protected final String[] indexColumnNames;
+	@Nullable
 	protected final String[] indexFormulaTemplates;
+	@Nullable
 	protected final String[] indexFormulas;
+	@Nullable
 	protected final boolean[] indexColumnIsGettable;
+	@Nullable
 	protected final boolean[] indexColumnIsSettable;
 	protected final String[] elementColumnNames;
 	protected final String[] elementColumnWriters;
@@ -201,8 +214,10 @@ public abstract class AbstractCollectionPersister
 	protected final boolean[] elementColumnIsGettable;
 	protected final boolean[] elementColumnIsSettable;
 
+	@Nullable
 	protected final String identifierColumnName;
 
+	@Nullable
 	private final String queryLoaderName;
 
 	private final boolean isPrimitiveArray;
@@ -219,41 +234,54 @@ public abstract class AbstractCollectionPersister
 	private final boolean cascadeDeleteEnabled;
 
 	// extra information about the element type
+	@Nullable
 	private final Class<?> elementClass;
 
 	private final Dialect dialect;
 	protected final SqlExceptionHelper sqlExceptionHelper;
+	@Nullable
 	private final BeforeExecutionGenerator identifierGenerator;
+	@Nullable
 	private final EntityPersister elementPersister;
 	private final @Nullable CollectionDataAccess cacheAccessStrategy;
 	private final @Nonnull CacheEntryStructure cacheEntryStructure;
 	private final boolean useShallowQueryCacheLayout;
 
 	// dynamic filters for the collection
+	@Nullable
 	private final FilterHelper filterHelper;
 
 	// dynamic filters specifically for many-to-many inside the collection
+	@Nullable
 	private final FilterHelper manyToManyFilterHelper;
 
+	@Nullable
 	private final String manyToManyWhereString;
+	@Nullable
 	private final String manyToManyWhereTemplate;
 
 	private final String[] spaces;
 
+	@Nullable
 	private final Comparator<?> comparator;
 
+	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private CollectionLoader collectionLoader;
+	@Nullable
 	private CollectionElementLoaderByIndex collectionElementLoaderByIndex;
 
+	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private PluralAttributeMapping attributeMapping;
+	@Nullable
 	private volatile Set<String> affectingFetchProfiles;
 
+	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private CollectionTableDescriptor collectionTableDescriptor;
 
 	public AbstractCollectionPersister(
-			Collection collectionBootDescriptor,
+			@Nonnull Collection collectionBootDescriptor,
 			@Nullable CollectionDataAccess cacheAccessStrategy,
-			RuntimeModelCreationContext creationContext)
+			@Nonnull RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
 		factory = creationContext.getSessionFactory();
 		final var factoryOptions = creationContext.getSessionFactoryOptions();
@@ -513,22 +541,25 @@ public abstract class AbstractCollectionPersister
 				&& creationContext.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE );
 	}
 
-	private FilterHelper manyToManyFilterHelper(Collection collection, RuntimeModelCreationContext context) {
+	@Nullable
+	private FilterHelper manyToManyFilterHelper(@Nonnull Collection collection, @Nonnull RuntimeModelCreationContext context) {
 		return collection.getManyToManyFilters().isEmpty()
 				? null
 				: new FilterHelper( collection.getManyToManyFilters(), context.getSessionFactory() );
 	}
 
+	@Nullable
 	private FilterHelper filterHelper(
-			Collection collection, EntityPersister elementPersister, RuntimeModelCreationContext context) {
+			@Nonnull Collection collection, @Nullable EntityPersister elementPersister, @Nonnull RuntimeModelCreationContext context) {
 		final var filters = collection.getFilters();
 		return filters.isEmpty()
 				? null
 				: new FilterHelper( filters, entityNameByTableNameMap( elementPersister, context ), factory );
 	}
 
+	@Nullable
 	private static Map<String, String> entityNameByTableNameMap(
-			EntityPersister elementPersister, RuntimeModelCreationContext context) {
+			@Nullable EntityPersister elementPersister, @Nonnull RuntimeModelCreationContext context) {
 		return elementPersister == null
 				? null
 				: AbstractEntityPersister.getEntityNameByTableNameMap(
@@ -537,18 +568,20 @@ public abstract class AbstractCollectionPersister
 				);
 	}
 
+	@Nullable
 	public String getSqlWhereString() {
 		return sqlWhereString;
 	}
 
-	private static int batchSize(Collection collection, SessionFactoryOptions options) {
+	private static int batchSize(@Nonnull Collection collection, @Nonnull SessionFactoryOptions options) {
 		final int batchSize = collection.getBatchSize();
 		return batchSize >= 0
 				? batchSize
 				: options.getDefaultBatchFetchSize();
 	}
 
-	private static CacheEntryStructure cacheEntryStructure(Collection collection, SessionFactoryOptions options) {
+	@Nonnull
+	private static CacheEntryStructure cacheEntryStructure(@Nonnull Collection collection, @Nonnull SessionFactoryOptions options) {
 		if ( options.isStructuredCacheEntriesEnabled() ) {
 			return collection.isMap()
 					? StructuredMapCacheEntry.INSTANCE
@@ -559,12 +592,13 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
+	@Nonnull
 	SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return getFactory().getJdbcServices().getDialect().getSqlAstTranslatorFactory();
 	}
 
 	@Override
-	public void prepareMappingModel(MappingModelCreationProcess creationProcess, Collection bootCollectionDescriptor) {
+	public void prepareMappingModel(@Nonnull MappingModelCreationProcess creationProcess, @Nonnull Collection bootCollectionDescriptor) {
 		final var creationContext = creationProcess.getCreationContext();
 		if ( mappedByProperty != null && elementType instanceof EntityType entityType ) {
 			final String entityName = entityType.getAssociatedEntityName();
@@ -602,10 +636,10 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private void delayedWhereFragmentProcessing(
-			EntityPersister entityPersister,
-			String mappedByProperty,
-			Collection bootDescriptor,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull String mappedByProperty,
+			@Nonnull Collection bootDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		final String where = getWhere( entityPersister, mappedByProperty, bootDescriptor, creationContext );
 		if ( isNotEmpty( where ) ) {
 			hasWhere = true;
@@ -618,10 +652,10 @@ public abstract class AbstractCollectionPersister
 
 	@Nullable
 	private String getWhere(
-			EntityPersister entityPersister,
-			String mappedByProperty,
-			Collection collectionBootDescriptor,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull String mappedByProperty,
+			@Nonnull Collection collectionBootDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		if ( resolveMappedBy( entityPersister, mappedByProperty )
 					instanceof DiscriminatedAssociationAttributeMapping anyMapping ) {
 			final var discriminatorMapping = anyMapping.getDiscriminatorMapping();
@@ -654,7 +688,8 @@ public abstract class AbstractCollectionPersister
 		return collectionSemantics.getCollectionClassification().toJpaClassification() == PluralAttribute.CollectionType.MAP;
 	}
 
-	private static AttributeMapping resolveMappedBy(EntityPersister entityPersister, String mappedByProperty) {
+	@Nullable
+	private static AttributeMapping resolveMappedBy(@Nonnull EntityPersister entityPersister, @Nonnull String mappedByProperty) {
 		final var propertyPathParts = new StringTokenizer( mappedByProperty, ".", false );
 		final int tokenCount = propertyPathParts.countTokens();
 		assert tokenCount > 0;
@@ -682,7 +717,8 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
+	@Nonnull
+	private BeforeExecutionGenerator createGenerator(@Nonnull RuntimeModelCreationContext context, @Nonnull IdentifierCollection collection) {
 		final Generator generator =
 				collection.getIdentifier()
 						.createGenerator( context.getDialect(), null, null, context.getGeneratorSettings() );
@@ -692,7 +728,7 @@ public abstract class AbstractCollectionPersister
 		return (BeforeExecutionGenerator) generator;
 	}
 
-	private boolean shouldUseShallowCacheLayout(CacheLayout collectionQueryCacheLayout, SessionFactoryOptions options) {
+	private boolean shouldUseShallowCacheLayout(@Nullable CacheLayout collectionQueryCacheLayout, @Nonnull SessionFactoryOptions options) {
 		final var queryCacheLayout =
 				collectionQueryCacheLayout == null
 						? options.getQueryCacheLayout()
@@ -701,17 +737,20 @@ public abstract class AbstractCollectionPersister
 			|| queryCacheLayout == CacheLayout.AUTO && cacheAccessStrategy != null;
 	}
 
+	@Nonnull
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
 
+	@Nullable
 	@Override
 	public Comparator<?> getSortingComparator() {
 		return comparator;
 	}
 
-	protected String determineTableName(Table table) {
+	@Nonnull
+	protected String determineTableName(@Nonnull Table table) {
 		return getTableIdentifierExpression( table, factory );
 	}
 
@@ -741,7 +780,8 @@ public abstract class AbstractCollectionPersister
 		logStaticSQL();
 	}
 
-	private NamedQueryMemento<?> getNamedQueryMemento(MetadataImplementor bootModel) {
+	@Nonnull
+	private NamedQueryMemento<?> getNamedQueryMemento(@Nullable MetadataImplementor bootModel) {
 		final var memento =
 				factory.getQueryEngine().getNamedObjectRepository()
 						.resolve( factory, bootModel, queryLoaderName );
@@ -784,7 +824,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException {
+	public void initialize(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) throws HibernateException {
 		determineLoaderToUse( key, session ).load( key, session );
 	}
 
@@ -808,11 +848,13 @@ public abstract class AbstractCollectionPersister
 		return queryLoaderName != null;
 	}
 
+	@Nonnull
 	public CollectionLoader getCollectionLoader() {
 		return collectionLoader;
 	}
 
-	protected CollectionLoader determineLoaderToUse(Object key, SharedSessionContractImplementor session) {
+	@Nonnull
+	protected CollectionLoader determineLoaderToUse(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( hasNamedQueryLoader() ) {
 			// if there is a user-specified loader, return that
 			return getCollectionLoader();
@@ -831,7 +873,8 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	private CollectionLoader resolveSubSelectLoader(Object key, SharedSessionContractImplementor session) {
+	@Nullable
+	private CollectionLoader resolveSubSelectLoader(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var subselect =
 				persistenceContext.getBatchFetchQueue()
@@ -848,7 +891,8 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	protected CollectionLoader createSubSelectLoader(SubselectFetch subselect, SharedSessionContractImplementor session) {
+	@Nonnull
+	protected CollectionLoader createSubSelectLoader(@Nonnull SubselectFetch subselect, @Nonnull SharedSessionContractImplementor session) {
 		return new CollectionLoaderSubSelectFetch( attributeMapping, null, subselect, session );
 	}
 //
@@ -872,7 +916,8 @@ public abstract class AbstractCollectionPersister
 //		return attributeMapping.isNotAffectedByInfluencers( loadQueryInfluencers );
 //	}
 
-	private CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	@Nonnull
+	private CollectionLoader createCollectionLoader(@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
@@ -887,15 +932,17 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * For Hibernate Reactive
 	 */
+	@Nonnull
 	protected CollectionLoader createNamedQueryCollectionLoader(
-			CollectionPersister persister, NamedQueryMemento<?> namedQueryMemento) {
+			@Nonnull CollectionPersister persister, @Nonnull NamedQueryMemento<?> namedQueryMemento) {
 		return new CollectionLoaderNamedQuery(persister, namedQueryMemento);
 	}
 
 	/**
 	 * For Hibernate Reactive
 	 */
-	protected CollectionLoader createSingleKeyCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	@Nonnull
+	protected CollectionLoader createSingleKeyCollectionLoader(@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, factory );
 	}
 
@@ -915,7 +962,9 @@ public abstract class AbstractCollectionPersister
 		return useShallowQueryCacheLayout;
 	}
 
+	@Nonnull
 	public abstract RowMutationOperations getRowMutationOperations();
+	@Nonnull
 	public abstract RemoveCoordinator getRemoveCoordinator();
 
 	@Override
@@ -931,12 +980,14 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Return the element class of an array, or null otherwise.  needed by arrays
 	 */
+	@Nullable
 	@Override
 	public Class<?> getElementClass() {
 		return elementClass;
 	}
 
-	public Object incrementIndexByBase(Object index) {
+	@Nonnull
+	public Object incrementIndexByBase(@Nonnull Object index) {
 		final int baseIndex = attributeMapping.getIndexMetadata().getListIndexBase();
 		return baseIndex > 0 ? baseIndex + (Integer) index : index;
 	}
@@ -951,6 +1002,7 @@ public abstract class AbstractCollectionPersister
 		return collectionSemantics.getCollectionClassification() == CollectionClassification.ARRAY;
 	}
 
+	@Nullable
 	@Override
 	public String getIdentifierColumnName() {
 		return hasId() ? identifierColumnName : null;
@@ -959,8 +1011,9 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Generate a list of collection index, key and element columns
 	 */
+	@Nonnull
 	@Override
-	public String selectFragment(String alias, String columnSuffix) {
+	public String selectFragment(@Nonnull String alias, @Nonnull String columnSuffix) {
 		final var attributeMapping = getAttributeMapping();
 		final var rootQuerySpec = new QuerySpec( true );
 		final var sqlAstCreationState = new LoaderSqlAstCreationState(
@@ -999,7 +1052,7 @@ public abstract class AbstractCollectionPersister
 		}
 
 		if ( hasIndex() ) {
-			for ( String indexAlias : indexColumnAliases ) {
+			for ( String indexAlias : castNonNull( indexColumnAliases ) ) {
 				sqlSelections.set( i,
 						sqlSelection( columnSuffix, indexAlias, i, sqlSelections ) );
 				i++;
@@ -1007,7 +1060,7 @@ public abstract class AbstractCollectionPersister
 		}
 		if ( hasId() ) {
 			sqlSelections.set( i,
-					sqlSelection( columnSuffix, identifierColumnAlias, i, sqlSelections ) );
+					sqlSelection( columnSuffix, castNonNull( identifierColumnAlias ), i, sqlSelections ) );
 			i++;
 		}
 
@@ -1028,15 +1081,17 @@ public abstract class AbstractCollectionPersister
 				: sql.substring( selectLength, fromIndex );
 	}
 
-	private static SqlSelectionImpl sqlSelection(String columnSuffix, String keyAlias, int i, List<SqlSelection> sqlSelections) {
+	@Nonnull
+	private static SqlSelectionImpl sqlSelection(@Nonnull String columnSuffix, @Nonnull String keyAlias, int i, @Nonnull List<SqlSelection> sqlSelections) {
 		return new SqlSelectionImpl( sqlSelections.get( i ).getValuesArrayPosition(),
 				new AliasedExpression( sqlSelections.get( i ).getExpression(),
 						keyAlias + columnSuffix ) );
 	}
 
+	@Nonnull
 	protected String generateSelectSizeString(boolean isIntegerIndexed) {
 		final String selectValue = isIntegerIndexed
-				? "max(" + getIndexColumnNames()[0] + ") + 1"  // lists, arrays
+				? "max(" + castNonNull( getIndexColumnNames() )[0] + ") + 1"  // lists, arrays
 				: "count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
@@ -1047,6 +1102,7 @@ public abstract class AbstractCollectionPersister
 				.toStatementString();
 	}
 
+	@Nullable
 	protected String generateDetectRowByIndexString() {
 		if ( !hasIndex() ) {
 			return null;
@@ -1065,6 +1121,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 
+	@Nonnull
 	protected String generateDetectRowByElementString() {
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
@@ -1077,26 +1134,32 @@ public abstract class AbstractCollectionPersister
 				.toStatementString();
 	}
 
+	@Nullable
 	public String[] getIndexColumnNames() {
 		return indexColumnNames;
 	}
 
+	@Nonnull
 	public String[] getElementColumnNames() {
 		return elementColumnNames; // TODO: something with formulas...
 	}
 
+	@Nonnull
 	public String[] getKeyColumnNames() {
 		return keyColumnNames;
 	}
 
+	@Nonnull
 	public String[] getKeyFormulas() {
 		return keyFormulas;
 	}
 
+	@Nonnull
 	public String[] getElementFormulas() {
 		return elementFormulas;
 	}
 
+	@Nullable
 	public String[] getIndexFormulas() {
 		return indexFormulas;
 	}
@@ -1124,12 +1187,13 @@ public abstract class AbstractCollectionPersister
 		return cascadeDeleteEnabled;
 	}
 
+	@Nonnull
 	public String getTableName() {
 		return qualifiedTableName;
 	}
 
 	@Override
-	public void remove(Object id, SharedSessionContractImplementor session) throws HibernateException {
+	public void remove(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) throws HibernateException {
 		getRemoveCoordinator().deleteAllRows( id, session );
 	}
 
@@ -1152,30 +1216,36 @@ public abstract class AbstractCollectionPersister
 		return keyIsUpdateable;
 	}
 
+	@Nullable
 	@Override
 	public boolean[] getIndexColumnIsSettable() {
 		return indexColumnIsSettable;
 	}
 
+	@Nonnull
 	@Override
 	public boolean[] getElementColumnIsSettable() {
 		return elementColumnIsSettable;
 	}
 
+	@Nonnull
 	@Override
 	public UnaryOperator<Object> getIndexIncrementer() {
 		return this::incrementIndexByBase;
 	}
 
+	@Nonnull
 	public String getOwnerEntityName() {
 		return ownerPersister.getEntityName();
 	}
 
+	@Nonnull
 	@Override
 	public EntityPersister getOwnerEntityPersister() {
 		return ownerPersister;
 	}
 
+	@Nullable
 	@Override
 	public BeforeExecutionGenerator getGenerator() {
 		return identifierGenerator;
@@ -1188,13 +1258,13 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void applyBaseRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState) {
+			@Nullable Set<String> treatAsDeclarations,
+			@Nullable SqlAstCreationState creationState) {
 		applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, onlyApplyLoadByKeyFilters, creationState );
 		applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
 	}
@@ -1204,7 +1274,8 @@ public abstract class AbstractCollectionPersister
 		return hasWhere || manyToManyWhereTemplate != null;
 	}
 
-	private static String aliasForWhereRestriction(TableReference tableReference, boolean useQualifier) {
+	@Nullable
+	private static String aliasForWhereRestriction(@Nullable TableReference tableReference, boolean useQualifier) {
 		if ( tableReference == null ) {
 			return null;
 		}
@@ -1218,10 +1289,10 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void applyWhereRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		final var tableReference =
 				isManyToMany()
 						? tableGroup.getPrimaryTableReference()
@@ -1232,17 +1303,17 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void applyWhereFragments(
-			Consumer<Predicate> predicateConsumer,
-			String alias,
-			TableGroup tableGroup,
-			SqlAstCreationState astCreationState) {
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nullable String alias,
+			@Nonnull TableGroup tableGroup,
+			@Nullable SqlAstCreationState astCreationState) {
 		applyWhereFragments( predicateConsumer, alias, sqlWhereStringTemplate );
 	}
 
 	/**
 	 * Applies all defined {@link org.hibernate.annotations.SQLRestriction}
 	 */
-	private static void applyWhereFragments(Consumer<Predicate> predicateConsumer, String alias, String template) {
+	private static void applyWhereFragments(@Nonnull Consumer<Predicate> predicateConsumer, @Nullable String alias, @Nullable String template) {
 		if ( template != null ) {
 			final String fragment = replace( template, Template.TEMPLATE, alias );
 			if ( !isEmpty( fragment ) ) {
@@ -1253,12 +1324,12 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void applyFilterRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
+			@Nonnull Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAstCreationState creationState) {
 		if ( filterHelper != null ) {
 			filterHelper.applyEnabledFilters(
 					predicateConsumer,
@@ -1276,17 +1347,17 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void applyBaseManyToManyRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
 			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState) {
+			@Nonnull Map<String, Filter> enabledFilters,
+			@Nullable Set<String> treatAsDeclarations,
+			@Nullable SqlAstCreationState creationState) {
 		if ( manyToManyFilterHelper != null || manyToManyWhereTemplate != null ) {
 			if ( manyToManyFilterHelper != null ) {
 				manyToManyFilterHelper.applyEnabledFilters(
 						predicateConsumer,
-						elementPersister.getFilterAliasGenerator( tableGroup ),
+						castNonNull( elementPersister ).getFilterAliasGenerator( tableGroup ),
 						enabledFilters,
 						false,
 						tableGroup,
@@ -1294,13 +1365,14 @@ public abstract class AbstractCollectionPersister
 				);
 			}
 			if ( manyToManyWhereString != null ) {
-				final var tableReference = tableGroup.resolveTableReference( elementPersister.getTableName() );
+				final var tableReference = tableGroup.resolveTableReference( castNonNull( elementPersister ).getTableName() );
 				final String alias = aliasForWhereRestriction( tableReference, useQualifier );
 				applyWhereFragments( predicateConsumer, alias, manyToManyWhereTemplate );
 			}
 		}
 	}
 
+	@Nonnull
 	@Override
 	public EntityPersister getElementPersister() {
 		if ( elementPersister == null ) {
@@ -1309,30 +1381,34 @@ public abstract class AbstractCollectionPersister
 		return elementPersister;
 	}
 
+	@Nullable
 	protected EntityPersister getElementPersisterInternal() {
 		return elementPersister;
 	}
 
+	@Nonnull
 	@Override
 	public String[] getCollectionSpaces() {
 		return spaces;
 	}
 
 	@Override
-	public void processQueuedOps(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+	public void processQueuedOps(@Nonnull PersistentCollection<?> collection, @Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( collection.hasQueuedOperations() ) {
 			doProcessQueuedOps( collection, key, session );
 		}
 	}
 
-	protected abstract void doProcessQueuedOps(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
+	protected abstract void doProcessQueuedOps(@Nonnull PersistentCollection<?> collection, @Nonnull Object key, @Nonnull SharedSessionContractImplementor session)
 			throws HibernateException;
 
+	@Nonnull
 	@Override
 	public SessionFactoryImplementor getFactory() {
 		return factory;
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return unqualify( getClass().getName() ) + '(' + navigableRole.getFullPath() + ')';
@@ -1344,6 +1420,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	// TODO: needed???
+	@Nonnull
 	protected SqlExceptionHelper getSQLExceptionHelper() {
 		return sqlExceptionHelper;
 	}
@@ -1355,7 +1432,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
+	public boolean isAffectedByEnabledFilters(@Nonnull SharedSessionContractImplementor session) {
 		return isAffectedByEnabledFilters( session.getLoadQueryInfluencers() );
 	}
 
@@ -1369,8 +1446,9 @@ public abstract class AbstractCollectionPersister
 		return isMutable;
 	}
 
+	@Nullable
 	@Override
-	public String[] getCollectionPropertyColumnAliases(String propertyName, String suffix) {
+	public String[] getCollectionPropertyColumnAliases(@Nonnull String propertyName, @Nonnull String suffix) {
 		final String[] rawAliases = collectionPropertyColumnAliases.get( propertyName );
 		if ( rawAliases == null ) {
 			return null;
@@ -1390,14 +1468,14 @@ public abstract class AbstractCollectionPersister
 		initCollectionPropertyMap( "key", keyType, keyColumnAliases );
 		initCollectionPropertyMap( "element", elementType, elementColumnAliases );
 		if ( hasIndex() ) {
-			initCollectionPropertyMap( "index", indexType, indexColumnAliases );
+			initCollectionPropertyMap( "index", castNonNull( indexType ), castNonNull( indexColumnAliases ) );
 		}
 		if ( hasId() ) {
-			initCollectionPropertyMap( "id", identifierType, new String[] { identifierColumnAlias } );
+			initCollectionPropertyMap( "id", castNonNull( identifierType ), new String[] { identifierColumnAlias } );
 		}
 	}
 
-	private void initCollectionPropertyMap(String aliasName, Type type, String[] columnAliases) {
+	private void initCollectionPropertyMap(@Nonnull String aliasName, @Nonnull Type type, @Nonnull String[] columnAliases) {
 		collectionPropertyColumnAliases.put( aliasName, columnAliases );
 
 		//TODO: this code is almost certainly obsolete and can be removed
@@ -1418,7 +1496,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public int getSize(Object key, SharedSessionContractImplementor session) {
+	public int getSize(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		try {
 			final var jdbcCoordinator = session.getJdbcCoordinator();
 			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sqlSelectSizeString );
@@ -1449,16 +1527,16 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public boolean indexExists(Object key, Object index, SharedSessionContractImplementor session) {
-		return exists( key, incrementIndexByBase( index ), getIndexType(), sqlDetectRowByIndexString, session );
+	public boolean indexExists(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session) {
+		return exists( key, incrementIndexByBase( index ), castNonNull( getIndexType() ), castNonNull( sqlDetectRowByIndexString ), session );
 	}
 
 	@Override
-	public boolean elementExists(Object key, Object element, SharedSessionContractImplementor session) {
+	public boolean elementExists(@Nonnull Object key, @Nullable Object element, @Nonnull SharedSessionContractImplementor session) {
 		return exists( key, element, getElementType(), sqlDetectRowByElementString, session );
 	}
 
-	private boolean exists(Object key, Object indexOrElement, Type indexOrElementType, String sql, SharedSessionContractImplementor session) {
+	private boolean exists(@Nonnull Object key, @Nullable Object indexOrElement, @Nonnull Type indexOrElementType, @Nonnull String sql, @Nonnull SharedSessionContractImplementor session) {
 		try {
 			final var jdbcCoordinator = session.getJdbcCoordinator();
 			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
@@ -1492,8 +1570,9 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
+	@Nullable
 	@Override
-	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
+	public Object getElementByIndex(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session, @Nullable Object owner) {
 		final var influencers = session.getLoadQueryInfluencers();
 		if ( influencers.hasEnabledFilters()
 			&& isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
@@ -1501,7 +1580,7 @@ public abstract class AbstractCollectionPersister
 					.load( key, index, session );
 		}
 		else {
-			return collectionElementLoaderByIndex.load( key, index, session );
+			return castNonNull( collectionElementLoaderByIndex ).load( key, index, session );
 		}
 	}
 
@@ -1510,6 +1589,7 @@ public abstract class AbstractCollectionPersister
 		return isExtraLazy;
 	}
 
+	@Nonnull
 	protected Dialect getDialect() {
 		return dialect;
 	}
@@ -1519,14 +1599,17 @@ public abstract class AbstractCollectionPersister
 		return batchSize;
 	}
 
+	@Nullable
 	@Override
 	public String getMappedByProperty() {
 		return mappedByProperty;
 	}
 
-	public abstract FilterAliasGenerator getFilterAliasGenerator(String rootAlias);
+	@Nonnull
+	public abstract FilterAliasGenerator getFilterAliasGenerator(@Nonnull String rootAlias);
 
-	public abstract FilterAliasGenerator getFilterAliasGenerator(TableGroup tableGroup);
+	@Nonnull
+	public abstract FilterAliasGenerator getFilterAliasGenerator(@Nonnull TableGroup tableGroup);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// "mapping model"
@@ -1539,17 +1622,18 @@ public abstract class AbstractCollectionPersister
 	 * {@link org.hibernate.metamodel.mapping.EmbeddableMappingType} and {@link EmbeddableValuedModelPart}.
 	 */
 	@Override
-	public void injectAttributeMapping(PluralAttributeMapping attributeMapping) {
+	public void injectAttributeMapping(@Nonnull PluralAttributeMapping attributeMapping) {
 		this.attributeMapping = attributeMapping;
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getAttributeMapping() {
 		return attributeMapping;
 	}
 
 	@Override
-	public void registerAffectingFetchProfile(String fetchProfileName) {
+	public void registerAffectingFetchProfile(@Nonnull String fetchProfileName) {
 		if ( affectingFetchProfiles == null ) {
 			affectingFetchProfiles = new HashSet<>();
 		}
@@ -1557,7 +1641,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByEnabledFetchProfiles(@Nonnull LoadQueryInfluencers influencers) {
 		if ( affectingFetchProfiles != null && influencers.hasEnabledFetchProfiles() ) {
 			for ( String profileName : affectingFetchProfiles ) {
 				if ( influencers.isFetchProfileEnabled( profileName ) ) {
@@ -1569,12 +1653,12 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers) {
 		return isAffectedByEnabledFilters( influencers, false );
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+	public boolean isAffectedByEnabledFilters(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		if ( influencers.hasEnabledFilters() ) {
 			final var enabledFilters = influencers.getEnabledFilters();
 			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
@@ -1588,8 +1672,8 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(
-			Set<ManagedMappingType> visitedTypes,
-			LoadQueryInfluencers influencers,
+			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKeyFilters) {
 		assert influencers.hasEnabledFilters();
 		final var enabledFilters = influencers.getEnabledFilters();
@@ -1599,17 +1683,17 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private boolean isKeyOrElementAffectedByFilters(
-			Set<ManagedMappingType> visitedTypes,
-			LoadQueryInfluencers influencers,
+			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		return isAffectedByFilters( visitedTypes, attributeMapping.getIndexDescriptor(), influencers, onlyApplyForLoadByKey )
 			|| isAffectedByFilters( visitedTypes, attributeMapping.getElementDescriptor(), influencers, onlyApplyForLoadByKey );
 	}
 
 	private boolean isAffectedByFilters(
-			Set<ManagedMappingType> visitedTypes,
-			CollectionPart collectionPart,
-			LoadQueryInfluencers influencers,
+			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull CollectionPart collectionPart,
+			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		if ( collectionPart instanceof EntityCollectionPart entityCollectionPart ) {
 			return entityCollectionPart.getEntityMappingType()
@@ -1625,11 +1709,12 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+	public boolean isAffectedByEntityGraph(@Nonnull LoadQueryInfluencers influencers) {
 		// todo (6.0) : anything to do here?
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public CollectionSemantics<?,?> getCollectionSemantics() {
 		return collectionSemantics;
@@ -1639,33 +1724,37 @@ public abstract class AbstractCollectionPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// CollectionMutationTarget
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getTargetPart() {
 		return attributeMapping;
 	}
 
+	@Nonnull
 	@Override
 	public String getIdentifierTableName() {
 		return tableMapping.getTableName();
 	}
 
+	@Nonnull
 	@Override
 	public CollectionTableMapping getCollectionTableMapping() {
 		return tableMapping;
 	}
 
+	@Nonnull
 	@Override
 	public CollectionTableDescriptor getCollectionTableDescriptor() {
 		return collectionTableDescriptor;
 	}
 
 	@Override
-	public void forEachMutableTableDescriptor(Consumer<CollectionTableDescriptor> consumer) {
+	public void forEachMutableTableDescriptor(@Nonnull Consumer<CollectionTableDescriptor> consumer) {
 		consumer.accept( getCollectionTableDescriptor() );
 	}
 
 	@Override
-	public void forEachMutableTableDescriptorReverse(Consumer<CollectionTableDescriptor> consumer) {
+	public void forEachMutableTableDescriptorReverse(@Nonnull Consumer<CollectionTableDescriptor> consumer) {
 		consumer.accept( getCollectionTableDescriptor() );
 	}
 
@@ -1675,19 +1764,20 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public void forEachMutableTable(Consumer<CollectionTableMapping> consumer) {
+	public void forEachMutableTable(@Nonnull Consumer<CollectionTableMapping> consumer) {
 		consumer.accept( tableMapping );
 	}
 
 	@Override
-	public void forEachMutableTableReverse(Consumer<CollectionTableMapping> consumer) {
+	public void forEachMutableTableReverse(@Nonnull Consumer<CollectionTableMapping> consumer) {
 		consumer.accept( tableMapping );
 	}
 
+	@Nonnull
 	private static CollectionTableDescriptor buildCollectionTableDescriptor(
-			CollectionTableMapping tableMapping,
-			PluralAttributeMapping attributeMapping,
-			SessionFactoryImplementor factory) {
+			@Nonnull CollectionTableMapping tableMapping,
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull SessionFactoryImplementor factory) {
 		final String qualifiedTableName = tableMapping.getTableName();
 		// NOTE: if ActionQueue is not the graph-based one, isSelfReferential will have no impact
 		final boolean isSelfReferential;
@@ -1720,17 +1810,19 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
-	private static TableKeyDescriptor buildTableKeyDescriptor(PluralAttributeMapping attributeMapping) {
+	@Nonnull
+	private static TableKeyDescriptor buildTableKeyDescriptor(@Nonnull PluralAttributeMapping attributeMapping) {
 		var keyColumns = new ArrayList<ColumnDescriptor>();
 		attributeMapping.getKeyDescriptor().visitKeySelectables( (index, selectableMapping)
 				-> keyColumns.add( ColumnDescriptor.from( selectableMapping ) ) );
 		return new TableKeyDescriptor( keyColumns );
 	}
 
+	@Nonnull
 	private static CollectionTableMapping buildCollectionTableMapping(
-			Collection collectionBootDescriptor,
-			String qualifiedTableName,
-			String[] spaces) {
+			@Nonnull Collection collectionBootDescriptor,
+			@Nonnull String qualifiedTableName,
+			@Nonnull String[] spaces) {
 		return new CollectionTableMapping(
 				qualifiedTableName,
 				spaces,
@@ -1744,7 +1836,8 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
-	private static MutationDetails buildUpdateMutationDetails(Collection collectionBootDescriptor) {
+	@Nonnull
+	private static MutationDetails buildUpdateMutationDetails(@Nonnull Collection collectionBootDescriptor) {
 		final boolean customUpdateCallable = collectionBootDescriptor.isCustomUpdateCallable();
 		return new MutationDetails(
 				MutationType.UPDATE,
@@ -1755,7 +1848,8 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
-	private static MutationDetails buildInsertMutationDetails(Collection collectionBootDescriptor) {
+	@Nonnull
+	private static MutationDetails buildInsertMutationDetails(@Nonnull Collection collectionBootDescriptor) {
 		return new MutationDetails(
 				MutationType.INSERT,
 				createExpectation( collectionBootDescriptor.getInsertExpectation(),
@@ -1765,7 +1859,8 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
-	private static MutationDetails buildDeleteMutationDetails(Collection collectionBootDescriptor) {
+	@Nonnull
+	private static MutationDetails buildDeleteMutationDetails(@Nonnull Collection collectionBootDescriptor) {
 		final boolean customDeleteCallable = collectionBootDescriptor.isCustomDeleteCallable();
 		return new MutationDetails(
 				MutationType.DELETE,
@@ -1776,7 +1871,8 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
-	private static MutationDetails buildDeleteAllMutationDetails(Collection collectionBootDescriptor) {
+	@Nonnull
+	private static MutationDetails buildDeleteAllMutationDetails(@Nonnull Collection collectionBootDescriptor) {
 		final boolean customDeleteAllCallable = collectionBootDescriptor.isCustomDeleteAllCallable();
 		final var deleteAllExpectation = collectionBootDescriptor.getDeleteAllExpectation();
 		return new MutationDetails(
@@ -1790,13 +1886,15 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
-	protected JdbcMutationOperation buildDeleteAllOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	protected JdbcMutationOperation buildDeleteAllOperation(@Nonnull MutatingTableReference tableReference) {
 		return tableMapping.getDeleteDetails().getCustomSql() != null
 				? buildCustomSqlDeleteAllOperation( tableReference )
 				: buildGeneratedDeleteAllOperation( tableReference );
 	}
 
-	private JdbcDeleteMutation buildCustomSqlDeleteAllOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcDeleteMutation buildCustomSqlDeleteAllOperation(@Nonnull MutatingTableReference tableReference) {
 		final var keyDescriptor = getAttributeMapping().getKeyDescriptor();
 		final var parameterBinders =
 				new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyDescriptor.getJdbcTypeCount() );
@@ -1813,13 +1911,15 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
-	private JdbcMutationOperation buildGeneratedDeleteAllOperation(MutatingTableReference tableReference) {
+	@Nonnull
+	private JdbcMutationOperation buildGeneratedDeleteAllOperation(@Nonnull MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
 				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateDeleteAllAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
-	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(MutatingTableReference tableReference) {
+	@Nonnull
+	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(@Nonnull MutatingTableReference tableReference) {
 		assert getAttributeMapping() != null;
 		final var foreignKeyDescriptor = getAttributeMapping().getKeyDescriptor();
 		assert foreignKeyDescriptor != null;
@@ -1841,8 +1941,8 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void applyKeyRestrictions(
-			ColumnValueParameterList parameterList,
-			List<ColumnValueBinding> restrictionBindings) {
+			@Nonnull ColumnValueParameterList parameterList,
+			@Nonnull List<ColumnValueBinding> restrictionBindings) {
 		final var foreignKeyDescriptor = getAttributeMapping().getKeyDescriptor();
 		assert foreignKeyDescriptor != null;
 		foreignKeyDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
@@ -1870,30 +1970,37 @@ public abstract class AbstractCollectionPersister
 
 	@Deprecated private final CollectionType collectionType;
 	@Deprecated private final Type keyType;
+	@Nullable
 	@Deprecated private final Type identifierType;
+	@Nullable
 	@Deprecated private final Type indexType;
 	@Deprecated protected final Type elementType;
 
+	@Nonnull
 	@Override @Deprecated(forRemoval = true)
 	public CollectionType getCollectionType() {
 		return collectionType;
 	}
 
+	@Nonnull
 	@Override @Deprecated(forRemoval = true)
 	public Type getKeyType() {
 		return keyType;
 	}
 
+	@Nullable
 	@Override @Deprecated(forRemoval = true)
 	public Type getIdentifierType() {
 		return identifierType;
 	}
 
+	@Nullable
 	@Override @Deprecated(forRemoval = true)
 	public Type getIndexType() {
 		return indexType;
 	}
 
+	@Nonnull
 	@Override @Deprecated(forRemoval = true)
 	public Type getElementType() {
 		return elementType;
@@ -1909,31 +2016,38 @@ public abstract class AbstractCollectionPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Deprecated protected final String[] keyColumnAliases;
+	@Nullable
 	@Deprecated private final String identifierColumnAlias;
+	@Nullable
 	@Deprecated protected final String[] indexColumnAliases;
 	@Deprecated protected final String[] elementColumnAliases;
 	@Deprecated private final Map<String,String[]> collectionPropertyColumnAliases = new HashMap<>();
 
+	@Nonnull
 	@Override @Deprecated(forRemoval = true)
-	public String[] getKeyColumnAliases(String suffix) {
+	public String[] getKeyColumnAliases(@Nonnull String suffix) {
 		return new Alias( suffix ).toAliasStrings( keyColumnAliases );
 	}
 
+	@Nonnull
 	@Override @Deprecated(forRemoval = true)
-	public String[] getElementColumnAliases(String suffix) {
+	public String[] getElementColumnAliases(@Nonnull String suffix) {
 		return new Alias( suffix ).toAliasStrings( elementColumnAliases );
 	}
 
+	@Nullable
 	@Override @Deprecated(forRemoval = true)
-	public String[] getIndexColumnAliases(String suffix) {
+	public String[] getIndexColumnAliases(@Nonnull String suffix) {
 		return hasIndex() ? new Alias( suffix ).toAliasStrings( indexColumnAliases ) : null;
 	}
 
+	@Nullable
 	@Override @Deprecated(forRemoval = true)
-	public String getIdentifierColumnAlias(String suffix) {
+	public String getIdentifierColumnAlias(@Nonnull String suffix) {
 		return hasId() ? new Alias( suffix ).toAliasString( identifierColumnAlias ) : null;
 	}
 
+	@Nonnull
 	@Override
 	public String getRolePath() {
 		return getNavigableRole().getFullPath();

@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.FindMultipleOption;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -22,6 +25,7 @@ public interface MultiIdLoadOptions extends MultiLoadOptions {
 	 *
 	 * @since 7.2
 	 */
+	@Nonnull
 	FindMultipleOption.SessionCheckMode getSessionCheckMode();
 
 	/**
@@ -55,5 +59,6 @@ public interface MultiIdLoadOptions extends MultiLoadOptions {
 	/**
 	 * Should the entities be loaded in read-only mode?
 	 */
-	Boolean getReadOnly(SessionImplementor session);
+	@Nullable
+	Boolean getReadOnly(@Nonnull SessionImplementor session);
 }

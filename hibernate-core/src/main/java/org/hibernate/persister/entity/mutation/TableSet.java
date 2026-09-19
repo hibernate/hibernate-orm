@@ -4,6 +4,12 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.BitSet;
 
 import org.hibernate.sql.spi.mutation.TableMapping;
@@ -23,10 +29,12 @@ import static java.util.Arrays.copyOf;
  */
 public final class TableSet {
 
+	@Nullable
 	private BitSet bits;
+	@Nullable
 	private Object[] checks; //Meant for assertions only
 
-	public void add(final TableMapping tableMapping) {
+	public void add(@Nonnull final TableMapping tableMapping) {
 		if ( bits == null ) {
 			bits = new BitSet();
 		}
@@ -34,7 +42,7 @@ public final class TableSet {
 		bits.set( tableMapping.relativePosition() );
 	}
 
-	public void remove(final TableMapping tableMapping) {
+	public void remove(@Nonnull final TableMapping tableMapping) {
 		if ( bits != null ) {
 			assert addForChecks( tableMapping );
 			bits.set( tableMapping.relativePosition(), false );
@@ -45,26 +53,27 @@ public final class TableSet {
 		return bits == null;
 	}
 
-	public boolean contains(final TableMapping tableMapping) {
+	public boolean contains(@Nonnull final TableMapping tableMapping) {
 		assert matchRead( tableMapping );
 		return bits != null && bits.get( tableMapping.relativePosition() );
 	}
 
 	//Meant for assertions only
-	private boolean matchRead(final TableMapping tableMapping) {
+	private boolean matchRead(@Nonnull final TableMapping tableMapping) {
 		if ( bits != null ) {
 			final int index = tableMapping.relativePosition();
 			if ( bits.get( index ) ) {
-				return checks[index] == tableMapping;
+				return castNonNull( checks )[index] == tableMapping;
 			}
 		}
 		return true; //to make the assertion happy
 	}
 
 	//Meant for assertions only
-	private boolean addForChecks(final TableMapping tableMapping) {
+	private boolean addForChecks(@Nonnull final TableMapping tableMapping) {
 		final int position = tableMapping.relativePosition();
 		ensureCapacity( position );
+		final var checks = castNonNull( this.checks );
 		if ( checks[position] != null ) {
 			//pre-existing in the set: verify it's the same one.
 			if ( checks[position] != tableMapping ) {

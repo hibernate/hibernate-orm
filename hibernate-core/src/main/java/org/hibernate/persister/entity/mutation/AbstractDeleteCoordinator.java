@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -23,6 +26,8 @@ import org.hibernate.sql.model.internal.MutationGroupSingle;
 
 import java.util.function.Function;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -38,11 +43,12 @@ public abstract class AbstractDeleteCoordinator
 	private final BasicBatchKey batchKey;
 	private final MutationOperationGroup staticOperationGroup;
 
+	@Nullable
 	private MutationOperationGroup noVersionDeleteGroup;
 
 	public AbstractDeleteCoordinator(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
 		batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#DELETE" );
@@ -52,28 +58,31 @@ public abstract class AbstractDeleteCoordinator
 		}
 	}
 
+	@Nullable
 	@Override
 	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return staticOperationGroup;
 	}
 
+	@Nullable
 	@Override
 	public BasicBatchKey getBatchKey() {
 		return batchKey;
 	}
 
+	@Nonnull
 	protected abstract MutationOperationGroup generateOperationGroup(
-			Object rowId,
-			Object[] loadedState,
+			@Nullable Object rowId,
+			@Nullable Object[] loadedState,
 			boolean applyVersion,
-			SharedSessionContractImplementor session);
+			@Nullable SharedSessionContractImplementor session);
 
 	@Override
 	public void delete(
-			Object entity,
-			Object id,
-			Object version,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object version,
+			@Nonnull SharedSessionContractImplementor session) {
 		TenantIdHelper.validateIdentifierTenant( id, entityPersister(), session );
 		final boolean isImpliedOptimisticLocking = entityPersister().optimisticLockStyle().isAllOrDirty();
 
@@ -90,11 +99,11 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	protected void doDynamicDelete(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object[] loadedState,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nullable Object[] loadedState,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var operationGroup =
 				generateOperationGroup( null, loadedState, true, session );
 		final var mutationExecutor = executor( session, operationGroup );
@@ -133,22 +142,22 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	protected void applyDynamicDeleteTableDetails(
-			Object id,
-			Object rowId,
-			Object[] loadedState,
-			MutationExecutor mutationExecutor,
-			MutationOperationGroup operationGroup,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nullable Object[] loadedState,
+			@Nonnull MutationExecutor mutationExecutor,
+			@Nonnull MutationOperationGroup operationGroup,
+			@Nonnull SharedSessionContractImplementor session) {
 		applyLocking( null, loadedState, mutationExecutor, session );
 		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), operationGroup );
 		applyId( id, null, mutationExecutor, operationGroup, session );
 	}
 
 	protected void applyLocking(
-			Object version,
-			Object[] loadedState,
-			MutationExecutor mutationExecutor,
-			SharedSessionContractImplementor session) {
+			@Nullable Object version,
+			@Nullable Object[] loadedState,
+			@Nonnull MutationExecutor mutationExecutor,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 		switch ( entityPersister().optimisticLockStyle() ) {
 			case VERSION:
@@ -162,9 +171,9 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	private void applyAllOrDirtyLocking(
-			Object[] loadedState,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nullable Object[] loadedState,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		if ( loadedState != null ) {
 			final var persister = entityPersister();
 			final boolean[] versionability = persister.getPropertyVersionability();
@@ -202,8 +211,8 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	private void applyVersionLocking(
-			Object version,
-			JdbcValueBindings jdbcValueBindings) {
+			@Nullable Object version,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var persister = entityPersister();
 		final var versionMapping = persister.getVersionMapping();
 		if ( version != null && versionMapping != null ) {
@@ -217,11 +226,11 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	protected void applyId(
-			Object id,
-			Object rowId,
-			MutationExecutor mutationExecutor,
-			MutationOperationGroup operationGroup,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nonnull MutationExecutor mutationExecutor,
+			@Nonnull MutationOperationGroup operationGroup,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 //		final EntityRowIdMapping rowIdMapping = entityPersister().getRowIdMapping();
 		for ( int position = 0; position < operationGroup.getNumberOfOperations(); position++ ) {
@@ -239,12 +248,12 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	protected void doStaticDelete(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object[] loadedState,
-			Object version,
-			SharedSessionContractImplementor session) {
+			@Nullable Object entity,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nullable Object[] loadedState,
+			@Nullable Object version,
+			@Nonnull SharedSessionContractImplementor session) {
 		final boolean applyVersion;
 		final MutationOperationGroup operationGroupToUse;
 		if ( entity == null ) {
@@ -291,13 +300,13 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	protected void applyStaticDeleteTableDetails(
-			Object id,
-			Object rowId,
-			Object[] loadedState,
-			Object version,
+			@Nonnull Object id,
+			@Nullable Object rowId,
+			@Nullable Object[] loadedState,
+			@Nullable Object version,
 			boolean applyVersion,
-			MutationExecutor mutationExecutor,
-			SharedSessionContractImplementor session) {
+			@Nonnull MutationExecutor mutationExecutor,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( applyVersion ) {
 			applyLocking( version, null, mutationExecutor, session );
 		}
@@ -310,11 +319,13 @@ public abstract class AbstractDeleteCoordinator
 		applyId( id, rowId, mutationExecutor, staticOperationGroup, session );
 	}
 
-	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group) {
+	@Nonnull
+	private MutationExecutor executor(@Nonnull SharedSessionContractImplementor session, @Nonnull MutationOperationGroup group) {
 		return mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ), group, session );
 	}
 
-	protected MutationOperationGroup resolveNoVersionDeleteGroup(SharedSessionContractImplementor session) {
+	@Nonnull
+	protected MutationOperationGroup resolveNoVersionDeleteGroup(@Nonnull SharedSessionContractImplementor session) {
 		if ( noVersionDeleteGroup == null ) {
 			noVersionDeleteGroup = generateOperationGroup( "", null, false, session );
 		}
@@ -322,19 +333,19 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	protected void applyOptimisticLocking(
-			OptimisticLockStyle optimisticLockStyle,
-			Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
-			Object[] loadedState,
-			SharedSessionContractImplementor session) {
+			@Nonnull OptimisticLockStyle optimisticLockStyle,
+			@Nonnull Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
+			@Nullable Object[] loadedState,
+			@Nullable SharedSessionContractImplementor session) {
 		if ( optimisticLockStyle.isVersion() && entityPersister().getVersionMapping() != null ) {
 			applyVersionBasedOptLocking( resolver );
 		}
 		else if ( loadedState != null && optimisticLockStyle.isAllOrDirty() ) {
-			applyNonVersionOptLocking( optimisticLockStyle, resolver, loadedState, session );
+			applyNonVersionOptLocking( optimisticLockStyle, resolver, loadedState, castNonNull( session ) );
 		}
 	}
 
-	protected void applyVersionBasedOptLocking(Function<String,RestrictedTableMutationBuilder<?, ?>> resolver) {
+	protected void applyVersionBasedOptLocking(@Nonnull Function<String,RestrictedTableMutationBuilder<?, ?>> resolver) {
 		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null ) {
 			final String tableNameForMutation =
@@ -347,10 +358,10 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	protected void applyNonVersionOptLocking(
-			OptimisticLockStyle lockStyle,
-			Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
-			Object[] loadedState,
-			SharedSessionContractImplementor session) {
+			@Nonnull OptimisticLockStyle lockStyle,
+			@Nonnull Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
+			@Nonnull Object[] loadedState,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var persister = entityPersister();
 		assert loadedState != null;
 		assert lockStyle.isAllOrDirty();
@@ -370,10 +381,10 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	private void breakDownJdbcValues(
-			Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
-			SharedSessionContractImplementor session,
-			AttributeMapping attribute,
-			Object loadedValue) {
+			@Nonnull Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull AttributeMapping attribute,
+			@Nullable Object loadedValue) {
 		final var tableMutationBuilder =
 				resolver.apply( attribute.getContainingTableExpression() );
 		if ( tableMutationBuilder != null ) {
@@ -396,13 +407,14 @@ public abstract class AbstractDeleteCoordinator
 		}
 	}
 
+	@Nonnull
 	protected Function<String,RestrictedTableMutationBuilder<?, ?>> tableMutationBuilderResolver(
-			RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
+			@Nonnull RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
 		final String tableName = tableMutationBuilder.getMutatingTable().getTableName();
 		return name -> tableName.equals( name ) ? tableMutationBuilder : null;
 	}
 
-	protected void applyPartitionKeyRestriction(Function<String,RestrictedTableMutationBuilder<?, ?>> resolver) {
+	protected void applyPartitionKeyRestriction(@Nonnull Function<String,RestrictedTableMutationBuilder<?, ?>> resolver) {
 		final var persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
 			final var attributeMappings = persister.getAttributeMappings();
@@ -424,7 +436,8 @@ public abstract class AbstractDeleteCoordinator
 		}
 	}
 
-	MutationOperationGroup createMutationOperationGroup(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
+	@Nonnull
+	MutationOperationGroup createMutationOperationGroup(@Nonnull TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
 		final var tableMutation = tableUpdateBuilder.buildMutation();
 		return singleOperation(
 				new MutationGroupSingle( MutationType.DELETE, entityPersister(), tableMutation ),

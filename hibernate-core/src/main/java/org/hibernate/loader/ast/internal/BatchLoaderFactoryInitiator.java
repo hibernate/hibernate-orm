@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nullable;
+
 import java.util.Map;
 
 import jakarta.annotation.Nonnull;
@@ -22,6 +24,7 @@ public class BatchLoaderFactoryInitiator implements StandardServiceInitiator<Bat
 	 */
 	public static final BatchLoaderFactoryInitiator INSTANCE = new BatchLoaderFactoryInitiator();
 
+	@Nullable
 	@Override
 	public BatchLoaderFactory initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return new StandardBatchLoaderFactory( configurationValues, registry );

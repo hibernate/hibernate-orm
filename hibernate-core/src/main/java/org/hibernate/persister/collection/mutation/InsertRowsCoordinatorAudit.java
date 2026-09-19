@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -28,19 +31,21 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 	private final SessionFactoryImplementor sessionFactory;
 	private final MutationExecutorService mutationExecutorService;
 	private final BasicBatchKey auditBatchKey;
+	@Nullable
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;
 
+	@Nullable
 	private CollectionAuditSupport auditMutationSupport;
 
 	public InsertRowsCoordinatorAudit(
-			CollectionMutationTarget mutationTarget,
-			InsertRowsCoordinator currentInsertCoordinator,
-			boolean[] indexColumnIsSettable,
-			boolean[] elementColumnIsSettable,
-			UnaryOperator<Object> indexIncrementer,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull CollectionMutationTarget mutationTarget,
+			@Nonnull InsertRowsCoordinator currentInsertCoordinator,
+			@Nullable boolean[] indexColumnIsSettable,
+			@Nonnull boolean[] elementColumnIsSettable,
+			@Nonnull UnaryOperator<Object> indexIncrementer,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.mutationTarget = mutationTarget;
 		this.currentInsertCoordinator = currentInsertCoordinator;
 		this.sessionFactory = sessionFactory;
@@ -51,6 +56,7 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 		this.mutationExecutorService = sessionFactory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
+	@Nonnull
 	@Override
 	public CollectionMutationTarget getMutationTarget() {
 		return mutationTarget;
@@ -58,10 +64,10 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 
 	@Override
 	public void insertRows(
-			PersistentCollection<?> collection,
-			Object id,
-			EntryFilter entryChecker,
-			SharedSessionContractImplementor session) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object id,
+			@Nullable EntryFilter entryChecker,
+			@Nonnull SharedSessionContractImplementor session) {
 		currentInsertCoordinator.insertRows( collection, id, entryChecker, session );
 
 		// Capture the snapshot before it's replaced by the flush, and enqueue
@@ -77,10 +83,11 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 		);
 	}
 
+	@Nullable
 	private Object resolveSnapshot(
-			PersistentCollection<?> collection,
-			Object id,
-			SharedSessionContractImplementor session) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object id,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var collectionEntry = persistenceContext.getCollectionEntry( collection );
 		if ( collectionEntry != null && collectionEntry.getLoadedPersister() != null ) {
@@ -102,10 +109,10 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 	 */
 	@Override
 	public void writeCollectionAuditRows(
-			PersistentCollection<?> collection,
-			Object id,
-			Object originalSnapshot,
-			SharedSessionContractImplementor session) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object id,
+			@Nonnull Object originalSnapshot,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var auditMutationSupport = getAuditMutationSupport();
 		final var operationGroup = auditMutationSupport.getAuditInsertOperationGroup();
 		if ( operationGroup == null ) {
@@ -142,10 +149,10 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 	 * audit row's REVEND to mark it as superseded.
 	 */
 	private void updateElementTransactionEnd(
-			PersistentCollection<?> collection,
-			Object ownerId,
-			List<AuditCollectionChange> changes,
-			SharedSessionContractImplementor session) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull Object ownerId,
+			@Nonnull List<AuditCollectionChange> changes,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var auditMutationSupport = getAuditMutationSupport();
 		final var updateGroup = auditMutationSupport.getTransactionEndUpdateGroup();
 		if ( updateGroup == null ) {
@@ -176,6 +183,7 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 		}
 	}
 
+	@Nonnull
 	private CollectionAuditSupport getAuditMutationSupport() {
 		if ( auditMutationSupport == null ) {
 			auditMutationSupport = new CollectionAuditSupport(

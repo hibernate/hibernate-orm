@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.LockOptions;
@@ -51,8 +54,8 @@ public class EntityBatchLoaderInPredicate<T>
 	 */
 	public EntityBatchLoaderInPredicate(
 			int domainBatchSize,
-			EntityMappingType entityDescriptor,
-			LoadQueryInfluencers loadQueryInfluencers) {
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		super( entityDescriptor, loadQueryInfluencers );
 		this.domainBatchSize = domainBatchSize;
 		final int idColumnCount =
@@ -104,24 +107,26 @@ public class EntityBatchLoaderInPredicate<T>
 		return sqlBatchSize;
 	}
 
+	@Nullable
 	@Override
-	public final T load(Object pkValue, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session) {
+	public final T load(@Nonnull Object pkValue, @Nonnull LockOptions lockOptions, @Nullable Boolean readOnly, @Nonnull SharedSessionContractImplementor session) {
 		return load( pkValue, null, lockOptions, readOnly, session );
 	}
 
-	protected Object[] resolveIdsToInitialize(Object id, SharedSessionContractImplementor session) {
+	@Nonnull
+	protected Object[] resolveIdsToInitialize(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		return session.getPersistenceContextInternal().getBatchFetchQueue()
 				.getBatchLoadableEntityIds( getLoadable(), id, domainBatchSize );
 	}
 
 	@Override
 	protected void initializeEntities(
-			Object[] idsToInitialize,
-			Object pkValue,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object[] idsToInitialize,
+			@Nonnull Object pkValue,
+			@Nullable Object entityInstance,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.entityIdsToInitialize(
 					infoString( getLoadable(), pkValue ), idsToInitialize );
@@ -171,7 +176,8 @@ public class EntityBatchLoaderInPredicate<T>
 				);
 	}
 
-	private MultiKeyLoadChunker<Object> getChunker(EntityIdentifierMapping identifierMapping) {
+	@Nonnull
+	private MultiKeyLoadChunker<Object> getChunker(@Nonnull EntityIdentifierMapping identifierMapping) {
 		return new MultiKeyLoadChunker<>(
 				sqlBatchSize,
 				identifierMapping.getJdbcTypeCount(),
@@ -182,6 +188,7 @@ public class EntityBatchLoaderInPredicate<T>
 		);
 	}
 
+	@Nonnull
 	@Override
 	public String toString() {
 		return String.format(

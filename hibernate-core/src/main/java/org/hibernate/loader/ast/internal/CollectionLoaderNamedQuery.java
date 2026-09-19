@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.persistence.Parameter;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
@@ -24,18 +26,20 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 	private final CollectionPersister persister;
 	private final NamedQueryMemento<?> namedQueryMemento;
 
-	public CollectionLoaderNamedQuery(CollectionPersister persister, NamedQueryMemento<?> namedQueryMemento) {
+	public CollectionLoaderNamedQuery(@Nonnull CollectionPersister persister, @Nonnull NamedQueryMemento<?> namedQueryMemento) {
 		this.persister = persister;
 		this.namedQueryMemento = namedQueryMemento;
 	}
 
+	@Nonnull
 	@Override
 	public PluralAttributeMapping getLoadable() {
 		return persister.getAttributeMapping();
 	}
 
+	@Nonnull
 	@Override
-	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
+	public PersistentCollection<?> load(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		final var query = namedQueryMemento.toSelectionQuery( session );
 		//noinspection unchecked
 		query.setParameter( (Parameter<Object>) query.getParameters().iterator().next(), key );

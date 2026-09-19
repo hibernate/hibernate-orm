@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.util.List;
@@ -17,5 +19,6 @@ public interface MultiIdEntityLoader<T> extends EntityMultiLoader<T> {
 	/**
 	 * Load multiple entities by id.  The exact result depends on the passed options.
 	 */
-	<K> List<T> load(K[] ids, MultiIdLoadOptions options, SharedSessionContractImplementor session);
+	@Nonnull
+	<K> List<T> load(@Nonnull K[] ids, @Nonnull MultiIdLoadOptions options, @Nonnull SharedSessionContractImplementor session);
 }

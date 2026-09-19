@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.engine.spi.EntityKey;
@@ -20,13 +23,14 @@ public class DeleteCoordinatorAudit extends AbstractAuditCoordinator implements 
 	private final DeleteCoordinator currentDeleteCoordinator;
 
 	public DeleteCoordinatorAudit(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory,
-			DeleteCoordinator currentDeleteCoordinator) {
+			@Nonnull EntityPersister entityPersister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nonnull DeleteCoordinator currentDeleteCoordinator) {
 		super( entityPersister, factory );
 		this.currentDeleteCoordinator = currentDeleteCoordinator;
 	}
 
+	@Nullable
 	@Override
 	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return currentDeleteCoordinator.getStaticMutationOperationGroup();
@@ -34,10 +38,10 @@ public class DeleteCoordinatorAudit extends AbstractAuditCoordinator implements 
 
 	@Override
 	public void delete(
-			Object entity,
-			Object id,
-			Object version,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object version,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
 		final Object[] state;
 		final EntityKey entityKey;

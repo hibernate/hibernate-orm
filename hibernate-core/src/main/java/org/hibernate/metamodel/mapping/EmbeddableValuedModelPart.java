@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.function.Consumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -28,30 +31,34 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @see jakarta.persistence.Embeddable
  */
 public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, FetchableContainer, TableGroupJoinProducer {
+	@Nonnull
 	EmbeddableMappingType getEmbeddableTypeDescriptor();
 
+	@Nonnull
 	@Override
 	default EmbeddableMappingType getMappedType() {
 		return getEmbeddableTypeDescriptor();
 	}
 
+	@Nonnull
 	@Override
 	default JavaType<?> getJavaType() {
 		return getEmbeddableTypeDescriptor().getJavaType();
 	}
 
+	@Nullable
 	@Override
-	default ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+	default ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
 		return getEmbeddableTypeDescriptor().findSubPart( name, treatTargetType );
 	}
 
 	@Override
-	default void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+	default void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
 		getEmbeddableTypeDescriptor().forEachSubPart( consumer, treatTarget );
 	}
 
 	@Override
-	default void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+	default void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
 		getEmbeddableTypeDescriptor().visitSubParts( consumer, treatTargetType );
 	}
 
@@ -60,46 +67,47 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 		return getEmbeddableTypeDescriptor().getJdbcTypeCount();
 	}
 
+	@Nonnull
 	@Override
 	default JdbcMapping getJdbcMapping(int index) {
 		return getEmbeddableTypeDescriptor().getJdbcMapping( index );
 	}
 
 	@Override
-	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		return getEmbeddableTypeDescriptor().forEachJdbcType( offset, action );
 	}
 
 	@Override
 	default <X, Y> int forEachJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().forEachJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
 	default <X, Y> int breakDownJdbcValues(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
 	default  <X, Y> int decompose(
-			Object domainValue,
+			@Nullable Object domainValue,
 			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValueBiConsumer<X, Y> valueConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().decompose( domainValue, offset, x, y, valueConsumer, session );
 	}
 
@@ -108,33 +116,35 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 		return getEmbeddableTypeDescriptor().getNumberOfFetchables();
 	}
 
+	@Nonnull
 	@Override
 	default Fetchable getFetchable(int position) {
 		return getEmbeddableTypeDescriptor().getFetchable( position );
 	}
 
 	@Override
-	default int getSelectableIndex(String selectableName) {
+	default int getSelectableIndex(@Nonnull String selectableName) {
 		return getEmbeddableTypeDescriptor().getSelectableIndex( selectableName );
 	}
 
+	@Nonnull
 	@Override
 	default SelectableMapping getSelectable(int columnIndex) {
 		return getEmbeddableTypeDescriptor().getSelectable( columnIndex );
 	}
 
 	@Override
-	default int forEachSelectable(int offset, SelectableConsumer consumer) {
+	default int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		return getEmbeddableTypeDescriptor().forEachSelectable( offset, consumer );
 	}
 
 	@Override
-	default void forEachInsertable(SelectableConsumer consumer) {
+	default void forEachInsertable(@Nonnull SelectableConsumer consumer) {
 		getEmbeddableTypeDescriptor().forEachInsertable( 0, consumer );
 	}
 
 	@Override
-	default void forEachUpdatable(SelectableConsumer consumer) {
+	default void forEachUpdatable(@Nonnull SelectableConsumer consumer) {
 		getEmbeddableTypeDescriptor().forEachUpdatable( 0, consumer );
 	}
 
@@ -145,12 +155,12 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 
 	@Override
 	default <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().forEachDisassembledJdbcValue(
 				value,
 				offset,
@@ -161,26 +171,29 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 		);
 	}
 
+	@Nullable
 	@Override
-	default Object disassemble(Object value, SharedSessionContractImplementor session) {
+	default Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().disassemble( value, session );
 	}
 
 	@Override
-	default void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+	default void addToCacheKey(@Nonnull MutableCacheKeyBuilder cacheKey, @Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		getEmbeddableTypeDescriptor().addToCacheKey( cacheKey, value, session );
 	}
 
 	/**
 	 * @see org.hibernate.annotations.Parent
 	 */
+	@Nullable
 	default PropertyAccess getParentInjectionAttributePropertyAccess() {
 		return null;
 	}
 
+	@Nonnull
 	SqlTuple toSqlExpression(
-			TableGroup tableGroup,
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState);
+			@Nonnull TableGroup tableGroup,
+			@Nonnull Clause clause,
+			@Nonnull SqmToSqlAstConverter walker,
+			@Nonnull SqlAstCreationState sqlAstCreationState);
 }

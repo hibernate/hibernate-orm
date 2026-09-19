@@ -334,6 +334,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// MultiIdLoadOptions & MultiNaturalIdLoadOptions
 
+	@Nonnull
 	@Override
 	public FindMultipleOption.SessionCheckMode getSessionCheckMode() {
 		return sessionCheckMode;
@@ -344,26 +345,31 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 		return cacheRetrieveMode == CacheRetrieveMode.USE;
 	}
 
+	@Nullable
 	@Override
-	public Boolean getReadOnly(SessionImplementor session) {
+	public Boolean getReadOnly(@Nonnull SessionImplementor session) {
 		return readOnlyMode == null ? null : readOnlyMode == ReadOnlyMode.READ_ONLY;
 	}
 
+	@Nonnull
 	@Override
 	public FindMultipleOption.RemovalsMode getRemovalsMode() {
 		return removalsMode;
 	}
 
+	@Nonnull
 	@Override
 	public FindMultipleOption.OrderingMode getOrderingMode() {
 		return orderingMode;
 	}
 
+	@Nonnull
 	@Override
 	public LockOptions getLockOptions() {
 		return Helper.makeLockOptions( lockMode, lockScope, lockTimeout, lockFollowOn );
 	}
 
+	@Nullable
 	@Override
 	public Integer getBatchSize() {
 		return batchSize == null ? null : batchSize.batchSize();

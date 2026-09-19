@@ -37,7 +37,7 @@ public class SqlFunction
 				new FunctionReturnTypeResolver() {
 					@Override
 					public ReturnableType<?> resolveFunctionReturnType(
-							ReturnableType<?> impliedType,
+							@Nullable ReturnableType<?> impliedType,
 							@Nullable SqmToSqlAstConverter converter,
 							List<? extends SqmTypedNode<?>> arguments,
 							TypeConfiguration typeConfiguration) {

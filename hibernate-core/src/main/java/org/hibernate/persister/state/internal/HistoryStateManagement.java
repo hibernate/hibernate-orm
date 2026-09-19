@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.state.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
@@ -61,13 +64,15 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 			StandardStateManagement.INSTANCE.getLegacyIntegration();
 
 	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
+		@Nonnull
 		@Override
-		public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
 			return new HistoryEntityMutationPlanContributor( persister, persister.getFactory() );
 		}
 
+		@Nonnull
 		@Override
-		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(CollectionPersister persister) {
+		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(@Nonnull CollectionPersister persister) {
 			return new HistoryCollectionMutationPlanContributor();
 		}
 	};
@@ -75,6 +80,7 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 	private HistoryStateManagement() {
 	}
 
+	@Nonnull
 	@Override
 	public StateManagementLegacyIntegration getLegacyIntegration() {
 		return this;
@@ -84,6 +90,7 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Graph ActionQueue integration
 
+	@Nonnull
 	@Override
 	public StateManagementGraphIntegration getGraphIntegration() {
 		return graphIntegration;
@@ -93,32 +100,37 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Legacy ActionQueue integration
 
+	@Nonnull
 	@Override
-	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
+	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister persister) {
 		return new MergeCoordinatorHistory( persister, persister.getFactory(),
 				standardLegacyIntegration.createMergeCoordinator( persister ) );
 	}
 
+	@Nonnull
 	@Override
-	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
+	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister persister) {
 		return new InsertCoordinatorHistory( persister, persister.getFactory(),
 				standardLegacyIntegration.createInsertCoordinator( persister ) );
 	}
 
+	@Nonnull
 	@Override
-	public UpdateCoordinator createUpdateCoordinator(EntityPersister persister) {
+	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister persister) {
 		return new UpdateCoordinatorHistory( persister, persister.getFactory(),
 				standardLegacyIntegration.createUpdateCoordinator( persister ) );
 	}
 
+	@Nonnull
 	@Override
-	public DeleteCoordinator createDeleteCoordinator(EntityPersister persister) {
+	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister) {
 		return new DeleteCoordinatorHistory( persister, persister.getFactory(),
 				standardLegacyIntegration.createDeleteCoordinator( persister ) );
 	}
 
+	@Nonnull
 	@Override
-	public InsertRowsCoordinator createInsertRowsCoordinator(CollectionPersister persister) {
+	public InsertRowsCoordinator createInsertRowsCoordinator(@Nonnull CollectionPersister persister) {
 		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !isInsertAllowed( persister ) ) {
 			return new InsertRowsCoordinatorNoOp( mutationTarget );
@@ -139,8 +151,9 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		}
 	}
 
+	@Nonnull
 	@Override
-	public UpdateRowsCoordinator createUpdateRowsCoordinator(CollectionPersister persister) {
+	public UpdateRowsCoordinator createUpdateRowsCoordinator(@Nonnull CollectionPersister persister) {
 		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !isUpdatePossible( persister ) ) {
 			return new UpdateRowsCoordinatorNoOp( mutationTarget );
@@ -160,8 +173,9 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		}
 	}
 
+	@Nonnull
 	@Override
-	public DeleteRowsCoordinator createDeleteRowsCoordinator(CollectionPersister persister) {
+	public DeleteRowsCoordinator createDeleteRowsCoordinator(@Nonnull CollectionPersister persister) {
 		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !persister.needsRemove() ) {
 			return new DeleteRowsCoordinatorNoOp( mutationTarget );
@@ -182,8 +196,9 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		}
 	}
 
+	@Nonnull
 	@Override
-	public RemoveCoordinator createRemoveCoordinator(CollectionPersister persister) {
+	public RemoveCoordinator createRemoveCoordinator(@Nonnull CollectionPersister persister) {
 		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !persister.needsRemove() ) {
 			return new RemoveCoordinatorNoOp( mutationTarget );
@@ -203,11 +218,12 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		}
 	}
 
+	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			EntityPersister persister,
-			RootClass rootClass,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull EntityPersister persister,
+			@Nonnull RootClass rootClass,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var temporalTable = rootClass.getAuxiliaryTable();
 		String tableName = temporalTable == null
 				? persister.getIdentifierTableName()
@@ -216,11 +232,12 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		return new TemporalMappingImpl( rootClass, tableName, creationProcess );
 	}
 
+	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			PluralAttributeMapping pluralAttributeMapping,
-			Collection bootDescriptor,
-			MappingModelCreationProcess creationProcess) {
+			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull Collection bootDescriptor,
+			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var temporalTable = bootDescriptor.getAuxiliaryTable();
 		String tableName = temporalTable == null
 				? pluralAttributeMapping.getSeparateCollectionTable()

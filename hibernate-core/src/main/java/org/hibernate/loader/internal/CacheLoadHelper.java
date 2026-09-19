@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -71,11 +74,12 @@ public class CacheLoadHelper {
 	 *
 	 * @throws HibernateException Generally indicates problems applying a lock mode.
 	 */
+	@Nonnull
 	public static PersistenceContextEntry loadFromSessionCache(
-			EntityKey keyToLoad,
-			LockOptions lockOptions,
-			LoadEventListener.LoadType options,
-			SharedSessionContractImplementor session) {
+			@Nonnull EntityKey keyToLoad,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull LoadEventListener.LoadType options,
+			@Nonnull SharedSessionContractImplementor session) {
 		final Object old = session.getEntityUsingInterceptor( keyToLoad );
 		final PersistenceContextEntry.EntityStatus entityStatus;
 		if ( old != null ) {
@@ -93,12 +97,13 @@ public class CacheLoadHelper {
 	}
 
 	// Used by Hibernate Reactive
+	@Nonnull
 	public static PersistenceContextEntry.EntityStatus entityStatus(
-			EntityKey keyToLoad,
-			LoadEventListener.LoadType options,
-			SharedSessionContractImplementor session,
-			EntityEntry oldEntry,
-			Object old) {
+			@Nonnull EntityKey keyToLoad,
+			@Nonnull LoadEventListener.LoadType options,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull EntityEntry oldEntry,
+			@Nonnull Object old) {
 		if ( options.isCheckDeleted() && oldEntry.getStatus().isDeletedOrGone() ) {
 			LOADING_LOGGER.foundEntityScheduledForRemoval();
 			return REMOVED_ENTITY_MARKER;
@@ -124,12 +129,13 @@ public class CacheLoadHelper {
 	 *
 	 * @return The entity from the second-level cache, or null.
 	 */
+	@Nullable
 	public static Object loadFromSecondLevelCache(
-			final SharedSessionContractImplementor source,
-			final Object entity,
-			final LockMode lockMode,
-			final EntityPersister persister,
-			final EntityKey entityKey) {
+			@Nonnull final SharedSessionContractImplementor source,
+			@Nullable final Object entity,
+			@Nonnull final LockMode lockMode,
+			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityKey entityKey) {
 		final boolean useCache =
 				source.getCacheMode().isGetEnabled()
 						&& lockMode.lessThan( LockMode.READ );
@@ -149,11 +155,12 @@ public class CacheLoadHelper {
 		}
 	}
 
+	@Nullable
 	private static Object getFromSharedCache(
-			final Object entityId,
-			final EntityPersister persister,
-			final SharedSessionContractImplementor source,
-			final EntityDataAccess cache) {
+			@Nonnull final Object entityId,
+			@Nonnull final EntityPersister persister,
+			@Nonnull final SharedSessionContractImplementor source,
+			@Nonnull final EntityDataAccess cache) {
 		final var factory = source.getFactory();
 		final Object cacheKey = cache.generateCacheKey( entityId, persister, factory, source.getTenantIdentifier() );
 		final Object cacheEntry = fromSharedCache( source, cacheKey, persister, cache );
@@ -171,12 +178,13 @@ public class CacheLoadHelper {
 		return cacheEntry;
 	}
 
+	@Nullable
 	private static Object processCachedEntry(
-			final Object instanceToLoad,
-			final EntityPersister persister,
-			final Object cacheEntry,
-			final SharedSessionContractImplementor source,
-			final EntityKey entityKey) {
+			@Nullable final Object instanceToLoad,
+			@Nonnull final EntityPersister persister,
+			@Nonnull final Object cacheEntry,
+			@Nonnull final SharedSessionContractImplementor source,
+			@Nonnull final EntityKey entityKey) {
 		final var entry = (CacheEntry)
 				persister.getCacheEntryStructure().destructure( cacheEntry, source.getFactory() );
 		if ( entry.isReferenceEntry() ) {
@@ -212,10 +220,11 @@ public class CacheLoadHelper {
 		}
 	}
 
+	@Nonnull
 	private static Object convertCacheReferenceEntryToEntity(
-			ReferenceCacheEntryImpl referenceCacheEntry,
-			SharedSessionContractImplementor session,
-			EntityKey entityKey) {
+			@Nonnull ReferenceCacheEntryImpl referenceCacheEntry,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull EntityKey entityKey) {
 		final Object entity = referenceCacheEntry.getReference();
 		if ( entity == null ) {
 			throw new IllegalStateException( "Reference cache entry contained null: " + referenceCacheEntry );
@@ -227,10 +236,10 @@ public class CacheLoadHelper {
 	}
 
 	private static void makeEntityCircularReferenceSafe(
-			ReferenceCacheEntryImpl referenceCacheEntry,
-			SharedSessionContractImplementor session,
-			Object entity,
-			EntityKey entityKey) {
+			@Nonnull ReferenceCacheEntryImpl referenceCacheEntry,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object entity,
+			@Nonnull EntityKey entityKey) {
 		// make it circular-reference safe
 		final var persistenceContext = session.getPersistenceContext();
 		if ( isManagedEntity( entity ) ) {
@@ -251,13 +260,14 @@ public class CacheLoadHelper {
 		persistenceContext.initializeNonLazyCollections();
 	}
 
+	@Nullable
 	private static Object convertCacheEntryToEntity(
-			CacheEntry entry,
-			Object entityId,
-			SharedSessionContractImplementor source,
-			EntityPersister persister,
-			Object instanceToLoad,
-			EntityKey entityKey) {
+			@Nonnull CacheEntry entry,
+			@Nonnull Object entityId,
+			@Nonnull SharedSessionContractImplementor source,
+			@Nonnull EntityPersister persister,
+			@Nullable Object instanceToLoad,
+			@Nonnull EntityKey entityKey) {
 
 		final var subclassPersister =
 				source.getFactory().getMappingMetamodel()
@@ -376,10 +386,10 @@ public class CacheLoadHelper {
 	 *         false otherwise.
 	 */
 	public static boolean initializeCollectionFromCache(
-			Object key,
-			CollectionPersister persister,
-			PersistentCollection<?> collection,
-			SharedSessionContractImplementor source) {
+			@Nonnull Object key,
+			@Nonnull CollectionPersister persister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull SharedSessionContractImplementor source) {
 		if ( source.getCacheMode().isGetEnabled() ) {
 			return usingCache( persister, cache -> {
 				final Object cachedEntry = getFromSharedCache( key, persister, source, cache );
@@ -399,11 +409,11 @@ public class CacheLoadHelper {
 	}
 
 	private static void processCachedEntry(
-			Object key,
-			CollectionPersister persister,
-			Object cachedEntry,
-			PersistentCollection<?> collection,
-			SharedSessionContractImplementor source) {
+			@Nonnull Object key,
+			@Nonnull CollectionPersister persister,
+			@Nonnull Object cachedEntry,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull SharedSessionContractImplementor source) {
 			final var cacheEntry = (CollectionCacheEntry)
 					persister.getCacheEntryStructure().destructure( cachedEntry, source.getFactory() );
 			final var persistenceContext = source.getPersistenceContextInternal();
@@ -418,11 +428,12 @@ public class CacheLoadHelper {
 			// addInitializedCollection(collection, persister, key);
 		}
 
+	@Nullable
 	private static Object getFromSharedCache(
-			Object key,
-			CollectionPersister persister,
-			SharedSessionContractImplementor source,
-			CollectionDataAccess cache) {
+			@Nonnull Object key,
+			@Nonnull CollectionPersister persister,
+			@Nonnull SharedSessionContractImplementor source,
+			@Nonnull CollectionDataAccess cache) {
 		final var factory = source.getFactory();
 		final Object cacheKey = cache.generateCacheKey( key, persister, factory, source.getTenantIdentifier() );
 		final Object cachedEntry = fromSharedCache( source, cacheKey, persister, cache );
@@ -450,12 +461,12 @@ public class CacheLoadHelper {
 	 * @param session The Session
 	 */
 	static void addUninitializedCachedEntity(
-			final EntityKey key,
-			final Object object,
-			final EntityPersister persister,
-			final LockMode lockMode,
-			final Object version,
-			final SharedSessionContractImplementor session) {
+			@Nonnull final EntityKey key,
+			@Nonnull final Object object,
+			@Nonnull final EntityPersister persister,
+			@Nonnull final LockMode lockMode,
+			@Nullable final Object version,
+			@Nonnull final SharedSessionContractImplementor session) {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var entityHolder = persistenceContext.addEntityHolder( key, object );
 		final var entityEntry = persistenceContext.addEntry(

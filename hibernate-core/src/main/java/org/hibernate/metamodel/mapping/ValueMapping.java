@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Locale;
 
 import org.hibernate.type.descriptor.java.JavaType;
@@ -21,8 +23,10 @@ public interface ValueMapping extends MappingModelExpressible, JavaTypedExpressi
 	/**
 	 * Descriptor for the type of this mapping
 	 */
+	@Nonnull
 	MappingType getMappedType();
 
+	@Nonnull
 	@Override
 	default JavaType<?> getExpressibleJavaType() {
 		return getMappedType().getMappedJavaType();
@@ -39,7 +43,8 @@ public interface ValueMapping extends MappingModelExpressible, JavaTypedExpressi
 	 * things the ValueMapping itself implements.
 	 *
 	 */
-	default <X> X treatAs(Class<X> targetType) {
+	@Nonnull
+	default <X> X treatAs(@Nonnull Class<X> targetType) {
 		if ( targetType.isInstance( this ) ) {
 			return targetType.cast( this );
 		}

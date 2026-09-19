@@ -4,6 +4,11 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -98,16 +103,17 @@ public class LoaderSelectBuilder {
 	 * @param jdbcParameterConsumer Consumer for all JdbcParameter references created
 	 * @param sessionFactory The SessionFactory
 	 */
+	@Nonnull
 	public static SelectStatement createSelectByUniqueKey(
-			Loadable loadable,
-			List<? extends ModelPart> partsToSelect,
-			ModelPart restrictedPart,
-			DomainResult<?> cachedDomainResult,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull Loadable loadable,
+			@Nonnull List<? extends ModelPart> partsToSelect,
+			@Nonnull ModelPart restrictedPart,
+			@Nullable DomainResult<?> cachedDomainResult,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
@@ -128,14 +134,15 @@ public class LoaderSelectBuilder {
 	/**
 	 * Create a select-statement (SQL AST) for loading by multiple keys using a single SQL ARRAY parameter
 	 */
+	@Nonnull
 	public static SelectStatement createSelectBySingleArrayParameter(
-			Loadable loadable,
-			ValuedModelPart restrictedPart,
-			LoadQueryInfluencers influencers,
-			LockOptions lockOptions,
-			JdbcParameter jdbcArrayParameter,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull Loadable loadable,
+			@Nonnull ValuedModelPart restrictedPart,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull JdbcParameter jdbcArrayParameter,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var builder = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
@@ -190,12 +197,12 @@ public class LoaderSelectBuilder {
 	}
 
 	private static void applyArrayParamRestriction(
-			QuerySpec rootQuerySpec,
-			NavigablePath rootNavigablePath,
-			TableGroup rootTableGroup,
-			ValuedModelPart restrictedPart,
-			JdbcParameter jdbcArrayParameter,
-			LoaderSqlAstCreationState sqlAstCreationState) {
+			@Nonnull QuerySpec rootQuerySpec,
+			@Nonnull NavigablePath rootNavigablePath,
+			@Nonnull TableGroup rootTableGroup,
+			@Nonnull ValuedModelPart restrictedPart,
+			@Nonnull JdbcParameter jdbcArrayParameter,
+			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		assert restrictedPart.getJdbcTypeCount() == 1;
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final var restrictedPartMapping = restrictedPart.getSelectable( 0 );
@@ -224,17 +231,18 @@ public class LoaderSelectBuilder {
 	 * @param jdbcParameterConsumer Consumer for all JdbcParameter references created
 	 * @param sessionFactory The SessionFactory
 	 */
+	@Nonnull
 	public static SelectStatement createSelect(
-			Loadable loadable,
-			List<? extends ModelPart> partsToSelect,
-			ModelPart restrictedPart,
-			DomainResult<?> cachedDomainResult,
+			@Nonnull Loadable loadable,
+			@Nullable List<? extends ModelPart> partsToSelect,
+			@Nonnull ModelPart restrictedPart,
+			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
@@ -250,17 +258,18 @@ public class LoaderSelectBuilder {
 		return process.generateSelect();
 	}
 
+	@Nonnull
 	public static SelectStatement createSelect(
-			Loadable loadable,
-			List<? extends ModelPart> partsToSelect,
-			List<ModelPart> restrictedParts,
-			DomainResult<?> cachedDomainResult,
+			@Nonnull Loadable loadable,
+			@Nullable List<? extends ModelPart> partsToSelect,
+			@Nonnull List<ModelPart> restrictedParts,
+			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
@@ -278,18 +287,19 @@ public class LoaderSelectBuilder {
 
 	// TODO: this method is probably unnecessary if we make
 	// determineWhetherToForceIdSelection() a bit smarter
+	@Nonnull
 	static SelectStatement createSelect(
-			Loadable loadable,
-			List<ModelPart> partsToSelect,
+			@Nonnull Loadable loadable,
+			@Nullable List<ModelPart> partsToSelect,
 			boolean forceIdentifierSelection,
-			List<ModelPart> restrictedParts,
-			DomainResult<?> cachedDomainResult,
+			@Nonnull List<ModelPart> restrictedParts,
+			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
@@ -320,15 +330,16 @@ public class LoaderSelectBuilder {
 	 *
 	 * @see CollectionLoaderSubSelectFetch
 	 */
+	@Nonnull
 	public static SelectStatement createSubSelectFetchSelect(
-			PluralAttributeMapping attributeMapping,
-			SubselectFetch subselect,
-			DomainResult<?> cachedDomainResult,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull SubselectFetch subselect,
+			@Nullable DomainResult<?> cachedDomainResult,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				attributeMapping,
@@ -358,16 +369,17 @@ public class LoaderSelectBuilder {
 	 *
 	 * @see EntityLoaderSubSelectFetch
 	 */
+	@Nonnull
 	public static SelectStatement createSubSelectFetchSelect(
-			EntityMappingType entityMapping,
-			ToOneAttributeMapping attributeMapping,
-			SubselectFetch subselect,
-			DomainResult<?> cachedDomainResult,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull EntityMappingType entityMapping,
+			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull SubselectFetch subselect,
+			@Nullable DomainResult<?> cachedDomainResult,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				entityMapping,
@@ -385,14 +397,18 @@ public class LoaderSelectBuilder {
 
 	private final SqlAstCreationContext creationContext;
 	private final Loadable loadable;
+	@Nullable
 	private final List<? extends ModelPart> partsToSelect;
 	private final List<ModelPart> restrictedParts;
+	@Nullable
 	private final DomainResult<?> cachedDomainResult;
 	private final int numberOfKeysToLoad;
 	private final boolean forceIdentifierSelection;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockOptions lockOptions;
+	@Nullable
 	private final Consumer<JdbcParameter> jdbcParameterConsumer;
+	@Nullable
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
@@ -400,18 +416,18 @@ public class LoaderSelectBuilder {
 	private final SqlAliasBaseGenerator sqlAliasBasGenerator;
 
 	private LoaderSelectBuilder(
-			SqlAstCreationContext creationContext,
-			Loadable loadable,
-			List<? extends ModelPart> partsToSelect,
-			List<ModelPart> restrictedParts,
-			DomainResult<?> cachedDomainResult,
+			@Nonnull SqlAstCreationContext creationContext,
+			@Nonnull Loadable loadable,
+			@Nullable List<? extends ModelPart> partsToSelect,
+			@Nonnull List<ModelPart> restrictedParts,
+			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			EntityGraphTraversalState entityGraphTraversalState,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LockOptions lockOptions,
+			@Nullable EntityGraphTraversalState entityGraphTraversalState,
 			boolean forceIdentifierSelection,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SqlAliasBaseGenerator sqlAliasBasGenerator) {
+			@Nullable Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBasGenerator) {
 		this.creationContext = creationContext;
 		this.loadable = loadable;
 		this.partsToSelect = partsToSelect;
@@ -433,16 +449,16 @@ public class LoaderSelectBuilder {
 	}
 
 	private LoaderSelectBuilder(
-			SqlAstCreationContext creationContext,
-			Loadable loadable,
-			List<? extends ModelPart> partsToSelect,
-			List<ModelPart> restrictedParts,
-			DomainResult<?> cachedDomainResult,
+			@Nonnull SqlAstCreationContext creationContext,
+			@Nonnull Loadable loadable,
+			@Nullable List<? extends ModelPart> partsToSelect,
+			@Nonnull List<ModelPart> restrictedParts,
+			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SqlAliasBaseGenerator sqlAliasBasGenerator) {
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nullable LockOptions lockOptions,
+			@Nullable Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBasGenerator) {
 		this(
 				creationContext,
 				loadable,
@@ -460,16 +476,16 @@ public class LoaderSelectBuilder {
 	}
 
 	private LoaderSelectBuilder(
-			SqlAstCreationContext creationContext,
-			Loadable loadable,
-			List<? extends ModelPart> partsToSelect,
-			ModelPart restrictedPart,
-			DomainResult<?> cachedDomainResult,
+			@Nonnull SqlAstCreationContext creationContext,
+			@Nonnull Loadable loadable,
+			@Nullable List<? extends ModelPart> partsToSelect,
+			@Nonnull ModelPart restrictedPart,
+			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SqlAliasBaseGenerator sqlAliasBasGenerator) {
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBasGenerator) {
 		this(
 				creationContext,
 				loadable,
@@ -485,10 +501,10 @@ public class LoaderSelectBuilder {
 	}
 
 	private static boolean determineWhetherToForceIdSelection(
-			Loadable loadable,
+			@Nonnull Loadable loadable,
 			int numberOfKeysToLoad,
-			List<ModelPart> restrictedParts,
-			LoadQueryInfluencers influencers) {
+			@Nonnull List<ModelPart> restrictedParts,
+			@Nonnull LoadQueryInfluencers influencers) {
 		if ( numberOfKeysToLoad > 1 ) {
 			return true;
 		}
@@ -512,9 +528,10 @@ public class LoaderSelectBuilder {
 				&& loadable.asEntityMappingType().getEntityPersister().getIdentifierCascadeStyle().doCascade( CascadingActions.REFRESH );
 	}
 
+	@Nullable
 	private static EntityGraphTraversalState determineGraphTraversalState(
-			LoadQueryInfluencers loadQueryInfluencers,
-			JpaMetamodel jpaMetamodel) {
+			@Nullable LoadQueryInfluencers loadQueryInfluencers,
+			@Nonnull JpaMetamodel jpaMetamodel) {
 		if ( loadQueryInfluencers != null ) {
 			final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			if ( effectiveEntityGraph != null ) {
@@ -528,6 +545,7 @@ public class LoaderSelectBuilder {
 		return null;
 	}
 
+	@Nonnull
 	private SelectStatement generateSelect() {
 		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
@@ -562,7 +580,7 @@ public class LoaderSelectBuilder {
 					rootTableGroup,
 					restrictedPart,
 					restrictedPart.getJdbcTypeCount(),
-					jdbcParameterConsumer,
+					castNonNull( jdbcParameterConsumer ),
 					sqlAstCreationState
 			);
 		}
@@ -578,10 +596,11 @@ public class LoaderSelectBuilder {
 		return new SelectStatement( rootQuerySpec, domainResults );
 	}
 
+	@Nonnull
 	private List<DomainResult<?>> buildRequestedDomainResults(
-			NavigablePath rootNavigablePath, LoaderSqlAstCreationState sqlAstCreationState, TableGroup rootTableGroup) {
-		final List<DomainResult<?>> domainResults;
-		domainResults = new ArrayList<>( partsToSelect.size() );
+			@Nonnull NavigablePath rootNavigablePath, @Nonnull LoaderSqlAstCreationState sqlAstCreationState, @Nonnull TableGroup rootTableGroup) {
+		final var partsToSelect = castNonNull( this.partsToSelect );
+		final List<DomainResult<?>> domainResults = new ArrayList<>( partsToSelect.size() );
 		for ( var part : partsToSelect ) {
 			final var navigablePath = rootNavigablePath.append( part.getPartName() );
 			final TableGroup tableGroup;
@@ -616,8 +635,9 @@ public class LoaderSelectBuilder {
 		return domainResults;
 	}
 
+	@Nonnull
 	private TableGroup buildRootTableGroup(
-			NavigablePath rootNavigablePath, QuerySpec rootQuerySpec, LoaderSqlAstCreationState sqlAstCreationState) {
+			@Nonnull NavigablePath rootNavigablePath, @Nonnull QuerySpec rootQuerySpec, @Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		final var rootTableGroup = loadable.createRootTableGroup(
 				true,
 				rootNavigablePath,
@@ -633,7 +653,8 @@ public class LoaderSelectBuilder {
 		return rootTableGroup;
 	}
 
-	private LoaderSqlAstCreationState createSqlAstCreationState(QuerySpec rootQuerySpec) {
+	@Nonnull
+	private LoaderSqlAstCreationState createSqlAstCreationState(@Nonnull QuerySpec rootQuerySpec) {
 		return new LoaderSqlAstCreationState(
 				rootQuerySpec,
 				sqlAliasBasGenerator,
@@ -646,18 +667,19 @@ public class LoaderSelectBuilder {
 		);
 	}
 
+	@Nonnull
 	private SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 		return sqlAliasBasGenerator;
 	}
 
 	private void applyRestriction(
-			QuerySpec rootQuerySpec,
-			NavigablePath rootNavigablePath,
-			TableGroup rootTableGroup,
-			ModelPart restrictedPart,
+			@Nonnull QuerySpec rootQuerySpec,
+			@Nonnull NavigablePath rootNavigablePath,
+			@Nonnull TableGroup rootTableGroup,
+			@Nonnull ModelPart restrictedPart,
 			int numberColumns,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			LoaderSqlAstCreationState sqlAstCreationState) {
+			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
+			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final var navigablePath =
 				rootNavigablePath.append( restrictedPart.getNavigableRole().getNavigableName() );
@@ -726,10 +748,10 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applyFiltering(
-			QuerySpec querySpec,
-			TableGroup tableGroup,
-			PluralAttributeMapping pluralAttributeMapping,
-			SqlAstCreationState astCreationState) {
+			@Nonnull QuerySpec querySpec,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull SqlAstCreationState astCreationState) {
 		// Only apply restrictions for root table groups,
 		// because for table group joins the restriction is applied
 		// via PluralAttributeMappingImpl.createTableGroupJoin
@@ -754,10 +776,10 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applyFiltering(
-			PredicateContainer predicateContainer,
-			TableGroup tableGroup,
-			Restrictable restrictable,
-			SqlAstCreationState astCreationState) {
+			@Nonnull PredicateContainer predicateContainer,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull Restrictable restrictable,
+			@Nonnull SqlAstCreationState astCreationState) {
 		restrictable.applyBaseRestrictions(
 				predicateContainer::applyPredicate,
 				tableGroup,
@@ -770,10 +792,10 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applyOrdering(
-			QuerySpec querySpec,
-			TableGroup tableGroup,
-			PluralAttributeMapping pluralAttributeMapping,
-			SqlAstCreationState astCreationState) {
+			@Nonnull QuerySpec querySpec,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull SqlAstCreationState astCreationState) {
 		final var orderByFragment = pluralAttributeMapping.getOrderByFragment();
 		if ( orderByFragment != null ) {
 			applyOrdering( querySpec, tableGroup, orderByFragment, astCreationState );
@@ -791,14 +813,15 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applyOrdering(
-			QuerySpec querySpec,
-			TableGroup tableGroup,
-			OrderByFragment orderByFragment,
-			SqlAstCreationState astCreationState) {
+			@Nonnull QuerySpec querySpec,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull OrderByFragment orderByFragment,
+			@Nonnull SqlAstCreationState astCreationState) {
 		orderByFragment.apply( querySpec, tableGroup, astCreationState );
 	}
 
-	private ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
+	@Nonnull
+	private ImmutableFetchList visitFetches(@Nonnull FetchParent fetchParent, @Nonnull LoaderSqlAstCreationState creationState) {
 		final var fetches = new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
 		final var processor = createFetchableConsumer( fetchParent, creationState, fetches );
 
@@ -833,26 +856,27 @@ public class LoaderSelectBuilder {
 		return fetches.build();
 	}
 
-	private boolean isBag(Fetchable fetchable) {
+	private boolean isBag(@Nonnull Fetchable fetchable) {
 		return isPluralAttributeMapping( fetchable )
 			&& ( (PluralAttributeMapping) fetchable ).getMappedType().getCollectionSemantics()
 					.getCollectionClassification() == CollectionClassification.BAG;
 	}
 
-	private boolean isPluralAttributeMapping(Fetchable fetchable) {
+	private boolean isPluralAttributeMapping(@Nonnull Fetchable fetchable) {
 		final var attributeMapping = fetchable.asAttributeMapping();
 		return attributeMapping != null && attributeMapping.isPluralAttributeMapping();
 	}
 
 	@FunctionalInterface
 	private interface FetchableConsumer {
-		void accept(Fetchable fetchable, boolean isKeyFetchable, boolean isABag);
+		void accept(@Nonnull Fetchable fetchable, boolean isKeyFetchable, boolean isABag);
 	}
 
+	@Nonnull
 	private FetchableConsumer createFetchableConsumer(
-			FetchParent fetchParent,
-			LoaderSqlAstCreationState creationState,
-			ImmutableFetchList.Builder fetches) {
+			@Nonnull FetchParent fetchParent,
+			@Nonnull LoaderSqlAstCreationState creationState,
+			@Nonnull ImmutableFetchList.Builder fetches) {
 		return (fetchable, isKeyFetchable, isABag) -> {
 			if ( !fetchable.isSelectable() || isFetchableAuditExcluded( fetchable, loadQueryInfluencers ) ) {
 				return;
@@ -991,7 +1015,8 @@ public class LoaderSelectBuilder {
 		};
 	}
 
-	private static NavigablePath getFetchablePath(FetchParent fetchParent, Fetchable fetchable, boolean isKeyFetchable) {
+	@Nonnull
+	private static NavigablePath getFetchablePath(@Nonnull FetchParent fetchParent, @Nonnull Fetchable fetchable, boolean isKeyFetchable) {
 		if ( isKeyFetchable ) {
 			final var identifierMapping = getEntityIdentifierMapping( fetchParent );
 			if ( identifierMapping != null ) {
@@ -1009,7 +1034,8 @@ public class LoaderSelectBuilder {
 		}
 	}
 
-	private static EntityIdentifierMapping getEntityIdentifierMapping(FetchParent fetchParent) {
+	@Nullable
+	private static EntityIdentifierMapping getEntityIdentifierMapping(@Nonnull FetchParent fetchParent) {
 		if ( fetchParent instanceof BiDirectionalFetch parentAsBiDirectionalFetch ) {
 			return parentAsBiDirectionalFetch.getFetchedMapping() instanceof EntityValuedFetchable entityFetchable
 							? entityFetchable.getEntityMappingType().getIdentifierMapping()
@@ -1022,7 +1048,7 @@ public class LoaderSelectBuilder {
 		}
 	}
 
-	private boolean shouldExplicitFetch(Integer maxFetchDepth, Fetchable fetchable, LoaderSqlAstCreationState creationState) {
+	private boolean shouldExplicitFetch(@Nullable Integer maxFetchDepth, @Nonnull Fetchable fetchable, @Nonnull LoaderSqlAstCreationState creationState) {
 		/*
 			Forcing the value of explicitFetch to true will disable the fetch circularity check and
 			for already visited association or collection this will cause a StackOverflow if maxFetchDepth is null, see HHH-15391.
@@ -1043,7 +1069,8 @@ public class LoaderSelectBuilder {
 		return true;
 	}
 
-	private SelectStatement generateSelect(SubselectFetch subselect, SqlAliasBaseGenerator sqlAliasBaseGenerator) {
+	@Nonnull
+	private SelectStatement generateSelect(@Nonnull SubselectFetch subselect, @Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator) {
 
 		// todo (6.0) : we could even convert this to a join by piecing together
 		//		parts from the subselect-fetch sql-ast.  e.g. today we do:
@@ -1111,10 +1138,11 @@ public class LoaderSelectBuilder {
 		);
 	}
 
+	@Nonnull
 	private SelectStatement generateSelect(
-			ToOneAttributeMapping attributeMapping,
-			SubselectFetch subselect,
-			SqlAliasBaseGenerator sqlAliasBaseGenerator) {
+			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull SubselectFetch subselect,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator) {
 		assert loadable instanceof EntityMappingType;
 		final var entityMapping = (EntityMappingType) loadable;
 
@@ -1154,10 +1182,10 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applySubSelectRestriction(
-			QuerySpec querySpec,
-			TableGroup rootTableGroup,
-			SubselectFetch subselect,
-			LoaderSqlAstCreationState sqlAstCreationState) {
+			@Nonnull QuerySpec querySpec,
+			@Nonnull TableGroup rootTableGroup,
+			@Nonnull SubselectFetch subselect,
+			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		assert loadable instanceof PluralAttributeMapping;
 
 		final var attributeMapping = (PluralAttributeMapping) loadable;
@@ -1201,11 +1229,11 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applySubSelectRestriction(
-			QuerySpec querySpec,
-			TableGroup rootTableGroup,
-			ToOneAttributeMapping attributeMapping,
-			SubselectFetch subselect,
-			LoaderSqlAstCreationState sqlAstCreationState) {
+			@Nonnull QuerySpec querySpec,
+			@Nonnull TableGroup rootTableGroup,
+			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull SubselectFetch subselect,
+			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		final var fkDescriptor = attributeMapping.getForeignKeyDescriptor();
 		final var targetPart = fkDescriptor.getPart( attributeMapping.getSideNature().inverse() );
 
@@ -1218,10 +1246,11 @@ public class LoaderSelectBuilder {
 		);
 	}
 
+	@Nonnull
 	private Expression createPartExpression(
-			TableGroup tableGroup,
-			ValuedModelPart modelPart,
-			LoaderSqlAstCreationState sqlAstCreationState) {
+			@Nonnull TableGroup tableGroup,
+			@Nonnull ValuedModelPart modelPart,
+			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		if ( modelPart.getJdbcTypeCount() == 1 ) {
 			final var selectable = modelPart.getSelectable( 0 );
@@ -1246,10 +1275,11 @@ public class LoaderSelectBuilder {
 		}
 	}
 
+	@Nonnull
 	private QueryPart generateSubSelect(
-			PluralAttributeMapping attributeMapping,
-			SubselectFetch subselect,
-			LoaderSqlAstCreationState creationState) {
+			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull SubselectFetch subselect,
+			@Nonnull LoaderSqlAstCreationState creationState) {
 		final var fkDescriptor = attributeMapping.getKeyDescriptor();
 		final var subQuery = new QuerySpec( false );
 		final var loadingSqlAst = subselect.getLoadingSqlAst();
@@ -1278,10 +1308,11 @@ public class LoaderSelectBuilder {
 		return subQuery;
 	}
 
+	@Nonnull
 	private QueryPart generateSubSelect(
-			ToOneAttributeMapping attributeMapping,
-			SubselectFetch subselect,
-			LoaderSqlAstCreationState creationState) {
+			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull SubselectFetch subselect,
+			@Nonnull LoaderSqlAstCreationState creationState) {
 		final var fkDescriptor = attributeMapping.getForeignKeyDescriptor();
 		final var ownerPart = fkDescriptor.getPart( attributeMapping.getSideNature() );
 		final var subQuery = new QuerySpec( false );
@@ -1307,7 +1338,7 @@ public class LoaderSelectBuilder {
 		return subQuery;
 	}
 
-	private void registerPluralTableGroupParts(FromClauseAccess fromClauseAccess, TableGroup tableGroup) {
+	private void registerPluralTableGroupParts(@Nonnull FromClauseAccess fromClauseAccess, @Nonnull TableGroup tableGroup) {
 		if ( tableGroup instanceof PluralTableGroup pluralTableGroup ) {
 			if ( pluralTableGroup.getElementTableGroup() != null ) {
 				final var elementTableGroup = pluralTableGroup.getElementTableGroup();

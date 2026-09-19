@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import java.util.Objects;
@@ -99,7 +101,7 @@ public final class BasicArrayType<T,E>
 	// instances of java.util.Date (Why do we even allow this?)
 
 	@Override
-	public boolean isEqual(Object one, Object another) {
+	public boolean isEqual(@Nullable Object one, @Nullable Object another) {
 		if ( arrayTypeDescriptor == null ) {
 			// for hibernate-vector
 			return super.isEqual( one, another );
@@ -115,8 +117,9 @@ public final class BasicArrayType<T,E>
 		}
 	}
 
+	@Nullable
 	@Override
-	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
+	public Object deepCopy(@Nullable Object value, SessionFactoryImplementor factory) {
 		return arrayTypeDescriptor == null
 				? super.deepCopy( value, factory ) // for hibernate-vector
 				: arrayTypeDescriptor.deepCopy( value );

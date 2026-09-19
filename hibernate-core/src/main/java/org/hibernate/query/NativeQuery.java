@@ -159,11 +159,11 @@ public interface NativeQuery<T>
 
 	@Override @Deprecated(since = "7")
 	@Nonnull
-	NativeQuery<T> setFlushMode(@Nonnull FlushModeType flushMode);
+	NativeQuery<T> setFlushMode(@Nullable FlushModeType flushMode);
 
 	@Override
 	@Nonnull
-	NativeQuery<T> setCacheMode(@Nonnull CacheMode cacheMode);
+	NativeQuery<T> setCacheMode(@Nullable CacheMode cacheMode);
 
 	@Override @SuppressWarnings("removal")
 	@Nonnull

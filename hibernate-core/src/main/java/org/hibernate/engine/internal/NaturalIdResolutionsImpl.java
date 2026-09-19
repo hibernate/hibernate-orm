@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
@@ -584,7 +586,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public Object findCachedIdByNaturalId(Object naturalId, EntityMappingType entityDescriptor) {
+	public Object findCachedIdByNaturalId(@Nullable Object naturalId, EntityMappingType entityDescriptor) {
 		final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 		validateNaturalId( persister, naturalId );
 		final var resolutionCache = resolutionsByEntity.get( persister );

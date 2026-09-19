@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.function;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.SPI;
 
 import java.util.List;
@@ -71,6 +73,7 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 		return sqlAstArguments;
 	}
 
+	@Nullable
 	@Override
 	public JdbcMappingContainer getExpressionType() {
 		return type instanceof SqlExpressible
@@ -138,6 +141,7 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 		renderer.render( sqlAppender, sqlAstArguments, type, walker );
 	}
 
+	@Nullable
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		if ( type instanceof SqlExpressible sqlExpressible ) {
@@ -167,7 +171,7 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		throw new UnsupportedOperationException();
 	}
 }

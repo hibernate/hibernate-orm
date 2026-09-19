@@ -4,6 +4,9 @@
  */
 package org.hibernate.type;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import java.util.Collection;
@@ -43,26 +46,31 @@ public class ConvertedBasicCollectionType<C extends Collection<E>, E> extends Ba
 		this.jdbcLiteralFormatter = (JdbcLiteralFormatter<C>) arrayJdbcType.getJdbcLiteralFormatter( converter.getRelationalJavaType() );
 	}
 
+	@Nullable
 	@Override
 	public BasicValueConverter<C, ?> getValueConverter() {
 		return converter;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<?> getJdbcJavaType() {
 		return converter.getRelationalJavaType();
 	}
 
+	@Nonnull
 	@Override
 	public ValueExtractor<C> getJdbcValueExtractor() {
 		return jdbcValueExtractor;
 	}
 
+	@Nonnull
 	@Override
 	public ValueBinder<C> getJdbcValueBinder() {
 		return jdbcValueBinder;
 	}
 
+	@Nullable
 	@Override
 	public JdbcLiteralFormatter<C> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;

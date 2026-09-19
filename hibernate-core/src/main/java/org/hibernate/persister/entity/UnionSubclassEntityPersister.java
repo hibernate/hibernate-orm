@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,20 +98,20 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[][] constraintOrderedKeyColumnNames;
 
 	public UnionSubclassEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext)
+			@Nonnull final PersistentClass persistentClass,
+			@Nullable final EntityDataAccess cacheAccessStrategy,
+			@Nullable final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			@Nonnull final RuntimeModelCreationContext creationContext)
 			throws HibernateException {
 		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, identity() );
 	}
 
 	protected UnionSubclassEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext,
-			final Function<StateManagement, StateManagement> stateManagementConverter)
+			@Nonnull final PersistentClass persistentClass,
+			@Nullable final EntityDataAccess cacheAccessStrategy,
+			@Nullable final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			@Nonnull final RuntimeModelCreationContext creationContext,
+			@Nonnull final Function<StateManagement, StateManagement> stateManagementConverter)
 					throws HibernateException {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, stateManagementConverter );
 
@@ -195,6 +198,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Nonnull
 	protected EntityTableDescriptor[] buildTableDescriptors() {
 		var builder = createTableDescriptorBuilder(
 				tableName,
@@ -223,7 +227,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public boolean containsTableReference(String tableExpression) {
+	public boolean containsTableReference(@Nonnull String tableExpression) {
 		for ( String subclassTableExpression : subclassTableExpressions ) {
 			if ( subclassTableExpression.equals( tableExpression ) ) {
 				return true;
@@ -233,10 +237,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 
+	@Nonnull
 	@Override
 	public UnionTableReference createPrimaryTableReference(
-			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState) {
+			@Nullable SqlAliasBase sqlAliasBase,
+			@Nonnull SqlAstCreationState creationState) {
 		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
 		final var auxMapping = getAuxiliaryMapping();
 		final boolean useAuxiliaryTable =
@@ -272,14 +277,15 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return tableReference;
 	}
 
+	@Nonnull
 	@Override
 	public TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			SqlAliasBase sqlAliasBase,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationState creationState) {
+			@Nonnull NavigablePath navigablePath,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase sqlAliasBase,
+			@Nullable Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			@Nonnull SqlAstCreationState creationState) {
 		final var tableGroup = new UnionTableGroup(
 				canUseInnerJoins,
 				navigablePath,
@@ -307,51 +313,61 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public Serializable[] getQuerySpaces() {
 		return subclassSpaces;
 	}
 
+	@Nonnull
 	@Override
 	public String getRootTableName() {
 		return tableName;
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName() {
 		return hasSubclasses() ? subquery : tableName;
 	}
 
+	@Nullable
 	@Override
 	public BasicType<?> getDiscriminatorType() {
 		return discriminatorType;
 	}
 
+	@Nonnull
 	@Override
 	public Map<DiscriminatorValue, String> getSubclassByDiscriminatorValue() {
 		return subclassByDiscriminatorValue;
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getMappedTableDetails() {
 		return getTableMapping( 0 );
 	}
 
+	@Nonnull
 	@Override
 	public TableDetails getIdentifierTableDetails() {
 		return getTableMapping( 0 );
 	}
 
+	@Nonnull
 	@Override
 	public DiscriminatorValue getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
+	@Nullable
 	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLValue;
 	}
 
+	@Nonnull
 	@Override
 	public String[] getPropertySpaces() {
 		return spaces;
@@ -367,11 +383,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return false;
 	}
 
+	@Nonnull
 	@Override
 	public String getTableName(int j) {
 		return tableName;
 	}
 
+	@Nonnull
 	@Override
 	public String[] getKeyColumns(int j) {
 		return getIdentifierColumnNames();
@@ -382,8 +400,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return false;
 	}
 
+	@Nonnull
 	@Override
-	protected TableMutationDetails createTableMutationDetails(PersistentClass bootEntityDescriptor, int relativePosition) {
+	protected TableMutationDetails createTableMutationDetails(@Nonnull PersistentClass bootEntityDescriptor, int relativePosition) {
 		return createTableMutationDetails( bootEntityDescriptor );
 	}
 
@@ -394,19 +413,21 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	// Execute the SQL:
 
+	@Nonnull
 	@Override
 	public String getAttributeMutationTableName(int i) {
 		return getTableName();//ie. the subquery! yuck!
 	}
 
+	@Nonnull
 	@Override
-	public String physicalTableNameForMutation(SelectableMapping selectableMapping) {
+	public String physicalTableNameForMutation(@Nonnull SelectableMapping selectableMapping) {
 		assert !selectableMapping.isFormula();
 		return tableName;
 	}
 
 	@Override
-	protected boolean isIdentifierTable(String tableExpression) {
+	protected boolean isIdentifierTable(@Nonnull String tableExpression) {
 		return tableExpression.equals( getRootTableName() );
 	}
 
@@ -417,7 +438,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
+	public void pruneForSubclasses(@Nonnull TableGroup tableGroup, @Nonnull Map<String, EntityNameUse> entityNameUses) {
 		final var tableReference = (NamedTableReference) tableGroup.getTableReference( getRootTableName() );
 		if ( tableReference == null ) {
 			throw new UnknownTableReferenceException( getRootTableName(), "Couldn't find table reference" );
@@ -429,7 +450,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
+	public void visitConstraintOrderedTables(@Nonnull ConstraintOrderedTableConsumer consumer) {
 		for ( int i = 0; i < constraintOrderedTableNames.length; i++ ) {
 			final String tableName = constraintOrderedTableNames[i];
 			final int tablePosition = i;
@@ -445,7 +466,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected void visitMutabilityOrderedTables(MutabilityOrderedTableConsumer consumer) {
+	protected void visitMutabilityOrderedTables(@Nonnull MutabilityOrderedTableConsumer consumer) {
 		consumer.consume(
 				tableName,
 				0,
@@ -462,8 +483,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return false;
 	}
 
+	@Nullable
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(PersistentClass bootEntityDescriptor) {
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(@Nonnull PersistentClass bootEntityDescriptor) {
 		return hasSubclasses() ? super.generateDiscriminatorMapping( bootEntityDescriptor ) : null;
 	}
 
@@ -473,12 +495,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 
+	@Nonnull
 	@Override
 	protected int[] getPropertyTableNumbers() {
 		return new int[getPropertySpan()];
 	}
 
-	protected String generateSubquery(PersistentClass model) {
+	@Nonnull
+	protected String generateSubquery(@Nonnull PersistentClass model) {
 		return generateSubquery( model, null, null );
 	}
 
@@ -490,10 +514,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	 * @param extraSelectExpressions additional column expressions to include in
 	 *                               each SELECT of the union (e.g. REV, REVTYPE)
 	 */
+	@Nonnull
 	public String generateSubquery(
-			PersistentClass model,
-			Function<String, String> tableNameResolver,
-			List<String> extraSelectExpressions) {
+			@Nonnull PersistentClass model,
+			@Nullable Function<String, String> tableNameResolver,
+			@Nullable List<String> extraSelectExpressions) {
 		final var factory = getFactory();
 		final var sqlStringGenerationContext = factory.getSqlStringGenerationContext();
 		if ( !model.hasSubclasses() ) {
@@ -553,7 +578,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
-	private String getSelectClauseNullString(Column column, Dialect dialect) {
+	@Nonnull
+	private String getSelectClauseNullString(@Nonnull Column column, @Nonnull Dialect dialect) {
 		return dialect.getSelectClauseNullString(
 				new SqlTypedMappingImpl(
 						column.getLength(),
@@ -567,7 +593,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		);
 	}
 
-	protected String generateSubquery(Map<String, EntityNameUse> entityNameUses, String currentTableExpression) {
+	@Nonnull
+	protected String generateSubquery(@Nonnull Map<String, EntityNameUse> entityNameUses, @Nonnull String currentTableExpression) {
 		final var auxMapping = currentTableExpression.equals( getTableName() ) ? null : getAuxiliaryMapping();
 		if ( !hasSubclasses() ) {
 			return currentTableExpression;
@@ -659,7 +686,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private void collectSelectableOwners(
-			LinkedHashMap<String, Map<String, SelectableMapping>> selectables,
+			@Nonnull LinkedHashMap<String, Map<String, SelectableMapping>> selectables,
 			boolean auditMapping) {
 		if ( !isAbstract() ) {
 			final SelectableConsumer selectableConsumer = (i, selectable) -> {
@@ -686,6 +713,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Nonnull
 	@Override
 	protected String[] getSubclassTableKeyColumns(int j) {
 		if ( j != 0 ) {
@@ -694,6 +722,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return getIdentifierColumnNames();
 	}
 
+	@Nonnull
 	@Override
 	public String getSubclassTableName(int j) {
 		if ( j != 0 ) {
@@ -702,6 +731,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return tableName;
 	}
 
+	@Nonnull
 	@Override
 	protected String[] getSubclassTableNames(){
 		return subclassTableNames;
@@ -720,18 +750,21 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public String[] getConstraintOrderedTableNameClosure() {
 		return constraintOrderedTableNames;
 	}
 
+	@Nonnull
 	@Override
 	public String[][] getConstraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 
+	@Nonnull
 	@Override
-	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
+	public FilterAliasGenerator getFilterAliasGenerator(@Nonnull String rootAlias) {
 		return new StaticFilterAliasGenerator( rootAlias );
 	}
 }

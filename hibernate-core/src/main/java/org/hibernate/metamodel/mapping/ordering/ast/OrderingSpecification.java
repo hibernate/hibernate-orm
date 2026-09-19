@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.query.SortDirection;
 
@@ -15,7 +17,7 @@ import org.hibernate.query.SortDirection;
 public class OrderingSpecification implements Node {
 	private final OrderingExpression orderingExpression;
 
-	private String collation;
+	@Nullable private String collation;
 	private SortDirection sortOrder = SortDirection.ASCENDING;
 	private Nulls nullPrecedence = Nulls.NONE;
 	private String orderByValue;
@@ -29,11 +31,12 @@ public class OrderingSpecification implements Node {
 		return orderingExpression;
 	}
 
+	@Nullable
 	public String getCollation() {
 		return collation;
 	}
 
-	public void setCollation(String collation) {
+	public void setCollation(@Nullable String collation) {
 		this.collation = collation;
 	}
 

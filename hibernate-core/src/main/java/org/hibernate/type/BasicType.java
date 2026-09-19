@@ -6,10 +6,6 @@ package org.hibernate.type;
 
 import org.hibernate.SPI;
 
-import static org.hibernate.SPI.Role.IMPLEMENT;
-import static org.hibernate.SPI.Role.SUPPLY;
-import static org.hibernate.SPI.Role.USE;
-
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
@@ -29,6 +25,10 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
 
 /// Describes a basic value mapping which combines its Java and JDBC type
 /// descriptors with the runtime mapping contracts required by Hibernate.
@@ -61,27 +61,31 @@ public interface BasicType<T>
 		return BasicDomainType.super.getJavaType();
 	}
 
+	@Nonnull
 	@Override
 	default MappingType getMappedType() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	default JavaType<T> getJavaTypeDescriptor() {
 		return getMappedJavaType();
 	}
 
+	@Nonnull
 	@Override
 	default JavaType<T> getExpressibleJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
 	@Override
-	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( 0, this );
 		return 1;
 	}
 
+	@Nonnull
 	@Override
 	default JdbcMapping getJdbcMapping() {
 		return this;
@@ -92,6 +96,7 @@ public interface BasicType<T>
 		return 1;
 	}
 
+	@Nonnull
 	@Override
 	default JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
@@ -100,39 +105,45 @@ public interface BasicType<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	default JdbcMapping getSingleJdbcMapping() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	default JavaType<T> getMappedJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
+	@Nullable
 	@Override
 	@Incubating(since = "6.1")
 	default BasicValueConverter<T, ?> getValueConverter() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	default ValueExtractor<T> getJdbcValueExtractor() {
 		return getJdbcType().getExtractor( this.getMappedJavaType() );
 	}
 
+	@Nonnull
 	@Override
 	default ValueBinder<T> getJdbcValueBinder() {
 		return getJdbcType().getBinder( this.getMappedJavaType() );
 	}
 
+	@Nullable
 	@Override
 	default JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return getJdbcType().getJdbcLiteralFormatter( getMappedJavaType() );
 	}
 
 	@Override
-	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
@@ -142,19 +153,20 @@ public interface BasicType<T>
 		return this;
 	}
 
+	@Nullable
 	@Override
-	default Object disassemble(Object value, SharedSessionContractImplementor session) {
+	default Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return value;
 	}
 
 	@Override
 	default <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
+			@Nullable Object value,
 			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
+			@Nullable X x,
+			@Nullable Y y,
+			@Nonnull JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			@Nullable SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
@@ -188,7 +200,7 @@ public interface BasicType<T>
 	}
 
 	@Override
-	default int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+	default int compare(@Nullable Object x, @Nullable Object y, SessionFactoryImplementor sessionFactory) {
 		return compare( x, y );
 	}
 }

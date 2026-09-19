@@ -230,6 +230,7 @@ public class QueryHelper {
 	}
 
 
+	@Nullable
 	public static int[] unnamedParameterIndices(DomainParameterXref domainParameterXref) {
 		final var jpaCriteriaParamResolutions = domainParameterXref
 				.getParameterResolutions()

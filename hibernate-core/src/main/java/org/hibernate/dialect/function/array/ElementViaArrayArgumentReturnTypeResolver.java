@@ -36,8 +36,8 @@ public class ElementViaArrayArgumentReturnTypeResolver implements FunctionReturn
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public ReturnableType<?> resolveFunctionReturnType(
-			ReturnableType<?> impliedType,
+	public @Nullable ReturnableType<?> resolveFunctionReturnType(
+			@Nullable ReturnableType<?> impliedType,
 			@Nullable SqmToSqlAstConverter converter,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {
@@ -62,7 +62,7 @@ public class ElementViaArrayArgumentReturnTypeResolver implements FunctionReturn
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public BasicValuedMapping resolveFunctionReturnType(
+	public @Nullable BasicValuedMapping resolveFunctionReturnType(
 			Supplier<BasicValuedMapping> impliedTypeAccess,
 			List<? extends SqlAstNode> arguments) {
 		return null;

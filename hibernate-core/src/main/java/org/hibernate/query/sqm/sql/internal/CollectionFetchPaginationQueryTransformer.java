@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -407,7 +409,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		final List<SqlSelection> sqlSelections = querySpec.getSelectClause().getSqlSelections();
 		class Projector implements SelectableConsumer {
 			@Override
-			public void accept(int idx, SelectableMapping selectable) {
+			public void accept(int idx, @Nonnull SelectableMapping selectable) {
 				if ( primaryTableExpr.equals( selectable.getContainingTableExpression() ) ) {
 					final String columnName = selectable.getSelectableName();
 					if ( seen.add( columnName ) ) {

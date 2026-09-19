@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 
 import org.hibernate.FindMultipleOption;
 import org.hibernate.LockOptions;
@@ -29,12 +32,13 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
 public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdLoader<E> {
 	private final EntityMappingType entityDescriptor;
 
-	public AbstractMultiNaturalIdLoader(EntityMappingType entityDescriptor) {
+	public AbstractMultiNaturalIdLoader(@Nonnull EntityMappingType entityDescriptor) {
 		this.entityDescriptor = entityDescriptor;
 	}
 
+	@Nonnull
 	@Override
-	public <K> List<E> multiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, SharedSessionContractImplementor session) {
+	public <K> List<E> multiLoad(@Nonnull K[] naturalIds, @Nonnull MultiNaturalIdLoadOptions options, @Nonnull SharedSessionContractImplementor session) {
 		assert naturalIds != null;
 		if ( naturalIds.length == 0 ) {
 			return emptyList();
@@ -46,25 +50,28 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 		}
 	}
 
+	@Nonnull
 	private <K> List<E> performUnorderedMultiLoad(
-			K[] naturalIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull K[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.unorderedBatchLoadStarting( getEntityDescriptor().getEntityName() );
 		}
 		return unorderedMultiLoad( naturalIds, loadOptions, session );
 	}
 
-	private static LockOptions lockOptions(MultiNaturalIdLoadOptions loadOptions) {
+	@Nonnull
+	private static LockOptions lockOptions(@Nonnull MultiNaturalIdLoadOptions loadOptions) {
 		final var lockOptions = loadOptions.getLockOptions();
 		return lockOptions == null ? new LockOptions() : lockOptions;
 	}
 
+	@Nonnull
 	private <K> List<E> unorderedMultiLoad(
-			K[] naturalIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull K[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		final List<E> results = arrayList( naturalIds.length );
 		final var lockOptions = lockOptions( loadOptions );
 		final var unresolvedIds =
@@ -75,26 +82,29 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 		return results;
 	}
 
+	@Nonnull
 	protected abstract List<E> loadEntitiesWithUnresolvedIds(
-			Object[] unresolvedIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session);
+			@Nonnull Object[] unresolvedIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SharedSessionContractImplementor session);
 
+	@Nonnull
 	private <K> List<E> performOrderedMultiLoad(
-			K[] naturalIds,
-			MultiNaturalIdLoadOptions options,
-			SharedSessionContractImplementor session) {
+			@Nonnull K[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions options,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.orderedMultiLoadStarting( getEntityDescriptor().getEntityName() );
 		}
 		return orderedMultiLoad( naturalIds, options, session );
 	}
 
+	@Nonnull
 	private <K> List<E> orderedMultiLoad(
-			K[] naturalIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull K[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var lockOptions = lockOptions( loadOptions );
 		final var unresolvedIds =
 				checkPersistenceContextForCachedResults( naturalIds, loadOptions, session, lockOptions, result -> {} );
@@ -104,10 +114,11 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 		return sortResults( naturalIds, loadOptions, session );
 	}
 
+	@Nonnull
 	private <K> List<E> sortResults(
-			K[] naturalIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session) {
+			@Nonnull K[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var context = session.getPersistenceContextInternal();
 		final List<E> results = arrayList( naturalIds.length );
 		for ( K naturalId : naturalIds ) {
@@ -128,19 +139,21 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 		return results;
 	}
 
-	private Object entityForNaturalId(PersistenceContext context, Object naturalId) {
+	@Nullable
+	private Object entityForNaturalId(@Nonnull PersistenceContext context, @Nullable Object naturalId) {
 		final var descriptor = getEntityDescriptor();
 		final Object id = context.getNaturalIdResolutions().findCachedIdByNaturalId( naturalId, descriptor );
 		// id can be null if a non-existent natural id is requested, or a mutable natural id was changed and then deleted
 		return id == null ? null : context.getEntity( new EntityKey( id, descriptor.getEntityPersister() ) );
 	}
 
+	@Nonnull
 	private <K> Object[] checkPersistenceContextForCachedResults(
-			K[] naturalIds,
-			MultiNaturalIdLoadOptions loadOptions,
-			SharedSessionContractImplementor session,
-			LockOptions lockOptions,
-			Consumer<E> results ) {
+			@Nonnull K[] naturalIds,
+			@Nonnull MultiNaturalIdLoadOptions loadOptions,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull Consumer<E> results ) {
 		final var removalsMode = loadOptions.getRemovalsMode();
 		if ( removalsMode == FindMultipleOption.RemovalsMode.EXCLUDE
 				&& loadOptions.getOrderingMode() == FindMultipleOption.OrderingMode.ORDERED ) {
@@ -174,11 +187,13 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 		return unresolvedIds.toArray();
 	}
 
+	@Nonnull
 	@Override
 	public EntityMappingType getLoadable() {
 		return getEntityDescriptor();
 	}
 
+	@Nonnull
 	protected final EntityMappingType getEntityDescriptor() {
 		return entityDescriptor;
 	}

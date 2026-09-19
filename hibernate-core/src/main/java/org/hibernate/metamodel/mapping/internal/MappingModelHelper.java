@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -93,9 +95,12 @@ public class MappingModelHelper {
 //		}
 //	}
 //
-	public static boolean isCompatibleModelPart(ModelPart attribute1, ModelPart attribute2) {
+	public static boolean isCompatibleModelPart(@Nullable ModelPart attribute1, @Nullable ModelPart attribute2) {
 		if ( attribute1 == attribute2 ) {
 			return true;
+		}
+		if ( attribute1 == null || attribute2 == null ) {
+			return false;
 		}
 		if ( attribute1.getClass() != attribute2.getClass() || attribute1.getJavaType() != attribute2.getJavaType() ) {
 			return false;
@@ -147,8 +152,9 @@ public class MappingModelHelper {
 				}
 				// For union subclass mappings we also consider mappings compatible that just match the selection expression,
 				// because we match up columns of disjoint union subclass types by column name
-				return attribute1.findContainingEntityMapping()
-						.getEntityPersister() instanceof UnionSubclassEntityPersister;
+				final var containingEntity = attribute1.findContainingEntityMapping();
+				return containingEntity != null
+						&& containingEntity.getEntityPersister() instanceof UnionSubclassEntityPersister;
 			}
 		}
 		return false;

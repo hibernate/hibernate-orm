@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
@@ -12,5 +14,6 @@ import org.hibernate.collection.spi.CollectionSemantics;
  * @author Steve Ebersole
  */
 public interface CollectionMappingType<C> extends MappingType {
+	@Nonnull
 	CollectionSemantics<C,?> getCollectionSemantics();
 }

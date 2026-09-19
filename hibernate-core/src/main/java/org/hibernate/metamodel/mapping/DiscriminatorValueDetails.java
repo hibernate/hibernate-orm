@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 /**
  * Details for a particular discriminator value.
  *
@@ -19,11 +22,13 @@ public interface DiscriminatorValueDetails {
 	/**
 	 * The discriminator value
 	 */
+	@Nullable
 	Object getValue();
 
 	/**
 	 * The name of the concrete entity-type mapped to this {@linkplain #getValue() discriminator value}
 	 */
+	@Nonnull
 	default String getIndicatedEntityName() {
 		return getIndicatedEntity().getEntityName();
 	}
@@ -31,5 +36,6 @@ public interface DiscriminatorValueDetails {
 	/**
 	 * Form of {@link #getIndicatedEntityName()} returning the matched {@link EntityMappingType}
 	 */
+	@Nonnull
 	EntityMappingType getIndicatedEntity();
 }

@@ -4,6 +4,9 @@
  */
 package org.hibernate.loader.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,11 +41,12 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 
 	private final boolean hasSimpleNaturalId;
 
-	public SimpleNaturalIdLoadAccessImpl(StatefulLoadAccessContext context, EntityMappingType entityDescriptor) {
+	public SimpleNaturalIdLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityMappingType entityDescriptor) {
 		super( context, entityDescriptor );
 		hasSimpleNaturalId = entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
 	}
 
+	@Nullable
 	@Override
 	public LockOptions getLockOptions() {
 		return super.getLockOptions();
@@ -53,42 +57,49 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 		return super.isSynchronizationEnabled();
 	}
 
+	@Nonnull
 	@Override
-	public SimpleNaturalIdLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+	public SimpleNaturalIdLoadAccess<T> with(@Nonnull LockMode lockMode, @Nonnull PessimisticLockScope lockScope) {
 		//noinspection unchecked
 		return (SimpleNaturalIdLoadAccess<T>) super.with( lockMode, lockScope );
 	}
 
-	public SimpleNaturalIdLoadAccess<T> with(PessimisticLockScope lockScope) {
+	@Nonnull
+	public SimpleNaturalIdLoadAccess<T> with(@Nonnull PessimisticLockScope lockScope) {
 		super.with( lockScope );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SimpleNaturalIdLoadAccess<T> with(Timeout timeout) {
+	public SimpleNaturalIdLoadAccess<T> with(@Nonnull Timeout timeout) {
 		//noinspection unchecked
 		return (SimpleNaturalIdLoadAccess<T>) super.with( timeout );
 	}
 
+	@Nonnull
 	@Override
-	public final SimpleNaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
+	public final SimpleNaturalIdLoadAccessImpl<T> with(@Nonnull LockOptions lockOptions) {
 		return (SimpleNaturalIdLoadAccessImpl<T>) super.with( lockOptions );
 	}
 
+	@Nonnull
 	@Override
 	public SimpleNaturalIdLoadAccessImpl<T> setSynchronizationEnabled(boolean synchronizationEnabled) {
 		super.synchronizationEnabled( synchronizationEnabled );
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public T getReference(Object naturalIdValue) {
+	public T getReference(@Nullable Object naturalIdValue) {
 		verifySimplicity( naturalIdValue );
 		return doGetReference( entityPersister().getNaturalIdMapping().normalizeInput( naturalIdValue) );
 	}
 
+	@Nullable
 	@Override
-	public T load(Object naturalIdValue) {
+	public T load(@Nullable Object naturalIdValue) {
 		verifySimplicity( naturalIdValue );
 		return doLoad( entityPersister().getNaturalIdMapping().normalizeInput( naturalIdValue) );
 	}
@@ -101,10 +112,9 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	 * For lists, just like arrays, we assume the user has ordered them properly; for maps,
 	 * the key is expected to be the attribute name.
 	 */
-	private void verifySimplicity(Object naturalIdValue) {
-		assert naturalIdValue != null;
+	private void verifySimplicity(@Nullable Object naturalIdValue) {
 		if ( !hasSimpleNaturalId
-				&& !naturalIdValue.getClass().isArray()
+				&& ( naturalIdValue == null || !naturalIdValue.getClass().isArray() )
 				&& !(naturalIdValue instanceof List)
 				&& !(naturalIdValue instanceof Map)
 				&& ! ( isNaturalIdClass( naturalIdValue ) ) ) {
@@ -119,35 +129,41 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 		}
 	}
 
-	private boolean isNaturalIdClass(Object naturalIdValue) {
+	private boolean isNaturalIdClass(@Nullable Object naturalIdValue) {
 		final EntityPersister entityPersister = entityPersister();
-		return entityPersister.getNaturalIdMapping().getNaturalIdClass().isInstance(  naturalIdValue );
+		final var naturalIdClass = entityPersister.getNaturalIdMapping().getNaturalIdClass();
+		return naturalIdClass != null && naturalIdClass.isInstance( naturalIdValue );
 	}
 
+	@Nonnull
 	@Override
-	public Optional<T> loadOptional(Object naturalIdValue) {
+	public Optional<T> loadOptional(@Nullable Object naturalIdValue) {
 		return Optional.ofNullable( load( naturalIdValue ) );
 	}
 
+	@Nonnull
 	@Override
-	public SimpleNaturalIdLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
+	public SimpleNaturalIdLoadAccess<T> with(@Nonnull EntityGraph<T> graph, @Nonnull GraphSemantic semantic) {
 		super.with( graph, semantic );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SimpleNaturalIdLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
+	public SimpleNaturalIdLoadAccess<T> withLoadGraph(@Nonnull EntityGraph<T> graph) {
 		return SimpleNaturalIdLoadAccess.super.withLoadGraph(graph);
 	}
 
+	@Nonnull
 	@Override
-	public SimpleNaturalIdLoadAccess<T> enableFetchProfile(String profileName) {
+	public SimpleNaturalIdLoadAccess<T> enableFetchProfile(@Nonnull String profileName) {
 		super.enableFetchProfile( profileName );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SimpleNaturalIdLoadAccess<T> disableFetchProfile(String profileName) {
+	public SimpleNaturalIdLoadAccess<T> disableFetchProfile(@Nonnull String profileName) {
 		super.enableFetchProfile( profileName );
 		return this;
 	}

@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import jakarta.annotation.Nullable;
+
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.HibernateException;
 import org.hibernate.sql.results.graph.FetchOptions;
 
@@ -19,7 +23,8 @@ public interface EmbeddableDiscriminatorMapping extends DiscriminatorMapping, Fe
 	 *
 	 * @throws HibernateException if the embeddable class name is not handled by this discriminator
 	 */
-	default Object getDiscriminatorValue(String embeddableClassName) {
+	@Nullable
+	default Object getDiscriminatorValue(@Nonnull String embeddableClassName) {
 		return getValueConverter().getDetailsForEntityName( embeddableClassName ).getValue();
 	}
 }

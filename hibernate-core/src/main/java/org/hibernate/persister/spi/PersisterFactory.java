@@ -4,6 +4,9 @@
  */
 package org.hibernate.persister.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -28,11 +31,12 @@ public interface PersisterFactory extends Service {
 	 * @param naturalIdCacheAccessStrategy The cache access strategy for the entity's natural-id cross-ref region
 	 * @param creationContext Access to additional information needed to create the EntityPersister
 	 */
+	@Nonnull
 	EntityPersister createEntityPersister(
-			PersistentClass entityBinding,
-			EntityDataAccess entityCacheAccessStrategy,
-			NaturalIdDataAccess naturalIdCacheAccessStrategy,
-			RuntimeModelCreationContext creationContext);
+			@Nonnull PersistentClass entityBinding,
+			@Nullable EntityDataAccess entityCacheAccessStrategy,
+			@Nullable NaturalIdDataAccess naturalIdCacheAccessStrategy,
+			@Nonnull RuntimeModelCreationContext creationContext);
 
 	/**
 	 * Create a collection persister instance.
@@ -41,8 +45,9 @@ public interface PersisterFactory extends Service {
 	 * @param cacheAccessStrategy The cache access strategy for the collection region
 	 * @param creationContext Access to additional information needed to create an EntityPersister
 	 */
+	@Nonnull
 	CollectionPersister createCollectionPersister(
-			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
-			RuntimeModelCreationContext creationContext);
+			@Nonnull Collection collectionBinding,
+			@Nullable CollectionDataAccess cacheAccessStrategy,
+			@Nonnull RuntimeModelCreationContext creationContext);
 }

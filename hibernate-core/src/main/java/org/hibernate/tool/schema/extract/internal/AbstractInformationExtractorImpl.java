@@ -49,11 +49,11 @@ import static org.hibernate.boot.model.naming.DatabaseIdentifier.toIdentifier;
 import static org.hibernate.cfg.SchemaToolingSettings.ENABLE_SYNONYMS;
 import static org.hibernate.cfg.SchemaToolingSettings.EXTRA_PHYSICAL_TABLE_TYPES;
 import static org.hibernate.engine.jdbc.spi.SQLExceptionLogging.ERROR_LOG;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.splitTrimmingTokens;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 public abstract class AbstractInformationExtractorImpl implements InformationExtractor {
 
@@ -323,11 +323,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						else if ( resultSet.next() ) {
 							final String catalogName = catalog == null ? "" : catalog.getCanonicalName();
 							final String schemaName = schema == null ? "" : schema.getCanonicalName();
-							CORE_LOGGER.debugf(
-									"Multiple schemas found with that name [%s.%s]",
-									catalogName,
-									schemaName
-							);
+							SCHEMA_LOGGER.multipleSchemasFound( catalogName, schemaName );
 						}
 						return true;
 					}
@@ -810,7 +806,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 							tableName.isQuoted() );
 			if ( tableName.equals( identifier ) ) {
 				if ( found ) {
-					CORE_LOGGER.multipleTablesFound( tableName.render() );
+					SCHEMA_LOGGER.multipleTablesFound( tableName.render() );
 					throw new SchemaExtractionException(
 							String.format(
 									Locale.ENGLISH,
@@ -829,7 +825,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			}
 		}
 		if ( !found ) {
-			CORE_LOGGER.tableNotFound( tableName.render() );
+			SCHEMA_LOGGER.tableNotFound( tableName.render() );
 		}
 		return tableInformation;
 	}
@@ -1177,7 +1173,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 								final var columnInformation = tableInformation.getColumn( columnIdentifier );
 								if ( columnInformation == null ) {
 									// See HHH-10191: this may happen when dealing with Oracle/PostgreSQL function indexes
-									CORE_LOGGER.logCannotLocateIndexColumnInformation(
+									SCHEMA_LOGGER.logCannotLocateIndexColumnInformation(
 											columnIdentifier.getText(),
 											indexIdentifier.getText()
 									);
@@ -1263,7 +1259,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 				final var columnInformation = tableInformation.getColumn( columnIdentifier );
 				if ( columnInformation == null ) {
 					// See HHH-10191: this may happen when dealing with Oracle/PostgreSQL function indexes
-					CORE_LOGGER.logCannotLocateIndexColumnInformation(
+					SCHEMA_LOGGER.logCannotLocateIndexColumnInformation(
 							columnIdentifier.getText(),
 							indexIdentifier.getText()
 					);

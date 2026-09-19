@@ -279,4 +279,18 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "Hibernate-envers is considered deprecated in favor of @Temporal and @Audited in hibernate-core."
 	)
 	void envers();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000046,
+			value = "--drop or --create was used; prefer --action=none|create|drop|drop-and-create instead"
+	)
+	void deprecatedSchemaExportActionArguments();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000047,
+			value = "--text or --quiet was used; prefer --target=none|(stdout|database|script)*"
+	)
+	void deprecatedSchemaToolTargetArguments();
 }

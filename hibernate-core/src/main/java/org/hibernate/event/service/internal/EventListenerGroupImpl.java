@@ -303,14 +303,12 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 			for ( int i = 0; i < size; i++ ) {
 				final T existingListener = listenersRead[i];
 				if ( traceEnabled ) {
-					EVENT_LISTENER_LOGGER.tracef( "Checking incoming listener [`%s`] for match against existing listener [`%s`]",
-							listener, existingListener );
+					EVENT_LISTENER_LOGGER.checkingListenerMatch( listener, existingListener );
 				}
 
 				if ( strategy.areMatch( listener,  existingListener ) ) {
 					if ( traceEnabled ) {
-						EVENT_LISTENER_LOGGER.tracef( "Found listener match between `%s` and `%s`",
-								listener, existingListener );
+						EVENT_LISTENER_LOGGER.listenerMatchFound( listener, existingListener );
 					}
 
 					final DuplicationStrategy.Action action = strategy.getAction();
@@ -319,14 +317,12 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 							throw new EventListenerRegistrationException( "Duplicate event listener found" );
 						case KEEP_ORIGINAL:
 							if ( traceEnabled ) {
-								EVENT_LISTENER_LOGGER.tracef( "Skipping listener registration (%s) : `%s`",
-										action, listener );
+								EVENT_LISTENER_LOGGER.skippingListenerRegistration( action, listener );
 							}
 							return;
 						case REPLACE_ORIGINAL:
 							if ( traceEnabled ) {
-								EVENT_LISTENER_LOGGER.tracef( "Replacing listener registration (%s) : `%s` -> `%s`",
-										action, existingListener, listener );
+								EVENT_LISTENER_LOGGER.replacingListenerRegistration( action, existingListener, listener );
 							}
 							prepareListener( listener );
 							listenersWrite[i] = listener;

@@ -27,7 +27,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
@@ -46,7 +45,8 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Command-line tool for exporting (create and/or drop) a database schema.  The export can
@@ -241,18 +241,18 @@ public class SchemaExport {
 
 	public void execute(EnumSet<TargetType> targetTypes, Action action, Metadata metadata, ServiceRegistry serviceRegistry) {
 		if ( action == Action.NONE ) {
-			CORE_LOGGER.debug( "Skipping SchemaExport as Action.NONE was passed" );
+			SCHEMA_LOGGER.skippingSchemaExportWithNoAction();
 			return;
 		}
 
 		if ( targetTypes.isEmpty() ) {
-			CORE_LOGGER.debug( "Skipping SchemaExport as no targets were specified" );
+			SCHEMA_LOGGER.skippingSchemaExportWithNoTargets();
 			return;
 		}
 
 		exceptions.clear();
 
-		CORE_LOGGER.runningHbm2ddlSchemaExport();
+		SCHEMA_LOGGER.runningHbm2ddlSchemaExport();
 
 		final TargetDescriptor targetDescriptor = buildTargetDescriptor(
 				targetTypes,
@@ -381,7 +381,7 @@ public class SchemaExport {
 			execute( commandLineArgs );
 		}
 		catch (Exception e) {
-			CORE_LOGGER.unableToCreateSchema( e );
+			SCHEMA_LOGGER.unableToCreateSchema( e );
 		}
 	}
 
@@ -570,7 +570,7 @@ public class SchemaExport {
 						parsedArgs.cfgXmlFile = arg.substring( 9 );
 					}
 					else if ( arg.startsWith( "--naming=" ) ) {
-						DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyArgument();
+						DEPRECATION_LOGGER.logDeprecatedNamingStrategyArgument();
 					}
 					else if ( arg.startsWith( "--implicit-naming=" ) ) {
 						parsedArgs.implicitNamingStrategyImplName = arg.substring( 18 );
@@ -594,7 +594,7 @@ public class SchemaExport {
 			}
 			else {
 				if ( drop || create ) {
-					CORE_LOGGER.warn( "--drop or --create was used; prefer --action=none|create|drop|drop-and-create instead" );
+					DEPRECATION_LOGGER.deprecatedSchemaExportActionArguments();
 				}
 				parsedArgs.action = Action.parseCommandLineOption( actionText );
 			}
@@ -604,7 +604,7 @@ public class SchemaExport {
 			}
 			else {
 				if ( !script || !export ) {
-					CORE_LOGGER.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
+					DEPRECATION_LOGGER.deprecatedSchemaToolTargetArguments();
 				}
 				parsedArgs.targetTypes = TargetTypeHelper.parseCommandLineOptions( targetText );
 			}

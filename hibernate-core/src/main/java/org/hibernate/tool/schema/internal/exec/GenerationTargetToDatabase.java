@@ -17,6 +17,7 @@ import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * A {@link GenerationTarget} which exports DDL directly to the database.
@@ -64,7 +65,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 	@Override
 	public void beforeScript(ScriptSourceInput scriptSource) {
 		if ( scriptSource.exists() ) {
-			CORE_LOGGER.executingScript( scriptSource.getScriptDescription() );
+			SCHEMA_LOGGER.executingScript( scriptSource.getScriptDescription() );
 		}
 	}
 

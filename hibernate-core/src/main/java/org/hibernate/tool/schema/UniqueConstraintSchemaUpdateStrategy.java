@@ -5,7 +5,8 @@
 package org.hibernate.tool.schema;
 
 import java.util.Locale;
-import org.jboss.logging.Logger;
+
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Unique columns and unique keys both use unique constraints in most dialects.
@@ -38,14 +39,12 @@ public enum UniqueConstraintSchemaUpdateStrategy {
 	 */
 	SKIP;
 
-	private static final Logger LOG = Logger.getLogger( UniqueConstraintSchemaUpdateStrategy.class );
-
 	public static UniqueConstraintSchemaUpdateStrategy byName(String name) {
 		return valueOf( name.toUpperCase(Locale.ROOT) );
 	}
 
 	public static UniqueConstraintSchemaUpdateStrategy interpret(Object setting) {
-		LOG.tracef( "Interpreting UniqueConstraintSchemaUpdateStrategy from setting: %s", setting );
+		SCHEMA_LOGGER.interpretingUniqueConstraintSchemaUpdateStrategy( setting );
 
 		if ( setting == null ) {
 			// default
@@ -65,7 +64,7 @@ public enum UniqueConstraintSchemaUpdateStrategy {
 		catch ( Exception ignore ) {
 		}
 
-		LOG.debugf( "Unable to interpret given setting [%s] as UniqueConstraintSchemaUpdateStrategy", setting );
+		SCHEMA_LOGGER.unableToInterpretUniqueConstraintSchemaUpdateStrategy( setting );
 
 		// default
 		return DROP_RECREATE_QUIETLY;

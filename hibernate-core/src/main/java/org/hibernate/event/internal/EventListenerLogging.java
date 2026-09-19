@@ -5,6 +5,7 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.Internal;
+import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -19,6 +20,7 @@ import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
 
 /**
  * Subsystem logging related to event listeners
@@ -304,4 +306,24 @@ public interface EventListenerLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(id = 90060067, value = "Wrapped collection in role: %s")
 	void wrappedCollectionInRole(String role);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90060077, value = "Checking incoming listener [`%s`] for match against existing listener [`%s`]")
+	void checkingListenerMatch(Object listener, Object existingListener);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90060078, value = "Found listener match between `%s` and `%s`")
+	void listenerMatchFound(Object listener, Object existingListener);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90060079, value = "Skipping listener registration (%s) : `%s`")
+	void skippingListenerRegistration(DuplicationStrategy.Action action, Object listener);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90060080, value = "Replacing listener registration (%s) : `%s` -> `%s`")
+	void replacingListenerRegistration(DuplicationStrategy.Action action, Object existingListener, Object listener);
+
+	@LogMessage(level = WARN)
+	@Message(id = 90060081, value = "Encountered event listener [%s] for post-commit event [%s] which did not implement the corresponding extended listener contract [%s]")
+	void listenerDoesNotImplementExtendedContract(String listenerClassName, String eventName, String contractName);
 }

@@ -24,7 +24,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaTruncator;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
-import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +33,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
 import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Basic implementation of {@link SchemaTruncator}.
@@ -41,8 +41,6 @@ import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabl
  * @author Gavin King
  */
 public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements SchemaTruncator {
-	private static final Logger LOG = Logger.getLogger( SchemaTruncatorImpl.class );
-
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
 
@@ -85,7 +83,7 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 					target.release();
 				}
 				catch (Exception e) {
-					LOG.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+					SCHEMA_LOGGER.problemReleasingGenerationTarget( target, e );
 				}
 			}
 		}

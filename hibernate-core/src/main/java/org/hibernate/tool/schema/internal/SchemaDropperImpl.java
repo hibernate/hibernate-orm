@@ -54,14 +54,12 @@ import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.jboss.logging.Logger;
-
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
 import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Basic implementation of {@link SchemaDropper}.
@@ -69,8 +67,6 @@ import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabl
  * @author Steve Ebersole
  */
 public class SchemaDropperImpl implements SchemaDropper {
-	private static final Logger LOG = Logger.getLogger( SchemaDropperImpl.class );
-
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
 
@@ -157,7 +153,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 					target.release();
 				}
 				catch (Exception e) {
-					LOG.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
+					SCHEMA_LOGGER.problemReleasingGenerationTarget( target, e );
 				}
 			}
 		}
@@ -613,7 +609,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		@Override
 		public void perform(ServiceRegistry serviceRegistry) {
-			CORE_LOGGER.startingDelayedSchemaDrop();
+			SCHEMA_LOGGER.startingDelayedSchemaDrop();
 
 			if ( target == null ) {
 				target = new GenerationTargetToDatabase(
@@ -632,8 +628,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 					catch (CommandAcceptanceException e) {
 						// implicitly we do not "halt on error", but we do want to
 						// report the problem
-						CORE_LOGGER.unsuccessfulSchemaManagementCommand( command );
-						CORE_LOGGER.unsuccessfulDelayedDropCommand( e );
+						SCHEMA_LOGGER.unsuccessfulSchemaManagementCommand( command );
+						SCHEMA_LOGGER.unsuccessfulDelayedDropCommand( e );
 					}
 				}
 			}

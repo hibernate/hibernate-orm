@@ -19,11 +19,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.query.internal.QueryLogging.QUERY_MESSAGE_LOGGER;
 
 /**
  * Strategy based on ANSI SQL's definition of a "global temporary table".
@@ -31,8 +31,6 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * @author Steve Ebersole
  */
 public class GlobalTemporaryTableStrategy {
-	private static final Logger LOG = Logger.getLogger( GlobalTemporaryTableStrategy.class );
-
 	public static final String SHORT_NAME = "global_temporary";
 
 	public static final String CREATE_ID_TABLES = "hibernate.query.mutation_strategy.global_temporary.create_tables";
@@ -77,7 +75,7 @@ public class GlobalTemporaryTableStrategy {
 						.requireService( ConfigurationService.class );
 
 		if ( configService.getSetting( CREATE_ID_TABLES, StandardConverters.BOOLEAN, true ) ) {
-			LOG.tracef( "Creating global-temp ID table: %s", getTemporaryTable().getTableExpression() );
+			QUERY_MESSAGE_LOGGER.creatingGlobalTemporaryIdTable( getTemporaryTable().getTableExpression() );
 
 			final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork =
 					new TemporaryTableHelper.TemporaryTableCreationWork( getTemporaryTable(), sessionFactory );
@@ -87,11 +85,11 @@ public class GlobalTemporaryTableStrategy {
 			}
 			catch (UnsupportedOperationException e) {
 				// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-				LOG.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
+				QUERY_MESSAGE_LOGGER.idTableConnectionUnavailable();
 				return;
 			}
 			catch (SQLException e) {
-				LOG.error( "Unable obtain JDBC Connection", e );
+				QUERY_MESSAGE_LOGGER.unableToObtainIdTableConnection( e );
 				return;
 			}
 
@@ -117,7 +115,7 @@ public class GlobalTemporaryTableStrategy {
 
 		dropIdTables = false;
 
-		LOG.tracef( "Dropping global-temp ID table: %s", getTemporaryTable().getTableExpression() );
+		QUERY_MESSAGE_LOGGER.droppingGlobalTemporaryIdTable( getTemporaryTable().getTableExpression() );
 
 		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork =
 				new TemporaryTableHelper.TemporaryTableDropWork( getTemporaryTable(), sessionFactory );
@@ -127,14 +125,11 @@ public class GlobalTemporaryTableStrategy {
 		}
 		catch (UnsupportedOperationException e) {
 			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			LOG.debugf(
-					"Unable to obtain JDBC connection; unable to drop global-temp ID table : %s",
-					getTemporaryTable().getTableExpression()
-			);
+			QUERY_MESSAGE_LOGGER.unableToDropGlobalTemporaryIdTable( getTemporaryTable().getTableExpression() );
 			return;
 		}
 		catch (SQLException e) {
-			LOG.error( "Unable obtain JDBC Connection", e );
+			QUERY_MESSAGE_LOGGER.unableToObtainIdTableConnection( e );
 			return;
 		}
 

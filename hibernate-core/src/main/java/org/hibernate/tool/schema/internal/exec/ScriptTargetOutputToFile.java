@@ -13,7 +13,7 @@ import java.io.Writer;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * ScriptTargetOutput implementation for writing to supplied File references
@@ -87,7 +87,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 		try {
 			if ( !file.exists() ) {
 				// best effort, since this is very likely not allowed in EE environments
-				CORE_LOGGER.attemptingToCreateScriptTarget( file.getAbsolutePath() );
+				SCHEMA_LOGGER.attemptingToCreateScriptTarget( file.getAbsolutePath() );
 				final var parentFile = file.getParentFile();
 				if ( parentFile != null ) {
 					parentFile.mkdirs();
@@ -96,7 +96,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 			}
 		}
 		catch (Exception e) {
-			CORE_LOGGER.couldNotCreateScriptTarget( e );
+			SCHEMA_LOGGER.couldNotCreateScriptTarget( e );
 		}
 		try {
 			final var outputStream = new FileOutputStream( file, append );

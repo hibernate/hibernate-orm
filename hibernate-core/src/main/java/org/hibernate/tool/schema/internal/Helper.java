@@ -42,10 +42,10 @@ import static org.hibernate.cfg.JdbcSettings.FORMAT_SQL;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CREATE_NAMESPACES;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CREATE_SCHEMAS;
 import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Helper methods.
@@ -63,7 +63,7 @@ public class Helper {
 		}
 		else {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
-			CORE_LOGGER.attemptingToResolveScriptSourceSetting( scriptSourceSettingString );
+			SCHEMA_LOGGER.attemptingToResolveScriptSourceSetting( scriptSourceSettingString );
 			final var paths = splitAtCommas( scriptSourceSettingString );
 			if ( paths.length == 1 ) {
 				return interpretScriptSourceSetting( scriptSourceSettingString, classLoaderService, charsetName );
@@ -87,7 +87,7 @@ public class Helper {
 		//		2) relative file path (resource lookup)
 		//		3) absolute file path
 
-		CORE_LOGGER.trace( "Trying as URL..." );
+		SCHEMA_LOGGER.tryingScriptSourceAsUrl();
 		// ClassLoaderService.locateResource() first tries the given resource name as url form...
 		final URL url = classLoaderService.locateResource( scriptSourceSettingString );
 		return url != null
@@ -109,7 +109,7 @@ public class Helper {
 		}
 		else {
 			final String scriptTargetSettingString = scriptTargetSetting.toString();
-			CORE_LOGGER.attemptingToResolveScriptSourceSetting( scriptTargetSettingString );
+			SCHEMA_LOGGER.attemptingToResolveScriptSourceSetting( scriptTargetSettingString );
 
 			// setting could be either:
 			//		1) string URL representation (i.e., "file://...")
@@ -157,7 +157,7 @@ public class Helper {
 			count++;
 		}
 		if ( count > 1 ) {
-			CORE_LOGGER.multipleSchemaCreationSettingsDefined();
+			SCHEMA_LOGGER.multipleSchemaCreationSettingsDefined();
 		}
 	}
 

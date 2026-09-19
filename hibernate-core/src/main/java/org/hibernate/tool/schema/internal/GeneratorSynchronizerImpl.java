@@ -15,12 +15,11 @@ import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
-import org.jboss.logging.Logger;
-
 
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
 import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Basic implementation of {@link GeneratorSynchronizer}.
@@ -28,8 +27,6 @@ import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabl
  * @author Gavin King
  */
 public class GeneratorSynchronizerImpl implements GeneratorSynchronizer {
-	private static final Logger LOG = Logger.getLogger( GeneratorSynchronizerImpl.class );
-
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
 
@@ -70,7 +67,7 @@ public class GeneratorSynchronizerImpl implements GeneratorSynchronizer {
 					target.release();
 				}
 				catch (Exception e) {
-					LOG.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+					SCHEMA_LOGGER.problemReleasingGenerationTarget( target, e );
 				}
 			}
 		}

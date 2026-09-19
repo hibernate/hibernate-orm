@@ -4,11 +4,9 @@
  */
 package org.hibernate.internal;
 
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
-import java.net.URL;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Locale;
@@ -22,8 +20,6 @@ import org.hibernate.cascade.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.internal.log.SubSystemLogging;
 
-import org.hibernate.tool.schema.spi.CommandAcceptanceException;
-import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -136,18 +132,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 223)
 	void recognizedObsoleteHibernateNamespace(String oldHibernateNamespace, String hibernateNamespace);
 
-	@LogMessage(level = INFO)
-	@Message(value = "Running hbm2ddl schema export", id = 227)
-	void runningHbm2ddlSchemaExport();
-
-	@LogMessage(level = INFO)
-	@Message(value = "Running hbm2ddl schema update", id = 228)
-	void runningHbm2ddlSchemaUpdate();
-
-	@LogMessage(level = INFO)
-	@Message(value = "Running schema validator", id = 229)
-	void runningSchemaValidator();
-
 //	@LogMessage(level = WARN)
 //	@Message(value = "Scoping types to session factory %s after already scoped %s", id = 233)
 //	void scopingTypesToSessionFactoryAfterAlreadyScoped(
@@ -161,14 +145,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Start time: %s", id = 251)
 	void startTime(long startTime);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Table not found: %s", id = 262)
-	void tableNotFound(String name);
-
-	@LogMessage(level = INFO)
-	@Message(value = "More than one table found: %s", id = 263)
-	void multipleTablesFound(String name);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Transactions: %s", id = 266)
@@ -215,10 +191,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToCreateProxyFactory(String entityName, @Cause HibernateException e);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Error creating schema ", id = 306)
-	void unableToCreateSchema(@Cause Exception e);
-
-	@LogMessage(level = ERROR)
 	@Message(value = "Problem loading properties from hibernate.properties", id = 329)
 	void unableToLoadProperties();
 
@@ -254,10 +226,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to retrieve type info result set: %s", id = 362)
 	void unableToRetrieveTypeInfoResultSet(String string);
 
-	@LogMessage(level = ERROR)
-	@Message(value = "Error running schema update", id = 366)
-	void unableToRunSchemaUpdate(@Cause Exception e);
-
 	@LogMessage(level = WARN)
 	@Message(
 			value = """
@@ -292,26 +260,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 444
 	)
 	void usingFollowOnLocking();
-
-	@LogMessage(level = INFO)
-	@Message(value = "Cannot locate column information using identifier [%s]; ignoring index [%s]", id = 475 )
-	void logCannotLocateIndexColumnInformation(String columnIdentifierText, String indexIdentifierText);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Executing script [%s]", id = 476)
-	void executingScript(String scriptName);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Starting delayed evictData of schema as part of SessionFactory shut-down'", id = 477)
-	void startingDelayedSchemaDrop();
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Unsuccessful: %s", id = 478)
-	void unsuccessfulSchemaManagementCommand(String command);
-
-	@LogMessage(level = DEBUG)
-	@Message( value = "Error performing delayed DROP command [%s]", id = 479 )
-	void unsuccessfulDelayedDropCommand(CommandAcceptanceException e);
 
 	@LogMessage(level = WARN)
 	@Message(
@@ -350,13 +298,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The [%s] property of the [%s] entity was modified, but it won't be updated because the property is immutable.", id = 502)
 	void ignoreImmutablePropertyModification(String propertyName, String entityName);
-
-	@LogMessage(level = WARN)
-	@Message(value = """
-			Multiple configuration properties defined to create schema.\
-			Choose at most one among 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'.""",
-			id = 504)
-	void multipleSchemaCreationSettingsDefined();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Multi-table insert is not available due to missing identity and window function support for: %s", id = 509)
@@ -529,10 +470,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message( id = 6062, value = "Could not resolve type name [%s] as Java type" )
 	void couldNotResolveTypeName(String typeName, @Cause ClassLoadingException exception);
 
-	@LogMessage(level = DEBUG)
-	@Message( id = 6063, value = "Problem releasing GenerationTarget [%s]" )
-	void problemReleasingGenerationTarget(GenerationTarget target, @Cause Exception e);
-
 	@LogMessage(level = WARN)
 	@Message( id = 6064, value = "Unable to close temp session" )
 	void unableToCLoseTempSession();
@@ -648,19 +585,4 @@ public interface CoreMessageLogger extends BasicLogger {
 			"Consider filing a feature request for this support with the driver/database developers.")
 	void unsupportedDirectJavaTimeJdbcAccess(String dialect, String javaTimeTypes, String fallback);
 
-	@LogMessage(level = TRACE)
-	@Message(id = 601, value = "Attempting to resolve script source setting: %s")
-	void attemptingToResolveScriptSourceSetting(String scriptSourceSettingString);
-
-	@LogMessage(level = DEBUG)
-	@Message(id = 602, value = "Attempting to create non-existent script target file: %s")
-	void attemptingToCreateScriptTarget(String absolutePath);
-
-	@LogMessage(level = DEBUG)
-	@Message(id = 603, value = "Could not create non-existent script target file")
-	void couldNotCreateScriptTarget(@Cause Exception e);
-
-	@LogMessage(level = DEBUG)
-	@Message(id = 604, value = "Attempting to resolve writer for URL: %s")
-	void attemptingToCreateWriter(URL url);
 }

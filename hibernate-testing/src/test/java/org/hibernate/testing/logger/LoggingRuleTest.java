@@ -4,7 +4,7 @@
  */
 package org.hibernate.testing.logger;
 
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.tool.schema.internal.SchemaManagementLogging;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.jboss.logging.Logger;
 import org.junit.Assert;
@@ -24,18 +24,18 @@ public class LoggingRuleTest {
 
 	//Taking this specific logger as a representative example of a Logger
 	//(The purpose of this test is not to log but to exercise the logger methods)
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, LoggingRuleTest.class.getName(), Locale.ROOT );
+	private static final SchemaManagementLogging LOG = Logger.getMessageLogger( MethodHandles.lookup(), SchemaManagementLogging.class, LoggingRuleTest.class.getName(), Locale.ROOT );
 
 	//We'll generally not be able to access the same LOG *instance* so make sure a fresh lookup
 	//from Logger#getMessageLogger will work fine as well
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, LoggingRuleTest.class.getName(), Locale.ROOT ) );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger( MethodHandles.lookup(), SchemaManagementLogging.class, LoggingRuleTest.class.getName(), Locale.ROOT ) );
 
 	@Test
 	public void testRule() {
-		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000229:" );
+		Triggerable triggerable = logInspection.watchForLogMessages( "HHH90090003:" );
 		Assert.assertFalse( triggerable.wasTriggered() );
-		LOG.runningSchemaValidator(); //Uses code HHH000229
+		LOG.runningSchemaValidator(); //Uses code HHH90090003
 		Assert.assertTrue( triggerable.wasTriggered() );
 		triggerable.reset();
 		Assert.assertFalse( triggerable.wasTriggered() );

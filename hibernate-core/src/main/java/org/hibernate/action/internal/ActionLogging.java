@@ -218,4 +218,52 @@ public interface ActionLogging extends BasicLogger {
 			id = NAMESPACE + 24
 	)
 	void customMutationExecutorServiceUnused(String serviceClassName);
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 25, value = "Skipping graph building - no statement dependencies")
+	void skippingGraphBuilding();
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 26, value = "Building graph - statement dependencies found")
+	void buildingDependencyGraph();
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 27, value = "executeActions: no pending actions to execute")
+	void noPendingActions();
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 28, value = "GraphBasedActionQueue.executeActions() - %d total actions")
+	void executingActions(int totalActions);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = NAMESPACE + 29, value = "Unschedule deletion for entity %s")
+	void unschedulingDeletion(Object entity);
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 30, value = "Beginning flush with %d INSERT actions, %d DELETE actions")
+	void beginningFlush(int insertCount, int deleteCount);
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 31, value = "  -> Filtering out dependency on %s (being inserted in this flush)")
+	void filteringDependencyBeingInserted(String entityClassName);
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 32, value = "Decomposing INSERT for %s")
+	void decomposingInsert(String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 33, value = "  -> Has unresolved dependencies, deferring")
+	void deferringInsertWithUnresolvedDependencies();
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 34, value = "  -> No unresolved dependencies, decomposing")
+	void decomposingInsertWithoutUnresolvedDependencies();
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 35, value = "Tracking unresolved insert for %s")
+	void trackingUnresolvedInsert(String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message(id = NAMESPACE + 36, value = "  - depends on: %s@%s")
+	void unresolvedInsertDependency(String entityClassName, int identityHashCode);
 }

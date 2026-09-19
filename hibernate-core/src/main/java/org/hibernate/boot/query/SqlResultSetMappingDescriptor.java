@@ -45,7 +45,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
 
-import static org.hibernate.boot.query.BootQueryLogging.BOOT_QUERY_LOGGER;
+import static org.hibernate.boot.query.internal.BootQueryLogging.BOOT_QUERY_LOGGER;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
@@ -196,11 +196,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Nonnull
 		@Override
 		public ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
-			BOOT_QUERY_LOGGER.tracef(
-					"Generating ScalarResultMappingMemento for JPA ColumnResult(%s) for ResultSet mapping `%s`",
-					columnResult.name(),
-					mappingName
-			);
+			BOOT_QUERY_LOGGER.generatingScalarResultMemento( columnResult.name(), mappingName );
 
 			return new ResultMementoBasicStandard( columnResult, resolutionContext );
 		}
@@ -255,11 +251,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Nonnull
 		@Override
 		public ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
-			BOOT_QUERY_LOGGER.tracef(
-					"Generating InstantiationResultMappingMemento for JPA ConstructorResult(%s) for ResultSet mapping `%s`",
-					targetJavaType.getName(),
-					mappingName
-			);
+			BOOT_QUERY_LOGGER.generatingInstantiationResultMemento( targetJavaType.getName(), mappingName );
 
 			final List<ArgumentMemento> argumentResultMementos = new ArrayList<>( argumentResultDescriptors.size() );
 			argumentResultDescriptors.forEach(

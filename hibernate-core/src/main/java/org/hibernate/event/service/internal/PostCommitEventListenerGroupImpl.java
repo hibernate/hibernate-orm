@@ -52,10 +52,7 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 
 	private void checkAgainstExtendedContract(@Nonnull T listener) {
 		if ( !extendedListenerContract.isInstance( listener ) ) {
-			EVENT_LISTENER_LOGGER.warnf(
-					"Encountered event listener [%s] for post-commit event [%s] "
-							+ "which did not implement the corresponding extended "
-							+ "listener contract [%s]",
+			EVENT_LISTENER_LOGGER.listenerDoesNotImplementExtendedContract(
 					listener.getClass().getName(),
 					getEventType().eventName(),
 					extendedListenerContract.getName()

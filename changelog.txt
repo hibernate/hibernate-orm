@@ -1,6 +1,16 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.58.Final (September 20, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40445
+
+
+** Bug
+    * HHH-20892  IllegalArgumentException when removing entity referenced by @Subselect @Immutable entity 
+    * HHH-20855 SQL Server temporal rounding causing trouble with sub-micro input values
+
 Changes in 6.6.57.Final (September 13, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

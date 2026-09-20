@@ -95,12 +95,16 @@ class RestrictedToOneNotFoundTest {
 		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
+	String targetTable(Mapping mapping) {
+		return "nf_" + mapping.restriction.toLowerCase() + "_target";
+	}
+
 	@ParameterizedTest
 	@MethodSource("cases")
 	void distinguishNullExcludedAndDangling(Mapping mapping, boolean enabled, Load load, SessionFactoryScope scope) {
 		final String table = mapping.table();
 		scope.inTransaction( session -> {
-			final String target = "nf_" + mapping.restriction.toLowerCase() + "_target";
+			final String target = targetTable( mapping );
 			for ( long id = 1; id <= 2; id++ ) {
 				session.createNativeMutationQuery( "insert into " + target + " (id, visible) values (:id, :visible)" )
 						.setParameter( "id", id )

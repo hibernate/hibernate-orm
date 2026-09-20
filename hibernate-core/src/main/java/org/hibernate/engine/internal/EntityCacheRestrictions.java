@@ -7,6 +7,8 @@ package org.hibernate.engine.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import static java.util.Collections.addAll;
+
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -90,6 +92,7 @@ public final class EntityCacheRestrictions {
 		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
 			final var attribute = mapping.getAttributeMapping( i );
 			if ( attribute instanceof ToOneAttributeMapping toOne ) {
+				addAll( names, toOne.getAssociationFilterNames() );
 				collectFilters( toOne.getEntityMappingType(), bootModel, names, visited );
 			}
 			else if ( attribute instanceof EmbeddableValuedModelPart embedded ) {
@@ -134,7 +137,7 @@ public final class EntityCacheRestrictions {
 			for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
 				final var attribute = mapping.getAttributeMapping( i );
 				if ( attribute instanceof ToOneAttributeMapping toOne
-						&& hasSqlRestrictions( toOne.getEntityMappingType(), visited )
+						&& (toOne.hasAssociationSqlRestriction() || hasSqlRestrictions( toOne.getEntityMappingType(), visited ))
 					|| attribute instanceof EmbeddableValuedModelPart embedded
 						&& hasSqlRestrictions( embedded.getEmbeddableTypeDescriptor(), visited ) ) {
 					return true;

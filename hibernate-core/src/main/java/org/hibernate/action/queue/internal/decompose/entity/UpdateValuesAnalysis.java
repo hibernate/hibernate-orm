@@ -4,21 +4,21 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
-import jakarta.annotation.Nullable;
-
-import jakarta.annotation.Nonnull;
-
-import org.hibernate.action.queue.spi.decompose.entity.GraphEntityMutationTarget;
-
-import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
-import org.hibernate.persister.entity.mutation.AttributeAnalysis;
-import org.hibernate.persister.entity.mutation.TableSet;
-import org.hibernate.sql.spi.mutation.TableMapping;
-
 import java.util.BitSet;
 import java.util.List;
 import java.util.function.Function;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
+import org.hibernate.action.queue.spi.decompose.entity.GraphEntityMutationTarget;
+import org.hibernate.engine.internal.FilteredAssociationMutation;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
+import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
+import org.hibernate.persister.entity.mutation.AttributeAnalysis;
+import org.hibernate.persister.entity.mutation.TableSet;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 /// Values analysis for update operations in the decomposer.
 /// Tracks which tables have non-null values and which tables need updating.
@@ -26,6 +26,7 @@ import java.util.function.Function;
 /// @author Steve Ebersole
 public class UpdateValuesAnalysis implements org.hibernate.persister.entity.mutation.UpdateValuesAnalysis {
 	private final GraphEntityMutationTarget mutationTarget;
+	private final FilteredAssociationMutation filteredAssociations;
 	private final Function<EntityTableDescriptor, TableMapping> legacyTableMappingAccess;
 	private BitSet tablesWithNonNullValues;
 	private BitSet tablesWithPreviousNonNullValues;
@@ -44,8 +45,10 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 			Object[] values,
 			Object[] previousValues,
 			int[] dirtyAttributeIndexes,
-			Function<EntityTableDescriptor, TableMapping> legacyTableMappingAccess) {
+			Function<EntityTableDescriptor, TableMapping> legacyTableMappingAccess,
+			FilteredAssociationMutation filteredAssociations) {
 		this.mutationTarget = mutationTarget;
+		this.filteredAssociations = filteredAssociations;
 		this.legacyTableMappingAccess = legacyTableMappingAccess;
 		this.values = values;
 		if ( dirtyAttributeIndexes == null ) {
@@ -67,12 +70,12 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 			boolean checkForPreviousNonNull = true;
 			boolean checkForDirtiness = true;
 
-			if ( values == null ) {
+			if ( values == null || filteredAssociations.hasStoredRow( table.name() ) ) {
 				addTableWithNonNullValues( table );
 				checkForNonNull = false;
 			}
 
-			if ( previousValues == null ) {
+			if ( previousValues == null || filteredAssociations.hasStoredRow( table.name() ) ) {
 				addTableWithPreviousNonNullValues( table );
 				checkForPreviousNonNull = false;
 			}
@@ -107,6 +110,14 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 				}
 			}
 		} );
+	}
+
+	public boolean includesColumn(SelectableMapping column) {
+		return filteredAssociations.includesColumn( column );
+	}
+
+	public void prepareUpdateBuilder(TableUpdateBuilder<?> builder, EntityTableDescriptor table) {
+		filteredAssociations.prepareUpdateBuilder( builder, table.name() );
 	}
 
 	private void addTableWithNonNullValues(EntityTableDescriptor table) {

@@ -6,6 +6,7 @@ package org.hibernate.sql.ast.spi.model.builder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.hibernate.SPI;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -37,7 +38,9 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	private final List<ColumnValueBinding> valueBindings = new ArrayList<>();
 	private List<ColumnValueBinding> lobValueBindings;
 
+	private boolean rowKnownToExist;
 	private String sqlComment;
+	private Predicate<SelectableMapping> columnInclusion;
 
 	/// Create an update builder which owns a new reference to `tableMapping`.
 	@SPI(IMPLEMENT)
@@ -115,8 +118,25 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		}
 	}
 
+	/** Limit assignments made through selectable mappings, including generated assignments. */
+	@Override
+	public void setColumnInclusion(Predicate<SelectableMapping> columnInclusion) {
+		this.columnInclusion = columnInclusion;
+	}
+
+	@Override
+	public void setRowKnownToExist(boolean rowKnownToExist) {
+		this.rowKnownToExist = rowKnownToExist;
+	}
+
+	protected boolean isRowKnownToExist() {
+		return rowKnownToExist;
+	}
+
 	@Override
 	public void addColumnAssignment(SelectableMapping columnMapping, String assignment) {
-		addColumnAssignment( createValueBinding( assignment, columnMapping ) );
+		if ( columnInclusion == null || columnInclusion.test( columnMapping ) ) {
+			addColumnAssignment( createValueBinding( assignment, columnMapping ) );
+		}
 	}
 }

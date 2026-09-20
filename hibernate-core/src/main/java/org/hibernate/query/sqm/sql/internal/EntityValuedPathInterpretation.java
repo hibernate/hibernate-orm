@@ -48,6 +48,7 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.query.sqm.internal.SqmUtil.determineAffectedTableName;
+import static org.hibernate.query.sqm.internal.SqmUtil.isAssociationAffectedByEnabledFilters;
 
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
@@ -165,7 +166,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					associationMapping.getForeignKeyDescriptor()
 							.getPart( associationMapping.getSideNature() );
 
-			if ( associationMapping.isFkOptimizationAllowed() ) {
+			if ( associationMapping.isFkOptimizationAllowed()
+					&& !isAssociationAffectedByEnabledFilters( associationMapping, sqlAstCreationState ) ) {
 				if ( forceUseOfForeignKeyAssociationSidePart( inferredMapping,
 						associationMapping, keyTargetMatchPart ) ) {
 					resultModelPart = associationMapping.getForeignKeyDescriptor()

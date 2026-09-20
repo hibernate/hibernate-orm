@@ -8,6 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.internal.EntityCacheRestrictions;
+import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.loader.ast.internal.TenantIdLoader;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -24,6 +27,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadeStyles;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -64,6 +68,7 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -920,6 +925,26 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Should lazy properties of this entity be cached?
 	 */
 	boolean isLazyPropertiesCacheable();
+
+	@Internal
+	default FilteredAssociationMapping getFilteredAssociationMapping() {
+		return FilteredAssociationMapping.NONE;
+	}
+
+	/** Initializes shared restriction metadata after the mapping model is complete. */
+	@Internal
+	default void initializeCacheRestrictions(MetadataImplementor bootModel) {
+	}
+
+	@Internal
+	default boolean hasSqlRestrictedAssociations() {
+		return EntityCacheRestrictions.hasSqlRestrictions( this, new HashSet<>() );
+	}
+
+	@Internal
+	default boolean isAffectedByEnabledFiltersForCache(LoadQueryInfluencers influencers) {
+		return isAffectedByEnabledFilters( influencers, true );
+	}
 
 	boolean canReadFromCache();
 	boolean canWriteToCache();

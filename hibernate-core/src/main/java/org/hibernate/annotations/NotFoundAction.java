@@ -24,6 +24,9 @@ public enum NotFoundAction {
 	/**
 	 * Raise an exception when a foreign key value has no corresponding
 	 * primary key value in the referenced table.
+	 * <p>
+	 * The effect of this action is bypassed when a foreign key association
+	 * is affected by an enabled filter or {@link SQLRestriction}.
 	 */
 	EXCEPTION,
 	/**

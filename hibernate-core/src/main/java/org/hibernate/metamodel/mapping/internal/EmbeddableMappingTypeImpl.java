@@ -82,7 +82,6 @@ import static org.hibernate.type.SqlTypes.STRUCT_ARRAY;
 import static org.hibernate.type.SqlTypes.STRUCT_TABLE;
 import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
-
 /**
  * Describes a "normal" embeddable.
  *
@@ -1022,12 +1021,12 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 		}
 		else {
-			final var concreteEmbeddableType = findSubtypeBySubclass( value.getClass().getName() );
+			final var concreteEmbeddableType = value instanceof Object[] ? null : findSubtypeBySubclass( value.getClass().getName() );
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final var attributeMapping = attributeMappings.get( i );
 				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
 					final Object attributeValue =
-							concreteEmbeddableType == null
+							value instanceof Object[] values ? values[i] : concreteEmbeddableType == null
 								|| !castNonNull( concreteEmbeddableType ).declaresAttribute( attributeMapping )
 									? null
 									: getValue( value, i );
@@ -1035,7 +1034,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				}
 			}
 			if ( isPolymorphic() ) {
-				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();
+				final Object d = value instanceof Object[] values ? values[attributeMappings.size()]
+						: concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();
 				span += castNonNull( discriminatorMapping ).forEachJdbcValue( d, offset + span, x, y, valuesConsumer, session );
 			}
 		}

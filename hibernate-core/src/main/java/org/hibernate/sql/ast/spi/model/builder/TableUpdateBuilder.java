@@ -5,6 +5,7 @@
 package org.hibernate.sql.ast.spi.model.builder;
 
 import jakarta.annotation.Nonnull;
+import java.util.function.Predicate;
 
 import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
@@ -34,6 +35,12 @@ public interface TableUpdateBuilder<O extends MutationOperation>
 	default void accept(int selectionIndex, @Nonnull SelectableMapping selectableMapping) {
 		addColumnAssignment( selectableMapping );
 	}
+
+	/** Limit assignments, including generated assignments, to the included columns. */
+	void setColumnInclusion(Predicate<SelectableMapping> columnInclusion);
+
+	/** Require an UPDATE when omitted stored values cannot be supplied to an INSERT. */
+	void setRowKnownToExist(boolean rowKnownToExist);
 
 	void setWhere(String fragment);
 

@@ -57,6 +57,8 @@ import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadingAction;
+import org.hibernate.engine.internal.EntityCacheRestrictions;
+import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -447,6 +449,8 @@ public abstract class AbstractEntityPersister
 	private final boolean canReadFromCache;
 	private final boolean canWriteToCache;
 	private final boolean invalidateCache;
+	private FilteredAssociationMapping filteredAssociationMapping = FilteredAssociationMapping.NONE;
+	private EntityCacheRestrictions cacheRestrictions = EntityCacheRestrictions.NONE;
 	private final boolean isLazyPropertiesCacheable;
 	private final boolean useReferenceCacheEntries;
 	private final boolean useShallowQueryCacheLayout;
@@ -2111,7 +2115,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public boolean isCacheInvalidationRequired() {
-		return invalidateCache;
+		return invalidateCache || cacheRestrictions.hasSqlRestrictions();
 	}
 
 	@Override
@@ -2132,7 +2136,12 @@ public abstract class AbstractEntityPersister
 				true,
 				new LoadQueryInfluencers( factory ),
 				factory.getSqlTranslationEngine()
-		);
+		) {
+			@Override
+			public boolean isProcedureOrNativeQuery() {
+				return true;
+			}
+		};
 
 		final var entityPath = new NavigablePath( getRootPathName() );
 		final var rootTableGroup = createSelectFragmentRootTableGroup(
@@ -3771,6 +3780,7 @@ public abstract class AbstractEntityPersister
 	public final void postInstantiate(@Nonnull PersistentClass bootEntityDescriptor) throws MappingException {
 
 		tableMappings = buildTableMappings( bootEntityDescriptor );
+		filteredAssociationMapping = FilteredAssociationMapping.create( this );
 		tenantIdMapping = TenantIdMappingImpl.create( this );
 
 		final List<AttributeMapping> insertGeneratedAttributes =
@@ -4817,6 +4827,28 @@ public abstract class AbstractEntityPersister
 	@Nonnull
 	private Dialect getDialect() {
 		return factory.getJdbcServices().getDialect();
+	}
+
+	@Override
+	public FilteredAssociationMapping getFilteredAssociationMapping() {
+		return filteredAssociationMapping;
+	}
+
+	@Override
+	public void initializeCacheRestrictions(MetadataImplementor bootModel) {
+		if ( canReadFromCache || canWriteToCache ) {
+			cacheRestrictions = EntityCacheRestrictions.create( this, bootModel );
+		}
+	}
+
+	@Override
+	public boolean hasSqlRestrictedAssociations() {
+		return cacheRestrictions.hasSqlRestrictions();
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFiltersForCache(LoadQueryInfluencers influencers) {
+		return cacheRestrictions.isAffectedByFilters( influencers );
 	}
 
 	@Override

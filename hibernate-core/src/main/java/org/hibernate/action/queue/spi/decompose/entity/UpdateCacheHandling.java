@@ -9,6 +9,7 @@ import org.hibernate.Incubating;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
@@ -85,7 +86,8 @@ public class UpdateCacheHandling {
 			SharedSessionContractImplementor session) {
 		final var persister = action.getPersister();
 		writingToCache( persister, cache -> {
-			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
+			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED
+					|| FilteredAssociationState.hasFilteredAssociations( entry ) ) {
 				cache.remove( session, cacheUpdate.cacheKey() );
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {

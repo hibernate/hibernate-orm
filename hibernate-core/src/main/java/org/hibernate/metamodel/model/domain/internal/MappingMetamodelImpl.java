@@ -177,6 +177,7 @@ public class MappingMetamodelImpl
 		//		- collecting insert and update generated attributes
 		//		- building insert and update generation delegates
 		for ( var persister : entityPersisterMap.values() ) {
+			persister.initializeCacheRestrictions( bootModel );
 			persister.postInstantiate( bootModel.getEntityBinding( persister.getEntityName() ) );
 			registerEntityNameResolvers( persister, entityNameResolvers );
 		}

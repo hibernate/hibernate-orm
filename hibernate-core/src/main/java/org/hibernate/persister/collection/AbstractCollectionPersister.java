@@ -83,6 +83,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.FilterHelper;
+import org.hibernate.sql.RestrictionRendering;
 import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
@@ -181,6 +182,8 @@ public abstract class AbstractCollectionPersister
 	protected String sqlWhereString;
 	@Nullable
 	private String sqlWhereStringTemplate;
+	private volatile RestrictionRendering sqlWhereRendering;
+	private volatile RestrictionRendering manyToManyWhereRendering;
 
 	private final boolean hasOrder;
 	private final boolean hasManyToManyOrder;
@@ -1299,15 +1302,42 @@ public abstract class AbstractCollectionPersister
 						: tableGroup.getTableReference( tableGroup.getNavigablePath(),
 								elementPersister != null ? elementPersister.getTableName() : qualifiedTableName );
 		final String alias = aliasForWhereRestriction( tableReference, useQualifier );
-		applyWhereFragments( predicateConsumer, alias, tableGroup, creationState );
+		applyWhereFragments( predicateConsumer, alias, tableGroup, useQualifier, creationState );
 	}
 
 	protected void applyWhereFragments(
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nullable String alias,
 			@Nonnull TableGroup tableGroup,
+			boolean useQualifier,
 			@Nullable SqlAstCreationState astCreationState) {
-		applyWhereFragments( predicateConsumer, alias, sqlWhereStringTemplate );
+		if ( sqlWhereStringTemplate != null && !isManyToMany() && elementPersister != null ) {
+			predicateConsumer.accept( new SqlFragmentPredicate( getSqlWhereRendering().render(
+					alias, useQualifier, tableGroup, astCreationState ) ) );
+		}
+		else {
+			applyWhereFragments( predicateConsumer, alias, sqlWhereStringTemplate );
+		}
+	}
+
+	// Initialized on first use because eager entity loaders can render these restrictions
+	// before collection postInstantiate(). The immutable renderers are shared by all sessions.
+	private RestrictionRendering getSqlWhereRendering() {
+		var rendering = sqlWhereRendering;
+		if ( rendering == null ) {
+			rendering = RestrictionRendering.compile( sqlWhereStringTemplate, elementPersister );
+			sqlWhereRendering = rendering;
+		}
+		return rendering;
+	}
+
+	private RestrictionRendering getManyToManyWhereRendering() {
+		var rendering = manyToManyWhereRendering;
+		if ( rendering == null ) {
+			rendering = RestrictionRendering.compile( manyToManyWhereTemplate, elementPersister );
+			manyToManyWhereRendering = rendering;
+		}
+		return rendering;
 	}
 
 	/**
@@ -1367,7 +1397,8 @@ public abstract class AbstractCollectionPersister
 			if ( manyToManyWhereString != null ) {
 				final var tableReference = tableGroup.resolveTableReference( castNonNull( elementPersister ).getTableName() );
 				final String alias = aliasForWhereRestriction( tableReference, useQualifier );
-				applyWhereFragments( predicateConsumer, alias, manyToManyWhereTemplate );
+				predicateConsumer.accept( new SqlFragmentPredicate( getManyToManyWhereRendering().render(
+						alias, useQualifier, tableGroup, creationState ) ) );
 			}
 		}
 	}

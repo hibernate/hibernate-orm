@@ -110,6 +110,9 @@ public class JdbcValueBindings {
 	}
 
 	public void bindValue(Object columnValue, String columnName, ParameterUsage parameterUsage) {
+		assert !(columnValue instanceof org.hibernate.engine.internal.FilteredAssociationState.Key)
+				: "Hidden association keys must be decomposed by their attribute mapping before JDBC binding";
+
 		if ( bindTemplate != null ) {
 			final BindSlot slot = bindTemplate.findSlot( columnName, parameterUsage );
 			if ( slot == null ) {

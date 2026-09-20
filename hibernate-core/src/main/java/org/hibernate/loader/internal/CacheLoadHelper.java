@@ -135,7 +135,9 @@ public class CacheLoadHelper {
 		final boolean useCache =
 				persister.canReadFromCache()
 						&& source.getCacheMode().isGetEnabled()
-						&& lockMode.lessThan( LockMode.READ );
+						&& lockMode.lessThan( LockMode.READ )
+						&& !persister.hasSqlRestrictedAssociations()
+						&& !persister.isAffectedByEnabledFiltersForCache( source.getLoadQueryInfluencers() );
 		if ( useCache ) {
 			final Object cacheEntry = getFromSharedCache( entityKey.getIdentifier(), persister, source );
 			return cacheEntry == null ? null : processCachedEntry( entity, persister, cacheEntry, source, entityKey );
@@ -145,6 +147,7 @@ public class CacheLoadHelper {
 			return null;
 		}
 	}
+
 
 	@Nullable
 	private static Object getFromSharedCache(

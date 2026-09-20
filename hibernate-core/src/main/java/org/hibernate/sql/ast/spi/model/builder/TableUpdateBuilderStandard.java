@@ -104,7 +104,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 			);
 		}
 
-		if ( getMutatingTable().getTableMapping().isOptional() ) {
+		if ( !isRowKnownToExist() && getMutatingTable().getTableMapping().isOptional() ) {
 			final var entityMutationTarget = (EntityMutationTarget) getMutationTarget();
 			return (LogicalTableUpdate<O>)	new OptionalTableUpdate(
 					getMutatingTable(),

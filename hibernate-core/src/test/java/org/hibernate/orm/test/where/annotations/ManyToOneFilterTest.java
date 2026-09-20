@@ -15,7 +15,6 @@ import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.EntityFilterException;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
@@ -28,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SessionFactory
 @DomainModel(annotatedClasses =
@@ -60,19 +59,21 @@ class ManyToOneFilterTest {
 			Z z = session.find(Z.class, 0L);
 			assertEquals( 0, z.xs.size() );
 		} );
-		assertThrows( EntityFilterException.class, () ->
-				scope.inTransaction( session -> {
-					session.enableFilter( "filter" ).validate();
-					var graph = session.createEntityGraph(Y.class);
-					session.find( graph, 0L );
-				} )
-		);
-		assertThrows( EntityFilterException.class, () ->
-				scope.inTransaction(session -> {
-					session.enableFilter( "filter" ).validate();
-					session.find(Y.class, 0L);
-				})
-		);
+		scope.inTransaction( session -> {
+			session.enableFilter( "filter" ).validate();
+			var graph = session.createEntityGraph( Y.class );
+			final Y y = session.find( graph, 0L );
+			assertNull( y.x );
+			y.name = "graph";
+		} );
+		scope.inTransaction( session -> {
+			session.enableFilter( "filter" ).validate();
+			final Y y = session.find( Y.class, 0L );
+			assertNull( y.x );
+			y.name = "find";
+		} );
+		scope.inTransaction( session -> assertEquals( -1L,
+				session.createNativeQuery( "select xx from YY where id = 0", Long.class ).getSingleResult() ) );
 	}
 
 	@Entity

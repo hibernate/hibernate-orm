@@ -271,6 +271,10 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 	@Override
 	public void postUpdate(Object entity, Object[] updatedState, Object nextVersion) {
+		final var filteredState = getExtraState( FilteredAssociationState.class );
+		if ( filteredState != null ) {
+			filteredState.afterUpdate( updatedState, persister );
+		}
 		loadedState = updatedState;
 		setLockMode( LockMode.WRITE );
 
@@ -503,6 +507,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		oos.writeInt( getLockMode().ordinal() );
 		oos.writeBoolean( isExistsInDatabase() );
 		oos.writeBoolean( persister == null || persister.isMutable() );
+		oos.writeObject( getExtraState( FilteredAssociationState.class ) );
 	}
 
 	/**
@@ -522,7 +527,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	 */
 	public static EntityEntry deserialize(ObjectInputStream ois, PersistenceContext persistenceContext)
 			throws IOException, ClassNotFoundException {
-		return new EntityEntryImpl(
+		final var entry = new EntityEntryImpl(
 				nullIfEmpty( ois.readUTF() ),
 				ois.readObject(),
 				Status.fromOrdinal( ois.readInt() ),
@@ -535,6 +540,11 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 				ois.readBoolean(),
 				persistenceContext
 		);
+		final var filteredState = (FilteredAssociationState) ois.readObject();
+		if ( filteredState != null ) {
+			entry.addExtraState( filteredState );
+		}
+		return entry;
 	}
 
 	@Override

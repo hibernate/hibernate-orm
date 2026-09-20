@@ -56,6 +56,11 @@ public interface EntityInitializer<Data extends InitializerData> extends Initial
 		return entityKey;
 	}
 
+	/** The stored key when a restriction excluded this association's target. */
+	default @Nullable Object getFilteredAssociationKey(RowProcessingState rowProcessingState) {
+		return null;
+	}
+
 	@Nullable Object getEntityIdentifier(Data data);
 	default @Nullable Object getEntityIdentifier(RowProcessingState rowProcessingState) {
 		return getEntityIdentifier( getData( rowProcessingState ) );

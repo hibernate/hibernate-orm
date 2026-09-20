@@ -8,6 +8,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -87,14 +88,17 @@ public abstract class AbstractDeleteCoordinator
 		final boolean isImpliedOptimisticLocking = entityPersister().optimisticLockStyle().isAllOrDirty();
 
 		final var entry = session.getPersistenceContextInternal().getEntry( entity );
-		final var loadedState = entry != null && isImpliedOptimisticLocking ? entry.getLoadedState() : null;
+		final var filteredState = entry == null ? null : entry.getExtraState( FilteredAssociationState.class );
+		final Object[] originalLoadedState = entry == null ? null : entry.getLoadedState();
+		final Object[] loadedState = filteredState == null ? originalLoadedState
+				: filteredState.physicalState( originalLoadedState, entityPersister() );
 		final Object rowId = entry != null ? entry.getRowId() : null;
 
 		if ( isImpliedOptimisticLocking && loadedState != null || rowId == null && entityPersister().hasRowId() ) {
 			doDynamicDelete( entity, id, rowId, loadedState, session );
 		}
 		else {
-			doStaticDelete( entity, id, rowId, entry == null ? null : entry.getLoadedState(), version, session );
+			doStaticDelete( entity, id, rowId, loadedState, version, session );
 		}
 	}
 

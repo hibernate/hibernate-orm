@@ -25,6 +25,8 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.FilteredAssociationMutation;
+import org.hibernate.engine.internal.FilteredUpdateCache;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -50,6 +52,7 @@ import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.ast.internal.model.builder.VersionUpdateBuilder;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -64,7 +67,6 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.trim;
-
 
 /// Decomposer for entity update operations.
 ///
@@ -90,7 +92,14 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	private final Map<String, MutationOperation> staticJdbcUpdateOperations;
 	private final MutationOperation versionJdbcUpdate;
 	private final Map<String, StatementShapeKey> staticStatementShapeKeys;
+	private final FilteredUpdateCache<CachedUpdates> filteredUpdateCache = new FilteredUpdateCache<>();
 	private final String origin;
+
+	private record CachedUpdates(
+			Map<String, LogicalTableUpdate<?>> updates,
+			Map<String, MutationOperation> jdbcOperations,
+			Map<String, StatementShapeKey> shapeKeys) {
+	}
 
 	public UpdateDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
@@ -207,14 +216,16 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			identifier = decompositionContext.getGeneratedIdentifierHandle( entity );
 		}
 		final Object rowId = action.getRowId();
-		final Object[] state = action.getState();
-		final Object[] previousState = action.getPreviousState();
+		Object[] state = action.getState();
+		Object[] previousState = action.getPreviousState();
 		final Object previousVersion = action.getPreviousVersion();
 
 		// Capture the EntityEntry now, at decomposition time, because for entities being deleted
 		// in the same flush, the DELETE operation may remove the entity from the persistence context
 		// before the UPDATE's post-execution callback runs.
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
+		final var filteredAssociations = FilteredAssociationMutation.forUpdate( entityEntry, state );
+		previousState = filteredAssociations.physicalState( previousState );
 
 		// Skip UPDATE operations for entities with DELETED status ONLY if there are no dirty fields.
 		// When an entity is marked for deletion in the same flush, UPDATEs with no dirty fields
@@ -311,6 +322,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		// apply any pre-update in-memory value generation
 		final int[] preUpdateGeneratedAttributeIndexes = preUpdateInMemoryValueGeneration( entity, state, session );
 		final int[] dirtyAttributeIndexes = combine( action.getDirtyFields(), preUpdateGeneratedAttributeIndexes );
+		state = filteredAssociations.physicalState( state );
 
 		// Determine if we need to apply optimistic locking
 		final var effectiveOptLockStyle = effectiveOptLockStyle( previousVersion, previousState );
@@ -325,37 +337,45 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				state,
 				previousState,
 				dirtyAttributeIndexes,
-				this
+				this,
+				filteredAssociations
 		);
-
 
 		// Choose between static or dynamic update group.  Use dynamic update if:
 		// 		1. Entity specifies dynamic-update
 		// 		2. We need optimistic locking with DIRTY check
 		//		3. The entity has any uninitialized state
-		final boolean needsDynamicUpdate = entityPersister.isDynamicUpdate()
+		final boolean needsDynamicUpdate = filteredAssociations.isActive()
+				|| entityPersister.isDynamicUpdate()
 				|| rowId != null
 				|| effectiveOptLockStyle.isAllOrDirty()
 				|| preUpdateGeneratedAttributeIndexes.length > 0
 				|| entityPersister.hasUninitializedLazyProperties( entity );
 
-		final Map<String, LogicalTableUpdate<?>> effectiveGroup;
-		if ( needsDynamicUpdate ) {
-			effectiveGroup = generateDynamicUpdateOperations(
-					entity,
-					identifier,
-					rowId,
-					state,
-					previousState,
-					previousVersion,
-					updateability,
-					valuesAnalysis,
-					session
-			);
+		CachedUpdates cachedUpdates = null;
+		if ( filteredAssociations.isActive() && FilteredUpdateCache.supports( entityPersister )
+				&& rowId == null && !entityPersister.hasUninitializedLazyProperties( entity )
+				&& entityEntry != null && entityEntry.isModifiableEntity()
+				&& ( !entityPersister.isVersioned() || previousVersion != null )
+				&& getClass() == UpdateDecomposer.class ) {
+			final var key = filteredUpdateKey( filteredAssociations, updateability, valuesAnalysis,
+					state, previousVersion, session );
+			final Object[] currentState = state;
+			final Object[] oldState = previousState;
+			final Object currentIdentifier = identifier;
+			cachedUpdates = filteredUpdateCache.resolve( key, sessionFactory, () -> {
+				final var updates = generateDynamicUpdateOperations( entity, currentIdentifier, null,
+						currentState, oldState, previousVersion, updateability, valuesAnalysis, session );
+				final var jdbcOperations = generateStaticJdbcOperations( updates );
+				return new CachedUpdates( updates, jdbcOperations, generateStaticStatementShapeKeys( jdbcOperations ) );
+			} );
 		}
-		else {
-			effectiveGroup = staticUpdateOperations;
-		}
+
+		final var effectiveGroup = cachedUpdates != null ? cachedUpdates.updates()
+				: needsDynamicUpdate
+						? generateDynamicUpdateOperations( entity, identifier, rowId, state, previousState,
+								previousVersion, updateability, valuesAnalysis, session )
+						: staticUpdateOperations;
 
 		int localOrd = 0;
 		FlushOperation previousOperation = null;
@@ -372,8 +392,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			if ( tableUpdate == null ) {
 				continue;
 			}
-			var operation = resolveJdbcUpdateOperation( tableDescriptor.name(), tableUpdate );
-			var shapeKey = resolveStatementShapeKey( tableDescriptor.name(), tableUpdate );
+			var operation = cachedUpdates == null ? resolveJdbcUpdateOperation( tableDescriptor.name(), tableUpdate )
+					: cachedUpdates.jdbcOperations().get( tableDescriptor.name() );
+			var shapeKey = cachedUpdates == null ? resolveStatementShapeKey( tableDescriptor.name(), tableUpdate )
+					: cachedUpdates.shapeKeys().get( tableDescriptor.name() );
 
 			// For static updates, only execute secondary tables when one of their
 			// attributes actually drove the update.  Static mutation groups may
@@ -434,6 +456,51 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		);
 
 		emitTailOperations( previousOperation, additionalOperations, postUpdateHandling, ordinalBase, operationConsumer );
+	}
+
+	private FilteredUpdateCache.Key filteredUpdateKey(
+			FilteredAssociationMutation filteredAssociations, boolean[] updateability,
+			UpdateValuesAnalysis valuesAnalysis, Object[] state, Object previousVersion,
+			SharedSessionContractImplementor session) {
+		final var assignments = new BitSet();
+		for ( int i = 0; i < updateability.length; i++ ) {
+			if ( shouldIncludeInDynamicUpdate( entityPersister.getAttributeMapping( i ), updateability, valuesAnalysis ) ) {
+				assignments.set( i );
+			}
+		}
+		final var tables = new BitSet();
+		final boolean versionChanged = isVersionChanged( state, previousVersion, session );
+		for ( var table : entityPersister.getTableDescriptors() ) {
+			if ( needsDynamicTableUpdate( table, valuesAnalysis, versionChanged ) ) {
+				tables.set( table.getRelativePosition() );
+			}
+		}
+		return filteredAssociations.updateCacheKey( assignments, tables );
+	}
+
+	private static Object getVersion(Object[] state, EntityVersionMapping versionMapping) {
+		return state[versionMapping.getVersionAttribute().getStateArrayPosition()];
+	}
+
+	private boolean isVersionChanged(Object[] state, Object previousVersion, SharedSessionContractImplementor session) {
+		final var versionMapping = entityPersister.getVersionMapping();
+		if ( versionMapping == null ) {
+			return false;
+		}
+		else {
+			final Object version = getVersion( state, versionMapping );
+			return !versionMapping.areEqual( version, previousVersion, session );
+		}
+	}
+
+	private boolean needsDynamicTableUpdate(
+			EntityTableDescriptor table, UpdateValuesAnalysis valuesAnalysis, boolean versionChanged) {
+		return !table.isInverse()
+			&& ( valuesAnalysis.needsUpdate( table ) || versionChanged && isVersionMappingTable( table ) );
+	}
+
+	private boolean isVersionMappingTable(EntityTableDescriptor table) {
+		return table.name().equals( entityPersister.getVersionMapping().getContainingTableExpression() );
 	}
 
 	private void logImmutablePropertyModifications(int[] dirtyAttributeIndexes, boolean[] updateability) {
@@ -505,9 +572,11 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			EntityUpdateAction action,
 			UpdateCacheHandling.CacheUpdate cacheUpdate,
 			SharedSessionContractImplementor session) {
-		final var callback = new UpdateAfterTransactionCompletionHandling( action, cacheUpdate );
-		if ( callback.isNeeded( session ) ) {
-			session.getTransactionCompletionCallbacks().registerCallback( callback );
+		final var completionHandling =
+				new UpdateAfterTransactionCompletionHandling( action, cacheUpdate );
+		if ( completionHandling.isNeeded( session ) ) {
+			session.getTransactionCompletionCallbacks()
+					.registerCallback( completionHandling );
 		}
 	}
 
@@ -592,7 +661,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	}
 
 	protected boolean preUpdate(EntityUpdateAction action, SharedSessionContractImplementor session) {
-		final var listenerGroup = session.getFactory().getEventListenerGroups().eventListenerGroup_PRE_UPDATE;
+		final var listenerGroup =
+				session.getFactory()
+						.getEventListenerGroups().eventListenerGroup_PRE_UPDATE;
 		if ( listenerGroup.isEmpty() ) {
 			return false;
 		}
@@ -793,6 +864,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			UpdateValuesAnalysis valuesAnalysis,
 			SharedSessionContractImplementor session) {
 		final Map<String, TableUpdateBuilder<?>> operationBuilders = new HashMap<>();
+		final var versionMapping = entityPersister.getVersionMapping();
+		final boolean versionChanged = versionMapping != null
+				&& !versionMapping.areEqual( getVersion( state, versionMapping ), version, session );
 
 		// Process tables in forward order
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
@@ -800,11 +874,11 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				// skip inverse tables
 				return;
 			}
-			if ( valuesAnalysis.needsUpdate( tableDescriptor ) ) {
-				operationBuilders.put(
-						tableDescriptor.name(),
-						createTableUpdateBuilder(tableDescriptor)
-				);
+			// A change confined to a secondary table may still increment the owner's version.
+			if ( needsDynamicTableUpdate( tableDescriptor, valuesAnalysis, versionChanged ) ) {
+				final var builder = createTableUpdateBuilder( tableDescriptor );
+				valuesAnalysis.prepareUpdateBuilder( builder, tableDescriptor );
+				operationBuilders.put( tableDescriptor.name(), builder );
 			}
 		} );
 
@@ -868,7 +942,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			TenantIdHelper.applyTenantRestriction( entityPersister, builder );
 		}
 	}
-
 
 	private void applyValueAssignment(
 			Object entity,
@@ -934,10 +1007,13 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				return;
 			}
 
-			// Apply SET clause columns for attributes
+			// Custom SQL has a fixed parameter layout even when generated values or hidden
+			// associations require dynamic decomposition. Bind all its updateable attributes.
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				var attribute = tableDescriptor.attributes().get( i );
-				if ( shouldIncludeInDynamicUpdate( attribute, builder, updateable, entity, valuesAnalysis, session ) ) {
+				if ( tableDescriptor.updateDetails().getCustomSql() != null
+						? updateable[attribute.getStateArrayPosition()]
+						: shouldIncludeInDynamicUpdate( attribute, updateable, valuesAnalysis ) ) {
 					if ( state[attribute.getStateArrayPosition()] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 						// it was not fetched and so could not have changed, skip it
 						continue;
@@ -964,28 +1040,25 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	private boolean shouldIncludeInDynamicUpdate(
 			AttributeMapping attribute,
-			AssigningTableMutationBuilder<?> builder,
 			boolean[] updateable,
-			Object entity,
-			UpdateValuesAnalysis valuesAnalysis, SharedSessionContractImplementor session) {
+			UpdateValuesAnalysis valuesAnalysis) {
 		final var versionMapping = entityPersister.getVersionMapping();
 		if ( versionMapping != null
 				&& versionMapping.getVersionAttribute() == attribute ) {
 			return true;
 		}
-
 		// First check if the attribute is updateable or has update-generated values
-		if ( !updateable[attribute.getStateArrayPosition()]
-				&& !isValueGenerationOnUpdateInSql( attribute.getGenerator() )) {
+		else if ( !updateable[attribute.getStateArrayPosition()]
+				&& !isValueGenerationOnUpdateInSql( attribute.getGenerator() ) ) {
 			return false;
 		}
-
 		// If we have dirty fields, only include dirty ones
-		if ( valuesAnalysis.hasDirtyAttributes() ) {
+		else if ( valuesAnalysis.hasDirtyAttributes() ) {
 			return valuesAnalysis.getDirtiness()[attribute.getStateArrayPosition()];
 		}
-
-		return true;
+		else {
+			return true;
+		}
 	}
 
 	private void applyKeyRestriction(EntityTableDescriptor tableDescriptor, TableUpdateBuilder<?> tableUpdateBuilder) {
@@ -1134,7 +1207,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				updateable,
 				effectiveOptLockStyle,
 				valuesAnalysis,
-				needsDynamicUpdate,
+				needsDynamicUpdate
+						&& tableDescriptor.updateDetails().getCustomSql() == null,
 				generatedValuesCollector
 		);
 	}

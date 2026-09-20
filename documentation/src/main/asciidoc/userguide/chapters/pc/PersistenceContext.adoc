@@ -479,11 +479,17 @@ include::{extrasdir}/pc-filter-entity-example.sql[]
 include::{extrasdir}/pc-filter-entity-find-example.sql[]
 ----
 
-[WARNING]
+[CAUTION]
 ====
-Using `@NotFound(action = NotFoundAction.IGNORE)` on associations that are filtered via a `FilterDef` with `applyToLoadByKey` set to `true`
-is dangerous, because the association will be set to `null` if the filter excludes the target row.
-On flush, this can lead to the foreign key column be set to `null` and hence lead to data loss.
+When an enabled filter excludes the target of a `@ManyToOne` or `@OneToOne` association, the mapped field or property of the entity instance is set to `null`.
+In this case:
+
+- Explicitly assigning a null value to the association has no effect on the persistent state of the entity, and the foreign key is not set to null when the session is flushed.
+- But assigning a non-null value to the association _does_ result in an update to the foreign key.
+
+Special care must be taken when merging a detached object which was retrieved with an enabled filter.
+The safest approach is to ensure that exactly the same filter is enabled in the session in which `merge()` is called.
+Otherwise, a null field of the detached entity could result in the foreign key being set to null in the database.
 ====
 
 As you can see from the example above, contrary to an entity query, the `activeAccount` filter does not prevent the entity from being loaded,

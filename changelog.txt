@@ -1,6 +1,20 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.10.Final (September 20, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40450
+
+
+** Bug
+    * HHH-20863 ActionQueue.clear() does not clear transactionCompletionCallbacks on rollback, causing HHH90010101
+    * HHH-20861 HHH100503 logged at INFO for normal constraint violation scenarios
+    * HHH-20857 Bug with @Audited.Excluded and TABLE_PER_CLASS inheritance
+
+** Improvement
+    * HHH-20883 mutation SQL should consistently include the tenant id
+
 Changes in 7.4.9.Final (September 17, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

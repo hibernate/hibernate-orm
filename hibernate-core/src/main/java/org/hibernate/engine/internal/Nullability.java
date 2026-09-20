@@ -95,8 +95,9 @@ public final class Nullability {
 					final var attribute = filteredState == null ? null : persister.getAttributeMapping( i );
 					final boolean hidden = filteredMapping.hasHiddenAttribute( filteredState, attribute );
 					if ( hidden && attribute instanceof EmbeddableValuedModelPart embedded ) {
-						final String failure = checkFilteredComponentNullability( value, (CompositeType) propertyTypes[i],
-								embedded.getEmbeddableTypeDescriptor(), filteredState, filteredMapping );
+						final String failure =
+								checkComponentNullability( value, (CompositeType) propertyTypes[i],
+										embedded.getEmbeddableTypeDescriptor(), filteredState, filteredMapping );
 						if ( failure != null ) {
 							throw new PropertyValueException( "not-null property references a null or transient value",
 									persister.getEntityName(), qualify( persister.getPropertyNames()[i], failure ) );
@@ -129,45 +130,6 @@ public final class Nullability {
 		}
 	}
 
-	private String checkFilteredComponentNullability(
-			Object component, CompositeType type, EmbeddableMappingType mapping,
-			FilteredAssociationState state, FilteredAssociationMapping filteredMapping) {
-		final boolean[] nullability = type.getPropertyNullability();
-		if ( nullability == null ) {
-			return null;
-		}
-		final Object[] values = component == null ? null : type.getPropertyValues( component, session );
-		final Type[] types = type.getSubtypes();
-		final String[] names = type.getPropertyNames();
-		for ( int i = 0; i < nullability.length; i++ ) {
-			final Object value = values == null ? null : values[i];
-			if ( unfetched( value ) ) {
-				continue;
-			}
-			final var attribute = mapping.getAttributeMapping( i );
-			final boolean hidden = filteredMapping.hasHiddenAttribute( state, attribute );
-			if ( hidden && attribute instanceof EmbeddableValuedModelPart embedded ) {
-				final String failure = checkFilteredComponentNullability( value, (CompositeType) types[i],
-						embedded.getEmbeddableTypeDescriptor(), state, filteredMapping );
-				if ( failure != null ) {
-					return qualify( names[i], failure );
-				}
-			}
-			else if ( value == null ) {
-				if ( !nullability[i] && !hidden ) {
-					return names[i];
-				}
-			}
-			else {
-				final String failure = checkSubElementsNullability( types[i], value );
-				if ( failure != null ) {
-					return qualify( names[i], failure );
-				}
-			}
-		}
-		return null;
-	}
-
 	private boolean[] getCheckability(EntityPersister persister) {
 		return checkType == NullabilityCheckType.CREATE
 				? persister.getPropertyInsertability()
@@ -193,11 +155,17 @@ public final class Nullability {
 	 * @throws HibernateException error while getting subcomponent values
 	 */
 	private String checkSubElementsNullability(Type propertyType, Object value) {
+		return checkSubElementsNullability( propertyType, value, null, null, null );
+	}
+
+	private String checkSubElementsNullability(
+			Type propertyType, Object value, EmbeddableMappingType mapping,
+			FilteredAssociationState state, FilteredAssociationMapping filteredMapping) {
 		if ( propertyType instanceof AnyType anyType ) {
 			return checkComponentNullability( value, anyType );
 		}
 		else if ( propertyType instanceof ComponentType componentType ) {
-			return checkComponentNullability( value, componentType );
+			return checkComponentNullability( value, componentType, mapping, state, filteredMapping );
 		}
 		else if ( propertyType instanceof CollectionType collectionType ) {
 			// persistent collections may have components
@@ -232,6 +200,12 @@ public final class Nullability {
 	 * @throws HibernateException error while getting subcomponent values
 	 */
 	private String checkComponentNullability(Object composite, CompositeType compositeType) {
+		return checkComponentNullability( composite, compositeType, null, null, null );
+	}
+
+	private String checkComponentNullability(
+			Object composite, CompositeType compositeType, EmbeddableMappingType mapping,
+			FilteredAssociationState state, FilteredAssociationMapping filteredMapping) {
 		// IMPL NOTE: we currently skip checking "any" and "many-to-any" mappings.
 		//
 		// This is not the best solution. But there's a mismatch between AnyType.getPropertyNullability()
@@ -248,20 +222,35 @@ public final class Nullability {
 			final boolean[] nullability = compositeType.getPropertyNullability();
 			if ( nullability != null ) {
 				// do the test
-				final Object[] values = compositeType.getPropertyValues( composite, session );
+				final Object[] values = composite == null ? null : compositeType.getPropertyValues( composite, session );
 				final Type[] propertyTypes = compositeType.getSubtypes();
 				final String[] propertyNames = compositeType.getPropertyNames();
-				for ( int i = 0; i < values.length; i++ ) {
-					final Object value = values[i];
-					if ( value == null ) {
-						if ( !nullability[i] ) {
-							return propertyNames[i];
+				for ( int i = 0; i < nullability.length; i++ ) {
+					final Object value = values == null ? null : values[i];
+					if ( !unfetched( value ) ) {
+						final var attribute =
+								mapping == null
+										? null
+										: mapping.getAttributeMapping( i );
+						final boolean hidden =
+								filteredMapping != null
+								&& filteredMapping.hasHiddenAttribute( state, attribute );
+						final var embedded =
+								attribute instanceof EmbeddableValuedModelPart part
+										? part.getEmbeddableTypeDescriptor()
+										: null;
+						if ( value == null && !(hidden && embedded != null) ) {
+							if ( !nullability[i] && !hidden ) {
+								return propertyNames[i];
+							}
 						}
-					}
-					else {
-						final String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
-						if ( breakProperties != null ) {
-							return qualify( propertyNames[i], breakProperties );
+						else {
+							final String breakProperties =
+									checkSubElementsNullability( propertyTypes[i],
+											value, embedded, state, filteredMapping );
+							if ( breakProperties != null ) {
+								return qualify( propertyNames[i], breakProperties );
+							}
 						}
 					}
 				}

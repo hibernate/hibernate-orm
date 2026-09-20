@@ -9,6 +9,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.sql.results.graph.entity.internal.FilteredAssociationHydration;
 import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -178,7 +179,7 @@ public class EmbeddableInitializerImpl
 			}
 		}
 		this.assemblers = assemblers;
-		this.filteredAssociationIndexes = FilteredAssociationState.assemblerIndexes( assemblers );
+		this.filteredAssociationIndexes = FilteredAssociationHydration.assemblerIndexes( assemblers );
 		this.discriminatorAssembler =
 				discriminatorFetch == null
 						? null
@@ -492,7 +493,7 @@ public class EmbeddableInitializerImpl
 			return state;
 		}
 		final var data = getData( rowProcessingState );
-		return FilteredAssociationState.collect( state, mapping,
+		return FilteredAssociationHydration.collect( state, mapping,
 				assemblers[data.getSubclassId()], filteredAssociationIndexes[data.getSubclassId()], data.rowState, rowProcessingState );
 	}
 

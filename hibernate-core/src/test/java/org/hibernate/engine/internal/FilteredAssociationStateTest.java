@@ -9,7 +9,11 @@ import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
+import java.util.function.IntFunction;
 
 class FilteredAssociationStateTest {
 	@Test
@@ -21,10 +25,11 @@ class FilteredAssociationStateTest {
 		assertThat( state.contains( 0 ) ).isTrue();
 		assertThat( state.contains( 62 ) ).isFalse();
 		assertThat( state.contains( 63 ) ).isTrue();
-		assertThat( state.retainsKeys() ).isFalse();
+		assertThat( state.omitsColumn( 0 ) ).isTrue();
 		assertThat( state.getClass().getDeclaredFields() ).filteredOn( field -> !Modifier.isStatic( field.getModifiers() ) )
 				.singleElement().satisfies( field -> assertThat( field.getType() ).isEqualTo( long.class ) );
-		assertThatThrownBy( () -> state.key( 0 ) ).isInstanceOf( IllegalStateException.class );
+		final Object[] values = new Object[64];
+		assertThat( state.physicalState( values, (FilteredAssociationMapping) null ) ).isSameAs( values );
 		state.clear( 0 );
 		assertThat( state.isEmpty() ).isFalse();
 		state.clear( 63 );
@@ -62,11 +67,16 @@ class FilteredAssociationStateTest {
 		final Object last = new Object();
 		state.set( 0, first );
 		state.set( 64, last );
-		assertThat( state.retainsKeys() ).isTrue();
-		assertThat( state.key( 0 ) ).isSameAs( first );
-		assertThat( state.key( 64 ) ).isSameAs( last );
+		assertThat( state.omitsColumn( 0 ) ).isFalse();
+		final Object[] values = new Object[65];
+		final var mapping = mock( FilteredAssociationMapping.class );
+		when( mapping.physicalState( same( state ), same( values ), any() ) ).thenAnswer( invocation -> {
+			final IntFunction<Object> keys = invocation.getArgument( 2 );
+			return new Object[] { keys.apply( 0 ), keys.apply( 64 ) };
+		} );
+		assertThat( state.physicalState( values, mapping ) ).containsExactly( first, last );
 		state.clear( 0 );
-		assertThat( state.key( 0 ) ).isNull();
+		assertThat( state.physicalState( values, mapping ) ).containsExactly( null, last );
 		assertThat( state.contains( 64 ) ).isTrue();
 		state.clear( 64 );
 		assertThat( state.isEmpty() ).isTrue();

@@ -12,6 +12,9 @@ import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
 import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
+import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
+import org.hibernate.sql.model.internal.TableUpdateNoSet;
+import static java.util.Collections.emptyList;
 
 import java.util.List;
 
@@ -48,6 +51,16 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 //					getOptimisticLockBindings()
 //			);
 //		}
+
+		if ( isRowKnownToExist() ) {
+			if ( valueBindings.isEmpty() ) {
+				return (LogicalTableUpdate<O>) new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
+			}
+			return (LogicalTableUpdate<O>) new TableUpdateStandard(
+					getMutatingTable(), getMutationTarget(), getSqlComment(), valueBindings,
+					getKeyRestrictionBindings(), getOptimisticLockBindings(), null,
+					getMutatingTable().getTableMapping().getUpdateDetails().getExpectation(), emptyList() );
+		}
 
 		return (LogicalTableUpdate<O>) new OptionalTableUpdate(
 				getMutatingTable(),

@@ -72,7 +72,6 @@ class RestrictedToOneBitmapTest {
 			final var entry = session.getPersistenceContextInternal().getEntry( owner );
 			final var state = entry.getExtraState( FilteredAssociationState.class );
 			assertThat( state ).isNotNull();
-			assertThat( state.retainsKeys() ).isFalse();
 			assertThat( state.physicalState( entry.getLoadedState(), entry.getPersister() ) ).isSameAs( entry.getLoadedState() );
 			assertThat( owner.joined ).isNull();
 			if ( owner.details == null ) {

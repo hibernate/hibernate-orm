@@ -6,9 +6,11 @@ package org.hibernate.engine.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntFunction;
 
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -58,12 +60,28 @@ public final class FilteredAssociationMapping {
 		}
 	}
 
+	public static boolean isRestricted(ToOneAttributeMapping association) {
+		final var target = association.getEntityMappingType().getEntityPersister();
+		return target.hasWhereRestrictions() || target.hasFilterForLoadByKey();
+	}
+
+	public static boolean hasRestrictedAssociations(ManagedMappingType mapping) {
+		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
+			final var attribute = mapping.getAttributeMapping( i );
+			if ( attribute instanceof ToOneAttributeMapping toOne && isRestricted( toOne )
+					|| attribute instanceof EmbeddableValuedModelPart embedded
+							&& hasRestrictedAssociations( embedded.getEmbeddableTypeDescriptor() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static void collectSlots(ManagedMappingType mapping, AttributeMapping[] prefix, List<Slot> slots) {
 		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
 			final var attribute = mapping.getAttributeMapping( i );
 			if ( attribute instanceof ToOneAttributeMapping association ) {
-				final var target = association.getEntityMappingType().getEntityPersister();
-				if ( target.hasWhereRestrictions() || target.hasFilterForLoadByKey() ) {
+				if ( isRestricted( association ) ) {
 					slots.add( new Slot( slots.size(), append( prefix, attribute ), association ) );
 				}
 			}
@@ -79,7 +97,7 @@ public final class FilteredAssociationMapping {
 		return result;
 	}
 
-	FilteredAssociationState record(FilteredAssociationState state, ToOneAttributeMapping association, Object key) {
+	public FilteredAssociationState record(FilteredAssociationState state, ToOneAttributeMapping association, Object key) {
 		final var slot = byRole.get( association.getNavigableRole().getFullPath() );
 		if ( slot == null ) {
 			throw new IllegalStateException( "No filtered association slot for " + association.getNavigableRole() );
@@ -98,7 +116,7 @@ public final class FilteredAssociationMapping {
 
 	/** Whether this column must retain its database value in the current update. */
 	boolean preservesColumn(FilteredAssociationState state, Object[] values, SelectableMapping column) {
-		if ( state == null || state.retainsKeys() ) {
+		if ( state == null ) {
 			return false;
 		}
 		else {
@@ -107,7 +125,7 @@ public final class FilteredAssociationMapping {
 					? null
 					: columns.get( column.getSelectionExpression() );
 			return slot != null
-				&& state.contains( slot.index )
+				&& state.omitsColumn( slot.index )
 				&& slot.value( values ) == null;
 		}
 	}
@@ -125,9 +143,9 @@ public final class FilteredAssociationMapping {
 	}
 
 	boolean preservesRow(FilteredAssociationState state, Object[] values, String table) {
-		if ( state != null && !state.retainsKeys() ) {
+		if ( state != null ) {
 			for ( var slot : slots ) {
-				if ( state.contains( slot.index )
+				if ( state.omitsColumn( slot.index )
 						&& slot.table().equals( table )
 						&& slot.value( values ) == null ) {
 					return true;
@@ -135,6 +153,16 @@ public final class FilteredAssociationMapping {
 			}
 		}
 		return false;
+	}
+
+	BitSet omittedSlots(FilteredAssociationState state, Object[] values) {
+		final var omitted = new BitSet( slots.length );
+		for ( var slot : slots ) {
+			if ( state.omitsColumn( slot.index ) && slot.value( values ) == null ) {
+				omitted.set( slot.index );
+			}
+		}
+		return omitted;
 	}
 
 	boolean hasHiddenAttribute(FilteredAssociationState state, AttributeMapping attribute) {
@@ -163,7 +191,7 @@ public final class FilteredAssociationMapping {
 		}
 	}
 
-	Object[] physicalState(FilteredAssociationState state, Object[] values) {
+	Object[] physicalState(FilteredAssociationState state, Object[] values, IntFunction<Object> keys) {
 		final Object[] result = values.clone();
 		for ( var slot : slots ) {
 			if ( state.contains( slot.index ) && slot.value( values ) == null ) {
@@ -176,7 +204,7 @@ public final class FilteredAssociationMapping {
 							: componentValues( parent[position], (EmbeddableMappingType) attribute.getMappedType() );
 					parent = (Object[]) parent[position];
 				}
-				parent[slot.association.getStateArrayPosition()] = new FilteredAssociationState.Key( state.key( slot.index ) );
+				parent[slot.association.getStateArrayPosition()] = new FilteredAssociationState.Key( keys.apply( slot.index ) );
 			}
 		}
 		return result;

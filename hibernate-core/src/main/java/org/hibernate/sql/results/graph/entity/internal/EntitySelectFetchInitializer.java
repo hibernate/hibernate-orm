@@ -116,7 +116,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	public Object getFilteredAssociationKey(RowProcessingState rowProcessingState) {
 		return keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?> assembler
 				? assembler.getFilteredKey( rowProcessingState )
-				: affectedByFilter && getData( rowProcessingState ).getInstance() == null
+				: isAffectedByRestrictions( rowProcessingState ) && getData( rowProcessingState ).getInstance() == null
 						? getData( rowProcessingState ).entityIdentifier : null;
 	}
 
@@ -294,9 +294,17 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	void checkNotFound(EntitySelectFetchInitializerData data) {
-		checkNotFound( toOneMapping, affectedByFilter,
+		checkNotFound( toOneMapping, isAffectedByRestrictions( data.getRowProcessingState() ),
 				concreteDescriptor.getEntityName(),
 				data.entityIdentifier );
+	}
+
+	private boolean isAffectedByRestrictions(RowProcessingState rowProcessingState) {
+		// Native result mappings are reusable with filters enabled or disabled. Their
+		// affectedByFilter flag describes a possibility, not the current session's exclusions.
+		return affectedByFilter && ( concreteDescriptor.hasWhereRestrictions()
+				|| concreteDescriptor.isAffectedByEnabledFilters(
+						rowProcessingState.getSession().getLoadQueryInfluencers(), true ) );
 	}
 
 	static void checkNotFound(

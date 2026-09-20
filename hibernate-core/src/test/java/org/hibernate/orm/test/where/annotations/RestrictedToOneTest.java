@@ -227,10 +227,8 @@ class RestrictedToOneTest {
 			final var entry = context.getEntry( hidden );
 			final var state = entry.getExtraState( FilteredAssociationState.class );
 			assertThat( state ).isNotNull();
-			assertThat( state.retainsKeys() ).isEqualTo(
-					mapping.ownerType.isAnnotationPresent( SQLUpdate.class )
-							|| mapping.ownerType.isAnnotationPresent( OptimisticLocking.class ) );
-			if ( !state.retainsKeys() ) {
+			if ( !mapping.ownerType.isAnnotationPresent( SQLUpdate.class )
+					&& !mapping.ownerType.isAnnotationPresent( OptimisticLocking.class ) ) {
 				assertThat( state.physicalState( entry.getLoadedState(), entry.getPersister() ) )
 						.isSameAs( entry.getLoadedState() );
 			}

@@ -5,19 +5,10 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
  * Optional state for associations whose nonnull database reference was hidden during hydration.
@@ -38,10 +29,10 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 	abstract boolean contains(int slot);
 	abstract void set(int slot, Object key);
 	abstract void clear(int slot);
-	abstract Object key(int slot);
 
-	public boolean retainsKeys() {
-		return false;
+	/** Whether a hidden slot must be omitted instead of supplied as a physical value. */
+	boolean omitsColumn(int slot) {
+		return contains( slot );
 	}
 
 	static FilteredAssociationState create(int slots, boolean retainKeys) {
@@ -69,11 +60,6 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 		@Override
 		void clear(int slot) {
 			bits &= ~(1L << slot);
-		}
-
-		@Override
-		Object key(int slot) {
-			throw new IllegalStateException( "Bitmap state does not retain keys" );
 		}
 	}
 
@@ -108,11 +94,6 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 		void clear(int slot) {
 			bits[slot / Long.SIZE] &= ~(1L << slot);
 		}
-
-		@Override
-		Object key(int slot) {
-			throw new IllegalStateException( "Bitmap state does not retain keys" );
-		}
 	}
 
 	private static final class Keys extends FilteredAssociationState {
@@ -123,8 +104,8 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 		}
 
 		@Override
-		public boolean retainsKeys() {
-			return true;
+		boolean omitsColumn(int slot) {
+			return false;
 		}
 
 		@Override
@@ -153,105 +134,8 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 		}
 
 		@Override
-		Object key(int slot) {
-			return keys[slot];
-		}
-	}
-
-	/** Builds shared assembler metadata once, returning null for unaffected result graphs. */
-	public static int[][] assemblerIndexes(DomainResultAssembler<?>[][] assemblers) {
-		int[][] result = null;
-		for ( int subtype = 0; subtype < assemblers.length; subtype++ ) {
-			final var row = assemblers[subtype];
-			if ( row != null ) {
-				int[] indexes = null;
-				int count = 0;
-				for ( int i = 0; i < row.length; i++ ) {
-					if ( row[i] != null ) {
-						final var initializer = row[i].getInitializer();
-						// An @Any initializer resolves its target type from each row's discriminator.
-						// Only ordinary to-one mappings have a static target descriptor to inspect here.
-						final boolean affected =
-								initializer instanceof EntityInitializer<?> entity
-										? hasFilterOrRestriction( entity )
-										: hasRestrictedAssociations( initializer );
-						if ( affected ) {
-							if ( indexes == null ) {
-								indexes = new int[row.length];
-							}
-							indexes[count++] = i;
-						}
-					}
-				}
-				if ( count != 0 ) {
-					if ( result == null ) {
-						result = new int[assemblers.length][];
-					}
-					result[subtype] = Arrays.copyOf( indexes, count );
-				}
-			}
-		}
-		return result;
-	}
-
-	private static boolean hasFilterOrRestriction(EntityInitializer<?> entity) {
-		return entity.getInitializedPart() instanceof ToOneAttributeMapping
-			&& ( entity.getEntityDescriptor().hasWhereRestrictions()
-				|| entity.getEntityDescriptor().hasFilterForLoadByKey() );
-	}
-
-	private static boolean hasRestrictedAssociations(Initializer<?> initializer) {
-		return initializer instanceof EmbeddableInitializer<?> embedded
-			&& hasRestrictedAssociations( embedded.getInitializedPart().getEmbeddableTypeDescriptor() );
-	}
-
-	private static boolean hasRestrictedAssociations(ManagedMappingType mapping) {
-		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
-			final var attribute = mapping.getAttributeMapping( i );
-			if ( attribute instanceof ToOneAttributeMapping toOne ) {
-				final var target = toOne.getEntityMappingType().getEntityPersister();
-				if ( target.hasWhereRestrictions() || target.hasFilterForLoadByKey() ) {
-					return true;
-				}
-			}
-			else if ( attribute instanceof EmbeddableValuedModelPart embedded
-					&& hasRestrictedAssociations( embedded.getEmbeddableTypeDescriptor() ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static FilteredAssociationState collect(
-			FilteredAssociationState state, FilteredAssociationMapping mapping,
-			DomainResultAssembler<?>[] assemblers, int[] indexes, Object[] values,
-			RowProcessingState rowProcessingState) {
-		if ( indexes != null ) {
-			for ( int i : indexes ) {
-				final var initializer = assemblers[i].getInitializer();
-				if ( values[i] == null && initializer instanceof EntityInitializer<?> entityInitializer ) {
-					final Object key = entityInitializer.getFilteredAssociationKey( rowProcessingState );
-					if ( key != null ) {
-						state = mapping.record( state, (ToOneAttributeMapping) entityInitializer.getInitializedPart(), key );
-					}
-				}
-				else if ( initializer instanceof EmbeddableInitializer<?> embedded ) {
-					state = embedded.collectFilteredAssociations( rowProcessingState, state, mapping );
-				}
-			}
-		}
-		return state;
-	}
-
-	public static void register(
-			EntityEntry entry, DomainResultAssembler<?>[] assemblers, int[] indexes,
-			Object[] values, RowProcessingState rowProcessingState) {
-		final var existing = entry.getExtraState( FilteredAssociationState.class );
-		final var state =
-				collect( existing, entry.getPersister().getFilteredAssociationMapping(),
-						assemblers, indexes, values, rowProcessingState );
-		if ( existing == null && state != null ) {
-			entry.addExtraState( state );
+		Object[] physicalState(Object[] values, FilteredAssociationMapping mapping) {
+			return values == null || isEmpty() ? values : mapping.physicalState( this, values, slot -> keys[slot] );
 		}
 	}
 
@@ -262,8 +146,11 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 
 	/** Returns domain state unchanged for bitmap mappings. */
 	public Object[] physicalState(Object[] state, EntityPersister persister) {
-		return state == null || isEmpty() || !retainsKeys() ? state
-				: persister.getFilteredAssociationMapping().physicalState( this, state );
+		return physicalState( state, persister.getFilteredAssociationMapping() );
+	}
+
+	Object[] physicalState(Object[] values, FilteredAssociationMapping mapping) {
+		return values;
 	}
 
 	public void afterUpdate(Object[] state, EntityPersister persister) {

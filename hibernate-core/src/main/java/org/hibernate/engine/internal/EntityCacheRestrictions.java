@@ -18,7 +18,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.sql.results.graph.FetchOptions;
 
 import static org.hibernate.binder.internal.TenantIdBinder.FILTER_NAME;
 

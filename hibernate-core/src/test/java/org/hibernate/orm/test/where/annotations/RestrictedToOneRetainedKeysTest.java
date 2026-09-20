@@ -63,7 +63,8 @@ class RestrictedToOneRetainedKeysTest {
 			final var owner = session.find( ownerType, 1L );
 			final var entry = session.getPersistenceContextInternal().getEntry( owner );
 			final var state = entry.getExtraState( FilteredAssociationState.class );
-			assertThat( state.retainsKeys() ).isTrue();
+			assertThat( state.physicalState( entry.getLoadedState(), entry.getPersister() ) )
+					.isNotSameAs( entry.getLoadedState() );
 			assertThat( owner.details ).isNull();
 			owner.details = new RestrictedToOneBitmapTest.Details();
 			owner.details.note = "changed";

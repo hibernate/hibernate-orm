@@ -120,6 +120,18 @@ contain restricted associations. Custom entity persisters must supply the shared
 `EntityPersister.getFilteredAssociationMapping()`. Hibernate's standard initializers and entity persisters
 manage this automatically.
 
+`TableUpdateBuilder` implementations must implement `setColumnInclusion()` and `setRowKnownToExist()`.
+The first limits assignments, including generated assignments, to the permitted columns.
+The second requires an update of an existing row instead of an optional-row insert or upsert when stored
+values have been omitted. Standard builders implement both operations. Builders extending
+`AbstractTableUpdateBuilder` inherit column inclusion and can consult `isRowKnownToExist()` when choosing
+the mutation form.
+
+Internal subclasses overriding `UpdateCoordinatorStandard.performUpdate()` or `analyzeUpdateValues()`
+must forward the additional `FilteredAssociationMutation` argument. `performUpdate()` also receives a
+boolean indicating eligibility for the update variant cache. Passing the same mutation view through the
+operation avoids reconstructing it or looking up the persistence-context entry twice.
+
 `AbstractCollectionPersister` is an internal implementation class. Its protected `applyWhereFragments()`
 method which accepts a `TableGroup`
 now also accepts a `boolean useQualifier` parameter immediately before `SqlAstCreationState`.
@@ -157,11 +169,26 @@ A filter does not begin affecting association fetching merely because it is enab
 `@SQLRestriction` remains unconditional and cannot be disabled.
 The change does not extend to `@Any` fetching, which may still throw `EntityFilterException`.
 
+==== Interaction with `@NotFound`
+
+`@NotFound(IGNORE)` continues to represent a missing target as null and to require eager
+resolution of a to-one association. When an applicable filter or `@SQLRestriction` is present,
+Hibernate cannot distinguish a target that does not exist from one excluded by the restriction.
+In either case, a non-null stored foreign key is preserved by unrelated updates, including its
+join-table row. This also applies to `@NotFound(EXCEPTION)` under an applicable exclusion.
+Hibernate does not issue an additional query to establish whether the physical target exists.
+
+Without an applicable exclusion, `@NotFound(EXCEPTION)` still throws for a dangling foreign key.
+`@NotFound(IGNORE)` retains its existing behavior in that case: the missing target becomes null,
+and no hidden-reference state is recorded. Consequently, an ordinary static update may write
+null over that dangling foreign key. A declared but disabled filter is not an active exclusion.
+
 ==== Stored references and updates
 
 For an owning to-one association, Hibernate now distinguishes an absent reference from a reference whose
 target was filtered out, even though both are represented as null in Java.
-The distinction is recorded in the persistence context while hydrating the owner, together with the stored key.
+The distinction is recorded in the persistence context while hydrating the owner.
+The stored key is retained only for mappings that require it during mutation, as described below.
 It applies both to foreign keys in the owner table and to associations mapped using `@JoinTable`, including
 associations inside embeddables and associations using composite or non-primary unique keys.
 
@@ -220,6 +247,17 @@ use a word array. Nested embeddables share the owner's bitmap. There is no alloc
 containing embeddable, and entities that never load a hidden reference require no additional entry state.
 Other mappings retain the keys needed for custom SQL parameters or optimistic-lock predicates.
 Successful replacement clears the corresponding state. An empty extension may remain attached for reuse.
+
+Generated update operations for otherwise-static mappings are reused across sessions through a lazily
+allocated, bounded cache at persister scope. The cache targets 32 variants and contains only SQL structure,
+not entity values or persistence-context state. Its keys distinguish omitted associations, assignments,
+and affected tables. Identifiers, versions, and new values are bound separately for every execution.
+Filter parameter values are not part of the update cache key: the recorded hidden references determine
+which columns must be preserved.
+This cache applies only when hidden-reference preservation is the reason for generating an update variant.
+Restricted updates that also use `@DynamicUpdate`, custom update SQL, `ALL` or `DIRTY` optimistic locking,
+update generators, uninitialized lazy properties, or other requirements for dynamic mutation continue
+through the existing uncached path. JDBC batching remains subject to the usual statement compatibility rules.
 
 Version checks and increments are preserved when Hibernate generates these updates, including changes
 confined to a join-table row.

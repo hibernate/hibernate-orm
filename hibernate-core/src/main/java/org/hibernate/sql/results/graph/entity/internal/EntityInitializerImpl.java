@@ -478,7 +478,7 @@ public class EntityInitializerImpl
 		}
 
 		this.assemblers = assemblers;
-		this.filteredAssociationIndexes = FilteredAssociationState.assemblerIndexes( assemblers );
+		this.filteredAssociationIndexes = FilteredAssociationHydration.assemblerIndexes( assemblers );
 		this.allInitializers = allInitializers;
 		this.subInitializers = subInitializers;
 		this.eagerSubInitializers = eagerSubInitializers;
@@ -1690,7 +1690,7 @@ public class EntityInitializerImpl
 		}
 
 		if ( filteredAssociationIndexes != null ) {
-			FilteredAssociationState.register( entityEntry,
+			FilteredAssociationHydration.register( entityEntry,
 					concreteAssemblers, filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()], state, rowProcessingState );
 		}
 
@@ -1774,7 +1774,7 @@ public class EntityInitializerImpl
 				);
 
 		if ( filteredAssociationIndexes != null ) {
-			FilteredAssociationState.register( entityEntry,
+			FilteredAssociationHydration.register( entityEntry,
 					assemblers[data.concreteDescriptor.getSubclassId()], filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()],
 					resolvedEntityState, rowProcessingState );
 		}

@@ -34,6 +34,9 @@ public class EntitySelectFetchByUniqueKeyInitializer
 
 	@Override
 	protected void initialize(EntitySelectFetchInitializerData data) {
+		if ( !isAssociationKeyVisible( data, true ) ) {
+			return;
+		}
 		final String entityName = concreteDescriptor.getEntityName();
 		final String uniqueKeyPropertyName = fetchedAttribute.getReferencedPropertyName();
 

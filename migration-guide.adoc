@@ -770,12 +770,14 @@ legacy mutation queue. It applies independently of association filtering.
 Combining `@DynamicUpdate` and `@SQLUpdate` on the same entity remains unsupported.
 
 [[collection-restriction-inherited-columns]]
-=== SQL restrictions on inherited collection-element columns
+=== SQL restrictions on collection elements mapped to multiple tables
 
 When rendering a collection-element `@SQLRestriction`, Hibernate now qualifies an unambiguous mapped column
 using the table which declares it. This fixes restrictions on collections of `JOINED` subclasses which
 refer to a column stored in a superclass table, as described in
 https://hibernate.atlassian.net/browse/HHH-12016[HHH-12016].
+The same qualification applies to mapped columns stored in a `@SecondaryTable`, for both one-to-many
+and many-to-many collections.
 The qualification handles quoted column names and case differences in unquoted names.
 Unmapped or ambiguous column names retain the existing default qualification.
 This does not introduce an explicit alias declaration facility for `@SQLRestriction`.

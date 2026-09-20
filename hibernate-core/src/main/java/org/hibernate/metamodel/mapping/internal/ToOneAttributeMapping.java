@@ -98,6 +98,7 @@ import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 import org.hibernate.sql.results.internal.NullValueAssembler;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.type.ComponentType;
@@ -1932,7 +1933,8 @@ public class ToOneAttributeMapping
 	}
 
 	public boolean isAssociationKeyVisible(
-			Object key, boolean byUniqueKey, SharedSessionContractImplementor session) {
+			Object key, boolean byUniqueKey, JdbcValuesSourceProcessingState processingState) {
+		final var session = processingState.getSession();
 		if ( !restrictions.hasSqlRestriction() && !restrictions.isAffectedByFilters( session.getLoadQueryInfluencers() ) ) {
 			return true;
 		}
@@ -1940,13 +1942,13 @@ public class ToOneAttributeMapping
 		if ( loader == null ) {
 			visibilityLoader = loader = new ToOneVisibilityLoader( this );
 		}
-		return loader.isVisible( key, byUniqueKey, session );
+		return loader.isVisible( key, byUniqueKey, processingState );
 	}
 
 	public void applyAssociationRestrictions(
 			Consumer<Predicate> consumer,
-			TableGroup tableGroup, boolean useQualifier, SqlAstCreationState creationState) {
-		restrictions.apply( consumer, entityMappingType, tableGroup, useQualifier, creationState );
+			TableGroup tableGroup, SqlAstCreationState creationState) {
+		restrictions.apply( consumer, entityMappingType, tableGroup, creationState );
 	}
 
 	private boolean needsImmediateFetch(FetchTiming fetchTiming) {
@@ -2376,7 +2378,7 @@ public class ToOneAttributeMapping
 							true,
 							creationState
 					);
-					applyAssociationRestrictions( join::applyPredicate, lazyTableGroup, true, creationState );
+					applyAssociationRestrictions( join::applyPredicate, lazyTableGroup, creationState );
 					if ( associatedEntityMappingType.getSuperMappingType() != null
 							&& !creationState.supportsEntityNameUsage() ) {
 						associatedEntityMappingType.applyDiscriminator( null, null, tableGroup, creationState );

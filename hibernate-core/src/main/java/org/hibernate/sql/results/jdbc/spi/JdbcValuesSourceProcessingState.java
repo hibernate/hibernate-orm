@@ -6,11 +6,14 @@ package org.hibernate.sql.results.jdbc.spi;
 
 import java.util.List;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.loader.ast.internal.ToOneVisibilityLoader;
 import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.query.spi.QueryOptions;
@@ -30,6 +33,14 @@ public interface JdbcValuesSourceProcessingState {
 	ExecutionContext getExecutionContext();
 
 	SharedSessionContractImplementor getSession();
+
+	/**
+	 * Execution-local visibility plans, or {@code null} when the implementation does not cache them.
+	 * The cache lives for the result set, including across calls to {@link #finishUp()} while scrolling.
+	 */
+	default @Nullable ToOneVisibilityLoader.Cache getToOneVisibilityPlanCache() {
+		return null;
+	}
 
 	default QueryOptions getQueryOptions() {
 		return getExecutionContext().getQueryOptions();

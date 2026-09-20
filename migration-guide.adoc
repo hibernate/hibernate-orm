@@ -191,7 +191,11 @@ The predicates constrain loading and do not validate newly assigned targets or r
 
 For native results, Hibernate checks the association predicate with a separate target-key query before
 resolving the entity. A hidden result does not mark the target entity itself as missing.
-Static visibility queries are reused at mapping scope. Active filters use fresh parameter bindings.
+Static visibility queries are reused at mapping scope. With active filters, the result-processing state
+reuses the latest visibility plan for each association and key mode. Changes to enabled filters or to
+parameter values captured by the plan cause it to be rebuilt, including changes made while scrolling.
+Plans and parameter snapshots are retained only for that result set. The visibility query still executes
+for each reference requiring a check.
 No additional kind of per-entity persistence-context state is required.
 
 These annotations restrict target rows. They do not add support for `@SQLJoinTableRestriction`

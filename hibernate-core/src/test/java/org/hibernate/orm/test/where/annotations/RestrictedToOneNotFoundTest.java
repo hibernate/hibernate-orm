@@ -101,7 +101,12 @@ class RestrictedToOneNotFoundTest {
 		final String table = mapping.table();
 		scope.inTransaction( session -> {
 			final String target = "nf_" + mapping.restriction.toLowerCase() + "_target";
-			session.createNativeMutationQuery( "insert into " + target + " (id, visible) values (1, true), (2, false)" ).executeUpdate();
+			for ( long id = 1; id <= 2; id++ ) {
+				session.createNativeMutationQuery( "insert into " + target + " (id, visible) values (:id, :visible)" )
+						.setParameter( "id", id )
+						.setParameter( "visible", id == 1 ? 1 : 0 )
+						.executeUpdate();
+			}
 			for ( int id = 1; id <= 4; id++ ) {
 				final String key = id == 4 ? "null" : id == 3 ? "99" : Integer.toString( id );
 				session.createNativeMutationQuery( "insert into " + table
@@ -120,7 +125,7 @@ class RestrictedToOneNotFoundTest {
 			if ( id == 3 && !mapping.ignore && !restricted ) {
 				assertThatThrownBy( () -> scope.inTransaction( session -> {
 					if ( enabled ) {
-						session.enableFilter( "nf_visible" ).setParameter( "visible", true );
+						session.enableFilter( "nf_visible" ).setParameter( "visible", 1 );
 					}
 					load.load( session, mapping, ownerId );
 				} ) ).isInstanceOf( FetchNotFoundException.class );
@@ -128,7 +133,7 @@ class RestrictedToOneNotFoundTest {
 			}
 			scope.inTransaction( session -> {
 				if ( enabled ) {
-					session.enableFilter( "nf_visible" ).setParameter( "visible", true );
+					session.enableFilter( "nf_visible" ).setParameter( "visible", 1 );
 				}
 				final var owner = load.load( session, mapping, ownerId );
 				final boolean absent = ownerId == 4 || ownerId == 3 || ownerId == 2 && restricted;
@@ -170,24 +175,24 @@ class RestrictedToOneNotFoundTest {
 	@Table(name = "nf_plain_target")
 	static class PlainTarget {
 		@Id Long id;
-		boolean visible;
+		int visible;
 	}
 
 	@Entity(name = "NfSqlTarget")
 	@Table(name = "nf_sql_target")
-	@SQLRestriction("visible = true")
+	@SQLRestriction("visible = 1")
 	static class SqlTarget {
 		@Id Long id;
-		boolean visible;
+		int visible;
 	}
 
 	@Entity(name = "NfFilterTarget")
 	@Table(name = "nf_filter_target")
-	@FilterDef(name = "nf_visible", parameters = @ParamDef(name = "visible", type = Boolean.class), applyToLoadByKey = true)
+	@FilterDef(name = "nf_visible", parameters = @ParamDef(name = "visible", type = Integer.class), applyToLoadByKey = true)
 	@Filter(name = "nf_visible", condition = "visible = :visible")
 	static class FilterTarget {
 		@Id Long id;
-		boolean visible;
+		int visible;
 	}
 
 	@Entity(name = "PlainIgnore")

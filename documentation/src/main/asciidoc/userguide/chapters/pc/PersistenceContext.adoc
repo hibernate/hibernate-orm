@@ -309,6 +309,48 @@ include::{extrasdir}/pc-where-collection-query-example.sql[]
 ----
 ====
 
+[[pc-to-one-restrictions]]
+==== Restrictions on to-one associations
+
+`@SQLRestriction` and `@Filter` may also be declared on a `@ManyToOne` or `@OneToOne` field or getter:
+
+[source,java]
+----
+@ManyToOne(fetch = FetchType.LAZY)
+@SQLRestriction("active = true")
+Person approver;
+
+@ManyToOne(fetch = FetchType.LAZY)
+@Filter(name = "activePerson", condition = "active = :active")
+Person reviewer;
+----
+
+The filter must have a corresponding `@FilterDef` with an `active` parameter.
+Enable it and set its parameter before loading the owner:
+
+[source,java]
+----
+session.enableFilter("activePerson").setParameter("active", true);
+----
+
+The conditions apply to the target entity through the annotated association, including associations
+mapped using `@JoinTable` and inverse one-to-one associations. Applicable conditions on the target entity
+and the association are combined using `AND`. Association filters apply whenever enabled, regardless of
+`@FilterDef.applyToLoadByKey`. Entity-level filters retain their usual load-by-key rules.
+Filter default conditions and explicit `@SqlFragmentAlias` declarations work as for collections.
+Use explicit aliases for filters referring to other tables of a target mapped with `JOINED` inheritance
+or `@SecondaryTable`. SQL restrictions qualify mapped columns from these tables automatically.
+
+An excluded target is represented as null, even if the target is already managed or cached.
+Other associations and direct lookups may still return the same target. Hibernate preserves the stored
+foreign key and join-table row when unrelated fields change or null is assigned to an already hidden
+association. Assigning a new nonnull target replaces the reference. A hidden target is not orphan-removed.
+Merge assumes that the detached source was loaded under the same filters and parameter values.
+
+Changing filters does not reinterpret already loaded associations. Refresh or reload the owner to obtain
+a new view. These predicates affect loading, not validation of newly assigned targets.
+Native result mappings require an additional visibility query when the association has an applicable restriction.
+
 [[pc-where-join-table]]
 ==== `@SQLJoinTableRestriction`
 
@@ -455,7 +497,7 @@ include::{example-dir-pc}/FilterTest.java[tags=pc-filter-resolver-Account-exampl
 
 [IMPORTANT]
 ====
-Filters apply to entity queries, but not to direct fetching, unless otherwise configured using the `applyToLoadByKey` flag
+Filters declared on an entity apply to entity queries, but not to direct fetching, unless otherwise configured using the `applyToLoadByKey` flag
 on the `@FilterDef`, that should be set to `true` in order to activate the filter with direct fetching.
 ====
 

@@ -598,9 +598,37 @@ An explicit inner fetch join still excludes an owner whose target does not satis
 Use a left fetch join to retain that owner with a null association.
 
 The default value of `applyToLoadByKey` remains `false`.
-A filter does not begin affecting association fetching merely because it is enabled for entity queries.
+A filter declared on the target entity does not begin affecting loading by key merely because it is enabled for entity queries.
 `@SQLRestriction` remains unconditional and cannot be disabled.
 The change does not extend to `@Any` fetching, which may still throw `EntityFilterException`.
+
+==== Restrictions declared on a to-one association
+
+`@SQLRestriction` and `@Filter` may now be declared directly on a `@ManyToOne` or `@OneToOne`
+field or getter. This includes associations mapped using `@JoinTable` and inverse one-to-one associations.
+The predicate restricts the target entity through that particular association. It is combined using `AND`
+with the target entity's applicable restrictions and with other enabled filters on the association.
+`@Filter` supports the existing default conditions, parameters, and `@SqlFragmentAlias` declarations.
+`@SQLRestriction` qualifies mapped columns from target superclass and secondary tables.
+Filters referring to other target tables may name those tables explicitly using `@SqlFragmentAlias`.
+
+A filter declared directly on the association applies whenever it is enabled, even when its
+`@FilterDef` uses the default `applyToLoadByKey = false`. That setting continues to govern filters
+declared on the target entity. These association annotations were previously ignored.
+
+Visibility is specific to the association. The same target may be null through a restricted association
+and visible through another association or a direct `find()`. A target already present in the persistence
+context or second-level cache does not bypass the association predicate. The existing rules for
+hidden references, merge, orphan removal, and changing filters also apply to these annotations.
+The predicates constrain loading and do not validate newly assigned targets or reinterpret loaded fields.
+
+For native results, Hibernate checks the association predicate with a separate target-key query before
+resolving the entity. A hidden result does not mark the target entity itself as missing.
+Static visibility queries are reused at mapping scope. Active filters use fresh parameter bindings.
+No additional kind of per-entity persistence-context state is required.
+
+These annotations restrict target rows. They do not add support for `@SQLJoinTableRestriction`
+or `@FilterJoinTable` on to-one associations.
 
 ==== Interaction with `@NotFound`
 
@@ -746,6 +774,8 @@ Second-level entity cache reads are bypassed for loads affected by enabled load-
 entities with SQL restrictions on themselves or on reachable to-one associations, including associations
 inside embeddables. Entities whose static SQL restrictions prevent cache reads are also excluded from
 cache puts. This applies to inserts, loads, and updates, and retains cache invalidation on mutation.
+Enabled filters declared directly on a to-one association also prevent cache reads and puts for affected
+owners, regardless of `applyToLoadByKey`. An otherwise unrestricted target remains eligible for caching.
 Entity state containing filtered null associations is not stored in the second-level cache, and updates
 invalidate such entries instead of publishing the incomplete state.
 The built-in tenant filter on the loaded entity does not by itself cause this bypass, since entity cache

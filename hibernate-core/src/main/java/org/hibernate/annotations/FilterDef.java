@@ -112,16 +112,20 @@ public @interface FilterDef {
 	boolean autoEnabled() default false;
 
 	/**
-	 * Specifies that the filter should be applied to operations
-	 * which fetch an entity by its identifier.
+	 * Specifies that the filter should be applied to operations which fetch
+	 * an entity by its identifier.
 	 * <p>
-	 * By default, a filter does not apply to lookups by primary
-	 * key, for example, when:
+	 * By default, a filter declared by an entity does not apply to lookups
+	 * by primary key, for example, when:
 	 * <ul>
 	 * <li> fetching a {@code @ManyToOne} association, or
 	 * <li>{@link org.hibernate.Session#find(Class, Object) find()}
 	 *     is called.
 	 * </ul>
+	 * <p>
+	 * This setting does not govern a filter declared directly by a to-one
+	 * association. Such a filter applies to that association whenever it
+	 * is enabled.
 	 * <p>
 	 * If a filter with {@code applyToLoadByKey = true} excludes the target
 	 * of a {@link jakarta.persistence.ManyToOne} or {@link jakarta.persistence.OneToOne}

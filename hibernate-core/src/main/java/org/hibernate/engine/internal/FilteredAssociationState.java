@@ -58,9 +58,12 @@ public final class FilteredAssociationState implements EntityEntryExtraState, Se
 			for ( int i = 0; i < row.length; i++ ) {
 				if ( row[i] != null ) {
 					final var initializer = row[i].getInitializer();
+					// An @Any initializer resolves its target type from each row's discriminator.
+					// Only ordinary to-one mappings have a static target descriptor to inspect here.
 					final boolean affected = initializer instanceof EntityInitializer<?> entity
-							? entity.getEntityDescriptor().hasWhereRestrictions()
-									|| entity.getEntityDescriptor().hasFilterForLoadByKey()
+							? entity.getInitializedPart() instanceof ToOneAttributeMapping
+									&& (entity.getEntityDescriptor().hasWhereRestrictions()
+											|| entity.getEntityDescriptor().hasFilterForLoadByKey())
 							: initializer instanceof EmbeddableInitializer<?> embedded
 									&& hasRestrictedAssociations( embedded.getInitializedPart().getEmbeddableTypeDescriptor() );
 					if ( affected ) {

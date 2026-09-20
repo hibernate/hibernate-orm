@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -50,38 +51,46 @@ public final class FilteredAssociationState implements EntityEntryExtraState, Se
 		int[][] result = null;
 		for ( int subtype = 0; subtype < assemblers.length; subtype++ ) {
 			final var row = assemblers[subtype];
-			if ( row == null ) {
-				continue;
-			}
-			int[] indexes = null;
-			int count = 0;
-			for ( int i = 0; i < row.length; i++ ) {
-				if ( row[i] != null ) {
-					final var initializer = row[i].getInitializer();
-					// An @Any initializer resolves its target type from each row's discriminator.
-					// Only ordinary to-one mappings have a static target descriptor to inspect here.
-					final boolean affected = initializer instanceof EntityInitializer<?> entity
-							? entity.getInitializedPart() instanceof ToOneAttributeMapping
-									&& (entity.getEntityDescriptor().hasWhereRestrictions()
-											|| entity.getEntityDescriptor().hasFilterForLoadByKey())
-							: initializer instanceof EmbeddableInitializer<?> embedded
-									&& hasRestrictedAssociations( embedded.getInitializedPart().getEmbeddableTypeDescriptor() );
-					if ( affected ) {
-						if ( indexes == null ) {
-							indexes = new int[row.length];
+			if ( row != null ) {
+				int[] indexes = null;
+				int count = 0;
+				for ( int i = 0; i < row.length; i++ ) {
+					if ( row[i] != null ) {
+						final var initializer = row[i].getInitializer();
+						// An @Any initializer resolves its target type from each row's discriminator.
+						// Only ordinary to-one mappings have a static target descriptor to inspect here.
+						final boolean affected =
+								initializer instanceof EntityInitializer<?> entity
+										? hasFilterOrRestriction( entity )
+										: hasRestrictedAssociations( initializer );
+						if ( affected ) {
+							if ( indexes == null ) {
+								indexes = new int[row.length];
+							}
+							indexes[count++] = i;
 						}
-						indexes[count++] = i;
 					}
 				}
-			}
-			if ( count != 0 ) {
-				if ( result == null ) {
-					result = new int[assemblers.length][];
+				if ( count != 0 ) {
+					if ( result == null ) {
+						result = new int[assemblers.length][];
+					}
+					result[subtype] = Arrays.copyOf( indexes, count );
 				}
-				result[subtype] = Arrays.copyOf( indexes, count );
 			}
 		}
 		return result;
+	}
+
+	private static boolean hasFilterOrRestriction(EntityInitializer<?> entity) {
+		return entity.getInitializedPart() instanceof ToOneAttributeMapping
+			&& ( entity.getEntityDescriptor().hasWhereRestrictions()
+				   || entity.getEntityDescriptor().hasFilterForLoadByKey() );
+	}
+
+	private static boolean hasRestrictedAssociations(Initializer<?> initializer) {
+		return initializer instanceof EmbeddableInitializer<?> embedded
+			&& hasRestrictedAssociations( embedded.getInitializedPart().getEmbeddableTypeDescriptor() );
 	}
 
 	private static boolean hasRestrictedAssociations(ManagedMappingType mapping) {
@@ -107,14 +116,17 @@ public final class FilteredAssociationState implements EntityEntryExtraState, Se
 		if ( indexes != null ) {
 			for ( int i : indexes ) {
 				final var initializer = assemblers[i].getInitializer();
-				if ( values[i] == null && initializer instanceof EntityInitializer<?> entityInitializer ) {
-					final Object key = entityInitializer.getFilteredAssociationKey( rowProcessingState );
+				if ( values[i] == null
+						&& initializer instanceof EntityInitializer<?> entityInitializer ) {
+					final Object key =
+							entityInitializer.getFilteredAssociationKey( rowProcessingState );
 					if ( key != null ) {
 						state = new FilteredAssociationState( i, key, state );
 					}
 				}
 				else if ( initializer instanceof EmbeddableInitializer<?> embeddableInitializer ) {
-					final var component = embeddableInitializer.getFilteredAssociationState( rowProcessingState );
+					final var component =
+							embeddableInitializer.getFilteredAssociationState( rowProcessingState );
 					if ( component != null ) {
 						state = new FilteredAssociationState( ~i, component, state );
 					}
@@ -153,7 +165,8 @@ public final class FilteredAssociationState implements EntityEntryExtraState, Se
 	}
 
 	public static boolean hasFilteredAssociations(EntityEntry entry) {
-		final var state = entry == null ? null : entry.getExtraState( FilteredAssociationState.class );
+		final var state = entry == null ? null
+				: entry.getExtraState( FilteredAssociationState.class );
 		return state != null && !state.isEmpty();
 	}
 
@@ -182,73 +195,86 @@ public final class FilteredAssociationState implements EntityEntryExtraState, Se
 		if ( state == null || isEmpty() ) {
 			return state;
 		}
-		final Object[] result = state.clone();
-		for ( var current = this; current != null; current = current.sibling ) {
-			final int position = current.position;
-			if ( position >= 0 ) {
-				assert mapping.getAttributeMapping( position ) instanceof ToOneAttributeMapping;
-				if ( result[position] == null ) {
-					result[position] = new Key( current.value );
+		else {
+			final Object[] result = state.clone();
+			for ( var current = this; current != null; current = current.sibling ) {
+				final int position = current.position;
+				if ( position >= 0 ) {
+					assert mapping.getAttributeMapping( position ) instanceof ToOneAttributeMapping;
+					if ( result[position] == null ) {
+						result[position] = new Key( current.value );
+					}
+				}
+				else if ( result[~position] != UNFETCHED_PROPERTY ) {
+					final var componentMapping =
+							(EmbeddableMappingType)
+									mapping.getAttributeMapping( ~position )
+											.getMappedType();
+					result[~position] = ((FilteredAssociationState) current.value).physicalState(
+							componentValues( result[~position], componentMapping ), componentMapping );
 				}
 			}
-			else if ( result[~position] != UNFETCHED_PROPERTY ) {
-				final var componentMapping = (EmbeddableMappingType) mapping.getAttributeMapping( ~position ).getMappedType();
-				result[~position] = ((FilteredAssociationState) current.value).physicalState(
-						componentValues( result[~position], componentMapping ), componentMapping );
-			}
+			return result;
 		}
-		return result;
 	}
 
 	private static Object[] componentValues(Object value, EmbeddableMappingType mapping) {
 		if ( value instanceof Object[] values ) {
 			return values;
 		}
-		final Object[] values = value == null
-				? new Object[mapping.getNumberOfAttributeMappings()] : mapping.getValues( value );
-		if ( mapping.isPolymorphic() ) {
-			final Object[] withDiscriminator = Arrays.copyOf( values, values.length + 1 );
-			if ( value != null ) {
-				withDiscriminator[values.length] = mapping.findSubtypeBySubclass( value.getClass().getName() ).getDiscriminatorValue();
+		else {
+			final Object[] values =
+					value == null
+							? new Object[mapping.getNumberOfAttributeMappings()]
+							: mapping.getValues( value );
+			if ( mapping.isPolymorphic() ) {
+				final Object[] withDiscriminator =
+						Arrays.copyOf( values, values.length + 1 );
+				if ( value != null ) {
+					withDiscriminator[values.length] =
+							mapping.findSubtypeBySubclass( value.getClass().getName() )
+									.getDiscriminatorValue();
+				}
+				return withDiscriminator;
 			}
-			return withDiscriminator;
+			return values;
 		}
-		return values;
 	}
 
 	public void afterUpdate(Object[] state, ManagedMappingType mapping) {
-		if ( isEmpty() ) {
-			return;
-		}
-		for ( var current = this; current != null; current = current.sibling ) {
-			if ( current.position >= 0 ) {
-				final Object updated = state[current.position];
-				if ( updated != null && updated != UNFETCHED_PROPERTY ) {
-					current.value = null;
-				}
-			}
-			else {
-				final Object updated = state[~current.position];
-				if ( updated != UNFETCHED_PROPERTY ) {
-					final var componentMapping = (EmbeddableMappingType) mapping.getAttributeMapping( ~current.position ).getMappedType();
-					final var component = (FilteredAssociationState) current.value;
-					component.afterUpdate( componentValues( updated, componentMapping ), componentMapping );
-					if ( component.isEmpty() ) {
+		if ( !isEmpty() ) {
+			for ( var current = this; current != null; current = current.sibling ) {
+				if ( current.position >= 0 ) {
+					final Object updated = state[current.position];
+					if ( updated != null && updated != UNFETCHED_PROPERTY ) {
 						current.value = null;
 					}
 				}
+				else {
+					final Object updated = state[~current.position];
+					if ( updated != UNFETCHED_PROPERTY ) {
+						final var componentMapping = (EmbeddableMappingType)
+								mapping.getAttributeMapping( ~current.position )
+										.getMappedType();
+						final var component = (FilteredAssociationState) current.value;
+						component.afterUpdate( componentValues( updated, componentMapping ), componentMapping );
+						if ( component.isEmpty() ) {
+							current.value = null;
+						}
+					}
+				}
 			}
-		}
-		// Retain only the head if empty: EntityEntryExtraState has no removal operation.
-		for ( var current = this; current != null; current = current.sibling ) {
-			while ( current.sibling != null && current.sibling.value == null ) {
-				current.sibling = current.sibling.sibling;
+			// Retain only the head if empty: EntityEntryExtraState has no removal operation.
+			for ( var current = this; current != null; current = current.sibling ) {
+				while ( current.sibling != null && current.sibling.value == null ) {
+					current.sibling = current.sibling.sibling;
+				}
 			}
-		}
-		if ( value == null && sibling != null ) {
-			position = sibling.position;
-			value = sibling.value;
-			sibling = sibling.sibling;
+			if ( value == null && sibling != null ) {
+				position = sibling.position;
+				value = sibling.value;
+				sibling = sibling.sibling;
+			}
 		}
 	}
 
@@ -264,6 +290,13 @@ public final class FilteredAssociationState implements EntityEntryExtraState, Se
 
 	@Override
 	public <T extends EntityEntryExtraState> T getExtraState(Class<T> type) {
-		return next == null ? null : type.isInstance( next ) ? type.cast( next ) : next.getExtraState( type );
+		if ( next == null ) {
+			return null;
+		}
+		else {
+			return type.isInstance( next )
+					? type.cast( next )
+					: next.getExtraState( type );
+		}
 	}
 }

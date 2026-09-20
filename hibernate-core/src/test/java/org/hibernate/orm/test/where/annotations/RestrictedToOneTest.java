@@ -558,7 +558,8 @@ class RestrictedToOneTest {
 
 	private static void assertHiddenTargetExists(SessionFactoryScope scope, Mapping mapping) {
 		scope.inTransaction( session -> {
-			final String table = mapping.targetType == SqlTarget.class ? "restricted_sql_target" : "restricted_filter_target";
+			final String table = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( mapping.targetType )
+					.getMappedTableDetails().getTableName();
 			assertThat( session.createNativeQuery( "select count(*) from " + table + " where id=2", Long.class )
 					.getSingleResult() ).isEqualTo( 1 );
 		} );
@@ -582,8 +583,8 @@ class RestrictedToOneTest {
 		} );
 		assertStoredReference( scope, mapping, 2L, 2L );
 		scope.inTransaction( session -> {
-			final String table = mapping.targetType == SqlTarget.class
-					? "restricted_sql_target" : "restricted_filter_target";
+			final String table = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( mapping.targetType )
+					.getMappedTableDetails().getTableName();
 			assertThat( session.createNativeQuery( "select id from " + table + " order by id", Long.class )
 					.getResultList() ).containsExactly( 2L, 3L );
 		} );

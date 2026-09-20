@@ -227,11 +227,25 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	protected void initialize(EntitySelectFetchInitializerData data) {
+		if ( !isAssociationKeyVisible( data, false ) ) {
+			return;
+		}
 		final var rowProcessingState = data.getRowProcessingState();
 		final var session = rowProcessingState.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final EntityKey entityKey = data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor );
 		initialize( data, persistenceContext.getEntityHolder( entityKey ), session, persistenceContext );
+	}
+
+	protected boolean isAssociationKeyVisible(EntitySelectFetchInitializerData data, boolean byUniqueKey) {
+		if ( !(keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?>)
+				&& !toOneMapping.isAssociationKeyVisible( data.entityIdentifier, byUniqueKey,
+						data.getRowProcessingState().getSession() ) ) {
+			data.setInstance( null );
+			data.setState( State.INITIALIZED );
+			return false;
+		}
+		return true;
 	}
 
 	protected void initialize(
@@ -302,9 +316,8 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	private boolean isAffectedByRestrictions(RowProcessingState rowProcessingState) {
 		// Native result mappings are reusable with filters enabled or disabled. Their
 		// affectedByFilter flag describes a possibility, not the current session's exclusions.
-		return affectedByFilter && ( concreteDescriptor.hasWhereRestrictions()
-				|| concreteDescriptor.isAffectedByEnabledFilters(
-						rowProcessingState.getSession().getLoadQueryInfluencers(), true ) );
+		return affectedByFilter && toOneMapping.isAffectedByRestrictions(
+				rowProcessingState.getSession().getLoadQueryInfluencers() );
 	}
 
 	static void checkNotFound(

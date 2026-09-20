@@ -61,8 +61,7 @@ public final class FilteredAssociationMapping {
 	}
 
 	public static boolean isRestricted(ToOneAttributeMapping association) {
-		final var target = association.getEntityMappingType().getEntityPersister();
-		return target.hasWhereRestrictions() || target.hasFilterForLoadByKey();
+		return association.hasWhereRestrictions() || association.hasFilterForLoadByKey();
 	}
 
 	public static boolean hasRestrictedAssociations(ManagedMappingType mapping) {

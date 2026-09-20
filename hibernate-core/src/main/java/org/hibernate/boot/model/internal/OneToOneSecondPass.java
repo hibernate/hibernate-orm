@@ -160,6 +160,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private ManyToOne createManyToOne(OneToOne oneToOne, Join mappedByJoin) {
 		final ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
 		manyToOne.setNotFoundAction( notFoundAction );
+		manyToOne.copyRestrictions( oneToOne );
 		manyToOne.setOnDeleteAction( oneToOne.getOnDeleteAction() );
 		manyToOne.setFetchStyle( oneToOne.getFetchStyle() );
 		manyToOne.setLazy( oneToOne.isLazy() );

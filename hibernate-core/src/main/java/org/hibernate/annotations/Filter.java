@@ -14,13 +14,13 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies that an entity or collection is affected by a named
- * filter declared using {@link FilterDef @FilterDef}, and allows the
- * {@linkplain FilterDef#defaultCondition default filter condition}
- * to be overridden for the annotated entity or collection role.
+ * Specifies that the annotated entity, collection, or to-one association is
+ * affected by a named filter declared using {@link FilterDef @FilterDef}, and
+ * allows the {@linkplain FilterDef#defaultCondition default filter condition}
+ * to be overridden for the annotated entity or association role.
  * <p>
- * For example, we might apply a filter named {@code Current} to
- * an entity like this:
+ * For example, we might apply a filter named {@code Current} to an entity
+ * like this:
  * <pre>
  * &#64;Entity
  * &#64;Filter(name = "Current",

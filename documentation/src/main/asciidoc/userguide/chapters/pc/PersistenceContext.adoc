@@ -479,15 +479,18 @@ include::{extrasdir}/pc-filter-entity-example.sql[]
 include::{extrasdir}/pc-filter-entity-find-example.sql[]
 ----
 
-When an applicable filter excludes a `@ManyToOne` or `@OneToOne` target, the association is represented as `null`.
-Hibernate remembers the stored reference in the persistence context, so flushing unrelated changes preserves it.
-This applies to foreign keys and to associations mapped with `@JoinTable`, and to targets excluded by `@SQLRestriction`.
+[CAUTION]
+====
+When an enabled filter excludes the target of a `@ManyToOne` or `@OneToOne` association, the mapped field or property of the entity instance is set to `null`.
+In this case:
 
-Leaving such an association null, or assigning null to it again, does not clear the hidden reference.
-Assigning a non-null target replaces the reference. An association which was visible when loaded can be cleared normally.
-Orphan removal preserves a filtered-out target, including when a new target replaces it.
-When merging detached state, use the same enabled filters and parameter values as when that state was loaded.
-Hibernate reconstructs the distinction while loading the managed merge target, so detached instances need no additional metadata.
+- Explicitly assigning a null value to the association has no effect on the persistent state of the entity, and the foreign key is not set to null when the session is flushed.
+- But assigning a non-null value to the association _does_ result in an update to the foreign key.
+
+Special care must be taken when merging a detached object which was retrieved with an enabled filter.
+The safest approach is to ensure that exactly the same filter is enabled in the session in which `merge()` is called.
+Otherwise, a null field of the detached entity could result in the foreign key being set to null in the database.
+====
 
 As you can see from the example above, contrary to an entity query, the `activeAccount` filter does not prevent the entity from being loaded,
 but the `minimumAmount` filter limits the results to the ones with an amount that is greater than the specified one.

@@ -113,6 +113,12 @@ It exposes the stored association key when a restriction hides the target.
 The default returns `null`, so existing implementations remain source compatible.
 Custom entity initializers which represent restricted targets as null must supply this information during hydration
 to participate in the <<filtered-to-one-associations,stored-reference preservation described below>>.
+`EmbeddableInitializer.collectFilteredAssociations()` contributes hidden references directly to the owning
+entity's state using the supplied shared mapping metadata. It must return the supplied state unchanged
+when there is no additional evidence. Custom embeddable initializers must implement this hook when they
+contain restricted associations. Custom entity persisters must supply the shared metadata via
+`EntityPersister.getFilteredAssociationMapping()`. Hibernate's standard initializers and entity persisters
+manage this automatically.
 
 `AbstractCollectionPersister` is an internal implementation class. Its protected `applyWhereFragments()`
 method which accepts a `TableGroup`
@@ -202,10 +208,26 @@ session.flush(); // the replacement reference is cleared
 
 These rules apply to ordinary updates without `@DynamicUpdate`, as well as dynamic updates and `@SQLUpdate`.
 Hibernate may generate a dynamic update to omit a hidden foreign key even when the entity does not declare
-`@DynamicUpdate`. Custom update SQL retains its declared parameter structure and receives the stored key
-when binding a hidden association. Update nullability checks and optimistic locking also use the stored
-reference instead of mistaking a filtered Java null for a database null.
-Join-table updates preserve the same distinction with native upsert support and with upsert emulation.
+`@DynamicUpdate`. The omission is per column, so changing another field of an embeddable still updates that field.
+Custom update SQL retains its declared parameter structure and receives the stored key when binding a
+hidden association. Attribute-based optimistic locking retains the original key for its comparison predicates.
+Update nullability checks recognize a hidden reference as physically present without treating the Java null
+as a database null.
+
+For entities with no custom update SQL on any mapped table and without `ALL` or `DIRTY` optimistic locking,
+Hibernate retains only a bitmap. Up to 64 potentially restricted associations use one word. Larger mappings
+use a word array. Nested embeddables share the owner's bitmap. There is no allocation per hidden key or
+containing embeddable, and entities that never load a hidden reference require no additional entry state.
+Other mappings retain the keys needed for custom SQL parameters or optimistic-lock predicates.
+Successful replacement clears the corresponding state. An empty extension may remain attached for reuse.
+
+Version checks and increments are preserved when Hibernate generates these updates, including changes
+confined to a join-table row.
+
+A hidden nonnull foreign key also establishes that its join-table row exists. An unchanged hidden reference
+preserves that row. If other columns of the row change, Hibernate updates them without writing the hidden
+foreign-key columns and without attempting an insert with missing key values. This applies regardless of
+whether the dialect otherwise uses native upserts or upsert emulation.
 Deleting the owner still removes its join-table row.
 
 ==== Merge and orphan removal
@@ -242,8 +264,9 @@ Use the HQL `fk()` function, for example `where fk(owner.target) = :id`, when th
 stored foreign key independently of whether the target is visible.
 
 Loading a lazy association may now add a left join and select the target identifier to determine visibility
-without initializing the target entity. The owner query also retains the physical foreign key needed for
-later updates. Applications which inspect generated SQL or count joins should account for these changes.
+without initializing the target entity. The owner query also selects the physical foreign key to distinguish
+a hidden reference from an absent reference. Ordinary mappings discard this key after recording the distinction.
+Applications which inspect generated SQL or count joins should account for these changes.
 For native queries and stored procedure results, Hibernate cannot add these selections to the supplied SQL.
 It instead resolves an affected association by an immediate separate fetch, even if the mapping requests
 lazy fetching. This does not add filtering predicates to the application's native SQL itself.

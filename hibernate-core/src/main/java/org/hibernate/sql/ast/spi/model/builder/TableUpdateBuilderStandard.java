@@ -28,6 +28,7 @@ import static java.util.Collections.emptyList;
 public class TableUpdateBuilderStandard<O extends MutationOperation>
 		extends AbstractTableUpdateBuilder<O> {
 	private final String whereFragment;
+	private boolean rowKnownToExist;
 	private TableMapping.MutationDetails mutationDetails;
 
 	public TableUpdateBuilderStandard(
@@ -75,6 +76,11 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 		this.whereFragment = whereFragment;
 	}
 
+	/** Omitted stored values must never be used to construct an optional-row INSERT. */
+	public void setRowKnownToExist(boolean rowKnownToExist) {
+		this.rowKnownToExist = rowKnownToExist;
+	}
+
 	public String getWhereFragment() {
 		return whereFragment;
 	}
@@ -104,7 +110,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 			);
 		}
 
-		if ( getMutatingTable().getTableMapping().isOptional() ) {
+		if ( !rowKnownToExist && getMutatingTable().getTableMapping().isOptional() ) {
 			final var entityMutationTarget = (EntityMutationTarget) getMutationTarget();
 			return (LogicalTableUpdate<O>)	new OptionalTableUpdate(
 					getMutatingTable(),

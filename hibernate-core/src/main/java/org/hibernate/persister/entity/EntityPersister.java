@@ -922,6 +922,11 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	boolean isLazyPropertiesCacheable();
 
+	@org.hibernate.Internal
+	default org.hibernate.engine.internal.FilteredAssociationMapping getFilteredAssociationMapping() {
+		return org.hibernate.engine.internal.FilteredAssociationMapping.NONE;
+	}
+
 	/** Initializes shared restriction metadata after the mapping model is complete. */
 	@org.hibernate.Internal
 	default void initializeCacheRestrictions(org.hibernate.boot.spi.MetadataImplementor bootModel) {

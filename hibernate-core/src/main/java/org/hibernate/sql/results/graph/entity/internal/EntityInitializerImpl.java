@@ -1690,8 +1690,8 @@ public class EntityInitializerImpl
 		}
 
 		if ( filteredAssociationIndexes != null ) {
-			FilteredAssociationState.register( entityEntry, FilteredAssociationState.from(
-					concreteAssemblers, filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()], state, rowProcessingState ) );
+			FilteredAssociationState.register( entityEntry,
+					concreteAssemblers, filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()], state, rowProcessingState );
 		}
 
 		final var session = rowProcessingState.getSession();
@@ -1774,9 +1774,9 @@ public class EntityInitializerImpl
 				);
 
 		if ( filteredAssociationIndexes != null ) {
-			FilteredAssociationState.register( entityEntry, FilteredAssociationState.from(
+			FilteredAssociationState.register( entityEntry,
 					assemblers[data.concreteDescriptor.getSubclassId()], filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()],
-					resolvedEntityState, rowProcessingState ) );
+					resolvedEntityState, rowProcessingState );
 		}
 		entityEntry.setMaybeLazySet( maybeLazySets[data.concreteDescriptor.getSubclassId()] );
 		data.entityHolder.setEntityEntry( entityEntry );

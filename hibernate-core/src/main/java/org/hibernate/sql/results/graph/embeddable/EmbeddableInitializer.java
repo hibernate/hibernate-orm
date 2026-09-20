@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph.embeddable;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
@@ -40,8 +41,9 @@ public interface EmbeddableInitializer<Data extends InitializerData> extends Ini
 
 	/** Internal hydration bookkeeping for associations nested in this embeddable. */
 	@org.hibernate.Internal
-	default @Nullable FilteredAssociationState getFilteredAssociationState(RowProcessingState rowProcessingState) {
-		return null;
+	default @Nullable FilteredAssociationState collectFilteredAssociations(
+			RowProcessingState rowProcessingState, @Nullable FilteredAssociationState state, FilteredAssociationMapping mapping) {
+		return state;
 	}
 
 	/**

@@ -227,13 +227,22 @@ class RestrictedToOneTest {
 			final var entry = context.getEntry( hidden );
 			final var state = entry.getExtraState( FilteredAssociationState.class );
 			assertThat( state ).isNotNull();
+			assertThat( state.retainsKeys() ).isEqualTo(
+					mapping.ownerType.isAnnotationPresent( SQLUpdate.class )
+							|| mapping.ownerType.isAnnotationPresent( OptimisticLocking.class ) );
+			if ( !state.retainsKeys() ) {
+				assertThat( state.physicalState( entry.getLoadedState(), entry.getPersister() ) )
+						.isSameAs( entry.getLoadedState() );
+			}
 			final int position = entry.getPersister().findAttributeMapping( "target" ).getStateArrayPosition();
-			assertThat( state.isFiltered( position ) ).isTrue();
+			assertThat( entry.getPersister().getFilteredAssociationMapping().isFiltered( state,
+					(ToOneAttributeMapping) entry.getPersister().getAttributeMapping( position ) ) ).isTrue();
 			assertThat( entry.getLoadedState()[position] ).isNull();
 			hidden.setTarget( session.find( mapping.targetType, 3L ) );
 			session.flush();
 			assertThat( state.isEmpty() ).isTrue();
-			assertThat( state.isFiltered( position ) ).isFalse();
+			assertThat( entry.getPersister().getFilteredAssociationMapping().isFiltered( state,
+					(ToOneAttributeMapping) entry.getPersister().getAttributeMapping( position ) ) ).isFalse();
 			// The replacement is visible and may now be cleared normally.
 			hidden.setTarget( null );
 		} );

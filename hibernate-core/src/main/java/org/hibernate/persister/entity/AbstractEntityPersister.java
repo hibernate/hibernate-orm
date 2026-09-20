@@ -58,6 +58,7 @@ import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadingAction;
 import org.hibernate.engine.internal.EntityCacheRestrictions;
+import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -448,6 +449,7 @@ public abstract class AbstractEntityPersister
 	private final boolean canReadFromCache;
 	private final boolean canWriteToCache;
 	private final boolean invalidateCache;
+	private FilteredAssociationMapping filteredAssociationMapping = FilteredAssociationMapping.NONE;
 	private EntityCacheRestrictions cacheRestrictions = EntityCacheRestrictions.NONE;
 	private final boolean isLazyPropertiesCacheable;
 	private final boolean useReferenceCacheEntries;
@@ -3778,6 +3780,7 @@ public abstract class AbstractEntityPersister
 	public final void postInstantiate(@Nonnull PersistentClass bootEntityDescriptor) throws MappingException {
 
 		tableMappings = buildTableMappings( bootEntityDescriptor );
+		filteredAssociationMapping = FilteredAssociationMapping.create( this );
 		tenantIdMapping = TenantIdMappingImpl.create( this );
 
 		final List<AttributeMapping> insertGeneratedAttributes =
@@ -4824,6 +4827,11 @@ public abstract class AbstractEntityPersister
 	@Nonnull
 	private Dialect getDialect() {
 		return factory.getJdbcServices().getDialect();
+	}
+
+	@Override
+	public FilteredAssociationMapping getFilteredAssociationMapping() {
+		return filteredAssociationMapping;
 	}
 
 	@Override

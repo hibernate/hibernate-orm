@@ -270,7 +270,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		// we'll use scheduled updates for that.
 		final var filteredState = entry.getExtraState( FilteredAssociationState.class );
 		new Nullability( session, NullabilityCheckType.UPDATE ).checkNullability(
-				filteredState == null ? values : filteredState.physicalState( values, persister ), persister );
+				values, persister, filteredState );
 
 		addEntityUpdateActionToActionQueue(
 				event,

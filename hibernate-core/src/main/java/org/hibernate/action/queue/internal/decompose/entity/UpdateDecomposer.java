@@ -22,7 +22,7 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.engine.internal.FilteredAssociationMutation;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -213,10 +213,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		// in the same flush, the DELETE operation may remove the entity from the persistence context
 		// before the UPDATE's post-execution callback runs.
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
-		final var filteredState = entityEntry == null ? null : entityEntry.getExtraState( FilteredAssociationState.class );
-		if ( filteredState != null ) {
-			previousState = filteredState.physicalState( previousState, entityPersister );
-		}
+		final var filteredAssociations = FilteredAssociationMutation.forUpdate( entity, entityPersister, state, session );
+		previousState = filteredAssociations.physicalState( previousState );
 
 		// Skip UPDATE operations for entities with DELETED status ONLY if there are no dirty fields.
 		// When an entity is marked for deletion in the same flush, UPDATEs with no dirty fields
@@ -304,9 +302,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		// apply any pre-update in-memory value generation
 		final int[] preUpdateGeneratedAttributeIndexes = preUpdateInMemoryValueGeneration( entity, state, session );
 		final int[] dirtyAttributeIndexes = combine( action.getDirtyFields(), preUpdateGeneratedAttributeIndexes );
-		if ( filteredState != null ) {
-			state = filteredState.physicalState( state, entityPersister );
-		}
+		state = filteredAssociations.physicalState( state );
 
 		// Determine if we need to apply optimistic locking
 		final var effectiveOptLockStyle = effectiveOptLockStyle( previousVersion, previousState );
@@ -314,19 +310,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		// Determine which fields are updateable
 		boolean[] updateability = entityPersister.getPropertyUpdateability();
 		logImmutablePropertyModifications( dirtyAttributeIndexes, updateability );
-		if ( filteredState != null && !filteredState.isEmpty() ) {
-			updateability = updateability.clone();
-			for ( var table : entityPersister.getTableDescriptors() ) {
-				if ( table.updateDetails().getCustomSql() == null ) {
-					for ( var attribute : table.attributes() ) {
-						final int position = attribute.getStateArrayPosition();
-						if ( state[position] instanceof FilteredAssociationState.Key ) {
-							updateability[position] = false;
-						}
-					}
-				}
-			}
-		}
 
 		// Create values analysis to track which tables need updating
 		final var valuesAnalysis = new UpdateValuesAnalysis(
@@ -334,7 +317,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				state,
 				previousState,
 				dirtyAttributeIndexes,
-				this
+				this,
+				filteredAssociations
 		);
 
 
@@ -342,7 +326,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		// 		1. Entity specifies dynamic-update
 		// 		2. We need optimistic locking with DIRTY check
 		//		3. The entity has any uninitialized state
-		final boolean needsDynamicUpdate = filteredState != null && !filteredState.isEmpty()
+		final boolean needsDynamicUpdate = filteredAssociations.isActive()
 				|| entityPersister.isDynamicUpdate()
 				|| rowId != null
 				|| effectiveOptLockStyle.isAllOrDirty()
@@ -789,6 +773,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			UpdateValuesAnalysis valuesAnalysis,
 			SharedSessionContractImplementor session) {
 		final Map<String, TableUpdateBuilder<?>> operationBuilders = new HashMap<>();
+		final var versionMapping = entityPersister.getVersionMapping();
+		final boolean versionChanged = versionMapping != null
+				&& !versionMapping.areEqual( state[versionMapping.getVersionAttribute().getStateArrayPosition()], version, session );
 
 		// Process tables in forward order
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
@@ -796,11 +783,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				// skip inverse tables
 				return;
 			}
-			if ( valuesAnalysis.needsUpdate( tableDescriptor ) ) {
-				operationBuilders.put(
-						tableDescriptor.name(),
-						createTableUpdateBuilder(tableDescriptor)
-				);
+			// A change confined to a secondary table may still increment the owner's version.
+			if ( valuesAnalysis.needsUpdate( tableDescriptor )
+					|| versionChanged && tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
+				final var builder = createTableUpdateBuilder( tableDescriptor );
+				valuesAnalysis.prepareUpdateBuilder( builder, tableDescriptor );
+				operationBuilders.put( tableDescriptor.name(), builder );
 			}
 		} );
 

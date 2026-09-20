@@ -20,7 +20,7 @@ import java.util.function.Supplier;
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.engine.internal.FilteredAssociationMutation;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.jdbc.Expectation;
@@ -286,22 +286,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			forceDynamicUpdate = entityPersister().hasUninitializedLazyProperties( entity );
 		}
 
-		final var filteredState = entry == null ? null : entry.getExtraState( FilteredAssociationState.class );
-		if ( filteredState != null ) {
-			attributeUpdateability = attributeUpdateability.clone();
-			for ( int i = 0; i < values.length; i++ ) {
-				if ( values[i] == null && filteredState.isFiltered( i ) ) {
-					final var attribute = (SingularAttributeMapping) entityPersister().getAttributeMapping( i );
-					final var tableMapping = physicalTableMappingForMutation( entityPersister(), attribute.getSelectable( 0 ) );
-					if ( tableMapping.getUpdateDetails().getCustomSql() == null ) {
-						attributeUpdateability[i] = false;
-						forceDynamicUpdate = true;
-					}
-				}
-			}
-			values = filteredState.physicalState( values, entityPersister() );
-			incomingOldValues = filteredState.physicalState( incomingOldValues, entityPersister() );
-		}
+		final var filteredAssociations = FilteredAssociationMutation.forUpdate( entity, entityPersister(), values, session );
+		forceDynamicUpdate |= filteredAssociations.isActive();
+		values = filteredAssociations.physicalState( values );
+		incomingOldValues = filteredAssociations.physicalState( incomingOldValues );
 
 		return performUpdate(
 				entity,
@@ -774,6 +762,16 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				databaseDirtinessCheck
 		);
 
+		if ( entity != null && session != null ) {
+			analysis.filteredAssociations = FilteredAssociationMutation.forUpdate( entity, persister, values, session );
+			persister.forEachMutableTable( table -> {
+				if ( analysis.filteredAssociations.hasStoredRow( table.getTableName() ) ) {
+					analysis.tablesWithNonNullValues.add( table );
+					analysis.tablesWithPreviousNonNullValues.add( table );
+				}
+			} );
+		}
+
 		for ( int attributeIndex = 0; attributeIndex < attributeMappings.size(); attributeIndex++ ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
 			analysis.startingAttribute( attributeMapping );
@@ -882,7 +880,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private void processSet(@Nonnull UpdateValuesAnalysisImpl analysis, @Nullable SelectableMapping selectable, boolean needsDynamicUpdate) {
-		if ( selectable != null && !selectable.isFormula() && isColumnIncludedInSet( selectable ) ) {
+		if ( selectable != null && !selectable.isFormula() && isColumnIncludedInSet( selectable )
+				&& analysis.filteredAssociations.includesColumn( selectable ) ) {
 			final var tableMapping = physicalTableMappingForMutation( entityPersister(), selectable );
 			analysis.registerColumnSet( tableMapping, selectable.getSelectionExpression(), selectable.getWriteExpression() );
 			if ( needsDynamicUpdate ) {
@@ -1072,7 +1071,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 								tableMapping,
 								attributeMapping,
 								values[attributeIndex],
-								entity
+								entity,
+								valuesAnalysis.filteredAssociations
 						);
 					}
 				}
@@ -1108,7 +1108,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			@Nonnull EntityTableMapping tableMapping,
 			@Nonnull AttributeMapping attributeMapping,
 			@Nonnull Object values,
-			@Nonnull Object entity) {
+			@Nonnull Object entity,
+			@Nonnull FilteredAssociationMutation filteredAssociations) {
 		final var generator = attributeMapping.getGenerator();
 		final OnExecutionGenerator onExecutionGenerator;
 		final String[] columnValues;
@@ -1137,6 +1138,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				(valueIndex, bindings, table, jdbcValue, jdbcMapping) -> {
 					if ( !jdbcMapping.isFormula()
 							&& isColumnIncludedInSet( jdbcMapping )
+							&& filteredAssociations.includesColumn( jdbcMapping )
 							&& shouldBindValue( onExecutionGenerator, columnValues, columnInclusions, bindAllValues, valueIndex ) ) {
 						bindings.bindValue(
 								jdbcValue,
@@ -1387,6 +1389,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final boolean[] versionability = persister.getPropertyVersionability();
 		final var optimisticLockStyle = persister.optimisticLockStyle();
 
+		// Configure every table first: a generated embeddable may assign columns in several tables.
+		if ( updateValuesAnalysis.filteredAssociations.isActive() ) {
+			updateGroupBuilder.forEachTableMutationBuilder( builder ->
+					updateValuesAnalysis.filteredAssociations.prepareUpdateBuilder(
+							(TableUpdateBuilder<?>) builder, builder.getMutatingTable().getTableName() ) );
+		}
+
 		updateGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
 			final var tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
@@ -1603,6 +1612,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		private final TableSet tablesWithPreviousNonNullValues = new TableSet();
 
 		private final List<AttributeAnalysis> attributeAnalyses = new ArrayList<>();
+		private FilteredAssociationMutation filteredAssociations = FilteredAssociationMutation.NONE;
 
 		// transient values as we perform the analysis
 		@Nullable

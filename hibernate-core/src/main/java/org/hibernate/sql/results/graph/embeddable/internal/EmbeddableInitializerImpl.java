@@ -9,6 +9,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -485,12 +486,13 @@ public class EmbeddableInitializerImpl
 	}
 
 	@Override
-	public FilteredAssociationState getFilteredAssociationState(RowProcessingState rowProcessingState) {
+	public FilteredAssociationState collectFilteredAssociations(
+			RowProcessingState rowProcessingState, FilteredAssociationState state, FilteredAssociationMapping mapping) {
 		if ( filteredAssociationIndexes == null ) {
-			return null;
+			return state;
 		}
 		final var data = getData( rowProcessingState );
-		return FilteredAssociationState.from(
+		return FilteredAssociationState.collect( state, mapping,
 				assemblers[data.getSubclassId()], filteredAssociationIndexes[data.getSubclassId()], data.rowState, rowProcessingState );
 	}
 

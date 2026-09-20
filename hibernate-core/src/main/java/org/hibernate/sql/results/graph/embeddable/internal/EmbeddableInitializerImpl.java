@@ -52,6 +52,7 @@ public class EmbeddableInitializerImpl
 	private final boolean isPartOfKey;
 
 	protected final DomainResultAssembler<?>[][] assemblers;
+	private final int[][] filteredAssociationIndexes;
 	protected final BasicResultAssembler<?> discriminatorAssembler;
 	protected final @Nullable DomainResultAssembler<Boolean> nullIndicatorAssembler;
 	protected final @Nullable Initializer<InitializerData>[][] subInitializers;
@@ -176,6 +177,7 @@ public class EmbeddableInitializerImpl
 			}
 		}
 		this.assemblers = assemblers;
+		this.filteredAssociationIndexes = FilteredAssociationState.assemblerIndexes( assemblers );
 		this.discriminatorAssembler =
 				discriminatorFetch == null
 						? null
@@ -484,9 +486,12 @@ public class EmbeddableInitializerImpl
 
 	@Override
 	public FilteredAssociationState getFilteredAssociationState(RowProcessingState rowProcessingState) {
+		if ( filteredAssociationIndexes == null ) {
+			return null;
+		}
 		final var data = getData( rowProcessingState );
 		return FilteredAssociationState.from(
-				assemblers[data.getSubclassId()], data.rowState, rowProcessingState );
+				assemblers[data.getSubclassId()], filteredAssociationIndexes[data.getSubclassId()], data.rowState, rowProcessingState );
 	}
 
 	protected void extractRowState(EmbeddableInitializerData data) {

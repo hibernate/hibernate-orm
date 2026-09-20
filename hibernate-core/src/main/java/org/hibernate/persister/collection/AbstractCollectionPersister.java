@@ -182,6 +182,8 @@ public abstract class AbstractCollectionPersister
 	protected String sqlWhereString;
 	@Nullable
 	private String sqlWhereStringTemplate;
+	private volatile RestrictionRendering sqlWhereRendering;
+	private volatile RestrictionRendering manyToManyWhereRendering;
 
 	private final boolean hasOrder;
 	private final boolean hasManyToManyOrder;
@@ -1310,12 +1312,32 @@ public abstract class AbstractCollectionPersister
 			boolean useQualifier,
 			@Nullable SqlAstCreationState astCreationState) {
 		if ( sqlWhereStringTemplate != null && !isManyToMany() && elementPersister != null ) {
-			predicateConsumer.accept( new SqlFragmentPredicate( RestrictionRendering.render(
-					sqlWhereStringTemplate, alias, useQualifier, elementPersister, tableGroup, astCreationState ) ) );
+			predicateConsumer.accept( new SqlFragmentPredicate( getSqlWhereRendering().render(
+					alias, useQualifier, tableGroup, astCreationState ) ) );
 		}
 		else {
 			applyWhereFragments( predicateConsumer, alias, sqlWhereStringTemplate );
 		}
+	}
+
+	// Initialized on first use because eager entity loaders can render these restrictions
+	// before collection postInstantiate(). The immutable renderers are shared by all sessions.
+	private RestrictionRendering getSqlWhereRendering() {
+		var rendering = sqlWhereRendering;
+		if ( rendering == null ) {
+			rendering = RestrictionRendering.compile( sqlWhereStringTemplate, elementPersister );
+			sqlWhereRendering = rendering;
+		}
+		return rendering;
+	}
+
+	private RestrictionRendering getManyToManyWhereRendering() {
+		var rendering = manyToManyWhereRendering;
+		if ( rendering == null ) {
+			rendering = RestrictionRendering.compile( manyToManyWhereTemplate, elementPersister );
+			manyToManyWhereRendering = rendering;
+		}
+		return rendering;
 	}
 
 	/**
@@ -1375,8 +1397,8 @@ public abstract class AbstractCollectionPersister
 			if ( manyToManyWhereString != null ) {
 				final var tableReference = tableGroup.resolveTableReference( castNonNull( elementPersister ).getTableName() );
 				final String alias = aliasForWhereRestriction( tableReference, useQualifier );
-				predicateConsumer.accept( new SqlFragmentPredicate( RestrictionRendering.render(
-						manyToManyWhereTemplate, alias, useQualifier, elementPersister, tableGroup, creationState ) ) );
+				predicateConsumer.accept( new SqlFragmentPredicate( getManyToManyWhereRendering().render(
+						alias, useQualifier, tableGroup, creationState ) ) );
 			}
 		}
 	}

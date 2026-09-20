@@ -133,6 +133,7 @@ public class EntityInitializerImpl
 	private final @Nullable DomainResultAssembler<?> auditChangesetIdAssembler;
 
 	private final DomainResultAssembler<?>[][] assemblers;
+	private final int[][] filteredAssociationIndexes;
 	private final @Nullable Initializer<?>[] allInitializers;
 	private final @Nullable Initializer<?>[][] subInitializers;
 	private final @Nullable Initializer<?>[][] eagerSubInitializers;
@@ -477,6 +478,7 @@ public class EntityInitializerImpl
 		}
 
 		this.assemblers = assemblers;
+		this.filteredAssociationIndexes = FilteredAssociationState.assemblerIndexes( assemblers );
 		this.allInitializers = allInitializers;
 		this.subInitializers = subInitializers;
 		this.eagerSubInitializers = eagerSubInitializers;
@@ -1687,8 +1689,10 @@ public class EntityInitializerImpl
 			}
 		}
 
-		FilteredAssociationState.register( entityEntry, FilteredAssociationState.from(
-				concreteAssemblers, state, rowProcessingState ) );
+		if ( filteredAssociationIndexes != null ) {
+			FilteredAssociationState.register( entityEntry, FilteredAssociationState.from(
+					concreteAssemblers, filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()], state, rowProcessingState ) );
+		}
 
 		final var session = rowProcessingState.getSession();
 		updateCaches(
@@ -1769,8 +1773,11 @@ public class EntityInitializerImpl
 						data.concreteDescriptor
 				);
 
-		FilteredAssociationState.register( entityEntry, FilteredAssociationState.from(
-				assemblers[data.concreteDescriptor.getSubclassId()], resolvedEntityState, rowProcessingState ) );
+		if ( filteredAssociationIndexes != null ) {
+			FilteredAssociationState.register( entityEntry, FilteredAssociationState.from(
+					assemblers[data.concreteDescriptor.getSubclassId()], filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()],
+					resolvedEntityState, rowProcessingState ) );
+		}
 		entityEntry.setMaybeLazySet( maybeLazySets[data.concreteDescriptor.getSubclassId()] );
 		data.entityHolder.setEntityEntry( entityEntry );
 
@@ -1831,6 +1838,7 @@ public class EntityInitializerImpl
 		// Don't cache temporal snapshots in the 2LC.
 		if ( !data.getRowProcessingState().isQueryCacheHit()
 				&& isCachePutEnabled( session )
+				&& !data.concreteDescriptor.hasSqlRestrictedAssociations()
 				&& !FilteredAssociationState.hasFilteredAssociations( persistenceContext.getEntry( data.entityInstanceForNotify ) )
 				&& ( data.entityKey == null || !data.entityKey.isTemporal() ) ) {
 			writingToCache( data.concreteDescriptor,

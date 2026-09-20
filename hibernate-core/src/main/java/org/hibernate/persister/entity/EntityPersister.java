@@ -24,6 +24,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadeStyles;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -920,6 +921,21 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Should lazy properties of this entity be cached?
 	 */
 	boolean isLazyPropertiesCacheable();
+
+	/** Initializes shared restriction metadata after the mapping model is complete. */
+	@org.hibernate.Internal
+	default void initializeCacheRestrictions(org.hibernate.boot.spi.MetadataImplementor bootModel) {
+	}
+
+	@org.hibernate.Internal
+	default boolean hasSqlRestrictedAssociations() {
+		return org.hibernate.engine.internal.EntityCacheRestrictions.hasSqlRestrictions( this, new java.util.HashSet<>() );
+	}
+
+	@org.hibernate.Internal
+	default boolean isAffectedByEnabledFiltersForCache(LoadQueryInfluencers influencers) {
+		return isAffectedByEnabledFilters( influencers, true );
+	}
 
 	boolean canReadFromCache();
 	boolean canWriteToCache();

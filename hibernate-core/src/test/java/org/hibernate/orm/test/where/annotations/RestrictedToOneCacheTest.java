@@ -22,9 +22,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RestrictedToOneCacheTest extends RestrictedToOneTest {
 	@ParameterizedTest
 	@MethodSource("mappings")
+	void staticRestrictionsDoNotPopulateUnreadableEntries(Mapping mapping, SessionFactoryScope scope) {
+		scope.getSessionFactory().getStatistics().clear();
+		prepare( scope, mapping );
+		if ( mapping.targetType() == SqlTarget.class ) {
+			assertThat( scope.getSessionFactory().getStatistics().getSecondLevelCachePutCount() ).isZero();
+			for ( int run = 0; run < 2; run++ ) {
+				scope.inTransaction( session -> {
+					final Owner owner = session.find( mapping.ownerType(), 1L );
+					assertThat( owner.getTarget() ).isNotNull();
+					owner.name = "updated";
+				} );
+			}
+			assertThat( scope.getSessionFactory().getStatistics().getSecondLevelCachePutCount() ).isZero();
+		}
+		else {
+			assertThat( scope.getSessionFactory().getStatistics().getSecondLevelCachePutCount() ).isPositive();
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("mappings")
 	void cacheCannotHideTheStoredReference(Mapping mapping, SessionFactoryScope scope) {
 		prepare( scope, mapping );
-		// Persisting the fixture populates the cache with unfiltered association keys.
+		// Cache entries created with filters disabled must not conceal an active restriction.
 		scope.inTransaction( session -> {
 			enable( session );
 			final Owner owner = session.find( mapping.ownerType(), 2L );

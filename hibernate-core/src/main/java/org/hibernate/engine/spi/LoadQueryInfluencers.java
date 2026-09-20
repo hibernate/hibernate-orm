@@ -87,15 +87,6 @@ public class LoadQueryInfluencers implements Serializable {
 		effectiveEntityGraph = new EffectiveEntityGraph();
 	}
 
-	/** Creates influencers for checking a specific set of enabled filters. */
-	@Internal
-	public LoadQueryInfluencers(
-			@Nonnull SessionFactoryImplementor sessionFactory,
-			@Nonnull Map<String, Filter> enabledFilters) {
-		this( sessionFactory );
-		this.enabledFilters = new TreeMap<>( enabledFilters );
-	}
-
 	public LoadQueryInfluencers(
 			@Nonnull SessionFactoryImplementor sessionFactory,
 			@Nonnull SessionCreationOptions options) {

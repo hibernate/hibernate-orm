@@ -22,6 +22,7 @@ import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -209,6 +210,34 @@ class RestrictedToOneTest {
 			}
 			assertThat( visible.getId() ).isEqualTo( 1L );
 		} );
+	}
+
+	@ParameterizedTest
+	@MethodSource("mappings")
+	void bookkeepingIsSparseAndReleasesReplacedKeys(Mapping mapping, SessionFactoryScope scope) {
+		prepare( scope, mapping );
+		scope.inTransaction( session -> {
+			enable( session );
+			final var context = session.getPersistenceContextInternal();
+			final Owner visible = session.find( mapping.ownerType, 1L );
+			final Owner absent = session.find( mapping.ownerType, 3L );
+			assertThat( context.getEntry( visible ).getExtraState( FilteredAssociationState.class ) ).isNull();
+			assertThat( context.getEntry( absent ).getExtraState( FilteredAssociationState.class ) ).isNull();
+			final Owner hidden = session.find( mapping.ownerType, 2L );
+			final var entry = context.getEntry( hidden );
+			final var state = entry.getExtraState( FilteredAssociationState.class );
+			assertThat( state ).isNotNull();
+			final int position = entry.getPersister().findAttributeMapping( "target" ).getStateArrayPosition();
+			assertThat( state.isFiltered( position ) ).isTrue();
+			assertThat( entry.getLoadedState()[position] ).isNull();
+			hidden.setTarget( session.find( mapping.targetType, 3L ) );
+			session.flush();
+			assertThat( state.isEmpty() ).isTrue();
+			assertThat( state.isFiltered( position ) ).isFalse();
+			// The replacement is visible and may now be cleared normally.
+			hidden.setTarget( null );
+		} );
+		assertStoredReference( scope, mapping, 2L, null );
 	}
 
 	@ParameterizedTest

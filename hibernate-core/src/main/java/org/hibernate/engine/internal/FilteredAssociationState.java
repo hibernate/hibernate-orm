@@ -6,13 +6,13 @@ package org.hibernate.engine.internal;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -22,40 +22,98 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
 
 /**
  * Stored keys of associations whose targets were excluded while hydrating an entity.
- * A null Java attribute with an entry here must not erase its stored reference.
+ * Allocated only for hidden references. Each node holds one raw key or one nested
+ * component, without maps, boxed positions, or retained mutation-binding wrappers.
  */
 public final class FilteredAssociationState implements EntityEntryExtraState, Serializable {
-	private final Map<Integer, Key> keys = new HashMap<>();
-	private final Map<Integer, FilteredAssociationState> components = new HashMap<>();
+	// A negative position encodes a component index as its bitwise complement.
+	private int position;
+	private Object value;
+	private FilteredAssociationState sibling;
 	private transient EntityEntryExtraState next;
 
-	/** A physical association key, used only during JDBC mutation binding. */
+	private FilteredAssociationState(int position, Object value, FilteredAssociationState sibling) {
+		this.position = position;
+		this.value = value;
+		this.sibling = sibling;
+	}
+
+	/** A physical association key in temporary mutation or nullability-checking state. */
 	public record Key(Object value) implements Serializable {
+		public Key {
+			assert value != null && !(value instanceof Key);
+		}
+	}
+
+	/** Builds shared assembler metadata once, returning null for unaffected result graphs. */
+	public static int[][] assemblerIndexes(DomainResultAssembler<?>[][] assemblers) {
+		int[][] result = null;
+		for ( int subtype = 0; subtype < assemblers.length; subtype++ ) {
+			final var row = assemblers[subtype];
+			if ( row == null ) {
+				continue;
+			}
+			int[] indexes = null;
+			int count = 0;
+			for ( int i = 0; i < row.length; i++ ) {
+				if ( row[i] != null ) {
+					final var initializer = row[i].getInitializer();
+					final boolean affected = initializer instanceof EntityInitializer<?> entity
+							? entity.getEntityDescriptor().hasWhereRestrictions()
+									|| entity.getEntityDescriptor().hasFilterForLoadByKey()
+							: initializer instanceof EmbeddableInitializer<?> embedded
+									&& hasRestrictedAssociations( embedded.getInitializedPart().getEmbeddableTypeDescriptor() );
+					if ( affected ) {
+						if ( indexes == null ) {
+							indexes = new int[row.length];
+						}
+						indexes[count++] = i;
+					}
+				}
+			}
+			if ( count != 0 ) {
+				if ( result == null ) {
+					result = new int[assemblers.length][];
+				}
+				result[subtype] = Arrays.copyOf( indexes, count );
+			}
+		}
+		return result;
+	}
+
+	private static boolean hasRestrictedAssociations(ManagedMappingType mapping) {
+		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
+			final var attribute = mapping.getAttributeMapping( i );
+			if ( attribute instanceof ToOneAttributeMapping toOne ) {
+				final var target = toOne.getEntityMappingType().getEntityPersister();
+				if ( target.hasWhereRestrictions() || target.hasFilterForLoadByKey() ) {
+					return true;
+				}
+			}
+			else if ( attribute instanceof EmbeddableValuedModelPart embedded
+					&& hasRestrictedAssociations( embedded.getEmbeddableTypeDescriptor() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static FilteredAssociationState from(
-			DomainResultAssembler<?>[] assemblers, Object[] values, RowProcessingState rowProcessingState) {
+			DomainResultAssembler<?>[] assemblers, int[] indexes, Object[] values, RowProcessingState rowProcessingState) {
 		FilteredAssociationState state = null;
-		for ( int i = 0; i < assemblers.length; i++ ) {
-			final var assembler = assemblers[i];
-			if ( assembler != null ) {
-				final var initializer = assembler.getInitializer();
+		if ( indexes != null ) {
+			for ( int i : indexes ) {
+				final var initializer = assemblers[i].getInitializer();
 				if ( values[i] == null && initializer instanceof EntityInitializer<?> entityInitializer ) {
 					final Object key = entityInitializer.getFilteredAssociationKey( rowProcessingState );
 					if ( key != null ) {
-						if ( state == null ) {
-							state = new FilteredAssociationState();
-						}
-						state.keys.put( i, new Key( key ) );
+						state = new FilteredAssociationState( i, key, state );
 					}
 				}
 				else if ( initializer instanceof EmbeddableInitializer<?> embeddableInitializer ) {
 					final var component = embeddableInitializer.getFilteredAssociationState( rowProcessingState );
 					if ( component != null ) {
-						if ( state == null ) {
-							state = new FilteredAssociationState();
-						}
-						state.components.put( i, component );
+						state = new FilteredAssociationState( ~i, component, state );
 					}
 				}
 			}
@@ -70,8 +128,23 @@ public final class FilteredAssociationState implements EntityEntryExtraState, Se
 				entry.addExtraState( state );
 			}
 			else {
-				existing.keys.putAll( state.keys );
-				existing.components.putAll( state.components );
+				for ( var current = state; current != null; current = current.sibling ) {
+					existing.merge( current.position, current.value );
+				}
+			}
+		}
+	}
+
+	private void merge(int position, Object value) {
+		for ( var current = this; ; current = current.sibling ) {
+			if ( current.value == null || current.position == position ) {
+				current.position = position;
+				current.value = value;
+				return;
+			}
+			if ( current.sibling == null ) {
+				current.sibling = new FilteredAssociationState( position, value, null );
+				return;
 			}
 		}
 	}
@@ -82,29 +155,45 @@ public final class FilteredAssociationState implements EntityEntryExtraState, Se
 	}
 
 	public boolean isEmpty() {
-		return keys.isEmpty() && components.isEmpty();
+		return value == null;
 	}
 
 	public boolean isFiltered(int position) {
-		return keys.containsKey( position );
+		for ( var current = this; current != null; current = current.sibling ) {
+			if ( current.position == position && current.value != null ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
+	/**
+	 * Creates temporary storage state for update/delete decomposition and update
+	 * nullability checks. Hidden to-one values become {@link Key} wrappers, and
+	 * affected embeddables become nested {@code Object[]} arrays. Only consumers
+	 * which decompose values through their attribute mappings may bind this state.
+	 * It must never replace entity attribute values, dirty-checking snapshots, or
+	 * second-level cache state. The supplied domain state is not modified.
+	 */
 	public Object[] physicalState(Object[] state, ManagedMappingType mapping) {
 		if ( state == null || isEmpty() ) {
 			return state;
 		}
 		final Object[] result = state.clone();
-		keys.forEach( (position, key) -> {
-			if ( result[position] == null ) {
-				result[position] = key;
+		for ( var current = this; current != null; current = current.sibling ) {
+			final int position = current.position;
+			if ( position >= 0 ) {
+				assert mapping.getAttributeMapping( position ) instanceof ToOneAttributeMapping;
+				if ( result[position] == null ) {
+					result[position] = new Key( current.value );
+				}
 			}
-		} );
-		components.forEach( (position, component) -> {
-			if ( result[position] != UNFETCHED_PROPERTY ) {
-				final var componentMapping = (EmbeddableMappingType) mapping.getAttributeMapping( position ).getMappedType();
-				result[position] = component.physicalState( componentValues( result[position], componentMapping ), componentMapping );
+			else if ( result[~position] != UNFETCHED_PROPERTY ) {
+				final var componentMapping = (EmbeddableMappingType) mapping.getAttributeMapping( ~position ).getMappedType();
+				result[~position] = ((FilteredAssociationState) current.value).physicalState(
+						componentValues( result[~position], componentMapping ), componentMapping );
 			}
-		} );
+		}
 		return result;
 	}
 
@@ -125,15 +214,39 @@ public final class FilteredAssociationState implements EntityEntryExtraState, Se
 	}
 
 	public void afterUpdate(Object[] state, ManagedMappingType mapping) {
-		keys.keySet().removeIf( position -> state[position] != null && state[position] != UNFETCHED_PROPERTY );
-		components.entrySet().removeIf( entry -> {
-			final Object value = state[entry.getKey()];
-			if ( value != UNFETCHED_PROPERTY ) {
-				final var componentMapping = (EmbeddableMappingType) mapping.getAttributeMapping( entry.getKey() ).getMappedType();
-				entry.getValue().afterUpdate( componentValues( value, componentMapping ), componentMapping );
+		if ( isEmpty() ) {
+			return;
+		}
+		for ( var current = this; current != null; current = current.sibling ) {
+			if ( current.position >= 0 ) {
+				final Object updated = state[current.position];
+				if ( updated != null && updated != UNFETCHED_PROPERTY ) {
+					current.value = null;
+				}
 			}
-			return entry.getValue().isEmpty();
-		} );
+			else {
+				final Object updated = state[~current.position];
+				if ( updated != UNFETCHED_PROPERTY ) {
+					final var componentMapping = (EmbeddableMappingType) mapping.getAttributeMapping( ~current.position ).getMappedType();
+					final var component = (FilteredAssociationState) current.value;
+					component.afterUpdate( componentValues( updated, componentMapping ), componentMapping );
+					if ( component.isEmpty() ) {
+						current.value = null;
+					}
+				}
+			}
+		}
+		// Retain only the head if empty: EntityEntryExtraState has no removal operation.
+		for ( var current = this; current != null; current = current.sibling ) {
+			while ( current.sibling != null && current.sibling.value == null ) {
+				current.sibling = current.sibling.sibling;
+			}
+		}
+		if ( value == null && sibling != null ) {
+			position = sibling.position;
+			value = sibling.value;
+			sibling = sibling.sibling;
+		}
 	}
 
 	@Override

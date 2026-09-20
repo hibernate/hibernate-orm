@@ -227,11 +227,17 @@ the owner under those conditions, then assign null. Disabling a filter alone is 
 There is no corresponding switch for `@SQLRestriction`.
 The stored-reference information survives refresh under the same restrictions, a change from read-only to
 modifiable state, and serialization of the session.
+The serialized persistence-context format has changed to include this information.
+Serialized sessions from earlier Hibernate versions must not be deserialized with this version.
+Applications that retain serialized sessions across an upgrade must discard them and reload their entities.
 
 ==== Query results, generated SQL, and caching
 
 Navigating to an association's identifier, for example `where owner.target.id = :id`, now retains the target
-join when needed to apply an applicable filter or SQL restriction.
+join when needed to apply an applicable enabled filter or SQL restriction.
+Merely declaring a filter does not disable the foreign-key optimization while that filter is disabled.
+Implicit path joins retain their usual inner-join semantics when a join is required.
+An explicit left join still retains owners whose targets are excluded.
 Use the HQL `fk()` function, for example `where fk(owner.target) = :id`, when the intention is to test the
 stored foreign key independently of whether the target is visible.
 
@@ -244,8 +250,10 @@ lazy fetching. This does not add filtering predicates to the application's nativ
 
 Second-level entity cache reads are bypassed for loads affected by enabled load-by-key filters and for
 entities with SQL restrictions on themselves or on reachable to-one associations, including associations
-inside embeddables. Entity state containing filtered null associations is not stored in the second-level
-cache, and updates invalidate such entries instead of publishing the incomplete state.
+inside embeddables. Entities whose static SQL restrictions prevent cache reads are also excluded from
+cache puts. This applies to inserts, loads, and updates, and retains cache invalidation on mutation.
+Entity state containing filtered null associations is not stored in the second-level cache, and updates
+invalidate such entries instead of publishing the incomplete state.
 The built-in tenant filter on the loaded entity does not by itself cause this bypass, since entity cache
 keys already include the tenant identifier. Tenant restrictions on association targets still require SQL
 to establish their visibility. Other enabled load-by-key filters which affect the load still cause a bypass
@@ -256,6 +264,16 @@ Consequently, applications may observe additional SQL and fewer second-level ent
 
 These changes address the inconsistencies described in https://hibernate.atlassian.net/browse/HHH-19568[HHH-19568]
 and its related issues.
+
+[[custom-sql-update-bindings]]
+=== Custom SQL updates with generated values
+
+An `@SQLUpdate` statement retains its fixed parameter layout when an in-memory generated value,
+such as `@UpdateTimestamp`, requires dynamic update processing internally. Hibernate now binds every
+updateable attribute required by the custom statement, including unchanged attributes.
+This corrects missing or misplaced parameter bindings in the graph mutation queue and matches the
+legacy mutation queue. It applies independently of association filtering.
+Combining `@DynamicUpdate` and `@SQLUpdate` on the same entity remains unsupported.
 
 [[collection-restriction-inherited-columns]]
 === SQL restrictions on inherited collection-element columns

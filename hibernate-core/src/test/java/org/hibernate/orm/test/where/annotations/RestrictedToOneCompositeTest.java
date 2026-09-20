@@ -14,6 +14,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -31,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(annotatedClasses = { RestrictedToOneCompositeTest.SqlTarget.class,
 		RestrictedToOneCompositeTest.FilterTarget.class, RestrictedToOneCompositeTest.Owner.class })
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 class RestrictedToOneCompositeTest {
 	@AfterEach
 	void cleanup(SessionFactoryScope scope) {
@@ -80,6 +81,44 @@ class RestrictedToOneCompositeTest {
 				"select sql_part, sql_number, filter_part, filter_number from restricted_composite where id=2",
 				Object[].class ).getSingleResult() ).containsExactly( "sql", 2L, "filter", 2L ) );
 	}
+	@Test
+	void compositeIdNavigationOnlyJoinsForEnabledFilters(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var target = new FilterTarget();
+			target.id = new Key( "filter", 2L );
+			session.persist( target );
+			final var owner = new Owner();
+			owner.id = 2L;
+			owner.filter = target;
+			session.persist( owner );
+		} );
+		scope.inTransaction( session -> {
+			final var inspector = scope.getCollectingStatementObserver();
+			for ( boolean enabled : new boolean[] { false, true, false } ) {
+				if ( enabled ) {
+					session.enableFilter( "compositeActive" );
+				}
+				else {
+					session.disableFilter( "compositeActive" );
+				}
+				for ( String hql : new String[] {
+						"select o.filter.id.number from CompositeOwner o where o.id = 2",
+						"select o.id from CompositeOwner o where o.filter.id.number = 2" } ) {
+					inspector.clear();
+					assertThat( session.createQuery( hql, Long.class ).getResultList() )
+							.containsExactly( enabled ? new Long[0] : new Long[] { 2L } );
+					assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+					assertThat( inspector.getSqlQueries().get( 0 ).contains( "join restricted_composite_filter " ) )
+							.isEqualTo( enabled );
+				}
+				assertThat( session.createQuery(
+						"select o.id from CompositeOwner o where o.filter.id = :key", Long.class )
+						.setParameter( "key", new Key( "filter", 2L ) ).getResultList() )
+						.containsExactly( enabled ? new Long[0] : new Long[] { 2L } );
+			}
+		} );
+	}
+
 	@Embeddable
 	static class Key implements Serializable {
 		String part;

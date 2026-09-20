@@ -889,7 +889,6 @@ public class ToOneAttributeMapping
 		final boolean forceJoin = hasNotFoundAction()
 				|| entityMappingType.getSoftDeleteMapping() != null
 				|| entityMappingType.hasWhereRestrictions()
-				|| entityMappingType.getEntityPersister().hasFilterForLoadByKey()
 				|| cardinality == ONE_TO_ONE && isNullable();
 		canUseParentTableGroup = ! forceJoin
 				&& sideNature == ForeignKeyDescriptor.Nature.KEY

@@ -4,8 +4,12 @@
  */
 package org.hibernate.sql;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,53 +23,71 @@ import static org.hibernate.internal.util.StringHelper.replace;
 /** Qualifies mapped columns in SQL restrictions using the tables that actually declare them. */
 @org.hibernate.Internal
 public final class RestrictionRendering {
-	private RestrictionRendering() {
+	private final String template;
+	private final Column[] columns;
+
+	private record Column(String name, String table, String entity, Pattern pattern) {
 	}
 
-	public static String render(
-			String template,
-			String defaultAlias,
-			boolean useQualifier,
-			EntityMappingType entityMapping,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
-		final Map<String, String> tables = new HashMap<>();
-		final Map<String, String> entities = new HashMap<>();
+	private record Owner(String column, String table, String entity) {
+	}
+
+	private RestrictionRendering(String template, Column[] columns) {
+		this.template = template;
+		this.columns = columns;
+	}
+
+	/** Compiles mapping-dependent column matching once, without retaining any query aliases. */
+	public static RestrictionRendering compile(String template, EntityMappingType entityMapping) {
+		final Map<String, Owner> owners = new HashMap<>();
 		entityMapping.forEachAttributeMapping( attribute -> {
 			if ( !attribute.isPluralAttributeMapping() ) {
 				attribute.forEachSelectable( (index, selectable) -> {
 					if ( !selectable.isFormula() ) {
 						final String column = selectable.getSelectionExpression();
-						final String table = selectable.getContainingTableExpression();
-						// Ambiguous column names keep the mapping's original qualification.
-						tables.merge( column, table, (first, second) -> first.equals( second ) ? first : "" );
 						final var declaringEntity = attribute.findContainingEntityMapping();
-						if ( declaringEntity != null ) {
-							entities.put( column, declaringEntity.getEntityName() );
-						}
+						final var owner = new Owner( column, selectable.getContainingTableExpression(),
+								declaringEntity == null ? null : declaringEntity.getEntityName() );
+						// Keep the original qualification when either table or entity ownership is ambiguous.
+						owners.merge( isQuoted( column ) ? column : column.toLowerCase( Locale.ROOT ), owner,
+								(first, second) -> Objects.equals( first.table, second.table )
+										&& Objects.equals( first.entity, second.entity )
+										? first : new Owner( column, null, null ) );
 					}
 				} );
 			}
 		} );
-		String result = template;
-		for ( var entry : tables.entrySet() ) {
-			final String column = entry.getKey();
-			final String table = entry.getValue();
-			if ( table != null && !table.isEmpty() ) {
-				final boolean quoted = column.startsWith( "\"" ) || column.startsWith( "`" ) || column.startsWith( "[" );
+		final List<Column> columns = new ArrayList<>();
+		for ( var owner : owners.values() ) {
+			if ( owner.table != null ) {
 				final var pattern = Pattern.compile(
-						Pattern.quote( Template.TEMPLATE + "." + column ) + "(?![\\p{L}\\p{N}_$])",
-						quoted ? 0 : Pattern.CASE_INSENSITIVE );
-				if ( !pattern.matcher( result ).find() ) {
-					continue;
+						Pattern.quote( Template.TEMPLATE + "." + owner.column ) + "(?![\\p{L}\\p{N}_$])",
+						isQuoted( owner.column ) ? 0 : Pattern.CASE_INSENSITIVE );
+				if ( pattern.matcher( template ).find() ) {
+					columns.add( new Column( owner.column, owner.table, owner.entity, pattern ) );
 				}
-				final var reference = tableGroup.resolveTableReference( table );
-				final String alias = !useQualifier || reference.getIdentificationVariable() == null
-						? reference.getTableId() : reference.getIdentificationVariable();
-				result = pattern.matcher( result ).replaceAll( Matcher.quoteReplacement( alias + "." + column ) );
-				if ( creationState != null && entities.containsKey( column ) ) {
-					creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, entities.get( column ) );
-				}
+			}
+		}
+		return new RestrictionRendering( template, columns.toArray( Column[]::new ) );
+	}
+
+	private static boolean isQuoted(String column) {
+		return column.startsWith( "\"" ) || column.startsWith( "`" ) || column.startsWith( "[" );
+	}
+
+	public String render(
+			String defaultAlias,
+			boolean useQualifier,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
+		String result = template;
+		for ( var column : columns ) {
+			final var reference = tableGroup.resolveTableReference( column.table );
+			final String alias = !useQualifier || reference.getIdentificationVariable() == null
+					? reference.getTableId() : reference.getIdentificationVariable();
+			result = column.pattern.matcher( result ).replaceAll( Matcher.quoteReplacement( alias + "." + column.name ) );
+			if ( creationState != null && column.entity != null ) {
+				creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, column.entity );
 			}
 		}
 		return replace( result, Template.TEMPLATE, defaultAlias );

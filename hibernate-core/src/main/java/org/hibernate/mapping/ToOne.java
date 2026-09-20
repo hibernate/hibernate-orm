@@ -1,6 +1,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.Internal;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
@@ -77,6 +78,7 @@ public abstract sealed class ToOne
 		return filters;
 	}
 
+	@Internal
 	public void copyRestrictions(ToOne original) {
 		sqlRestriction = original.sqlRestriction;
 		filters = original.filters.isEmpty() ? List.of() : new ArrayList<>( original.filters );

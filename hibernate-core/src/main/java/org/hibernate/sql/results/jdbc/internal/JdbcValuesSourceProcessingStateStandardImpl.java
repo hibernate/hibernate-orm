@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.loader.ast.internal.ToOneVisibilityLoader;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
@@ -29,6 +30,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private List<EntityHolder> reloadedEntityHolders;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private boolean subselectsRegistered;
+	private ToOneVisibilityLoader.Cache toOneVisibilityPlanCache;
 
 	private final PreLoadEvent preLoadEvent;
 	private final PostLoadEvent postLoadEvent;
@@ -141,6 +143,14 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 					key
 			);
 		}
+	}
+
+	@Override
+	public ToOneVisibilityLoader.Cache getToOneVisibilityPlanCache() {
+		if ( toOneVisibilityPlanCache == null ) {
+			toOneVisibilityPlanCache = new ToOneVisibilityLoader.Cache();
+		}
+		return toOneVisibilityPlanCache;
 	}
 
 	@Override

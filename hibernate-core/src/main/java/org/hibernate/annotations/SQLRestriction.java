@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies a restriction written in native SQL to add to the generated
- * SQL for entities or collections.
+ * SQL for an entity, collection, or to-one association.
  * <p>
  * For example, {@code @SQLRestriction} could be used to hide entity
  * instances which have been soft-deleted, either for the entity class

@@ -280,9 +280,8 @@ public class SqmUtil {
 	public static boolean isAssociationAffectedByEnabledFilters(
 			ModelPart modelPart, SqmToSqlAstConverter creationState) {
 		return modelPart instanceof ToOneAttributeMapping toOne
-				&& toOne.getEntityMappingType().getEntityPersister().hasFilterForLoadByKey()
-				&& toOne.getEntityMappingType().isAffectedByEnabledFilters(
-						creationState.getLoadQueryInfluencers(), true );
+				&& toOne.hasFilterForLoadByKey()
+				&& toOne.isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers() );
 	}
 
 	private static boolean shouldRenderTargetSide(

@@ -166,7 +166,8 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 				}
 				else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 					final EntityMappingType entityMappingType = toOneAttributeMapping.getEntityMappingType();
-					if ( entityMappingType.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
+					if ( toOneAttributeMapping.isAffectedByAssociationFilters( influencers )
+							|| entityMappingType.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
 						return true;
 					}
 				}

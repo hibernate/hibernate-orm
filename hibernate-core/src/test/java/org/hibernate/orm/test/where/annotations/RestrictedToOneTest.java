@@ -151,10 +151,10 @@ class RestrictedToOneTest {
 			final String keyTable = association.getForeignKeyDescriptor().getKeyTable();
 			scope.inTransaction( session -> {
 				if ( !ownerTable.equals( keyTable ) ) {
-					session.createNativeMutationQuery( "delete from " + keyTable ).executeUpdate();
+					session.createNativeMutationQuery( "delete from " + keyTable + " where 1=1" ).executeUpdate();
 				}
-				session.createNativeMutationQuery( "delete from " + ownerTable ).executeUpdate();
-				session.createNativeMutationQuery( "delete from " + target.getMappedTableDetails().getTableName() )
+				session.createNativeMutationQuery( "delete from " + ownerTable + " where 1=1" ).executeUpdate();
+				session.createNativeMutationQuery( "delete from " + target.getMappedTableDetails().getTableName() + " where 1=1" )
 						.executeUpdate();
 			} );
 			preparedMapping = null;

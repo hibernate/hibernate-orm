@@ -4,8 +4,6 @@
  */
 package org.hibernate.engine.internal;
 
-import java.util.Iterator;
-
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -34,7 +32,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 public final class Nullability {
 	private final SharedSessionContractImplementor session;
 	private final boolean checkNullability;
-	private NullabilityCheckType checkType;
+	private final NullabilityCheckType checkType;
 
 	public enum NullabilityCheckType {
 		CREATE,
@@ -171,7 +169,7 @@ public final class Nullability {
 			// persistent collections may have components
 			if ( collectionType.getElementType( session.getFactory() ) instanceof CompositeType componentType ) {
 				// check for all component's values in the collection
-				final Iterator<?> iterator = getLoadedElementsIterator( collectionType, value );
+				final var iterator = getLoadedElementsIterator( collectionType, value );
 				while ( iterator.hasNext() ) {
 					final Object compositeElement = iterator.next();
 					if ( compositeElement != null ) {
@@ -222,7 +220,10 @@ public final class Nullability {
 			final boolean[] nullability = compositeType.getPropertyNullability();
 			if ( nullability != null ) {
 				// do the test
-				final Object[] values = composite == null ? null : compositeType.getPropertyValues( composite, session );
+				final Object[] values =
+						composite == null
+								? null :
+								compositeType.getPropertyValues( composite, session );
 				final Type[] propertyTypes = compositeType.getSubtypes();
 				final String[] propertyNames = compositeType.getPropertyNames();
 				for ( int i = 0; i < nullability.length; i++ ) {

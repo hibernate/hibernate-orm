@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.internal.EntityCacheRestrictions;
 import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.loader.ast.internal.TenantIdLoader;
@@ -67,6 +68,7 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -931,12 +933,12 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/** Initializes shared restriction metadata after the mapping model is complete. */
 	@Internal
-	default void initializeCacheRestrictions(org.hibernate.boot.spi.MetadataImplementor bootModel) {
+	default void initializeCacheRestrictions(MetadataImplementor bootModel) {
 	}
 
 	@Internal
 	default boolean hasSqlRestrictedAssociations() {
-		return EntityCacheRestrictions.hasSqlRestrictions( this, new java.util.HashSet<>() );
+		return EntityCacheRestrictions.hasSqlRestrictions( this, new HashSet<>() );
 	}
 
 	@Internal

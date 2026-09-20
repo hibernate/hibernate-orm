@@ -128,6 +128,18 @@ public class LoaderSelectBuilder {
 		return process.generateSelect();
 	}
 
+	static SelectStatement createAssociationKeySelect(
+			ToOneAttributeMapping association,
+			ModelPart restrictedPart, LoadQueryInfluencers influencers,
+			Consumer<JdbcParameter> parameterConsumer) {
+		final var target = association.getEntityMappingType();
+		final var factory = influencers.getSessionFactory();
+		final var builder = new LoaderSelectBuilder( factory.getSqlTranslationEngine(), target,
+				List.of( target.getIdentifierMapping() ), restrictedPart, null, 1, influencers,
+				LockOptions.NONE, parameterConsumer, new SqlAliasBaseManager() );
+		return builder.generateSelect( association );
+	}
+
 	/**
 	 * Create a select-statement (SQL AST) for loading by multiple keys using a single SQL ARRAY parameter
 	 */
@@ -547,20 +559,7 @@ public class LoaderSelectBuilder {
 		return generateSelect( null );
 	}
 
-	static SelectStatement createAssociationKeySelect(
-			ToOneAttributeMapping association,
-			ModelPart restrictedPart, LoadQueryInfluencers influencers,
-			Consumer<JdbcParameter> parameterConsumer) {
-		final var target = association.getEntityMappingType();
-		final var factory = influencers.getSessionFactory();
-		final var builder = new LoaderSelectBuilder( factory.getSqlTranslationEngine(), target,
-				List.of( target.getIdentifierMapping() ), restrictedPart, null, 1, influencers,
-				LockOptions.NONE, parameterConsumer, new SqlAliasBaseManager() );
-		return builder.generateSelect( association );
-	}
-
-	private SelectStatement generateSelect(
-			@Nullable ToOneAttributeMapping association) {
+	private SelectStatement generateSelect(@Nullable ToOneAttributeMapping association) {
 		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final var rootQuerySpec = new QuerySpec( true );
@@ -608,7 +607,7 @@ public class LoaderSelectBuilder {
 		}
 
 		if ( association != null ) {
-			association.applyAssociationRestrictions( rootQuerySpec::applyPredicate, rootTableGroup, true, sqlAstCreationState );
+			association.applyAssociationRestrictions( rootQuerySpec::applyPredicate, rootTableGroup, sqlAstCreationState );
 		}
 		return new SelectStatement( rootQuerySpec, domainResults );
 	}

@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.sql.results.graph.FetchOptions;
 
 import static org.hibernate.binder.internal.TenantIdBinder.FILTER_NAME;
 
@@ -42,11 +43,16 @@ public final class EntityCacheRestrictions {
 		if ( hasSqlRestrictions( entity, new HashSet<>() ) ) {
 			return SQL_RESTRICTED;
 		}
-		final Set<String> names = new HashSet<>();
-		collectEntityFilters( entity, bootModel, names, true );
-		// Do not mark the root visited yet: a self-association must still check its tenant.
-		collectAttributeFilters( entity, bootModel, names, new HashSet<>() );
-		return names.isEmpty() ? NONE : new EntityCacheRestrictions( false, names.toArray( String[]::new ) );
+		else {
+			final Set<String> names = new HashSet<>();
+			collectEntityFilters( entity, bootModel, names, true );
+			// Do not mark the root visited yet: a self-association must still check its tenant.
+			collectAttributeFilters( entity, bootModel, names, new HashSet<>() );
+			return names.isEmpty()
+					? NONE
+					: new EntityCacheRestrictions( false,
+							names.toArray( String[]::new ) );
+		}
 	}
 
 	public boolean isAffectedByFilters(LoadQueryInfluencers influencers) {
@@ -63,7 +69,8 @@ public final class EntityCacheRestrictions {
 		final var factory = entity.getEntityPersister().getFactory();
 		for ( var filter : bootModel.getEntityBinding( entity.getEntityName() ).getFilters() ) {
 			final String name = filter.getName();
-			if ( !(root && FILTER_NAME.equals( name )) && factory.getFilterDefinition( name ).isAppliedToLoadByKey() ) {
+			if ( !(root && FILTER_NAME.equals( name ))
+					&& factory.getFilterDefinition( name ).isAppliedToLoadByKey() ) {
 				names.add( name );
 			}
 		}
@@ -89,14 +96,19 @@ public final class EntityCacheRestrictions {
 			else if ( attribute instanceof EmbeddableValuedModelPart embedded ) {
 				collectFilters( embedded.getEmbeddableTypeDescriptor(), bootModel, names, visited );
 			}
-			else if ( attribute instanceof PluralAttributeMapping plural
-					&& attribute.getMappedFetchOptions().getTiming() == FetchTiming.IMMEDIATE
-					&& attribute.getMappedFetchOptions().getStyle() == FetchStyle.JOIN ) {
-				final var collection = bootModel.getCollectionBinding( plural.getCollectionDescriptor().getRole() );
-				collection.getFilters().forEach( filter -> names.add( filter.getName() ) );
-				collection.getManyToManyFilters().forEach( filter -> names.add( filter.getName() ) );
-				collectCollectionPartFilters( plural.getElementDescriptor(), bootModel, names, visited );
-				collectCollectionPartFilters( plural.getIndexDescriptor(), bootModel, names, visited );
+			else if ( attribute instanceof PluralAttributeMapping plural ) {
+				final var fetchOptions = attribute.getMappedFetchOptions();
+				if ( fetchOptions.getTiming() == FetchTiming.IMMEDIATE
+					&& fetchOptions.getStyle() == FetchStyle.JOIN ) {
+					final var collection =
+							bootModel.getCollectionBinding( plural.getCollectionDescriptor().getRole() );
+					collection.getFilters()
+							.forEach( filter -> names.add( filter.getName() ) );
+					collection.getManyToManyFilters()
+							.forEach( filter -> names.add( filter.getName() ) );
+					collectCollectionPartFilters( plural.getElementDescriptor(), bootModel, names, visited );
+					collectCollectionPartFilters( plural.getIndexDescriptor(), bootModel, names, visited );
+				}
 			}
 		}
 	}
@@ -115,18 +127,21 @@ public final class EntityCacheRestrictions {
 		if ( !visited.add( mapping ) ) {
 			return false;
 		}
-		if ( mapping instanceof EntityMappingType entity && entity.hasWhereRestrictions() ) {
+		else if ( mapping instanceof EntityMappingType entity
+					&& entity.hasWhereRestrictions() ) {
 			return true;
 		}
-		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
-			final var attribute = mapping.getAttributeMapping( i );
-			if ( attribute instanceof ToOneAttributeMapping toOne
-					&& hasSqlRestrictions( toOne.getEntityMappingType(), visited )
+		else {
+			for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
+				final var attribute = mapping.getAttributeMapping( i );
+				if ( attribute instanceof ToOneAttributeMapping toOne
+						&& hasSqlRestrictions( toOne.getEntityMappingType(), visited )
 					|| attribute instanceof EmbeddableValuedModelPart embedded
-					&& hasSqlRestrictions( embedded.getEmbeddableTypeDescriptor(), visited ) ) {
-				return true;
+						&& hasSqlRestrictions( embedded.getEmbeddableTypeDescriptor(), visited ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
 	}
 }

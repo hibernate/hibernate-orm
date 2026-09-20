@@ -8,6 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.internal.EntityCacheRestrictions;
+import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.loader.ast.internal.TenantIdLoader;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -922,22 +924,22 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	boolean isLazyPropertiesCacheable();
 
-	@org.hibernate.Internal
-	default org.hibernate.engine.internal.FilteredAssociationMapping getFilteredAssociationMapping() {
-		return org.hibernate.engine.internal.FilteredAssociationMapping.NONE;
+	@Internal
+	default FilteredAssociationMapping getFilteredAssociationMapping() {
+		return FilteredAssociationMapping.NONE;
 	}
 
 	/** Initializes shared restriction metadata after the mapping model is complete. */
-	@org.hibernate.Internal
+	@Internal
 	default void initializeCacheRestrictions(org.hibernate.boot.spi.MetadataImplementor bootModel) {
 	}
 
-	@org.hibernate.Internal
+	@Internal
 	default boolean hasSqlRestrictedAssociations() {
-		return org.hibernate.engine.internal.EntityCacheRestrictions.hasSqlRestrictions( this, new java.util.HashSet<>() );
+		return EntityCacheRestrictions.hasSqlRestrictions( this, new java.util.HashSet<>() );
 	}
 
-	@org.hibernate.Internal
+	@Internal
 	default boolean isAffectedByEnabledFiltersForCache(LoadQueryInfluencers influencers) {
 		return isAffectedByEnabledFilters( influencers, true );
 	}

@@ -247,8 +247,9 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 			EntityEntry entry, DomainResultAssembler<?>[] assemblers, int[] indexes,
 			Object[] values, RowProcessingState rowProcessingState) {
 		final var existing = entry.getExtraState( FilteredAssociationState.class );
-		final var state = collect( existing, entry.getPersister().getFilteredAssociationMapping(),
-				assemblers, indexes, values, rowProcessingState );
+		final var state =
+				collect( existing, entry.getPersister().getFilteredAssociationMapping(),
+						assemblers, indexes, values, rowProcessingState );
 		if ( existing == null && state != null ) {
 			entry.addExtraState( state );
 		}
@@ -285,7 +286,9 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 			return null;
 		}
 		else {
-			return type.isInstance( next ) ? type.cast( next ) : next.getExtraState( type );
+			return type.isInstance( next )
+					? type.cast( next )
+					: next.getExtraState( type );
 		}
 	}
 }

@@ -22,7 +22,8 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
 
 /** Shared slot and column metadata. No mapping references are stored in an entity's bitmap. */
 public final class FilteredAssociationMapping {
-	public static final FilteredAssociationMapping NONE = new FilteredAssociationMapping( new Slot[0], false );
+	public static final FilteredAssociationMapping NONE =
+			new FilteredAssociationMapping( new Slot[0], false );
 	private final Slot[] slots;
 	private final boolean retainKeys;
 	private final Map<String, Slot> byRole = new HashMap<>();
@@ -48,11 +49,13 @@ public final class FilteredAssociationMapping {
 		if ( slots.isEmpty() ) {
 			return NONE;
 		}
-		boolean retainKeys = persister.optimisticLockStyle().isAllOrDirty();
-		for ( var table : persister.getTableMappings() ) {
-			retainKeys |= table.getUpdateDetails().getCustomSql() != null;
+		else {
+			boolean retainKeys = persister.optimisticLockStyle().isAllOrDirty();
+			for ( var table : persister.getTableMappings() ) {
+				retainKeys |= table.getUpdateDetails().getCustomSql() != null;
+			}
+			return new FilteredAssociationMapping( slots.toArray( Slot[]::new ), retainKeys );
 		}
-		return new FilteredAssociationMapping( slots.toArray( Slot[]::new ), retainKeys );
 	}
 
 	private static void collectSlots(ManagedMappingType mapping, AttributeMapping[] prefix, List<Slot> slots) {
@@ -98,15 +101,21 @@ public final class FilteredAssociationMapping {
 		if ( state == null || state.retainsKeys() ) {
 			return false;
 		}
-		final var columns = byColumn.get( column.getContainingTableExpression() );
-		final var slot = columns == null ? null : columns.get( column.getSelectionExpression() );
-		return slot != null && state.contains( slot.index ) && slot.value( values ) == null;
+		else {
+			final var columns = byColumn.get( column.getContainingTableExpression() );
+			final var slot = columns == null
+					? null
+					: columns.get( column.getSelectionExpression() );
+			return slot != null
+				&& state.contains( slot.index )
+				&& slot.value( values ) == null;
+		}
 	}
 
 	/** A hidden nonnull FK also proves that its containing table row existed when loaded. */
 	boolean hasHiddenReference(FilteredAssociationState state, String table) {
 		if ( state != null ) {
-			for ( Slot slot : slots ) {
+			for ( var slot : slots ) {
 				if ( state.contains( slot.index ) && slot.table().equals( table ) ) {
 					return true;
 				}
@@ -117,8 +126,10 @@ public final class FilteredAssociationMapping {
 
 	boolean preservesRow(FilteredAssociationState state, Object[] values, String table) {
 		if ( state != null && !state.retainsKeys() ) {
-			for ( Slot slot : slots ) {
-				if ( state.contains( slot.index ) && slot.table().equals( table ) && slot.value( values ) == null ) {
+			for ( var slot : slots ) {
+				if ( state.contains( slot.index )
+						&& slot.table().equals( table )
+						&& slot.value( values ) == null ) {
 					return true;
 				}
 			}
@@ -128,7 +139,7 @@ public final class FilteredAssociationMapping {
 
 	boolean hasHiddenAttribute(FilteredAssociationState state, AttributeMapping attribute) {
 		if ( state != null ) {
-			for ( Slot slot : slots ) {
+			for ( var slot : slots ) {
 				if ( state.contains( slot.index ) ) {
 					for ( var part : slot.path ) {
 						if ( part == attribute ) {
@@ -142,7 +153,7 @@ public final class FilteredAssociationMapping {
 	}
 
 	void afterUpdate(FilteredAssociationState state, Object[] values) {
-		for ( Slot slot : slots ) {
+		for ( var slot : slots ) {
 			if ( state.contains( slot.index ) ) {
 				final Object value = slot.value( values );
 				if ( value != null && value != UNFETCHED_PROPERTY ) {
@@ -154,7 +165,7 @@ public final class FilteredAssociationMapping {
 
 	Object[] physicalState(FilteredAssociationState state, Object[] values) {
 		final Object[] result = values.clone();
-		for ( Slot slot : slots ) {
+		for ( var slot : slots ) {
 			if ( state.contains( slot.index ) && slot.value( values ) == null ) {
 				Object[] parent = result;
 				for ( int depth = 0; depth < slot.path.length - 1; depth++ ) {
@@ -196,7 +207,8 @@ public final class FilteredAssociationMapping {
 					result = components[path[i].getStateArrayPosition()];
 				}
 				else if ( mapping.isPolymorphic()
-						&& !mapping.findSubtypeBySubclass( result.getClass().getName() ).declaresAttribute( path[i] ) ) {
+						&& !mapping.findSubtypeBySubclass( result.getClass().getName() )
+								.declaresAttribute( path[i] ) ) {
 					return UNFETCHED_PROPERTY;
 				}
 				else {

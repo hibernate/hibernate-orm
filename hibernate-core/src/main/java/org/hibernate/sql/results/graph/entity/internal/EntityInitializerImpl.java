@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 import jakarta.persistence.CacheStoreMode;
 
-import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.CacheMode;
@@ -23,6 +22,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
@@ -127,6 +127,7 @@ public class EntityInitializerImpl
 	private final @Nullable DomainResultAssembler<?> auditChangesetIdAssembler;
 
 	private final DomainResultAssembler<?>[][] assemblers;
+	private final int[][] filteredAssociationIndexes;
 	private final @Nullable Initializer<?>[] allInitializers;
 	private final @Nullable Initializer<?>[][] subInitializers;
 	private final @Nullable Initializer<?>[][] eagerSubInitializers;
@@ -471,6 +472,7 @@ public class EntityInitializerImpl
 		}
 
 		this.assemblers = assemblers;
+		this.filteredAssociationIndexes = FilteredAssociationHydration.assemblerIndexes( assemblers );
 		this.allInitializers = allInitializers;
 		this.subInitializers = subInitializers;
 		this.eagerSubInitializers = eagerSubInitializers;
@@ -886,7 +888,18 @@ public class EntityInitializerImpl
 		}
 	}
 
+	@Override
+	public Object getFilteredAssociationKey(RowProcessingState rowProcessingState) {
+		return affectedByFilter && keyAssembler != null && getData( rowProcessingState ).getInstance() == null
+				? keyAssembler.assemble( rowProcessingState )
+				: null;
+	}
+
 	protected void setMissing(EntityInitializerData data) {
+		setMissing( data, true );
+	}
+
+	private void setMissing(EntityInitializerData data, boolean checkForeignKey) {
 		data.entityKey = null;
 		data.concreteDescriptor = null;
 		data.setInstance( null );
@@ -898,16 +911,12 @@ public class EntityInitializerImpl
 		// need to also look at the foreign-key value column to check
 		// for a dangling foreign-key
 
-		if ( keyAssembler != null ) {
+		if ( checkForeignKey && keyAssembler != null ) {
 			final Object foreignKeyValue = keyAssembler.assemble( data.getRowProcessingState() );
 			if ( foreignKeyValue != null ) {
 				if ( notFoundAction != NotFoundAction.IGNORE ) {
 					final String entityName = getEntityDescriptor().getEntityName();
-					if ( affectedByFilter ) {
-						throw new EntityFilterException( entityName, foreignKeyValue,
-								referencedModelPart.getNavigableRole().getFullPath() );
-					}
-					else {
+					if ( !affectedByFilter ) {
 						throw new FetchNotFoundException( entityName, foreignKeyValue );
 					}
 				}
@@ -938,7 +947,9 @@ public class EntityInitializerImpl
 						: parentInstance;
 		final var session = data.getRowProcessingState().getSession();
 		if ( instance == null ) {
-			setMissing( data );
+			// The parent was already loaded and checked. Its foreign key need not be
+			// present in this row, for example when reading a shallow query-cache entry.
+			setMissing( data, false );
 		}
 		else {
 			data.setInstance( instance );
@@ -1672,6 +1683,11 @@ public class EntityInitializerImpl
 			}
 		}
 
+		if ( filteredAssociationIndexes != null ) {
+			FilteredAssociationHydration.register( entityEntry,
+					concreteAssemblers, filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()], state, rowProcessingState );
+		}
+
 		final var session = rowProcessingState.getSession();
 		updateCaches(
 				data,
@@ -1751,6 +1767,11 @@ public class EntityInitializerImpl
 						data.concreteDescriptor
 				);
 
+		if ( filteredAssociationIndexes != null ) {
+			FilteredAssociationHydration.register( entityEntry,
+					assemblers[data.concreteDescriptor.getSubclassId()], filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()],
+					resolvedEntityState, rowProcessingState );
+		}
 		entityEntry.setMaybeLazySet( maybeLazySets[data.concreteDescriptor.getSubclassId()] );
 		data.entityHolder.setEntityEntry( entityEntry );
 
@@ -1811,6 +1832,8 @@ public class EntityInitializerImpl
 				// No need to put into the entity cache if this is coming from the query cache already
 				&& !data.getRowProcessingState().isQueryCacheHit()
 				&& isCachePutEnabled( session )
+				&& !data.concreteDescriptor.hasSqlRestrictedAssociations()
+				&& !FilteredAssociationState.hasFilteredAssociations( persistenceContext.getEntry( data.entityInstanceForNotify ) )
 				// Don't cache temporal snapshots in the 2LC
 				&& ( data.entityKey == null || !data.entityKey.isTemporal() ) ) {
 			final var cacheAccess = data.concreteDescriptor.getCacheAccessStrategy();

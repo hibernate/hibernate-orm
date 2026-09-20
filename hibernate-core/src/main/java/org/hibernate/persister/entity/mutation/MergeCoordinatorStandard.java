@@ -3,6 +3,7 @@ package org.hibernate.persister.entity.mutation;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import org.hibernate.engine.internal.FilteredAssociationMutation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -127,7 +128,8 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 			@Nullable Object rowId,
 			boolean forceDynamicUpdate,
 			boolean databaseDirtinessCheck,
-			@Nullable SharedSessionContractImplementor session) {
+			@Nullable SharedSessionContractImplementor session,
+			FilteredAssociationMutation filteredAssociations) {
 		final var updateValuesAnalysis = super.analyzeUpdateValues(
 				entity,
 				values,
@@ -141,7 +143,8 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 				rowId,
 				forceDynamicUpdate,
 				databaseDirtinessCheck,
-				session
+				session,
+				filteredAssociations
 		);
 		if ( oldValues == null ) {
 			final TableSet tablesNeedingUpdate = updateValuesAnalysis.getTablesNeedingUpdate();

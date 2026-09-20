@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.function.BiConsumer;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.sql.results.graph.entity.internal.FilteredAssociationHydration;
+import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -47,6 +50,7 @@ public class EmbeddableInitializerImpl
 	private final boolean isPartOfKey;
 
 	protected final DomainResultAssembler<?>[][] assemblers;
+	private final int[][] filteredAssociationIndexes;
 	protected final BasicResultAssembler<?> discriminatorAssembler;
 	protected final @Nullable DomainResultAssembler<Boolean> nullIndicatorAssembler;
 	protected final @Nullable Initializer<InitializerData>[][] subInitializers;
@@ -171,6 +175,7 @@ public class EmbeddableInitializerImpl
 			}
 		}
 		this.assemblers = assemblers;
+		this.filteredAssociationIndexes = FilteredAssociationHydration.assemblerIndexes( assemblers );
 		this.discriminatorAssembler =
 				discriminatorFetch == null
 						? null
@@ -475,6 +480,17 @@ public class EmbeddableInitializerImpl
 		}
 
 //		EMBEDDED_LOAD_LOGGER.tracef( "Created composite instance [%s]", navigablePath );
+	}
+
+	@Override
+	public FilteredAssociationState collectFilteredAssociations(
+			RowProcessingState rowProcessingState, FilteredAssociationState state, FilteredAssociationMapping mapping) {
+		if ( filteredAssociationIndexes == null ) {
+			return state;
+		}
+		final var data = getData( rowProcessingState );
+		return FilteredAssociationHydration.collect( state, mapping,
+				assemblers[data.getSubclassId()], filteredAssociationIndexes[data.getSubclassId()], data.rowState, rowProcessingState );
 	}
 
 	protected void extractRowState(EmbeddableInitializerData data) {

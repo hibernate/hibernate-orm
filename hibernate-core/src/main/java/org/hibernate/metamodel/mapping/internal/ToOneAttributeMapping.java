@@ -7,6 +7,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.sql.results.graph.entity.internal.RestrictedForeignKeyResult;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -114,7 +116,6 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.LOGICAL_ONE_TO_ONE;
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.MANY_TO_ONE;
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.ONE_TO_ONE;
-
 
 /**
  * @author Steve Ebersole
@@ -1719,10 +1720,9 @@ public class ToOneAttributeMapping
 
 			return withRegisteredAssociationKeys(
 					() -> {
-						// When a filter exists that affects a singular association, we have to enable NotFound handling
-						// to force an exception if the filter would result in the entity not being found.
-						// If we silently just read null, this could lead to data loss on flush
-						final boolean affectedByEnabledFilters = isAffectedByEnabledFilters( creationState );
+						// Retain the physical key when a restriction excludes the target.
+						// The persistence context uses it to distinguish a filtered null from an absent reference.
+						final boolean affectedByEnabledFilters = isAffectedByRestrictions( creationState );
 						DomainResult<?> keyResult = null;
 						if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 							// If the key side is non-nullable we also need to add the keyResult
@@ -1785,18 +1785,27 @@ public class ToOneAttributeMapping
 
 		 */
 
-		final var keyResult =
+		DomainResult<?> keyResult =
 				getKeyResult( fetchParent, fetchablePath, creationState, side, parentTableGroup );
+		if ( isAffectedByRestrictions( creationState )
+				&& !sqlAstCreationState.isProcedureOrNativeQuery() ) {
+			final var tableGroup = createTableGroupForDelayedFetch(
+					fetchablePath, parentTableGroup, null, creationState );
+			final var targetResult = entityMappingType.getIdentifierMapping().createDomainResult(
+					fetchablePath, tableGroup, null, creationState );
+			keyResult = new RestrictedForeignKeyResult<>( keyResult, targetResult );
+		}
 		final boolean selectByUniqueKey = isSelectByUniqueKey( side );
 
-		if ( needsImmediateFetch( fetchTiming ) ) {
+		if ( needsImmediateFetch( fetchTiming )
+				|| sqlAstCreationState.isProcedureOrNativeQuery() && isAffectedByRestrictions( creationState ) ) {
 			return buildEntityFetchSelect(
 					fetchParent,
 					this,
 					fetchablePath,
 					keyResult,
 					selectByUniqueKey,
-					isAffectedByEnabledFilters( creationState ),
+					isAffectedByRestrictions( creationState ),
 					creationState
 			);
 		}
@@ -1913,10 +1922,13 @@ public class ToOneAttributeMapping
 		return false;
 	}
 
-	private boolean isAffectedByEnabledFilters(DomainResultCreationState creationState) {
+	private boolean isAffectedByRestrictions(DomainResultCreationState creationState) {
 		final LoadQueryInfluencers loadQueryInfluencers = creationState.getSqlAstCreationState()
 				.getLoadQueryInfluencers();
-		return entityMappingType.isAffectedByEnabledFilters( loadQueryInfluencers, true );
+		return entityMappingType.hasWhereRestrictions()
+				|| entityMappingType.isAffectedByEnabledFilters( loadQueryInfluencers, true )
+				|| creationState.getSqlAstCreationState().isProcedureOrNativeQuery()
+						&& entityMappingType.getEntityPersister().hasFilterForLoadByKey();
 	}
 
 	private boolean needsImmediateFetch(FetchTiming fetchTiming) {
@@ -2150,7 +2162,8 @@ public class ToOneAttributeMapping
 
 	@Override
 	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
-		if ( isKeyTableNullable || isNullable ) {
+		if ( isKeyTableNullable || isNullable || entityMappingType.hasWhereRestrictions()
+				|| entityMappingType.getEntityPersister().hasFilterForLoadByKey() ) {
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( parentTableGroup.getModelPart() instanceof CollectionPart ) {
@@ -2698,6 +2711,9 @@ public class ToOneAttributeMapping
 		if ( domainValue == null ) {
 			return null;
 		}
+		if ( domainValue instanceof FilteredAssociationState.Key key ) {
+			return key.value();
+		}
 
 		if ( referencedPropertyName != null ) {
 			domainValue = lazyInitialize( domainValue );
@@ -2831,7 +2847,9 @@ public class ToOneAttributeMapping
 	@Override
 	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return foreignKeyDescriptor.disassemble(
-				foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
+				value instanceof FilteredAssociationState.Key key
+						? key.value()
+						: foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
 				session
 		);
 	}
@@ -2841,6 +2859,8 @@ public class ToOneAttributeMapping
 		final Object cacheValue =
 				value != null && foreignKeyDescriptor.getJavaType().getJavaTypeClass() == value.getClass()
 						? value
+						: value instanceof FilteredAssociationState.Key key
+						? key.value()
 						: foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session );
 		// the value may come from a database snapshot, in this case it corresponds to the value of the key and can be
 		// added to the cache key
@@ -2868,7 +2888,9 @@ public class ToOneAttributeMapping
 			@Nullable SharedSessionContractImplementor session) {
 		return foreignKeyDescriptor.forEachDisassembledJdbcValue(
 				foreignKeyDescriptor.disassemble(
-						foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
+						value instanceof FilteredAssociationState.Key key
+						? key.value()
+						: foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
 						session
 				),
 				offset,

@@ -67,7 +67,7 @@ final class ToOneRestrictions {
 	}
 
 	void apply(Consumer<Predicate> consumer, EntityMappingType target, TableGroup tableGroup,
-			boolean useQualifier, SqlAstCreationState creationState) {
+			SqlAstCreationState creationState) {
 		if ( sqlTemplate != null ) {
 			var rendering = sqlRendering;
 			if ( rendering == null ) {
@@ -75,9 +75,9 @@ final class ToOneRestrictions {
 				sqlRendering = rendering = RestrictionRendering.compile( sqlTemplate, target );
 			}
 			final var reference = tableGroup.resolveTableReference( target.getEntityPersister().getTableName() );
-			final String alias = useQualifier && reference.getIdentificationVariable() != null
+			final String alias = reference.getIdentificationVariable() != null
 					? reference.getIdentificationVariable() : reference.getTableId();
-			consumer.accept( new SqlFragmentPredicate( rendering.render( alias, useQualifier, tableGroup, creationState ) ) );
+			consumer.accept( new SqlFragmentPredicate( rendering.render( alias, true, tableGroup, creationState ) ) );
 		}
 		if ( filters != null ) {
 			filters.applyEnabledFilters( consumer, target.getEntityPersister().getFilterAliasGenerator( tableGroup ),

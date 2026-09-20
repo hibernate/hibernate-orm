@@ -470,7 +470,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	private boolean needsDynamicTableUpdate(
 			EntityTableDescriptor table, UpdateValuesAnalysis valuesAnalysis, boolean versionChanged) {
-		return !table.isInverse() 
+		return !table.isInverse()
 			&& ( valuesAnalysis.needsUpdate( table ) || versionChanged && isVersionMappingTable( table ) );
 	}
 

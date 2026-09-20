@@ -240,7 +240,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected boolean isAssociationKeyVisible(EntitySelectFetchInitializerData data, boolean byUniqueKey) {
 		if ( !(keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?>)
 				&& !toOneMapping.isAssociationKeyVisible( data.entityIdentifier, byUniqueKey,
-						data.getRowProcessingState().getSession() ) ) {
+						data.getRowProcessingState().getJdbcValuesSourceProcessingState() ) ) {
 			data.setInstance( null );
 			data.setState( State.INITIALIZED );
 			return false;

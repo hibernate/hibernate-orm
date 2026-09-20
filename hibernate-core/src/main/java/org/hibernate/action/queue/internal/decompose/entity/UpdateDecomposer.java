@@ -925,6 +925,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			final var builder = builders.get( tableDescriptor.name() );
 			if ( builder != null ) {// Apply SET clause columns for attributes
+				// Custom SQL has a fixed parameter layout even when generated values or hidden
+				// associations require dynamic decomposition. Bind all its updateable attributes.
 				for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 					final var attribute = tableDescriptor.attributes().get( i );
 					if ( tableDescriptor.updateDetails().getCustomSql() != null

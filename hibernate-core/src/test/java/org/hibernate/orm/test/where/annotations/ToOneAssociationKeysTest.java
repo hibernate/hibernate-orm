@@ -81,9 +81,15 @@ class ToOneAssociationKeysTest {
 				}
 			} );
 		}
-		scope.inTransaction( session -> assertThat( session.createNativeQuery(
-				"select key_part, key_number, target_code, target_registration from association_keys where id=2", Object[].class )
-				.getSingleResult() ).containsExactly( "target", 2, "code2", "registered2" ) );
+		scope.inTransaction( session -> {
+			final Object[] keys = session.createNativeQuery(
+					"select key_part, key_number, target_code, target_registration from association_keys where id=2", Object[].class )
+					.getSingleResult();
+			assertThat( keys[0] ).isEqualTo( "target" );
+			assertThat( ( (Number) keys[1] ).intValue() ).isEqualTo( 2 );
+			assertThat( keys[2] ).isEqualTo( "code2" );
+			assertThat( keys[3] ).isEqualTo( "registered2" );
+		} );
 	}
 
 	@Embeddable

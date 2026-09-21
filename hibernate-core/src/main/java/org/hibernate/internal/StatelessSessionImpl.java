@@ -880,7 +880,10 @@ public class StatelessSessionImpl
 			final var event = eventMonitor.beginEntityUpsertEvent();
 			boolean success = false;
 			try {
-				persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+				final var generatedValues =
+						persister.getMergeCoordinator()
+								.update( entity, id, null, state, oldVersion, null, null, false, this );
+				applyDatabaseResolvedVersion( entity, state, persister, generatedValues );
 				success = true;
 			}
 			finally {

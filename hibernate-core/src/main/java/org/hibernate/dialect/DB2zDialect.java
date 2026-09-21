@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 
 import org.hibernate.dialect.rowid.spi.RowIdSupport;
@@ -38,6 +39,7 @@ import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 
@@ -209,6 +211,16 @@ public class DB2zDialect extends DB2Dialect implements TemporalOperationSupport 
 		}
 		pattern.append(")");
 		return pattern.toString();
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public MutationOperation createOptionalTableUpdateOperation(
+			OptionalTableUpdateOperationRequest request) {
+		final var optionalTableUpdate = request.update();
+		final var factory = request.sessionFactory();
+		return new DB2zSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ), getVersion() )
+				.createMergeOperation( optionalTableUpdate );
 	}
 
 	@Override

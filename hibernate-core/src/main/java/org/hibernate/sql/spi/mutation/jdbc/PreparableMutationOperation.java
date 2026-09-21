@@ -44,6 +44,10 @@ public interface PreparableMutationOperation extends MutationOperation {
 	 */
 	Expectation getExpectation();
 
+	default boolean canRetry() {
+		return getExpectation() instanceof Expectation.RetryableRowCount;
+	}
+
 	/**
 	 * Series of opt-out checks for whether the operation can be
 	 * handled as part of a batch.

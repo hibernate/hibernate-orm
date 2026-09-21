@@ -10431,7 +10431,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return false;
 	}
 
-	private void applySqlComment(String comment) {
+	protected void applySqlComment(String comment) {
 		if ( sessionFactory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			if ( comment != null ) {
 				appendSql( "/* " );

@@ -32,6 +32,20 @@ This release introduces support for Jakarta Persistence 4.0, including the follo
 
 See https://in.relation.to/2026/01/20/JPA-4-M1/[our blog] for discussion of the changes in version 4.0.
 
+[[stateless-lock-modes]]
+== Lock modes in stateless sessions
+
+`StatelessSession` and `EntityAgent` now support all `LockModeType` values for entity loading and queries, including streamed results.
+Optimistic modes obtain protection immediately instead of deferring a version check until commit.
+Both `OPTIMISTIC_FORCE_INCREMENT` and `PESSIMISTIC_FORCE_INCREMENT` increment the version immediately.
+See the link:{migrationGuide}#optimistic-lock-mode-version-check[Migration Guide] for database requirements.
+
+[[nullability-annotations]]
+== Nullability annotations
+
+Jakarta `@Nonnull` and `@Nullable` annotations now cover more of the query, Criteria, restriction, and range APIs, along with mapping, loading, and configuration SPIs.
+These annotations make nullability contracts available to IDEs and static analysis tools.
+
 [[data11]]
 == Jakarta Data 1.1
 
@@ -173,6 +187,15 @@ List<Initiative> initiatives =  outputs.getCurrent()
 On databases with built-in support for row-level security, Hibernate now uses row-level security to enforce the visibility rules implied by discriminator-based multi-tenancy.
 
 In this release, row-level security is already supported on PostgreSQL, Db2, SQL Server, and CockroachDB.
+
+[[custom-sql-tenant-parameter]]
+== Tenant parameters in custom update and delete SQL
+
+For discriminato-based multi-tenancy, Hibernate now restricts all SQL mutations by the tenant id.
+`@SQLUpdate` and `@SQLDelete` may now declare an extra JDBC parameter for the session tenant identifier when the affected table has a tenant column outside its primary key.
+Place this parameter after all existing parameters and include the tenant predicate explicitly, for example, `and tenant_id=coalesce(?,tenant_id)`.
+Hibernate binds null for a root tenant.
+Existing statements without the extra parameter remain supported.
 
 
 [[session-open]]

@@ -29,6 +29,7 @@ import org.hibernate.dialect.sequence.internal.DB2iSequenceSupport;
 import org.hibernate.dialect.sequence.internal.NoSequenceSupport;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.dialect.sql.ast.internal.DB2iSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
@@ -36,6 +37,7 @@ import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 
@@ -163,6 +165,16 @@ public class DB2iDialect extends DB2Dialect {
 		return getVersion().isSameOrAfter(7, 3)
 				? DB2IdentityColumnSupport.INSTANCE
 				: DB2zIdentityColumnSupport.INSTANCE;
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public MutationOperation createOptionalTableUpdateOperation(
+			OptionalTableUpdateOperationRequest request) {
+		final var optionalTableUpdate = request.update();
+		final var factory = request.sessionFactory();
+		return new DB2iSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ), getVersion() )
+				.createMergeOperation( optionalTableUpdate );
 	}
 
 	@Override

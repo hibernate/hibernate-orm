@@ -16,6 +16,7 @@ import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
@@ -34,7 +35,6 @@ import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
-import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorWithUpsert;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
@@ -77,7 +77,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Christian Beikov
  * @author Loïc Lefèvre
  */
-public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithUpsert<T> {
+public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
 	public OracleSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
 		super( request );
@@ -621,42 +621,140 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
+	protected void renderMergeStatement(OptionalTableUpdate optionalTableUpdate) {
+		//
+		// merge into <target-table> as t
+		// using (select col_1, col_2, ... from dual) as s
+		// on (t.key = s.key)
+		// when not matched
+		//	 then insert ...
+		// when matched
+		//      and s.col_1 is null
+		//	    and s.col_2 is null
+		//		and ...
+		//   then delete
+		// when matched
+		//   then update ...
+
+		// `merge into <target-table> [as] t`
+		renderMergeInto( optionalTableUpdate );
+		appendSql( ' ' );
+
+		// using (select col_1, col_2, ... from dual) as s
+		renderMergeUsing( optionalTableUpdate );
+		appendSql( ' ' );
+
+		// on (t.key = s.key)
+		renderMergeOn( optionalTableUpdate );
+		appendSql( ' ' );
+
+		// when not matched
+		//	 then insert ...
+		renderMergeInsert( optionalTableUpdate );
+		appendSql( ' ' );
+
+		// when matched
+		//   then update ... where ...
+		renderMergeUpdate( optionalTableUpdate );
+
+		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
+			// delete
+			//      where s.col_1 is null
+			//	      and s.col_2 is null
+			//		  and ...
+			renderMergeDelete( optionalTableUpdate );
+		}
+	}
+
+	@Override
 	protected void renderMergeTargetAlias() {
-		appendSql( " t" );
+		appendSql( "t" );
 	}
 
 	@Override
 	protected void renderMergeSourceAlias() {
-		appendSql( " s" );
+		appendSql( "s" );
+	}
+
+	private static final String MERGE_ACTION = "hib_merge_action";
+
+	@Override
+	protected void renderMergeUsingQuery(OptionalTableUpdate optionalTableUpdate) {
+		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
+			appendSql( "select s.*,case when" );
+			String separator = " ";
+			for ( ColumnValueBinding valueBinding : optionalTableUpdate.getValueBindings() ) {
+				appendSql( separator );
+				appendSql( "s." );
+				appendSql( valueBinding.getColumnReference().getColumnExpression() );
+				appendSql( " is not null" );
+				separator = " or ";
+			}
+			appendSql( " then 1 else 0 end " );
+			appendSql( MERGE_ACTION );
+			appendSql( " from (" );
+			super.renderMergeUsingQuery( optionalTableUpdate );
+			appendSql( ") s" );
+		}
+		else {
+			super.renderMergeUsingQuery( optionalTableUpdate );
+		}
 	}
 
 	@Override
-	protected void renderMergeSource(OptionalTableUpdate optionalTableUpdate) {
+	protected void renderMergeUpdate(OptionalTableUpdate optionalTableUpdate) {
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
-		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
+		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
 
-		appendSql( "(select " );
-
-		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			final ColumnValueBinding keyBinding = keyBindings.get( i );
-			if ( i > 0 ) {
-				appendSql( ", " );
+		if ( valueBindings.stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
+			appendSql( "when matched then update set" );
+			char separatorChar = ' ';
+			for ( ColumnValueBinding binding : valueBindings ) {
+				if ( binding.isAttributeUpdatable() ) {
+					appendSql( separatorChar );
+					binding.getColumnReference().appendColumnForWrite( this, null );
+					appendSql( '=' );
+					if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
+						appendSql( "case when s." );
+						appendSql( MERGE_ACTION );
+						appendSql( "=1 then " );
+						binding.getColumnReference().appendColumnForWrite( this, "s" );
+						appendSql( " else " );
+						binding.getColumnReference().appendColumnForWrite( this, null );
+						appendSql( " end" );
+					}
+					else {
+						binding.getColumnReference().appendColumnForWrite( this, "s" );
+					}
+					separatorChar = COMMA_SEPARATOR_CHAR;
+				}
 			}
-			renderCasted( keyBinding.getValueExpression() );
-			appendSql( " " );
-			appendSql( keyBinding.getColumnReference().getColumnExpression() );
+			String separator = " where ";
+			for ( ColumnValueBinding optimisticLockBinding : optimisticLockBindings ) {
+				appendSql( separator );
+				if ( renderTenantRestriction( optimisticLockBinding, "t" ) ) {
+					continue;
+				}
+				optimisticLockBinding.getColumnReference().appendReadExpression( this, "t" );
+				appendSql('=');
+				optimisticLockBinding.getValueExpression().accept( this );
+				separator = " and ";
+			}
 		}
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			appendSql( ", " );
-			final ColumnValueBinding valueBinding = valueBindings.get( i );
-			renderCasted( valueBinding.getValueExpression() );
-			appendSql( " " );
-			appendSql( valueBinding.getColumnReference().getColumnExpression() );
-		}
+	}
 
-		appendSql( getSelectOnlyFromClause() );
-		appendSql( ")" );
-
-		renderMergeSourceAlias();
+	@Override
+	protected void renderMergeDelete(OptionalTableUpdate optionalTableUpdate) {
+		appendSql( " delete where s." );
+		appendSql( MERGE_ACTION );
+		appendSql( "=0" );
+		// On Oracle, a delete is considered only after matching the update condition, so no need to check version again
+//		for ( ColumnValueBinding optimisticLockBinding : optionalTableUpdate.getOptimisticLockBindings() ) {
+//			appendSql( separator );
+//			optimisticLockBinding.getColumnReference().appendReadExpression( this, "t" );
+//			appendSql('=');
+//			optimisticLockBinding.getValueExpression().accept( this );
+//			separator = " and ";
+//		}
 	}
 }

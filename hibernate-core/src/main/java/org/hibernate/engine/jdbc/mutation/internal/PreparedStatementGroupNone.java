@@ -30,6 +30,11 @@ public class PreparedStatementGroupNone implements PreparedStatementGroup {
 	}
 
 	@Override
+	public boolean canRetry() {
+		return false;
+	}
+
+	@Override
 	public PreparedStatementDetails getSingleStatementDetails() {
 		return null;
 	}

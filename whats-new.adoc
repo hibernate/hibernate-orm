@@ -191,7 +191,7 @@ In this release, row-level security is already supported on PostgreSQL, Db2, SQL
 [[custom-sql-tenant-parameter]]
 == Tenant parameters in custom update and delete SQL
 
-For discriminato-based multi-tenancy, Hibernate now restricts all SQL mutations by the tenant id.
+For discriminator-based multi-tenancy, Hibernate now restricts all SQL mutations by the tenant id.
 `@SQLUpdate` and `@SQLDelete` may now declare an extra JDBC parameter for the session tenant identifier when the affected table has a tenant column outside its primary key.
 Place this parameter after all existing parameters and include the tenant predicate explicitly, for example, `and tenant_id=coalesce(?,tenant_id)`.
 Hibernate binds null for a root tenant.

@@ -74,11 +74,11 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNotFoundEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToOneType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOuterJoinEnum;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPolymorphismEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPrimitiveArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPropertiesType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmResultSetMappingType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPolymorphismEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
@@ -1055,9 +1055,7 @@ public class HbmXmlTransformer {
 
 		transferEntityLoader( hbmClass, mappingEntity );
 
-		if ( !hbmClass.getTuplizer().isEmpty() ) {
-			handleUnsupported( "<tuplizer/> is not supported" );
-		}
+		validateEntity( hbmClass );
 
 		if ( hbmClass.getPolymorphism() == JaxbHbmPolymorphismEnum.EXPLICIT ) {
 			handleUnsupported( "explicit polymorphism no longer supported" );
@@ -1114,7 +1112,7 @@ public class HbmXmlTransformer {
 		}
 
 		final var filters = mappingEntity.getFilters();
-		for ( var hbmFilter : hbmClass.getFilter()) {
+		for ( var hbmFilter : hbmClass.getFilter() ) {
 			filters.add( convert( hbmFilter ) );
 		}
 
@@ -1124,7 +1122,9 @@ public class HbmXmlTransformer {
 		}
 
 		for ( var hbmSubclass : hbmClass.getSubclass() ) {
-			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
+			validateEntity( hbmSubclass );
+			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass,
+					hbmXmlBinding.getRoot() );
 			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
 			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferDiscriminatorSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
@@ -1132,7 +1132,9 @@ public class HbmXmlTransformer {
 		}
 
 		for ( var hbmSubclass : hbmClass.getJoinedSubclass() ) {
-			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
+			validateEntity( hbmSubclass );
+			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass,
+					hbmXmlBinding.getRoot() );
 			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
 			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferJoinedSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
@@ -1140,7 +1142,9 @@ public class HbmXmlTransformer {
 		}
 
 		for ( var hbmSubclass : hbmClass.getUnionSubclass() ) {
-			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
+			validateEntity( hbmSubclass );
+			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass,
+					hbmXmlBinding.getRoot() );
 			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
 			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferUnionSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
@@ -5122,6 +5126,15 @@ public class HbmXmlTransformer {
 		return className;
 	}
 
+
+	private void validateEntity(JaxbHbmEntityBaseDefinition hbmEntity) {
+		if ( !hbmEntity.getTuplizer().isEmpty() ) {
+			handleUnsupported( "<tuplizer/> is not supported" );
+		}
+		if ( hbmEntity.getProxy() != null ) {
+			handleUnsupported( "proxy attribute no longer supported" );
+		}
+	}
 
 	private void handleUnsupportedContent(String description) {
 		handleUnsupported(

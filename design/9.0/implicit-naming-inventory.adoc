@@ -1,0 +1,364 @@
+= Implicit Naming: Coverage Inventory And Role Proposal
+:toc2:
+:sectanchors:
+
+Status: historical source inventory with outstanding coverage investigations.
+Table, independent-column, join-column, tenant, and entity-discriminator migrations
+are now implemented. Use link:implicit-naming-strategy-proposal.adoc[the replacement
+proposal] for current implementation status; the baseline findings below are not
+a list of still-open defects. See link:naming-strategy-redesign.adoc[the parent design] and
+link:naming-dependency-inputs-spec.adoc[the dependency-input working specification].
+
+== Purpose And Constraints
+
+Find naming decisions, including those which never invoke `ImplicitNamingStrategy`.
+Design the replacement around their semantics, without preserving the old callback
+set or requiring compatibility adapters. Explicit names bypass implicit naming
+uniformly. Both logical and physical dependency names should be available when
+applicable, with the explicit inline-view variant described in the input specification.
+Availability of both stages does not select the stage used by a default algorithm.
+
+This is a static inventory of the inspected boot binders, materializers, state
+management helpers, and standard identifier generators. It is not proof of exhaustive
+runtime coverage. The rows identify source anchors and gaps; exact precedence,
+quoting, invocation counts, and expected outputs still need executable examples
+and a working specification before implementation.
+
+== Existing Callback Coverage
+
+At the start of this inventory, the interface declared sixteen callbacks and
+production invocation sites were found for thirteen. The findings below describe
+that baseline; link:implicit-naming-strategy-proposal.adoc[implementation progress]
+tracks the replacement callbacks and corrected invocation paths. `determineDiscriminatorColumnName`, `determineTenantIdColumnName`,
+and `determinePrimaryKeyJoinColumnName` had no production invocation sites at that
+baseline; their replacement paths are now wired.
+An invoked callback does not by itself establish complete coverage of its role.
+
+Source anchors below are class/method names under `hibernate-core/src/main/java`.
+
+[cols="2,3,4",options="header"]
+|===
+|Role |Current path |Observation and required inputs
+|Primary, association, collection tables
+|`TableBinder` logical-name determination methods
+|Existing callbacks. Association and collection inputs need paired dependency names,
+not reconstructed physical text passed as logical input. Entity/attribute facts
+remain distinct from database names.
+|Identifier and basic columns
+|`IdentifierMappingMaterializer`, `BasicValueMappingMaterializer`, `ComponentSource`, `ElementCollectionAttributeBinder`
+|Existing callbacks in ordinary paths. Preserve the semantic attribute path and
+identify identifier, collection-element, and component roles explicitly.
+|Ordinary association join columns
+|`ToOneAttributeBinder`, `PluralAssociationAttributeBinder`, `TableKeyBinder`
+|Existing join callback, but other association paths below bypass it. Inputs need
+selected referenced-column aliases, ordered name pairs, and owner/target roles.
+|Any discriminator and key columns
+|`AnyValueBinder`
+|Existing callbacks. Keep these distinct from entity discriminators and ordinary
+foreign-key associations; an any mapping has no single target table dependency.
+|List index and scalar map-key columns
+|`CollectionIndexBinder`
+|Existing callbacks. Audit generated defaults supplied as user-provided names;
+the explicit-name bypass must test actual source origin.
+|Foreign keys, unique keys, indexes
+|`InFlightMetadataCollectorImpl`, `DenormalizedTable`, `UniqueKeyMappingMaterializer`, `CollectionKeyMappingMaterializer`, `IndexMappingMaterializer`
+|Existing callbacks. Define owning table, ordered column dependencies, target
+dependencies for foreign keys, and explicit-name bypass at all entry points.
+|===
+
+== Decisions Outside Those Calls
+
+=== Entity discriminator
+
+Source: `ColumnBinder.bindDiscriminatorColumn`
+
+Completed: `DiscriminatorColumnNamingInput` supplies the root entity to the dedicated
+callback, returning implicit `DTYPE` by default. A present annotation supplies its
+effective name, including `DTYPE`; both explicit and generated names receive physical
+naming. Formula and embeddable-discriminator behavior is separate.
+
+=== Tenant identifier
+
+Source: `BasicValueMappingMaterializer.materializeTenantIdBasicValue`
+
+Completed: `TenantColumnNamingInput` supplies the owning entity and full attribute
+path. The supplied strategies use the terminal attribute name, including supported
+embedded paths; explicit names bypass the callback.
+
+=== Embeddable discriminator
+
+Source: `EmbeddableAttributeBinder.bindDiscriminator`
+
+Default attribute name plus `_DTYPE`. Distinguish this role from entity discriminator
+naming, with its component path available.
+
+=== Aggregate container column
+
+Source: `AggregateComponentBinder`
+
+Fallback to the member's attribute name through `bindUntransformedColumn`.
+Represent aggregate container naming rather than silently treating it as explicit.
+
+=== Association identifier columns
+
+Source: `AssociationIdentifierBinder`
+
+Direct property name plus target-column spelling. The target spelling currently
+comes from `Column.getName()`. Needs settled target pairs and identifier-role context.
+
+=== Derived identifier columns
+
+Source: `DerivedIdentifierBinder`
+
+Direct concatenation and later renaming. Separate deciding a new implicit name
+from reuse/alias registration, and settle overrides before publishing dependencies.
+
+=== Primary-key joins for table keys
+
+Source: `TableKeyBinder.bindKeyColumn`
+
+The default supplier copies `identifierColumn.getName()`. Secondary-table and
+joined-inheritance roles must be represented; a new column's default matching an
+existing column's spelling is still a naming decision.
+
+=== Entity map-key join columns
+
+Source: `CollectionIndexBinder.implicitMapKeyJoinColumnName`
+
+Single-column PK default is attribute plus `_KEY`; other cases add target-column
+spelling. This path deliberately bypasses ordinary join naming to retain old
+defaults. The clean-room design must specify this role directly.
+
+=== Collection identifier column
+
+Source: `CollectionIdBinder`
+
+Fallback to `IdentifierCollection.DEFAULT_IDENTIFIER_COLUMN_NAME` without an
+implicit callback. Distinct from an entity identifier and a list index.
+
+=== Time-zone companion column
+
+Source: `BasicValueSourceBinder`
+
+Empty `@TimeZoneColumn.name` becomes property name plus `_tz` directly.
+Supply the related attribute/column facts and identify the companion-column role.
+
+=== Soft-delete column
+
+Source: `SoftDeleteHelper`, `EntityTypeBinder`
+
+Configured/default column names go straight to physical resolution. Distinguish
+an explicitly configured name from the strategy-specific soft-delete default.
+
+=== Primary-key constraint
+
+Source: `PrimaryTableKeyMappingMaterializer.initializePrimaryKey`, `DependentTableKeyMappingMaterializer`, `Join.createPrimaryKey`
+
+Names use `PK_ALIAS.toAliasString(table.getName())` directly. Primary-key constraint
+naming is distinct from naming primary-key columns and requires its own coverage.
+
+=== Index default before materialization
+
+Source: `TableKeyBinder.applyIndexes`
+
+Generates `idx_` plus table name and a column-list hash, then uses `ResolvedIndex.explicit`.
+Preserve absence until implicit naming; do not make generated names bypass it.
+
+=== Audit and history tables
+
+Source: `AuditHelper`, `TemporalHelper`
+
+Direct `_AUD` / `_history` derivation; collection audit tables have another direct
+composition. Some derived table names inherit explicit provenance from the source
+table. Explicit dependency provenance must not make the new generated name explicit.
+
+=== Audit and temporal companion columns
+
+Source: `AuditHelper.setAuditColumnName`, `TemporalHelper.setTemporalColumnName`
+
+Direct finalization of configured/default names. Inventory each companion role
+and configuration precedence separately from copying original table columns.
+
+=== Generator sequence/table
+
+Source: `SequenceStyleGenerator`, `TableGenerator`, `ImplicitDatabaseObjectNamingStrategy`
+
+Retain the separate implicit SPI. Standard, legacy, and single naming policies
+remain on `ImplicitDatabaseObjectNamingStrategy` for now.
+
+=== Generator storage columns
+
+Source: `SequenceStyleGenerator.determineValueColumnName`, `TableGenerator.determineSegmentColumnName` / `determineValueColumnName`
+
+Configuration or literal defaults currently resolved in the generators. Add implicit
+storage-column naming to `ImplicitDatabaseObjectNamingStrategy`, covering sequence
+table emulation, segment columns, and value columns as distinct purposes.
+
+== Boundaries Still To Complete
+
+* SQL object types and dialect-generated auxiliary objects: `AggregateMappingIntent`
+  currently reads struct names from mapping information; that alone does not prove
+  an implicit type-name decision. Trace dialect-created array/type/function/trigger
+  names separately before assigning callbacks or declaring exceptions.
+* Mutation temporary tables: `TemporaryTable` derives names using an adjuster over
+  mapped table spelling. Decide whether these implementation objects use the main
+  strategy or a documented specialized policy; include lifecycle and dialect limits.
+* Catalog/schema defaults, partition objects, check constraints, and names produced
+  by additional mapping contributors need a separate pass. Absence of a discovered
+  callback is not evidence that every such object has an implicit naming decision.
+* Constraint export paths need checking: a mapping constraint name and a name
+  actually emitted by a dialect are not necessarily the same observable surface.
+
+Do not add callbacks for SQL aliases, export bookkeeping keys, discriminator values,
+generator segment values, reference lookup, or alias registration. They are not new
+database-object naming decisions. Restoring or copying an already finalized name
+also must not replay naming. Creating a distinct object whose default derives from
+another object's name must be distinguished from those operations.
+
+== Proposed Role Model
+
+The dialect/auxiliary-object investigation below refines the remaining boundaries.
+Its recommendations are proposals except for Steve's decision to defer named SQL
+types from the current redesign. No implementation changes accompany this investigation.
+
+=== Dialect Objects: Investigation
+
+Named SQL type callbacks are deferred at Steve's request. The findings below are
+retained for future work, not current coverage or acceptance requirements.
+
+Named SQL types are a meaningful candidate for user naming control. They may be
+shared schema objects or types which already exist independently of Hibernate.
+That differs from SQL type syntax: `Dialect.getArrayTypeName()` renders forms such
+as `element array[length]`, while `OracleDialect` derives a named type by appending
+`Array`. A general identifier-naming callback must not receive SQL type expressions.
+
+Concrete paths inspected:
+
+* `AggregateMappingIntent.toQualifiedName()` reads the explicit `@Struct` name,
+  catalog, and schema. This path is not evidence of an implicit struct-name default.
+* `PostgreSQLEnumJdbcType` and `OracleEnumJdbcType` derive auxiliary enum names from
+  the Java class's simple name. `NamedNativeEnumDdlTypeImpl` and its ordinal variant
+  also derive declaration names independently. User naming control would help with
+  schema conventions and equal simple names in different Java packages, but must
+  coordinate creation, dropping, declarations, and JDBC use rather than just DDL.
+* `OracleArrayJdbcType` derives named array types from Java/JDBC element types,
+  converters, or structured types unless a type name is already supplied. It also
+  uses the type name when binding JDBC arrays. Resolve and retain the same name
+  across registration, schema export, SQL rendering, and binding before exposing
+  a naming override. Shared type identity must not depend on which attribute binds first.
+* `OracleUserDefinedTypeExporter` creates functions such as `<array-type>_position`
+  and `<array-type>_concat`. `OracleArrayPositionFunction` and related SQL renderers
+  independently reconstruct those names. These are implementation helpers, not
+  independently mapped application functions.
+* `DB2AggregateSupport` creates `<type>_serializer` and `<type>_deserializer`, with
+  the same names referenced by its transform DDL. Independent naming would require
+  resolving the helper identities and using them throughout the generated bundle.
+* `SQLServerRowLevelSecurity.getTenantTableDdl()` derives a predicate function and
+  security policy from a hash of the qualified table name. The policy references
+  that function. Keep the linked object's DDL and drop commands consistent.
+
+The targeted search did not find generated trigger naming in core/community dialect
+sources. Do not invent a trigger callback without a concrete contributing path.
+This is a source investigation, not database execution or an exhaustive plugin audit.
+
+Future option: support naming actual named SQL types, with dialect-owned syntax,
+capabilities, and validation. This is deferred from the current redesign.
+The recommendation for implementation helper functions/policies is to keep them under
+their dialect/feature support for now. A future specialized override could address
+DBA naming requirements, but it must resolve the whole linked set of names; changing
+only the exported spelling would break references. Do not add generic function or
+trigger callbacks merely because these kinds appear in the inventory.
+
+=== Mutation Temporary Tables: Tradeoffs
+
+Steve prefers keeping these internal. The recommendation is to keep them outside
+`ImplicitNamingStrategy`, retaining the existing dialect/temporary-table strategy
+boundary rather than removing its specialized extension capability.
+
+`TemporaryTable` starts with mapped physical table spelling, distinguishes ID and
+entity staging tables (`HT_` and `HTE_`), accounts for single-table subclasses,
+applies the strategy adjuster, and truncates to the dialect's identifier limit.
+Current adjusters add `ora$ptt_` for Oracle private temporary tables, `#` for
+Transact-SQL, and `session.` for HSQL. Naming is intertwined with qualification,
+table kind, and create/clean/drop lifecycle.
+
+Benefits of keeping this internal:
+
+* Preserve dialect-required spelling and lifecycle rules together.
+* Avoid exposing staging layout and mutation implementation choices as application
+  mapping contracts, or applying ordinary physical naming again to derived names.
+* Keep shared naming between runtime DML, creation, cleanup, and dropping under
+  one implementation's control.
+* Allow the mutation implementation to evolve without growing the main naming SPI.
+
+Costs of keeping this internal:
+
+* DBAs have less direct control over schema conventions and deployment-managed
+  staging tables. Global/persistent strategies already allow automatic creation
+  to be disabled, so pre-created objects are a concrete operational concern.
+* Applications sharing a schema may need name isolation or collision remedies.
+  Current truncation alone is not proof of collision safety.
+* Changing internal names between versions can still affect deployment scripts
+  and permissions even if there is no public naming callback.
+* Customization may require specialized dialect/mutation support instead of a
+  familiar application naming strategy.
+
+If those operational needs require an override, prefer a narrowly scoped option
+in the temporary-table subsystem. Hibernate must still enforce dialect rules and
+use the resolved name consistently. Internal ownership does not eliminate the need
+for deterministic names, collision handling, or deployment documentation.
+
+One existing contract mismatch needs separate follow-up: `TemporaryTableStrategy`
+documents a logical, unqualified input/result, while these callers supply physical
+table spelling and the HSQL adjuster returns a qualified name. Clarify that boundary
+without using it as a reason to route staging names through the main implicit SPI.
+
+=== Main Strategy Families
+
+Organize the design inventory into table, column, and constraint/index families;
+this does not prescribe generic callbacks or a request-type hierarchy for the
+replacement `ImplicitNamingStrategy`. Steve decided that generator naming remains on
+`ImplicitDatabaseObjectNamingStrategy` for now, including new coverage for generator
+storage-column defaults. Do not fold those roles into the replacement implicit SPI.
+The generator extension must define callbacks and inputs, explicit-name bypass,
+default outputs, and tests for both `TableGenerator` and sequence table emulation;
+the contract ownership is settled, while those API details remain to be specified.
+
+Within each family, preserve semantic roles: a tenant column, an entity discriminator,
+an embeddable discriminator, and a collection index are not interchangeable merely
+because each is a column. State-management and aggregate roles belong in this model;
+the exact extension boundary for dialect implementation objects remains open.
+
+Prefer typed, role-specific requests with shared immutable dependency inputs over
+a generic map of optional facts. This does not yet decide between separate strategy
+methods and typed request dispatch. First specify the facts each role actually needs.
+Do not expose mutable mapping objects or a kitchen-sink boot context.
+
+For every role, the next specification must record:
+
+. Source precedence and which inputs count as explicitly supplied.
+. Entity/attribute facts and selected table/column dependencies, with both name stages.
+. Readiness point, including derived or non-primary-key targets and inline views.
+. Default logical output, quoting, and physical transformation for the new object.
+. Exactly-once provider participation, bypass, sharing, and restoration behavior.
+
+== Planned Sequence
+
+. Work through primary-table, association-table, and ordinary join-column requests
+  together, using the Person/Passport example and nonidentity physical naming.
+  State logical-composition and physical-composition alternatives without assuming
+  either is the chosen default.
+. Extend those requests to non-PK targets, derived identifiers, composite keys,
+  selected aliases, and inline views. Establish readiness before selecting signatures.
+. Complete column-role coverage, including the binder-generated defaults above,
+  then constraint/index coverage with dependencies on the resulting columns.
+. Specify the generator storage-column extension on `ImplicitDatabaseObjectNamingStrategy`
+  separately. Complete state-management and dialect-object boundaries; record any
+  intentional exclusions with a reason and customization mechanism.
+. Consolidate the role requests into the replacement SPI working specification,
+  select default outputs and extension style, and seek explicit approval before
+  implementing the replacement.
+
+Keep the dependency-input specification as the common invariant throughout this
+work. Characterization of current names informs choices; it does not impose legacy
+compatibility on the new design.

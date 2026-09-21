@@ -7,6 +7,10 @@ Changes in 7.1.36.Final (September 17, 2026)
 https://hibernate.atlassian.net/projects/HHH/versions/40370
 
 
+** Bug
+    * HHH-20816 Ensure arguments to JSON functions don't allow SQL injection
+
+
 Changes in 7.1.35.Final (August 02, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

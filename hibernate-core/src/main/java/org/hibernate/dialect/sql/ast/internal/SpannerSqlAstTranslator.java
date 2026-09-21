@@ -292,16 +292,6 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		}
 	}
 
-	private void applySqlComment(String comment) {
-		if ( getSessionFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			if ( comment != null ) {
-				appendSql( "/* " );
-				appendSql( org.hibernate.sql.spi.SqlComments.escape( comment ) );
-				appendSql( " */" );
-			}
-		}
-	}
-
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );

@@ -264,10 +264,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	protected void renderNewRowAlias() {
-	}
-
-	@Override
 	protected void renderUpdateValue(ColumnValueBinding columnValueBinding) {
 		appendSql( "values(" );
 		appendSql( columnValueBinding.getColumnReference().getColumnExpression() );

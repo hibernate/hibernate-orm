@@ -17,6 +17,7 @@ import org.hibernate.dialect.sql.ast.DB2zSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -26,6 +27,8 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import jakarta.persistence.TemporalType;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 
 import java.util.List;
 
@@ -176,6 +179,15 @@ public class DB2zDialect extends DB2Dialect {
 		}
 		pattern.append(")");
 		return pattern.toString();
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return new DB2zSqlAstTranslator<>( factory, optionalTableUpdate, getVersion() )
+				.createMergeOperation( optionalTableUpdate );
 	}
 
 	@Override

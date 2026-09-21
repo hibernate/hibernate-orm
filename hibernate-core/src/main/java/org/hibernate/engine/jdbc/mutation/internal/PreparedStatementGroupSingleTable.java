@@ -54,6 +54,11 @@ public class PreparedStatementGroupSingleTable extends AbstractPreparedStatement
 	}
 
 	@Override
+	public boolean canRetry() {
+		return jdbcMutation.canRetry();
+	}
+
+	@Override
 	public PreparedStatementDetails getSingleStatementDetails() {
 		return statementDetails;
 	}

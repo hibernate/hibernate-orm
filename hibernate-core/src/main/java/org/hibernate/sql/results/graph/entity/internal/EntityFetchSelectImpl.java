@@ -31,7 +31,15 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 			boolean selectByUniqueKey,
 			boolean isAffectedByFilter,
 			DomainResultCreationState creationState) {
-		super( navigablePath, fetchedAttribute, fetchParent, keyResult, false, selectByUniqueKey, creationState );
+		super(
+				navigablePath,
+				fetchedAttribute,
+				fetchParent,
+				keyResult,
+				fetchedAttribute.getEntityMappingType().isConcreteProxy() && fetchedAttribute.getEntityMappingType().hasSubclasses(),
+				selectByUniqueKey,
+				creationState
+		);
 		this.isAffectedByFilter = isAffectedByFilter;
 	}
 

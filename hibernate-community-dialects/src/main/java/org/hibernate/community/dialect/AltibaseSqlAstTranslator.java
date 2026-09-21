@@ -39,6 +39,7 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Over;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
@@ -487,6 +488,17 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			appendSql( "floor" );
 		}
 		super.visitBinaryArithmeticExpression(arithmeticExpression);
+	}
+
+	@Override
+	protected void visitArithmeticOperand(Expression expression) {
+		// Altibase requires an explicit type for null literals in arithmetic expressions.
+		if ( expression instanceof QueryLiteral<?> literal && literal.getLiteralValue() == null ) {
+			renderCasted( literal );
+		}
+		else {
+			super.visitArithmeticOperand( expression );
+		}
 	}
 
 }

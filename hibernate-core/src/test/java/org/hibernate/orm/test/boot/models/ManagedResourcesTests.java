@@ -291,7 +291,7 @@ class ManagedResourcesTests {
 		assertThat( ambiguousPackage.isRealClass() ).isFalse();
 		assertThat( ambiguousPackage ).isNotSameAs( ordinary );
 		assertThat( types.resolveClassDetails( SampleType.class.getName() ) ).isSameAs( ordinary );
-		assertThat( org.hibernate.boot.model.internal.GeneratorAnnotationHelper.locatePackageInfoDetails( ordinary, types ) ).isNull();
+		assertThat( ordinary.getPackage().isRealClass() ).isFalse();
 
 		try ( var registry = new StandardServiceRegistryBuilder().build() ) {
 			final var options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( registry );

@@ -22,7 +22,6 @@ import jakarta.persistence.GeneratedValue;
 
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleIdGeneratorType;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleIdentityStrategy;
-import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.locatePackageInfoDetails;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createGeneratorFrom;
 import static org.hibernate.boot.model.internal.GeneratorParameters.identityTablesString;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.mapLegacyNamedGenerator;
@@ -145,31 +144,21 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 			return true;
 		}
 
-		final var packageInfoDetails =
-				locatePackageInfoDetails( declaringType, buildingContext );
-		if ( packageInfoDetails != null ) {
-			final var fromPackage = findGeneratorAnnotation( packageInfoDetails );
+		final var packageDetails = declaringType.getPackage();
+		if ( packageDetails != null ) {
+			final var fromPackage = findGeneratorAnnotation( packageDetails );
 			if ( fromPackage != null ) {
 				handleIdGeneratorType( fromPackage, idValue, idMember, buildingContext );
 				return true;
 			}
 		}
 
-		if ( !declaringType.isRealClass() ) {
-			return false;
-		}
-		final var declaringModule = declaringType.toJavaClass().getModule();
-		if ( declaringModule.isNamed() ) {
-			final var moduleDetails =
-					buildingContext.getBootstrapContext().getModelsContext()
-							.getModuleDetailsRegistry()
-							.findModuleDetails( declaringModule.getName() );
-			if ( moduleDetails != null ) {
-				final var fromModule = findGeneratorAnnotation( moduleDetails );
-				if ( fromModule != null ) {
-					handleIdGeneratorType( fromModule, idValue, idMember, buildingContext );
-					return true;
-				}
+		final var moduleDetails = declaringType.getModule();
+		if ( moduleDetails != null ) {
+			final var fromModule = findGeneratorAnnotation( moduleDetails );
+			if ( fromModule != null ) {
+				handleIdGeneratorType( fromModule, idValue, idMember, buildingContext );
+				return true;
 			}
 		}
 

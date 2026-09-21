@@ -1040,8 +1040,7 @@ public abstract class CollectionBinder {
 		if ( !declaringType.isRealClass() ) {
 			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
 		}
-		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		final var packageInfo = GeneratorAnnotationHelper.locatePackageInfoDetails( declaringType, modelsContext );
+		final var packageInfo = declaringType.getPackage();
 		if ( packageInfo != null ) {
 			final var annotation = packageInfo.getDirectAnnotationUsage( DefaultListSemantics.class );
 			if ( annotation != null ) {
@@ -1049,9 +1048,8 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		final var module = declaringType.toJavaClass().getModule();
-		if ( module.isNamed() ) {
-			final var moduleDetails = modelsContext.getModuleDetailsRegistry().resolveModuleDetails( module );
+		final var moduleDetails = declaringType.getModule();
+		if ( moduleDetails != null ) {
 			final var annotation = moduleDetails.getDirectAnnotationUsage( DefaultListSemantics.class );
 			if ( annotation != null ) {
 				return CollectionClassification.valueOf( annotation.value().name() );

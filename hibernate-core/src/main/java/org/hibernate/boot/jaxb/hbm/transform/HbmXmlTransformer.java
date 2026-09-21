@@ -4770,6 +4770,9 @@ public class HbmXmlTransformer {
 				if (hbmCascade.contains( "delete" ) ) {
 					cascadeType.setCascadeRemove( new JaxbEmptyTypeImpl() );
 				}
+				else {
+					throw new UnsupportedOperationException( "Unsupported cascade style: " + hbmCascade );
+				}
 			}
 		}
 		return cascadeType;

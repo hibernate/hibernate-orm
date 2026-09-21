@@ -1051,17 +1051,11 @@ public class HbmXmlTransformer {
 			mappingEntity.getSynchronizeTables().add( synchronizedTable );
 		}
 
-		if ( hbmClass.getLoader() != null ) {
-			handleUnsupported( "<loader/> is not supported in mapping.xsd - use <sql-select/> or <hql-select/> instead" );
-		}
-
-		if ( !hbmClass.getTuplizer().isEmpty() ) {
-			handleUnsupported( "<tuplizer/> is not supported" );
-		}
-
 		if ( hbmClass.getPolymorphism() == JaxbHbmPolymorphismEnum.EXPLICIT ) {
 			handleUnsupported( "explicit polymorphism no longer supported" );
 		}
+
+		validateEntity( hbmClass );
 
 		if ( hbmClass.getSqlInsert() != null ) {
 			final var sqlInsert = new JaxbCustomSqlImpl();
@@ -1114,7 +1108,7 @@ public class HbmXmlTransformer {
 		}
 
 		final var filters = mappingEntity.getFilters();
-		for ( var hbmFilter : hbmClass.getFilter()) {
+		for ( var hbmFilter : hbmClass.getFilter() ) {
 			filters.add( convert( hbmFilter ) );
 		}
 
@@ -1124,7 +1118,17 @@ public class HbmXmlTransformer {
 		}
 
 		for ( var hbmSubclass : hbmClass.getSubclass() ) {
-			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
+			if ( hbmSubclass.getLoader() != null ) {
+				handleUnsupported( "<loader/> is not supported in mapping.xsd - use <sql-select/> or <hql-select/> instead" );
+			}
+
+			if ( !hbmSubclass.getTuplizer().isEmpty() ) {
+				handleUnsupported( "<tuplizer/> is not supported" );
+			}
+
+			validateEntity( hbmSubclass );
+			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass,
+					hbmXmlBinding.getRoot() );
 			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
 			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferDiscriminatorSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
@@ -1132,7 +1136,9 @@ public class HbmXmlTransformer {
 		}
 
 		for ( var hbmSubclass : hbmClass.getJoinedSubclass() ) {
-			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
+			validateEntity( hbmSubclass );
+			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass,
+					hbmXmlBinding.getRoot() );
 			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
 			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferJoinedSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
@@ -1140,7 +1146,9 @@ public class HbmXmlTransformer {
 		}
 
 		for ( var hbmSubclass : hbmClass.getUnionSubclass() ) {
-			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
+			validateEntity( hbmSubclass );
+			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass,
+					hbmXmlBinding.getRoot() );
 			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
 			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferUnionSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
@@ -4810,6 +4818,18 @@ public class HbmXmlTransformer {
 		return className;
 	}
 
+
+	private void validateEntity(JaxbHbmEntityBaseDefinition hbmEntity) {
+		if ( hbmEntity.getLoader() != null ) {
+			handleUnsupported( "<loader/> is not supported in mapping.xsd - use <sql-select/> or <hql-select/> instead" );
+		}
+		if ( !hbmEntity.getTuplizer().isEmpty() ) {
+			handleUnsupported( "<tuplizer/> is not supported" );
+		}
+		if ( hbmEntity.getProxy() != null ) {
+			handleUnsupported( "proxy attribute no longer supported" );
+		}
+	}
 
 	private void handleUnsupportedContent(String description) {
 		handleUnsupported(

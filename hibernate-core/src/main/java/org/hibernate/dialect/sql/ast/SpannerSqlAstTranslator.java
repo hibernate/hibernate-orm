@@ -314,16 +314,6 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		}
 	}
 
-	private void applySqlComment(String comment) {
-		if ( getSessionFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			if ( comment != null ) {
-				appendSql( "/* " );
-				appendSql( org.hibernate.dialect.Dialect.escapeComment( comment ) );
-				appendSql( " */" );
-			}
-		}
-	}
-
 	@Override
 	protected void renderTableReferenceIdentificationVariable(TableReference tableReference) {
 		// Spanner requires `UNNEST(...) alias`. Standard rendering places the alias

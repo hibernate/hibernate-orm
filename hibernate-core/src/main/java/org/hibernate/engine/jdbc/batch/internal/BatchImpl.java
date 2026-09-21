@@ -4,7 +4,14 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
+import jakarta.annotation.Nullable;
+
+import java.sql.BatchUpdateException;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 import org.hibernate.HibernateException;
@@ -20,6 +27,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.sql.model.TableMapping;
 
 import static java.util.Objects.requireNonNull;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
@@ -42,10 +50,13 @@ public class BatchImpl implements Batch {
 	private final JdbcServices jdbcServices;
 
 	private final LinkedHashSet<BatchObserver> observers = new LinkedHashSet<>();
+	private final @Nullable Binding[] valueBindings;
 
 	private int batchPosition;
 	private boolean batchExecuted;
 	private StaleStateMapper[] staleStateMappers;
+
+	private record Binding(JdbcValueBindings jdbcValueBindings, ArrayList<TableMapping> tableMappings) {}
 
 	public BatchImpl(
 			BatchKey key,
@@ -71,6 +82,7 @@ public class BatchImpl implements Batch {
 					key.toLoggableString()
 			);
 		}
+		valueBindings = statementGroup.canRetry() ? new Binding[batchSizeToUse] : null;
 	}
 
 	@Override
@@ -144,7 +156,17 @@ public class BatchImpl implements Batch {
 						);
 					}
 					finally {
-						jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
+						if ( valueBindings != null ) {
+							if ( valueBindings[batchPosition] == null ) {
+								valueBindings[batchPosition] = new Binding( jdbcValueBindings,
+										new ArrayList<>( getStatementGroup().getNumberOfStatements() ) );
+							}
+							valueBindings[batchPosition].tableMappings.add(
+									statementDetails.getMutatingTableDetails() );
+						}
+						else {
+							jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
+						}
 					}
 				}
 			} );
@@ -253,10 +275,15 @@ public class BatchImpl implements Batch {
 						if ( statementDetails.getMutatingTableDetails().isIdentifierTable() ) {
 							final var eventMonitor = jdbcSessionOwner.getEventMonitor();
 							final var executionEvent = eventMonitor.beginJdbcBatchExecutionEvent();
-							final int[] rowCounts;
+							eventHandler.jdbcExecuteBatchStart();
+							int[] rowCounts;
 							try {
-								eventHandler.jdbcExecuteBatchStart();
-								rowCounts = statement.executeBatch();
+								try {
+									rowCounts = statement.executeBatch();
+								}
+								catch (BatchUpdateException batchUpdateException) {
+									rowCounts = maybeRetryBatch( statementDetails, statement, batchUpdateException );
+								}
 							}
 							catch (SQLException sqle) {
 								jdbcCoordinator.afterFailedStatementExecution( sqle );
@@ -269,7 +296,12 @@ public class BatchImpl implements Batch {
 							checkRowCounts( rowCounts, statementDetails );
 						}
 						else {
-							statement.executeBatch();
+							try {
+								statement.executeBatch();
+							}
+							catch (BatchUpdateException batchUpdateException) {
+								maybeRetryBatch( statementDetails, statement, batchUpdateException );
+							}
 						}
 					}
 					catch (SQLException e) {
@@ -286,7 +318,139 @@ public class BatchImpl implements Batch {
 		}
 		finally {
 			jdbcCoordinator.afterStatementExecution();
+			clearBatchStateUntil( batchPosition );
 			batchPosition = 0;
+		}
+	}
+
+	private int[] maybeRetryBatch(
+			PreparedStatementDetails statementDetails,
+			PreparedStatement statement,
+			BatchUpdateException batchUpdateException) throws SQLException {
+		if ( valueBindings == null ) {
+			// When no value bindings are available, this statement is not retryable
+			throw batchUpdateException;
+		}
+		int availableValueBindings = 0;
+		for ( Binding valueBinding : valueBindings ) {
+			if ( valueBinding == null ) {
+				break;
+			}
+			availableValueBindings++;
+		}
+		int[] updateCounts = batchUpdateException.getUpdateCounts();
+		int[] finalUpdateCounts;
+		if ( updateCounts.length == availableValueBindings ) {
+			finalUpdateCounts = updateCounts;
+		}
+		else {
+			finalUpdateCounts = new int[availableValueBindings];
+			// -4 is our empty constant
+			Arrays.fill( finalUpdateCounts, -4 );
+			System.arraycopy( updateCounts, 0, finalUpdateCounts, 0, updateCounts.length );
+		}
+		int valueBindingToRetry = 0;
+		try {
+			int executedValueBindings = updateCounts.length;
+
+			do {
+				// Even though a failure happened, we reach this line of code, which means to retry,
+				// but this time, we don't allow another retry and let the exception bubble up
+				final boolean loggerTraceEnabled = BATCH_MESSAGE_LOGGER.isTraceEnabled();
+				if ( loggerTraceEnabled ) {
+					BATCH_MESSAGE_LOGGER.retryingBatch( getKey().toLoggableString() );
+				}
+				statement.clearBatch();
+				int retryBatchPosition = 1;
+				int failedCount = 0;
+				for ( ; valueBindingToRetry < updateCounts.length; valueBindingToRetry++ ) {
+					if ( updateCounts[valueBindingToRetry] == Statement.EXECUTE_FAILED ) {
+						final String sqlString = statementDetails.getSqlString();
+						sqlStatementLogger.logStatement( sqlString );
+						valueBindings[valueBindingToRetry].jdbcValueBindings.beforeStatement( statementDetails );
+						try {
+							statement.addBatch();
+						}
+						catch (SQLException exception) {
+							throw sqlExceptionHelper.convert(
+									exception,
+									"Could not perform addBatch",
+									sqlString
+							);
+						}
+						failedCount++;
+					}
+				}
+				// Some databases don't continue executing statements if one fails in a batch, so we have to redo them here
+				for ( int i = valueBindingToRetry; i < availableValueBindings; i++ ) {
+					final String sqlString = statementDetails.getSqlString();
+					sqlStatementLogger.logStatement( sqlString );
+					valueBindings[i].jdbcValueBindings.beforeStatement( statementDetails );
+					try {
+						statement.addBatch();
+					}
+					catch (SQLException exception) {
+						throw sqlExceptionHelper.convert(
+								exception,
+								"Could not perform addBatch",
+								sqlString
+						);
+					}
+				}
+				try {
+					int[] retryUpdateCounts = statement.executeBatch();
+					for ( int i = 0, j = 0; i < finalUpdateCounts.length && j < retryUpdateCounts.length; i++ ) {
+						if ( finalUpdateCounts[i] == Statement.EXECUTE_FAILED ) {
+							finalUpdateCounts[i] = retryUpdateCounts[j++];
+						}
+						else if ( finalUpdateCounts[i] == -4 ) {
+							// -4 is our empty constant
+							finalUpdateCounts[i] = retryUpdateCounts[j++];
+						}
+					}
+
+					assert finalUpdateCounts[finalUpdateCounts.length - 1] != -4 : "Not all batch positions were retried";
+					executedValueBindings = availableValueBindings;
+				}
+				catch (BatchUpdateException batchUpdateRetryException) {
+					final int[] retryUpdateCounts = batchUpdateRetryException.getUpdateCounts();
+					if ( retryUpdateCounts.length == 0 || failedCount != 0 ) {
+						// The database stops executing the batch on error and retry failed on the same statement again
+						// or the retry of a previous failure failed again, so give up
+						throw batchUpdateRetryException;
+					}
+					else {
+						// Made some progress, but another statement failed now
+						System.arraycopy( retryUpdateCounts, 0, finalUpdateCounts, executedValueBindings, retryUpdateCounts.length );
+						executedValueBindings += retryUpdateCounts.length;
+						updateCounts = retryUpdateCounts;
+						batchUpdateException.addSuppressed( batchUpdateRetryException );
+					}
+				}
+			} while ( executedValueBindings != availableValueBindings );
+
+			return finalUpdateCounts;
+		}
+		catch (RuntimeException e) {
+			batchUpdateException.addSuppressed( e );
+			throw batchUpdateException;
+		}
+	}
+
+	private void clearBatchStateUntil(int batchCount) {
+		if ( staleStateMappers != null ) {
+			Arrays.fill( staleStateMappers, 0, batchCount, null );
+		}
+		if ( valueBindings != null ) {
+			for ( int i = 0; i < batchCount; i++ ) {
+				final Binding valueBinding = valueBindings[i];
+				if ( valueBinding != null ) {
+					for ( TableMapping tableMapping : valueBinding.tableMappings ) {
+						valueBinding.jdbcValueBindings.afterStatement( tableMapping );
+					}
+				}
+			}
+			Arrays.fill( valueBindings, 0, batchCount, null );
 		}
 	}
 
@@ -329,6 +493,8 @@ public class BatchImpl implements Batch {
 
 	private void close(){
 		releaseStatements();
+		clearBatchStateUntil( batchSizeToUse );
+		staleStateMappers = null;
 		observers.clear();
 	}
 

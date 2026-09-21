@@ -22,6 +22,7 @@ import org.hibernate.sql.model.jdbc.UpsertOperation;
  *
  * @author Steve Ebersole
  */
+@Deprecated(forRemoval = true, since = "8.0")
 public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 	protected SqlAstTranslatorWithUpsert(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
@@ -50,10 +51,18 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 		);
 	}
 
-	private static Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
+	protected Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
+		return mergeExpectation( optionalTableUpdate );
+	}
+
+	private static Expectation mergeExpectation(OptionalTableUpdate optionalTableUpdate) {
 		return optionalTableUpdate.getValueBindings().stream()
 					.anyMatch( ColumnValueBinding::isAttributeUpdatable )
-				? new Expectation.RowCount()
+				? optionalTableUpdate.getMutatingTable().isOptional()
+					// When the mutating table is optional, we would generate a delete part for the merge statement
+					// which makes the statement non-idempotent and hence not retryable
+					? new Expectation.RowCount()
+					: new Expectation.RetryableRowCount()
 				// Without updatable bindings, the merge affects 0 rows when matched
 				: new Expectation.OptionalRowCount();
 	}

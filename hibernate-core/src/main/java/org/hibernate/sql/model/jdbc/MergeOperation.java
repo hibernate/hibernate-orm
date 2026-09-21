@@ -6,6 +6,7 @@ package org.hibernate.sql.model.jdbc;
 
 import java.util.List;
 
+import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.model.MutationTarget;
@@ -40,4 +41,10 @@ public class MergeOperation extends AbstractJdbcMutation {
 		return MutationType.UPDATE;
 	}
 
+	@Override
+	public boolean canBeBatched(BatchKey batchKey, int batchSize) {
+		// When the mutating table is optional, we generated a delete part for the merge statement
+		// which makes the statement non-idempotent and hence not retryable, so also not batchable
+		return !getTableDetails().isOptional() && super.canBeBatched( batchKey, batchSize );
+	}
 }

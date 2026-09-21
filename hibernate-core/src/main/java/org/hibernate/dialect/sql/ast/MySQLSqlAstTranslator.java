@@ -406,9 +406,8 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 	*/
 	@Override
 	protected void renderNewRowAlias() {
-		appendSql( "as " );
+		appendSql( " as " );
 		renderAlias();
-		appendSql( " " );
 	}
 
 	@Override

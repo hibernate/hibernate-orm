@@ -8,6 +8,7 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class LocalizedString {
+	@jakarta.persistence.Column(name = "language")
 	private String language;
 	private String text;
 

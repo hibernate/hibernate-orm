@@ -4,9 +4,10 @@
  */
 package org.hibernate.tool.schema.spi;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import org.hibernate.SPI;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -59,7 +60,7 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 	}
 
 	/// Format the sequence name used by create and drop commands.
-	protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata,
+	protected String getFormattedSequenceName(QualifiedPhysicalName name, Metadata metadata,
 			SqlStringGenerationContext context) {
 		return context.format( name );
 	}

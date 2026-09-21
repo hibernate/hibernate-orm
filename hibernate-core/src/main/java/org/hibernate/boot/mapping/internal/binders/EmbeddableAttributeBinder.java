@@ -16,7 +16,6 @@ import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
@@ -32,7 +31,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.models.spi.ClassDetails;
@@ -64,7 +63,7 @@ class EmbeddableAttributeBinder {
 	private final AttributeBindingView attributeBinding;
 	private final PersistentClass ownerBinding;
 	private final AttributeMetadataImplementor attributeMetadata;
-	private final Table primaryTable;
+	private final ColumnContainer primaryTable;
 	private final ModelBinders modelBinders;
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
@@ -77,7 +76,7 @@ class EmbeddableAttributeBinder {
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
 			AttributeMetadataImplementor attributeMetadata,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			ModelBinders modelBinders,
 			BindingState bindingState,
 			BindingOptions bindingOptions,
@@ -101,7 +100,7 @@ class EmbeddableAttributeBinder {
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
 			AttributeMetadataImplementor attributeMetadata,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			ModelBinders modelBinders,
 			BindingState bindingState,
 			BindingOptions bindingOptions,
@@ -151,7 +150,7 @@ class EmbeddableAttributeBinder {
 					bindingContext
 			);
 		}
-		final Table componentTable = resolveComponentTable( member );
+		final ColumnContainer componentTable = resolveComponentTable( member );
 		final EmbeddableMappingMaterializer materializer = new EmbeddableMappingMaterializer( bindingState );
 		final var embeddedValueIntent = attributeBinding.embeddedValueIntent();
 		final var embeddedValueMetadata = embeddedValueIntent == null ? null : embeddedValueIntent.valueMetadata();
@@ -274,7 +273,7 @@ class EmbeddableAttributeBinder {
 
 	private void bindDiscriminator(
 			Component component,
-			Table componentTable,
+			ColumnContainer componentTable,
 			EmbeddableContribution contribution) {
 		bindDiscriminator(
 				component,
@@ -289,7 +288,7 @@ class EmbeddableAttributeBinder {
 
 	static void bindDiscriminator(
 			Component component,
-			Table componentTable,
+			ColumnContainer componentTable,
 			EmbeddableContribution contribution,
 			String implicitColumnName,
 			BindingState bindingState,
@@ -311,22 +310,22 @@ class EmbeddableAttributeBinder {
 		final var overrideColumnSource = discriminatorSource.overrideColumnSource();
 		final DiscriminatorColumn discriminatorColumn = discriminatorSource.discriminatorColumn();
 		if ( overrideColumnSource != null ) {
-			final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
+			final org.hibernate.mapping.Column column = ColumnBinder.bindUntransformedColumn(
 					overrideColumnSource,
 					() -> implicitColumnName,
 					false,
-					true
-			);
+					true, 255, 0, 0, bindingState.getDatabase()
+		);
 			componentTable.addColumn( column );
 			discriminator.addColumn( column, true, true );
 		}
 		else if ( discriminatorColumn == null ) {
-			final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
+			final org.hibernate.mapping.Column column = ColumnBinder.bindUntransformedColumn(
 					null,
 					() -> implicitColumnName,
 					false,
-					true
-			);
+					true, 255, 0, 0, bindingState.getDatabase()
+		);
 			componentTable.addColumn( column );
 			discriminator.addColumn( column, true, true );
 		}
@@ -377,18 +376,18 @@ class EmbeddableAttributeBinder {
 		);
 	}
 
-	private Table resolveComponentTable(MemberDetails attributeMember) {
+	private ColumnContainer resolveComponentTable(MemberDetails attributeMember) {
 		return resolveExplicitEmbeddedTable( attributeMember );
 	}
 
-	private Table resolveExplicitEmbeddedTable(MemberDetails attributeMember) {
+	private ColumnContainer resolveExplicitEmbeddedTable(MemberDetails attributeMember) {
 		final EmbeddedTable embeddedTable = attributeMember.getDirectAnnotationUsage( EmbeddedTable.class );
 		if ( embeddedTable == null ) {
 			return primaryTable;
 		}
 
-		final Identifier identifier = Identifier.toIdentifier( embeddedTable.value() );
-		final TableReference tableReference = bindingState.getTableByName( identifier.getCanonicalName() );
+		final var logicalName = bindingState.getDatabase().toLogicalName( embeddedTable.value() );
+		final TableReference tableReference = bindingState.getTableByName( logicalName );
 		if ( tableReference == null ) {
 			throw new MappingException( String.format( Locale.ROOT,
 					"Could not resolve @EmbeddedTable table `%s` for %s.%s",

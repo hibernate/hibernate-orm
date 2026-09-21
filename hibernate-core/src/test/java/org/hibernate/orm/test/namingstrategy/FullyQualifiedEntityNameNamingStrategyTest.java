@@ -4,11 +4,16 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import org.hibernate.boot.model.naming.spi.AssociationTableNamingInput;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.boot.model.source.spi.AttributePath;
+
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.EntityNaming;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
-import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
+import org.hibernate.boot.model.naming.spi.JoinColumnNamingInput;
+import org.hibernate.boot.model.naming.spi.CollectionKeyNamingInput;
+import org.hibernate.boot.model.naming.spi.AssociationKeyNamingInput;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -122,32 +127,33 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 		}
 
 		@Override
-		public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
-			final String ownerPortion = transformEntityName( source.getOwningEntityNaming() );
+		public LogicalName determineAssociationTableName(AssociationTableNamingInput source, ImplicitNamingContext context) {
+			final String ownerPortion = transformEntityName( source.owner() );
 			final String ownedPortion;
-			if ( source.getNonOwningEntityNaming() != null ) {
-				ownedPortion = transformEntityName( source.getNonOwningEntityNaming() );
+			if ( source.target() != null ) {
+				ownedPortion = transformEntityName( source.target() );
 			}
 			else {
-				ownedPortion = transformAttributePath( source.getAssociationOwningAttributePath() );
+				ownedPortion = transformAttributePath( AttributePath.parse( source.attributePath() ) );
 			}
 
-			return toIdentifier( ownerPortion + "_" + ownedPortion, source.getNamingContext() );
+			return context.implicitName( ownerPortion + "_" + ownedPortion );
+		}
+
+			@Override
+		public LogicalName determineJoinColumnName(JoinColumnNamingInput input, ImplicitNamingContext context) {
+			return joinName( transformEntityName( input.owner() ) + "_" + transformAttributePath( AttributePath.parse( input.attributePath() ) ), input.reference(), context );
 		}
 
 		@Override
-		public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source) {
-			final String entityPortion = transformEntityName( source.getEntityNaming() );
-			final String name;
-			if ( source.getAttributePath() == null ) {
-				name = entityPortion + "_" + source.getReferencedColumnName();
-			}
-			else {
-				name = entityPortion + "_"
-						+ transformAttributePath( source.getAttributePath() )
-						+ "_" + source.getReferencedColumnName();
-			}
-			return toIdentifier( name, source.getNamingContext() );
+		public LogicalName determineCollectionKeyColumnName(CollectionKeyNamingInput input, ImplicitNamingContext context) {
+			return joinName( transformEntityName( input.owner() ) + input.inverseAttributePath().map( path -> "_" + transformAttributePath( AttributePath.parse( path ) ) ).orElse( "" ), input.reference(), context );
 		}
+
+		@Override
+		public LogicalName determineAssociationKeyColumnName(AssociationKeyNamingInput input, ImplicitNamingContext context) {
+			return joinName( transformEntityName( input.target() ) + "_" + transformAttributePath( AttributePath.parse( input.attributePath() ) ), input.reference(), context );
+		}
+
 	}
 }

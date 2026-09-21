@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.dialect;
 
+import org.hibernate.testing.util.MappingTableHelper;
+
+
 import java.util.stream.Stream;
 
 import org.hibernate.boot.model.naming.Identifier;
@@ -21,8 +24,9 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedArrayType;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.DialectTestSupport;
 import org.junit.jupiter.api.Test;
@@ -39,11 +43,15 @@ import static org.mockito.Mockito.when;
 /// @author Steve Ebersole
 @BaseUnitTest
 public class SchemaExporterRenderingTests {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 	@ParameterizedTest
 	@MethodSource("tableDialects")
 	void rendersStandardAndAggregateAwareTableVariants(Dialect dialect) {
 		final String[] commands = dialect.getTableExporter().getSqlCreateStrings(
-				new Table( "test", "orders" ),
+				MappingTableHelper.table( "test", "orders", new PhysicalName.Factory( (text, quoted) -> text ) ),
 				null,
 				new TestContext( dialect )
 		);
@@ -58,7 +66,7 @@ public class SchemaExporterRenderingTests {
 	void preservesHanaTypeTableQuoting() {
 		final Dialect dialect = new HANADialect();
 		assertThat( dialect.getTableExporter().getSqlCreateStrings(
-				new Table( "test", "TYPE" ),
+				MappingTableHelper.table( "test", "TYPE", new PhysicalName.Factory( (text, quoted) -> text ) ),
 				null,
 				new TestContext( dialect )
 		)[0] ).contains( "\"TYPE\"" );
@@ -67,9 +75,9 @@ public class SchemaExporterRenderingTests {
 	@Test
 	void preservesSpannerIndexDropOrdering() {
 		final Dialect dialect = new SpannerDialect();
-		final Table table = new Table( "test", "orders" );
+		final var table = MappingTableHelper.table( "test", "orders", new PhysicalName.Factory( (text, quoted) -> text ) );
 		final var index = table.getOrCreateIndex( "ix_orders_name" );
-		index.addColumn( new Column( "name" ) );
+		index.addColumn( new Column( MappingTableHelper.columnName( "name", COLUMN_NAMES ) ) );
 
 		assertThat( dialect.getTableExporter().getSqlDropStrings(
 				table,
@@ -82,10 +90,24 @@ public class SchemaExporterRenderingTests {
 	}
 
 	@Test
+	void preservesNamedViewOptionsAndComments() {
+		final var dialect = new PostgreSQLDialect();
+		final var context = new TestContext( dialect );
+		final var view = new org.hibernate.mapping.DatabaseView( "test",
+				new QualifiedPhysicalName( null, null, context.getPhysicalNameFactory().create( "report", true ) ),
+				"select id from orders" );
+		view.setOptions( "with local check option" );
+		view.setComment( "Order report" );
+		assertThat( dialect.getTableExporter().getSqlCreateStrings( view, null, context ) )
+				.containsExactly( "create view \"report\" as select id from orders with local check option",
+						"comment on table \"report\" is 'Order report'" );
+	}
+
+	@Test
 	void preservesOracleArrayTypeRenderingBehindFacade() {
 		final Dialect dialect = new OracleDialect();
 		final Namespace namespace = mock( Namespace.class );
-		when( namespace.getPhysicalName() ).thenReturn( new Namespace.Name( null, null ) );
+		when( namespace.getPhysicalName() ).thenReturn( new org.hibernate.boot.model.relational.PhysicalNamespaceName( null, null ) );
 		final UserDefinedArrayType arrayType = new UserDefinedArrayType(
 				"test",
 				namespace,
@@ -111,6 +133,11 @@ public class SchemaExporterRenderingTests {
 	}
 
 	private record TestContext(Dialect dialect) implements SqlStringGenerationContext {
+		@Override
+		public PhysicalName.Factory getPhysicalNameFactory() {
+			return new PhysicalName.Factory( (text, quoted) -> text );
+		}
+
 		@Override
 		public Dialect getDialect() {
 			return dialect;
@@ -150,6 +177,15 @@ public class SchemaExporterRenderingTests {
 		public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
 			return qualifiedName.render();
 		}
+
+		@Override
+		public String format(QualifiedPhysicalName name) {
+			return new org.hibernate.engine.jdbc.env.internal.QualifiedObjectNameFormatterStandardImpl(
+					org.hibernate.engine.jdbc.env.spi.NameQualifierSupport.BOTH, ".", false ).format( name, dialect );
+		}
+
+		@Override
+		public String formatWithoutCatalog(QualifiedPhysicalName name) { return name.render(); }
 
 		@Override
 		public boolean isMigration() {

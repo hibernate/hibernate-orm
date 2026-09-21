@@ -6,6 +6,8 @@ package org.hibernate.engine.jdbc.env.spi;
 
 import org.hibernate.SPI;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.IdentifierComparisonPolicy;
 import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.dialect.identifier.spi.IdentifierSupport;
 
@@ -27,6 +29,12 @@ import static org.hibernate.SPI.Role.USE;
 /// @see IdentifierSupport#buildIdentifierHelper(IdentifierHelperBuildRequest)
 @SPI({ USE, SUPPLY })
 public interface IdentifierHelper {
+	/// The immutable effective database comparison rules for this system.
+	IdentifierComparisonPolicy getComparisonPolicy();
+
+	/// The stable factory shared by this system's physical names.
+	PhysicalName.Factory getPhysicalNameFactory();
+
 	/// Quote the identifier when required by the configured global, reserved-word,
 	/// or database-specific policy.
 	///

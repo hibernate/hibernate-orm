@@ -208,7 +208,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		}
 
 		Column dbColumn = currentDbTable
-				.getColumn( new Column( col.getName() ) );
+				.getColumn( col.getPhysicalName() );
 
 		if ( dbColumn == null ) {
 			pc.reportIssue( new Issue( "SCHEMA_COLUMN_MISSING",
@@ -309,7 +309,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	}
 
 	private Collection<Table> readFromDatabase() {
-		RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector();
+		RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector( getMetadata().getDatabase()
+				.getJdbcEnvironment().getIdentifierHelper().getPhysicalNameFactory() );
 		reader.readDatabaseSchema(revengMetadataCollector);
 		return revengMetadataCollector.getTables();
 	}

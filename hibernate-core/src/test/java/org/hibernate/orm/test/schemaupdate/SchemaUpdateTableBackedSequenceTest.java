@@ -60,7 +60,7 @@ public class SchemaUpdateTableBackedSequenceTest {
 		Assertions.assertEquals( 1, database.getDefaultNamespace().getTables().size() );
 		Table table = database.getDefaultNamespace().getTables().iterator().next();
 		SqlStringGenerationContext context = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment(), null, null );
-		Assertions.assertEquals( 1, table.getInitCommands( context ).size() );
+		Assertions.assertEquals( 1, ((org.hibernate.mapping.PhysicalTable) table).getInitCommands( context ).size() );
 
 		final TargetImpl target = new TargetImpl();
 

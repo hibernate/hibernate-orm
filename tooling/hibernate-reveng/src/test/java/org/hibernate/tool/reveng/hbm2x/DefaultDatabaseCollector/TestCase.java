@@ -109,7 +109,8 @@ public class TestCase {
 		DatabaseReader reader = DatabaseReader.create(
 				properties, new DefaultStrategy(),
 				realMetaData, serviceRegistry );
-		RevengMetadataCollector dc = new RevengMetadataCollector();
+		RevengMetadataCollector dc = new RevengMetadataCollector( serviceRegistry.requireService( org.hibernate.engine.jdbc.env.spi.JdbcEnvironment.class )
+				.getIdentifierHelper().getPhysicalNameFactory() );
 		reader.readDatabaseSchema(dc);
 		String defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		assertNotNull(getTable(dc, realMetaData, defaultCatalog, "cat.cat", "cat.child"), "The table should be found");

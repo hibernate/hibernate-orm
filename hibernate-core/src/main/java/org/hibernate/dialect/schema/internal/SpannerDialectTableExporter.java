@@ -4,11 +4,14 @@
  */
 package org.hibernate.dialect.schema.internal;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.spi.StandardTableExporter;
 
@@ -27,9 +30,13 @@ public final class SpannerDialectTableExporter extends StandardTableExporter {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
+	public String[] getSqlDropStrings(NamedTable table, Metadata metadata, SqlStringGenerationContext context) {
+		if ( !(table instanceof PhysicalTable physicalTable) ) {
+			return super.getSqlDropStrings( table, metadata, context );
+		}
+
 		final ArrayList<String> sqlDropIndexStrings = new ArrayList<>();
-		for ( var index : table.getIndexes().values() ) {
+		for ( var index : physicalTable.getIndexes().values() ) {
 			sqlDropIndexStrings.add( sqlDropIndexString( index.getName() ) );
 		}
 		for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {

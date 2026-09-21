@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
@@ -65,10 +67,9 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 	@Override
 	public String format(QualifiedTableName qualifiedTableName, Dialect dialect) {
 		return format.format(
-				qualifiedTableName.getCatalogName(),
-				qualifiedTableName.getSchemaName(),
-				qualifiedTableName.getTableName(),
-				dialect
+				render( qualifiedTableName.getCatalogName(), dialect ),
+				render( qualifiedTableName.getSchemaName(), dialect ),
+				render( qualifiedTableName.getTableName(), dialect )
 		);
 	}
 
@@ -83,45 +84,50 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 	@Override
 	public String format(QualifiedSequenceName qualifiedSequenceName, Dialect dialect) {
 		return format.format(
-				qualifiedSequenceName.getCatalogName(),
-				qualifiedSequenceName.getSchemaName(),
-				qualifiedSequenceName.getSequenceName(),
-				dialect
+				render( qualifiedSequenceName.getCatalogName(), dialect ),
+				render( qualifiedSequenceName.getSchemaName(), dialect ),
+				render( qualifiedSequenceName.getSequenceName(), dialect )
 		);
 	}
 
 	@Override
 	public String format(QualifiedName qualifiedName, Dialect dialect) {
 		return format.format(
-				qualifiedName.getCatalogName(),
-				qualifiedName.getSchemaName(),
-				qualifiedName.getObjectName(),
-				dialect
+				render( qualifiedName.getCatalogName(), dialect ),
+				render( qualifiedName.getSchemaName(), dialect ),
+				render( qualifiedName.getObjectName(), dialect )
 		);
 	}
 
+	@Override
+	public String format(QualifiedPhysicalName name, Dialect dialect) {
+		final var support = dialect.getIdentifierSupport();
+		return format.format( name.catalogName() == null ? null : support.render( name.catalogName() ),
+				name.schemaName() == null ? null : support.render( name.schemaName() ), support.render( name.objectName() ) );
+	}
+
 	private interface Format {
-		String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
+		String format(String catalog, String schema, String name);
 	}
 
 	private record NoQualifierSupportFormat() implements Format {
 		public static final NoQualifierSupportFormat INSTANCE = new NoQualifierSupportFormat();
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
-			return render( name, dialect );
+		public String format(String catalog, String schema, String name) {
+			return name;
 		}
 	}
 
 	private record SchemaNameCatalogFormat(String catalogSeparator) implements Format {
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+		public String format(String catalog, String schema, String name) {
 			final var formatted = new StringBuilder();
 			if ( schema != null ) {
-				formatted.append( render( schema, dialect ) ).append( '.' );
+				formatted.append( schema ).append( '.' );
 			}
-			formatted.append( render( name, dialect ) );
+			formatted.append( name );
 			if ( catalog != null ) {
-				formatted.append( catalogSeparator ).append( render( catalog, dialect ) );
+				formatted.append( catalogSeparator ).append( catalog );
 			}
 			return formatted.toString();
 		}
@@ -130,26 +136,26 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 	private record CatalogSchemaNameFormat(String catalogSeparator) implements Format {
 
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+		public String format(String catalog, String schema, String name) {
 			final var formatted = new StringBuilder();
 			if ( catalog != null ) {
-				formatted.append( render( catalog, dialect ) ).append( catalogSeparator );
+				formatted.append( catalog ).append( catalogSeparator );
 			}
 			if ( schema != null ) {
-				formatted.append( render( schema, dialect ) ).append( '.' );
+				formatted.append( schema ).append( '.' );
 			}
-			formatted.append( render( name, dialect ) );
+			formatted.append( name );
 			return formatted.toString();
 		}
 	}
 
 	private record NameCatalogFormat(String catalogSeparator) implements Format {
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+		public String format(String catalog, String schema, String name) {
 			final var formatted = new StringBuilder();
-			formatted.append( render( name, dialect ) );
+			formatted.append( name );
 			if ( catalog != null ) {
-				formatted.append( catalogSeparator ).append( render( catalog, dialect ) );
+				formatted.append( catalogSeparator ).append( catalog );
 			}
 			return formatted.toString();
 		}
@@ -157,12 +163,12 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 
 	private record CatalogNameFormat(String catalogSeparator) implements Format {
 		@Override
-			public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+			public String format(String catalog, String schema, String name) {
 				final var formatted = new StringBuilder();
 				if ( catalog != null ) {
-					formatted.append( render( catalog, dialect ) ).append( catalogSeparator );
+					formatted.append( catalog ).append( catalogSeparator );
 				}
-				formatted.append( render( name, dialect ) );
+				formatted.append( name );
 				return formatted.toString();
 			}
 		}
@@ -173,12 +179,12 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		 */
 		public static final SchemaNameFormat INSTANCE = new SchemaNameFormat();
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+		public String format(String catalog, String schema, String name) {
 			final var formatted = new StringBuilder();
 			if ( schema != null ) {
-				formatted.append( render( schema, dialect ) ).append( '.' );
+				formatted.append( schema ).append( '.' );
 			}
-			formatted.append( render( name, dialect ) );
+			formatted.append( name );
 			return formatted.toString();
 		}
 	}

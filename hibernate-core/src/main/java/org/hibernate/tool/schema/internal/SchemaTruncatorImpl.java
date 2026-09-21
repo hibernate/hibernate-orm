@@ -4,6 +4,10 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.NamedTable;
+
+import org.hibernate.mapping.PhysicalTable;
+
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Exportable;
@@ -15,7 +19,6 @@ import org.hibernate.dialect.schema.spi.ConstraintControlMode;
 import org.hibernate.dialect.schema.spi.TruncateMode;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -122,13 +125,16 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 				applySqlStrings( dialect.getTableCleaner().getSqlBeforeStrings(), formatter, options, targets );
 
 				// now it's safe to drop the tables
-				final List<Table> tablesToTruncate = new ArrayList<>( namespace.getTables().size() );
-				for ( var table : namespace.getTables() ) {
-					if ( table.isPhysicalTable()
+				final List<PhysicalTable> tablesToTruncate = new ArrayList<>( namespace.getTables().size() );
+				for ( var candidate : namespace.getTables() ) {
+					if ( !( candidate instanceof NamedTable table ) ) {
+						continue;
+					}
+					if ( table instanceof PhysicalTable physicalTable && table.isPhysicalTable()
 							&& schemaFilter.includeTable( table )
 							&& contributableInclusionFilter.matches( table ) ) {
 						checkExportIdentifier( table, exportIdentifiers );
-						tablesToTruncate.add( table );
+						tablesToTruncate.add( physicalTable );
 					}
 				}
 				applySqlStrings(
@@ -163,8 +169,11 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 			ContributableMatcher contributableInclusionFilter,
 			GenerationTarget... targets) {
 		final var dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
-		for ( var table : namespace.getTables() ) {
-			if ( table.isPhysicalTable()
+		for ( var candidate : namespace.getTables() ) {
+			if ( !( candidate instanceof NamedTable table ) ) {
+				continue;
+			}
+			if ( table instanceof PhysicalTable physicalTable && table.isPhysicalTable()
 					&& schemaFilter.includeTable( table )
 					&& contributableInclusionFilter.matches( table ) ) {
 				for ( var foreignKey : table.getForeignKeyCollection() ) {
@@ -202,8 +211,11 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 			ContributableMatcher contributableInclusionFilter,
 			GenerationTarget... targets) {
 		final var dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
-		for ( var table : namespace.getTables() ) {
-			if ( table.isPhysicalTable()
+		for ( var candidate : namespace.getTables() ) {
+			if ( !( candidate instanceof NamedTable table ) ) {
+				continue;
+			}
+			if ( table instanceof PhysicalTable physicalTable && table.isPhysicalTable()
 					&& schemaFilter.includeTable( table )
 					&& contributableInclusionFilter.matches( table ) ) {
 				for ( var foreignKey : table.getForeignKeyCollection() ) {

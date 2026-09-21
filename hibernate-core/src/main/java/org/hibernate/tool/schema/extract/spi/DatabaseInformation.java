@@ -4,9 +4,12 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.PhysicalNamespaceName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 
@@ -26,7 +29,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return {@code true} indicates a schema with the given name already exists
 	 */
-	boolean schemaExists(Namespace.Name schema);
+	boolean schemaExists(PhysicalNamespaceName schema);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -57,6 +60,14 @@ public interface DatabaseInformation {
 	 * @return The table information.  May return {@code null} if not found.
 	 */
 	TableInformation getTableInformation(QualifiedTableName tableName);
+
+	/// Projects finalized names only at the JDBC extraction boundary.
+	default TableInformation getTableInformation(QualifiedPhysicalName name) {
+		return getTableInformation(
+				org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( name.catalogName() ),
+				org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( name.schemaName() ),
+				org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( name.objectName() ) );
+	}
 
 	/**
 	 * Obtain reference to all the {@link TableInformation} for a given {@link Namespace}
@@ -98,6 +109,8 @@ public interface DatabaseInformation {
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
+	SequenceInformation getSequenceInformation(QualifiedPhysicalName sequenceName);
+
 	SequenceInformation getSequenceInformation(QualifiedSequenceName sequenceName);
 
 	/**

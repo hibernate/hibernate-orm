@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,11 +13,9 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.AnyKeyJavaType;
 import org.hibernate.boot.internal.AnyKeyType;
-import org.hibernate.boot.model.naming.ImplicitAnyDiscriminatorColumnNameSource;
-import org.hibernate.boot.model.naming.ImplicitAnyKeyColumnNameSource;
+import org.hibernate.boot.model.naming.spi.AnyColumnNamingInput;
+import org.hibernate.boot.model.naming.spi.AnyColumnNamingInput;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
-import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
-import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
@@ -28,7 +28,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
@@ -85,11 +85,11 @@ class AnyValueBinder {
 		this.bindingContext = bindingContext;
 	}
 
-	Any bind(AnySource source, String propertyName, Table table) {
+	Any bind(AnySource source, String propertyName, ColumnContainer table) {
 		return bind( source, propertyName, table, true );
 	}
 
-	Any bind(AnySource source, String propertyName, Table table, boolean registerTableColumns) {
+	Any bind(AnySource source, String propertyName, ColumnContainer table, boolean registerTableColumns) {
 		validateSupportedShape( source, propertyName );
 
 		final Any any = new Any( bindingState.getMetadataBuildingContext(), table, true );
@@ -111,7 +111,7 @@ class AnyValueBinder {
 	private BasicValue bindDiscriminator(
 			AnySource source,
 			String propertyName,
-			Table table,
+			ColumnContainer table,
 			boolean registerTableColumns) {
 		final BasicValue discriminator = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		discriminator.setTable( table );
@@ -121,15 +121,15 @@ class AnyValueBinder {
 		}
 		else {
 			final var columnSource = ColumnSource.from( source.discriminatorColumn() );
-			final Column column = ColumnBinder.bindColumn(
+			final Column column = ColumnBinder.bindColumnWithNameBinding( registerTableColumns ? table : null,
 					columnSource,
 					() -> implicitAnyDiscriminatorColumnName( source ),
 					false,
 					source.effectiveOptional(),
 					defaultDiscriminatorLength( source.discriminatorType() ),
 					0,
-					0
-			);
+					0, bindingOptions, bindingState
+		);
 			if ( registerTableColumns ) {
 				table.addColumn( column );
 			}
@@ -157,17 +157,17 @@ class AnyValueBinder {
 		return discriminator;
 	}
 
-	private BasicValue bindKey(AnySource source, String propertyName, Table table, boolean registerTableColumns) {
+	private BasicValue bindKey(AnySource source, String propertyName, ColumnContainer table, boolean registerTableColumns) {
 		final BasicValue key = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		key.setTable( table );
 
 		if ( source.keyColumns().isEmpty() ) {
-			final Column column = ColumnBinder.bindColumn(
+			final Column column = ColumnBinder.bindColumnWithNameBinding( registerTableColumns ? table : null,
 					null,
-					() -> implicitAnyKeyColumnName( source ),
+					() -> implicitAnyKeyColumnName( source, 0 ),
 					false,
-					source.effectiveOptional()
-			);
+					source.effectiveOptional(), 255, 0, 0, bindingOptions, bindingState
+		);
 			if ( registerTableColumns ) {
 				table.addColumn( column );
 			}
@@ -177,14 +177,12 @@ class AnyValueBinder {
 			for ( int i = 0; i < source.keyColumns().size(); i++ ) {
 				final int index = i;
 				final var columnSource = ColumnSource.from( source.keyColumns().get( index ) );
-				final Column column = ColumnBinder.bindColumn(
+				final Column column = ColumnBinder.bindColumnWithNameBinding( registerTableColumns ? table : null,
 						columnSource,
-						() -> index == 0
-								? implicitAnyKeyColumnName( source )
-								: implicitAnyKeyColumnName( source ) + ( index + 1 ),
+						() -> implicitAnyKeyColumnName( source, index ),
 						false,
-						source.effectiveOptional()
-				);
+						source.effectiveOptional(), 255, 0, 0, bindingOptions, bindingState
+		);
 				if ( registerTableColumns ) {
 					table.addColumn( column );
 				}
@@ -214,35 +212,13 @@ class AnyValueBinder {
 	}
 
 	private String implicitAnyDiscriminatorColumnName(AnySource source) {
-		return bindingContext.getImplicitNamingStrategy()
-				.determineAnyDiscriminatorColumnName( new ImplicitAnyDiscriminatorColumnNameSource() {
-					@Override
-					public AttributePath getAttributePath() {
-						return AttributePath.parse( source.member().resolveAttributeName() );
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
-					}
-				} )
-				.getText();
+		return ImplicitNamingHelper.columnName( bindingContext.getImplicitNamingStrategy()
+				.determineAnyDiscriminatorColumnName( new AnyColumnNamingInput( source.member().resolveAttributeName(), 0 ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "AnyDiscriminatorColumn" );
 	}
 
-	private String implicitAnyKeyColumnName(AnySource source) {
-		return bindingContext.getImplicitNamingStrategy()
-				.determineAnyKeyColumnName( new ImplicitAnyKeyColumnNameSource() {
-					@Override
-					public AttributePath getAttributePath() {
-						return AttributePath.parse( source.member().resolveAttributeName() );
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
-					}
-				} )
-				.getText();
+	private String implicitAnyKeyColumnName(AnySource source, int columnPosition) {
+		return ImplicitNamingHelper.columnName( bindingContext.getImplicitNamingStrategy()
+				.determineAnyKeyColumnName( new AnyColumnNamingInput( source.member().resolveAttributeName(), columnPosition ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "AnyKeyColumn" );
 	}
 
 	private void addAdditionalKeySelectables(Any any, BasicValue key) {

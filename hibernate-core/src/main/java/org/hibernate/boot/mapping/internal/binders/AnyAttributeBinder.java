@@ -21,6 +21,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -62,9 +63,9 @@ class AnyAttributeBinder {
 		this.bindingContext = bindingContext;
 	}
 
-	Any bind(Property property, Table table) {
+	Any bind(Property property, ColumnContainer table) {
 		final AnySource source = attributeBinding.anyValueIntent().source();
-		final Table valueTable = source.joinTable() == null ? table : bindAssociationTable( source, table );
+		final ColumnContainer valueTable = source.joinTable() == null ? table : bindAssociationTable( source, table.requireTable() );
 		final Any value = new AnyValueBinder(
 				bindingOptions,
 				bindingState,
@@ -129,6 +130,7 @@ class AnyAttributeBinder {
 
 		bindingState.addAssociationTableBinding( new AssociationTableBinding(
 				join,
+				attributeBinding.attributeName(),
 				ownerJoinColumns,
 				ForeignKeySource.from( joinTable )
 		) );

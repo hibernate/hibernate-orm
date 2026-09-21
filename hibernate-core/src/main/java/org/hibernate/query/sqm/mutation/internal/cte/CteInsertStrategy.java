@@ -126,12 +126,12 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 			// In this case, the descriptor is a subclass of a single table inheritance.
 			// To avoid name collisions, we suffix the table name with the subclass number
 			tableNameIdentifier = new Identifier(
-					persistentClass.getTable().getNameIdentifier().getText() + persistentClass.getSubclassId(),
-					persistentClass.getTable().getNameIdentifier().isQuoted()
+					new Identifier( persistentClass.getTable().getName(), persistentClass.getTable().isQuoted() ).getText() + persistentClass.getSubclassId(),
+					new Identifier( persistentClass.getTable().getName(), persistentClass.getTable().isQuoted() ).isQuoted()
 			);
 		}
 		else {
-			tableNameIdentifier = persistentClass.getTable().getNameIdentifier();
+			tableNameIdentifier = new Identifier( persistentClass.getTable().getName(), persistentClass.getTable().isQuoted() );
 		}
 		final String cteName = TemporaryTable.ENTITY_TABLE_PREFIX + tableNameIdentifier.getText();
 		final String qualifiedCteName = new Identifier(

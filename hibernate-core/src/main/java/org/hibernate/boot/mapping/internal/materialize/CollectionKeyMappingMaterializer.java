@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
+import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -225,19 +229,19 @@ public final class CollectionKeyMappingMaterializer {
 	private static String implicitKeyName(ResolvedCollectionTableKey collectionTableKey, Constraint key) {
 		final Collection collection = collectionTableKey.collection();
 		final MetadataBuildingContext buildingContext = collectionTableKey.metadataBuildingContext();
-		return buildingContext.getBuildingPlan()
+		return org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.resolve( null, () -> buildingContext.getBuildingPlan()
 				.getImplicitNamingStrategy()
 				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
 					@Override
 					public Identifier getTableName() {
-						return collection.getTable().getNameIdentifier();
+						return ImplicitNamingSourceHelper.tableName( collection.getColumnContainer() );
 					}
 
 					@Override
 					public List<Identifier> getColumnNames() {
 						final List<Identifier> list = new ArrayList<>();
 						for ( var column : key.getColumns() ) {
-							list.add( column.getNameIdentifier( buildingContext ) );
+							list.add( ColumnNameHelper.identifier( column ) );
 						}
 						return list;
 					}
@@ -251,8 +255,9 @@ public final class CollectionKeyMappingMaterializer {
 					public ImplicitNamingContext getNamingContext() {
 						return ImplicitNamingContextImpl.from( buildingContext );
 					}
-				} )
-				.render( buildingContext.getMetadataCollector().getDatabase().getDialect() );
+				} ), key instanceof PrimaryKey
+						? org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.Kind.PRIMARY_KEY
+						: org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.Kind.UNIQUE_KEY, buildingContext );
 	}
 
 	private static void adjustTemporalPrimaryKey(Collection collection) {

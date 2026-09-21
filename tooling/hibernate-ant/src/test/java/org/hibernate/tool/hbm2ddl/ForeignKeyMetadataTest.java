@@ -4,6 +4,10 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import org.hibernate.mapping.PhysicalTable;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PrimaryKey;
@@ -55,14 +59,14 @@ public class ForeignKeyMetadataTest {
 			}
 
 			// Build a matching ForeignKey mapping object
-			Table refTable = new Table("orm", "REF_TABLE");
-			Column pkCol = new Column("ID");
+			Table refTable = table( "REF_TABLE" );
+			Column pkCol = new Column( new PhysicalName.Factory( (text, quoted) -> text ).create( "ID", false ) );
 			PrimaryKey pk = new PrimaryKey(refTable);
 			pk.addColumn(pkCol);
 			refTable.setPrimaryKey(pk);
 
-			Table fkTable = new Table("orm", "FK_TABLE");
-			Column fkCol = new Column("REF_ID");
+			Table fkTable = table( "FK_TABLE" );
+			Column fkCol = new Column( new PhysicalName.Factory( (text, quoted) -> text ).create( "REF_ID", false ) );
 			ForeignKey fk = new ForeignKey(fkTable);
 			fk.setReferencedTable(refTable);
 			fk.addColumn(fkCol);
@@ -88,10 +92,10 @@ public class ForeignKeyMetadataTest {
 			}
 
 			// ForeignKey pointing to a different table
-			Table wrongTable = new Table("orm", "WRONG_TABLE");
-			ForeignKey fk = new ForeignKey(new Table("orm", "TBL_B"));
+			Table wrongTable = table( "WRONG_TABLE" );
+			ForeignKey fk = new ForeignKey(table( "TBL_B" ));
 			fk.setReferencedTable(wrongTable);
-			fk.addColumn(new Column("A_ID"));
+			fk.addColumn(new Column( new PhysicalName.Factory( (text, quoted) -> text ).create( "A_ID", false ) ));
 
 			assertFalse(fkMeta.matches(fk));
 		}
@@ -114,18 +118,24 @@ public class ForeignKeyMetadataTest {
 			}
 
 			// ForeignKey with 2 columns instead of 1
-			Table refTable = new Table("orm", "CC_PARENT");
+			Table refTable = table( "CC_PARENT" );
 			PrimaryKey pk = new PrimaryKey(refTable);
-			pk.addColumn(new Column("ID"));
-			pk.addColumn(new Column("ID2"));
+			pk.addColumn(new Column( new PhysicalName.Factory( (text, quoted) -> text ).create( "ID", false ) ));
+			pk.addColumn(new Column( new PhysicalName.Factory( (text, quoted) -> text ).create( "ID2", false ) ));
 			refTable.setPrimaryKey(pk);
 
-			ForeignKey fk = new ForeignKey(new Table("orm", "CC_CHILD"));
+			ForeignKey fk = new ForeignKey(table( "CC_CHILD" ));
 			fk.setReferencedTable(refTable);
-			fk.addColumn(new Column("PID"));
-			fk.addColumn(new Column("PID2"));
+			fk.addColumn(new Column( new PhysicalName.Factory( (text, quoted) -> text ).create( "PID", false ) ));
+			fk.addColumn(new Column( new PhysicalName.Factory( (text, quoted) -> text ).create( "PID2", false ) ));
 
 			assertFalse(fkMeta.matches(fk));
 		}
 	}
+	private static PhysicalTable table(String name) {
+		final var factory = new PhysicalName.Factory( (text, quoted) -> text );
+		return new PhysicalTable( "orm",
+				new QualifiedPhysicalName( null, null, factory.create( name, false ) ), false );
+	}
+
 }

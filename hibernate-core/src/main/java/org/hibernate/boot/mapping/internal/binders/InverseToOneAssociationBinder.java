@@ -88,7 +88,7 @@ class InverseToOneAssociationBinder {
 			}
 			return;
 		}
-		if ( !isTableInTypeHierarchy( targetTypeBinder.getTypeBinding(), owningToOne.getTable() ) ) {
+		if ( !isTableInTypeHierarchy( targetTypeBinder.getTypeBinding(), owningToOne.getColumnContainer().requireTable() ) ) {
 			final Join joinedTable = findJoinContainingProperty( targetTypeBinder, owningProperty );
 			if ( joinedTable == null ) {
 				throw new MappingException(
@@ -223,7 +223,7 @@ class InverseToOneAssociationBinder {
 	}
 
 	private Column copyColumn(Table table, Column source) {
-		final Column result = new Column( source.getName() );
+		final Column result = new Column( source.getPhysicalName() );
 		result.setLength( source.getLength() );
 		result.setPrecision( source.getPrecision() );
 		result.setScale( source.getScale() );

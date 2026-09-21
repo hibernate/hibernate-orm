@@ -80,6 +80,13 @@ public abstract class Constraint implements Exportable, Serializable {
 		return table;
 	}
 
+	protected String getTableExportIdentifier() {
+		if ( table instanceof NamedTable namedTable ) {
+			return namedTable.getExportIdentifier();
+		}
+		throw new MappingException( "Cannot export a constraint on an inline view: " + table.getName() );
+	}
+
 	public List<Column> getColumns() {
 		return columns;
 	}

@@ -21,7 +21,7 @@ import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.IdentifierCollection;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 
 import jakarta.annotation.Nullable;
 
@@ -34,7 +34,7 @@ class CollectionIdBinder {
 			CollectionSource source,
 			@Nullable CollectionIdMetadataImpl collectionIdMetadata,
 			IdentifierCollection collection,
-			Table table,
+			ColumnContainer table,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -64,11 +64,11 @@ class CollectionIdBinder {
 					bindingState.getMetadataBuildingContext()
 			) );
 
-		final org.hibernate.mapping.Column idColumn = ColumnBinder.bindColumn(
+		final org.hibernate.mapping.Column idColumn = ColumnBinder.bindUntransformedColumn(
 				ColumnSource.from( collectionId.column() ),
 				() -> IdentifierCollection.DEFAULT_IDENTIFIER_COLUMN_NAME,
 				false,
-				false
+				false, 255, 0, 0, bindingState.getDatabase()
 		);
 		table.addColumn( idColumn );
 		id.addColumn( idColumn );

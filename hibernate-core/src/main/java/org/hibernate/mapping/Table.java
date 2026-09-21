@@ -4,6 +4,8 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,118 +18,34 @@ import java.util.Objects;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.ContributableDatabaseObject;
-import org.hibernate.boot.model.relational.InitCommand;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.Dialect;
 
-import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 
 /**
  * A mapping model object representing a relational database {@linkplain jakarta.persistence.Table table}.
  *
  * @author Gavin King
  */
-public class Table implements Serializable, ContributableDatabaseObject {
-	@FunctionalInterface
-	public interface InitCommandProducer
-			extends java.util.function.Function<SqlStringGenerationContext, InitCommand>, Serializable {
-	}
-
-	@FunctionalInterface
-	public interface ResyncCommandProducer
-			extends java.util.function.BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>,
-				Serializable {
-	}
-
+public abstract class Table extends ColumnContainer implements Contributable {
 	private final String contributor;
 
-	private Identifier catalog;
-	private Identifier schema;
-	private Identifier name;
-
-	/**
-	 * contains all columns, including the primary key
-	 */
-	private final Map<String, Column> columns = new LinkedHashMap<>();
 	private PrimaryKey primaryKey;
-	private final Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
-	private final Map<String, Index> indexes = new LinkedHashMap<>();
+	private final List<ForeignKeyEntry> foreignKeys = new ArrayList<>();
 	private final Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
-	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 	private String rowId;
-	private String subselect;
 	private boolean isAbstract;
 	private boolean hasDenormalizedTables;
-	private String comment;
-	private String viewQuery;
-	private String type;
-	private String options;
-	private String extraDeclarations;
 
-	private List<InitCommandProducer> initCommandProducers;
-	private List<ResyncCommandProducer> resyncCommandProducers;
-	private List<InitCommandProducer> resetCommandProducers;
 
-	@Deprecated(since="6.2", forRemoval = true)
-	public Table() {
-		this( "orm" );
-	}
-
-	public Table(String contributor) {
-		this( contributor, null );
-	}
-
-	public Table(String contributor, String name) {
+	protected Table(String contributor) {
 		this.contributor = contributor;
-		setName( name );
-	}
-
-	public Table(
-			String contributor,
-			Namespace namespace,
-			Identifier physicalTableName,
-			boolean isAbstract) {
-		this.contributor = contributor;
-		this.catalog = namespace.getPhysicalName().catalog();
-		this.schema = namespace.getPhysicalName().schema();
-		this.name = physicalTableName;
-		this.isAbstract = isAbstract;
-	}
-
-	public Table(
-			String contributor,
-			Namespace namespace,
-			Identifier physicalTableName,
-			String subselect,
-			boolean isAbstract) {
-		this.contributor = contributor;
-		final var physicalName = namespace.getPhysicalName();
-		this.catalog = physicalName.catalog();
-		this.schema = physicalName.schema();
-		this.name = physicalTableName;
-		this.subselect = subselect;
-		this.isAbstract = isAbstract;
-	}
-
-	public Table(String contributor, Namespace namespace, String subselect, boolean isAbstract) {
-		this.contributor = contributor;
-		final var physicalName = namespace.getPhysicalName();
-		this.catalog = physicalName.catalog();
-		this.schema = physicalName.schema();
-		this.subselect = subselect;
-		this.isAbstract = isAbstract;
 	}
 
 	@Override
@@ -135,10 +53,10 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return contributor;
 	}
 
+	public abstract String getTableExpression(SqlStringGenerationContext context);
+
 	public String getQualifiedName(SqlStringGenerationContext context) {
-		return subselect != null
-				? "( " + subselect + " )"
-				: context.format( new QualifiedTableName( catalog, schema, name ) );
+		return getTableExpression( context );
 	}
 
 	/**
@@ -157,182 +75,58 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return qualifiedName.append( table ).toString();
 	}
 
-	public void setName(String name) {
-		this.name = toIdentifier( name );
+	public abstract String getName();
+	public abstract boolean isQuoted();
+	public abstract String getSchema();
+	public abstract boolean isSchemaQuoted();
+	public abstract String getCatalog();
+	public abstract boolean isCatalogQuoted();
+
+	public String getQuotedName() { return quoted( getName(), isQuoted() ); }
+	public String getQuotedName(Dialect dialect) { return render( getName(), isQuoted(), dialect ); }
+	public String getQuotedSchema() { return quoted( getSchema(), isSchemaQuoted() ); }
+	public String getQuotedSchema(Dialect dialect) { return render( getSchema(), isSchemaQuoted(), dialect ); }
+	public String getQuotedCatalog() { return quoted( getCatalog(), isCatalogQuoted() ); }
+	public String getQuotedCatalog(Dialect dialect) { return render( getCatalog(), isCatalogQuoted(), dialect ); }
+
+	private static String quoted(String text, boolean quoted) {
+		return text == null ? null : quoted ? '`' + text + '`' : text;
 	}
 
-	public String getName() {
-		return name == null ? null : name.getText();
-	}
-
-	public Identifier getNameIdentifier() {
-		return name;
-	}
-
-	public Identifier getSchemaIdentifier() {
-		return schema;
-	}
-
-	public Identifier getCatalogIdentifier() {
-		return catalog;
-	}
-
-	public String getQuotedName() {
-		return name == null ? null : name.toString();
-	}
-
-	public String getQuotedName(Dialect dialect) {
-		return name == null ? null : name.render( dialect );
-	}
-
-	public QualifiedTableName getQualifiedTableName() {
-		return name == null ? null : new QualifiedTableName( catalog, schema, name );
-	}
-
-	public boolean isQuoted() {
-		return name.isQuoted();
-	}
-
-	public void setQuoted(boolean quoted) {
-		if ( quoted != name.isQuoted() ) {
-			name = new Identifier( name.getText(), quoted );
-		}
-	}
-
-	public void setSchema(String schema) {
-		this.schema = toIdentifier( schema );
-	}
-
-	public String getSchema() {
-		return schema == null ? null : schema.getText();
-	}
-
-	public String getQuotedSchema() {
-		return schema == null ? null : schema.toString();
-	}
-
-	public String getQuotedSchema(Dialect dialect) {
-		return schema == null ? null : schema.render( dialect );
-	}
-
-	public boolean isSchemaQuoted() {
-		return schema != null && schema.isQuoted();
-	}
-
-	public void setCatalog(String catalog) {
-		this.catalog = toIdentifier( catalog );
-	}
-
-	public String getCatalog() {
-		return catalog == null ? null : catalog.getText();
-	}
-
-	public String getQuotedCatalog() {
-		return catalog == null ? null : catalog.render();
-	}
-
-	public String getQuotedCatalog(Dialect dialect) {
-		return catalog == null ? null : catalog.render( dialect );
-	}
-
-	public boolean isCatalogQuoted() {
-		return catalog != null && catalog.isQuoted();
-	}
-
-	/**
-	 * Return the column which is identified by column provided as argument.
-	 *
-	 * @param column column with at least a name.
-	 * @return the underlying column or null if not inside this table.
-	 *         Note: the instance *can* be different than the input parameter,
-	 *         but the name will be the same.
-	 */
-	public Column getColumn(Column column) {
-		if ( column == null ) {
-			return null;
-		}
-		else {
-			final var existing = columns.get( column.getCanonicalName() );
-			return column.equals( existing ) ? existing : null;
-		}
-	}
-
-	public Column getColumn(Identifier name) {
-		return name == null ? null
-				: columns.get( name.getCanonicalName() );
+	private static String render(String text, boolean quoted, Dialect dialect) {
+		return text == null ? null : quoted ? dialect.openQuote() + text + dialect.closeQuote() : text;
 	}
 
 	@Internal
 	public Column getColumn(InFlightMetadataCollector collector, String logicalName) {
-		return name == null ? null
-				: getColumn( new Column( collector.getPhysicalColumnName( this, logicalName ) ) );
+		return logicalName == null ? null
+				: getColumn( ColumnNameHelper.physicalName( collector.getPhysicalColumnName( this, logicalName ), collector.getDatabase() ) );
 	}
 
-	public Column getColumn(int n) {
-		final var iter = columns.values().iterator();
-		for ( int i = 0; i < n - 1; i++ ) {
-			iter.next();
-		}
-		return iter.next();
-	}
-
+	@Override
 	public void addColumn(Column column) {
-		final var oldColumn = getColumn( column );
-		if ( oldColumn == null ) {
-			if ( primaryKey != null ) {
-				for ( var primaryKeyColumn : primaryKey.getColumns() ) {
-					if ( Objects.equals( column.getCanonicalName(),
-							primaryKeyColumn.getCanonicalName() ) ) {
-						// Force the column to be non-null
-						// as it is part of the primary key
-						column.setNullable( false );
-					}
+		if ( getColumn( column ) == null && primaryKey != null ) {
+			for ( var primaryKeyColumn : primaryKey.getColumns() ) {
+				if ( Objects.equals( column.getPhysicalName(), primaryKeyColumn.getPhysicalName() ) ) {
+					column.setNullable( false );
 				}
 			}
-			columns.put( column.getCanonicalName(), column );
-			column.uniqueInteger = columns.size();
 		}
-		else {
-			if ( !column.isNullable() ) {
-				oldColumn.setNullable( false );
-			}
-			else if ( !oldColumn.isNullable() ) {
-				column.setNullable( false );
-			}
-			column.uniqueInteger = oldColumn.uniqueInteger;
-		}
+		super.addColumn( column );
 	}
 
-	@Internal
-	public void columnRenamed(Column column) {
-		for ( var entry : columns.entrySet() ) {
-			if ( entry.getValue() == column ) {
-				columns.remove( entry.getKey() );
-				columns.put( column.getCanonicalName(), column );
-				break;
-			}
-		}
-	}
-
-	public int getColumnSpan() {
-		return columns.size();
-	}
-
-	public Collection<Column> getColumns() {
-		return columns.values();
-	}
-
-	public Map<String, Index> getIndexes() {
-		return unmodifiableMap( indexes );
-	}
 
 	@Incubating(since = "7.0")
 	public Collection<ForeignKey> getForeignKeyCollection() {
-		return unmodifiableCollection( foreignKeys.values() );
+		return foreignKeys.stream().map( ForeignKeyEntry::foreignKey ).toList();
 	}
 
 	public Collection<ForeignKey> getForeignKeys() {
-		return unmodifiableCollection( foreignKeys.values() );
+		return foreignKeys.stream().map( ForeignKeyEntry::foreignKey ).toList();
+	}
+
+	java.util.Collection<UniqueKey> uniqueKeysForNameAttachment() {
+		return uniqueKeys.values();
 	}
 
 	public Map<String, UniqueKey> getUniqueKeys() {
@@ -405,36 +199,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			&& primaryKey.getColumns().containsAll( uniqueKey.getColumns() );
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (catalog == null ? 0 : catalog.hashCode());
-		result = prime * result + (name == null ? 0 : name.hashCode());
-		result = prime * result + (schema == null ? 0 : schema.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof Table table
-			&& equals( table );
-	}
-
-	public boolean equals(Table table) {
-		if ( null == table ) {
-			return false;
-		}
-		else if ( this == table ) {
-			return true;
-		}
-		else {
-			return Identifier.areEqual( name, table.name )
-				&& Identifier.areEqual( schema, table.schema )
-				&& Identifier.areEqual( catalog, table.catalog );
-		}
-	}
-
 	public boolean isPrimaryKey(Column column) {
 		return hasPrimaryKey()
 			&& getPrimaryKey().getColumnSpan() == 1
@@ -454,32 +218,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		checkPrimaryKeyUniqueKey();
 	}
 
-	public Index getOrCreateIndex(String indexName) {
-		final var index =  indexes.get( indexName );
-		if ( index != null ) {
-			return index;
-		}
-		else {
-			final var newIndex = new Index();
-			newIndex.setName( indexName );
-			newIndex.setTable( this );
-			indexes.put( indexName, newIndex );
-			return newIndex;
-		}
-	}
 
-	public Index getIndex(String indexName) {
-		return indexes.get( indexName );
-	}
 
-	public Index addIndex(Index index) {
-		final var current =  indexes.get( index.getName() );
-		if ( current != null ) {
-			throw new MappingException( "Index " + index.getName() + " already exists" );
-		}
-		indexes.put( index.getName(), index );
-		return index;
-	}
 
 	public UniqueKey addUniqueKey(UniqueKey uniqueKey) {
 		final var current = uniqueKeys.get( uniqueKey.getName() );
@@ -533,7 +273,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			String options) {
 		final var key = new ForeignKeyKey( columnMappings.mappings(), referencedEntityName );
 
-		ForeignKey foreignKey = foreignKeys.get( key );
+		ForeignKey foreignKey = foreignKeyIndex().get( key );
 		if ( foreignKey == null ) {
 			foreignKey = new ForeignKey( this );
 			foreignKey.setReferencedEntityName( referencedEntityName );
@@ -553,7 +293,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			//       after we know the referenced table name (which might not be resolved yet).
 			foreignKey.setName( keyName );
 
-			foreignKeys.put( key, foreignKey );
+			foreignKeys.add( new ForeignKeyEntry( key, foreignKey ) );
 		}
 
 		if ( keyName != null ) {
@@ -626,13 +366,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return uniqueInteger;
 	}
 
-	public void addCheck(CheckConstraint check) {
-		checkConstraints.add( check );
-	}
-
-	public boolean containsColumn(Column column) {
-		return columns.containsValue( column );
-	}
 
 	public String getRowId() {
 		return rowId;
@@ -657,15 +390,12 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public String getSubselect() {
-		return subselect;
+		return null;
 	}
 
-	public void setSubselect(String subselect) {
-		this.subselect = subselect;
-	}
 
 	public boolean isSubselect() {
-		return subselect != null;
+		return this instanceof InlineView;
 	}
 
 	public boolean isAbstractUnionTable() {
@@ -693,47 +423,57 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public boolean isView() {
-		return viewQuery != null;
+		return this instanceof DatabaseView;
 	}
 
-	public String getComment() {
-		return comment;
+
+
+
+
+
+	public String getViewQuery() {
+		return null;
 	}
 
-	public void setComment(String comment) {
-		this.comment = comment;
-	}
 
-	public List<CheckConstraint> getChecks() {
-		return unmodifiableList( checkConstraints );
-	}
-
-	@Override
-	public String getExportIdentifier() {
-		return Table.qualify( render( catalog ), render( schema ), name.render() );
-	}
-
-	private String render(Identifier identifier) {
-		return identifier == null ? null : identifier.render();
-	}
-
-	@Internal
-	public void reorderColumns(List<Column> columns) {
-		assert this.columns.size() == columns.size()
-			&& this.columns.values().containsAll( columns );
-		this.columns.clear();
-		for ( var column : columns ) {
-			this.columns.put( column.getCanonicalName(), column );
+	void validateColumnRename(Column column, org.hibernate.relational.naming.spi.PhysicalName replacement) {
+		final var keys = new java.util.HashSet<List<Object>>();
+		for ( var entry : foreignKeys ) {
+			final List<Object> parts = new ArrayList<>();
+			parts.add( entry.key.referencedClassName );
+			for ( var mapping : entry.key.columnMappings ) {
+				parts.add( mapping.column() == column ? replacement : mapping.column().getPhysicalName() );
+				parts.add( mapping.referencedColumn() == null ? null
+						: mapping.referencedColumn() == column ? replacement : mapping.referencedColumn().getPhysicalName() );
+			}
+			if ( !keys.add( parts ) ) {
+				throw new MappingException( "Column rename collides in foreign keys of " + getName() );
+			}
 		}
 	}
 
-	public String getViewQuery() {
-		return viewQuery;
+	void validateForeignKeyIndex() { foreignKeyIndex(); }
+
+	void visitForeignKeyColumns(java.util.function.Consumer<Column> consumer) {
+		foreignKeys.forEach( entry -> {
+			for ( var mapping : entry.key.columnMappings ) {
+				consumer.accept( mapping.column() );
+				consumer.accept( mapping.referencedColumn() );
+			}
+		} );
 	}
 
-	public void setViewQuery(String viewQuery) {
-		this.viewQuery = viewQuery;
+	private Map<ForeignKeyKey, ForeignKey> foreignKeyIndex() {
+		final Map<ForeignKeyKey, ForeignKey> index = new LinkedHashMap<>();
+		for ( var entry : foreignKeys ) {
+			if ( index.putIfAbsent( entry.key, entry.foreignKey ) != null ) {
+				throw new MappingException( "Physical column collision in foreign keys of " + getName() );
+			}
+		}
+		return index;
 	}
+
+	private record ForeignKeyEntry(ForeignKeyKey key, ForeignKey foreignKey) implements Serializable {}
 
 	private record ForeignKeyKey(ForeignKeyColumnMapping[] columnMappings, String referencedClassName)
 			implements Serializable {
@@ -757,83 +497,16 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 	}
 
-	/**
-	 * @deprecated Use {@link #addInitCommand(InitCommandProducer)} instead.
-	 */
-	@Deprecated
-	public void addInitCommand(InitCommand command) {
-		addInitCommand( ignored -> command );
-	}
 
-	public void addInitCommand(InitCommandProducer commandProducer) {
-		if ( initCommandProducers == null ) {
-			initCommandProducers = new ArrayList<>();
-		}
-		initCommandProducers.add( commandProducer );
-	}
 
-	public List<InitCommand> getInitCommands(SqlStringGenerationContext context) {
-		return initCommandProducers == null
-				? emptyList()
-				: initCommandProducers.stream()
-						.map( producer -> producer.apply( context ) )
-						.distinct()
-						.toList();
-	}
 
-	public void addResyncCommand(ResyncCommandProducer commandProducer) {
-		if ( resyncCommandProducers == null ) {
-			resyncCommandProducers = new ArrayList<>();
-		}
-		resyncCommandProducers.add( commandProducer );
-	}
 
-	public List<InitCommand> getResyncCommands(SqlStringGenerationContext context, DdlTransactionIsolator isolator) {
-		return resyncCommandProducers == null
-				? emptyList()
-				: resyncCommandProducers.stream()
-						.map( producer -> producer.apply( context, isolator ) )
-						.distinct()
-						.toList();
-	}
 
-	public void addResetCommand(InitCommandProducer commandProducer) {
-		if ( resetCommandProducers == null ) {
-			resetCommandProducers = new ArrayList<>();
-		}
-		resetCommandProducers.add( commandProducer );
-	}
 
-	public List<InitCommand> getResetCommands(SqlStringGenerationContext context) {
-		return resetCommandProducers == null
-				? emptyList()
-				: resetCommandProducers.stream()
-						.map( producer -> producer.apply( context ) )
-						.distinct()
-						.toList();
-	}
 
-	public String getOptions() {
-		return options;
-	}
 
-	public void setOptions(String options) {
-		this.options = options;
-	}
 
-	public String getType() {
-		return type;
-	}
 
-	public void setType(String type) {
-		this.type = type;
-	}
 
-	public String getExtraDeclarations() {
-		return extraDeclarations;
-	}
 
-	public void setExtraDeclarations(String extraDeclarations) {
-		this.extraDeclarations = extraDeclarations;
-	}
 }

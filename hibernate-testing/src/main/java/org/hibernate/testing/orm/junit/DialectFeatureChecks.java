@@ -1682,7 +1682,7 @@ abstract public class DialectFeatureChecks {
 					bootstrapContext.getServiceRegistry(),
 					bootstrapContext.getTypeConfiguration()
 			);
-			this.database = new Database( buildingPlan, null );
+			this.database = new Database( buildingPlan );
 		}
 
 		@Override
@@ -1809,18 +1809,18 @@ abstract public class DialectFeatureChecks {
 				String subselect,
 				boolean isAbstract,
 				MetadataBuildingContext buildingContext,
-				boolean isExplicit) {
+				boolean isExplicit,
+				String viewQuery) {
 			return null;
 		}
 
 		@Override
-		public Table addDenormalizedTable(
+		public org.hibernate.mapping.DenormalizedTable addDenormalizedTable(
 				String schema,
 				String catalog,
 				String name,
 				boolean isAbstract,
-				String subselect,
-				Table includedTable,
+				org.hibernate.mapping.PhysicalTable includedTable,
 				MetadataBuildingContext buildingContext) throws DuplicateMappingException {
 			return null;
 		}

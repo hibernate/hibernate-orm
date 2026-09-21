@@ -4,11 +4,14 @@
  */
 package org.hibernate.orm.test.mapping;
 
+import org.hibernate.testing.util.MappingTableHelper;
+
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.ForeignKeyColumnMapping;
 import org.hibernate.mapping.ForeignKeyColumnMappings;
-import org.hibernate.mapping.Table;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class TableForeignKeyCorrespondenceTest {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 	@Test
 	void reusesForeignKeyForSameOrderedCorrespondence() {
-		final Table table = new Table( "orm", "child" );
+		final var table = MappingTableHelper.table( "orm", "child", new PhysicalName.Factory( (text, quoted) -> text ) );
 		final Column childOne = column( "child_one" );
 		final Column childTwo = column( "child_two" );
 		final Column parentOne = column( "parent_one" );
@@ -54,7 +61,7 @@ class TableForeignKeyCorrespondenceTest {
 
 	@Test
 	void keepsDifferentReferencedCorrespondenceDistinct() {
-		final Table table = new Table( "orm", "child" );
+		final var table = MappingTableHelper.table( "orm", "child", new PhysicalName.Factory( (text, quoted) -> text ) );
 		final Column childOne = column( "child_one" );
 		final Column childTwo = column( "child_two" );
 		final Column parentOne = column( "parent_one" );
@@ -87,7 +94,7 @@ class TableForeignKeyCorrespondenceTest {
 
 	@Test
 	void retainedColumnsAreProjectedFromCorrespondenceOrder() {
-		final Table table = new Table( "orm", "child" );
+		final var table = MappingTableHelper.table( "orm", "child", new PhysicalName.Factory( (text, quoted) -> text ) );
 		final Column childOne = column( "child_one" );
 		final Column childTwo = column( "child_two" );
 		final Column parentOne = column( "parent_one" );
@@ -109,6 +116,6 @@ class TableForeignKeyCorrespondenceTest {
 	}
 
 	private static Column column(String name) {
-		return new Column( name );
+		return new Column( MappingTableHelper.columnName( name, COLUMN_NAMES ) );
 	}
 }

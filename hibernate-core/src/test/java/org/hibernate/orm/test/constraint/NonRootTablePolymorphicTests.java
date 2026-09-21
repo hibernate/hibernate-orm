@@ -153,7 +153,7 @@ public class NonRootTablePolymorphicTests {
 					final Property subProperty = subParent.getProperty( "sub" );
 					final ToOne toOne = (ToOne) subProperty.getValue();
 
-					assertThat( toOne.getTable().getName(), is( "sub_parent" ) );
+					assertThat( toOne.getColumnContainer().requireTable().getName(), is( "sub_parent" ) );
 
 					assertThat( toOne.getColumnSpan(), is( 1 ) );
 					final Selectable selectable = toOne.getSelectables().get( 0 );
@@ -163,7 +163,7 @@ public class NonRootTablePolymorphicTests {
 					final ForeignKey foreignKey = subParent.getTable().getForeignKeyCollection().iterator().next();
 
 					assertThat( foreignKey.getReferencedTable().getName(), is( "sub" ) );
-					assertThat( foreignKey.getTable(), sameInstance( toOne.getTable() ) );
+					assertThat( foreignKey.getTable(), sameInstance( toOne.getColumnContainer().requireTable() ) );
 				}
 		);
 	}

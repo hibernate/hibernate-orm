@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.boot.models.bind.associations;
 
+import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -19,9 +22,8 @@ import org.hibernate.annotations.AnyKeyJdbcTypeCode;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitAnyDiscriminatorColumnNameSource;
-import org.hibernate.boot.model.naming.ImplicitAnyKeyColumnNameSource;
+import org.hibernate.boot.model.naming.spi.AnyColumnNamingInput;
+import org.hibernate.boot.model.naming.spi.AnyColumnNamingInput;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -441,7 +443,7 @@ public class AnyAssociationTests {
 					assertThat( join.getTable().getName() ).isEqualTo( "any_holder_targets" );
 					assertThat( join.getKey().getColumns() ).extracting( Column::getName )
 							.containsExactly( "holder_id" );
-					assertThat( value.getTable() ).isSameAs( join.getTable() );
+					assertThat( value.getColumnContainer() ).isSameAs( join.getTable() );
 					assertThat( ( (Column) value.getDiscriminatorDescriptor().getColumn() ).getName() )
 							.isEqualTo( "target_type" );
 					assertThat( ( (Column) value.getKeyDescriptor().getColumn() ).getName() )
@@ -468,7 +470,7 @@ public class AnyAssociationTests {
 					assertThat( join.getTable().getName() ).isEqualTo( "ImplicitJoinTableAnyHolder_target" );
 					assertThat( join.getKey().getColumns() ).extracting( Column::getName )
 							.containsExactly( "holder_id" );
-					assertThat( value.getTable() ).isSameAs( join.getTable() );
+					assertThat( value.getColumnContainer() ).isSameAs( join.getTable() );
 					assertThat( ( (Column) value.getDiscriminatorDescriptor().getColumn() ).getName() )
 							.isEqualTo( "target_type" );
 					assertThat( ( (Column) value.getKeyDescriptor().getColumn() ).getName() )
@@ -741,19 +743,15 @@ public class AnyAssociationTests {
 
 	public static class AnyImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
 		@Override
-		public Identifier determineAnyDiscriminatorColumnName(ImplicitAnyDiscriminatorColumnNameSource source) {
-			return toIdentifier(
-					"implicit_any_discriminator_" + source.getAttributePath().getProperty(),
-					source.getNamingContext()
-			);
+		public LogicalName determineAnyDiscriminatorColumnName(AnyColumnNamingInput source, ImplicitNamingContext context) {
+			return context.implicitName(
+					"implicit_any_discriminator_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}
 
 		@Override
-		public Identifier determineAnyKeyColumnName(ImplicitAnyKeyColumnNameSource source) {
-			return toIdentifier(
-					"implicit_any_key_" + source.getAttributePath().getProperty(),
-					source.getNamingContext()
-			);
+		public LogicalName determineAnyKeyColumnName(AnyColumnNamingInput source, ImplicitNamingContext context) {
+			return context.implicitName(
+					"implicit_any_key_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}
 	}
 

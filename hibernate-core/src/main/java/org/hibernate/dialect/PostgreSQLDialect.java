@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -115,7 +117,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -1508,7 +1509,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return postgresqlTableExporter;
 	}
 

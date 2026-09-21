@@ -8,9 +8,7 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Table;
+import org.hibernate.tool.reveng.api.core.ForeignKeyDefinition;
 import org.hibernate.tool.reveng.api.core.AssociationInfo;
 import org.hibernate.tool.reveng.api.core.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.reveng.api.core.TableIdentifier;
@@ -80,10 +78,8 @@ public class OverrideBinder {
 			ArrayList<Element> tables,
 			OverrideRepository repository) {
 		for (Element element : tables) {
-			Table table = new Table("Hibernate Tools");
-			table.setCatalog(getAttribute(element, "catalog"));
-			table.setSchema(getAttribute(element, "schema"));
-			table.setName(getAttribute(element, "name"));
+			var table = new OverrideTable( getAttribute(element, "catalog"),
+					getAttribute(element, "schema"), getAttribute(element, "name") );
 			ArrayList<Element> primaryKeys = getChildElements(element, "primary-key");
 			if ( !primaryKeys.isEmpty() ) {
 				bindPrimaryKey(primaryKeys.get(0), table, repository);
@@ -97,7 +93,7 @@ public class OverrideBinder {
 
 	private static void bindPrimaryKey(
 			Element element,
-			Table table,
+			OverrideTable table,
 			OverrideRepository repository) {
 		String propertyName = getAttribute(element, "property");
 		String compositeIdName = getAttribute(element, "id-class");
@@ -110,81 +106,52 @@ public class OverrideBinder {
 			for ( Element parameter : parameterList ) {
 				params.setProperty( getAttribute( parameter, "name" ), parameter.getTextContent() );
 			}
-			repository.addTableIdentifierStrategy(table, identifierClass, params);
+			repository.addTableIdentifierStrategy(table.lookupKey(), identifierClass, params);
 		}
 		List<String> boundColumnNames = bindColumns(getChildElements(element, "key-column"), table, repository);
-		repository.addPrimaryKeyNamesForTable(table, boundColumnNames, propertyName, compositeIdName);
+		repository.addPrimaryKeyNamesForTable(table.lookupKey(), boundColumnNames, propertyName, compositeIdName);
 	}
 
 	private static List<String> bindColumns(
 			ArrayList<Element> columns,
-			Table table,
+			OverrideTable table,
 			OverrideRepository repository) {
 		List<String> columnNames = new ArrayList<>();
 		for (Element element : columns) {
-			Column column = new Column();
-			column.setName(getAttribute(element, "name"));
+			String column = getAttribute(element, "name");
 			String attributeValue = getAttribute(element, "jdbc-type");
 			if (StringHelper.isNotEmpty(attributeValue)) {
-				column.setSqlTypeCode( JdbcToHibernateTypeHelper.getJDBCType( attributeValue ) );
+				JdbcToHibernateTypeHelper.getJDBCType( attributeValue );
 			}
-			TableIdentifier tableIdentifier = TableIdentifier.create(table);
-			if (table.getColumn(column) != null) {
-				throw new MappingException("Column " + column.getName() + " already exists in table " + tableIdentifier );
-			}
+			TableIdentifier tableIdentifier = table.lookupKey();
 			MultiValuedMap<String, SimpleMetaAttribute> map =
 					MetaAttributeHelper.loadAndMergeMetaMap(
 							element,
 							new HashSetValuedHashMap<>());
 			if( !map.isEmpty() ) {
-				repository.addMetaAttributeInfo( tableIdentifier, column.getName(), map);
+				repository.addMetaAttributeInfo( tableIdentifier, OverrideTable.text( column ), map);
 			}
 			table.addColumn(column);
-			columnNames.add(column.getName());
+			columnNames.add(OverrideTable.text( column ));
 			repository.setTypeNameForColumn(
 					tableIdentifier,
-					column.getName(),
+					OverrideTable.text( column ),
 					getAttribute(element, "type"));
 			repository.setPropertyNameForColumn(
 					tableIdentifier,
-					column.getName(),
+					OverrideTable.text( column ),
 					getAttribute(element, "property"));
 			boolean excluded = Boolean.parseBoolean(element.getAttribute("exclude") );
 			if(excluded) {
-				repository.setExcludedColumn(tableIdentifier, column.getName());
+				repository.setExcludedColumn(tableIdentifier, OverrideTable.text( column ));
 			}
 			if (element.hasAttribute("foreign-table")) {
 				String foreignTableName = element.getAttribute("foreign-table");
-				List<Column> localColumns = new ArrayList<>();
-				localColumns.add(column);
-				List<Column> foreignColumns = new ArrayList<>();
-				Table foreignTable = new Table("Hibernate Tools");
-				foreignTable.setName(foreignTableName);
-				foreignTable.setCatalog(
-						element.hasAttribute("foreign-catalog") ?
-						element.getAttribute("foreign-catalog") :
-						table.getCatalog());
-				foreignTable.setSchema(
-						element.hasAttribute("foreign-schema") ?
-						element.getAttribute("foreign-schema") :
-						table.getSchema());
-				if (element.hasAttribute("foreign-column")) {
-					String foreignColumnName = element.getAttribute("foreign-column");
-					Column foreignColumn = new Column();
-					foreignColumn.setName(foreignColumnName);
-					foreignColumns.add(foreignColumn);
-				}
-				else {
+				if ( !element.hasAttribute( "foreign-column" ) ) {
 					throw new MappingException("foreign-column is required when foreign-table is specified on " + column);
 				}
-				ForeignKey key = table.createForeignKey(
-						null,
-						localColumns,
-						foreignTableName,
-						null,
-						null,
-						foreignColumns);
-				key.setReferencedTable(foreignTable); // only possible if foreignColumns is explicitly specified (workaround on aligncolumns)
+				table.addForeignKey( null, foreignTable( element, table, foreignTableName ),
+						List.of( new ForeignKeyDefinition.ColumnReference( column, element.getAttribute( "foreign-column" ) ) ) );
 			}
 		}
 		return columnNames;
@@ -192,37 +159,18 @@ public class OverrideBinder {
 
 	private static void bindForeignKeys(
 			ArrayList<Element> foreignKeys,
-			Table table,
+			OverrideTable table,
 			OverrideRepository repository) {
 		for (Element element : foreignKeys) {
 			String constraintName = getAttribute(element, "constraint-name");
 			String foreignTableName = getAttribute(element, "foreign-table");
 			if (foreignTableName != null) {
-				Table foreignTable = new Table("hibernate tools");
-				foreignTable.setName(foreignTableName);
-				foreignTable.setCatalog(
-						element.hasAttribute("foreign-catalog") ?
-						element.getAttribute("foreign-catalog") :
-						table.getCatalog());
-				foreignTable.setSchema(
-						element.hasAttribute("foreign-schema") ?
-						element.getAttribute("foreign-schema") :
-						table.getSchema());
-				List<Column> localColumns = new ArrayList<>();
-				List<Column> foreignColumns = new ArrayList<>();
-				ArrayList<Element> columnRefs = getChildElements(element, "column-ref");
-				for (Element columnRef : columnRefs) {
-					localColumns.add(new Column(columnRef.getAttribute("local-column")));
-					foreignColumns.add(new Column(columnRef.getAttribute("foreign-column")));
+				final List<ForeignKeyDefinition.ColumnReference> references = new ArrayList<>();
+				for ( Element columnRef : getChildElements( element, "column-ref" ) ) {
+					references.add( new ForeignKeyDefinition.ColumnReference(
+							columnRef.getAttribute( "local-column" ), columnRef.getAttribute( "foreign-column" ) ) );
 				}
-				ForeignKey key = table.createForeignKey(
-						constraintName,
-						localColumns,
-						foreignTableName,
-						null,
-						null,
-						foreignColumns);
-				key.setReferencedTable(foreignTable); // only possible if foreignColumns is explicitly specified (workaround on aligncolumns)
+				table.addForeignKey( constraintName, foreignTable( element, table, foreignTableName ), references );
 			}
 			if (StringHelper.isNotEmpty(constraintName)) {
 				if (!validateFkAssociations(element)) {
@@ -234,6 +182,13 @@ public class OverrideBinder {
 			}
 
 		}
+	}
+
+	private static TableIdentifier foreignTable(Element element, OverrideTable table, String name) {
+		return TableIdentifier.create(
+				element.hasAttribute( "foreign-catalog" ) ? element.getAttribute( "foreign-catalog" ) : table.selector.getCatalog(),
+				element.hasAttribute( "foreign-schema" ) ? element.getAttribute( "foreign-schema" ) : table.selector.getSchema(),
+				name );
 	}
 
 	private static void bindOneToOne(Element element, String constraintName,
@@ -344,14 +299,14 @@ public class OverrideBinder {
 
 	private static void bindMetaAttributes(
 			Element element,
-			Table table,
+			OverrideTable table,
 			OverrideRepository repository) {
 		MultiValuedMap<String, SimpleMetaAttribute> map =
 				MetaAttributeHelper.loadAndMergeMetaMap(
 						element,
 						new HashSetValuedHashMap<>());
 		if( !map.isEmpty() ) {
-			repository.addMetaAttributeInfo( table, map);
+			repository.addMetaAttributeInfo( table.lookupKey(), map);
 		}
 	}
 

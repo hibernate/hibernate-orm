@@ -60,6 +60,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
@@ -115,7 +116,7 @@ public class ComponentBinder {
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
-			Table table,
+			ColumnContainer table,
 			BiConsumer<MemberDetails, Column> columnConsumer,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
@@ -139,7 +140,7 @@ public class ComponentBinder {
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
-			Table table,
+			ColumnContainer table,
 			BiConsumer<MemberDetails, Column> columnConsumer,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
@@ -167,7 +168,7 @@ public class ComponentBinder {
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
-			Table table,
+			ColumnContainer table,
 			BiConsumer<MemberDetails, Column> columnConsumer,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
@@ -597,8 +598,8 @@ public class ComponentBinder {
 	}
 
 	private static BasicValue genericBasicValue(BasicValue source, MetadataBuildingContext context) {
-		final BasicValue basicValue = BasicValue.unregistered( context, source.getTable() );
-		basicValue.setTable( source.getTable() );
+		final BasicValue basicValue = BasicValue.unregistered( context, source.getColumnContainer() );
+		basicValue.setTable( source.getColumnContainer() );
 		basicValue.setTypeName( Object.class.getName() );
 		for ( int i = 0; i < source.getSelectables().size(); i++ ) {
 			final var selectable = source.getSelectables().get( i );
@@ -668,7 +669,7 @@ public class ComponentBinder {
 			ClassDetails componentType,
 			ComponentMemberBinding componentMember,
 			Property property,
-			Table table,
+			ColumnContainer table,
 			AssociationOverride associationOverride,
 			List<Column> identifierColumns) {
 		final String attributeName = componentMember.attributeName();
@@ -705,7 +706,7 @@ public class ComponentBinder {
 		}
 
 		final JoinTable joinTable = source.joinTable();
-		final Table valueTable = joinTable == null
+		final ColumnContainer valueTable = joinTable == null
 				? table
 				: bindAssociationIdentifierTable(
 						resolveOwnerEntityType( ownerType ),
@@ -751,7 +752,7 @@ public class ComponentBinder {
 			String attributeName,
 			ToOneSource source,
 			Property property,
-			Table table,
+			ColumnContainer table,
 			EntityTypeBinder targetTypeBinder,
 			List<Column> identifierColumns) {
 		final OneToOne value = new OneToOne(
@@ -790,14 +791,14 @@ public class ComponentBinder {
 	private Table bindAssociationIdentifierTable(
 			EntityTypeMetadataImpl ownerType,
 			PersistentClass ownerBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			String attributeName,
 			EntityTypeBinder targetTypeBinder,
 			JoinTable joinTable) {
 		final Table associationTable = modelBinders.getTableBinder()
 				.bindAssociationTable(
 						ownerType,
-						primaryTable,
+						primaryTable.requireTable(),
 						attributeName,
 						targetTypeBinder.getManagedType(),
 						targetTypeBinder.getTypeBinding().getTable(),
@@ -815,6 +816,7 @@ public class ComponentBinder {
 		final List<JoinColumn> joinColumns = listJoinColumns( joinTable.joinColumns() );
 		state.addAssociationTableBinding( new AssociationTableBinding(
 				join,
+				attributeName,
 				joinColumns,
 				ForeignKeySource.firstSpecified(
 						ForeignKeySource.fromFirstSpecifiedJoinColumn( joinColumns ),
@@ -1015,8 +1017,8 @@ public class ComponentBinder {
 	}
 
 	private static void alignComponentTable(Component component, Property property) {
-		final Table propertyTable = property.getValue().getTable();
-		if ( propertyTable == null || propertyTable.equals( component.getTable() ) ) {
+		final ColumnContainer propertyTable = property.getValue().getColumnContainer();
+		if ( propertyTable == null || propertyTable.equals( component.getColumnContainer() ) ) {
 			return;
 		}
 		if ( component.getPropertySpan() == 0 ) {

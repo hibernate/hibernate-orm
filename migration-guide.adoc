@@ -822,3 +822,68 @@ preserving deferred database initialization. Restored metadata already contains
 resolved names: calling `getObjectNameNormalizer()` on its building context now
 throws `IllegalStateException` immediately, instead of returning a normalizer
 that fails when it tries to access the unavailable metadata collector.
+
+=== Implicit naming strategy consolidation
+
+The default `StandardImplicitNamingStrategy` now uses full attribute paths for
+embedded mappings. For example, `home.location.zip` becomes `home_location_zip`
+and `work.location.zip` becomes `work_location_zip`, avoiding the duplicate `zip`
+columns produced by terminal-property naming. This changes implicitly named
+embedded columns, including embedded identifier columns. Explicit names continue
+to bypass implicit naming and are still processed by physical naming.
+
+`ImplicitNamingStrategyJpaCompliantImpl` remains supported and retains
+terminal-property naming. Select `jpa` for JPA naming conventions and use explicit
+mapping overrides where repeated embeddables require distinct names.
+
+The following strategies are deprecated for removal:
+
+* `ImplicitNamingStrategyLegacyHbmImpl` (`legacy-hbm`)
+* `ImplicitNamingStrategyLegacyJpaImpl` (`legacy-jpa`)
+* `ImplicitNamingStrategyComponentPathImpl` (`component-path`)
+
+Their aliases and existing algorithms remain available during the deprecation
+period. Selecting one, including a subclass, emits deprecation warning `HHH90000046`
+once per mapping resolution. Migrate to Standard or JPA after comparing resolved
+schema names. Standard now supplies component-path's embedded naming behavior,
+but its association-table composition uses logical dependency names, so replacing
+component-path is not guaranteed to preserve every schema name.
+
+To preserve an existing schema, make affected mapping names explicit and verify
+the result under the configured physical strategy. Do not copy physical database
+names directly into annotations if that strategy would transform them again.
+
+=== Tenant column naming callback
+
+`ImplicitNamingStrategy.determineTenantIdColumnName(ImplicitTenantIdColumnNameSource)`
+has been replaced by `determineTenantColumnName(TenantColumnNamingInput, ImplicitNamingContext)`,
+returning `LogicalName`. The old source interface is removed. Custom implementations
+must return a non-null implicit name, for example with `context.implicitName(...)`.
+
+Tenant columns now participate in this dedicated callback, including supported embedded
+tenant attributes. Supplied strategies use the terminal tenant attribute name rather
+than a fixed `tenant_id` default. Direct attributes retain their previous default;
+embedded attributes now use the same terminal-name convention instead of ordinary
+basic-column naming. Under Standard this removes any implicit embeddable path prefix
+from tenant columns. Declare a column name explicitly to preserve a different existing name.
+An explicit column bypasses implicit naming and still undergoes physical naming.
+An existing identifier column serving as the tenant column is reused without renaming.
+
+=== Entity discriminator-column naming
+
+`ImplicitNamingStrategy.determineDiscriminatorColumnName` now accepts
+`DiscriminatorColumnNamingInput` and `ImplicitNamingContext` and returns an implicit
+`LogicalName`. The legacy `ImplicitDiscriminatorColumnNameSource` is removed.
+The supplied strategies default to `DTYPE`, preserving the entity binder's default;
+the shared discriminator default used by Any-column naming is unchanged.
+
+A present `@DiscriminatorColumn` supplies its effective name, including default
+`DTYPE` when only another member such as `length` is specified. It therefore bypasses
+implicit naming unless its name is empty. Normalized XML declarations follow the same
+rule. Without a supplied name, the dedicated callback now controls the name.
+
+Entity discriminator columns now pass through `PhysicalNamingStrategy.toPhysicalColumnName`,
+including explicitly named columns. A prefix strategy may therefore change `DTYPE` to
+`p_DTYPE`; applications with existing schemas must account for this when upgrading.
+Requested quoting is preserved. Discriminator formulas and embeddable discriminator
+naming are unchanged by this migration.

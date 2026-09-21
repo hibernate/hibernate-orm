@@ -11,7 +11,6 @@ import java.util.Set;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.FetchStyle;
@@ -130,7 +129,7 @@ public interface Value extends Serializable {
 	 */
 	FetchStyle getFetchStyle();
 
-	Table getTable();
+	ColumnContainer getColumnContainer();
 
 	boolean hasFormula();
 
@@ -190,22 +189,9 @@ public interface Value extends Serializable {
 		for ( int i = 0; i < getSelectables().size(); i++ ) {
 			if ( getSelectables().get( i ) instanceof Column column
 					&& ( isColumnInsertable( i ) || isColumnUpdateable( i ) ) ) {
-				final var primaryTable = getTable();
-				final Identifier catalog;
-				final Identifier schema;
-				final Identifier table;
-				if ( primaryTable != null ) {
-					catalog = primaryTable.getCatalogIdentifier();
-					schema = primaryTable.getSchemaIdentifier();
-					table = primaryTable.getNameIdentifier();
-				}
-				else {
-					catalog = null;
-					schema = null;
-					table = null;
-				}
-				final var columnName = column.getNameIdentifier( database );
-				if ( !distinctColumns.add( new QualifiedColumnName( catalog, schema, table, columnName ) ) ){
+				final var columnContainer = getColumnContainer();
+				final var columnName = column.getPhysicalName();
+				if ( !distinctColumns.add( new QualifiedColumnName( columnContainer, columnName ) ) ){
 					throw new MappingException(
 							"Column '" + column.getName()
 									+ "' is duplicated in mapping for " + owner

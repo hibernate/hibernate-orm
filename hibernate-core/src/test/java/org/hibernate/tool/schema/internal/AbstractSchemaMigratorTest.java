@@ -7,8 +7,9 @@ package org.hibernate.tool.schema.internal;
 import java.util.ArrayList;
 import java.util.Set;
 
+import org.hibernate.relational.naming.spi.LogicalName;
+
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -47,7 +48,7 @@ public class AbstractSchemaMigratorTest {
 			protected NameSpaceTablesInformation performTablesMigration(Metadata metadata,
 					DatabaseInformation existingDatabase, ExecutionOptions options,ContributableMatcher contributableInclusionFilter, Dialect dialect,
 					Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs,
-					boolean tryToCreateSchemas, Set<Identifier> exportedCatalogs, Namespace namespace,
+					boolean tryToCreateSchemas, Set<LogicalName> exportedCatalogs, Namespace namespace,
 					SqlStringGenerationContext sqlStringGenerationContext,
 					GenerationTarget[] targets) { return null; }
 		};

@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
@@ -147,9 +149,9 @@ public class GeneratedValueTests {
 		assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
 
 		final Sequence sequence = database.getDefaultNamespace()
-				.locateSequence( Identifier.toIdentifier( "my_db_sequence" ) );
+				.locateSequence( logicalName( Identifier.toIdentifier( "my_db_sequence" ) ) );
 		assertThat( sequence, notNullValue() );
-		assertThat( sequence.getName().getSequenceName().getText(), is( "my_db_sequence" ) );
+		assertThat( sequence.getName().getObjectName().getText(), is( "my_db_sequence" ) );
 		assertThat( sequence.getInitialValue(), is( 100 ) );
 		assertThat( sequence.getIncrementSize(), is( 500 ) );
 

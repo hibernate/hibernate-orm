@@ -4,11 +4,13 @@
  */
 package org.hibernate.orm.test.stateless.fetching;
 
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import java.util.Locale;
 
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
 
 public class TestingNamingStrategy extends PhysicalNamingStrategyStandardImpl {
@@ -20,8 +22,8 @@ public class TestingNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 	}
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier( applyPrefix( logicalName.getText() ) );
+	public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+		return jdbcEnvironment.getPhysicalNameFactory().create( applyPrefix( logicalName.getText() ), logicalName.isQuoted() );
 	}
 
 	private String determineUniquePrefix() {

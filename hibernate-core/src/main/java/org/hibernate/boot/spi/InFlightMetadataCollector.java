@@ -36,6 +36,8 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.DenormalizedTable;
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
@@ -148,7 +150,13 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 			String subselect,
 			boolean isAbstract,
 			MetadataBuildingContext buildingContext,
-			boolean isExplicit);
+			boolean isExplicit,
+			String viewQuery);
+
+	default Table addTable(String schema, String catalog, String name, String subselect,
+			boolean isAbstract, MetadataBuildingContext context, boolean isExplicit) {
+		return addTable( schema, catalog, name, subselect, isAbstract, context, isExplicit, null );
+	}
 
 	/**
 	 * Adds a 'denormalized table' to this repository.
@@ -157,21 +165,18 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 * @param catalog The named catalog in which the table belongs (or null).
 	 * @param name The table name
 	 * @param isAbstract Is the table abstract (i.e. not really existing in the DB)?
-	 * @param subselect A select statement which defines a logical table, much
-	 * like a DB view.
 	 * @param includedTable The "common" table
 	 *
 	 * @return The created table metadata.
 	 *
 	 * @throws DuplicateMappingException If such a table mapping already exists.
 	 */
-	Table addDenormalizedTable(
+	DenormalizedTable addDenormalizedTable(
 			String schema,
 			String catalog,
 			String name,
 			boolean isAbstract,
-			String subselect,
-			Table includedTable,
+			PhysicalTable includedTable,
 			MetadataBuildingContext buildingContext) throws DuplicateMappingException;
 
 	/**

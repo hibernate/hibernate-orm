@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
@@ -34,12 +36,15 @@ public class IndividuallySchemaValidatorImpl extends AbstractSchemaValidator {
 			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			Namespace namespace) {
-		for ( var table : namespace.getTables() ) {
+		for ( var candidate : namespace.getTables() ) {
+			if ( !( candidate instanceof NamedTable table ) ) {
+				continue;
+			}
 			if ( schemaFilter.includeTable( table )
 					&& table.isPhysicalTable()
 					&& contributableInclusionFilter.matches( table ) ) {
 				final var tableInformation =
-						databaseInformation.getTableInformation( table.getQualifiedTableName() );
+						databaseInformation.getTableInformation( ((NamedTable) table).getPhysicalName() );
 				validateTable( table, tableInformation, metadata, options, dialect );
 			}
 		}

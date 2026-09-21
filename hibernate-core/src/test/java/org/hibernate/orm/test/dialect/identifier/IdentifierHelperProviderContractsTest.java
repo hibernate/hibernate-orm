@@ -8,6 +8,8 @@ import java.lang.reflect.Proxy;
 import java.util.Set;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.IdentifierComparisonPolicy;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -37,6 +39,10 @@ public class IdentifierHelperProviderContractsTest {
 	void forwardsEveryOperationExactlyOnce() {
 		final IdentifierHelper delegate = mock( IdentifierHelper.class );
 		final TestIdentifierHelper helper = new TestIdentifierHelper( delegate );
+		final IdentifierComparisonPolicy policy = mock( IdentifierComparisonPolicy.class );
+		final PhysicalName.Factory factory = new PhysicalName.Factory( policy );
+		when( delegate.getComparisonPolicy() ).thenReturn( policy );
+		when( delegate.getPhysicalNameFactory() ).thenReturn( factory );
 		final Identifier input = Identifier.toIdentifier( "input" );
 		final Identifier normalized = Identifier.toIdentifier( "normalized", true );
 		final Identifier simple = Identifier.toIdentifier( "simple" );
@@ -55,6 +61,8 @@ public class IdentifierHelperProviderContractsTest {
 		when( delegate.toMetaDataObjectName( input ) ).thenReturn( "OBJECT" );
 
 		assertThat( helper.exposedDelegate() ).isSameAs( delegate );
+		assertThat( helper.getComparisonPolicy() ).isSameAs( policy );
+		assertThat( helper.getPhysicalNameFactory() ).isSameAs( factory );
 		assertThat( helper.normalizeQuoting( input ) ).isSameAs( normalized );
 		assertThat( helper.toIdentifier( "simple" ) ).isSameAs( simple );
 		assertThat( helper.toIdentifier( "quoted", true ) ).isSameAs( quoted );
@@ -65,6 +73,8 @@ public class IdentifierHelperProviderContractsTest {
 		assertThat( helper.toMetaDataSchemaName( input ) ).isEqualTo( "SCHEMA" );
 		assertThat( helper.toMetaDataObjectName( input ) ).isEqualTo( "OBJECT" );
 
+		verify( delegate ).getComparisonPolicy();
+		verify( delegate ).getPhysicalNameFactory();
 		verify( delegate ).normalizeQuoting( input );
 		verify( delegate ).toIdentifier( "simple" );
 		verify( delegate ).toIdentifier( "quoted", true );

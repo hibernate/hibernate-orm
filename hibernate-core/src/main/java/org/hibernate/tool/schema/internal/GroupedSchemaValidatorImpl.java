@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
@@ -35,7 +37,10 @@ public class GroupedSchemaValidatorImpl extends AbstractSchemaValidator {
 			Dialect dialect, Namespace namespace) {
 
 		final var tables = databaseInformation.getTablesInformation( namespace );
-		for ( var table : namespace.getTables() ) {
+		for ( var candidate : namespace.getTables() ) {
+			if ( !( candidate instanceof NamedTable table ) ) {
+				continue;
+			}
 			if ( schemaFilter.includeTable( table )
 					&& table.isPhysicalTable()
 					&& contributableInclusionFilter.matches( table ) ) {

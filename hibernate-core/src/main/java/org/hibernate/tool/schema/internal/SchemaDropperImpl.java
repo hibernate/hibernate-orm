@@ -4,6 +4,10 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.NamedTable;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,6 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.relational.naming.spi.LogicalName;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
@@ -31,7 +37,6 @@ import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
@@ -353,28 +358,34 @@ public class SchemaDropperImpl implements SchemaDropper {
 			SqlStringGenerationContext context,
 			Namespace namespace,
 			GenerationTarget[] targets) {
-		for ( var table : namespace.getTables() ) {
+		for ( var candidate : namespace.getTables() ) {
+			if ( !( candidate instanceof NamedTable table ) ) {
+				continue;
+			}
 			if ( table.isPhysicalTable()
 					&& table.isView()
 					&& schemaFilter.includeTable( table )
 					&& inclusionFilter.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers);
 				applySqlStrings(
-						dialect.getTableExporter().getSqlDropStrings( table, metadata, context),
+						dialect.getTableExporter().getSqlDropStrings( (NamedTable) table, metadata, context),
 						formatter,
 						options,
 						targets
 				);
 			}
 		}
-		for ( var table : namespace.getTables() ) {
+		for ( var candidate : namespace.getTables() ) {
+			if ( !( candidate instanceof NamedTable table ) ) {
+				continue;
+			}
 			if ( table.isPhysicalTable()
 					&& !table.isView()
 					&& schemaFilter.includeTable( table )
 					&& inclusionFilter.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers);
 				applySqlStrings(
-						dialect.getTableExporter().getSqlDropStrings( table, metadata, context),
+						dialect.getTableExporter().getSqlDropStrings( (NamedTable) table, metadata, context),
 						formatter,
 						options,
 						targets
@@ -422,14 +433,14 @@ public class SchemaDropperImpl implements SchemaDropper {
 		final boolean tryToDropCatalogs = manageNamespaces && namespaceSupport.canCreateCatalog();
 		final boolean tryToDropSchemas = manageNamespaces && namespaceSupport.canCreateSchema();
 		if ( tryToDropCatalogs || tryToDropSchemas) {
-			final Set<Identifier> exportedCatalogs = new HashSet<>();
+			final Set<LogicalName> exportedCatalogs = new HashSet<>();
 			for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( schemaFilter.includeNamespace( namespace ) ) {
 					final var logicalName = namespace.getName();
 					final var physicalName = namespace.getPhysicalName();
 
 					if ( tryToDropSchemas ) {
-						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
+						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalIdentifier( physicalName.schema() ) );
 						if ( schemaPhysicalName != null ) {
 							final String schemaName = schemaPhysicalName.render( dialect );
 							applySqlStrings(
@@ -442,8 +453,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 					}
 
 					if ( tryToDropCatalogs ) {
-						final Identifier catalogLogicalName = logicalName.catalog();
-						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
+						final LogicalName catalogLogicalName = logicalName.catalog();
+						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalIdentifier( physicalName.catalog() ) );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 							final String catalogName = catalogPhysicalName.render( dialect );
 							applySqlStrings(
@@ -476,7 +487,10 @@ public class SchemaDropperImpl implements SchemaDropper {
 			GenerationTarget... targets) {
 		final var dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
 		if ( dialect.getSchemaDropSupport().constraintDropMode() == ConstraintDropMode.EXPLICIT ) {
-			for ( Table table : namespace.getTables() ) {
+			for ( var candidate : namespace.getTables() ) {
+				if ( !( candidate instanceof NamedTable table ) ) {
+					continue;
+				}
 				if ( table.isPhysicalTable()
 						&& schemaFilter.includeTable( table )
 						&& inclusionFilter.matches( table ) ) {

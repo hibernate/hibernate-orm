@@ -4,14 +4,16 @@
  */
 package org.hibernate.orm.test.annotations.namingstrategy;
 
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
@@ -63,9 +65,9 @@ public class NamingStrategyTest {
 				new MappingSources().addManagedClass( A.class ),
 				new PhysicalNamingStrategyStandardImpl() {
 					@Override
-					public Identifier toPhysicalColumnName(
-							Identifier logicalName, JdbcEnvironment context) {
-						return new Identifier( logicalName.getText().toUpperCase(), logicalName.isQuoted() );
+					public PhysicalName toPhysicalColumnName(
+							LogicalName logicalName, PhysicalNamingContext context) {
+						return context.getPhysicalNameFactory().create( logicalName.getText().toUpperCase(), logicalName.isQuoted() );
 					}
 				}
 		);

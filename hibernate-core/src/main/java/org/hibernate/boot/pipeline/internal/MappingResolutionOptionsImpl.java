@@ -19,7 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -252,7 +252,7 @@ public class MappingResolutionOptionsImpl
 				() -> strategySelector.resolveDefaultableStrategy(
 						ImplicitNamingStrategy.class,
 						"default",
-						ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
+						StandardImplicitNamingStrategy.INSTANCE
 				)
 		);
 	}

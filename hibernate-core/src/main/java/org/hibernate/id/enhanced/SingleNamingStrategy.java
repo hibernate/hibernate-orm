@@ -10,7 +10,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.id.enhanced.TableGenerator.DEF_TABLE;
@@ -38,9 +37,7 @@ public class SingleNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 		return new QualifiedSequenceName(
 				catalogName,
 				schemaName,
-				serviceRegistry.requireService( JdbcEnvironment.class )
-						.getIdentifierHelper()
-						.toIdentifier( DEF_SEQUENCE )
+				Identifier.toIdentifier( DEF_SEQUENCE, false, false, false )
 		);
 	}
 
@@ -52,9 +49,7 @@ public class SingleNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 		return new QualifiedTableName(
 				catalogName,
 				schemaName,
-				serviceRegistry.requireService( JdbcEnvironment.class )
-						.getIdentifierHelper()
-						.toIdentifier( DEF_TABLE )
+				Identifier.toIdentifier( DEF_TABLE, false, false, false )
 		);
 	}
 }

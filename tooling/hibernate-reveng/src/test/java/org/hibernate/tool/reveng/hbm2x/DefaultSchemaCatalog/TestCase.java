@@ -4,6 +4,11 @@
  */
 package org.hibernate.tool.reveng.hbm2x.DefaultSchemaCatalog;
 
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.mapping.NamedTable;
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Table;
@@ -103,6 +108,46 @@ public class TestCase {
 		TableIdentifier childid = TableIdentifier.create(catchild);
 		assertEquals(TableIdentifier.create(null, null, "CATMASTER"), masterid, "jdbcreader has not nulled out according to default schema");
 		assertEquals(TableIdentifier.create(null, null, "CATCHILD"), childid, "jdbcreader has not nulled out according to default schema");
+	}
+
+	@Test
+	public void testDatabaseNamesAreAlreadyPhysical() {
+		final var properties = new Properties();
+		properties.setProperty( Environment.DEFAULT_SCHEMA, "OVRTEST" );
+		properties.setProperty( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
+		properties.put( Environment.PHYSICAL_NAMING_STRATEGY, new AlreadyPhysicalStrategy() );
+		final var metadata = MetadataDescriptorFactory.createReverseEngineeringDescriptor( null, properties ).createMetadata();
+		final var tables = getTables( metadata );
+		assertEquals( 2, tables.size() );
+		assertEquals( "OVRTEST", metadata.getDatabase().getPhysicalImplicitNamespaceName().schema().getText() );
+		org.junit.jupiter.api.Assertions.assertFalse( metadata.getDatabase().getPhysicalImplicitNamespaceName().schema().isQuoted() );
+		final var sqlContext = org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit(
+				metadata.getDatabase().getJdbcEnvironment(), metadata.getDatabase(), null, null );
+		for ( var table : tables ) {
+			final var physical = ((NamedTable) table).getPhysicalName();
+			org.junit.jupiter.api.Assertions.assertNull( physical.schemaName() );
+			org.junit.jupiter.api.Assertions.assertFalse( physical.objectName().isQuoted() );
+			org.junit.jupiter.api.Assertions.assertTrue( Set.of( "CATMASTER", "CATCHILD" ).contains( physical.objectName().getText() ) );
+			org.junit.jupiter.api.Assertions.assertTrue( table.getTableExpression( sqlContext ).endsWith( "OVRTEST." + table.getName() ) );
+			org.junit.jupiter.api.Assertions.assertThrows( NoSuchMethodException.class,
+					() -> NamedTable.class.getMethod( "setSchema", String.class ) );
+		}
+	}
+
+	public static class AlreadyPhysicalStrategy extends PhysicalNamingStrategyStandardImpl {
+		@Override
+		public PhysicalName toPhysicalTableName(
+				LogicalName name,
+				PhysicalNamingContext context) {
+			throw new AssertionError( "A JDBC table name must not pass through physical naming" );
+		}
+
+		@Override
+		public PhysicalName toPhysicalSchemaName(
+				LogicalName name,
+				PhysicalNamingContext context) {
+			return name == null ? null : context.getPhysicalNameFactory().create( "renamed_" + name.getText(), false );
+		}
 	}
 
 	private List<Table> getTables(Metadata metadata) {

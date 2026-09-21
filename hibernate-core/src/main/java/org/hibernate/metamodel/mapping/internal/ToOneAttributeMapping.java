@@ -327,7 +327,7 @@ public class ToOneAttributeMapping
 					for ( var join : entityBinding.getJoinClosure() ) {
 						if ( join.getPersistentClass().getEntityName().equals( entityBinding.getEntityName() )
 								&& join.getPropertySpan() == 1
-								&& join.getTable() == manyToOne.getTable()
+								&& join.getTable() == manyToOne.getColumnContainer()
 								&& equal( join.getKey(), manyToOne ) ) {
 							bidirectionalAttributeName = SelectablePath.parse(
 									join.getProperties().get(0).getName()
@@ -377,7 +377,7 @@ public class ToOneAttributeMapping
 			}
 			else {
 				final String targetTableName =
-						getTableIdentifierExpression( manyToOne.getTable(),
+						getTableIdentifierExpression( manyToOne.getColumnContainer().requireTable(),
 								declaringEntityPersister.getFactory() );
 				if ( CollectionPart.Nature.fromNameExact( navigableRole.getParent().getLocalName() ) != null ) {
 					// * the to-one's parent is directly a collection element or index

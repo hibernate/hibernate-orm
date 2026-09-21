@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.internal;
 
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
@@ -12,7 +14,6 @@ import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetai
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -121,12 +122,11 @@ public class SoftDeleteHelper {
 			SoftDelete softDeleteConfig,
 			BasicValue softDeleteIndicatorValue,
 			MetadataBuildingContext context) {
-		final var softDeleteColumn = new Column();
+		final var softDeleteColumn = new Column( applyColumnName( softDeleteConfig, context ) );
 
 		softDeleteColumn.setValue( softDeleteIndicatorValue );
 		softDeleteIndicatorValue.addColumn( softDeleteColumn );
 
-		applyColumnName( softDeleteColumn, softDeleteConfig, context );
 
 		softDeleteColumn.setOptions( softDeleteConfig.options() );
 		if ( isBlank( softDeleteConfig.comment() ) ) {
@@ -149,8 +149,7 @@ public class SoftDeleteHelper {
 		return softDeleteColumn;
 	}
 
-	private static void applyColumnName(
-			Column softDeleteColumn,
+	private static org.hibernate.relational.naming.spi.PhysicalName applyColumnName(
 			SoftDelete softDeleteConfig,
 			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
@@ -160,11 +159,9 @@ public class SoftDeleteHelper {
 				softDeleteConfig.strategy().getDefaultColumnName(),
 				softDeleteConfig.columnName()
 		);
-		final Identifier physicalColumnName = namingStrategy.toPhysicalColumnName(
-				database.toIdentifier( logicalColumnName ),
-				database.getJdbcEnvironment()
-		);
-		softDeleteColumn.setName( physicalColumnName.render( database.getDialect() ) );
+		return PhysicalNamingStrategyHelper.resolve(
+				PhysicalNamingStrategyHelper.logicalName( database.toIdentifier( logicalColumnName ) ),
+				database.getJdbcEnvironment(), namingStrategy::toPhysicalColumnName, "column", false );
 	}
 
 	public static SoftDeleteMappingImpl resolveSoftDeleteMapping(

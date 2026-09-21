@@ -70,13 +70,13 @@ public class ListTests {
 	private void validateCategoryName(Property nameProperty) {
 		assertThat( nameProperty.getColumns() ).hasSize( 1 );
 		assertThat( nameProperty.getColumns().get( 0 ).getName() ).isEqualTo( "name" );
-		assertThat( nameProperty.getValue().getTable().getName() ).isEqualTo( "root_categories" );
+		assertThat( nameProperty.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "root_categories" );
 	}
 
 	private void validateCategoryOwner(Property owenerProperty) {
 		assertThat( owenerProperty.getColumns() ).hasSize( 1 );
 		assertThat( owenerProperty.getColumns().get( 0 ).getName() ).isEqualTo( "owner_fk" );
-		assertThat( owenerProperty.getValue().getTable().getName() ).isEqualTo( "root_categories" );
+		assertThat( owenerProperty.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "root_categories" );
 
 	}
 

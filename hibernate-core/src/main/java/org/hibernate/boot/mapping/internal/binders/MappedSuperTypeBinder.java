@@ -31,6 +31,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
@@ -96,7 +97,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			superEntity = null;
 		}
 
-		this.binding = new MappedSuperclass( superMappedSuper, superEntity, getTable() );
+		this.binding = new MappedSuperclass( superMappedSuper, superEntity, new org.hibernate.mapping.MappedSuperclassColumnContainer( getManagedType().getClassDetails().getName() + "#mapped-superclass" ) );
 		this.binding.setClassDetails( type.getClassDetails() );
 		if ( superMappedSuper != null ) {
 			superMappedSuper.addSubType( binding );
@@ -126,7 +127,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	public void bindMembers() {
-		final Table mappedSuperclassTable = new Table( "orm", getManagedType().getClassDetails().getName() + "#mapped-superclass" );
+		final ColumnContainer mappedSuperclassTable = binding.getImplicitTable();
 		bindDeclaredAttributes(
 				modelBinders,
 				getManagedType(),
@@ -142,7 +143,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		applyDeclaredPropertiesToNearestEntityConsumers( getManagedType() );
 	}
 
-	private void applyDeclaredVersion(Table mappedSuperclassTable) {
+	private void applyDeclaredVersion(ColumnContainer mappedSuperclassTable) {
 		final var versionAttribute = getManagedType().getHierarchy().getVersionAttribute();
 		if ( versionAttribute != null ) {
 			if ( isUnresolvedGenericAttribute( versionAttribute ) ) {
@@ -432,8 +433,8 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private BasicValue genericBasicValue(BasicValue source) {
-		final BasicValue basicValue = BasicValue.unregistered( getBindingState().getMetadataBuildingContext(), source.getTable() );
-		basicValue.setTable( source.getTable() );
+		final BasicValue basicValue = BasicValue.unregistered( getBindingState().getMetadataBuildingContext(), source.getColumnContainer() );
+		basicValue.setTable( source.getColumnContainer() );
 		basicValue.setTypeName( Object.class.getName() );
 		for ( int i = 0; i < source.getSelectables().size(); i++ ) {
 			final var selectable = source.getSelectables().get( i );

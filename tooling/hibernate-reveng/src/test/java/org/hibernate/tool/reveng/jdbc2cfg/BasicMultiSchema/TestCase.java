@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.reveng.jdbc2cfg.BasicMultiSchema;
 
+import org.hibernate.tool.reveng.test.utils.PhysicalNameHelper;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
@@ -28,6 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SuppressWarnings("DuplicatedCode")
 public class TestCase {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 
 	private Metadata metadata = null;
 
@@ -61,7 +67,7 @@ public class TestCase {
 				JdbcUtil.toIdentifier(this, table.getName()) );
 		assertEquals( 2, table.getColumnSpan() );
 
-		Column basicColumn = table.getColumn( 0 );
+		Column basicColumn = table.getColumn( 1 );
 		assertEquals(
 				JdbcUtil.toIdentifier(this, "A"),
 				JdbcUtil.toIdentifier(this, basicColumn.getName() ));
@@ -82,7 +88,7 @@ public class TestCase {
 		Table table = HibernateUtil.getTable(
 				metadata,
 				JdbcUtil.toIdentifier(this, "BASIC" ) );
-		Column nameCol = table.getColumn( new Column( JdbcUtil.toIdentifier(this, "NAME" ) ) );
+		Column nameCol = table.getColumn( PhysicalNameHelper.columnName( JdbcUtil.toIdentifier(this, "NAME" ), COLUMN_NAMES )  );
 		assertEquals(20, nameCol.getLength().intValue());
 		assertNull(nameCol.getPrecision());
 		assertNull(nameCol.getScale());

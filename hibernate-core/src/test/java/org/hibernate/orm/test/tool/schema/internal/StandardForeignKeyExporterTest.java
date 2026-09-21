@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.tool.schema.internal;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -52,7 +54,7 @@ public class StandardForeignKeyExporterTest {
 		SqlStringGenerationContext sqlStringGenerationContext =
 				SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
 
-		var fks = database.getDefaultNamespace().locateTable( Identifier.toIdentifier( "PERSON" ) ).getForeignKeyCollection();
+		var fks = database.getDefaultNamespace().locateTable( logicalName( Identifier.toIdentifier( "PERSON" ) ) ).getForeignKeyCollection();
 		assertEquals( 1, fks.size() );
 		final Optional<ForeignKey> foreignKey = fks.stream().findFirst();
 

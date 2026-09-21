@@ -23,6 +23,7 @@ import jakarta.persistence.JoinColumn;
 /// @author Steve Ebersole
 public record AssociationTableBinding(
 		Join join,
+		String attributePath,
 		List<JoinColumn> joinColumns,
 		ForeignKeySource foreignKeySource) {
 }

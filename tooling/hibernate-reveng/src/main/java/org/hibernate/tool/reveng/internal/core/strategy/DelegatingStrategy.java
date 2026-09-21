@@ -5,6 +5,7 @@
 package org.hibernate.tool.reveng.internal.core.strategy;
 
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.tool.reveng.api.core.ForeignKeyDefinition;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.reveng.api.core.AssociationInfo;
@@ -20,7 +21,7 @@ public class DelegatingStrategy implements RevengStrategy {
 
 	RevengStrategy delegate;
 
-	public List<ForeignKey> getForeignKeys(TableIdentifier referencedTable) {
+	public List<ForeignKeyDefinition> getForeignKeys(TableIdentifier referencedTable) {
 		return delegate==null?null:delegate.getForeignKeys(referencedTable);
 	}
 

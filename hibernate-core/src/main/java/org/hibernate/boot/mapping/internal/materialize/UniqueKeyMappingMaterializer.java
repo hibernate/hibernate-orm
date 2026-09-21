@@ -4,10 +4,15 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
+import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
+
 import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.internal.ConstraintNamingHelper;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
@@ -86,7 +91,7 @@ public final class UniqueKeyMappingMaterializer {
 			List<Column> keyColumns,
 			String userProvidedName,
 			MetadataBuildingContext context) {
-		return context.getBuildingPlan().getImplicitNamingStrategy()
+		return ConstraintNamingHelper.resolve( userProvidedName, () -> context.getBuildingPlan().getImplicitNamingStrategy()
 				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
 					@Override
 					public Identifier getTableName() {
@@ -96,7 +101,7 @@ public final class UniqueKeyMappingMaterializer {
 					@Override
 					public List<Identifier> getColumnNames() {
 						return keyColumns.stream()
-								.map( column -> column.getNameIdentifier( context ) )
+								.map( column -> ColumnNameHelper.identifier( column ) )
 								.toList();
 					}
 
@@ -111,8 +116,7 @@ public final class UniqueKeyMappingMaterializer {
 					public ImplicitNamingContext getNamingContext() {
 						return ImplicitNamingContextImpl.from( context );
 					}
-				} )
-				.render( context.getMetadataCollector().getDatabase().getDialect() );
+				} ), ConstraintNamingHelper.Kind.UNIQUE_KEY, context );
 	}
 
 	private static Identifier logicalTableName(Table table, MetadataBuildingContext context) {
@@ -122,7 +126,7 @@ public final class UniqueKeyMappingMaterializer {
 					.toIdentifier( context.getMetadataCollector().getLogicalTableName( table ) );
 		}
 		catch (MappingException ignored) {
-			return table.getNameIdentifier();
+			return ImplicitNamingSourceHelper.tableName( table );
 		}
 	}
 }

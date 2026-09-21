@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -16,10 +18,9 @@ import org.hibernate.boot.model.internal.CannotForceNonNullableException;
 import org.hibernate.boot.model.internal.DerivedIdentifierGeneratorDescriptor;
 import org.hibernate.boot.model.internal.GeneratedValueGeneratorDescriptor;
 import org.hibernate.boot.model.internal.GeneratorAnnotationHelper;
-import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
+import org.hibernate.boot.model.naming.spi.EntityNamingInput;
+import org.hibernate.boot.model.naming.spi.IdentifierColumnNamingInput;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
-import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
-import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTableBinding;
 import org.hibernate.boot.mapping.internal.binders.AttributeBindingPhase;
@@ -62,6 +63,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
@@ -1226,16 +1228,16 @@ public class IdentifierMappingMaterializer {
 	private Table bindAssociationIdentifierTable(
 			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			String propertyName,
 			JoinTable joinTable) {
 		final Table associationTable = modelBinders.getTableBinder()
 				.bindAssociationTable(
 						type,
-						primaryTable,
+						primaryTable.requireTable(),
 						propertyName,
 						type,
-						primaryTable,
+						primaryTable.requireTable(),
 						joinTable
 				)
 				.binding();
@@ -1249,6 +1251,7 @@ public class IdentifierMappingMaterializer {
 
 		state.addAssociationTableBinding( new AssociationTableBinding(
 				join,
+				propertyName,
 				listJoinColumns( joinTable.joinColumns() ),
 				ForeignKeySource.firstSpecified(
 						ForeignKeySource.fromFirstSpecifiedJoinColumn( listJoinColumns( joinTable.joinColumns() ) ),
@@ -1356,24 +1359,8 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private Supplier<String> implicitIdentifierColumnName(EntityTypeMetadataImpl type, AttributeMetadataImplementor idAttribute) {
-		return () -> context.getImplicitNamingStrategy()
-				.determineIdentifierColumnName( new ImplicitIdentifierColumnNameSource() {
-					@Override
-					public EntityTypeMetadataImpl getEntityNaming() {
-						return type;
-					}
-
-					@Override
-					public AttributePath getIdentifierAttributePath() {
-						return AttributePath.parse( idAttribute.getName() );
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( state.getMetadataBuildingContext() );
-					}
-				} )
-				.getText();
+		return ImplicitNamingHelper.once( () -> context.getImplicitNamingStrategy()
+				.determineIdentifierColumnName( new IdentifierColumnNamingInput( new EntityNamingInput( type.getClassName(), type.getEntityName(), type.getJpaEntityName() ), idAttribute.getName() ), ImplicitNamingContextImpl.forPhysicalNaming( state.getMetadataBuildingContext() ) ), "IdentifierColumn" );
 	}
 
 	private void applyGeneratedValue(SimpleValue idValue, MemberDetails member, RootClass typeBinding) {
@@ -1457,7 +1444,7 @@ public class IdentifierMappingMaterializer {
 		table.addColumn( column );
 		ColumnBinder.registerColumnNameBinding(
 				table,
-				ColumnBinder.columnName( ColumnSource.from( columnAnn ), implicitName ),
+				ColumnBinder.logicalColumnName( ColumnSource.from( columnAnn ), implicitName ),
 				column,
 				options,
 				state

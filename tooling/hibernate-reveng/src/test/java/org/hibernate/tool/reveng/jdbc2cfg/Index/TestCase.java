@@ -8,7 +8,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.reveng.test.utils.HibernateUtil;
@@ -48,7 +48,7 @@ public class TestCase {
 
 	@Test
 	public void testUniqueKey() {
-		Table table = HibernateUtil.getTable(
+		PhysicalTable table = (PhysicalTable) HibernateUtil.getTable(
 				metadata,
 				JdbcUtil.toIdentifier(this, "WITH_INDEX") );
 		UniqueKey uniqueKey = table.getUniqueKey(
@@ -62,7 +62,7 @@ public class TestCase {
 
 	@Test
 	public void testWithIndex() {
-		Table table = HibernateUtil.getTable(
+		PhysicalTable table = (PhysicalTable) HibernateUtil.getTable(
 				metadata,
 				JdbcUtil.toIdentifier(this, "WITH_INDEX"));
 		assertEquals(
@@ -92,10 +92,8 @@ public class TestCase {
 		assertEquals(
 				JdbcUtil.toIdentifier(this, "THREE"),
 				JdbcUtil.toIdentifier(this, col2.getName()));
-		Column example = new Column();
-		example.setName(col2.getName() );
 		assertSame(
-				table.getColumn(example), col2, "column with same name should be same instance!");
+				table.getColumn(col2.getPhysicalName()), col2, "column with same name should be same instance!");
 	}
 
 }

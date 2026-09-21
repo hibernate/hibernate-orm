@@ -4,11 +4,12 @@
  */
 package org.hibernate.orm.test.namingstrategy.ejb3joincolumn;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 
-import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+
 
 /**
  * @author Anton Wimmer
@@ -21,15 +22,15 @@ public class PhysicalNamingStrategyImpl extends PhysicalNamingStrategyStandardIm
 	public static final PhysicalNamingStrategyImpl INSTANCE = new PhysicalNamingStrategyImpl();
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return toIdentifier( makeCleanIdentifier("tbl_" + logicalName.getText()), logicalName.isQuoted() );
+	public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+		return jdbcEnvironment.getPhysicalNameFactory().create( makeCleanIdentifier("tbl_" + logicalName.getText()), logicalName.isQuoted() );
 	}
 
 	@Override
-	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+	public PhysicalName toPhysicalColumnName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
 		return logicalName.getText().equals( "DTYPE" )
-				? logicalName
-				: toIdentifier( makeCleanIdentifier( "c_" + logicalName.getText() ), logicalName.isQuoted() );
+				? jdbcEnvironment.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() )
+				: jdbcEnvironment.getPhysicalNameFactory().create( makeCleanIdentifier( "c_" + logicalName.getText() ), logicalName.isQuoted() );
 	}
 
 	private String makeCleanIdentifier(String s) {

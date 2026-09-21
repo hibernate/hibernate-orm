@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.mapping.Table;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 
 /// Table reference for a persistent database view.
 ///
@@ -19,35 +19,36 @@ import org.hibernate.mapping.Table;
 /// @since 9.0
 /// @author Steve Ebersole
 public record PhysicalView(
-		Identifier logicalName,
-		Identifier logicalCatalogName,
-		Identifier logicalSchemaName,
-		Identifier physicalName,
-		Identifier physicalCatalogName,
-		Identifier physicalSchemaName,
-		Table binding) implements PersistentTableReference {
+		LogicalName logicalName,
+		LogicalName logicalCatalogName,
+		LogicalName logicalSchemaName,
+		org.hibernate.mapping.DatabaseView binding) implements PersistentTableReference {
+	public PhysicalName physicalName() {
+		return binding.getPhysicalName().objectName();
+	}
+
 	@Override
-	public Identifier logicalName() {
+	public LogicalName logicalName() {
 		return logicalName;
 	}
 
 	@Override
-	public Identifier getPhysicalSchemaName() {
-		return physicalSchemaName;
+	public PhysicalName getPhysicalSchemaName() {
+		return binding.getPhysicalName().schemaName();
 	}
 
 	@Override
-	public Identifier getLogicalSchemaName() {
+	public LogicalName getLogicalSchemaName() {
 		return logicalSchemaName;
 	}
 
 	@Override
-	public Identifier getPhysicalCatalogName() {
-		return physicalCatalogName;
+	public PhysicalName getPhysicalCatalogName() {
+		return binding.getPhysicalName().catalogName();
 	}
 
 	@Override
-	public Identifier getLogicalCatalogName() {
+	public LogicalName getLogicalCatalogName() {
 		return logicalCatalogName;
 	}
 
@@ -57,7 +58,7 @@ public record PhysicalView(
 	}
 
 	@Override
-	public Table binding() {
+	public org.hibernate.mapping.DatabaseView binding() {
 		return binding;
 	}
 }

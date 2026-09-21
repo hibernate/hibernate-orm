@@ -34,10 +34,13 @@ public final class DependentTableKeyMappingMaterializer {
 		return new ResolvedDependentTableKey( ownerBinding, sourceRole, table, key );
 	}
 
-	public static PrimaryKey materializePrimaryKey(ResolvedDependentTableKey dependentTableKey) {
+	public static PrimaryKey materializePrimaryKey(ResolvedDependentTableKey dependentTableKey,
+			org.hibernate.boot.spi.MetadataBuildingContext context) {
 		final Table table = dependentTableKey.table();
 		final PrimaryKey primaryKey = new PrimaryKey( table );
-		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
+		primaryKey.setName( org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.resolve(
+				null, () -> org.hibernate.boot.model.naming.Identifier.toIdentifier( PK_ALIAS.toAliasString( table.getName() ) ),
+				org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.Kind.PRIMARY_KEY, context ) );
 		table.setPrimaryKey( primaryKey );
 		for ( Column column : dependentTableKey.keyColumns() ) {
 			primaryKey.addColumn( column );

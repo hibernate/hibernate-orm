@@ -1102,7 +1102,7 @@ public class FirebirdDialect extends Dialect implements CurrentTemporalSupport, 
 
 		@Override
 		public String[] getSqlCreateStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
-			final String tableName = context.format( index.getTable().getQualifiedTableName() );
+			final String tableName = index.getTable().getTableExpression( context );
 			final String indexNameForCreation = index.getQuotedName( dialect );
 			// In firebird the index is only sortable on top-level, not per column, use the first column to decide
 			final String sortOrder = index.getSelectableOrderMap().getOrDefault( index.getSelectables().get( 0 ), "asc" );

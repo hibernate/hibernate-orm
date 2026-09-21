@@ -7,6 +7,7 @@ package org.hibernate.dialect.identifier.spi;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.SPI;
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 
@@ -25,6 +26,11 @@ import static org.hibernate.SPI.Role.USE;
 /// @see Dialect#getIdentifierSupport()
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface IdentifierSupport {
+	/// Render a physical name using this database's identifier delimiters.
+	default String render(PhysicalName name) {
+		return name.isQuoted() ? toQuotedIdentifier( name.getText() ) : name.getText();
+	}
+
 	/// Return the character which opens a quoted identifier.
 	default char openQuote() {
 		return '"';
@@ -75,7 +81,12 @@ public interface IdentifierSupport {
 	/// and namespace support from the request. Invoke it before replacing any of
 	/// those values with authoritative provider settings, then build the final
 	/// helper from the same builder. Settings which this implementation does not
-	/// initialize may be applied before invoking it. If builder configuration
+	/// initialize may be applied before invoking it. The final case strategies
+	/// also supply the physical-name comparison policy. If storage casing alone
+	/// does not describe database equality, configure an immutable policy using
+	/// [org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder#setComparisonPolicy].
+	/// This same policy supplies metadata spelling and physical-name comparison.
+	/// If builder configuration
 	/// cannot express a database rule, decorate the final helper with
 	/// [DelegatingIdentifierHelper]. Do not retain the request, builder, or
 	/// metadata view.

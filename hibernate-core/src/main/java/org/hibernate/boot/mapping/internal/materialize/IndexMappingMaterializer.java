@@ -4,10 +4,13 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
+import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
+
 import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.internal.ConstraintNamingHelper;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
@@ -62,7 +65,7 @@ public final class IndexMappingMaterializer {
 			List<String> columnNames,
 			String userProvidedName,
 			MetadataBuildingContext context) {
-		return context.getBuildingPlan().getImplicitNamingStrategy()
+		return ConstraintNamingHelper.resolve( userProvidedName, () -> context.getBuildingPlan().getImplicitNamingStrategy()
 				.determineIndexName( new ImplicitIndexNameSource() {
 					@Override
 					public Identifier getTableName() {
@@ -87,8 +90,7 @@ public final class IndexMappingMaterializer {
 					public ImplicitNamingContext getNamingContext() {
 						return ImplicitNamingContextImpl.from( context );
 					}
-				} )
-				.render( context.getMetadataCollector().getDatabase().getDialect() );
+				} ), ConstraintNamingHelper.Kind.INDEX, context );
 	}
 
 	private static Identifier logicalTableName(Table table, MetadataBuildingContext context) {
@@ -98,7 +100,7 @@ public final class IndexMappingMaterializer {
 					.toIdentifier( context.getMetadataCollector().getLogicalTableName( table ) );
 		}
 		catch (MappingException ignored) {
-			return table.getNameIdentifier();
+			return ImplicitNamingSourceHelper.tableName( table );
 		}
 	}
 }

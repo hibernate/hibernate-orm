@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+
 import java.util.List;
 import java.util.Comparator;
 
@@ -57,12 +59,16 @@ class DerivedIdentifierBinder {
 	private void bindDerivedIdentifier(
 			DerivedIdentifierBinding derivedIdentifierBinding,
 			java.util.Set<org.hibernate.mapping.PersistentClass> visiting) {
+		if ( bindingState.isDerivedIdentifierBound( derivedIdentifierBinding ) ) {
+			return;
+		}
 		if ( !visiting.add( derivedIdentifierBinding.ownerBinding() ) ) {
 			return;
 		}
 		try {
 			bindTargetDerivedIdentifiers( derivedIdentifierBinding, visiting );
 			bindDerivedIdentifier( derivedIdentifierBinding );
+			bindingState.markDerivedIdentifierBound( derivedIdentifierBinding );
 		}
 		finally {
 			visiting.remove( derivedIdentifierBinding.ownerBinding() );
@@ -155,7 +161,7 @@ class DerivedIdentifierBinder {
 			if ( derivedIdentifierColumns.size() > identifierComponent.getColumnSpan() ) {
 				return;
 			}
-			final var primaryKey = identifierComponent.getTable().getPrimaryKey();
+			final var primaryKey = identifierComponent.getColumnContainer().requireTable().getPrimaryKey();
 			if ( primaryKey != null
 					&& primaryKey.getOriginalOrder() == null
 					&& primaryKey.getColumns().equals( identifierComponent.getColumns() )
@@ -199,8 +205,8 @@ class DerivedIdentifierBinder {
 
 	private Column findColumn(List<Column> columns, Column targetColumn) {
 		for ( Column column : columns ) {
-			if ( column.getNameIdentifier( bindingState.getDatabase() )
-					.matches( targetColumn.getNameIdentifier( bindingState.getDatabase() ) ) ) {
+			if ( column.getPhysicalName()
+					.equals( targetColumn.getPhysicalName() ) ) {
 				return column;
 			}
 		}
@@ -227,8 +233,8 @@ class DerivedIdentifierBinder {
 
 	private int findColumnPosition(List<Column> columns, Column targetColumn) {
 		for ( int i = 0; i < columns.size(); i++ ) {
-			if ( columns.get( i ).getNameIdentifier( bindingState.getDatabase() )
-					.matches( targetColumn.getNameIdentifier( bindingState.getDatabase() ) ) ) {
+			if ( columns.get( i ).getPhysicalName()
+					.equals( targetColumn.getPhysicalName() ) ) {
 				return i;
 			}
 		}
@@ -284,8 +290,21 @@ class DerivedIdentifierBinder {
 					identifierColumns.get( i ),
 					StringHelper.isNotEmpty( joinColumn.name() )
 							? joinColumn.name()
-							: derivedIdentifierBinding.property().getName() + "_" + targetColumns.get( i ).getName()
+							: JoinColumnNaming.toOne( derivedIdentifierBinding.ownerBinding(),
+									derivedIdentifierBinding.targetTypeBinder().getTypeBinding(), derivedIdentifierBinding.property().getName(),
+									derivedIdentifierBinding.targetTypeBinder().getTypeBinding().getTable(), targetColumns,
+									orderedJoinColumns.stream().map( JoinColumn::referencedColumnName ).toList(), i, bindingState ).get(),
+					StringHelper.isNotEmpty( joinColumn.name() )
 			);
+			if ( StringHelper.isNotEmpty( joinColumn.name() ) ) {
+				// MapsId replaces the identifier spelling with the join-column name.
+				// Keep that source name available to subsequent referencedColumnName resolution.
+				bindingState.getRelationalModelCorrespondences().columnNames().register(
+						identifierColumns.get( i ).getValue().getColumnContainer(),
+						bindingState.getDatabase().toLogicalName( joinColumn.name() ),
+						identifierColumns.get( i )
+				);
+			}
 		}
 	}
 
@@ -302,25 +321,31 @@ class DerivedIdentifierBinder {
 			boolean forcePrefix) {
 		for ( int i = 0; i < identifierColumns.size(); i++ ) {
 			if ( !forcePrefix
-					&& identifierColumns.get( i ).getNameIdentifier( bindingState.getDatabase() )
-					.matches( targetColumns.get( i ).getNameIdentifier( bindingState.getDatabase() ) ) ) {
+					&& identifierColumns.get( i ).getPhysicalName()
+					.equals( targetColumns.get( i ).getPhysicalName() ) ) {
 				continue;
 			}
 			renameIdentifierColumn(
 					identifierColumns.get( i ),
-					derivedIdentifierBinding.property().getName() + "_" + targetColumns.get( i ).getName()
+					JoinColumnNaming.toOne( derivedIdentifierBinding.ownerBinding(),
+							derivedIdentifierBinding.targetTypeBinder().getTypeBinding(), derivedIdentifierBinding.property().getName(),
+							derivedIdentifierBinding.targetTypeBinder().getTypeBinding().getTable(), targetColumns,
+							List.of(), i, bindingState ).get(), false
 			);
 		}
 	}
 
-	private void renameIdentifierColumn(Column identifierColumn, String name) {
-		if ( identifierColumn.getName().equals( name ) ) {
-			return;
+	private void renameIdentifierColumn(Column identifierColumn, String name, boolean explicit) {
+		final var logical = bindingState.getDatabase().toLogicalName( name, explicit );
+		final var replacement = PhysicalNamingStrategyHelper.resolve(
+				logical, bindingState.getDatabase().getJdbcEnvironment(),
+				bindingState.getDatabase().getPhysicalNamingStrategy()::toPhysicalColumnName, "derived identifier column", false );
+		final var owner = identifierColumn.getValue().getColumnContainer();
+		if ( !identifierColumn.getName().equals( replacement.getText() )
+				|| identifierColumn.isQuoted() != replacement.isQuoted() ) {
+			bindingState.renameColumn( owner, identifierColumn, replacement );
 		}
-		identifierColumn.setName( name );
-		if ( identifierColumn.getValue() instanceof SimpleValue simpleValue ) {
-			simpleValue.getTable().columnRenamed( identifierColumn );
-		}
+		bindingState.getRelationalModelCorrespondences().columnNames().registerDeclaration( owner, logical, identifierColumn );
 	}
 
 	private void applyDerivedIdentifierGenerator(

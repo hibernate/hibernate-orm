@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.mapping.internal.sources;
 
+import org.hibernate.boot.model.naming.Identifier;
+
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,10 +19,8 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.naming.spi.BasicColumnNamingInput;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
-import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.categorize.StandardPersistentAttributeMemberResolver;
@@ -757,7 +759,14 @@ public record ComponentSource(
 		final var timeZoneColumn = member.getDirectAnnotationUsage( TimeZoneColumn.class );
 		final var created = JpaAnnotations.COLUMN.createUsage( buildingContext.getModelsContext()
 		);
-		created.name( timeZoneColumn == null ? column.name() + "_tz" : timeZoneColumn.name() );
+		if ( timeZoneColumn == null ) {
+			final var baseName = Identifier.toIdentifier( column.name(), false, false );
+			created.name( new org.hibernate.relational.naming.spi.LogicalName(
+					baseName.getText() + "_tz", baseName.isQuoted(), false ).toString() );
+		}
+		else {
+			created.name( timeZoneColumn.name() );
+		}
 		created.nullable( column.nullable() );
 		if ( timeZoneColumn == null ) {
 			created.table( column.table() );
@@ -804,29 +813,11 @@ public record ComponentSource(
 			created.secondPrecision( -1 );
 		}
 
-		final Identifier implicitName = buildingContext.getObjectNameNormalizer().normalizeIdentifierQuoting(
-				buildingContext.getBuildingPlan().getImplicitNamingStrategy()
-						.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
-							final AttributePath attributePath = AttributePath.parse( path );
-
-							@Override
-							public AttributePath getAttributePath() {
-								return attributePath;
-							}
-
-							@Override
-							public boolean isCollectionElement() {
-								return false;
-							}
-
-							@Override
-							public ImplicitNamingContext getNamingContext() {
-								return ImplicitNamingContextImpl.from( buildingContext );
-							}
-						} )
-		);
-		if ( isNotEmpty( implicitName.getText() ) ) {
-			created.name( implicitName.getText() );
+		final String implicitName = ImplicitNamingHelper.columnName(
+				buildingContext.getBuildingPlan().getImplicitNamingStrategy().determineBasicColumnName(
+						new BasicColumnNamingInput( path ), ImplicitNamingContextImpl.forPhysicalNaming( buildingContext ) ), "basic column" );
+		if ( isNotEmpty( implicitName ) ) {
+			created.name( implicitName );
 		}
 		return created;
 	}

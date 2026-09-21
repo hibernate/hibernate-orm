@@ -48,9 +48,9 @@ final class AggregateComponentBinder {
 		component.setStructName( plan.structName() );
 		component.setStructColumnNames( intent.structAttributeNames() );
 
-		final Column column = ColumnBinder.bindColumn(
+		final Column column = ColumnBinder.bindUntransformedColumn(
 				intent.aggregateColumnSource(),
-				() -> source.sourceMember().resolveAttributeName()
+				() -> source.sourceMember().resolveAttributeName(), false, true, 255, 0, 0, state.getDatabase()
 		);
 		final BasicValue aggregateValue = BasicValue.unregistered( state.getMetadataBuildingContext(), memberTarget.table() );
 		aggregateValue.setTable( memberTarget.table() );

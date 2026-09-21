@@ -70,20 +70,20 @@ public class SecondaryTableTests {
 	}
 
 	private void validateStuffProperty(Property property) {
-		assertThat( property.getValue().getTable().getName() ).isEqualTo( "supplemental1" );
+		assertThat( property.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "supplemental1" );
 	}
 
 	private void validateDataProperty(Property property) {
-		assertThat( property.getValue().getTable().getName() ).isEqualTo( "supplemental1" );
+		assertThat( property.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "supplemental1" );
 		assertThat( property.getValue() ).isInstanceOf( Component.class );
 		final Component component = (Component) property.getValue();
 		for ( Property subProperty : component.getProperties() ) {
-			assertThat( subProperty.getValue().getTable().getName() ).isEqualTo( "supplemental1" );
+			assertThat( subProperty.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "supplemental1" );
 		}
 	}
 
 	private void validateDetailsProperty(Property property) {
-		assertThat( property.getValue().getTable().getName() ).isEqualTo( "supplemental1" );
+		assertThat( property.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "supplemental1" );
 	}
 
 	private void verifySupplemental2(Join join) {
@@ -95,6 +95,6 @@ public class SecondaryTableTests {
 
 		assertThat( join.getProperties() ).hasSize( 1 );
 		assertThat( join.getProperties().get(0).getName() ).isEqualTo( "datum" );
-		assertThat( join.getProperties().get(0).getValue().getTable().getName() ).isEqualTo( "supplemental2" );
+		assertThat( join.getProperties().get(0).getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "supplemental2" );
 	}
 }

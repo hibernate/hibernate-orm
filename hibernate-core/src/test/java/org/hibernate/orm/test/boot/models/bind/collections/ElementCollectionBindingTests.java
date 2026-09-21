@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.boot.models.bind.collections;
 
+import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.List;
@@ -38,9 +41,8 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
-import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
+import org.hibernate.boot.model.naming.spi.ListIndexColumnNamingInput;
+import org.hibernate.boot.model.naming.spi.MapKeyColumnNamingInput;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadataImpl;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -140,7 +142,7 @@ public class ElementCollectionBindingTests {
 					assertThat( collectionIntent.collectionIdIntent() ).isNull();
 					assertThat( collection.getRole() ).isEqualTo( SetOwner.class.getName() + ".labels" );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "set_owner_labels" );
-					assertThat( collection.getCollectionTable().getOptions() ).isEqualTo( "collection table options" );
+					assertThat( ((org.hibernate.mapping.NamedTable) collection.getCollectionTable()).getOptions() ).isEqualTo( "collection table options" );
 					assertThat( context.getBindingState().getTableByBinding( entityBinding.getTable() ).binding() )
 							.isSameAs( entityBinding.getTable() );
 					assertThat( context.getBindingState().getTableByBinding( collection.getCollectionTable() ).binding() )
@@ -164,8 +166,8 @@ public class ElementCollectionBindingTests {
 					assertThat( uniqueKey.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "owner_id", "label" );
-					final org.hibernate.mapping.Index index = collection.getCollectionTable()
-							.getIndex( "idx_set_owner_labels_label" );
+					final org.hibernate.mapping.Index index = ((org.hibernate.mapping.PhysicalTable) collection.getCollectionTable()
+							).getIndex( "idx_set_owner_labels_label" );
 					assertThat( index ).isNotNull();
 					assertThat( index.getOptions() ).isEqualTo( "index options" );
 					assertThat( index.getSelectables() )
@@ -947,7 +949,7 @@ public class ElementCollectionBindingTests {
 					assertThat( collection.getMapKeyPropertyName() ).isEqualTo( "zipCode" );
 					assertThat( collection.getIndex().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "zipCode" );
+							.containsExactly( "addresses_zipCode" );
 					assertThat( collection.getElement() ).isInstanceOf( Component.class );
 				},
 				scope.getRegistry(),
@@ -971,7 +973,7 @@ public class ElementCollectionBindingTests {
 					assertThat( key.getComponentClassName() ).isEqualTo( Location.class.getName() );
 					assertThat( key.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "city", "country" );
+							.containsExactly( "addresses_location_city", "addresses_location_country" );
 					assertThat( collection.getElement() ).isInstanceOf( Component.class );
 				},
 				scope.getRegistry(),
@@ -1147,7 +1149,7 @@ public class ElementCollectionBindingTests {
 					assertThat( element.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "zipCode" );
+							.containsExactly( "addresses_line1", "addresses_zipCode" );
 					final MappingRole elementRole = MappingRole.collection( collection.getRole() )
 							.append( MappingRole.PartKind.ELEMENT );
 					final var appliedElement = context.getBindingState().getBootBindingModel()
@@ -1181,7 +1183,7 @@ public class ElementCollectionBindingTests {
 					assertThat( element.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "zipCode" );
+							.containsExactly( "addresses_line1", "addresses_zipCode" );
 				},
 				scope.getRegistry(),
 				EmbeddableListOwner.class
@@ -1208,7 +1210,7 @@ public class ElementCollectionBindingTests {
 					assertThat( element.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "zipCode" );
+							.containsExactly( "addresses_line1", "addresses_zipCode" );
 				},
 				scope.getRegistry(),
 				EmbeddableMapOwner.class
@@ -1269,7 +1271,7 @@ public class ElementCollectionBindingTests {
 					assertThat( element.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "zipCode" );
+							.containsExactly( "addresses_line1", "addresses_zipCode" );
 				},
 				scope.getRegistry(),
 				EmbeddedIntentElementOwner.class
@@ -1293,7 +1295,7 @@ public class ElementCollectionBindingTests {
 							.containsExactly( "home_city", "home_country" );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "home_city", "home_country", "zipCode" );
+							.containsExactly( "addresses_line1", "home_city", "home_country", "addresses_zipCode" );
 				},
 				scope.getRegistry(),
 				NestedEmbeddableElementOwner.class
@@ -1323,19 +1325,15 @@ public class ElementCollectionBindingTests {
 
 	public static class CollectionIndexImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
 		@Override
-		public Identifier determineListIndexColumnName(ImplicitIndexColumnNameSource source) {
-			return toIdentifier(
-					"implicit_list_index_" + source.getPluralAttributePath().getProperty(),
-					source.getNamingContext()
-			);
+		public LogicalName determineListIndexColumnName(ListIndexColumnNamingInput source, ImplicitNamingContext context) {
+			return context.implicitName(
+					"implicit_list_index_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}
 
 		@Override
-		public Identifier determineMapKeyColumnName(ImplicitMapKeyColumnNameSource source) {
-			return toIdentifier(
-					"implicit_map_key_" + source.getPluralAttributePath().getProperty(),
-					source.getNamingContext()
-			);
+		public LogicalName determineMapKeyColumnName(MapKeyColumnNamingInput source, ImplicitNamingContext context) {
+			return context.implicitName(
+					"implicit_map_key_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}
 	}
 

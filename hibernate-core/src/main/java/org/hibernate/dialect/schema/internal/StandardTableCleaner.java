@@ -4,13 +4,18 @@
  */
 package org.hibernate.dialect.schema.internal;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.schema.spi.ConstraintControlMode;
@@ -21,7 +26,6 @@ import org.hibernate.dialect.schema.spi.TruncateRequest;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 
-import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 
 /// Standard table cleaner composed from focused Dialect schema strategies.
 ///
@@ -78,7 +82,7 @@ public class StandardTableCleaner implements TableCleaner {
 
 	@Override
 	public List<String> getSqlTruncateStrings(
-			Collection<Table> tables,
+			Collection<PhysicalTable> tables,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
 		final var tableNames = tables.stream()
@@ -104,11 +108,7 @@ public class StandardTableCleaner implements TableCleaner {
 		);
 	}
 
-	private static QualifiedNameParser.NameParts getTableName(Table table) {
-		return new QualifiedNameParser.NameParts(
-				toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				table.getNameIdentifier()
-		);
+	private static QualifiedPhysicalName getTableName(Table table) {
+		return ((NamedTable) table).getPhysicalName();
 	}
 }

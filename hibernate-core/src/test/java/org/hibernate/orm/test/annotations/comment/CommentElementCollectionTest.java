@@ -39,11 +39,11 @@ public class CommentElementCollectionTest {
 	public void testTableCommentsPlacement(SessionFactoryScope scope) {
 		scope.inSession(session -> {
 			Collection<PersistentClass> entityBindings = METADATA.getEntityBindings();
-			assertThat( entityBindings.iterator().next().getTable().getComment() ).isEqualTo(
+			assertThat( ((org.hibernate.mapping.NamedTable) entityBindings.iterator().next().getTable()).getComment() ).isEqualTo(
 					MainEntity.EXPECTED_MAIN_ENTITY_TABLE_COMMENT );
 
 			Collection<org.hibernate.mapping.Collection> collectionBindings = METADATA.getCollectionBindings();
-			assertThat( collectionBindings.iterator().next().getCollectionTable().getComment() ).isEqualTo(
+			assertThat( ((org.hibernate.mapping.NamedTable) collectionBindings.iterator().next().getCollectionTable()).getComment() ).isEqualTo(
 					MainEntity.EXPECTED_ELEMENT_COLLECTION_TABLE_COMMENT );
 		});
 	}

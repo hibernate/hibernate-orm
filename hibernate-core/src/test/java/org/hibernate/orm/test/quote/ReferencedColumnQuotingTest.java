@@ -189,7 +189,8 @@ public class ReferencedColumnQuotingTest {
 	@Table(name = "User")
 	public static class User {
 		@Id
-		@Column(name = "User+id")
+		// Match the explicitly quoted logical name used by referencedColumnName.
+		@Column(name = "`User+id`")
 		Long id;
 		@Column(name = "Name")
 		String name;

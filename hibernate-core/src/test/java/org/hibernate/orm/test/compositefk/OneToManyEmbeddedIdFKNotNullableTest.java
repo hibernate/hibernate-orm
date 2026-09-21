@@ -82,6 +82,7 @@ public class OneToManyEmbeddedIdFKNotNullableTest {
 	public static class ChildEntity {
 		@Id
 		@GeneratedValue
+		@jakarta.persistence.Column(name = "id")
 		private int id;
 
 		public int getId() {
@@ -95,6 +96,7 @@ public class OneToManyEmbeddedIdFKNotNullableTest {
 
 	@Embeddable
 	public static class NestedEmbeddable {
+		@jakarta.persistence.Column(name = "name")
 		private String name;
 
 		public NestedEmbeddable() {
@@ -115,6 +117,7 @@ public class OneToManyEmbeddedIdFKNotNullableTest {
 
 	@Embeddable
 	public static class ParentEntityId implements Serializable {
+		@jakarta.persistence.Column(name = "id")
 		private int id;
 
 		private NestedEmbeddable nestedEmbeddable;

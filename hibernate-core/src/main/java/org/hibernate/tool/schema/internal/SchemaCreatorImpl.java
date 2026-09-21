@@ -4,12 +4,20 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.relational.naming.spi.LogicalName;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
@@ -24,7 +32,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -273,7 +280,10 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 		for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 			// foreign keys must be created after unique keys for numerous DBs (see HHH-8390)
 			if ( schemaFilter.includeNamespace( namespace ) ) {
-				for ( Table table : namespace.getTables() ) {
+				for ( var candidate : namespace.getTables() ) {
+					if ( !( candidate instanceof NamedTable table ) ) {
+						continue;
+					}
 					if ( schemaFilter.includeTable( table )
 							&& contributableInclusionMatcher.matches( table ) ) {
 						// foreign keys
@@ -357,12 +367,15 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			GenerationTarget[] targets,
 			Namespace namespace) {
 		final var uniqueKeyExporter = new StandardUniqueKeyExporter( dialect );
-		for ( var table : namespace.getTables() ) {
-			if ( table.isPhysicalTable()
+		for ( var candidate : namespace.getTables() ) {
+			if ( !( candidate instanceof NamedTable table ) ) {
+				continue;
+			}
+			if ( table instanceof PhysicalTable physicalTable && table.isPhysicalTable()
 					&& schemaFilter.includeTable( table )
 					&& contributableInclusionMatcher.matches( table ) ) {
 				// indexes
-				for ( var index : table.getIndexes().values() ) {
+				for ( var index : physicalTable.getIndexes().values() ) {
 					checkExportIdentifier( index, exportIdentifiers );
 					applySqlStrings(
 							dialect.getIndexExporter().getSqlCreateStrings( index, metadata, context ),
@@ -396,28 +409,34 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets,
 			Namespace namespace) {
-		for ( var table : namespace.getTables() ) {
+		for ( var candidate : namespace.getTables() ) {
+			if ( !( candidate instanceof NamedTable table ) ) {
+				continue;
+			}
 			if ( table.isPhysicalTable()
 					&& !table.isView()
 					&& schemaFilter.includeTable( table )
 					&& contributableInclusionMatcher.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers );
 				applySqlStrings(
-						dialect.getTableExporter().getSqlCreateStrings( table, metadata, context ),
+						dialect.getTableExporter().getSqlCreateStrings( (NamedTable) table, metadata, context ),
 						formatter,
 						options,
 						targets
 				);
 			}
 		}
-		for ( var table : namespace.getTables() ) {
+		for ( var candidate : namespace.getTables() ) {
+			if ( !( candidate instanceof NamedTable table ) ) {
+				continue;
+			}
 			if ( table.isPhysicalTable()
 					&& table.isView()
 					&& schemaFilter.includeTable( table )
 					&& contributableInclusionMatcher.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers );
 				applySqlStrings(
-						dialect.getTableExporter().getSqlCreateStrings( table, metadata, context ),
+						dialect.getTableExporter().getSqlCreateStrings( (NamedTable) table, metadata, context ),
 						formatter,
 						options,
 						targets
@@ -511,15 +530,15 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 		final boolean tryToCreateSchemas = manageNamespaces && namespaceSupport.canCreateSchema();
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
-			Set<Identifier> exportedCatalogs = new HashSet<>();
+			Set<LogicalName> exportedCatalogs = new HashSet<>();
 			for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( schemaFilter.includeNamespace( namespace ) ) {
 					final var logicalName = namespace.getName();
 					final var physicalName = namespace.getPhysicalName();
 
 					if ( tryToCreateCatalogs ) {
-						final Identifier catalogLogicalName = logicalName.catalog();
-						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
+						final LogicalName catalogLogicalName = logicalName.catalog();
+						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalIdentifier( physicalName.catalog() ) );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 							applySqlStrings(
 									namespaceSupport.getCreateCatalogCommands( catalogPhysicalName.render( dialect ) ),
@@ -532,7 +551,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 					}
 
 					if ( tryToCreateSchemas ) {
-						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
+						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalIdentifier( physicalName.schema() ) );
 						if ( schemaPhysicalName != null ) {
 							applySqlStrings(
 									namespaceSupport.getCreateSchemaCommands( schemaPhysicalName.render( dialect ) ),

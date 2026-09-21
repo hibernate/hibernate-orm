@@ -35,6 +35,7 @@ public class PrimaryKeyProcessor {
 
 		List<Object[]> columns = new ArrayList<>();
 		PrimaryKey key = null;
+		boolean sourceOverride = false;
 		Iterator<Map<String, Object>> primaryKeyIterator = null;
 		try {
 			Map<String, Object> primaryKeyRs;
@@ -96,6 +97,7 @@ public class PrimaryKeyProcessor {
 				}
 				table.setPrimaryKey(key);
 				t = new ArrayList<>( userPrimaryKey );
+				sourceOverride = true;
 			}
 			else {
 				log.warn("Rev.eng. strategy did not report any primary key columns for " + table.getName());
@@ -130,7 +132,11 @@ public class PrimaryKeyProcessor {
 		if(key!=null) {
 			for (String name : t) {
 				// should get column from table if it already exists!
-				Column col = getColumn(metaDataDialect, table, name);
+				final var sourceName = sourceOverride
+						? revengMetadataCollector.columnName( quote( metaDataDialect, name ) ) : null;
+				Column col = sourceOverride ? table.getColumn( sourceName )
+						: getColumn( metaDataDialect, table, name, revengMetadataCollector );
+				if ( col == null ) { col = new Column( sourceName ); }
 				key.addColumn(col);
 			}
 			log.debug("primary key for " + table + " -> "  + key);
@@ -150,14 +156,9 @@ public class PrimaryKeyProcessor {
 		return schema==null?defaultSchema:schema;
 	}
 
-	private static Column getColumn(RevengDialect metaDataDialect, Table table, String columnName) {
-		Column column = new Column();
-		column.setName(quote(metaDataDialect, columnName));
-		Column existing = table.getColumn(column);
-		if(existing!=null) {
-			column = existing;
-		}
-		return column;
+	private static Column getColumn(RevengDialect metaDataDialect, Table table, String columnName, org.hibernate.tool.reveng.internal.core.RevengMetadataCollector collector) {
+		final var existing = collector.findObservedColumn( table, columnName );
+		return existing == null ? new Column( collector.observedColumnName( columnName, metaDataDialect.needQuote( columnName ) ) ) : existing;
 	}
 
 	private static String quote(RevengDialect metaDataDialect, String columnName) {

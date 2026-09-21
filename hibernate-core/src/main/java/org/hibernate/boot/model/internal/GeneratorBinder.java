@@ -202,7 +202,7 @@ public class GeneratorBinder {
 			Value value,
 			Map<String, Object> configuration,
 			MetadataBuildingContext context) {
-		final Table table = value.getTable();
+		final Table table = value.getColumnContainer().requireTable();
 		configuration.put( PersistentIdentifierGenerator.TABLE, table.getName() );
 		final String catalog = implicitNamespaceCatalog( table.getCatalog(), context )
 				? defaultCatalog( context )

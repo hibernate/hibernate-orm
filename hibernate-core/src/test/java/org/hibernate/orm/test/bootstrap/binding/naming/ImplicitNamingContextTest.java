@@ -7,7 +7,6 @@ package org.hibernate.orm.test.bootstrap.binding.naming;
 import java.util.List;
 
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitDiscriminatorColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.NamingHelper;
@@ -38,10 +37,8 @@ class ImplicitNamingContextTest {
 		assertThat( context.getNamingDefaults() ).isSameAs( defaults );
 		assertThat( context.getNamingDefaults().isDefaultQuoteIdentifiers() ).isTrue();
 		assertThat( context.getIdentifierHelper() ).isSameAs( helper );
-		final var source = mock( ImplicitDiscriminatorColumnNameSource.class );
-		when( source.getNamingContext() ).thenReturn( context );
 		final var strategy = new TrackingStrategy();
-		assertThat( strategy.determineDiscriminatorColumnName( source ) ).isEqualTo( Identifier.toIdentifier( "kind", true ) );
+		assertThat( strategy.toIdentifier( "kind", context ) ).isEqualTo( Identifier.toIdentifier( "kind", true ) );
 		assertThat( strategy.identifierContext ).isSameAs( context );
 
 		final var otherMapping = mock( MetadataBuildingContext.class, RETURNS_DEEP_STUBS );

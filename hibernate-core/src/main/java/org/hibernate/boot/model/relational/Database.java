@@ -4,7 +4,13 @@
  */
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.MappingException;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+
 import java.io.Serializable;
+
+import org.hibernate.boot.model.relational.internal.PhysicalNamespaceSnapshot;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -14,6 +20,7 @@ import java.util.TreeMap;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.internal.PersistenceUnitJdbcEnvironment;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
@@ -38,12 +45,13 @@ public class Database implements Serializable {
 	private transient Dialect dialect;
 	private transient TypeConfiguration typeConfiguration;
 	private transient JdbcEnvironment jdbcEnvironment;
-	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<>();
+	private final Map<Namespace.LogicalNamespaceName,Namespace> namespaceMap = new TreeMap<>();
 	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new LinkedHashMap<>();
 	private transient ServiceRegistry serviceRegistry;
 	private transient PhysicalNamingStrategy physicalNamingStrategy;
 
-	private Namespace.Name physicalImplicitNamespaceName;
+	private transient PhysicalNamespaceName physicalImplicitNamespaceName;
+	private PhysicalNamespaceSnapshot physicalImplicitNamespaceSnapshot;
 	private List<InitCommand> initCommands;
 
 	public Database(MappingResolutionOptions buildingPlan) {
@@ -52,20 +60,22 @@ public class Database implements Serializable {
 
 	public Database(MappingResolutionOptions buildingOptions, JdbcEnvironment jdbcEnvironment) {
 		serviceRegistry = buildingOptions.getServiceRegistry();
-		this.jdbcEnvironment = jdbcEnvironment == null
-				? null
-				: new PersistenceUnitJdbcEnvironment(
-						jdbcEnvironment,
-						buildingOptions.getMappingDefaults()::shouldImplicitlyQuoteIdentifiers,
-						globallyQuoteIdentifiersSkipColumnDefinitions( serviceRegistry )
-				);
+		this.jdbcEnvironment = scopedJdbcEnvironment( buildingOptions, jdbcEnvironment );
 		typeConfiguration = buildingOptions.getTypeConfiguration();
 		physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
 		dialect = determineDialect( buildingOptions );
 
 		setImplicitNamespaceName(
-				toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
-				toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() )
+				toLogicalName( buildingOptions.getMappingDefaults().getImplicitCatalogName(), false ),
+				toLogicalName( buildingOptions.getMappingDefaults().getImplicitSchemaName(), false )
+		);
+	}
+
+	private JdbcEnvironment scopedJdbcEnvironment(MappingResolutionOptions options, JdbcEnvironment environment) {
+		return environment == null ? null : new PersistenceUnitJdbcEnvironment(
+				environment,
+				options.getMappingDefaults()::shouldImplicitlyQuoteIdentifiers,
+				globallyQuoteIdentifiersSkipColumnDefinitions( serviceRegistry )
 		);
 	}
 
@@ -84,11 +94,18 @@ public class Database implements Serializable {
 		}
 	}
 
-	private void setImplicitNamespaceName(Identifier catalogName, Identifier schemaName) {
-		physicalImplicitNamespaceName = new Namespace.Name(
-				physicalNamingStrategy.toPhysicalCatalogName( catalogName, jdbcEnvironment ),
-				physicalNamingStrategy.toPhysicalSchemaName( schemaName, jdbcEnvironment )
+	private void setImplicitNamespaceName(LogicalName catalogName, LogicalName schemaName) {
+		physicalImplicitNamespaceName = new PhysicalNamespaceName(
+				PhysicalNamingStrategyHelper.resolve( catalogName, jdbcEnvironment, physicalNamingStrategy::toPhysicalCatalogName, "catalog", true ),
+				PhysicalNamingStrategyHelper.resolve( schemaName, jdbcEnvironment, physicalNamingStrategy::toPhysicalSchemaName, "schema", true )
 		);
+		physicalImplicitNamespaceSnapshot = PhysicalNamespaceSnapshot.from( physicalImplicitNamespaceName );
+	}
+
+	/// Supply already-physical default qualifiers, as used by JDBC reverse engineering.
+	public void setPhysicalImplicitNamespaceName(PhysicalNamespaceName name) {
+		physicalImplicitNamespaceName = java.util.Objects.requireNonNull( name );
+		physicalImplicitNamespaceSnapshot = PhysicalNamespaceSnapshot.from( name );
 	}
 
 	private static Dialect determineDialect(MappingResolutionOptions buildingPlan) {
@@ -101,7 +118,7 @@ public class Database implements Serializable {
 		return new H2Dialect();
 	}
 
-	private Namespace makeNamespace(Namespace.Name name) {
+	private Namespace makeNamespace(Namespace.LogicalNamespaceName name) {
 		final Namespace namespace = new Namespace( getPhysicalNamingStrategy(), getJdbcEnvironment(), name );
 		namespaceMap.put( name, namespace );
 		return namespace;
@@ -116,14 +133,10 @@ public class Database implements Serializable {
 	}
 
 	/**
-	 * Wrap the raw name of a database object in its Identifier form accounting
-	 * for quoting from any of:
-	 * <ul>
-	 *     <li>explicit quoting in the name itself</li>
-	 *     <li>global request to quote all identifiers</li>
-	 * </ul>
+	 * Wrap raw name text in its Identifier form, preserving explicit source quoting.
+	 * Global and automatic quoting are applied after physical naming.
 	 *
-	 * @implNote Quoting from database keywords happens only when building physical identifiers.
+	 * @implNote Global and database keyword quoting happen only when finalizing physical identifiers.
 	 *
 	 * @param text The raw object name
 	 *
@@ -134,20 +147,32 @@ public class Database implements Serializable {
 	}
 
 	/**
-	 * Wrap the raw name of a database object in its Identifier form accounting
-	 * for quoting from any of:
-	 * <ul>
-	 *     <li>explicit quoting in the name itself</li>
-	 *     <li>global request to quote all identifiers</li>
-	 * </ul>
+	 * Wrap raw name text in its Identifier form, preserving explicit source quoting.
+	 * Global and automatic quoting are applied after physical naming.
 	 *
 	 * @param text The raw object name
 	 * @param isExplicit Whether the name is explicitly set
 	 * @return The wrapped Identifier form
-	 * @implNote Quoting from database keywords happens only when building physical identifiers.
+	 * @implNote Global and database keyword quoting happen only when finalizing physical identifiers.
 	 */
 	public Identifier toIdentifier(String text, boolean isExplicit) {
-		return text == null ? null : jdbcEnvironment.getIdentifierHelper().toIdentifier( text, false, isExplicit );
+		return text == null ? null : Identifier.toIdentifier( text, false, false, isExplicit );
+	}
+
+	/**
+	 * Interpret an explicitly supplied logical name, preserving source quoting.
+	 * No physical transformation or automatic quoting is applied.
+	 */
+	public LogicalName toLogicalName(String text) {
+		return toLogicalName( text, true );
+	}
+
+	/**
+	 * Interpret logical source text with its explicit or generated origin.
+	 */
+	public LogicalName toLogicalName(String text, boolean explicit) {
+		final var identifier = Identifier.toIdentifier( text, false, false, explicit );
+		return identifier == null ? null : new LogicalName( identifier.getText(), identifier.isQuoted(), explicit );
 	}
 
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
@@ -173,27 +198,52 @@ public class Database implements Serializable {
 	 *         at runtime.
 	 * @see SqlStringGenerationContext
 	 */
-	public Namespace.Name getPhysicalImplicitNamespaceName() {
+	public PhysicalNamespaceName getPhysicalImplicitNamespaceName() {
+		if ( physicalImplicitNamespaceName == null ) {
+			throw new IllegalStateException( "Database services must be reattached before accessing physical names" );
+		}
 		return physicalImplicitNamespaceName;
 	}
 
-	public @Nullable Namespace findNamespace(Identifier catalogName, Identifier schemaName) {
-		return namespaceMap.get( new Namespace.Name( catalogName, schemaName ) );
+	public @Nullable Namespace findNamespace(LogicalName catalogName, LogicalName schemaName) {
+		return namespaceMap.get( new Namespace.LogicalNamespaceName( catalogName, schemaName ) );
 	}
 
-	public Namespace locateNamespace(Identifier catalogName, Identifier schemaName) {
-		final var name = new Namespace.Name( catalogName, schemaName );
+	public Namespace locateNamespace(LogicalName catalogName, LogicalName schemaName) {
+		final var name = new Namespace.LogicalNamespaceName( catalogName, schemaName );
 		final var namespace = namespaceMap.get( name );
 		return namespace == null ? makeNamespace( name ) : namespace;
 	}
 
-	public Namespace adjustDefaultNamespace(Identifier catalogName, Identifier schemaName) {
+	/// Locate a namespace for names already obtained from the database, without naming or quoting them again.
+	public Namespace locatePhysicalNamespace(
+			PhysicalName catalog,
+			PhysicalName schema) {
+		final var name = new Namespace.LogicalNamespaceName( physicalLookupName( catalog ), physicalLookupName( schema ) );
+		final var physicalName = new PhysicalNamespaceName( catalog, schema );
+		final var namespace = namespaceMap.get( name );
+		if ( namespace != null ) {
+			if ( !namespace.getPhysicalName().equals( physicalName ) ) {
+				throw new MappingException( "Namespace lookup already denotes different physical names: " + name );
+			}
+			return namespace;
+		}
+		final var created = new Namespace( physicalNamingStrategy, jdbcEnvironment, name, physicalName );
+		namespaceMap.put( name, created );
+		return created;
+	}
+
+	private static LogicalName physicalLookupName(PhysicalName name) {
+		return name == null ? null : new LogicalName( name.getText(), name.isQuoted(), true );
+	}
+
+	public Namespace adjustDefaultNamespace(LogicalName catalogName, LogicalName schemaName) {
 		setImplicitNamespaceName( catalogName, schemaName );
 		return locateNamespace( catalogName, schemaName );
 	}
 
 	public Namespace adjustDefaultNamespace(String implicitCatalogName, String implicitSchemaName) {
-		return adjustDefaultNamespace( toIdentifier( implicitCatalogName ), toIdentifier( implicitSchemaName ) );
+		return adjustDefaultNamespace( toLogicalName( implicitCatalogName, false ), toLogicalName( implicitSchemaName, false ) );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
@@ -226,9 +276,20 @@ public class Database implements Serializable {
 	public void reattach(MappingResolutionOptions buildingPlan) {
 		serviceRegistry = buildingPlan.getServiceRegistry();
 		typeConfiguration = buildingPlan.getTypeConfiguration();
-		jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		jdbcEnvironment = scopedJdbcEnvironment( buildingPlan, serviceRegistry.getService( JdbcEnvironment.class ) );
 		physicalNamingStrategy = buildingPlan.getPhysicalNamingStrategy();
 		dialect = determineDialect( buildingPlan );
+		physicalImplicitNamespaceName = physicalImplicitNamespaceSnapshot.restore( jdbcEnvironment.getIdentifierHelper().getPhysicalNameFactory() );
 		namespaceMap.values().forEach( namespace -> namespace.reattach( physicalNamingStrategy, jdbcEnvironment ) );
+		final var columnNames = new org.hibernate.mapping.ColumnNameLifecycle();
+		namespaceMap.values().forEach( namespace -> {
+			namespace.getTables().forEach( columnNames::addContainer );
+			namespace.getUserDefinedTypes().forEach( type -> {
+				if ( type instanceof org.hibernate.mapping.UserDefinedObjectType objectType ) {
+					columnNames.addUserDefinedType( objectType );
+				}
+			} );
+		} );
+		columnNames.restore( jdbcEnvironment.getIdentifierHelper().getPhysicalNameFactory() );
 	}
 }

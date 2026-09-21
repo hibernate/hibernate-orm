@@ -7,47 +7,79 @@ package org.hibernate.boot.model.naming;
 import java.io.Serializable;
 
 import org.hibernate.SPI;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 
-/**
- * Standard implementation of the {@link PhysicalNamingStrategy} contract. This is a trivial implementation
- * where each physical name is taken to be exactly identical to the corresponding logical name.
- *
- * @author Steve Ebersole
- */
+/// Identity physical naming: preserve logical text and requested quoting.
+///
+/// @author Steve Ebersole
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class PhysicalNamingStrategyStandardImpl implements PhysicalNamingStrategy, Serializable {
+	public static final PhysicalNamingStrategyStandardImpl INSTANCE = new PhysicalNamingStrategyStandardImpl();
+
 	@SPI(SPI.Role.USE)
 	public PhysicalNamingStrategyStandardImpl() {
 	}
 
-	/**
-	 * Singleton access
-	 */
-	public static final PhysicalNamingStrategyStandardImpl INSTANCE = new PhysicalNamingStrategyStandardImpl();
-
 	@Override
-	public Identifier toPhysicalCatalogName(Identifier logicalName, JdbcEnvironment context) {
-		return logicalName;
+	public PhysicalName toPhysicalCatalogName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 	}
 
 	@Override
-	public Identifier toPhysicalSchemaName(Identifier logicalName, JdbcEnvironment context) {
-		return logicalName;
+	public PhysicalName toPhysicalSchemaName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 	}
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment context) {
-		return logicalName;
+	public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 	}
 
 	@Override
-	public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment context) {
-		return logicalName;
+	public PhysicalName toPhysicalSequenceName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 	}
 
 	@Override
-	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment context) {
-		return logicalName;
+	public PhysicalName toPhysicalColumnName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 	}
+
+	@Override
+	public PhysicalName toPhysicalTypeName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
+	}
+
+	@Override
+	public PhysicalName toPhysicalPrimaryKeyName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
+	}
+
+	@Override
+	public PhysicalName toPhysicalForeignKeyName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
+	}
+
+	@Override
+	public PhysicalName toPhysicalUniqueKeyName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
+	}
+
+	@Override
+	public PhysicalName toPhysicalIndexName(LogicalName logicalName, PhysicalNamingContext context) {
+		return logicalName == null ? null
+				: context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
+	}
+
 }

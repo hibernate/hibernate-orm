@@ -4,6 +4,10 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.NamedTable;
+
+import org.hibernate.mapping.PhysicalTable;
+
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -101,11 +105,14 @@ public class GeneratorSynchronizerImpl implements GeneratorSynchronizer {
 			final var context = createSqlStringGenerationContext( options, metadata );
 			for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( schemaFilter.includeNamespace( namespace ) ) {
-					for ( var table : namespace.getTables() ) {
-						if ( table.isPhysicalTable()
+					for ( var candidate : namespace.getTables() ) {
+						if ( !( candidate instanceof NamedTable table ) ) {
+							continue;
+						}
+						if ( table instanceof PhysicalTable physicalTable && table.isPhysicalTable()
 								&& schemaFilter.includeTable( table )
 								&& contributableInclusionFilter.matches( table ) ) {
-							for ( var command : table.getResyncCommands( context, isolator ) ) {
+							for ( var command : physicalTable.getResyncCommands( context, isolator ) ) {
 								applySqlStrings( command.initCommands(), formatter, options, targets );
 							}
 						}

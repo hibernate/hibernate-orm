@@ -45,5 +45,5 @@ public interface AttributeContainer {
 	 * The {@link Table} with the columns mapped by attributes belonging
 	 * to this container.
 	 */
-	Table getTable();
+	ColumnContainer getColumnContainer();
 }

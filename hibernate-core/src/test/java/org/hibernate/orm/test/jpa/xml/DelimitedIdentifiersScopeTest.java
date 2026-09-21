@@ -33,7 +33,9 @@ public class DelimitedIdentifiersScopeTest {
 		assertThat( quotedMetadata.getEntityBinding( DelimitedIdentifiersTest.SequenceGeneratedEntity.class.getName() )
 				.getTable().isQuoted() )
 				.isTrue();
-		assertThat( quotedMetadata.getDatabase().toIdentifier( "QuotedIdentifier" ).isQuoted() ).isTrue();
+		assertThat( quotedMetadata.getDatabase().toIdentifier( "QuotedIdentifier" ).isQuoted() ).isFalse();
+		assertThat( quotedMetadata.getDatabase().getJdbcEnvironment()
+				.getIdentifierHelper().toIdentifier( "QuotedIdentifier" ).isQuoted() ).isTrue();
 
 		assertThat( unquotedMetadata.getEntityBinding( DelimitedIdentifiersTest.SequenceGeneratedEntity.class.getName() )
 				.getTable().isQuoted() )

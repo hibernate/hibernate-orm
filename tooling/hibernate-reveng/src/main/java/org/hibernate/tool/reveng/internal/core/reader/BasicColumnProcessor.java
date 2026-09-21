@@ -27,7 +27,7 @@ public class BasicColumnProcessor {
 			RevengDialect metaDataDialect,
 			RevengStrategy revengStrategy,
 			String defaultSchema, String defaultCatalog,
-			Table table) {
+			Table table, org.hibernate.tool.reveng.internal.core.RevengMetadataCollector collector) {
 
 		String qualify = TableNameQualifier.qualify(table.getCatalog(), table.getSchema(), table.getName() );
 		Iterator<?> columnIterator = null;
@@ -62,9 +62,8 @@ public class BasicColumnProcessor {
 				int size = (Integer) columnRs.get( "COLUMN_SIZE" );
 				int decimalDigits = (Integer) columnRs.get( "DECIMAL_DIGITS" );
 
-				Column column = new Column();
-				column.setName(quote(columnName, metaDataDialect));
-				Column existing = table.getColumn(column);
+				Column column = new Column( collector.observedColumnName( columnName, metaDataDialect.needQuote( columnName ) ) );
+				Column existing = collector.findObservedColumn( table, columnName );
 				if(existing!=null) {
 					throw new RuntimeException(column + " already exists in " + qualify);
 				}
@@ -123,16 +122,4 @@ public class BasicColumnProcessor {
 		return size>=0 && size!=Integer.MAX_VALUE;
 	}
 
-	private static String quote(String columnName, RevengDialect metaDataDialect) {
-		if(columnName==null) return null;
-		if(metaDataDialect.needQuote(columnName)) {
-			if(columnName.length()>1 && columnName.charAt(0)=='`' && columnName.charAt(columnName.length()-1)=='`') {
-				return columnName; // avoid double quoting
-			}
-			return "`" + columnName + "`";
-		}
-		else {
-			return columnName;
-		}
-	}
 }

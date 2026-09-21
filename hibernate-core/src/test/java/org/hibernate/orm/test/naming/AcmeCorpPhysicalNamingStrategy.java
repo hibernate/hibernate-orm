@@ -4,6 +4,10 @@
  */
 package org.hibernate.orm.test.naming;
 
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -11,9 +15,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 import org.junit.platform.commons.util.StringUtils;
 
@@ -38,31 +40,31 @@ public class AcmeCorpPhysicalNamingStrategy extends PhysicalNamingStrategyStanda
 	}
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+	public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
 		final List<String> parts = splitAndReplace( logicalName.getText());
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier(
+		return jdbcEnvironment.getPhysicalNameFactory().create(
 				String.join("_", parts),
 				logicalName.isQuoted()
 		);
 	}
 
 	@Override
-	public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+	public PhysicalName toPhysicalSequenceName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
 		final List<String> parts = splitAndReplace( logicalName.getText());
 		// Acme Corp says all sequences should end with _seq
 		if (!"seq".equals(parts.get(parts.size() - 1))) {
 			parts.add("seq");
 		}
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier(
+		return jdbcEnvironment.getPhysicalNameFactory().create(
 				String.join("_", parts),
 				logicalName.isQuoted()
 		);
 	}
 
 	@Override
-	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+	public PhysicalName toPhysicalColumnName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
 		final List<String> parts = splitAndReplace( logicalName.getText());
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier(
+		return jdbcEnvironment.getPhysicalNameFactory().create(
 				String.join("_", parts),
 				logicalName.isQuoted()
 		);

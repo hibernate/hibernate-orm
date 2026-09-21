@@ -24,7 +24,6 @@ import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ValueVisitor;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
@@ -57,7 +56,7 @@ public class ValueVisitorTest {
 	public void testProperCallbacks() {
 		final MetadataImplementor metadata =
 				(MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( serviceRegistry );
-		final Table tbl = new Table( "orm" );
+		final var tbl = new org.hibernate.mapping.MappedSuperclassColumnContainer( "visitor" );
 		final RootClass rootClass = new RootClass( metadataBuildingContext );
 
 		ValueVisitor vv = new ValueVisitorValidator();

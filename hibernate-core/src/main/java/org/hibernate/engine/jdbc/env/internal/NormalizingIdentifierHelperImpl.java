@@ -4,13 +4,13 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
-import java.util.Locale;
 import java.util.TreeSet;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.IdentifierComparisonPolicy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
@@ -29,8 +29,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	private final boolean autoQuoteInitialUnderscore;
 	private final boolean autoQuoteDollar;
 	private final TreeSet<String> reservedWords;
-	private final IdentifierCaseStrategy unquotedCaseStrategy;
-	private final IdentifierCaseStrategy quotedCaseStrategy;
+	private final IdentifierComparisonPolicy comparisonPolicy;
+	private final PhysicalName.Factory physicalNameFactory;
 
 	public NormalizingIdentifierHelperImpl(
 			JdbcEnvironment jdbcEnvironment,
@@ -41,8 +41,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			boolean autoQuoteInitialUnderscore,
 			boolean autoQuoteDollar,
 			TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
-			IdentifierCaseStrategy unquotedCaseStrategy,
-			IdentifierCaseStrategy quotedCaseStrategy) {
+			IdentifierComparisonPolicy comparisonPolicy) {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
@@ -51,8 +50,18 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		this.autoQuoteInitialUnderscore = autoQuoteInitialUnderscore;
 		this.autoQuoteDollar = autoQuoteDollar;
 		this.reservedWords = reservedWords;
-		this.unquotedCaseStrategy = unquotedCaseStrategy == null ? IdentifierCaseStrategy.UPPER : unquotedCaseStrategy;
-		this.quotedCaseStrategy = quotedCaseStrategy == null ? IdentifierCaseStrategy.MIXED : quotedCaseStrategy;
+		this.comparisonPolicy = java.util.Objects.requireNonNull( comparisonPolicy, "comparisonPolicy" );
+		this.physicalNameFactory = new PhysicalName.Factory( comparisonPolicy );
+	}
+
+	@Override
+	public IdentifierComparisonPolicy getComparisonPolicy() {
+		return comparisonPolicy;
+	}
+
+	@Override
+	public PhysicalName.Factory getPhysicalNameFactory() {
+		return physicalNameFactory;
 	}
 
 	@Override
@@ -131,19 +140,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		if ( identifier instanceof DatabaseIdentifier ) {
 			return text;
 		}
-		else if ( identifier.isQuoted() ) {
-			return switch ( quotedCaseStrategy ) {
-				case UPPER -> text.toUpperCase( Locale.ROOT );
-				case LOWER -> text.toLowerCase( Locale.ROOT );
-				case MIXED -> text; // default
-			};
-		}
 		else {
-			return switch ( unquotedCaseStrategy ) {
-				case MIXED -> text;
-				case LOWER -> text.toLowerCase( Locale.ROOT );
-				case UPPER -> text.toUpperCase( Locale.ROOT ); // default
-			};
+			return comparisonPolicy.toDatabaseName( text, identifier.isQuoted() );
 		}
 	}
 

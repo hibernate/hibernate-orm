@@ -4,6 +4,8 @@
  */
 package org.hibernate.temporal.audit;
 
+import org.hibernate.testing.util.MappingTableHelper;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -56,6 +58,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class RevChangesTrackingTest {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 
 	// --- Custom changeset entity with @Changelog.ModifiedEntities ---
 
@@ -160,8 +166,8 @@ class RevChangesTrackingTest {
 		for ( var table : scope.getDomainModel().collectTableMappings() ) {
 			if ( "REVCHANGES".equalsIgnoreCase( table.getName() ) ) {
 				found = true;
-				assertNotNull( table.getColumn( new org.hibernate.mapping.Column( "REV" ) ) );
-				assertNotNull( table.getColumn( new org.hibernate.mapping.Column( "ENTITYNAME" ) ) );
+				assertNotNull( table.getColumn( new org.hibernate.mapping.Column( MappingTableHelper.columnName( "REV", COLUMN_NAMES ) ) ) );
+				assertNotNull( table.getColumn( new org.hibernate.mapping.Column( MappingTableHelper.columnName( "ENTITYNAME", COLUMN_NAMES ) ) ) );
 				break;
 			}
 		}

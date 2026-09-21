@@ -4,6 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -11,7 +12,8 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.DialectTestSupport;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,7 @@ class SchemaExporterRenderingTest {
 	void rendersGaussDbTableThroughSupportedExporter() {
 		final Dialect dialect = new GaussDBDialect();
 		assertThat( dialect.getTableExporter().getSqlCreateStrings(
-				new Table( "test", "orders" ),
+				org.hibernate.testing.util.MappingTableHelper.table( "test", "orders", new PhysicalName.Factory( (text, quoted) -> text ) ),
 				null,
 				new TestContext( dialect )
 		)[0] ).startsWith( DialectTestSupport.createTableCommand( dialect ) ).contains( "orders" );
@@ -51,7 +53,7 @@ class SchemaExporterRenderingTest {
 	void rendersInformixTableThroughSupportedExporter() {
 		final Dialect dialect = new InformixDialect();
 		assertThat( dialect.getTableExporter().getSqlCreateStrings(
-				new Table( "test", "orders" ),
+				org.hibernate.testing.util.MappingTableHelper.table( "test", "orders", new PhysicalName.Factory( (text, quoted) -> text ) ),
 				null,
 				new TestContext( dialect )
 		)[0] ).startsWith( DialectTestSupport.createTableCommand( dialect ) ).contains( "orders" );
@@ -92,13 +94,18 @@ class SchemaExporterRenderingTest {
 	}
 
 	private static org.hibernate.mapping.Index index(String name, String order) {
-		final Table table = new Table( "test", "orders" );
+		final var table = org.hibernate.testing.util.MappingTableHelper.table( "test", "orders", new PhysicalName.Factory( (text, quoted) -> text ) );
 		final var index = table.getOrCreateIndex( name );
-		index.addColumn( new Column( "name" ), order );
+		index.addColumn( new Column( new PhysicalName.Factory( (text, quoted) -> text ).create( "name", false ) ), order );
 		return index;
 	}
 
 	private record TestContext(Dialect dialect) implements SqlStringGenerationContext {
+		@Override
+		public PhysicalName.Factory getPhysicalNameFactory() {
+			return new PhysicalName.Factory( (text, quoted) -> text );
+		}
+
 		@Override
 		public Dialect getDialect() {
 			return dialect;
@@ -138,6 +145,12 @@ class SchemaExporterRenderingTest {
 		public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
 			return qualifiedName.render();
 		}
+
+		@Override
+		public String format(QualifiedPhysicalName name) { return name.render(); }
+
+		@Override
+		public String formatWithoutCatalog(QualifiedPhysicalName name) { return name.render(); }
 
 		@Override
 		public boolean isMigration() {

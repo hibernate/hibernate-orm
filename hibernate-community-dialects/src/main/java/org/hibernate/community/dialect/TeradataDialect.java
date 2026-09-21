@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
+import org.hibernate.mapping.NamedTable;
+
 import java.sql.SQLException;
 
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
@@ -27,8 +31,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.QualifiedNameImpl;
-import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.identity.internal.Teradata14IdentityColumnSupport;
 import org.hibernate.community.dialect.lock.internal.TeradataLockingSupport;
@@ -510,16 +512,16 @@ public class TeradataDialect extends Dialect implements TemporalOperationSupport
 
 		@Override
 		public String[] getSqlCreateStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
-			QualifiedTableName qualifiedTableName = index.getTable().getQualifiedTableName();
+			var qualifiedTableName = ((NamedTable) index.getTable()).getPhysicalName();
 			final String tableName = context.format( qualifiedTableName );
 
 			final String indexNameForCreation;
 			if ( dialect.getIndexDdlSupport().nameQualification() == IndexNameQualification.QUALIFIED ) {
 				indexNameForCreation = context.format(
-						new QualifiedNameImpl(
+						new QualifiedPhysicalName(
 								qualifiedTableName.getCatalogName(),
 								qualifiedTableName.getSchemaName(),
-								Identifier.toIdentifier( index.getName() )
+								context.getPhysicalNameFactory().create( Identifier.toIdentifier( index.getName() ).getText(), Identifier.toIdentifier( index.getName() ).isQuoted() )
 						)
 				);
 			}

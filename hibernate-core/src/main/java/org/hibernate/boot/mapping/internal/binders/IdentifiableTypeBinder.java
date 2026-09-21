@@ -37,6 +37,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.TypeDetails;
 
@@ -148,7 +149,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			AbstractIdentifiableTypeMetadata sourceType,
 			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			Consumer<Property> propertyConsumer) {
 		bindDeclaredAttributes( modelBinders, sourceType, ownerType, attributeOwnerBinding, primaryTable, propertyConsumer, true );
 	}
@@ -158,7 +159,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			AbstractIdentifiableTypeMetadata sourceType,
 			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			Consumer<Property> propertyConsumer,
 			boolean includePluralAttributes) {
 		bindDeclaredAttributes(
@@ -178,7 +179,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			AbstractIdentifiableTypeMetadata sourceType,
 			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			Consumer<Property> propertyConsumer,
 			boolean includePluralAttributes,
 			boolean registerCollectionBindings) {
@@ -200,7 +201,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			AbstractIdentifiableTypeMetadata sourceType,
 			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			Consumer<Property> propertyConsumer,
 			boolean includePluralAttributes,
 			boolean registerCollectionBindings,
@@ -230,7 +231,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			AbstractIdentifiableTypeMetadata sourceType,
 			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			BoundAttributeConsumer propertyConsumer,
 			boolean includePluralAttributes,
 			boolean registerCollectionBindings,
@@ -275,12 +276,12 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			final var value = property.getValue();
 
 			attributeBinders.add( attributeBinder );
-			final Table attributeTable = value.getTable();
+			final ColumnContainer attributeTable = value.getColumnContainer();
 			if ( attributeTable == primaryTable || value instanceof org.hibernate.mapping.Collection ) {
 				propertyConsumer.accept( property, attributeBinding.usageBinding(), null );
 			}
 			else {
-				final Join join = findJoin( attributeOwnerBinding, attributeTable );
+				final Join join = findJoin( attributeOwnerBinding, attributeTable.requireTable() );
 				propertyConsumer.accept( property, attributeBinding.usageBinding(), join );
 			}
 			getBindingState().addAttributeCustomMapping(

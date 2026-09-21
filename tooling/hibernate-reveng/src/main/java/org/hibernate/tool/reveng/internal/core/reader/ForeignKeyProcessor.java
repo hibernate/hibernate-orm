@@ -7,7 +7,7 @@ package org.hibernate.tool.reveng.internal.core.reader;
 import org.hibernate.JDBCException;
 import org.hibernate.MappingException;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
+import org.hibernate.tool.reveng.api.core.ForeignKeyDefinition;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.reveng.api.core.RevengDialect;
 import org.hibernate.tool.reveng.api.core.RevengStrategy;
@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class ForeignKeyProcessor {
 
@@ -79,13 +78,13 @@ public class ForeignKeyProcessor {
 			Map<String, List<Column>> dependentColumns,
 			Map<String, Table> dependentTables,
 			Map<String, List<Column>> referencedColumns) {
-		List<ForeignKey> userForeignKeys = revengStrategy.getForeignKeys(
+		List<ForeignKeyDefinition> userForeignKeys = revengStrategy.getForeignKeys(
 				RevengUtils.createTableIdentifier(
 						referencedTable,
 						defaultCatalog,
 						defaultSchema));
 		if(userForeignKeys!=null) {
-			for ( ForeignKey userForeignKey : userForeignKeys ) {
+			for ( ForeignKeyDefinition userForeignKey : userForeignKeys ) {
 				processUserForeignKey(
 						userForeignKey,
 						referencedTable,
@@ -188,9 +187,10 @@ public class ForeignKeyProcessor {
 			Table referencedTable,
 			String fkName) {
 		List<Column> primColumns = referencedColumns.computeIfAbsent( fkName, k -> new ArrayList<>() );
-		Column refColumn = new Column((String) exportedKeyRs.get("PKCOLUMN_NAME"));
-		Column existingColumn = referencedTable.getColumn(refColumn);
-		primColumns.add( Objects.requireNonNullElse( existingColumn, refColumn ) );
+		final String name = (String) exportedKeyRs.get("PKCOLUMN_NAME");
+		final Column existing = revengMetadataCollector.findObservedColumn( referencedTable, name );
+		primColumns.add( existing != null ? existing
+				: new Column( revengMetadataCollector.observedColumnName( name, metaDataDialect.needQuote( name ) ) ) );
 	}
 
 	private void handleDependencies(
@@ -212,20 +212,20 @@ public class ForeignKeyProcessor {
 				throw new RuntimeException("Foreign key name (" + fkName + ") mapped to different tables! previous: " + previousTable + " current:" + fkTable);
 			}
 		}
-		Column column = new Column(fkColumnName);
-		Column existingColumn = fkTable.getColumn(column);
-		depColumns.add( Objects.requireNonNullElse( existingColumn, column ) );
+		final Column existing = revengMetadataCollector.findObservedColumn( fkTable, fkColumnName );
+		depColumns.add( existing != null ? existing
+				: new Column( revengMetadataCollector.observedColumnName( fkColumnName, metaDataDialect.needQuote( fkColumnName ) ) ) );
 	}
 
 	private void processUserForeignKey(
-			ForeignKey element,
+			ForeignKeyDefinition element,
 			Table referencedTable,
 			Map<String, List<Column>> referencedColumns,
 			Map<String, List<Column>> dependentColumns,
 			Map<String, Table> dependentTables) {
 
-		if(!equalTable(referencedTable, element.getReferencedTable(), defaultSchema, defaultCatalog)) {
-			log.debug("Referenced table " + element.getReferencedTable().getName() + " is not " +  referencedTable + ". Ignoring userdefined foreign key " + element );
+		if(!equalTable(referencedTable, element.referencedTable(), defaultSchema, defaultCatalog)) {
+			log.debug("Referenced table " + element.referencedTable().getName() + " is not " +  referencedTable + ". Ignoring userdefined foreign key " + element );
 			return; // skip non related foreign keys
 		}
 		Table deptable = determineDependentTable(dependentTables, element);
@@ -233,55 +233,52 @@ public class ForeignKeyProcessor {
 			//	filter out stuff we don't have tables for!
 			log.debug(
 					"User defined foreign key " +
-					element.getName() +
+					element.name() +
 					" references unknown or filtered table " +
-					TableIdentifier.create(element.getTable()) );
+					element.table() );
 		}
 		else {
-			dependentTables.put(element.getName(), deptable);
-			referencedColumns.put(element.getName(), getReferencedColums(referencedTable, element) );
-			dependentColumns.put(element.getName(), getDependendColumns(deptable, element) );
+			dependentTables.put(element.name(), deptable);
+			referencedColumns.put(element.name(), getReferencedColums(referencedTable, element) );
+			dependentColumns.put(element.name(), getDependendColumns(deptable, element) );
 		}
 	}
 
-	private Table determineDependentTable(Map<String, Table> dependentTables, ForeignKey element) {
-		Table userfkTable = element.getTable();
-		String userfkName = element.getName();
+	private Table determineDependentTable(Map<String, Table> dependentTables, ForeignKeyDefinition element) {
+		TableIdentifier userfkTable = element.table();
+		String userfkName = element.name();
 		Table deptable = dependentTables.get(userfkName);
 		if(deptable!=null) { // foreign key already defined!?
 			throw new MappingException("Foreign key " + userfkName + " already defined in the database!");
 		}
 		return getTable(
-				getCatalogForDBLookup(userfkTable.getCatalog(), defaultCatalog),
-				getSchemaForDBLookup(userfkTable.getSchema(), defaultSchema),
-				userfkTable.getName());
+				getCatalogForDBLookup(sourceText( userfkTable.getCatalog() ), defaultCatalog),
+				getSchemaForDBLookup(sourceText( userfkTable.getSchema() ), defaultSchema),
+				sourceText( userfkTable.getName() ));
 	}
 
-	private List<Column> getDependendColumns(Table deptable, ForeignKey element) {
-		List<?> userColumns = element.getColumns();
-		List<Column> depColumns = new ArrayList<>( userColumns.size() );
-		for ( Object userColumn : userColumns ) {
-			Column jdbcColumn = (Column) userColumn;
-			Column column = new Column( jdbcColumn.getName() );
-			Column existingColumn = deptable.getColumn( column );
-			column = existingColumn == null ? column : existingColumn;
-			depColumns.add( column );
-		}
-		return depColumns;
+	private List<Column> getDependendColumns(Table table, ForeignKeyDefinition definition) {
+		return resolveColumns( table, definition.columns().stream().map( ForeignKeyDefinition.ColumnReference::column ).toList() );
 	}
 
-	private List<Column> getReferencedColums(Table referencedTable, ForeignKey element) {
-		List<?> userrefColumns = element.getReferencedColumns();
-		List<Column> result = new ArrayList<>( userrefColumns.size() );
-		for ( Object userrefColumn : userrefColumns ) {
-			Column jdbcColumn = (Column) userrefColumn;
-			Column column = new Column( jdbcColumn.getName() );
-			Column existingColumn = referencedTable.getColumn( column );
-			column = existingColumn == null ? column : existingColumn;
-			result.add( column );
+	private List<Column> getReferencedColums(Table table, ForeignKeyDefinition definition) {
+		return resolveColumns( table, definition.columns().stream().map( ForeignKeyDefinition.ColumnReference::referencedColumn ).toList() );
+	}
+
+	private List<Column> resolveColumns(Table table, List<String> names) {
+		final List<Column> result = new ArrayList<>( names.size() );
+		for ( String name : names ) {
+			// Retain the reader's existing unquoted lookup behavior in this structural migration.
+			final var physicalName = revengMetadataCollector.columnName( sourceText( name ) );
+			final var existing = table.getColumn( physicalName );
+			result.add( existing == null ? new Column( physicalName ) : existing );
 		}
 		return result;
+	}
 
+	private static String sourceText(String name) {
+		final var identifier = org.hibernate.boot.model.naming.Identifier.toIdentifier( name );
+		return identifier == null ? null : identifier.getText();
 	}
 
 	private static String getCatalogForDBLookup(String catalog, String defaultCatalog) {
@@ -308,16 +305,16 @@ public class ForeignKeyProcessor {
 
 	private static boolean equalTable(
 			Table table1,
-			Table table2,
+			TableIdentifier table2,
 			String defaultSchema,
 			String defaultCatalog) {
-		return  table1.getName().equals(table2.getName())
+		return  table1.getName().equals(sourceText( table2.getName() ))
 				&& ( StringUtil.isEqual(
 						getSchemaForModel(table1.getSchema(), defaultSchema),
-						getSchemaForModel(table2.getSchema(), defaultSchema))
+						getSchemaForModel(sourceText( table2.getSchema() ), defaultSchema))
 				&& ( StringUtil.isEqual(
 						getCatalogForModel(table1.getCatalog(), defaultCatalog),
-						getCatalogForModel(table2.getCatalog(), defaultCatalog))));
+						getCatalogForModel(sourceText( table2.getCatalog() ), defaultCatalog))));
 	}
 
 	private Table getTable(String catalog, String schema, String name) {

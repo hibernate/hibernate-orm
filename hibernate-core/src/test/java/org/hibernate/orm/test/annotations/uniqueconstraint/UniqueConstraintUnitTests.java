@@ -68,8 +68,8 @@ public class UniqueConstraintUnitTests {
 						.isNotEqualTo( tableB.getUniqueKeys().values().iterator().next().getName() );
 			}
 			else {
-				assertThat( tableA.getIndexes().values().iterator().next().getName() )
-						.isNotEqualTo( tableB.getIndexes().values().iterator().next().getName() );
+				assertThat( ((org.hibernate.mapping.PhysicalTable) tableA).getIndexes().values().iterator().next().getName() )
+						.isNotEqualTo( ((org.hibernate.mapping.PhysicalTable) tableB).getIndexes().values().iterator().next().getName() );
 			}
 		}
 		finally {

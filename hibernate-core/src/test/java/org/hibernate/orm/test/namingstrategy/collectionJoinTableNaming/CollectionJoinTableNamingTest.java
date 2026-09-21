@@ -137,8 +137,7 @@ public class CollectionJoinTableNamingTest {
 		// NOTE : here so that tester can more easily see the produced table. It is only dumped to stdout
 		new SchemaExport().create( EnumSet.of( TargetType.STDOUT ), metadata );
 
-		for ( int i = 0; i < inputs1Mapping.getCollectionTable().getColumnSpan(); i++ ) {
-			final Column column = inputs1Mapping.getCollectionTable().getColumn( i );
+		for ( final Column column : inputs1Mapping.getCollectionTable().getColumns() ) {
 
 			// this, coupled with JPA saying the 2 collections implicitly map to the same table,
 			// is the crux of the problem: all columns are null, so we effectively can never

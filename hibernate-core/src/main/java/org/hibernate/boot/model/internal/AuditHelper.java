@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.model.internal;
 
+import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
+
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+
 import java.lang.annotation.Annotation;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -26,7 +30,6 @@ import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -131,9 +134,9 @@ public final class AuditHelper {
 				table.isAbstract(),
 				context,
 				hasExplicitAuditTableName
-						|| table.getNameIdentifier().isExplicit()
+						|| ImplicitNamingSourceHelper.tableName( table ).isExplicit()
 		);
-		collector.addTableNameBinding( table.getNameIdentifier(), auditLogTable );
+		collector.addTableNameBinding( ImplicitNamingSourceHelper.tableName( table ), auditLogTable );
 
 		bindingState.addStateManagementFinalizer(
 				new AuditTableFinalizer(
@@ -166,7 +169,7 @@ public final class AuditHelper {
 			// (added during collection binding) are detected.
 			final var excludedColumns = auditable instanceof RootClass rootClass
 					? resolveExcludedColumns( rootClass )
-					: Set.<String>of();
+					: Set.<org.hibernate.relational.naming.spi.PhysicalName>of();
 			copyTableColumns( table, auditLogTable, excludedColumns );
 			final var changesetIdColumn =
 					createAuditColumn( csIdColumnName, getChangesetIdType( context ), auditLogTable, context );
@@ -674,7 +677,7 @@ public final class AuditHelper {
 	private static Table createAuditTable(
 			Table sourceTable,
 			String csIdColumnName,
-			Set<String> excludedColumns,
+			Set<org.hibernate.relational.naming.spi.PhysicalName> excludedColumns,
 			@Nullable String schemaOverride,
 			@Nullable String catalogOverride,
 			@Nullable String customAuditTableName,
@@ -690,7 +693,7 @@ public final class AuditHelper {
 				sourceTable.getSubselect(),
 				sourceTable.isAbstract(),
 				context,
-				sourceTable.getNameIdentifier().isExplicit()
+				ImplicitNamingSourceHelper.tableName( sourceTable ).isExplicit()
 		);
 		copyTableColumns( sourceTable, auditTable, excludedColumns );
 		final var revColumn = createAuditColumn( csIdColumnName, getChangesetIdType( context ), auditTable, context );
@@ -716,9 +719,9 @@ public final class AuditHelper {
 		return context.getChangesetCoordinator().getIdentifierType();
 	}
 
-	private static void copyTableColumns(Table sourceTable, Table targetTable, Set<String> excludedColumns) {
+	private static void copyTableColumns(Table sourceTable, Table targetTable, Set<org.hibernate.relational.naming.spi.PhysicalName> excludedColumns) {
 		for ( var column : sourceTable.getColumns() ) {
-			if ( !excludedColumns.contains( column.getCanonicalName() ) ) {
+			if ( !excludedColumns.contains( column.getPhysicalName() ) ) {
 				copyColumnRemovingUnique( column, targetTable );
 			}
 		}
@@ -758,14 +761,13 @@ public final class AuditHelper {
 			Table table,
 			MetadataBuildingContext context) {
 		final var basicValue = BasicValue.unregistered( context, table );
-		final var column = new Column();
+		final var column = new Column( setColumnName( columnName, context.getMetadataCollector().getDatabase(),
+				context.getBuildingPlan().getPhysicalNamingStrategy() ) );
 		column.setNullable( false );
 		column.setValue( basicValue );
 		basicValue.addColumn( column );
 
 		final var database = context.getMetadataCollector().getDatabase();
-		setColumnName( columnName, column, database,
-				context.getBuildingPlan().getPhysicalNamingStrategy() );
 		setTemporalColumnType( column, database, javaType );
 
 		final var details = BasicValueResolutionDetails.create(
@@ -792,17 +794,13 @@ public final class AuditHelper {
 		}
 	}
 
-	private static void setColumnName(
+	private static org.hibernate.relational.naming.spi.PhysicalName setColumnName(
 			String name,
-			Column column,
 			Database database,
 			PhysicalNamingStrategy physicalNamingStrategy) {
-		final Identifier physicalColumnName =
-				physicalNamingStrategy.toPhysicalColumnName(
-						database.toIdentifier( name ),
-						database.getJdbcEnvironment()
-				);
-		column.setName( physicalColumnName.render( database.getDialect() ) );
+		return PhysicalNamingStrategyHelper.resolve(
+				PhysicalNamingStrategyHelper.logicalName( database.toIdentifier( name ) ),
+				database.getJdbcEnvironment(), physicalNamingStrategy::toPhysicalColumnName, "column", false );
 	}
 
 	private static boolean isValidityStrategy(MetadataBuildingContext context) {
@@ -875,29 +873,29 @@ public final class AuditHelper {
 		return supplier != null ? supplier.getChangelogClass().getName() : null;
 	}
 
-	private static Set<String> resolveExcludedColumns(Iterable<Property> properties) {
-		final Set<String> excluded = new HashSet<>();
+	private static Set<org.hibernate.relational.naming.spi.PhysicalName> resolveExcludedColumns(Iterable<Property> properties) {
+		final Set<org.hibernate.relational.naming.spi.PhysicalName> excluded = new HashSet<>();
 		for ( var property : properties ) {
 			if ( property.isAuditedExcluded() || property instanceof Backref ) {
 				for ( var column : property.getColumns() ) {
-					excluded.add( column.getCanonicalName() );
+					excluded.add( column.getPhysicalName() );
 				}
 			}
 		}
 		return excluded;
 	}
 
-	private static Set<String> resolveExcludedColumns(RootClass rootClass) {
-		final Set<String> excluded = new HashSet<>();
-		final Set<String> mappedColumns = new HashSet<>();
+	private static Set<org.hibernate.relational.naming.spi.PhysicalName> resolveExcludedColumns(RootClass rootClass) {
+		final Set<org.hibernate.relational.naming.spi.PhysicalName> excluded = new HashSet<>();
+		final Set<org.hibernate.relational.naming.spi.PhysicalName> mappedColumns = new HashSet<>();
 		// Identifier columns
 		for ( var column : rootClass.getIdentifier().getColumns() ) {
-			mappedColumns.add( column.getCanonicalName() );
+			mappedColumns.add( column.getPhysicalName() );
 		}
 		// Discriminator column
 		if ( rootClass.getDiscriminator() != null ) {
 			for ( var column : rootClass.getDiscriminator().getColumns() ) {
-				mappedColumns.add( column.getCanonicalName() );
+				mappedColumns.add( column.getPhysicalName() );
 			}
 		}
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)
@@ -907,8 +905,8 @@ public final class AuditHelper {
 		}
 		// Exclude unmapped columns (e.g. FK from unidirectional @OneToMany @JoinColumn)
 		for ( var column : rootClass.getMainTable().getColumns() ) {
-			if ( !mappedColumns.contains( column.getCanonicalName() ) ) {
-				excluded.add( column.getCanonicalName() );
+			if ( !mappedColumns.contains( column.getPhysicalName() ) ) {
+				excluded.add( column.getPhysicalName() );
 			}
 		}
 		return excluded;
@@ -916,17 +914,17 @@ public final class AuditHelper {
 
 	private static void collectPropertyColumns(
 			PersistentClass persistentClass,
-			Set<String> mappedColumns,
-			Set<String> excluded) {
+			Set<org.hibernate.relational.naming.spi.PhysicalName> mappedColumns,
+			Set<org.hibernate.relational.naming.spi.PhysicalName> excluded) {
 		for ( var property : persistentClass.getProperties() ) {
 			if ( property.isAuditedExcluded() || property instanceof Backref ) {
 				for ( var column : property.getColumns() ) {
-					excluded.add( column.getCanonicalName() );
+					excluded.add( column.getPhysicalName() );
 				}
 			}
 			else {
 				for ( var column : property.getColumns() ) {
-					mappedColumns.add( column.getCanonicalName() );
+					mappedColumns.add( column.getPhysicalName() );
 				}
 			}
 		}

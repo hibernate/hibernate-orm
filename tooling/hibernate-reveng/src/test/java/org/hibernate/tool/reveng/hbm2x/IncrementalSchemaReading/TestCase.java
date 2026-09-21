@@ -74,7 +74,8 @@ public class TestCase {
 
 		tss.addSchemaSelection( createSchemaSelection("CHILD") );
 
-		RevengMetadataCollector dc = new RevengMetadataCollector();
+		RevengMetadataCollector dc = new RevengMetadataCollector( serviceRegistry.requireService( org.hibernate.engine.jdbc.env.spi.JdbcEnvironment.class )
+				.getIdentifierHelper().getPhysicalNameFactory() );
 		reader.readDatabaseSchema(dc);
 
 		assertEquals(1, gottenTables.size());

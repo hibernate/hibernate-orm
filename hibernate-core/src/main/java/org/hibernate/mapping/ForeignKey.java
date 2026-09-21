@@ -36,7 +36,7 @@ public class ForeignKey extends Constraint {
 	@Override
 	public String getExportIdentifier() {
 		// Not sure name is always set.  Might need some implicit naming
-		return qualify( getTable().getExportIdentifier(), "FK-" + getName() );
+		return qualify( getTableExportIdentifier(), "FK-" + getName() );
 	}
 
 	public void disableCreation() {
@@ -140,7 +140,9 @@ public class ForeignKey extends Constraint {
 	}
 
 	public boolean isPhysicalConstraint() {
-		return referencedTable.isPhysicalTable()
+		return referencedTable instanceof PhysicalTable
+			&& getTable() instanceof PhysicalTable
+			&& referencedTable.isPhysicalTable()
 			&& getTable().isPhysicalTable()
 			&& !referencedTable.hasDenormalizedTables();
 	}

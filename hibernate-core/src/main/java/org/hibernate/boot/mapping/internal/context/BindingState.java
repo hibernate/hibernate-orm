@@ -8,6 +8,8 @@ import java.util.List;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.relational.naming.spi.LogicalName;
+
 import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -65,6 +67,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -86,6 +89,27 @@ import jakarta.persistence.AttributeConverter;
 /// @since 9.0
 /// @author Steve Ebersole
 public interface BindingState {
+	/// Rename a registered physical column while preserving its logical aliases.
+	default void renameColumn(org.hibernate.mapping.ColumnContainer owner, org.hibernate.mapping.Column column,
+			org.hibernate.relational.naming.spi.PhysicalName replacement) {
+		final var graph = new org.hibernate.mapping.ColumnNameLifecycle();
+		getDatabase().getNamespaces().forEach( namespace -> namespace.getTables().forEach( graph::addContainer ) );
+		getEntityBindings().forEach( graph::addEntity );
+		graph.addContainer( owner );
+		graph.validateRename( column, replacement );
+		owner.renameColumn( column, replacement );
+		getRelationalModelCorrespondences().columnNames().rebuildPhysicalIndex();
+	}
+
+	/// Finish association columns whose naming dependencies require later member/identifier phases.
+	void addDeferredJoinColumnBinding(Runnable binding);
+
+	void bindDeferredJoinColumns();
+
+	boolean isDerivedIdentifierBound(org.hibernate.boot.mapping.internal.binders.DerivedIdentifierBinding binding);
+
+	void markDerivedIdentifierBound(org.hibernate.boot.mapping.internal.binders.DerivedIdentifierBinding binding);
+
 	/// Metadata building context for the current boot run.
 	MetadataBuildingContext getMetadataBuildingContext();
 
@@ -114,7 +138,13 @@ public interface BindingState {
 			String name,
 			String subselect,
 			boolean isAbstract,
-			boolean isExplicit);
+			boolean isExplicit,
+			String viewQuery);
+
+	default Table getOrCreateTable(String schema, String catalog, String name, String subselect,
+			boolean isAbstract, boolean isExplicit) {
+		return getOrCreateTable( schema, catalog, name, subselect, isAbstract, isExplicit, null );
+	}
 
 	/// Create a denormalized table mapping in the metadata product.
 	@Nonnull DenormalizedTable createDenormalizedTable(
@@ -122,8 +152,7 @@ public interface BindingState {
 			String catalog,
 			String name,
 			boolean isAbstract,
-			String subselect,
-			Table includedTable);
+			PhysicalTable includedTable);
 
 	/// JDBC services used for dialect and identifier handling.
 	@Nonnull JdbcServices getJdbcServices();
@@ -239,10 +268,10 @@ public interface BindingState {
 	int getTableCount();
 
 	/// Visit each known table reference keyed by its binding-state name.
-	void forEachTable(KeyedConsumer<String,TableReference> consumer);
+	void forEachTable(KeyedConsumer<LogicalName,TableReference> consumer);
 
 	/// Resolve a table reference by binding-state name.
-	<T extends TableReference> T getTableByName(String name);
+	<T extends TableReference> T getTableByName(LogicalName name);
 
 	/// Resolve the table reference owned by the given model object.
 	<T extends TableReference> T getTableByOwner(TableOwner owner);

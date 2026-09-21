@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.reveng.internal.core.binder;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
@@ -66,7 +68,7 @@ class VersionPropertyBinder extends AbstractBinder {
 			RootClass rc,
 			Set<Column> processed) {
 		TableIdentifier identifier = TableIdentifier.create(table);
-		Column column = table.getColumn(new Column(optimisticLockColumnName));
+		Column column = table.getColumn( ColumnNameHelper.physicalName( optimisticLockColumnName, getMetadataCollector().getDatabase() ) );
 		if(column==null) {
 			LOGGER.log(Level.WARNING, "Column " + optimisticLockColumnName + " wanted for <version>/<timestamp> not found in " + identifier);
 		}

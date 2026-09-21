@@ -4,12 +4,13 @@
  */
 package org.hibernate.temporal.audit;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
 import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -84,11 +85,11 @@ class AuditCustomTableTest {
 				.getEntityBinding( CustomTableEntity.class.getName() )
 				.getAuxiliaryTable();
 		assertNotNull(
-				auditTable.getColumn( Identifier.toIdentifier( "TX_ID" ) ),
+				auditTable.getColumn( ColumnNameHelper.physicalName( "TX_ID", scope.getMetadataImplementor().getDatabase() ) ),
 				"Custom transaction id column TX_ID should exist"
 		);
 		assertNotNull(
-				auditTable.getColumn( Identifier.toIdentifier( "MOD_TYPE" ) ),
+				auditTable.getColumn( ColumnNameHelper.physicalName( "MOD_TYPE", scope.getMetadataImplementor().getDatabase() ) ),
 				"Custom modification type column MOD_TYPE should exist"
 		);
 	}

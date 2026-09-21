@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.serial.internal;
 
+import org.hibernate.mapping.DenormalizedTable;
+import org.hibernate.mapping.NamedTable;
+import org.hibernate.mapping.Table;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -165,6 +168,8 @@ public final class MetadataState implements Serializable {
 				)
 		);
 		database.reattach( restoredOptions );
+		reattachTableNames();
+		reattachColumnNames();
 		reattachMappingValues(
 				restoredContext.getTypeConfiguration(),
 				restoredContext.getClassLoaderAccess(),
@@ -197,6 +202,49 @@ public final class MetadataState implements Serializable {
 				restoredFunctionRegistry, Map.of(), persistenceUnitLifecycleCallbackDefinitions,
 				database, restoredContext
 		);
+	}
+
+	private void reattachTableNames() {
+		final var factory = database.getJdbcEnvironment().getIdentifierHelper().getPhysicalNameFactory();
+		final Set<Table> visited = java.util.Collections.newSetFromMap( new IdentityHashMap<>() );
+		final java.util.function.Consumer<Table> attach = new java.util.function.Consumer<>() {
+			@Override
+			public void accept(Table table) {
+				if ( table == null || !visited.add( table ) ) {
+					return;
+				}
+				if ( table instanceof NamedTable namedTable ) {
+					namedTable.reattachPhysicalName( factory );
+				}
+				if ( table instanceof DenormalizedTable denormalizedTable ) {
+					accept( denormalizedTable.getIncludedTable() );
+				}
+				table.getForeignKeys().forEach( key -> accept( key.getReferencedTable() ) );
+			}
+		};
+		database.getNamespaces().forEach( namespace -> namespace.getTables().forEach( attach ) );
+		entityBindingMap.values().forEach( entity -> {
+			attach.accept( entity.getTable() );
+			entity.getJoins().forEach( join -> attach.accept( join.getTable() ) );
+		} );
+		collectionBindingMap.values().forEach( collection -> {
+			if ( collection.getCollectionColumnContainer() instanceof Table table ) {
+				attach.accept( table );
+			}
+		} );
+	}
+
+	private void reattachColumnNames() {
+		final var graph = new org.hibernate.mapping.ColumnNameLifecycle();
+		database.getNamespaces().forEach( namespace -> namespace.getTables().forEach( graph::addContainer ) );
+		entityBindingMap.values().forEach( graph::addEntity );
+		collectionBindingMap.values().forEach( graph::addValue );
+		composites.forEach( graph::addValue );
+		genericComponentsMap.values().forEach( graph::addValue );
+		if ( mappedSuperclassMap != null ) {
+			mappedSuperclassMap.values().forEach( graph::addMappedSuperclass );
+		}
+		graph.restore( database.getJdbcEnvironment().getIdentifierHelper().getPhysicalNameFactory() );
 	}
 
 	private Map<String, TypeDefinition> restoreTypeDefinitions(

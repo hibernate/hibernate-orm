@@ -13,7 +13,6 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.boot.model.naming.Identifier.isQuoted;
@@ -70,9 +69,7 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 				: new QualifiedSequenceName(
 						catalogName,
 						schemaName,
-						serviceRegistry.requireService( JdbcEnvironment.class )
-								.getIdentifierHelper()
-								.toIdentifier( sequenceName )
+						Identifier.toIdentifier( sequenceName, false, false, false )
 				);
 
 	}
@@ -106,9 +103,7 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 				: new QualifiedTableName(
 						catalogName,
 						schemaName,
-						serviceRegistry.requireService( JdbcEnvironment.class )
-								.getIdentifierHelper()
-								.toIdentifier( implicitName )
+						Identifier.toIdentifier( implicitName, false, false, false )
 				);
 	}
 

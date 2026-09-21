@@ -11,6 +11,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.internal.QualifiedObjectNameFormatterStandardImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
@@ -38,9 +40,19 @@ class MockJdbcServicesInitiator extends JdbcServicesInitiator {
 	public abstract static class MockJdbcServices implements JdbcServices, JdbcEnvironment {
 
 		private final Dialect dialect;
+		private final IdentifierHelper identifierHelper;
 
 		public MockJdbcServices(Dialect dialect) {
 			this.dialect = dialect;
+			final var builder = IdentifierHelperBuilder.from( this );
+			builder.setNameQualifierSupport( dialect.getNameQualifierSupport() );
+			builder.applyReservedWords( dialect.getKeywordSupport().getKeywords() );
+			identifierHelper = builder.build();
+		}
+
+		@Override
+		public IdentifierHelper getIdentifierHelper() {
+			return identifierHelper;
 		}
 
 		@Override

@@ -71,7 +71,7 @@ class ForeignKeyBinder {
 					: ForeignKeyMappingMaterializer.materializeForeignKey(
 							value,
 							referencedEntity,
-							foreignKeyBinding.ownerBinding().getEntityName() + "." + value.getTable().getName()
+							foreignKeyBinding.ownerBinding().getEntityName() + "." + value.getColumnContainer().requireTable().getName()
 					);
 		}
 		else if ( value instanceof ManyToOne manyToOne ) {
@@ -94,7 +94,7 @@ class ForeignKeyBinder {
 		if ( manyToOne.hasFormula() ) {
 			return null;
 		}
-		final String sourceRole = foreignKeyBinding.ownerBinding().getEntityName() + "." + manyToOne.getTable().getName();
+		final String sourceRole = foreignKeyBinding.ownerBinding().getEntityName() + "." + manyToOne.getColumnContainer().requireTable().getName();
 		if ( foreignKeyBinding.referencedColumnNames().isEmpty() ) {
 			return ForeignKeyMappingMaterializer.materializeForeignKey( manyToOne, referencedEntity, sourceRole );
 		}
@@ -115,7 +115,7 @@ class ForeignKeyBinder {
 								sourceRole,
 							entityBinder.getBindingState().getRelationalModelCorrespondences().columnNames()
 						),
-						referencedProperty.getValue().getTable()
+						referencedProperty.getValue().getColumnContainer().requireTable()
 				),
 				referencedEntity
 		);
@@ -144,7 +144,7 @@ class ForeignKeyBinder {
 						tableForeignKeyBinding.key(),
 						referencedEntity,
 						tableForeignKeyBinding.ownerBinding().getEntityName()
-								+ "." + tableForeignKeyBinding.key().getTable().getName()
+								+ "." + tableForeignKeyBinding.key().getColumnContainer().requireTable().getName()
 				);
 		applyForeignKeySource( foreignKey, tableForeignKeyBinding.foreignKeySource() );
 	}

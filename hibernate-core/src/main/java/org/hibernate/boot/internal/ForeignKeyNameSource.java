@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.internal;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
+import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
+
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
@@ -77,7 +81,7 @@ public class ForeignKeyNameSource implements ImplicitForeignKeyNameSource {
 
 		final List<Identifier> columnNames = arrayList( columns.size() );
 		for ( Column column : columns ) {
-			columnNames.add( column.getNameIdentifier( buildingContext ) );
+			columnNames.add( ColumnNameHelper.identifier( column ) );
 		}
 		return columnNames;
 	}
@@ -89,7 +93,7 @@ public class ForeignKeyNameSource implements ImplicitForeignKeyNameSource {
 					.toIdentifier( buildingContext.getMetadataCollector().getLogicalTableName( table ) );
 		}
 		catch (MappingException ignored) {
-			return table.getNameIdentifier();
+			return ImplicitNamingSourceHelper.tableName( table );
 		}
 	}
 }

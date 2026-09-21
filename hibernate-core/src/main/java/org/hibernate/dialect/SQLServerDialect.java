@@ -4,6 +4,10 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -55,7 +59,6 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
@@ -108,7 +111,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.Table;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupports;
 import org.hibernate.dialect.sql.ast.spi.FetchClauseSupport;
@@ -1261,7 +1263,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return this.sqlServerTableExporter;
 	}
 
@@ -1277,7 +1279,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 		}
 
 		@Override
-		protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata,
+		protected String getFormattedSequenceName(QualifiedPhysicalName name, Metadata metadata,
 				SqlStringGenerationContext context) {
 			// SQL Server does not allow the catalog in the sequence name.
 			// See https://docs.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver15&viewFallbackFrom=sql-server-ver12

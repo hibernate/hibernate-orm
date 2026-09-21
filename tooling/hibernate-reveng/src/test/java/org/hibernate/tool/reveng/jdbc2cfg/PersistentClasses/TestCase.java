@@ -12,8 +12,6 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.OneToMany;
@@ -90,7 +88,7 @@ public class TestCase {
 		OneToMany otm = (OneToMany) col.getElement();
 		assertEquals(PACKAGE_NAME + ".Item", otm.getReferencedEntityName());
 		assertEquals(PACKAGE_NAME + ".Item", otm.getAssociatedClass().getClassName());
-		assertEquals("ORDERS", otm.getTable().getName());
+		assertEquals("ORDERS", otm.getColumnContainer().requireTable().getName());
 		assertNotNull(itemset);
 		assertInstanceOf(Set.class, itemset.getValue());
 	}
@@ -98,14 +96,6 @@ public class TestCase {
 	@Test
 	@Disabled("Reverse-engineered Metadata does not currently expose the resolved BootBindingModel required for SessionFactory construction")
 	public void testBinding() throws HibernateException {
-
-		String schemaToUse = Environment
-				.getProperties()
-				.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		PersistentClass orders = metadata.getEntityBinding(PACKAGE_NAME + ".Orders");
-		orders.getTable().setSchema(schemaToUse);
-		PersistentClass items = metadata.getEntityBinding(PACKAGE_NAME + ".Item");
-		items.getTable().setSchema(schemaToUse);
 
 		SessionFactory sf = SessionFactoryPipeline.build( metadata, new SessionFactoryOptionsCollector() );
 		Session session = sf.openSession();

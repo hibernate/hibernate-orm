@@ -4,13 +4,15 @@
  */
 package org.hibernate.orm.test.namingstrategy.synchronizedTables;
 
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
@@ -76,12 +78,12 @@ public class SynchronizeTableNamingTest {
 		public static final TestingPhysicalNamingStrategy INSTANCE = new TestingPhysicalNamingStrategy();
 
 		@Override
-		public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment context) {
-			String baseName = logicalName.render( context.getDialect() );
+		public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext context) {
+			String baseName = logicalName.getText();
 			if ( baseName.equals( "table_a" ) ) {
 				baseName = "tbl_a";
 			}
-			return context.getIdentifierHelper().toIdentifier( baseName );
+			return context.getPhysicalNameFactory().create( baseName, logicalName.isQuoted() );
 		}
 	}
 }

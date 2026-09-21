@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.mapping.NamedTable;
+
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,12 +26,17 @@ import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
-import org.hibernate.boot.model.naming.ImplicitEntityNameSource;
-import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
+import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.spi.PrimaryTableNamingInput;
+import org.hibernate.boot.model.naming.spi.CollectionTableNamingInput;
+import org.hibernate.boot.model.naming.spi.AssociationTableNamingInput;
+import org.hibernate.boot.model.naming.spi.EntityNamingInput;
+import org.hibernate.boot.model.naming.spi.TableNamingInput;
+import org.hibernate.boot.model.naming.spi.NamedTableNamingInput;
+import org.hibernate.boot.model.naming.spi.InlineViewNamingInput;
+import org.hibernate.boot.model.naming.spi.NamingNamePair;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
-import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.mapping.internal.context.BindingHelper;
@@ -200,7 +209,10 @@ public class TableBinder {
 			throw new MappingException( "Unable to resolve super entity table for table-per-class entity - "
 					+ type.getEntityName() + " : " + superEntityBinder.getManagedType().getEntityName() );
 		}
-		final Table unionBaseTable = superTypeTable.binding();
+		if ( !( superTypeTable.binding() instanceof org.hibernate.mapping.PhysicalTable unionBaseTable ) ) {
+			throw new MappingException( "Table-per-class entity '" + type.getEntityName()
+					+ "' requires a physical superclass table" );
+		}
 
 		final Identifier logicalName = determineLogicalName( type, tableSource );
 		final Identifier logicalSchemaName = resolveDatabaseIdentifier(
@@ -220,7 +232,6 @@ public class TableBinder {
 				logicalCatalogName == null  ? null : logicalCatalogName.getCanonicalName(),
 				explicitTableName ? logicalName.render() : logicalName.getText(),
 				type.isAbstract(),
-				null,
 				unionBaseTable
 		);
 		registerLegacyLogicalTableName( logicalName, binding );
@@ -231,7 +242,7 @@ public class TableBinder {
 		applyUniqueConstraints( binding, tableSource );
 		applyIndexes( binding, tableSource );
 
-		return new UnionTable( logicalName, superTypeTable, binding, !type.hasSubTypes() );
+		return new UnionTable( PhysicalNamingStrategyHelper.logicalName( logicalName ), superTypeTable, binding, !type.hasSubTypes() );
 	}
 
 	public List<org.hibernate.boot.mapping.internal.relational.SecondaryTable> bindSecondaryTables(EntityTypeBinder entityBinder) {
@@ -283,7 +294,7 @@ public class TableBinder {
 		);
 		registerLegacyLogicalTableName( logicalName, binding );
 
-		return new InLineView( logicalName, binding );
+		return new InLineView( PhysicalNamingStrategyHelper.logicalName( logicalName ), (org.hibernate.mapping.InlineView) binding );
 	}
 
 	private TableReference bindPhysicalTable(
@@ -312,26 +323,23 @@ public class TableBinder {
 		final Identifier logicalCatalogName = bindingOptions.getDefaultCatalogName();
 
 		final Table binding = bindingState.getOrCreateTable(
-					toCanonicalName( logicalSchemaName ),
-					toCanonicalName( logicalCatalogName ),
-					nameForAddTable( logicalName ),
-					null,
-					type.isAbstract(),
-				false
+				toCanonicalName( logicalSchemaName ),
+				toCanonicalName( logicalCatalogName ),
+				nameForAddTable( logicalName ),
+				null,
+				type.isAbstract(),
+				false,
+				viewAnn == null ? null : viewAnn.query()
 		);
 		registerLegacyLogicalTableName( logicalName, binding );
 
 		applyComment( binding, null );
-		applyView( binding, viewAnn );
 
 		return createPhysicalTableReference(
 				viewAnn,
-				logicalName,
-				logicalCatalogName,
-				logicalSchemaName,
-				physicalNamingStrategy.toPhysicalTableName( logicalName, jdbcEnvironment ),
-				physicalNamingStrategy.toPhysicalCatalogName( logicalCatalogName, jdbcEnvironment ),
-				physicalNamingStrategy.toPhysicalSchemaName( logicalSchemaName, jdbcEnvironment ),
+				PhysicalNamingStrategyHelper.logicalName( logicalName ),
+				PhysicalNamingStrategyHelper.logicalName( logicalCatalogName ),
+				PhysicalNamingStrategyHelper.logicalName( logicalSchemaName ),
 				binding
 		);
 	}
@@ -340,23 +348,12 @@ public class TableBinder {
 		if ( tableSource != null ) {
 			final String name = tableSource.nonEmptyName();
 			if ( name != null ) {
-				return BindingHelper.toIdentifier( name, QuotedIdentifierTarget.TABLE_NAME, bindingOptions, jdbcEnvironment );
+				return BindingHelper.toIdentifier( name, QuotedIdentifierTarget.TABLE_NAME, bindingOptions, jdbcEnvironment, true );
 			}
 		}
 
-		return implicitNamingStrategy.determinePrimaryTableName(
-				new ImplicitEntityNameSource() {
-					@Override
-					public EntityNaming getEntityNaming() {
-						return type;
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
-					}
-				}
-		);
+		return implicitResult( implicitNamingStrategy.determinePrimaryTableName(
+				new PrimaryTableNamingInput( entityNaming( type ) ), namingContext() ), "primary table" );
 	}
 
 	private TableReference bindExplicitPhysicalTable(
@@ -382,7 +379,8 @@ public class TableBinder {
 				nameForAddTable( logicalName ),
 				null,
 				type.isAbstract(),
-				tableSource.nonEmptyName() != null
+				tableSource.nonEmptyName() != null,
+				viewAnn == null ? null : viewAnn.query()
 		);
 		registerLegacyLogicalTableName( logicalName, binding );
 
@@ -392,54 +390,37 @@ public class TableBinder {
 		applyCheckConstraints( binding, tableSource );
 		applyUniqueConstraints( binding, tableSource );
 		applyIndexes( binding, tableSource );
-		applyView( binding, viewAnn );
 
 		return createPhysicalTableReference(
 				viewAnn,
-				logicalName,
-				logicalCatalogName,
-				logicalSchemaName,
-				physicalNamingStrategy.toPhysicalTableName( logicalName, jdbcEnvironment ),
-				logicalCatalogName == null ? null : physicalNamingStrategy.toPhysicalCatalogName( logicalCatalogName, jdbcEnvironment ),
-				logicalSchemaName == null ? null : physicalNamingStrategy.toPhysicalSchemaName( logicalSchemaName, jdbcEnvironment ),
+				PhysicalNamingStrategyHelper.logicalName( logicalName ),
+				PhysicalNamingStrategyHelper.logicalName( logicalCatalogName ),
+				PhysicalNamingStrategyHelper.logicalName( logicalSchemaName ),
 				binding
 		);
 	}
 
-	private static void applyView(Table binding, View viewAnn) {
-		if ( viewAnn != null ) {
-			binding.setViewQuery( viewAnn.query() );
-		}
-	}
 
+	/// Read an already resolved model name without invoking naming or quoting again.
 	private static TableReference createPhysicalTableReference(
 			View viewAnn,
-			Identifier logicalName,
-			Identifier logicalCatalogName,
-			Identifier logicalSchemaName,
-			Identifier physicalName,
-			Identifier physicalCatalogName,
-			Identifier physicalSchemaName,
+			LogicalName logicalName,
+			LogicalName logicalCatalogName,
+			LogicalName logicalSchemaName,
 			Table binding) {
 		if ( viewAnn != null ) {
 			return new PhysicalView(
 					logicalName,
 					logicalCatalogName,
 					logicalSchemaName,
-					physicalName,
-					physicalCatalogName,
-					physicalSchemaName,
-					binding
+					(org.hibernate.mapping.DatabaseView) binding
 			);
 		}
 		return new PhysicalTable(
 				logicalName,
 				logicalCatalogName,
 				logicalSchemaName,
-				physicalName,
-				physicalCatalogName,
-				physicalSchemaName,
-				binding
+				(org.hibernate.mapping.PhysicalTable) binding
 		);
 	}
 
@@ -551,13 +532,10 @@ public class TableBinder {
 		applyCheckConstraints( binding, tableSource );
 
 		return new PhysicalTable(
-				logicalName,
-				logicalCatalogName,
-				logicalSchemaName,
-				physicalNamingStrategy.toPhysicalTableName( logicalName, jdbcEnvironment ),
-				physicalNamingStrategy.toPhysicalCatalogName( logicalCatalogName, jdbcEnvironment ),
-				physicalNamingStrategy.toPhysicalSchemaName( logicalSchemaName, jdbcEnvironment ),
-				binding
+				PhysicalNamingStrategyHelper.logicalName( logicalName ),
+				PhysicalNamingStrategyHelper.logicalName( logicalCatalogName ),
+				PhysicalNamingStrategyHelper.logicalName( logicalSchemaName ),
+				(org.hibernate.mapping.PhysicalTable) binding
 		);
 	}
 
@@ -581,33 +559,13 @@ public class TableBinder {
 		if ( tableSource != null ) {
 			final String name = tableSource.nonEmptyName();
 			if ( name != null ) {
-				return BindingHelper.toIdentifier( name, QuotedIdentifierTarget.TABLE_NAME, bindingOptions, jdbcEnvironment );
+				return BindingHelper.toIdentifier( name, QuotedIdentifierTarget.TABLE_NAME, bindingOptions, jdbcEnvironment, true );
 			}
 		}
 
-		return implicitNamingStrategy.determineCollectionTableName(
-				new ImplicitCollectionTableNameSource() {
-					@Override
-					public Identifier getOwningPhysicalTableName() {
-						return Identifier.toIdentifier( owningTable.getName() );
-					}
-
-					@Override
-					public EntityNaming getOwningEntityNaming() {
-						return ownerType;
-					}
-
-					@Override
-					public AttributePath getOwningAttributePath() {
-						return AttributePath.parse( attributeName );
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
-					}
-				}
-		);
+		return implicitResult( implicitNamingStrategy.determineCollectionTableName(
+				new CollectionTableNamingInput( entityNaming( ownerType ), tableNaming( ownerType, owningTable ), attributeName ),
+				namingContext() ), "collection table" );
 	}
 
 	private Identifier determineAssociationTableLogicalName(
@@ -620,43 +578,44 @@ public class TableBinder {
 		if ( tableSource != null ) {
 			final String name = tableSource.nonEmptyName();
 			if ( name != null ) {
-				return BindingHelper.toIdentifier( name, QuotedIdentifierTarget.TABLE_NAME, bindingOptions, jdbcEnvironment );
+				return BindingHelper.toIdentifier( name, QuotedIdentifierTarget.TABLE_NAME, bindingOptions, jdbcEnvironment, true );
 			}
 		}
 
-		return implicitNamingStrategy.determineJoinTableName(
-				new ImplicitJoinTableNameSource() {
-					@Override
-					public String getOwningPhysicalTableName() {
-						return owningTable.getName();
-					}
+		return implicitResult( implicitNamingStrategy.determineAssociationTableName(
+				new AssociationTableNamingInput( entityNaming( ownerType ), tableNaming( ownerType, owningTable ),
+						entityNaming( targetType ), tableNaming( targetType, targetTable ), attributeName ),
+				namingContext() ), "association table" );
+	}
 
-					@Override
-					public EntityNaming getOwningEntityNaming() {
-						return ownerType;
-					}
+	private ImplicitNamingContext namingContext() {
+		return ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() );
+	}
 
-					@Override
-					public String getNonOwningPhysicalTableName() {
-						return targetTable.getName();
-					}
+	private static EntityNamingInput entityNaming(EntityNaming entity) {
+		return new EntityNamingInput( entity.getClassName(), entity.getEntityName(), entity.getJpaEntityName() );
+	}
 
-					@Override
-					public EntityNaming getNonOwningEntityNaming() {
-						return targetType;
-					}
+	private TableNamingInput tableNaming(EntityNaming entity, Table table) {
+		if ( table instanceof org.hibernate.mapping.InlineView view ) {
+			return new InlineViewNamingInput( view.getLogicalName() );
+		}
+		final TableReference ownedReference = entity instanceof org.hibernate.boot.mapping.internal.relational.TableOwner owner
+				? bindingState.getTableByOwner( owner ) : null;
+		final TableReference reference = ownedReference != null && ownedReference.binding() == table
+				? ownedReference : bindingState.getTableByBinding( table );
+		if ( reference == null ) {
+			throw new MappingException( "No logical table binding for naming dependency: " + table.getName() );
+		}
+		return new NamedTableNamingInput( new NamingNamePair( reference.logicalName(),
+				((org.hibernate.mapping.NamedTable) table).getPhysicalName().objectName() ) );
+	}
 
-					@Override
-					public AttributePath getAssociationOwningAttributePath() {
-						return AttributePath.parse( attributeName );
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
-					}
-				}
-		);
+	private static Identifier implicitResult(LogicalName name, String role) {
+		if ( name == null || name.isExplicit() ) {
+			throw new MappingException( "Implicit naming strategy must return a non-null implicit name for " + role );
+		}
+		return PhysicalNamingStrategyHelper.identifier( name );
 	}
 
 	private org.hibernate.boot.mapping.internal.relational.SecondaryTable bindSecondaryTable(
@@ -703,12 +662,9 @@ public class TableBinder {
 		entityBinder.getTypeBinding().addJoin( join );
 
 		return new org.hibernate.boot.mapping.internal.relational.SecondaryTable(
-				logicalName,
-				catalogName,
-				schemaName,
-				physicalNamingStrategy.toPhysicalTableName( logicalName, jdbcEnvironment ),
-				physicalNamingStrategy.toPhysicalCatalogName( catalogName, jdbcEnvironment ),
-				physicalNamingStrategy.toPhysicalSchemaName( schemaName, jdbcEnvironment ),
+				PhysicalNamingStrategyHelper.logicalName( logicalName ),
+				PhysicalNamingStrategyHelper.logicalName( catalogName ),
+				PhysicalNamingStrategyHelper.logicalName( schemaName ),
 				optional,
 				owned,
 				primaryKeyJoinColumns( secondaryTableAnn.pkJoinColumns() ),
@@ -716,7 +672,7 @@ public class TableBinder {
 						ForeignKeySource.from( secondaryTableAnn ),
 						ForeignKeySource.fromFirstSpecifiedPrimaryKeyJoinColumn( secondaryTableAnn.pkJoinColumns() )
 				),
-				binding
+				(org.hibernate.mapping.PhysicalTable) binding
 		);
 	}
 
@@ -750,7 +706,7 @@ public class TableBinder {
 			Identifier fallback,
 			QuotedIdentifierTarget target) {
 		if ( StringHelper.isNotEmpty( explicit ) ) {
-			return BindingHelper.toIdentifier( explicit, target, bindingOptions, jdbcEnvironment );
+			return BindingHelper.toIdentifier( explicit, target, bindingOptions, jdbcEnvironment, true );
 		}
 
 		if ( fallback != null ) {
@@ -762,34 +718,34 @@ public class TableBinder {
 
 
 	private void applyComment(Table table, TableSource tableSource) {
-		if ( tableSource != null ) {
+		if ( table instanceof NamedTable namedTable && tableSource != null ) {
 			final String comment = tableSource.comment();
 			if ( StringHelper.isNotEmpty( comment ) ) {
-				table.setComment( comment );
+				namedTable.setComment( comment );
 			}
 		}
 	}
 
 	private void applyOptions(Table table, TableSource tableSource) {
-		if ( tableSource != null ) {
+		if ( table instanceof NamedTable namedTable && tableSource != null ) {
 			final String options = tableSource.options();
 			if ( StringHelper.isNotEmpty( options ) ) {
-				table.setOptions( options );
+				namedTable.setOptions( options );
 			}
 		}
 	}
 
 	private void applyType(Table table, TableSource tableSource) {
-		if ( tableSource != null ) {
+		if ( table instanceof org.hibernate.mapping.PhysicalTable physicalTable && tableSource != null ) {
 			final String type = tableSource.type();
 			if ( StringHelper.isNotEmpty( type ) ) {
-				table.setType( type );
+				physicalTable.setType( type );
 			}
 		}
 	}
 
 	private void applyCheckConstraints(Table table, TableSource tableSource) {
-		if ( tableSource == null ) {
+		if ( !(table instanceof org.hibernate.mapping.PhysicalTable physicalTable) || tableSource == null ) {
 			return;
 		}
 
@@ -802,7 +758,7 @@ public class TableBinder {
 			if ( StringHelper.isEmpty( checkConstraint.constraint() ) ) {
 				continue;
 			}
-			table.addCheck( new org.hibernate.mapping.CheckConstraint(
+			physicalTable.addCheck( new org.hibernate.mapping.CheckConstraint(
 					StringHelper.nullIfEmpty( checkConstraint.name() ),
 					checkConstraint.constraint(),
 					StringHelper.nullIfEmpty( checkConstraint.options() )
@@ -850,7 +806,7 @@ public class TableBinder {
 	}
 
 	private void applyIndexes(Table table, TableSource tableSource) {
-		if ( tableSource == null || tableSource.indexes() == null ) {
+		if ( !(table instanceof org.hibernate.mapping.PhysicalTable physicalTable) || tableSource == null || tableSource.indexes() == null ) {
 			return;
 		}
 
@@ -900,7 +856,7 @@ public class TableBinder {
 			else {
 				IndexMappingMaterializer.materializeIndex(
 						ResolvedIndex.explicit(
-								table,
+								physicalTable,
 								Arrays.asList( selectables ),
 								Arrays.asList( columnExpressions ),
 								bindingState.getMetadataBuildingContext(),
@@ -964,13 +920,9 @@ public class TableBinder {
 	}
 
 	private Column createColumn(String logicalName) {
-		final String physicalName = physicalNamingStrategy
-				.toPhysicalColumnName(
-						bindingState.getDatabase().toIdentifier( logicalName ),
-						jdbcEnvironment
-				)
-				.render( jdbcEnvironment.getDialect() );
-		return new Column( physicalName );
+		return new Column( PhysicalNamingStrategyHelper.resolve(
+				PhysicalNamingStrategyHelper.logicalName( bindingState.getDatabase().toIdentifier( logicalName ) ),
+				jdbcEnvironment, physicalNamingStrategy::toPhysicalColumnName, "column", false ) );
 	}
 
 	private void applyRowId(Table table, EntityTypeMetadataImpl type) {

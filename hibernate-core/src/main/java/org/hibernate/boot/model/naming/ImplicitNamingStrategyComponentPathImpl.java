@@ -6,8 +6,6 @@ package org.hibernate.boot.model.naming;
 
 import org.hibernate.SPI;
 import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.spi.NavigablePath;
 
 /**
  * An ImplicitNamingStrategy implementation which uses full composite paths
@@ -16,9 +14,13 @@ import org.hibernate.spi.NavigablePath;
  * Mainly a port of the older DefaultComponentSafeNamingStrategy class implementing
  * the no longer supported NamingStrategy contract
  *
+ * @deprecated Use {@link org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy}
+ * or {@link ImplicitNamingStrategyJpaCompliantImpl}. Verify mapping names when migrating.
+ *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
+@Deprecated(since = "9.0", forRemoval = true)
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class ImplicitNamingStrategyComponentPathImpl extends ImplicitNamingStrategyJpaCompliantImpl {
 	@SPI(SPI.Role.USE)
@@ -35,20 +37,6 @@ public class ImplicitNamingStrategyComponentPathImpl extends ImplicitNamingStrat
 	}
 
 	public static void process(AttributePath attributePath, StringBuilder sb) {
-		String property = attributePath.getProperty();
-		final AttributePath parent = attributePath.getParent();
-		if ( parent != null && StringHelper.isNotEmpty( parent.getProperty() ) ) {
-			process( parent, sb );
-			sb.append( '_' );
-		}
-		else if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property ) ) {
-			// skip it, do not pass go
-			sb.append( "id" );
-			return;
-		}
-		property = property.replace( "<", "" );
-		property = property.replace( ">", "" );
-
-		sb.append( property );
+		appendAttributePath( attributePath, sb );
 	}
 }

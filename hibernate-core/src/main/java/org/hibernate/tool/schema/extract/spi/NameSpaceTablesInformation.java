@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
+import org.hibernate.mapping.NamedTable;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +29,7 @@ public class NameSpaceTablesInformation {
 	}
 
 	public @Nullable TableInformation getTableInformation(Table table) {
-		return tables.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
+		return tables.get( identifierHelper.toMetaDataObjectName( org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( ((NamedTable) table).getPhysicalName().objectName() ) ) );
 	}
 
 	public @Nullable TableInformation getTableInformation(String tableName) {

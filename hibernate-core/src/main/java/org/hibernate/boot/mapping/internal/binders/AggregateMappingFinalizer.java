@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -89,8 +92,8 @@ final class AggregateMappingFinalizer {
 		final boolean addAuxiliaryObjects;
 		if ( structName != null ) {
 			final Namespace namespace = database.locateNamespace(
-					structName.getCatalogName(),
-					structName.getSchemaName()
+					logicalName( structName.getCatalogName() ),
+					logicalName( structName.getSchemaName() )
 			);
 			if ( !database.getDialect().supportsUserDefinedTypes() ) {
 				throw new MappingException( "Database does not support user-defined types (remove '@Struct' annotation)" );
@@ -474,7 +477,7 @@ final class AggregateMappingFinalizer {
 								componentClassDetails.getName(),
 								column1.getSqlType(),
 								column2.getSqlType(),
-								column1.getCanonicalName()
+								column1.getPhysicalName()
 						)
 				);
 			}

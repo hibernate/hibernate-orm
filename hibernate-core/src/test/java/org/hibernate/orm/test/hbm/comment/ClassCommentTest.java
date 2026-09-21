@@ -50,7 +50,7 @@ public class ClassCommentTest {
 			assertThat( pc ).isNotNull();
 			Table table = pc.getTable();
 			assertThat( table ).isNotNull();
-			assertThat( table.getComment() ).isEqualTo( "This is class 'Foo' with property 'bar'." );
+			assertThat( ((org.hibernate.mapping.NamedTable) table).getComment() ).isEqualTo( "This is class 'Foo' with property 'bar'." );
 		}
 	}
 

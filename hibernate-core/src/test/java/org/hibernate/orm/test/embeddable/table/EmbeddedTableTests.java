@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.embeddable.table;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -77,26 +79,26 @@ public class EmbeddedTableTests {
 			String secondaryTableName,
 			MetadataImplementor domainModel) {
 		final Property nameProperty = entityBinding.getProperty( "name" );
-		assertThat( nameProperty.getValue().getTable().getName() ).isEqualTo( primaryTableName );
+		assertThat( nameProperty.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( primaryTableName );
 
 		final Property primaryTagProperty = entityBinding.getProperty( "tag" );
-		assertThat( primaryTagProperty.getValue().getTable().getName() ).isEqualTo( secondaryTableName );
+		assertThat( primaryTagProperty.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( secondaryTableName );
 
 		final Namespace dbNamespace = domainModel.getDatabase().getDefaultNamespace();
 
 		// id, name
 		final org.hibernate.mapping.Table primaryTable = dbNamespace.locateTable(
-				Identifier.toIdentifier( primaryTableName ) );
+				logicalName( Identifier.toIdentifier( primaryTableName ) ) );
 		assertThat( primaryTable.getColumns() ).hasSize( 2 );
 		assertThat( primaryTable.getColumns().stream().map( org.hibernate.mapping.Column::getName ) )
 				.containsExactlyInAnyOrder( "id", "name" );
 
 		// text, added
 		final org.hibernate.mapping.Table secondaryTable = dbNamespace.locateTable(
-				Identifier.toIdentifier( secondaryTableName ) );
+				logicalName( Identifier.toIdentifier( secondaryTableName ) ) );
 		assertThat( secondaryTable.getColumns() ).hasSize( 3 );
 		assertThat( secondaryTable.getColumns().stream().map( org.hibernate.mapping.Column::getName ) )
-				.containsExactlyInAnyOrder( "text", "added", "post_fk" );
+				.containsExactlyInAnyOrder( "tag_text", "tag_added", "post_fk" );
 	}
 
 	@Test
@@ -120,33 +122,33 @@ public class EmbeddedTableTests {
 
 		// id, name
 		final org.hibernate.mapping.Table primaryTable = dbNamespace.locateTable(
-				Identifier.toIdentifier( "top" ) );
+				logicalName( Identifier.toIdentifier( "top" ) ) );
 		assertThat( primaryTable.getColumns() ).hasSize( 2 );
 		assertThat( primaryTable.getColumns().stream().map( org.hibernate.mapping.Column::getName ) )
 				.containsExactlyInAnyOrder( "id", "name" );
 
 		// thing1, thing2, top_fk
 		final org.hibernate.mapping.Table secondaryTable = dbNamespace.locateTable(
-				Identifier.toIdentifier( "supp" ) );
+				logicalName( Identifier.toIdentifier( "supp" ) ) );
 		assertThat( secondaryTable.getColumns() ).hasSize( 3 );
 		assertThat( secondaryTable.getColumns().stream().map( org.hibernate.mapping.Column::getName ) )
-				.containsExactlyInAnyOrder( "thing1", "thing2", "top_fk" );
+				.containsExactlyInAnyOrder( "subContainer_nested_thing1", "subContainer_nested_thing2", "top_fk" );
 
 		// thing1, thing2, top_fk
 		final org.hibernate.mapping.Table collectionTable = dbNamespace.locateTable(
-				Identifier.toIdentifier( "sub_containers" ) );
+				logicalName( Identifier.toIdentifier( "sub_containers" ) ) );
 		assertThat( collectionTable.getColumns() ).hasSize( 3 );
 		assertThat( collectionTable.getColumns().stream().map( org.hibernate.mapping.Column::getName ) )
-				.containsExactlyInAnyOrder( "thing1", "thing2", "top_fk" );
+				.containsExactlyInAnyOrder( "subContainers_nested_thing1", "subContainers_nested_thing2", "top_fk" );
 	}
 
 	private void checkContainerComponent(Component containerComponent, String tableName) {
-		assertThat( containerComponent.getTable().getName() ).isEqualTo( tableName );
+		assertThat( containerComponent.getColumnContainer().requireTable().getName() ).isEqualTo( tableName );
 		assertThat( containerComponent.getPropertySpan() ).isEqualTo( 1 );
 		final Property nestedProp = containerComponent.getProperty( "nested" );
 		final Component nestedComponent = (Component) nestedProp.getValue();
 		nestedComponent.getProperties().forEach( (subProp) -> {
-			assertThat( subProp.getValue().getTable().getName() ).isEqualTo( tableName );
+			assertThat( subProp.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( tableName );
 		} );
 	}
 
@@ -163,7 +165,7 @@ public class EmbeddedTableTests {
 			session.createSelectionQuery( "from Post", Post.class ).list();
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			assertThat( sqlCollector.getSqlQueries().get( 0 ) )
-					.contains( "p1_0.id", "p1_0.name", "p1_1.added", "p1_1.text" );
+					.contains( "p1_0.id", "p1_0.name", "p1_1.tag_added", "p1_1.tag_text" );
 		} );
 	}
 

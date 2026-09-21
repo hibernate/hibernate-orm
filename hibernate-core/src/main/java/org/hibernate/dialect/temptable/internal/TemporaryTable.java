@@ -94,20 +94,20 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 			// In this case, the descriptor is a subclass of a single table inheritance.
 			// To avoid name collisions, we suffix the table name with the subclass number
 			tableNameIdentifier = new Identifier(
-					persistentClass.getTable().getNameIdentifier().getText() + persistentClass.getSubclassId(),
-					persistentClass.getTable().getNameIdentifier().isQuoted()
+					new Identifier( persistentClass.getTable().getName(), persistentClass.getTable().isQuoted() ).getText() + persistentClass.getSubclassId(),
+					new Identifier( persistentClass.getTable().getName(), persistentClass.getTable().isQuoted() ).isQuoted()
 			);
 		}
 		else {
-			tableNameIdentifier = persistentClass.getTable().getNameIdentifier();
+			tableNameIdentifier = new Identifier( persistentClass.getTable().getName(), persistentClass.getTable().isQuoted() );
 		}
 		// Have to parse the adjusted name, since it could be prepended by a schema
 		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE
 				.parse( temporaryTableNameAdjuster.apply( tableNameIdentifier.getText() ) );
 		final Identifier catalogIdentifier = nameParts.getCatalogName() != null ? nameParts.getCatalogName()
-				: persistentClass.getTable().getCatalogIdentifier();
+				: Identifier.toIdentifier( persistentClass.getTable().getCatalog(), persistentClass.getTable().isCatalogQuoted() );
 		final Identifier schemaIdentifier = nameParts.getSchemaName() != null ? nameParts.getSchemaName()
-				: persistentClass.getTable().getSchemaIdentifier();
+				: Identifier.toIdentifier( persistentClass.getTable().getSchema(), persistentClass.getTable().isSchemaQuoted() );
 		final String adjustedName = nameParts.getObjectName().getText();
 		final Identifier temporaryTableNameIdentifier = new Identifier(
 				adjustedName.substring( 0, Math.min( dialect.getIdentifierSupport().getMaxIdentifierLength(), adjustedName.length() ) ),
@@ -348,7 +348,7 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 						else {
 							for ( Map.Entry<Table, TemporaryTableColumn> columnsEntry : columnsPerTable.entrySet() ) {
 								final var temporaryTableColumn = columnsEntry.getValue();
-								final var tableNameIdentifier = columnsEntry.getKey().getNameIdentifier();
+								final var tableNameIdentifier = new Identifier( columnsEntry.getKey().getName(), columnsEntry.getKey().isQuoted() );
 								final var tableName = tableNameIdentifier.render( dialect );
 								int counter = 0;
 								Identifier columnName;
@@ -449,7 +449,7 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 		final Dialect dialect = metadata.getDatabase().getDialect();
 		SqmMutationStrategyHelper.forEachSelectableMapping( "", value, metadata, (attributePath, selectable) ->
 			consumer.accept(
-					selectable.getValue().getTable(),
+					selectable.getValue().getColumnContainer().requireTable(),
 					new TemporaryTableColumn(
 							temporaryTable,
 							selectable.getQuotedName( dialect ),

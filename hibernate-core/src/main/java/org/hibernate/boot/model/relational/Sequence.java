@@ -4,10 +4,13 @@
  */
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.internal.QualifiedPhysicalNameSnapshot;
 
 /**
  * Models a database {@code SEQUENCE}.
@@ -15,16 +18,9 @@ import org.hibernate.boot.model.naming.Identifier;
  * @author Steve Ebersole
  */
 public class Sequence implements ContributableDatabaseObject, Serializable {
-	public static class Name extends QualifiedNameParser.NameParts {
-		public Name(
-				Identifier catalogIdentifier,
-				Identifier schemaIdentifier,
-				Identifier nameIdentifier) {
-			super( catalogIdentifier, schemaIdentifier, nameIdentifier );
-		}
-	}
 
-	private final QualifiedSequenceName name;
+	private transient QualifiedPhysicalName name;
+	private final QualifiedPhysicalNameSnapshot nameSnapshot;
 	private final String exportIdentifier;
 	private final String contributor;
 	private final int initialValue;
@@ -33,17 +29,17 @@ public class Sequence implements ContributableDatabaseObject, Serializable {
 
 	public Sequence(
 			String contributor,
-			Identifier catalogName,
-			Identifier schemaName,
-			Identifier sequenceName) {
+			PhysicalName catalogName,
+			PhysicalName schemaName,
+			PhysicalName sequenceName) {
 		this( contributor, catalogName, schemaName, sequenceName, 1, 1, null );
 	}
 
 	public Sequence(
 			String contributor,
-			Identifier catalogName,
-			Identifier schemaName,
-			Identifier sequenceName,
+			PhysicalName catalogName,
+			PhysicalName schemaName,
+			PhysicalName sequenceName,
 			int initialValue,
 			int incrementSize) {
 		this( contributor, catalogName, schemaName, sequenceName, initialValue, incrementSize, null );
@@ -51,22 +47,30 @@ public class Sequence implements ContributableDatabaseObject, Serializable {
 
 	public Sequence(
 			String contributor,
-			Identifier catalogName,
-			Identifier schemaName,
-			Identifier sequenceName,
+			PhysicalName catalogName,
+			PhysicalName schemaName,
+			PhysicalName sequenceName,
 			int initialValue,
 			int incrementSize,
 			String options) {
 		this.contributor = contributor;
-		this.name = new QualifiedSequenceName( catalogName, schemaName, sequenceName );
+		this.name = new QualifiedPhysicalName( catalogName, schemaName, sequenceName );
+		nameSnapshot = QualifiedPhysicalNameSnapshot.from( name );
 		this.exportIdentifier = name.render();
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.options = options;
 	}
 
-	public QualifiedSequenceName getName() {
+	public QualifiedPhysicalName getName() {
+		if ( name == null ) {
+			throw new IllegalStateException( "Sequence services must be reattached before accessing physical names" );
+		}
 		return name;
+	}
+
+	void reattach(PhysicalName.Factory factory) {
+		name = nameSnapshot.restore( factory );
 	}
 
 	@Override

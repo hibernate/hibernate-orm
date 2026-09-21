@@ -4,12 +4,13 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.mapping.PhysicalTable;
+
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
-import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.Table;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 
 /**
  * Encapsulates definition of the underlying data structure backing
@@ -22,11 +23,13 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * The physical name of the database structure (table or sequence).
 	 * <p>
 	 * Only available after {@link #registerExportables(Database)}
-	 * has been called.
+	 * has been called. After deserialization, call
+	 * {@link #initialize(SqlStringGenerationContext)} to restore the physical name
+	 * with the current system comparison policy.
 	 *
 	 * @return The structure name.
 	 */
-	QualifiedName getPhysicalName();
+	QualifiedPhysicalName getPhysicalName();
 
 	/**
 	 * How many times has this structure been accessed through this reference?
@@ -101,7 +104,7 @@ public interface DatabaseStructure extends ExportableProducer {
 	 *
 	 * @since 7.2
 	 */
-	default void registerExtraExportables(Table table, Optimizer optimizer) {
+	default void registerExtraExportables(PhysicalTable table, Optimizer optimizer) {
 	}
 
 	/**

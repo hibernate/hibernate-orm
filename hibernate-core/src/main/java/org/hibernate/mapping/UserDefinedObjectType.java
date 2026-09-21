@@ -5,9 +5,7 @@
 package org.hibernate.mapping;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -20,7 +18,7 @@ import org.hibernate.boot.model.relational.Namespace;
 @Incubating(since = "6.6")
 public class UserDefinedObjectType extends AbstractUserDefinedType {
 
-	private final Map<String, Column> columns = new LinkedHashMap<>();
+	private final java.util.List<Column> columns = new java.util.ArrayList<>();
 	private int[] orderMapping;
 	private String comment;
 
@@ -41,20 +39,20 @@ public class UserDefinedObjectType extends AbstractUserDefinedType {
 			return null;
 		}
 		else {
-			final var existing = columns.get( column.getCanonicalName() );
+			final var existing = getColumn( column.getPhysicalName() );
 			return column.equals( existing ) ? existing : null;
 		}
 	}
 
-	public Column getColumn(Identifier name) {
+	public Column getColumn(org.hibernate.relational.naming.spi.PhysicalName name) {
 		if ( name == null ) {
 			return null;
 		}
-		return columns.get( name.getCanonicalName() );
+		return columns.stream().filter( column -> column.getPhysicalName().equals( name ) ).findFirst().orElse( null );
 	}
 
 	public Column getColumn(int n) {
-		final var iter = columns.values().iterator();
+		final var iter = columns.iterator();
 		for ( int i = 0; i < n - 1; i++ ) {
 			iter.next();
 		}
@@ -64,7 +62,7 @@ public class UserDefinedObjectType extends AbstractUserDefinedType {
 	public void addColumn(Column column) {
 		final Column old = getColumn( column );
 		if ( old == null ) {
-			columns.put( column.getCanonicalName(), column );
+			columns.add( column );
 			column.uniqueInteger = columns.size();
 		}
 		else {
@@ -77,11 +75,11 @@ public class UserDefinedObjectType extends AbstractUserDefinedType {
 	}
 
 	public Collection<Column> getColumns() {
-		return columns.values();
+		return columns;
 	}
 
 	public boolean containsColumn(Column column) {
-		return columns.containsValue( column );
+		return columns.contains( column );
 	}
 
 	public String getComment() {
@@ -99,12 +97,12 @@ public class UserDefinedObjectType extends AbstractUserDefinedType {
 		}
 		orderMapping = new int[columns.size()];
 		int i = 0;
-		for ( var column : this.columns.values() ) {
+		for ( var column : this.columns ) {
 			orderMapping[columns.indexOf( column )] = i++;
 		}
 		this.columns.clear();
 		for ( var column : columns ) {
-			this.columns.put( column.getCanonicalName(), column );
+			this.columns.add( column );
 		}
 	}
 

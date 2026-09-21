@@ -76,11 +76,11 @@ public abstract class AbstractCharsetNamingStrategyTest {
 
 		org.hibernate.mapping.Index index = null;
 		if ( dialect.getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) == org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT ) {
-			index = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values().iterator()
+			index = ((org.hibernate.mapping.PhysicalTable) metadata.getEntityBinding( Address.class.getName() ).getTable()).getIndexes().values().iterator()
 					.next();
 		}
 		else {
-			var indexes = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values();
+			var indexes = ((org.hibernate.mapping.PhysicalTable) metadata.getEntityBinding( Address.class.getName() ).getTable()).getIndexes().values();
 			assertThat( indexes.size() ).isEqualTo( 2 );
 
 			org.hibernate.mapping.Index uniqueIndex = null;

@@ -4,7 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 
 /// Contract for table references that carry catalog and schema names.
 ///
@@ -16,14 +17,14 @@ import org.hibernate.boot.model.naming.Identifier;
 /// @author Steve Ebersole
 public interface SchemaAware {
 	/// Physical schema name used in the database model.
-	Identifier getPhysicalSchemaName();
+	PhysicalName getPhysicalSchemaName();
 
 	/// Logical schema name requested by the mapping source or defaults.
-	Identifier getLogicalSchemaName();
+	LogicalName getLogicalSchemaName();
 
 	/// Physical catalog name used in the database model.
-	Identifier getPhysicalCatalogName();
+	PhysicalName getPhysicalCatalogName();
 
 	/// Logical catalog name requested by the mapping source or defaults.
-	Identifier getLogicalCatalogName();
+	LogicalName getLogicalCatalogName();
 }

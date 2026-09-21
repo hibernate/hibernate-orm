@@ -4,6 +4,12 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.spi.BasicColumnNamingInput;
+
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+
 import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
@@ -12,7 +18,6 @@ import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.materialize.AttributeOptionsMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.CollationMappingMaterializer;
@@ -44,7 +49,7 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -82,13 +87,13 @@ public class AttributeBinder {
 	private final BindingContext bindingContext;
 
 	private final Property binding;
-	private final Table attributeTable;
+	private final ColumnContainer attributeTable;
 
 	public AttributeBinder(
 			AbstractIdentifiableTypeMetadata ownerType,
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			ModelBinders modelBinders,
 			BindingState bindingState,
 			BindingOptions bindingOptions,
@@ -110,7 +115,7 @@ public class AttributeBinder {
 			AbstractIdentifiableTypeMetadata ownerType,
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			ModelBinders modelBinders,
 			BindingState bindingState,
 			BindingOptions bindingOptions,
@@ -152,13 +157,13 @@ public class AttributeBinder {
 						attributeMetadata.getMember(),
 						bindingState.getMetadataBuildingContext()
 				);
-				attributeTable = componentValue.getTable();
+				attributeTable = componentValue.getColumnContainer();
 			}
 			else {
 				final var basicValue = createBasicValue( primaryTable );
 				relaxSingleTableSubclassNullability( ownerBinding, basicValue );
 				binding.setValue( basicValue );
-				attributeTable = basicValue.getTable();
+				attributeTable = basicValue.getColumnContainer();
 			}
 		}
 		else if ( valueIntent instanceof ToOneValueIntent ) {
@@ -175,7 +180,7 @@ public class AttributeBinder {
 			).bind( binding );
 			relaxSingleTableSubclassNullability( ownerBinding, toOneValue );
 			binding.setValue( toOneValue );
-			attributeTable = toOneValue.getTable();
+			attributeTable = toOneValue.getColumnContainer();
 		}
 		else if ( valueIntent instanceof EmbeddedValueIntent ) {
 			final var componentValue = new EmbeddableAttributeBinder(
@@ -196,7 +201,7 @@ public class AttributeBinder {
 					attributeMetadata.getMember(),
 					bindingState.getMetadataBuildingContext()
 			);
-			attributeTable = componentValue.getTable();
+			attributeTable = componentValue.getColumnContainer();
 		}
 		else if ( valueIntent instanceof AnyValueIntent ) {
 			final var anyValue = new AnyAttributeBinder(
@@ -209,7 +214,7 @@ public class AttributeBinder {
 					bindingContext
 			).bind( binding, primaryTable );
 			binding.setValue( anyValue );
-			attributeTable = anyValue.getTable();
+			attributeTable = anyValue.getColumnContainer();
 		}
 		else if ( valueIntent instanceof CollectionValueIntent collectionValueIntent ) {
 			final var collectionValue = bindCollectionValue(
@@ -224,7 +229,7 @@ public class AttributeBinder {
 			binding.setValue( collectionValue );
 			binding.setLazy( collectionValue.isLazy() );
 			binding.setOptional( true );
-			attributeTable = collectionValue.getCollectionTable();
+			attributeTable = collectionValue.getCollectionColumnContainer();
 		}
 		else {
 			throw new UnsupportedOperationException( "Not yet implemented" );
@@ -267,7 +272,7 @@ public class AttributeBinder {
 		return null;
 	}
 
-	public Table getTable() {
+	public ColumnContainer getColumnContainer() {
 		return attributeTable;
 	}
 
@@ -390,7 +395,7 @@ public class AttributeBinder {
 		property.setLazyGroup( attributeBinding.lazyGroup() );
 	}
 
-	private BasicValue createBasicValue(Table primaryTable) {
+	private BasicValue createBasicValue(ColumnContainer primaryTable) {
 		return new BasicValueMappingMaterializer().createAttributeBasicValue(
 				attributeBinding,
 				binding,
@@ -402,7 +407,7 @@ public class AttributeBinder {
 	}
 
 	private void relaxSingleTableSubclassNullability(PersistentClass ownerBinding, Value value) {
-		if ( !( ownerBinding instanceof SingleTableSubclass ) || value.getTable() != ownerBinding.getRootTable() ) {
+		if ( !( ownerBinding instanceof SingleTableSubclass ) || value.getColumnContainer() != ownerBinding.getRootTable() ) {
 			return;
 		}
 
@@ -427,7 +432,7 @@ public class AttributeBinder {
 			AttributeBindingView attributeBinding,
 			Property property,
 			BasicValue basicValue,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -439,17 +444,34 @@ public class AttributeBinder {
 			BasicValueIntent selectableIntent,
 			Property property,
 			BasicValue basicValue,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		final Supplier<String> defaultColumnName = ImplicitNamingHelper.once(
+				() -> bindingContext.getImplicitNamingStrategy().determineBasicColumnName(
+						new BasicColumnNamingInput( property.getName() ),
+						ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ),
+				"basic column" );
+		return processSelectable( selectableIntent, property, basicValue, primaryTable,
+				bindingOptions, bindingState, bindingContext, defaultColumnName );
+	}
+
+	public static ProcessedSelectable processSelectable(
+			BasicValueIntent selectableIntent,
+			Property property,
+			BasicValue basicValue,
+			ColumnContainer primaryTable,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			Supplier<String> defaultColumnName) {
 		if ( selectableIntent.isFormula() ) {
 			basicValue.setTable( primaryTable );
 			basicValue.addFormula( formula( selectableIntent ) );
 			return ProcessedSelectable.formula();
 		}
 
-		final Supplier<String> defaultColumnName = property::getName;
 		final var column = ColumnBinder.bindColumn(
 				selectableIntent.columnSource(),
 				defaultColumnName,
@@ -469,8 +491,8 @@ public class AttributeBinder {
 			basicValue.setTable( primaryTable );
 		}
 		else {
-			final Identifier identifier = Identifier.toIdentifier( tableName );
-			final TableReference tableByName = bindingState.getTableByName( identifier.getCanonicalName() );
+			final var logicalName = bindingState.getDatabase().toLogicalName( tableName );
+			final TableReference tableByName = bindingState.getTableByName( logicalName );
 			basicValue.setTable( tableByName.binding() );
 		}
 
@@ -479,10 +501,10 @@ public class AttributeBinder {
 		property.setInsertable( insertable );
 		property.setUpdatable( updatable );
 		basicValue.addColumn( column, insertable, updatable );
-		basicValue.getTable().addColumn( column );
+		basicValue.getColumnContainer().addColumn( column );
 		ColumnBinder.registerColumnNameBinding(
-				basicValue.getTable(),
-				ColumnBinder.columnName( selectableIntent.columnSource(), defaultColumnName ),
+				basicValue.getColumnContainer(),
+				ColumnBinder.logicalColumnName( selectableIntent.columnSource(), defaultColumnName ),
 				column,
 				bindingOptions,
 				bindingState

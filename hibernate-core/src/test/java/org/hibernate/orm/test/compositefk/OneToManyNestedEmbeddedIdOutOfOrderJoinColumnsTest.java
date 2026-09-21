@@ -86,10 +86,10 @@ public class OneToManyNestedEmbeddedIdOutOfOrderJoinColumnsTest {
 	}
 
 	@Embeddable
-	public record ParentEntityId(Integer id, NestedEmbeddable nested) implements Serializable {
+	public record ParentEntityId(@jakarta.persistence.Column(name = "id") Integer id, NestedEmbeddable nested) implements Serializable {
 	}
 
 	@Embeddable
-	public record NestedEmbeddable(String name) implements Serializable {
+	public record NestedEmbeddable(@jakarta.persistence.Column(name = "name") String name) implements Serializable {
 	}
 }

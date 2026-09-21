@@ -69,7 +69,7 @@ public class ColumnValue implements Value {
 	}
 
 	@Override
-	public Table getTable() {
+	public Table getColumnContainer() {
 		return table;
 	}
 

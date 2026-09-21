@@ -66,7 +66,7 @@ public abstract class AbstractJPAIndexTest {
 			assertThat( uk.getTable() ).isSameAs( entity.getTable() );
 		}
 
-		Iterator<Index> indexItr = entity.getTable().getIndexes().values().iterator();
+		Iterator<Index> indexItr = ((org.hibernate.mapping.PhysicalTable) entity.getTable()).getIndexes().values().iterator();
 		Index index;
 		if ( dialect.getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) == org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT ) {
 			// if dialect supports unique constraints, we don't have to check unique index
@@ -106,7 +106,7 @@ public abstract class AbstractJPAIndexTest {
 		PersistentClass entity = scope.getMetadataImplementor().getEntityBinding( Car.class.getName() );
 
 		Join join = entity.getJoins().get( 0 );
-		Iterator<Index> itr = join.getTable().getIndexes().values().iterator();
+		Iterator<Index> itr = ((org.hibernate.mapping.PhysicalTable) join.getTable()).getIndexes().values().iterator();
 		assertThat( itr.hasNext() ).isTrue();
 		Index index = itr.next();
 		assertThat( itr.hasNext() ).isFalse();
@@ -130,7 +130,7 @@ public abstract class AbstractJPAIndexTest {
 		Set set = (Set) property.getValue();
 		Table collectionTable = set.getCollectionTable();
 
-		Iterator<Index> itr = collectionTable.getIndexes().values().iterator();
+		Iterator<Index> itr = ((org.hibernate.mapping.PhysicalTable) collectionTable).getIndexes().values().iterator();
 		assertThat( itr.hasNext() ).isTrue();
 		Index index = itr.next();
 		assertThat( itr.hasNext() ).isFalse();
@@ -152,7 +152,7 @@ public abstract class AbstractJPAIndexTest {
 		Collection collection = (Collection) property.getValue();
 		Table collectionTable = collection.getCollectionTable();
 
-		Iterator<Index> itr = collectionTable.getIndexes().values().iterator();
+		Iterator<Index> itr = ((org.hibernate.mapping.PhysicalTable) collectionTable).getIndexes().values().iterator();
 		assertThat( itr.hasNext() ).isTrue();
 		Index index = itr.next();
 		assertThat( itr.hasNext() ).isFalse();

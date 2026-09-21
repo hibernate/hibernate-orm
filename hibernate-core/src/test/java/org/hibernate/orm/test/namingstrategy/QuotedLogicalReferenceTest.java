@@ -4,12 +4,14 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -70,8 +72,8 @@ class QuotedLogicalReferenceTest {
 
 	public static class PrefixNaming extends PhysicalNamingStrategyStandardImpl {
 		@Override
-		public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment env) {
-			return name == null ? null : Identifier.toIdentifier("p_" + name.getText(), name.isQuoted());
+		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext env) {
+			return name == null ? null : env.getPhysicalNameFactory().create("p_" + name.getText(), name.isQuoted());
 		}
 	}
 	@Entity(name="Person")

@@ -4,13 +4,13 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.Internal;
-import org.hibernate.boot.internal.ForeignKeyNameSource;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.JoinedList;
@@ -18,17 +18,17 @@ import org.hibernate.internal.util.collections.JoinedList;
 /**
  * @author Gavin King
  */
-public class DenormalizedTable extends Table {
+public class DenormalizedTable extends PhysicalTable {
 
-	private final Table includedTable;
+	private final PhysicalTable includedTable;
 	private List<Column> reorderedColumns;
 
 	public DenormalizedTable(
 			String contributor,
 			Namespace namespace,
-			Identifier physicalTableName,
+			PhysicalName physicalTableName,
 			boolean isAbstract,
-			Table includedTable) {
+			PhysicalTable includedTable) {
 		super( contributor, namespace, physicalTableName, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
@@ -36,23 +36,10 @@ public class DenormalizedTable extends Table {
 
 	public DenormalizedTable(
 			String contributor,
-			Namespace namespace,
-			Identifier physicalTableName,
-			String subselectFragment,
+			QualifiedPhysicalName name,
 			boolean isAbstract,
-			Table includedTable) {
-		super( contributor, namespace, physicalTableName, subselectFragment, isAbstract );
-		this.includedTable = includedTable;
-		includedTable.setHasDenormalizedTables();
-	}
-
-	public DenormalizedTable(
-			String contributor,
-			Namespace namespace,
-			String subselect,
-			boolean isAbstract,
-			Table includedTable) {
-		super( contributor, namespace, subselect, isAbstract );
+			PhysicalTable includedTable) {
+		super( contributor, name, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
@@ -69,12 +56,8 @@ public class DenormalizedTable extends Table {
 				foreignKey.setReferencedTable( referencedClass.getTable() );
 			}
 
-			final var denormalizedForeignKey = createDenormalizedForeignKey( foreignKey );
 			createForeignKey(
-					context.getBuildingPlan()
-							.getImplicitNamingStrategy()
-							.determineForeignKeyName( new ForeignKeyNameSource( denormalizedForeignKey, this, context ) )
-							.render( context.getMetadataCollector().getDatabase().getDialect() ),
+					null,
 					foreignKey.getColumns(),
 					foreignKey.getReferencedEntityName(),
 					foreignKey.getKeyDefinition(),
@@ -84,26 +67,13 @@ public class DenormalizedTable extends Table {
 		}
 	}
 
-	private ForeignKey createDenormalizedForeignKey(ForeignKey includedTableFk) {
-		final var denormalizedForeignKey = new ForeignKey(this);
-		denormalizedForeignKey.setReferencedEntityName( includedTableFk.getReferencedEntityName() );
-		denormalizedForeignKey.setKeyDefinition( includedTableFk.getKeyDefinition() );
-		denormalizedForeignKey.setOptions( includedTableFk.getOptions() );
-		denormalizedForeignKey.setReferencedTable( includedTableFk.getReferencedTable() );
-		denormalizedForeignKey.addReferencedColumns( includedTableFk.getReferencedColumns() );
-		for ( var keyColumn : includedTableFk.getColumns() ) {
-			denormalizedForeignKey.addColumn( keyColumn );
-		}
-		return denormalizedForeignKey;
-	}
-
 	@Override
 	public Column getColumn(Column column) {
 		final var superColumn = super.getColumn( column );
 		return superColumn != null ? superColumn : includedTable.getColumn(column);
 	}
 
-	public Column getColumn(Identifier name) {
+	public Column getColumn(PhysicalName name) {
 		final var superColumn = super.getColumn( name );
 		return superColumn != null ? superColumn : includedTable.getColumn(name);
 	}
@@ -126,7 +96,7 @@ public class DenormalizedTable extends Table {
 		return includedTable.getPrimaryKey();
 	}
 
-	public Table getIncludedTable() {
+	public PhysicalTable getIncludedTable() {
 		return includedTable;
 	}
 

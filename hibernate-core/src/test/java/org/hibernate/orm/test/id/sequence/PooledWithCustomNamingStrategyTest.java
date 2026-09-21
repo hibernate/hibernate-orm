@@ -4,12 +4,15 @@
  */
 package org.hibernate.orm.test.id.sequence;
 
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -19,7 +22,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
@@ -142,31 +144,57 @@ public class PooledWithCustomNamingStrategyTest {
 		static MyPhysicalNamingStrategy INSTANCE = new MyPhysicalNamingStrategy();
 
 		@Override
-		public Identifier toPhysicalCatalogName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return logicalName;
+		public PhysicalName toPhysicalCatalogName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+			return logicalName == null ? null : jdbcEnvironment.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 		}
 
 		@Override
-		public Identifier toPhysicalSchemaName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return logicalName;
+		public PhysicalName toPhysicalSchemaName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+			return logicalName == null ? null : jdbcEnvironment.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 		}
 
 		@Override
-		public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return logicalName;
+		public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+			return logicalName == null ? null : jdbcEnvironment.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 		}
 
 		@Override
-		public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return Identifier.toIdentifier(
+		public PhysicalName toPhysicalSequenceName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+			return jdbcEnvironment.getPhysicalNameFactory().create(
 					logicalName.getText().replaceAll( "REPLACE_", "MY_" ),
 					logicalName.isQuoted()
 			);
 		}
 
 		@Override
-		public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return logicalName;
+		public PhysicalName toPhysicalColumnName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+			return logicalName == null ? null : jdbcEnvironment.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 		}
+
+	@Override
+	public PhysicalName toPhysicalTypeName(LogicalName name, PhysicalNamingContext context) {
+		return context.getPhysicalNameFactory().create( name.getText(), name.isQuoted() );
+	}
+
+	@Override
+	public PhysicalName toPhysicalPrimaryKeyName(LogicalName name, PhysicalNamingContext context) {
+		return context.getPhysicalNameFactory().create( name.getText(), name.isQuoted() );
+	}
+
+	@Override
+	public PhysicalName toPhysicalForeignKeyName(LogicalName name, PhysicalNamingContext context) {
+		return context.getPhysicalNameFactory().create( name.getText(), name.isQuoted() );
+	}
+
+	@Override
+	public PhysicalName toPhysicalUniqueKeyName(LogicalName name, PhysicalNamingContext context) {
+		return context.getPhysicalNameFactory().create( name.getText(), name.isQuoted() );
+	}
+
+	@Override
+	public PhysicalName toPhysicalIndexName(LogicalName name, PhysicalNamingContext context) {
+		return context.getPhysicalNameFactory().create( name.getText(), name.isQuoted() );
+	}
+
 	}
 }

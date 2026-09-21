@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.id;
 
+import org.hibernate.testing.util.MappingTableHelper;
+
 import java.util.Properties;
 
 import org.hibernate.Session;
@@ -23,7 +25,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -111,7 +112,9 @@ public class SequenceStyleGeneratorBehavesLikeSequenceHiloGeneratorWithZeroIncre
 
 					@Override
 					public Value getValue() {
-						return new BasicValue( buildingContext, new Table() );
+						return new BasicValue( buildingContext, MappingTableHelper.table( "orm", "generator_owner",
+					buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment()
+							.getIdentifierHelper().getPhysicalNameFactory() ) );
 					}
 
 					@Override

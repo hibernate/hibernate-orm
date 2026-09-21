@@ -1,0 +1,119 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.namingstrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
+import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
+import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/// Checks physical naming participation and explicit-name bypass in constraint binding.
+///
+/// @author Steve Ebersole
+@BaseUnitTest
+class PhysicalConstraintNamingTest {
+	@Test
+	void explicitAndImplicitNamesReachThePhysicalRole() {
+		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
+			final var physical = new ConstraintStrategy();
+			final var metadata = MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
+					new MappingSources().addManagedClass( Owner.class ).addManagedClass( Target.class ),
+					new BypassCheckingStrategy(), physical );
+			final var table = (org.hibernate.mapping.PhysicalTable) metadata.getEntityBinding( Owner.class.getName() ).getTable();
+			assertThat( table.getPrimaryKey().getName() ).startsWith( "pk_" );
+			assertThat( table.getForeignKeyCollection() ).extracting( org.hibernate.mapping.ForeignKey::getName )
+					.allMatch( name -> name.startsWith( "fk_" ) ).contains( "fk_owner_target" );
+			assertThat( table.getIndexes().keySet() ).contains( "ix_owner_code" );
+			assertThat( table.getIndexes().keySet() ).contains( "\"ix_QuotedIndex\"" );
+			assertThat( table.getUniqueKeys().keySet() ).contains( "uk_owner_code" );
+			assertThat( physical.foreignKeys ).anyMatch( LogicalName::isExplicit ).anyMatch( name -> !name.isExplicit() );
+			assertThat( physical.foreignKeys ).hasSize( 2 );
+			assertThat( physical.indexes ).anyMatch( LogicalName::isExplicit ).anyMatch( name -> !name.isExplicit() );
+			assertThat( physical.uniqueKeys ).anyMatch( LogicalName::isExplicit ).anyMatch( name -> !name.isExplicit() );
+		}
+	}
+
+	static class BypassCheckingStrategy extends StandardImplicitNamingStrategy {
+		@Override
+		public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
+			assertThat( source.getUserProvidedIdentifier() ).isNull();
+			return super.determineForeignKeyName( source );
+		}
+		@Override
+		public Identifier determineIndexName(ImplicitIndexNameSource source) {
+			assertThat( source.getUserProvidedIdentifier() ).isNull();
+			return super.determineIndexName( source );
+		}
+		@Override
+		public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
+			assertThat( source.getUserProvidedIdentifier() ).isNull();
+			return super.determineUniqueKeyName( source );
+		}
+	}
+
+	static class ConstraintStrategy extends PhysicalNamingStrategyStandardImpl {
+		final List<LogicalName> foreignKeys = new ArrayList<>();
+		final List<LogicalName> indexes = new ArrayList<>();
+		final List<LogicalName> uniqueKeys = new ArrayList<>();
+		@Override
+		public PhysicalName toPhysicalPrimaryKeyName(LogicalName name, PhysicalNamingContext context) {
+			return context.getPhysicalNameFactory().create( "pk_" + name.getText(), name.isQuoted() );
+		}
+		@Override
+		public PhysicalName toPhysicalForeignKeyName(LogicalName name, PhysicalNamingContext context) {
+			foreignKeys.add( name );
+			return context.getPhysicalNameFactory().create( "fk_" + name.getText(), name.isQuoted() );
+		}
+		@Override
+		public PhysicalName toPhysicalIndexName(LogicalName name, PhysicalNamingContext context) {
+			indexes.add( name );
+			return context.getPhysicalNameFactory().create( "ix_" + name.getText(), false );
+		}
+		@Override
+		public PhysicalName toPhysicalUniqueKeyName(LogicalName name, PhysicalNamingContext context) {
+			uniqueKeys.add( name );
+			return context.getPhysicalNameFactory().create( "uk_" + name.getText(), name.isQuoted() );
+		}
+	}
+
+	@Entity(name = "Owner")
+	@Table(indexes = {@Index(name = "owner_code", columnList = "code"), @Index(columnList = "other"),
+			@Index(name = "`QuotedIndex`", columnList = "code,other")},
+			uniqueConstraints = {@UniqueConstraint(name = "owner_code", columnNames = "code"), @UniqueConstraint(columnNames = "other")})
+	static class Owner {
+		@Id long id;
+		String code;
+		String other;
+		@ManyToOne @JoinColumn(foreignKey = @ForeignKey(name = "owner_target")) Target explicitTarget;
+		@ManyToOne Target implicitTarget;
+	}
+	@Entity(name = "Target")
+	static class Target { @Id long id; }
+}

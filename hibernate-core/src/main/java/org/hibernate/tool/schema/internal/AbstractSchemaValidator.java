@@ -4,6 +4,10 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Namespace;
@@ -127,7 +131,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema validation: missing table [%s]",
-							table.getQualifiedTableName().toString()
+							((NamedTable) table).getPhysicalName().toString()
 					)
 			);
 		}
@@ -141,7 +145,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 						String.format(
 								"Schema validation: missing column [%s] in table [%s]",
 								column.getName(),
-								table.getQualifiedTableName()
+								((NamedTable) table).getPhysicalName()
 						)
 				);
 			}
@@ -164,7 +168,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 							"Schema validation: wrong column type encountered in column [%s] in " +
 									"table [%s]; found [%s (Types#%s)], but expecting [%s (Types#%s)]",
 							column.getName(),
-							table.getQualifiedTableName(),
+							((NamedTable) table).getPhysicalName(),
 							columnInformation.getTypeName().toLowerCase( ROOT),
 							JdbcTypeNameMapper.getTypeName( columnInformation.getTypeCode() ),
 							column.getSqlType( metadata ).toLowerCase( ROOT),
@@ -180,9 +184,12 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect) {
+		if ( !(table instanceof PhysicalTable physicalTable) ) {
+			return;
+		}
 		var validationType = ConstraintValidationType.interpret( INDEX_VALIDATION, options.getConfigurationValues() );
 
-		table.getIndexes().forEach((rawName,index) -> {
+		physicalTable.getIndexes().forEach((rawName,index) -> {
 			assert StringHelper.isNotEmpty( rawName );
 			assert Objects.equals( rawName, index.getName() );
 			if ( validationType == ConstraintValidationType.NONE ) {

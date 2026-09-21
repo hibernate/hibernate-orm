@@ -42,7 +42,9 @@ public class PrimaryTableKeyMappingMaterializer {
 		}
 
 		final PrimaryKey primaryKey = new PrimaryKey( table );
-		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
+		primaryKey.setName( org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.resolve(
+				null, () -> org.hibernate.boot.model.naming.Identifier.toIdentifier( PK_ALIAS.toAliasString( table.getName() ) ),
+				org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.Kind.PRIMARY_KEY, buildingContext ) );
 		table.setPrimaryKey( primaryKey );
 		return primaryKey;
 	}

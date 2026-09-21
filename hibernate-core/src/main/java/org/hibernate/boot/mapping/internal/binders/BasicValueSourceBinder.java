@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
@@ -50,7 +52,6 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.internal.GeneratorAnnotationSnapshot;
 import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.relational.ExportableProducer;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
@@ -1434,7 +1435,9 @@ public class BasicValueSourceBinder {
 
 		if ( columnAnn != null ) {
 			final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) basicValue.getColumn();
-			column.setName( columnAnn.name().isEmpty() ? property.getName() + "_tz" : columnAnn.name() );
+			bindingState.renameColumn( basicValue.getColumnContainer(), column,
+					ColumnNameHelper.physicalName(
+							columnAnn.name().isEmpty() ? property.getName() + "_tz" : columnAnn.name(), bindingState.getDatabase() ) );
 			column.setSqlType( columnAnn.columnDefinition().isEmpty() ? null : columnAnn.columnDefinition() );
 			column.setOptions( columnAnn.options().isEmpty() ? null : columnAnn.options() );
 			column.setComment( columnAnn.comment().isEmpty() ? null : columnAnn.comment() );
@@ -1442,8 +1445,8 @@ public class BasicValueSourceBinder {
 			final var tableName = columnAnn.table().isEmpty() ? null : columnAnn.table();
 			TableReference tableByName = null;
 			if ( tableName != null ) {
-				final Identifier identifier = Identifier.toIdentifier( tableName );
-				tableByName = bindingState.getTableByName( identifier.getCanonicalName() );
+				final var logicalName = bindingState.getDatabase().toLogicalName( tableName );
+				tableByName = bindingState.getTableByName( logicalName );
 				basicValue.setTable( tableByName.binding() );
 			}
 

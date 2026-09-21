@@ -8,6 +8,7 @@ import org.hibernate.SPI;
 
 /// Effective defaults consumed by implicit naming strategies.
 ///
+/// @since 9.0
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public interface ImplicitNamingDefaults {
@@ -24,6 +25,8 @@ public interface ImplicitNamingDefaults {
 	/// The default discriminator column name, falling back to {@value #DEFAULT_DISCRIMINATOR_COLUMN_NAME}.
 	String getDefaultDiscriminatorColumnName();
 
-	/// The default tenant identifier column name, falling back to {@value #DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME}.
+	/// The configured tenant identifier column name, falling back to {@value #DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME}.
+	/// Supplied implicit naming strategies use the tenant attribute name instead;
+	/// custom strategies may choose to use this configured value.
 	String getDefaultTenantIdColumnName();
 }

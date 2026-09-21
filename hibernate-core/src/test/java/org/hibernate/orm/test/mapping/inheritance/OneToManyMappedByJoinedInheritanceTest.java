@@ -4,11 +4,12 @@
  */
 package org.hibernate.orm.test.mapping.inheritance;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.mapping.Column;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -66,7 +67,7 @@ public class OneToManyMappedByJoinedInheritanceTest {
 				.flatMap( namespace -> namespace.getTables().stream() )
 				.forEach( t -> {
 					// assert that the 'owner_id' column is only found in the 'computer_system' table
-					final Column column = t.getColumn( Identifier.toIdentifier( "owner_id " ) );
+					final Column column = t.getColumn( ColumnNameHelper.physicalName( "owner_id ", scope.getMetadataImplementor().getDatabase() ) );
 					if ( t.getName().equals( "computer_system" ) ) {
 						assertThat( column ).isNotNull();
 					}

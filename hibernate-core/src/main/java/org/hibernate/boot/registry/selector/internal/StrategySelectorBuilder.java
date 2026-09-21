@@ -6,6 +6,7 @@ import java.util.List;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -227,7 +228,7 @@ public class StrategySelectorBuilder {
 		strategySelector.registerStrategyImplementor(
 				ImplicitNamingStrategy.class,
 				"default",
-				ImplicitNamingStrategyJpaCompliantImpl.class
+				StandardImplicitNamingStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
 				ImplicitNamingStrategy.class,

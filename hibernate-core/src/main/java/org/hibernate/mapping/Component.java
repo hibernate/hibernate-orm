@@ -109,7 +109,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public Component(MetadataBuildingContext metadata, Component component) throws MappingException {
-		this( metadata, component.getTable(), component.getOwner() );
+		this( metadata, component.getColumnContainer(), component.getOwner() );
 	}
 
 	public Component(MetadataBuildingContext metadata, Join join) throws MappingException {
@@ -117,10 +117,10 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public Component(MetadataBuildingContext metadata, Collection collection) throws MappingException {
-		this( metadata, collection.getCollectionTable(), collection.getOwner() );
+		this( metadata, collection.getCollectionColumnContainer(), collection.getOwner() );
 	}
 
-	public Component(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
+	public Component(MetadataBuildingContext metadata, ColumnContainer table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.owner = owner;
 		metadata.getMetadataCollector().registerComponent( this );
@@ -476,7 +476,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return unmodifiableList( properties );
 	}
 
-	public void setTable(Table table) {
+	public void setTable(ColumnContainer table) {
 		if ( !tableWasExplicit ) {
 			super.setTable( table );
 		}
@@ -484,7 +484,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		// otherwise, ignore it...
 	}
 
-	public void setTable(Table table, boolean wasExplicit) {
+	public void setTable(ColumnContainer table, boolean wasExplicit) {
 		super.setTable( table );
 		tableWasExplicit = wasExplicit;
 	}

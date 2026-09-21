@@ -74,7 +74,7 @@ public interface GeneratorCreationContext {
 	 */
 	default String getContributorName() {
 		final var rootClass = getRootClass();
-		final var contributor = rootClass == null ? getValue().getTable().getContributor() : rootClass.getContributor();
+		final var contributor = rootClass == null ? getValue().getColumnContainer().requireTable().getContributor() : rootClass.getContributor();
 		return contributor == null ? "orm" : contributor;
 	}
 

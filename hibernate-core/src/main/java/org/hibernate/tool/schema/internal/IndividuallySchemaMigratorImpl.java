@@ -1,9 +1,12 @@
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.NamedTable;
+
 import java.util.Set;
 
+import org.hibernate.relational.naming.spi.LogicalName;
+
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -40,7 +43,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			Set<String> exportIdentifiers,
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
-			Set<Identifier> exportedCatalogs,
+			Set<LogicalName> exportedCatalogs,
 			Namespace namespace,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
@@ -60,12 +63,15 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					context,
 					targets
 			);
-			for ( var table : namespace.getTables() ) {
+			for ( var candidate : namespace.getTables() ) {
+				if ( !( candidate instanceof NamedTable table ) ) {
+					continue;
+				}
 				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
 					checkExportIdentifier( table, exportIdentifiers );
-					final var tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+					final var tableInformation = existingDatabase.getTableInformation( ((NamedTable) table).getPhysicalName() );
 					if ( tableInformation == null ) {
 						createTable( table, dialect, metadata, formatter, options, context, targets );
 					}
@@ -77,7 +83,10 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 				}
 			}
 
-			for ( var table : namespace.getTables() ) {
+			for ( var candidate : namespace.getTables() ) {
+				if ( !( candidate instanceof NamedTable table ) ) {
+					continue;
+				}
 				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {

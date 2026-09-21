@@ -5,7 +5,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
 import org.hibernate.AnnotationException
-import org.hibernate.boot.MetadataSources
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper
+import org.hibernate.boot.pipeline.internal.source.MappingSources
 import org.hibernate.testing.orm.junit.JiraKey
 import org.hibernate.testing.orm.junit.ServiceRegistry
 import org.hibernate.testing.orm.junit.ServiceRegistryScope
@@ -28,18 +29,17 @@ class OverriddenIdPropertyTest {
 	fun overriddenIdProperty(scope: ServiceRegistryScope) {
 		assertFalse(Dog::class.java.getDeclaredField("id").isAnnotationPresent(Id::class.java))
 		for (subclass in listOf(Dog::class.java, JoinedDog::class.java, UnionDog::class.java)) {
-			val metadata = MetadataSources(scope.registry)
-				.addAnnotatedClasses(subclass.superclass, subclass)
-				.buildMetadata()
+			val metadata = MetadataBuildingHelper.buildMetadata(
+				scope.registry, MappingSources().addManagedClasses(subclass.superclass, subclass)
+			)
 			assertTrue(metadata.getEntityBinding(subclass.name)!!.declaredProperties.none { it.name == "id" })
 		}
 	}
 
 	@Test
 	fun annotatedOverriddenIdProperty(scope: ServiceRegistryScope) {
-		val sources = MetadataSources(scope.registry)
-			.addAnnotatedClasses(Animal::class.java, Cat::class.java)
-		val exception = assertThrows(AnnotationException::class.java) { sources.buildMetadata() }
+		val sources = MappingSources().addManagedClasses(Animal::class.java, Cat::class.java)
+		val exception = assertThrows(AnnotationException::class.java) { MetadataBuildingHelper.buildMetadata(scope.registry, sources) }
 		assertTrue(exception.message!!.contains("'id' of '" + Cat::class.java.name + "'"))
 	}
 

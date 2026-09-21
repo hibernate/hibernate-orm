@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.relational.naming.internal.QualifiedPhysicalNameSnapshot;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -21,7 +21,7 @@ public class FilterConfiguration implements Serializable {
 	private final boolean autoAliasInjection;
 	private final Map<String, String> aliasTableMap;
 	private final Map<String, String> aliasEntityMap;
-	private final QualifiedTableName persistentClassTableName;
+	private final QualifiedPhysicalNameSnapshot persistentClassTableName;
 	private final String persistentClassSubselect;
 
 	public FilterConfiguration(
@@ -37,7 +37,8 @@ public class FilterConfiguration implements Serializable {
 		this.aliasTableMap = aliasTableMap;
 		this.aliasEntityMap = aliasEntityMap;
 		this.persistentClassTableName =
-				persistentClass == null ? null : persistentClass.getTable().getQualifiedTableName();
+				persistentClass != null && persistentClass.getTable() instanceof NamedTable table
+						? QualifiedPhysicalNameSnapshot.from( table.getPhysicalName() ) : null;
 		this.persistentClassSubselect =
 				persistentClass == null ? null : persistentClass.getTable().getSubselect();
 	}
@@ -70,7 +71,7 @@ public class FilterConfiguration implements Serializable {
 		}
 		else if ( persistentClassTableName != null ) {
 			final String tableName =
-					sqlStringGenerationContext.format( persistentClassTableName );
+					sqlStringGenerationContext.format( persistentClassTableName.restore( sqlStringGenerationContext.getPhysicalNameFactory() ) );
 			return singletonMap( null, tableName );
 		}
 		else {

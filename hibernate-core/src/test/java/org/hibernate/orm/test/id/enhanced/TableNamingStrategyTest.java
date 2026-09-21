@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.id.enhanced;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.util.function.Consumer;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -105,7 +107,7 @@ public class TableNamingStrategyTest {
 	private void verify(Class<?> entityType, String strategy, String expectedName) {
 		withMetadata( entityType, strategy, (metadata) -> {
 			final Namespace defaultNamespace = metadata.getDatabase().getDefaultNamespace();
-			final Table table = defaultNamespace.locateTable( Identifier.toIdentifier( expectedName ) );
+			final Table table = defaultNamespace.locateTable( logicalName( Identifier.toIdentifier( expectedName ) ) );
 			assertThat( table ).isNotNull();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( entityType.getName() );

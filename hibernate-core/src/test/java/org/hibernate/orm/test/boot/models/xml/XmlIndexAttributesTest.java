@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.boot.models.xml;
 
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.pipeline.internal.source.XmlMappingSource;
@@ -62,9 +63,8 @@ public class XmlIndexAttributesTest {
 				.build();
 		try {
 			final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addXmlMappingSource( XmlMappingSource.fromInputStream( new ByteArrayInputStream( xml.getBytes( StandardCharsets.UTF_8 ) ) ) ) );
-			final Index index = metadata.getEntityBinding( IndexedEntity.class.getName() )
-					.getTable()
-					.getIndex( INDEX_NAME );
+			final var table = (PhysicalTable) metadata.getEntityBinding( IndexedEntity.class.getName() ).getTable();
+			final Index index = table.getIndex( INDEX_NAME );
 			assertThat( index ).as( "Index declared in orm.xml" ).isNotNull();
 			return index;
 		}

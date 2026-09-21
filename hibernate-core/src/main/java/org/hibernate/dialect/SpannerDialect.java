@@ -1,5 +1,7 @@
 package org.hibernate.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
 import java.sql.SQLException;
 
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
@@ -102,7 +104,6 @@ import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Table;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
@@ -232,7 +233,7 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 			.build();
 
 	private final UniqueDelegate SPANNER_UNIQUE_DELEGATE = UniqueDelegates.alwaysIndex( this );
-	private final Exporter<Table> SPANNER_TABLE_EXPORTER = new SpannerDialectTableExporter( this );
+	private final Exporter<NamedTable> SPANNER_TABLE_EXPORTER = new SpannerDialectTableExporter( this );
 	private final Exporter<Index> SPANNER_INDEX_EXPORTER = new SpannerIndexExporter( this );
 	private final SequenceSupport SPANNER_SEQUENCE_SUPPORT = new SpannerSequenceSupport(this);
 
@@ -1157,7 +1158,7 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 	/* DDL-related functions */
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return SPANNER_TABLE_EXPORTER;
 	}
 

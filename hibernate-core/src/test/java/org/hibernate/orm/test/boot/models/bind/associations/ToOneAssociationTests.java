@@ -338,7 +338,7 @@ public class ToOneAssociationTests {
 					assertThat( value.getReferencedPropertyName() ).isEqualTo( "parent" );
 					assertThat( value.isReferenceToPrimaryKey() ).isFalse();
 					assertThat( value.getForeignKeyType() ).isEqualTo( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
-					assertThat( value.getTable().getName() ).isEqualTo( "mapped_by_one_to_one_parents" );
+					assertThat( value.getColumnContainer().requireTable().getName() ).isEqualTo( "mapped_by_one_to_one_parents" );
 					assertThat( value.getColumns() ).isEmpty();
 				},
 				scope.getRegistry(),
@@ -1092,7 +1092,7 @@ public class ToOneAssociationTests {
 					assertThat( index.getComponentClassName() ).isEqualTo( LocationKey.class.getName() );
 					assertThat( index.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "city", "country" );
+							.containsExactly( "locationKey_city", "locationKey_country" );
 					assertIndexMappingRoles( collection, index );
 				},
 				scope.getRegistry(),
@@ -1343,7 +1343,7 @@ public class ToOneAssociationTests {
 					assertThat( inverseIndex.getComponentClassName() ).isEqualTo( LocationKey.class.getName() );
 					assertThat( inverseIndex.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "city", "country" );
+							.containsExactly( "locationKey_city", "locationKey_country" );
 					assertIndexMappingRoles( inverseCollection, inverseIndex );
 				},
 				scope.getRegistry(),
@@ -2909,7 +2909,7 @@ public class ToOneAssociationTests {
 	}
 
 	private static void assertElementUniquelyConstrained(ManyToOne element) {
-		final org.hibernate.mapping.Table table = element.getTable();
+		final org.hibernate.mapping.Table table = element.getColumnContainer().requireTable();
 		final List<org.hibernate.mapping.Column> elementColumns = element.getColumns();
 		assertThat(
 				( table.getPrimaryKey() != null && table.getPrimaryKey().getColumns().equals( elementColumns ) )

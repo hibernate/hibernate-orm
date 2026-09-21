@@ -1,5 +1,10 @@
 package org.hibernate.boot.mapping.internal.materialize;
 
+import org.hibernate.annotations.TenantId;
+import org.hibernate.boot.model.naming.spi.EntityNamingInput;
+import org.hibernate.boot.model.naming.spi.TenantColumnNamingInput;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,10 +13,8 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.naming.spi.BasicColumnNamingInput;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
-import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
-import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder;
 import org.hibernate.boot.mapping.internal.binders.AttributeBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.ColumnBinder;
@@ -33,7 +36,7 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
@@ -65,7 +68,7 @@ public class BasicValueMappingMaterializer {
 	public BasicValue createAttributeBasicValue(
 			AttributeBindingView attributeBinding,
 			Property property,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -111,7 +114,7 @@ public class BasicValueMappingMaterializer {
 			TypeDetails resolvedType,
 			BasicValueIntent basicValueIntent,
 			Property property,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -140,18 +143,20 @@ public class BasicValueMappingMaterializer {
 	}
 
 	public void materializeTenantIdBasicValue(
+			PersistentClass ownerBinding,
 			MemberDetails member,
 			TypeDetails resolvedType,
 			BasicValueIntent basicValueIntent,
 			Property property,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final BasicValue basicValue = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), primaryTable );
 		property.setValue( basicValue );
 
-		processSelectable( basicValueIntent, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
+		processSelectable( basicValueIntent, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext,
+				ImplicitNamingHelper.once( () -> implicitTenantColumnName( ownerBinding, property.getName(), bindingState, bindingContext ), "tenant column" ) );
 		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.attribute( member, resolvedType, bindingContext ),
 				property,
@@ -186,7 +191,7 @@ public class BasicValueMappingMaterializer {
 			validateNonIdentifierGeneratedValue( member, member.getName() );
 		}
 		final BasicValueIntent basicValueIntent = componentMember.basicValueIntent();
-		final Table valueTable = resolveTable( basicValueIntent, ownerBinding, memberTarget );
+		final ColumnContainer valueTable = resolveTable( basicValueIntent, ownerBinding, memberTarget );
 		final BasicValue basicValue = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), valueTable );
 		basicValue.setTable( valueTable );
 		property.setValue( basicValue );
@@ -214,7 +219,12 @@ public class BasicValueMappingMaterializer {
 		}
 
 		final Column column = bindComponentMemberColumn(
-				() -> implicitBasicColumnName( source, componentMember, bindingState, bindingContext ),
+				ImplicitNamingHelper.once( () -> member.hasDirectAnnotationUsage( TenantId.class )
+						? implicitTenantColumnName( ownerBinding, componentMember.namingPath().getFullPath(), bindingState, bindingContext )
+						: bindingContext.getImplicitNamingStrategy().determineBasicColumnName(
+								new BasicColumnNamingInput( componentMember.namingPath().getFullPath() ),
+								ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ),
+						member.hasDirectAnnotationUsage( TenantId.class ) ? "tenant column" : "basic column" ),
 				property,
 				basicValue,
 				memberTarget,
@@ -431,7 +441,7 @@ public class BasicValueMappingMaterializer {
 		}
 	}
 
-	private static Table resolveTable(
+	private static ColumnContainer resolveTable(
 			BasicValueIntent basicValueIntent,
 			PersistentClass ownerBinding,
 			ComponentMemberTarget memberTarget) {
@@ -457,14 +467,13 @@ public class BasicValueMappingMaterializer {
 			boolean updatable,
 			BindingOptions bindingOptions,
 			BindingState bindingState) {
-		final Column column = ColumnBinder.bindColumn(
-				basicValueIntent.columnSource(),
-				implicitName,
-				uniqueByDefault,
-				nullableByDefault
-		);
-		final String logicalName = applyColumnNamingPatterns( column.getName(), columnNamingPatterns );
-		column.setName( ColumnBinder.finalizeColumnName( logicalName, bindingOptions, bindingState ) );
+		final var sourceName = ColumnBinder.logicalColumnName( basicValueIntent.columnSource(), implicitName );
+		final String logicalName = applyColumnNamingPatterns( sourceName.getText(), columnNamingPatterns );
+		final var logicalColumnName = new org.hibernate.relational.naming.spi.LogicalName(
+				logicalName, sourceName.isQuoted(), sourceName.isExplicit() );
+		final Column column = ColumnBinder.bindColumn( basicValueIntent.columnSource(),
+				ColumnBinder.finalizeColumnName( logicalColumnName.toString(), logicalColumnName.isExplicit(), bindingOptions, bindingState ),
+				uniqueByDefault, nullableByDefault, 255, 0, 0 );
 		applyColumnTransformer( basicValueIntent, property, column );
 		applyChecks( basicValueIntent, column );
 		basicValue.addColumn( column, insertable, updatable );
@@ -472,8 +481,8 @@ public class BasicValueMappingMaterializer {
 		registerTableColumn( basicValue, memberTarget, column );
 		if ( !memberTarget.isAggregateMemberTarget() ) {
 			ColumnBinder.registerColumnNameBinding(
-					basicValue.getTable(),
-					logicalName,
+					basicValue.getColumnContainer(),
+					logicalColumnName,
 					column,
 					bindingOptions,
 					bindingState
@@ -484,33 +493,18 @@ public class BasicValueMappingMaterializer {
 
 	private static void registerTableColumn(BasicValue basicValue, ComponentMemberTarget memberTarget, Column column) {
 		if ( !memberTarget.isAggregateMemberTarget() ) {
-			basicValue.getTable().addColumn( column );
+			basicValue.getColumnContainer().addColumn( column );
 		}
 	}
 
-	private static String implicitBasicColumnName(
-			ComponentSource source,
-			ComponentMemberBinding member,
+	private static org.hibernate.relational.naming.spi.LogicalName implicitTenantColumnName(
+			PersistentClass owner,
+			String attributePath,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		return bindingContext.getImplicitNamingStrategy()
-				.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
-					@Override
-					public AttributePath getAttributePath() {
-						return member.namingPath();
-					}
-
-					@Override
-					public boolean isCollectionElement() {
-						return false;
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
-					}
-				} )
-				.getText();
+		return bindingContext.getImplicitNamingStrategy().determineTenantColumnName(
+				new TenantColumnNamingInput( new EntityNamingInput( owner.getClassName(), owner.getEntityName(), owner.getJpaEntityName() ), attributePath ),
+				ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) );
 	}
 
 	private static String applyColumnNamingPatterns(String name, List<String> patterns) {

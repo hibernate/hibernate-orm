@@ -1,5 +1,9 @@
 package org.hibernate.dialect.unique.internal;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
+import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
+
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
@@ -37,10 +41,10 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 		if ( uniqueKeyName == null ) {
 			final List<Identifier> columnIdentifiers = new ArrayList<>();
 			for ( var column : uniqueKey.getColumns() ) {
-				columnIdentifiers.add( column.getNameIdentifier( database ) );
+				columnIdentifiers.add( ColumnNameHelper.identifier( column ) );
 			}
 			return NamingHelper.INSTANCE.generateHashedConstraintName("UK",
-					uniqueKey.getTable().getNameIdentifier(), columnIdentifiers );
+					ImplicitNamingSourceHelper.tableName( uniqueKey.getTable() ), columnIdentifiers );
 		}
 		else {
 			return database.getDialect().quote( uniqueKeyName );
@@ -48,7 +52,7 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 	}
 
 	static String tableName(UniqueKey uniqueKey, SqlStringGenerationContext context) {
-		return context.format( uniqueKey.getTable().getQualifiedTableName() );
+		return uniqueKey.getTable().getTableExpression( context );
 	}
 
 	// legacy model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

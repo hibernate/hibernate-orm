@@ -4,7 +4,8 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -97,9 +98,8 @@ public class ElementCollectionSetNullableUniqueKeyPostgreSQLLegacyTestCase {
 
 	private static MetadataImplementor buildMetadata(StandardServiceRegistry registry) {
 		final var metadata = (MetadataImplementor)
-				new MetadataSources( registry )
-						.addAnnotatedClass( ElementCollectionSetNullableUniqueKeyPostgreSQLLegacyTestCase.Book.class )
-						.buildMetadata();
+				MetadataBuildingHelper.buildMetadata( registry, new MappingSources()
+						.addManagedClass( ElementCollectionSetNullableUniqueKeyPostgreSQLLegacyTestCase.Book.class ) );
 		metadata.orderColumns( true );
 		metadata.validate();
 		return metadata;

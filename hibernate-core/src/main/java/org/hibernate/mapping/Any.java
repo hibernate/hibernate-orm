@@ -45,11 +45,11 @@ public class Any extends SimpleValue {
 
 	private transient AnyType resolvedType;
 
-	public Any(MetadataBuildingContext buildingContext, Table table) {
+	public Any(MetadataBuildingContext buildingContext, ColumnContainer table) {
 		this( buildingContext, table, false );
 	}
 
-	public Any(MetadataBuildingContext buildingContext, Table table, boolean annotations) {
+	public Any(MetadataBuildingContext buildingContext, ColumnContainer table, boolean annotations) {
 		super( buildingContext, table );
 		this.typeConfiguration = buildingContext.getTypeConfiguration();
 		if ( ! annotations ) {
@@ -378,7 +378,7 @@ public class Any extends SimpleValue {
 		public MetaValue(
 				Consumer<Selectable> selectableConsumer,
 				MetadataBuildingContext buildingContext,
-				Table table) {
+				ColumnContainer table) {
 			super( buildingContext, table );
 			this.database = buildingContext.getMetadataCollector().getDatabase();
 			this.typeConfiguration = buildingContext.getTypeConfiguration();
@@ -478,7 +478,7 @@ public class Any extends SimpleValue {
 		public KeyValue(
 				Consumer<Selectable> selectableConsumer,
 				MetadataBuildingContext buildingContext,
-				Table table) {
+				ColumnContainer table) {
 			super( buildingContext, table );
 			this.typeConfiguration = buildingContext.getTypeConfiguration();
 			this.selectableConsumer = selectableConsumer;

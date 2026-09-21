@@ -39,7 +39,7 @@ public abstract sealed class ToOne
 	private List<FilterConfiguration> filters = List.of();
 	private ForeignKeyColumnMappings foreignKeyColumnMappings;
 
-	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
+	protected ToOne(MetadataBuildingContext buildingContext, ColumnContainer table) {
 		super( buildingContext, table );
 	}
 

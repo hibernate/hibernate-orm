@@ -63,6 +63,7 @@ public class OrderUpdateNestedEmbeddedIdTest {
 
 	@Embeddable
 	public static class ParentId implements Serializable {
+		@jakarta.persistence.Column(name = "id")
 		private String id;
 
 		public ParentId() {
@@ -95,6 +96,7 @@ public class OrderUpdateNestedEmbeddedIdTest {
 	public static class Child1Id implements Serializable {
 		@Embedded
 		private ParentId parentId;
+		@jakarta.persistence.Column(name = "version")
 		private Integer version;
 
 		public Child1Id() {

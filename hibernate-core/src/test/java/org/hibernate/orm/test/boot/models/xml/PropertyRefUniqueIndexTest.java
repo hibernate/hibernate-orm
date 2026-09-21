@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.boot.models.xml;
 
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.MappingException;
 
 import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
@@ -46,7 +47,7 @@ public class PropertyRefUniqueIndexTest {
 		assertThat( association.isReferenceToPrimaryKey() ).isFalse();
 		assertThat( association.getColumnSpan() ).isEqualTo( span );
 		if ( dialect == SpannerDialect.class ) {
-			var table = metadata.getEntityBinding( Target.class.getName() ).getTable();
+			var table = (PhysicalTable) metadata.getEntityBinding( Target.class.getName() ).getTable();
 			assertThat( table.getIndexes().values() ).anySatisfy( index -> {
 				assertThat( index.isUnique() ).isTrue();
 				assertThat( index.getColumnSpan() ).isEqualTo( span );

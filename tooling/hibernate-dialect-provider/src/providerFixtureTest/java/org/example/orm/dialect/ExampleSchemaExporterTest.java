@@ -1,5 +1,6 @@
 package org.example.orm.dialect;
 
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -7,6 +8,8 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -23,7 +26,7 @@ public class ExampleSchemaExporterTest {
 				"fixture",
 				null,
 				null,
-				Identifier.toIdentifier( "orders" ),
+				new PhysicalName.Factory( (text, quoted) -> text ).create( "orders", false ),
 				5,
 				10
 		);
@@ -36,6 +39,11 @@ public class ExampleSchemaExporterTest {
 	}
 
 	private record FixtureContext(Dialect dialect) implements SqlStringGenerationContext {
+		@Override
+		public PhysicalName.Factory getPhysicalNameFactory() {
+			return new PhysicalName.Factory( (text, quoted) -> text );
+		}
+
 		@Override
 		public Dialect getDialect() {
 			return dialect;
@@ -75,6 +83,12 @@ public class ExampleSchemaExporterTest {
 		public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
 			return qualifiedName.render();
 		}
+
+		@Override
+		public String format(QualifiedPhysicalName name) { return name.render(); }
+
+		@Override
+		public String formatWithoutCatalog(QualifiedPhysicalName name) { return name.render(); }
 
 		@Override
 		public boolean isMigration() {

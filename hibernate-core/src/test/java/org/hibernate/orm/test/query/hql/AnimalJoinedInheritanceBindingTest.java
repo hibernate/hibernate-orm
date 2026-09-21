@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.testing.util.MappingTableHelper;
+
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -23,6 +25,10 @@ import static org.hamcrest.Matchers.notNullValue;
  */
 @DomainModel( standardModels = StandardDomainModel.ANIMAL )
 public class AnimalJoinedInheritanceBindingTest {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 	@Test
 	public void humanEmbeddedNameUsesHumanJoinedTable(DomainModelScope scope) {
 		final PersistentClass humanBinding = scope.getDomainModel().getEntityBinding( Human.class.getName() );
@@ -36,7 +42,7 @@ public class AnimalJoinedInheritanceBindingTest {
 		assertThat( nameProperty.getValue(), instanceOf( Component.class ) );
 
 		final Component nameComponent = (Component) nameProperty.getValue();
-		assertThat( nameComponent.getTable().getName(), is( humanBinding.getTable().getName() ) );
+		assertThat( nameComponent.getColumnContainer().requireTable().getName(), is( humanBinding.getTable().getName() ) );
 		assertThat(
 				nameComponent.getColumns()
 						.stream()
@@ -52,7 +58,7 @@ public class AnimalJoinedInheritanceBindingTest {
 						.toList(),
 				containsInAnyOrder( "mammal_id_fk", "birthdate", "pregnant", "mammal_fk", "name" )
 		);
-		final Column mapKeyColumn = mammalBinding.getTable().getColumn( new Column( "name" ) );
+		final Column mapKeyColumn = mammalBinding.getTable().getColumn( MappingTableHelper.columnName( "name", COLUMN_NAMES )  );
 		assertThat( mapKeyColumn, notNullValue() );
 		assertThat( mapKeyColumn.isNullable(), is( true ) );
 	}

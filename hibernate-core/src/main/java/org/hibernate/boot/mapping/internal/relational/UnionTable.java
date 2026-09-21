@@ -1,6 +1,6 @@
 package org.hibernate.boot.mapping.internal.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.mapping.DenormalizedTable;
 
 /// Table reference for a union-subclass denormalized table.
@@ -13,7 +13,7 @@ import org.hibernate.mapping.DenormalizedTable;
 /// @since 9.0
 /// @author Steve Ebersole
 public record UnionTable(
-		Identifier logicalName,
+		LogicalName logicalName,
 		TableReference base,
 		DenormalizedTable binding,
 		boolean exportable) implements TableReference {

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.onetoone.basic;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -25,8 +27,8 @@ public class OneToOneSchemaTest {
 		try {
 			Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, Parent.class, Child.class );
 
-			Table childTable = metadata.getDatabase().getDefaultNamespace().locateTable( Identifier.toIdentifier(
-					"CHILD" ) );
+			Table childTable = metadata.getDatabase().getDefaultNamespace().locateTable( logicalName( Identifier.toIdentifier(
+					"CHILD" ) ) );
 			assertFalse( childTable.getUniqueKeys().values().iterator().hasNext(), "UniqueKey was generated when it should not" );
 		}
 		finally {

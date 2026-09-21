@@ -3,7 +3,9 @@ package org.hibernate.dialect.identifier.spi;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
+import org.hibernate.relational.naming.spi.IdentifierComparisonPolicy;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 
 import static java.util.Objects.requireNonNull;
@@ -47,6 +49,18 @@ public abstract class DelegatingIdentifierHelper implements IdentifierHelper {
 	@Nonnull
 	protected final IdentifierHelper delegate() {
 		return delegate;
+	}
+
+	@Override
+	@SPI(USE)
+	public final IdentifierComparisonPolicy getComparisonPolicy() {
+		return delegate.getComparisonPolicy();
+	}
+
+	@Override
+	@SPI(USE)
+	public final PhysicalName.Factory getPhysicalNameFactory() {
+		return delegate.getPhysicalNameFactory();
 	}
 
 	@Override

@@ -8,6 +8,8 @@ import java.util.function.BooleanSupplier;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.IdentifierComparisonPolicy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -131,8 +133,17 @@ public final class PersistenceUnitJdbcEnvironment implements JdbcEnvironment {
 		}
 
 		@Override
-		@Nullable
-		public Identifier normalizeQuoting(@Nullable Identifier identifier) {
+		public IdentifierComparisonPolicy getComparisonPolicy() {
+			return delegateIdentifierHelper().getComparisonPolicy();
+		}
+
+		@Override
+		public PhysicalName.Factory getPhysicalNameFactory() {
+			return delegateIdentifierHelper().getPhysicalNameFactory();
+		}
+
+		@Override
+		public Identifier normalizeQuoting(Identifier identifier) {
 			return withGlobalQuoting( delegateIdentifierHelper().normalizeQuoting( identifier ) );
 		}
 

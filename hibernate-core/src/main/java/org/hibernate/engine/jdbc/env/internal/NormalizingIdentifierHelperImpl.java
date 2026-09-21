@@ -1,6 +1,5 @@
 package org.hibernate.engine.jdbc.env.internal;
 
-import java.util.Locale;
 import java.util.TreeSet;
 
 import jakarta.annotation.Nonnull;
@@ -8,12 +7,12 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.IdentifierComparisonPolicy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 
-import static java.util.Objects.requireNonNull;
 
 /**
 * @author Steve Ebersole
@@ -28,9 +27,9 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	private final boolean autoQuoteKeywords;
 	private final boolean autoQuoteInitialUnderscore;
 	private final boolean autoQuoteDollar;
-	private final @Nonnull TreeSet<String> reservedWords;
-	private final @Nonnull IdentifierCaseStrategy unquotedCaseStrategy;
-	private final @Nonnull IdentifierCaseStrategy quotedCaseStrategy;
+	private final TreeSet<String> reservedWords;
+	private final IdentifierComparisonPolicy comparisonPolicy;
+	private final PhysicalName.Factory physicalNameFactory;
 
 	public NormalizingIdentifierHelperImpl(
 			@Nonnull JdbcEnvironment jdbcEnvironment,
@@ -40,10 +39,9 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			boolean autoQuoteKeywords,
 			boolean autoQuoteInitialUnderscore,
 			boolean autoQuoteDollar,
-			@Nonnull TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
-			@Nonnull IdentifierCaseStrategy unquotedCaseStrategy,
-			@Nonnull IdentifierCaseStrategy quotedCaseStrategy) {
-		this.jdbcEnvironment = requireNonNull( jdbcEnvironment, "jdbcEnvironment" );
+			TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
+			IdentifierComparisonPolicy comparisonPolicy) {
+		this.jdbcEnvironment = jdbcEnvironment;
 		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
 		this.globallyQuoteIdentifiersSkipColumnDefinitions = globallyQuoteIdentifiersSkipColumnDefinitions;
@@ -51,8 +49,18 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		this.autoQuoteInitialUnderscore = autoQuoteInitialUnderscore;
 		this.autoQuoteDollar = autoQuoteDollar;
 		this.reservedWords = reservedWords;
-		this.unquotedCaseStrategy = requireNonNull( unquotedCaseStrategy, "unquotedCaseStrategy" );
-		this.quotedCaseStrategy = requireNonNull( quotedCaseStrategy, "quotedCaseStrategy" );
+		this.comparisonPolicy = java.util.Objects.requireNonNull( comparisonPolicy, "comparisonPolicy" );
+		this.physicalNameFactory = new PhysicalName.Factory( comparisonPolicy );
+	}
+
+	@Override
+	public IdentifierComparisonPolicy getComparisonPolicy() {
+		return comparisonPolicy;
+	}
+
+	@Override
+	public PhysicalName.Factory getPhysicalNameFactory() {
+		return physicalNameFactory;
 	}
 
 	@Override
@@ -135,19 +143,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		if ( identifier instanceof DatabaseIdentifier ) {
 			return text;
 		}
-		else if ( identifier.isQuoted() ) {
-			return switch ( quotedCaseStrategy ) {
-				case UPPER -> text.toUpperCase( Locale.ROOT );
-				case LOWER -> text.toLowerCase( Locale.ROOT );
-				case MIXED -> text; // default
-			};
-		}
 		else {
-			return switch ( unquotedCaseStrategy ) {
-				case MIXED -> text;
-				case LOWER -> text.toLowerCase( Locale.ROOT );
-				case UPPER -> text.toUpperCase( Locale.ROOT ); // default
-			};
+			return comparisonPolicy.toDatabaseName( text, identifier.isQuoted() );
 		}
 	}
 

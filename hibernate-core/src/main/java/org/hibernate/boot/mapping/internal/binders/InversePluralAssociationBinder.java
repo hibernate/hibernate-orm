@@ -139,7 +139,7 @@ class InversePluralAssociationBinder {
 		applyOnDeleteAction( inverseBinding, owningToOne );
 
 		final Collection inverseCollection = inverseBinding.collection();
-		final Table collectionTable = owningToOne.getTable();
+		final Table collectionTable = owningToOne.getColumnContainer().requireTable();
 		inverseCollection.setCollectionTable( collectionTable );
 		if ( !owningToOne.isReferenceToPrimaryKey() ) {
 			inverseCollection.setReferencedPropertyName( owningToOne.getReferencedPropertyName() );
@@ -163,7 +163,7 @@ class InversePluralAssociationBinder {
 			EntityTypeBinder targetTypeBinder,
 			BasicValue owningBasicValue) {
 		final Collection inverseCollection = inverseBinding.collection();
-		final Table collectionTable = owningBasicValue.getTable();
+		final Table collectionTable = owningBasicValue.getColumnContainer().requireTable();
 		inverseCollection.setCollectionTable( collectionTable );
 		inverseCollection.setKey( createInverseKey( inverseBinding, collectionTable, owningBasicValue ) );
 		inverseCollection.setElement( createOneToManyElement( inverseBinding, targetTypeBinder ) );
@@ -178,7 +178,7 @@ class InversePluralAssociationBinder {
 			EntityTypeBinder targetTypeBinder,
 			Any owningAny) {
 		final Collection inverseCollection = inverseBinding.collection();
-		final Table collectionTable = owningAny.getTable();
+		final Table collectionTable = owningAny.getColumnContainer().requireTable();
 		inverseCollection.setCollectionTable( collectionTable );
 		inverseCollection.setKey( createInverseKey( inverseBinding, collectionTable, owningAny ) );
 		inverseCollection.setElement( createOneToManyElement( inverseBinding, targetTypeBinder ) );
@@ -735,7 +735,7 @@ class InversePluralAssociationBinder {
 	}
 
 	private Column copyColumn(Table table, Column source, boolean unique) {
-		final Column result = new Column( source.getName() );
+		final Column result = new Column( source.getPhysicalName() );
 		result.setLength( source.getLength() );
 		result.setPrecision( source.getPrecision() );
 		result.setScale( source.getScale() );

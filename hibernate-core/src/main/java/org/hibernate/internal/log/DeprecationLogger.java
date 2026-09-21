@@ -287,4 +287,11 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "--text or --quiet was used; prefer --target=none|(stdout|database|script)*"
 	)
 	void deprecatedSchemaToolTargetArguments();
+
+	@LogMessage(level = WARN)
+	@Message(id = 90000048,
+			value = "Implicit naming strategy '%s' is deprecated for removal. Use StandardImplicitNamingStrategy, "
+					+ "ImplicitNamingStrategyJpaCompliantImpl, or a custom ImplicitNamingStrategy; "
+					+ "verify mapping names before switching strategies.")
+	void deprecatedImplicitNamingStrategy(String strategyClass);
 }

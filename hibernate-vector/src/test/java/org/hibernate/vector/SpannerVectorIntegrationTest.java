@@ -9,6 +9,11 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.mapping.Index;
+import org.hibernate.mapping.NamedTable;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.dialect.schema.internal.SpannerIndexExporter;
+import org.hibernate.dialect.schema.internal.SpannerPostgreSQLIndexExporter;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -51,6 +56,8 @@ import org.hibernate.vector.internal.SpannerVectorDdlType;
 import org.hibernate.vector.internal.SpannerVectorFunctionContributor;
 import org.hibernate.vector.internal.SpannerVectorTypeContributor;
 
+import static org.hibernate.testing.util.MappingTableHelper.columnName;
+import static org.hibernate.testing.util.MappingTableHelper.table;
 import static org.hibernate.vector.VectorTestHelper.cosineDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanNorm;
@@ -396,14 +403,16 @@ public class SpannerVectorIntegrationTest {
 	@Test
 	public void testVectorIndexDdl(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final Exporter<org.hibernate.mapping.Index> indexExporter = dialect.getIndexExporter();
+		final Exporter<Index> indexExporter = dialect.getIndexExporter();
 
-		final org.hibernate.mapping.Table table = new org.hibernate.mapping.Table( "orm", "items" );
-		final org.hibernate.mapping.Column vectorCol = new org.hibernate.mapping.Column( "embedding" );
+		final var factory = scope.getSessionFactory().getJdbcServices().getJdbcEnvironment()
+				.getIdentifierHelper().getPhysicalNameFactory();
+		final var table = table( "orm", "items", factory );
+		final org.hibernate.mapping.Column vectorCol = new org.hibernate.mapping.Column( columnName( "embedding", factory ) );
 		vectorCol.setSqlTypeCode( SqlTypes.VECTOR );
 		table.addColumn( vectorCol );
 
-		final org.hibernate.mapping.Index vectorIndex = new org.hibernate.mapping.Index();
+		final Index vectorIndex = new Index();
 		vectorIndex.setName( "idx_items_embedding" );
 		vectorIndex.setTable( table );
 		vectorIndex.addColumn( vectorCol );
@@ -428,7 +437,7 @@ public class SpannerVectorIntegrationTest {
 			assertEquals( "drop vector index idx_items_embedding", dropSql[0] );
 
 			// Verify SpannerDialectTableExporter drops vector indexes with 'drop vector index if exists'
-			final Exporter<org.hibernate.mapping.Table> tableExporter = dialect.getTableExporter();
+			final Exporter<NamedTable> tableExporter = dialect.getTableExporter();
 			table.addIndex( vectorIndex );
 			final String[] tableDropSql = tableExporter.getSqlDropStrings( table, null, context );
 			boolean foundVectorDrop = false;
@@ -442,9 +451,9 @@ public class SpannerVectorIntegrationTest {
 		}
 
 		// Verify non-vector index continues to delegate to standard index exporter
-		final org.hibernate.mapping.Column standardCol = new org.hibernate.mapping.Column( "name" );
+		final org.hibernate.mapping.Column standardCol = new org.hibernate.mapping.Column( columnName( "name", factory ) );
 		standardCol.setSqlTypeCode( SqlTypes.VARCHAR );
-		final org.hibernate.mapping.Index standardIndex = new org.hibernate.mapping.Index();
+		final Index standardIndex = new Index();
 		standardIndex.setName( "idx_items_name" );
 		standardIndex.setTable( table );
 		standardIndex.addColumn( standardCol );
@@ -482,16 +491,17 @@ public class SpannerVectorIntegrationTest {
 	@Test
 	public void testSpannerPostgreSQLVectorIndexDdl() {
 		final SpannerPostgreSQLDialect pgDialect = new SpannerPostgreSQLDialect();
-		final org.hibernate.dialect.schema.internal.SpannerPostgreSQLIndexExporter pgExporter =
-				new org.hibernate.dialect.schema.internal.SpannerPostgreSQLIndexExporter( pgDialect );
+		final SpannerPostgreSQLIndexExporter pgExporter =
+				new SpannerPostgreSQLIndexExporter( pgDialect );
 
-		final org.hibernate.mapping.Table table = new org.hibernate.mapping.Table( "orm", "items" );
-		final org.hibernate.mapping.Column nullableVectorCol = new org.hibernate.mapping.Column( "embedding" );
+		final var factory = new PhysicalName.Factory( (text, quoted) -> text );
+		final var table = table( "orm", "items", factory );
+		final org.hibernate.mapping.Column nullableVectorCol = new org.hibernate.mapping.Column( columnName( "embedding", factory ) );
 		nullableVectorCol.setSqlTypeCode( SqlTypes.VECTOR );
 		nullableVectorCol.setNullable( true );
 		table.addColumn( nullableVectorCol );
 
-		final org.hibernate.mapping.Index nullableIndex = new org.hibernate.mapping.Index();
+		final Index nullableIndex = new Index();
 		nullableIndex.setName( "idx_items_nullable" );
 		nullableIndex.setTable( table );
 		nullableIndex.addColumn( nullableVectorCol );
@@ -500,12 +510,12 @@ public class SpannerVectorIntegrationTest {
 		assertEquals( 1, nullableSql.length );
 		assertEquals( "create index idx_items_nullable on items using scann (embedding) with (distance_type = 'COSINE') where (embedding is not null)", nullableSql[0] );
 
-		final org.hibernate.mapping.Column nonNullableVectorCol = new org.hibernate.mapping.Column( "vec_nonnull" );
+		final org.hibernate.mapping.Column nonNullableVectorCol = new org.hibernate.mapping.Column( columnName( "vec_nonnull", factory ) );
 		nonNullableVectorCol.setSqlTypeCode( SqlTypes.VECTOR );
 		nonNullableVectorCol.setNullable( false );
 		table.addColumn( nonNullableVectorCol );
 
-		final org.hibernate.mapping.Index nonNullableIndex = new org.hibernate.mapping.Index();
+		final Index nonNullableIndex = new Index();
 		nonNullableIndex.setName( "idx_items_nonnull" );
 		nonNullableIndex.setTable( table );
 		nonNullableIndex.addColumn( nonNullableVectorCol );
@@ -514,16 +524,16 @@ public class SpannerVectorIntegrationTest {
 		assertEquals( 1, nonNullSql.length );
 		assertEquals( "create index idx_items_nonnull on items using scann (vec_nonnull) with (distance_type = 'COSINE')", nonNullSql[0] );
 
-		final org.hibernate.mapping.Index orphanIndex = new org.hibernate.mapping.Index();
+		final Index orphanIndex = new Index();
 		orphanIndex.setName( "idx_orphan" );
 		orphanIndex.addColumn( nullableVectorCol );
 		assertThrows( IllegalArgumentException.class, () -> pgExporter.getSqlCreateStrings( orphanIndex, null, null ) );
 
-		final org.hibernate.dialect.schema.internal.SpannerIndexExporter gsqlExporter =
-				new org.hibernate.dialect.schema.internal.SpannerIndexExporter( new SpannerDialect() );
+		final SpannerIndexExporter gsqlExporter =
+				new SpannerIndexExporter( new SpannerDialect() );
 		assertThrows( IllegalArgumentException.class, () -> gsqlExporter.getSqlCreateStrings( orphanIndex, null, null ) );
 
-		final org.hibernate.mapping.Index usingVectorIndex = new org.hibernate.mapping.Index();
+		final Index usingVectorIndex = new Index();
 		usingVectorIndex.setName( "idx_using_vec" );
 		usingVectorIndex.setUsing( "vector" );
 		assertTrue( gsqlExporter.isVectorIndex( usingVectorIndex, null ) );

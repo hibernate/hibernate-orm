@@ -6,6 +6,7 @@ import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import java.sql.Types;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -62,7 +63,7 @@ public class NativeEnumColumnLengthTest {
 
 		final Column column = metadata.getEntityBinding( Widget.class.getName() )
 				.getTable()
-				.getColumn( Identifier.toIdentifier( "status" ) );
+				.getColumn( ColumnNameHelper.physicalName( "status", metadata.getDatabase() ) );
 		assertThat( column.getSqlType( metadata ) ).startsWith( "enum" );
 
 		// what MySQL Connector/J reports for 'enum ('ARCHIVED','DRAFT','PUBLISHED')'

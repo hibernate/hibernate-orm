@@ -138,7 +138,8 @@ public class TestCase {
 				new DefaultStrategy(),
 				dialect,
 				serviceRegistry );
-		RevengMetadataCollector dc = new RevengMetadataCollector();
+		RevengMetadataCollector dc = new RevengMetadataCollector( serviceRegistry.requireService( org.hibernate.engine.jdbc.env.spi.JdbcEnvironment.class )
+				.getIdentifierHelper().getPhysicalNameFactory() );
 		reader.readDatabaseSchema(dc);
 		validate( dc );
 		mock.setFailOnDelegateAccess(true);
@@ -147,7 +148,8 @@ public class TestCase {
 				new DefaultStrategy(),
 				dialect,
 				serviceRegistry );
-		dc = new RevengMetadataCollector();
+		dc = new RevengMetadataCollector( serviceRegistry.requireService( org.hibernate.engine.jdbc.env.spi.JdbcEnvironment.class )
+				.getIdentifierHelper().getPhysicalNameFactory() );
 		reader.readDatabaseSchema(dc);
 		validate(dc);
 	}

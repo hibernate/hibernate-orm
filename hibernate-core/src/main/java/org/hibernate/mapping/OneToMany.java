@@ -103,7 +103,7 @@ public class OneToMany implements Value, AppliedMappingPart {
 	 * Table of the owner entity (the "one" side)
 	 */
 	@Override
-	public Table getTable() {
+	public Table getColumnContainer() {
 		return referencingTable;
 	}
 

@@ -113,6 +113,7 @@ public class ElementCollectionCustomSqlMutationsTest {
 	@Table( name = "t_project" )
 	public static class Project {
 		@Id
+		@jakarta.persistence.Column(name = "name")
 		private String name;
 
 		@ElementCollection
@@ -144,6 +145,7 @@ public class ElementCollectionCustomSqlMutationsTest {
 
 	@Embeddable
 	public static class User {
+		@jakarta.persistence.Column(name = "name")
 		private String name;
 
 		public User() {

@@ -1,5 +1,9 @@
 package org.hibernate.id.enhanced;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
@@ -192,7 +196,7 @@ public class SequenceStyleGenerator
 		final var dialect = jdbcEnvironment.getDialect();
 
 		identifierType = creationContext.getType();
-		table = creationContext.getValue().getTable();
+		table = creationContext.getValue().getColumnContainer().requireTable();
 
 		final var sequenceName = normalizeQualifiedName(
 				determineSequenceName( parameters, jdbcEnvironment, serviceRegistry ),
@@ -285,8 +289,7 @@ public class SequenceStyleGenerator
 		final var database = creationContext.getDatabase();
 		final Identifier databaseSequenceIdentifier =
 				database != null
-						? database.getPhysicalNamingStrategy()
-								.toPhysicalSequenceName( sequenceName.getObjectName(), jdbcEnvironment )
+						? PhysicalNamingStrategyHelper.toPhysicalSequenceName( database.getPhysicalNamingStrategy(), sequenceName.getObjectName(), jdbcEnvironment )
 						: sequenceName.getObjectName();
 		final String databaseSequenceName = databaseSequenceIdentifier.getText();
 		final Number databaseIncrementValue =
@@ -335,7 +338,9 @@ public class SequenceStyleGenerator
 	@Override
 	public void registerExportables(Database database) {
 		databaseStructure.registerExportables( database );
-		databaseStructure.registerExtraExportables( table, optimizer );
+		if ( table instanceof PhysicalTable physicalTable ) {
+			databaseStructure.registerExtraExportables( physicalTable, optimizer );
+		}
 	}
 
 	@Override
@@ -358,8 +363,8 @@ public class SequenceStyleGenerator
 			JdbcEnvironment jdbcEnv,
 			ServiceRegistry serviceRegistry) {
 		final var identifierHelper = jdbcEnv.getIdentifierHelper();
-		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, params ) );
-		final Identifier schema =  identifierHelper.toIdentifier( getString( SCHEMA, params ) );
+		final Identifier catalog = Identifier.toIdentifier( getString( CATALOG, params ), false, false, true );
+		final Identifier schema =  Identifier.toIdentifier( getString( SCHEMA, params ), false, false, true );
 		final String sequenceName = getString( SEQUENCE_PARAM, params, () -> getString( ALT_SEQUENCE_PARAM, params ) );
 		return sequenceName( params, serviceRegistry, sequenceName, catalog, schema, identifierHelper );
 	}
@@ -375,7 +380,7 @@ public class SequenceStyleGenerator
 			return explicitSequenceName.contains( "." )
 					? QualifiedNameParser.INSTANCE.parse( explicitSequenceName )
 					: new QualifiedNameParser.NameParts( catalog, schema,
-							identifierHelper.toIdentifier( explicitSequenceName, false, true ) );
+							Identifier.toIdentifier( explicitSequenceName, false, false, true ) );
 		}
 		else {
 			// otherwise, determine an implicit name to use

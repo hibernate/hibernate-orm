@@ -61,7 +61,7 @@ public abstract sealed class Collection
 
 	private KeyValue key;
 	private Value element;
-	private Table collectionTable;
+	private ColumnContainer collectionTable;
 	private String role;
 	private boolean lazy;
 	private boolean extraLazy;
@@ -265,11 +265,15 @@ public abstract sealed class Collection
 		return false;
 	}
 
-	public Table getCollectionTable() {
+	public ColumnContainer getCollectionColumnContainer() {
 		return collectionTable;
 	}
 
-	public void setCollectionTable(Table table) {
+	public Table getCollectionTable() {
+		return collectionTable == null ? null : collectionTable.requireTable();
+	}
+
+	public void setCollectionTable(ColumnContainer table) {
 		this.collectionTable = table;
 	}
 
@@ -602,7 +606,7 @@ public abstract sealed class Collection
 	}
 
 	@Override
-	public Table getTable() {
+	public Table getColumnContainer() {
 		return owner.getTable();
 	}
 
@@ -682,7 +686,7 @@ public abstract sealed class Collection
 		if ( isAuxiliaryColumnInPrimaryKey() ) {
 			final var startingColumn = getAuxiliaryColumn( auxiliaryColumnInPrimaryKey );
 			if ( startingColumn != null ) {
-				final var primaryKey = collectionTable.getPrimaryKey();
+				final var primaryKey = collectionTable.requireTable().getPrimaryKey();
 				if ( primaryKey != null ) {
 					if ( !primaryKey.containsColumn( startingColumn ) ) {
 						primaryKey.addColumn( startingColumn );
@@ -690,8 +694,8 @@ public abstract sealed class Collection
 				}
 				// TODO: we should probably only do this for the UK created in
 				//       Set.createPrimaryKey() and not one the user defined
-				else if ( !collectionTable.getUniqueKeys().isEmpty() ) {
-					for ( var uniqueKey : collectionTable.getUniqueKeys().values() ) {
+				else if ( !collectionTable.requireTable().getUniqueKeys().isEmpty() ) {
+					for ( var uniqueKey : collectionTable.requireTable().getUniqueKeys().values() ) {
 						if ( !uniqueKey.containsColumn( startingColumn ) ) {
 							uniqueKey.addColumn( startingColumn );
 						}
@@ -1037,7 +1041,7 @@ public abstract sealed class Collection
 
 	@Override
 	public Table getMainTable() {
-		return collectionTable;
+		return getCollectionTable();
 	}
 
 	@Override

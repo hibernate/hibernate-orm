@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.id.enhanced;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.util.function.Consumer;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -122,7 +124,7 @@ public class SequenceNamingStrategyTest {
 	private void verify(Class<?> entityType, String strategy, String expectedName) {
 		withMetadata( entityType, strategy, (metadata) -> {
 			final Namespace defaultNamespace = metadata.getDatabase().getDefaultNamespace();
-			final Sequence sequence = defaultNamespace.locateSequence( Identifier.toIdentifier( expectedName ) );
+			final Sequence sequence = defaultNamespace.locateSequence( logicalName( Identifier.toIdentifier( expectedName ) ) );
 			assertThat( sequence ).isNotNull();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( entityType.getName() );

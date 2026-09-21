@@ -1,5 +1,7 @@
 package org.hibernate.tool.reveng.internal.core.strategy;
 
+import org.hibernate.tool.reveng.test.utils.PhysicalNameHelper;
+
 import org.hibernate.mapping.Column;
 import org.hibernate.tool.reveng.api.core.RevengSettings;
 import org.hibernate.tool.reveng.api.core.RevengStrategy;
@@ -18,6 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  */
 public class DefaultStrategyTest {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 
 	RevengStrategy rns = new DefaultStrategy();
 
@@ -121,11 +127,11 @@ public class DefaultStrategyTest {
 
 		fkName = "billing";
 		fromColumns.clear();
-		fromColumns.add(new Column("bill_adr") );
+		fromColumns.add(new Column( PhysicalNameHelper.columnName( "bill_adr", COLUMN_NAMES ) ) );
 		assertEquals("addressByBillAdr", rns.foreignKeyToEntityName(fkName, fromTable, fromColumns, toTable, toColumns, false) );
 		assertEquals("companiesForBillAdr", rns.foreignKeyToCollectionName(fkName, fromTable, fromColumns, toTable, toColumns, false) );
 
-		fromColumns.add(new Column("bill_adrtype") );
+		fromColumns.add(new Column( PhysicalNameHelper.columnName( "bill_adrtype", COLUMN_NAMES ) ) );
 		assertEquals("addressByBilling", rns.foreignKeyToEntityName(fkName, fromTable, fromColumns, toTable, toColumns, false) );
 		assertEquals("companiesForBilling", rns.foreignKeyToCollectionName(fkName, fromTable, fromColumns, toTable, toColumns, false) );
 	}

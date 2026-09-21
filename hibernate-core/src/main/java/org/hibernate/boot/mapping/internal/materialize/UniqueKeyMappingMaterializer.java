@@ -1,5 +1,9 @@
 package org.hibernate.boot.mapping.internal.materialize;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
+import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
+
 import java.util.List;
 import java.util.ArrayList;
 import org.hibernate.dialect.unique.spi.UniqueKeyRepresentation;
@@ -7,6 +11,7 @@ import org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.internal.ConstraintNamingHelper;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
@@ -14,6 +19,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.mapping.UniqueKey;
 
 /// Explicit materializer bridge for physical unique-key constraints.
@@ -27,7 +33,7 @@ public final class UniqueKeyMappingMaterializer {
 	public static UniqueKey materializeUniqueKey(ResolvedUniqueKey uniqueKey) {
 		if ( uniqueKey.metadataBuildingContext().getServiceComponents().getJdbcServices().getDialect().getUniqueDelegate()
 				.representation( new UniqueKeyRepresentationRequest( false, false, false ) ) == UniqueKeyRepresentation.INDEX ) {
-			IndexMappingMaterializer.materializeIndex( ResolvedIndex.explicit( uniqueKey.table(),
+			IndexMappingMaterializer.materializeIndex( ResolvedIndex.explicit( (PhysicalTable) uniqueKey.table(),
 					new ArrayList<>( uniqueKey.columns() ), uniqueKey.columns().stream().map( Column::getName ).toList(),
 					uniqueKey.metadataBuildingContext(), keyName( uniqueKey ), true, null, null, uniqueKey.options(),
 					uniqueKey.columnOrderings(), uniqueKey.sourceRole() ) );
@@ -93,7 +99,7 @@ public final class UniqueKeyMappingMaterializer {
 			List<Column> keyColumns,
 			String userProvidedName,
 			MetadataBuildingContext context) {
-		return context.getBuildingPlan().getImplicitNamingStrategy()
+		return ConstraintNamingHelper.resolve( userProvidedName, () -> context.getBuildingPlan().getImplicitNamingStrategy()
 				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
 					@Override
 					public Identifier getTableName() {
@@ -103,7 +109,7 @@ public final class UniqueKeyMappingMaterializer {
 					@Override
 					public List<Identifier> getColumnNames() {
 						return keyColumns.stream()
-								.map( column -> column.getNameIdentifier( context ) )
+								.map( column -> ColumnNameHelper.identifier( column ) )
 								.toList();
 					}
 
@@ -118,8 +124,7 @@ public final class UniqueKeyMappingMaterializer {
 					public ImplicitNamingContext getNamingContext() {
 						return ImplicitNamingContextImpl.from( context );
 					}
-				} )
-				.render( context.getMetadataCollector().getDatabase().getDialect() );
+				} ), ConstraintNamingHelper.Kind.UNIQUE_KEY, context );
 	}
 
 	private static Identifier logicalTableName(Table table, MetadataBuildingContext context) {
@@ -129,7 +134,7 @@ public final class UniqueKeyMappingMaterializer {
 					.toIdentifier( context.getMetadataCollector().getLogicalTableName( table ) );
 		}
 		catch (MappingException ignored) {
-			return table.getNameIdentifier();
+			return ImplicitNamingSourceHelper.tableName( table );
 		}
 	}
 }

@@ -77,6 +77,10 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, AppliedMa
 	}
 
 	@Override
+	public Table getColumnContainer() {
+		return getTable();
+	}
+
 	public Table getTable() {
 		return table;
 	}

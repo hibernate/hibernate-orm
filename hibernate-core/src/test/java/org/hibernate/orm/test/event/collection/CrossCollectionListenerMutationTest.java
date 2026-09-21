@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.event.collection;
 
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,12 +13,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.FlushSettings;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
@@ -119,8 +121,8 @@ public class CrossCollectionListenerMutationTest {
 		}
 
 		@Override
-		public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return Identifier.toIdentifier( prefix + logicalName.getText(), logicalName.isQuoted() );
+		public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+			return jdbcEnvironment.getPhysicalNameFactory().create( prefix + logicalName.getText(), logicalName.isQuoted() );
 		}
 	}
 

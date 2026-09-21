@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.inheritance;
 
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 
@@ -56,7 +57,7 @@ public class TablePerClassAbstractTableAnnotationTest {
 	@Test
 	void indexOnConcreteSubclass(ServiceRegistryScope registryScope) {
 		final Metadata metadata = MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addManagedClasses( Root.class, Child.class ) );
-		final var table = metadata.getEntityBinding( Child.class.getName() ).getTable();
+		final var table = (PhysicalTable) metadata.getEntityBinding( Child.class.getName() ).getTable();
 		assertThat( table.getName() ).isEqualTo( "child_t" );
 		assertThat( table.getIndexes() ).containsKey( "idx_child_name" );
 		assertThat( table.getIndexes().get( "idx_child_name" ).getSelectables() )

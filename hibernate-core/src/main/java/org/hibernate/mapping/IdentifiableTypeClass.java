@@ -36,7 +36,7 @@ public interface IdentifiableTypeClass extends TableContainer {
 
 	Component getIdentifierMapper();
 
-	Table getImplicitTable();
+	ColumnContainer getImplicitTable();
 
 	boolean isVersioned();
 	Property getVersion();

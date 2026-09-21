@@ -3,7 +3,8 @@ package org.hibernate.dialect.schema.internal;
 import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedNameImpl;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
@@ -88,8 +89,8 @@ public class SpannerPostgreSQLIndexExporter implements Exporter<Index> {
 
 	private String buildVectorIndexDdl(Index index, Metadata metadata, SqlStringGenerationContext context) {
 		final String tableName;
-		if ( context != null && index.getTable() != null && index.getTable().getQualifiedTableName() != null ) {
-			tableName = context.format( index.getTable().getQualifiedTableName() );
+		if ( context != null && index.getTable() != null && index.getTable().getPhysicalName() != null ) {
+			tableName = context.format( index.getTable().getPhysicalName() );
 		}
 		else if ( index.getTable() != null && index.getTable().getName() != null ) {
 			tableName = dialect.quote( index.getTable().getName() );
@@ -161,14 +162,13 @@ public class SpannerPostgreSQLIndexExporter implements Exporter<Index> {
 
 	private String getIndexName(Index index, SqlStringGenerationContext context, Metadata metadata) {
 		if ( dialect.getIndexDdlSupport().nameQualification() == IndexNameQualification.QUALIFIED ) {
-			final var qualifiedTableName = index.getTable().getQualifiedTableName();
+			final var qualifiedTableName = index.getTable().getPhysicalName();
 			if ( metadata != null && metadata.getDatabase() != null && metadata.getDatabase().getJdbcEnvironment() != null ) {
 				return context.format(
-						new QualifiedNameImpl(
+						new QualifiedPhysicalName(
 								qualifiedTableName.getCatalogName(),
 								qualifiedTableName.getSchemaName(),
-								metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper()
-										.toIdentifier( index.getQuotedName( dialect ) )
+								ColumnNameHelper.physicalName( index.getQuotedName( dialect ), metadata.getDatabase() )
 						)
 				);
 			}

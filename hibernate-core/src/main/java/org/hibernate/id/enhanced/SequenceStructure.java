@@ -1,5 +1,9 @@
 package org.hibernate.id.enhanced;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.io.Serializable;
 import java.sql.SQLException;
 
@@ -13,7 +17,8 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.Table;
+import org.hibernate.relational.naming.internal.QualifiedPhysicalNameSnapshot;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.extractLong;
@@ -36,7 +41,8 @@ public class SequenceStructure implements DatabaseStructure, Serializable {
 	private @Nullable String sql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
-	protected @Nullable QualifiedName physicalSequenceName;
+	protected transient QualifiedPhysicalName physicalSequenceName;
+	private QualifiedPhysicalNameSnapshot physicalNameSnapshot;
 
 	public SequenceStructure(
 			@Nonnull String contributor,
@@ -68,9 +74,19 @@ public class SequenceStructure implements DatabaseStructure, Serializable {
 		}
 
 	@Override
-	public @Nonnull QualifiedName getPhysicalName() {
-		if ( physicalSequenceName == null ) {
+	public QualifiedPhysicalName getPhysicalName() {
+		if ( physicalSequenceName == null && physicalNameSnapshot == null ) {
 			throw new IllegalStateException( "The physical sequence name is unavailable before registerExportables()" );
+		}
+		if ( physicalSequenceName == null && physicalNameSnapshot != null ) {
+			throw new IllegalStateException( "Generator structure has not been initialized after restoration" );
+		}
+		return physicalSequenceName;
+	}
+
+	private QualifiedPhysicalName physicalName(SqlStringGenerationContext context) {
+		if ( physicalSequenceName == null && physicalNameSnapshot != null ) {
+			physicalSequenceName = physicalNameSnapshot.restore( context.getPhysicalNameFactory() );
 		}
 		return physicalSequenceName;
 	}
@@ -164,15 +180,15 @@ public class SequenceStructure implements DatabaseStructure, Serializable {
 	@Override
 	public void initialize(@Nonnull SqlStringGenerationContext context) {
 		sql = context.getDialect().getSequenceSupport()
-				.getSequenceNextValString( context.format( physicalSequenceName ) );
+				.getSequenceNextValString( context.format( physicalName( context ) ) );
 	}
 
 	@Override
-	public void registerExtraExportables(Table table, Optimizer optimizer) {
+	public void registerExtraExportables(PhysicalTable table, Optimizer optimizer) {
 		final var optimizerState = new OptimizerResetState( optimizer );
 		table.addResyncCommand( (sqlContext, isolator) -> {
-			final String sequenceName = sqlContext.format( physicalSequenceName );
-			final String tableName = sqlContext.format( table.getQualifiedTableName() );
+			final String sequenceName = sqlContext.format( physicalName( sqlContext ) );
+			final String tableName = table.getTableExpression( sqlContext );
 			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
 			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
 			final long current = getNextSequenceValue( isolator, sequenceName);
@@ -183,7 +199,7 @@ public class SequenceStructure implements DatabaseStructure, Serializable {
 		} );
 		table.addResetCommand( sqlContext -> {
 			optimizerState.reset();
-			final String sequenceName = sqlContext.format( physicalSequenceName );
+			final String sequenceName = sqlContext.format( physicalName( sqlContext ) );
 			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
 					.getRestartSequenceString( sequenceName, initialValue ) );
 		} );
@@ -205,23 +221,24 @@ public class SequenceStructure implements DatabaseStructure, Serializable {
 	protected void buildSequence(@Nonnull Database database) {
 		final var sequence =
 				locateOrCreateSequence( database.locateNamespace(
-						logicalQualifiedSequenceName.getCatalogName(),
-						logicalQualifiedSequenceName.getSchemaName()
+						logicalName( logicalQualifiedSequenceName.getCatalogName() ),
+						logicalName( logicalQualifiedSequenceName.getSchemaName() )
 				) );
 		physicalSequenceName = sequence.getName();
+		physicalNameSnapshot = QualifiedPhysicalNameSnapshot.from( physicalSequenceName );
 	}
 
 	private @Nonnull Sequence locateOrCreateSequence(@Nonnull Namespace namespace) {
 		final int sourceIncrementSize = getSourceIncrementSize();
 		final var objectName = logicalQualifiedSequenceName.getObjectName();
-		final var existingSequence = namespace.locateSequence( objectName );
+		final var existingSequence = namespace.locateSequence( logicalName( objectName ) );
 		if ( existingSequence != null ) {
 			existingSequence.validate( initialValue, sourceIncrementSize );
 			return existingSequence;
 		}
 		else {
 			return namespace.createSequence(
-					objectName,
+					logicalName( objectName ),
 					physicalName -> new Sequence(
 							contributor,
 							namespace.getPhysicalName().catalog(),

@@ -1,6 +1,5 @@
 package org.hibernate.mapping;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -14,7 +13,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  */
 public class UniqueKey extends Constraint {
 
-	private final Map<Column, String> columnOrderMap = new HashMap<>();
+	private final SelectableOrderings<Column> columnOrderMap = new SelectableOrderings<>();
 	private boolean nameExplicit; // true when the constraint name was explicitly specified by @UniqueConstraint annotation
 	private boolean explicit; // true when the constraint was explicitly specified by @UniqueConstraint annotation
 	private boolean nullsNotDistinct;
@@ -31,12 +30,16 @@ public class UniqueKey extends Constraint {
 	}
 
 	public Map<Column, String> getColumnOrderMap() {
-		return columnOrderMap;
+		return columnOrderMap.asMap();
+	}
+
+	void visitOrderingSelectables(java.util.function.Consumer<Selectable> consumer) {
+		columnOrderMap.visit( consumer );
 	}
 
 	@Override
 	public String getExportIdentifier() {
-		return qualify( getTable().getExportIdentifier(), "UK-" + getName() );
+		return qualify( getTableExportIdentifier(), "UK-" + getName() );
 	}
 
 	public boolean isNameExplicit() {

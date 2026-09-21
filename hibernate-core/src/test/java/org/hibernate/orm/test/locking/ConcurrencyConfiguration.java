@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.locking;
 
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.testing.orm.junit.SessionFactoryUtil;
 
 import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
@@ -245,7 +246,7 @@ public record ConcurrencyConfiguration(int isolation, Boolean rcsi, Boolean mari
 				registry = builder.build();
 				final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( Row.class ) );
 				if ( dialect instanceof OracleDialect && configuration.isolation == TRANSACTION_SERIALIZABLE ) {
-					metadata.getEntityBinding( Row.class.getName() ).getTable().setOptions( "segment creation immediate" );
+					((PhysicalTable) metadata.getEntityBinding( Row.class.getName() ).getTable()).setOptions( "segment creation immediate" );
 				}
 				factory = (SessionFactoryImplementor) SessionFactoryUtil.buildSessionFactory( metadata );
 				assertEquals( configuration.isolation, factory.getJdbcServices().getJdbcEnvironment()

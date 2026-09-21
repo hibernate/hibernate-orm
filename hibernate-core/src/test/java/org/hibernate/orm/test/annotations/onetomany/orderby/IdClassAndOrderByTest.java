@@ -1,7 +1,11 @@
 package org.hibernate.orm.test.annotations.onetomany.orderby;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
+import org.hibernate.boot.model.naming.spi.AssociationTableNamingInput;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
+import org.hibernate.boot.model.naming.spi.NamedTableNamingInput;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.boot.model.source.spi.AttributePath;
+
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
 import org.hibernate.cfg.AvailableSettings;
@@ -84,10 +88,10 @@ public class IdClassAndOrderByTest {
 		}
 
 		@Override
-		public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
-			String var10000 = source.getOwningPhysicalTableName();
-			String name = var10000 + "_" + source.getAssociationOwningAttributePath().getProperty();
-			return this.toIdentifier( name, source.getNamingContext() );
+		public LogicalName determineAssociationTableName(AssociationTableNamingInput source, ImplicitNamingContext context) {
+			String var10000 = ((NamedTableNamingInput) source.owningTable()).names().physicalName().getText();
+			String name = var10000 + "_" + AttributePath.parse( source.attributePath() ).getProperty();
+			return context.implicitName( name );
 		}
 	}
 }

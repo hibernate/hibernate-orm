@@ -1,12 +1,13 @@
 package org.hibernate.boot.mapping.internal.materialize;
 
+import org.hibernate.mapping.PhysicalTable;
+
 import java.util.List;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
 
 /// Resolved index materialization input.
 ///
@@ -20,7 +21,7 @@ import org.hibernate.mapping.Table;
 /// @since 9.0
 /// @author Steve Ebersole
 public record ResolvedIndex(
-		@Nonnull Table table,
+		@Nonnull PhysicalTable table,
 		@Nonnull List<Selectable> selectables,
 		@Nonnull List<String> columnNames,
 		@Nonnull MetadataBuildingContext metadataBuildingContext,
@@ -40,7 +41,7 @@ public record ResolvedIndex(
 	}
 
 	public static ResolvedIndex explicit(
-			Table table,
+			PhysicalTable table,
 			List<Selectable> selectables,
 			List<String> columnNames,
 			MetadataBuildingContext metadataBuildingContext,

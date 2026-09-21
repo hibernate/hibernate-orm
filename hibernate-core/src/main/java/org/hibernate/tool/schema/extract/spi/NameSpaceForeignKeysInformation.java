@@ -1,6 +1,8 @@
 package org.hibernate.tool.schema.extract.spi;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.mapping.NamedTable;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.mapping.Table;
@@ -26,8 +28,8 @@ public class NameSpaceForeignKeysInformation {
 				.add( foreignKeyInformation );
 	}
 
-	public @Nullable List<ForeignKeyInformation> getForeignKeysInformation(@Nonnull Table table) {
-		return foreignKeys.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
+	public @Nullable List<ForeignKeyInformation> getForeignKeysInformation(Table table) {
+		return foreignKeys.get( identifierHelper.toMetaDataObjectName( org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( ((NamedTable) table).getPhysicalName().objectName() ) ) );
 	}
 
 	public @Nullable List<ForeignKeyInformation> getForeignKeysInformation(String tableName) {

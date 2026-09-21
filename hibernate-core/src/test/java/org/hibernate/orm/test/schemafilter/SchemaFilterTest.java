@@ -4,7 +4,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.SQLServerDialect;
@@ -140,7 +139,7 @@ public class SchemaFilterTest {
 		@Override
 		public boolean includeNamespace(Namespace namespace) {
 			// exclude schema "the_schema_2"
-			Identifier identifier = namespace.getName().schema();
+			var identifier = namespace.getName().schema();
 			if ( identifier != null ) {
 				return !"the_schema_2".equals( identifier.getText() );
 			}

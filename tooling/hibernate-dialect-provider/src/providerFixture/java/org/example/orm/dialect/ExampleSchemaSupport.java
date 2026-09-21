@@ -1,5 +1,7 @@
 package org.example.orm.dialect;
 
+import org.hibernate.mapping.PhysicalTable;
+
 import java.util.List;
 
 import org.hibernate.dialect.schema.spi.AlterTableSupport;
@@ -199,7 +201,7 @@ final class ExampleSchemaSupport {
 
 		@Override
 		public List<String> getSqlTruncateStrings(
-				java.util.Collection<org.hibernate.mapping.Table> tables,
+				java.util.Collection<PhysicalTable> tables,
 				org.hibernate.boot.Metadata metadata,
 				org.hibernate.boot.model.relational.SqlStringGenerationContext context) {
 			return tables.isEmpty()

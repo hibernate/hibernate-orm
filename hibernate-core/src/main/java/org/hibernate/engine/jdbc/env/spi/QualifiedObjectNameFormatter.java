@@ -1,6 +1,8 @@
 package org.hibernate.engine.jdbc.env.spi;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -42,6 +44,7 @@ public interface QualifiedObjectNameFormatter {
 	 *
 	 * @return The formatted name
 	 */
-	@Nonnull
-	String format(@Nonnull QualifiedName qualifiedName, @Nonnull Dialect dialect);
+	String format(QualifiedName qualifiedName, Dialect dialect);
+	/** Render finalized physical components using database qualifier ordering. */
+	String format(QualifiedPhysicalName name, Dialect dialect);
 }

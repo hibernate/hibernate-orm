@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.idgen.userdefined;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.GeneratedValue;
@@ -83,8 +85,8 @@ public class ExportableValueGeneratorTest {
 			REGISTERED_INSTANCE = this;
 			Identifier testseq = Identifier.toIdentifier( sequenceName );
 			database.getDefaultNamespace()
-					.registerSequence( testseq,
-							new Sequence( "OnExecutionSequenceGenerator", null, null, testseq ) );
+					.registerSequence( logicalName( testseq ),
+							new Sequence( "OnExecutionSequenceGenerator", null, null, database.getJdbcEnvironment().getIdentifierHelper().getPhysicalNameFactory().create( testseq.getText(), testseq.isQuoted() ) ) );
 		}
 
 		@Override

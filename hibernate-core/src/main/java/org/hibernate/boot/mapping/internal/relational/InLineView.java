@@ -1,7 +1,6 @@
 package org.hibernate.boot.mapping.internal.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.mapping.Table;
+import org.hibernate.relational.naming.spi.LogicalName;
 
 /// Table reference for a from-clause subquery.
 ///
@@ -13,9 +12,9 @@ import org.hibernate.mapping.Table;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record InLineView(Identifier logicalName, Table binding) implements TableReference {
+public record InLineView(LogicalName logicalName, org.hibernate.mapping.InlineView binding) implements TableReference {
 	@Override
-	public Identifier logicalName() {
+	public LogicalName logicalName() {
 		return logicalName;
 	}
 
@@ -29,7 +28,7 @@ public record InLineView(Identifier logicalName, Table binding) implements Table
 	}
 
 	@Override
-	public Table binding() {
+	public org.hibernate.mapping.InlineView binding() {
 		return binding;
 	}
 }

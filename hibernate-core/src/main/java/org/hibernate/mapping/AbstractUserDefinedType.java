@@ -1,5 +1,7 @@
 package org.hibernate.mapping;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -20,8 +22,8 @@ public class AbstractUserDefinedType implements UserDefinedType {
 			Namespace namespace,
 			Identifier physicalTypeName) {
 		this.contributor = contributor;
-		this.catalog = namespace.getPhysicalName().catalog();
-		this.schema = namespace.getPhysicalName().schema();
+		this.catalog = physicalIdentifier( namespace.getPhysicalName().catalog() );
+		this.schema = physicalIdentifier( namespace.getPhysicalName().schema() );
 		this.name = physicalTypeName;
 	}
 

@@ -1,0 +1,17 @@
+package org.hibernate.boot.model.naming.spi;
+
+import org.hibernate.SPI;
+
+import static java.util.Objects.requireNonNull;
+
+/// Immutable facts for IdentifierColumn naming.
+/// Attribute paths are relative to the declaring entity or collection.
+///
+/// @author Steve Ebersole
+@SPI(SPI.Role.USE)
+public record IdentifierColumnNamingInput(EntityNamingInput entity, String attributePath) {
+	public IdentifierColumnNamingInput {
+		requireNonNull( attributePath, "attributePath" );
+		requireNonNull( entity, "entity" );
+	}
+}

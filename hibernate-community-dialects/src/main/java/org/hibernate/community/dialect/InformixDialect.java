@@ -1,6 +1,8 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -108,7 +110,6 @@ import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
@@ -994,7 +995,7 @@ public class InformixDialect extends Dialect implements CurrentTemporalSupport, 
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return this.informixTableExporter;
 	}
 

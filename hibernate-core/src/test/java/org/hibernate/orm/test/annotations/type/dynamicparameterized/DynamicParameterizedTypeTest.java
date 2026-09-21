@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 
+import static org.hibernate.testing.util.MappingTableHelper.table;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.mapping.BasicValue;
@@ -7,7 +8,6 @@ import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuild
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -116,7 +116,7 @@ public class DynamicParameterizedTypeTest {
 	@Test
 	void testGetReturnedJavaTypeWithoutMember(ServiceRegistryScope scope) {
 		final var context = new MetadataBuildingContextTestingImpl( scope.getRegistry() );
-		final var value = new BasicValue( context, new Table( context.getCurrentContributorName(), "entity3" ) );
+		final var value = new BasicValue( context, table( context.getCurrentContributorName(), "entity3", context.getMetadataCollector().getDatabase().getJdbcEnvironment().getIdentifierHelper().getPhysicalNameFactory() ) );
 		value.setTypeParameters( Map.of(
 				DynamicParameterizedType.IS_DYNAMIC, "true",
 				DynamicParameterizedType.RETURNED_CLASS, List.class.getName()

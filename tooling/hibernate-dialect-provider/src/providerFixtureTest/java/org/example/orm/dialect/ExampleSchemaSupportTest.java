@@ -1,5 +1,9 @@
 package org.example.orm.dialect;
 
+import org.hibernate.mapping.PhysicalTable;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import java.util.List;
 
 import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
@@ -11,7 +15,6 @@ import org.hibernate.dialect.schema.spi.TableCreationKind;
 import org.hibernate.dialect.schema.spi.TruncateMode;
 import org.hibernate.dialect.schema.spi.TruncateRequest;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Table;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.junit.jupiter.api.Test;
 
@@ -98,7 +101,7 @@ class ExampleSchemaSupportTest {
 
 	@Test
 	void suppliesCompleteCustomMigratorAndCleaner() {
-		final var table = new Table( "fixture", "orders" );
+		final var table = table( "orders" );
 		assertArrayEquals(
 				new String[] { "fixture migrate table orders" },
 				dialect.getTableMigrator().getSqlAlterStrings( table, null, null, null )
@@ -116,7 +119,7 @@ class ExampleSchemaSupportTest {
 		assertEquals(
 				List.of( "fixture cleaner empty orders then customers" ),
 				dialect.getTableCleaner().getSqlTruncateStrings(
-						List.of( table, new Table( "fixture", "customers" ) ),
+						List.of( table, table( "customers" ) ),
 						null,
 						null
 				)
@@ -131,4 +134,10 @@ class ExampleSchemaSupportTest {
 		assertThrows( IllegalArgumentException.class, () -> new IndexDdlRequest( false, List.of() ) );
 		assertThrows( NullPointerException.class, () -> new TruncateRequest( java.util.Arrays.asList( "orders", null ) ) );
 	}
+	private static PhysicalTable table(String name) {
+		final var factory = new PhysicalName.Factory( (text, quoted) -> text );
+		return new PhysicalTable( "fixture",
+				new QualifiedPhysicalName( null, null, factory.create( name, false ) ), false );
+	}
+
 }

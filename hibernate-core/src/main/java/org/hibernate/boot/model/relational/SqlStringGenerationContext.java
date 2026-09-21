@@ -1,5 +1,8 @@
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 
@@ -13,6 +16,9 @@ public interface SqlStringGenerationContext {
 	 * to generate SQL fragments that are specific to each vendor.
 	 */
 	Dialect getDialect();
+
+	/** The current system factory, for restoring finalized physical names without naming or quoting. */
+	PhysicalName.Factory getPhysicalNameFactory();
 
 	/**
 	 * Generate an Identifier instance from its simple name as obtained from mapping
@@ -89,6 +95,13 @@ public interface SqlStringGenerationContext {
 	 * @return The formatted name
 	 */
 	String format(QualifiedName qualifiedName);
+
+	/** Render an already finalized physical name, supplying missing qualifiers. */
+	String format(QualifiedPhysicalName qualifiedName);
+
+	/** Render an already finalized physical name, omitting any catalog. */
+	String formatWithoutCatalog(QualifiedPhysicalName qualifiedName);
+
 
 	/**
 	 * Render a formatted sequence name, without the catalog (even the default one).

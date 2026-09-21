@@ -161,7 +161,7 @@ public class StateManagementBindingPhase {
 			Collection collection,
 			String referencedEntityName,
 			BindingState bindingState) {
-		if ( collection.isInverse() || collection.getCollectionTable() == null ) {
+		if ( collection.isInverse() || !(collection.getCollectionColumnContainer() instanceof org.hibernate.mapping.Table) ) {
 			return;
 		}
 
@@ -251,7 +251,7 @@ public class StateManagementBindingPhase {
 			CollectionSource source,
 			Collection collection,
 			BindingState bindingState) {
-		if ( collection.isInverse() || collection.getCollectionTable() == null ) {
+		if ( collection.isInverse() || !(collection.getCollectionColumnContainer() instanceof org.hibernate.mapping.Table) ) {
 			return;
 		}
 
@@ -301,7 +301,7 @@ public class StateManagementBindingPhase {
 			CollectionSource source,
 			Collection collection,
 			BindingState bindingState) {
-		if ( collection.isInverse() || collection.getCollectionTable() == null ) {
+		if ( collection.isInverse() || !(collection.getCollectionColumnContainer() instanceof org.hibernate.mapping.Table) ) {
 			return;
 		}
 		if ( source.nature() == CollectionSource.Nature.ONE_TO_MANY

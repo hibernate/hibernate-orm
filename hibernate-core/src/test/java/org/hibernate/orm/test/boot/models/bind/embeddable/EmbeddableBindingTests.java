@@ -397,7 +397,7 @@ public class EmbeddableBindingTests {
 					assertThat( join.getKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "owner_country_id" );
-					assertThat( country.getTable() ).isSameAs( join.getTable() );
+					assertThat( country.getColumnContainer() ).isSameAs( join.getTable() );
 					assertThat( country.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "country_id" );
@@ -680,7 +680,7 @@ public class EmbeddableBindingTests {
 							.containsExactly( "line1", "zipCode" );
 					assertThat( component.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "zipCode" );
+							.containsExactly( "address_line1", "address_zipCode" );
 
 					final var contributions = context.getBindingState().getBootBindingModel()
 							.embeddableContributions();
@@ -726,7 +726,7 @@ public class EmbeddableBindingTests {
 					assertThat( component.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( component.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "zipCode" );
+							.containsExactly( "address_line1", "address_zipCode" );
 				},
 				scope.getRegistry(),
 				ImplicitEmbeddedEntity.class
@@ -837,7 +837,7 @@ public class EmbeddableBindingTests {
 							.containsExactly( "address" );
 
 					final Component component = (Component) join.getProperties().get( 0 ).getValue();
-					assertThat( component.getTable() ).isSameAs( join.getTable() );
+					assertThat( component.getColumnContainer() ).isSameAs( join.getTable() );
 					assertThat( component.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "street", "postal_code" );
@@ -864,10 +864,10 @@ public class EmbeddableBindingTests {
 							.containsExactly( "address" );
 
 					final Component component = (Component) join.getProperties().get( 0 ).getValue();
-					assertThat( component.getTable() ).isSameAs( join.getTable() );
+					assertThat( component.getColumnContainer() ).isSameAs( join.getTable() );
 					assertThat( component.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "zipCode" );
+							.containsExactly( "address_line1", "address_zipCode" );
 				},
 				scope.getRegistry(),
 				EmbeddedTableEntity.class
@@ -890,10 +890,10 @@ public class EmbeddableBindingTests {
 					assertThat( location.getComponentClassName() ).isEqualTo( Location.class.getName() );
 					assertThat( location.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "city", "country" );
+							.containsExactly( "address_location_city", "address_location_country" );
 					assertThat( address.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "city", "country", "zipCode" );
+							.containsExactly( "address_line1", "address_location_city", "address_location_country", "address_zipCode" );
 
 					final var contributions = context.getBindingState().getBootBindingModel()
 							.embeddableContributions();
@@ -945,7 +945,7 @@ public class EmbeddableBindingTests {
 							.containsExactly( "home_city", "home_country" );
 					assertThat( address.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "line1", "home_city", "home_country", "zipCode" );
+							.containsExactly( "address_line1", "home_city", "home_country", "address_zipCode" );
 				},
 				scope.getRegistry(),
 				NestedOverrideEmbeddedEntity.class
@@ -985,7 +985,7 @@ public class EmbeddableBindingTests {
 					assertThat( country.getReferencedEntityName() ).isEqualTo( Country.class.getName() );
 					assertThat( country.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "country_id" );
+							.containsExactly( "address_country_id" );
 				},
 				scope.getRegistry(),
 				Country.class,
@@ -1052,7 +1052,7 @@ public class EmbeddableBindingTests {
 					assertThat( join.getKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "owner_id" );
-					assertThat( country.getTable() ).isSameAs( join.getTable() );
+					assertThat( country.getColumnContainer() ).isSameAs( join.getTable() );
 					assertThat( country.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "country_id" );
@@ -1079,7 +1079,7 @@ public class EmbeddableBindingTests {
 					assertThat( join.getKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "owner_id" );
-					assertThat( country.getTable() ).isSameAs( join.getTable() );
+					assertThat( country.getColumnContainer() ).isSameAs( join.getTable() );
 					assertThat( country.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "country_id" );
@@ -1106,7 +1106,7 @@ public class EmbeddableBindingTests {
 					assertThat( join.getKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "owner_id" );
-					assertThat( country.getTable() ).isSameAs( join.getTable() );
+					assertThat( country.getColumnContainer() ).isSameAs( join.getTable() );
 					assertThat( country.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "country_code", "country_region" );

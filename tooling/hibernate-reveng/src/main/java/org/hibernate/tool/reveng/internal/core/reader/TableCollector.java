@@ -1,5 +1,9 @@
 package org.hibernate.tool.reveng.internal.core.reader;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
@@ -94,13 +98,13 @@ public class TableCollector {
 		if (isTypeToAdd(tableType)) { //||
 			log.debug("Adding table " + tableIdentifier + " of type " + tableType);
 			Table table = revengMetadataCollector.addTable(tableIdentifier);
-			table.setComment(comment);
+			((NamedTable) table).setComment(comment);
 			BasicColumnProcessor.processBasicColumns(
 					metaDataDialect,
 					revengStrategy,
 					properties.getProperty(AvailableSettings.DEFAULT_SCHEMA),
 					properties.getProperty(AvailableSettings.DEFAULT_CATALOG),
-					table);
+					table, revengMetadataCollector);
 			PrimaryKeyProcessor.processPrimaryKey(
 					metaDataDialect,
 					revengStrategy,
@@ -113,7 +117,7 @@ public class TableCollector {
 						metaDataDialect,
 						properties.getProperty(AvailableSettings.DEFAULT_SCHEMA),
 						properties.getProperty(AvailableSettings.DEFAULT_CATALOG),
-						table);
+						(PhysicalTable) table, revengMetadataCollector);
 			}
 			processedTables.put(table, tableType.equalsIgnoreCase("TABLE"));
 		}

@@ -93,6 +93,7 @@ public class ElementCollectionMapUpdateTest {
 
 	@Embeddable
 	public static class MarketData {
+		@jakarta.persistence.Column(name = "name")
 		private String name;
 
 		@AttributeOverride( name = "value", column = @Column( name = "price" ) )
@@ -129,6 +130,7 @@ public class ElementCollectionMapUpdateTest {
 	@Embeddable
 	public static class Amount {
 		private Double value;
+		@jakarta.persistence.Column(name = "currency")
 		private Currency currency;
 
 		protected Amount() {

@@ -53,7 +53,7 @@ class ToOneAssociationOverrideTest {
 		var event = owner.getProperty( "event" );
 		assertThat( owner.getJoins() ).singleElement().satisfies( join -> {
 			assertThat( join.getProperties() ).contains( event );
-			assertThat( join.getTable() ).isSameAs( event.getValue().getTable() );
+			assertThat( join.getTable() ).isSameAs( event.getValue().getColumnContainer().requireTable() );
 		} );
 		assertThat( event.getColumns() ).extracting( Column::getName )
 				.containsExactly( "target_id" );
@@ -77,7 +77,7 @@ class ToOneAssociationOverrideTest {
 		var owner = metadata.getEntityBinding( PropertyAccessOverride.class.getName() );
 		assertThat( owner.getJoins() ).singleElement()
 				.satisfies( join -> assertThat( join.getTable().getName() ).isEqualTo( "getter_events" ) );
-		assertThat( owner.getProperty( "event" ).getValue().getTable().getName() ).isEqualTo( "getter_events" );
+		assertThat( owner.getProperty( "event" ).getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "getter_events" );
 	}
 
 	@Entity

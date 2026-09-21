@@ -47,7 +47,6 @@ public class RootClassBinder extends AbstractBinder {
 
 	public void bind(Table table, RevengMetadataCollector revengMetadataCollector) {
 		Set<Column> processed = new HashSet<>();
-		nullifyDefaultCatalogAndSchema(table);
 		RootClass rc = createRootClass(table);
 		addToMetadataCollector(rc, table);
 		PrimaryKeyInfo pki = bindPrimaryKey(table, rc, processed, revengMetadataCollector);
@@ -98,15 +97,6 @@ public class RootClassBinder extends AbstractBinder {
 		rc.setTable(table);
 		rc.setOptimisticLockStyle(OptimisticLockStyle.NONE);
 		return rc;
-	}
-
-	private void nullifyDefaultCatalogAndSchema(Table table) {
-		if (table.getCatalog() != null && table.getCatalog().equals(getDefaultCatalog())) {
-			table.setCatalog(null);
-		}
-		if (table.getSchema() != null && table.getSchema().equals(getDefaultSchema())) {
-			table.setSchema(null);
-		}
 	}
 
 	private void bindVersionProperty(

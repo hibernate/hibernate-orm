@@ -216,7 +216,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				updatable = componentProperty.isUpdatable();
 			}
 			this.aggregateMapping = SelectableMappingImpl.from(
-					aggregateColumn.getValue().getTable()
+					aggregateColumn.getValue().getColumnContainer().requireTable()
 							.getQualifiedName( creationContext.getSqlStringGenerationContext() ),
 					aggregateColumn,
 					null,
@@ -457,7 +457,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 //				representationStrategy,
 //				(name, type) -> {},
 //				(column, jdbcEnvironment) -> getTableIdentifierExpression(
-//						column.getValue().getTable(),
+//						column.getValue().getColumnContainer().requireTable(),
 //						jdbcEnvironment
 //				),
 //				this::addAttribute,
@@ -505,7 +505,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 									: selectable.getText( dialect );
 					if ( selectable instanceof Column column ) {
 						containingTableExpression =
-								getTableIdentifierExpression( column.getValue().getTable(), creationProcess );
+								getTableIdentifierExpression( column.getValue().getColumnContainer().requireTable(), creationProcess );
 					}
 					else {
 						containingTableExpression = baseTableExpression;
@@ -827,7 +827,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return new ExplicitColumnDiscriminatorMappingImpl(
 				this,
 				name,
-				bootDescriptor.getTable()
+				bootDescriptor.getColumnContainer().requireTable()
 						.getQualifiedName( creationContext.getSqlStringGenerationContext() ),
 				discriminatorColumnExpression,
 				isFormula,

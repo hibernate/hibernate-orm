@@ -2,6 +2,10 @@ package org.hibernate.orm.test.tool.schema.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.testing.util.MappingTableHelper;
+
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
@@ -13,7 +17,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.internal.ColumnInformationImpl;
 import org.hibernate.tool.schema.extract.internal.ForeignKeyInformationImpl;
 import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
@@ -44,6 +47,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Milo van der Zee
  */
 public class CheckForExistingForeignKeyTest {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 
 	private static class SchemaMigrator extends AbstractSchemaMigrator {
 
@@ -66,7 +73,7 @@ public class CheckForExistingForeignKeyTest {
 				Dialect dialect,
 				Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs,
 				boolean tryToCreateSchemas,
-				Set<Identifier> exportedCatalogs, Namespace namespace,
+				Set<LogicalName> exportedCatalogs, Namespace namespace,
 				SqlStringGenerationContext sqlStringGenerationContext,
 				GenerationTarget[] targets) {
 			return null;
@@ -95,6 +102,16 @@ public class CheckForExistingForeignKeyTest {
 	}
 
 	private static class IdentifierHelperImpl implements IdentifierHelper {
+		@Override
+		public org.hibernate.relational.naming.spi.IdentifierComparisonPolicy getComparisonPolicy() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public PhysicalName.Factory getPhysicalNameFactory() {
+			throw new UnsupportedOperationException();
+		}
+
 
 		@Override
 		@Nullable
@@ -217,8 +234,8 @@ public class CheckForExistingForeignKeyTest {
 
 		ForeignKey foreignKey = new ForeignKey( null );
 		foreignKey.setName( "objectId2id" );
-		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
+		foreignKey.addColumn( new Column( MappingTableHelper.columnName( "id", COLUMN_NAMES ) ) );
+		foreignKey.setReferencedTable( MappingTableHelper.table( "orm", "table2", new PhysicalName.Factory( (text, quoted) -> text ) ) );
 
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
@@ -254,8 +271,8 @@ public class CheckForExistingForeignKeyTest {
 
 		ForeignKey foreignKey = new ForeignKey( null );
 		foreignKey.setName( "objectId2id_1" );
-		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
+		foreignKey.addColumn( new Column( MappingTableHelper.columnName( "id", COLUMN_NAMES ) ) );
+		foreignKey.setReferencedTable( MappingTableHelper.table( "orm", "table2", new PhysicalName.Factory( (text, quoted) -> text ) ) );
 
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
@@ -291,8 +308,8 @@ public class CheckForExistingForeignKeyTest {
 
 		ForeignKey foreignKey = new ForeignKey( null );
 		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
-		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
+		foreignKey.addColumn( new Column( MappingTableHelper.columnName( "id", COLUMN_NAMES ) ) );
+		foreignKey.setReferencedTable( MappingTableHelper.table( "orm", "table2", new PhysicalName.Factory( (text, quoted) -> text ) ) );
 
 		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
@@ -329,8 +346,8 @@ public class CheckForExistingForeignKeyTest {
 
 		ForeignKey foreignKey = new ForeignKey( null );
 		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
-		foreignKey.addColumn( new Column( "id" ) );
-		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
+		foreignKey.addColumn( new Column( MappingTableHelper.columnName( "id", COLUMN_NAMES ) ) );
+		foreignKey.setReferencedTable( MappingTableHelper.table( "orm", "table2", new PhysicalName.Factory( (text, quoted) -> text ) ) );
 
 		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
 		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );

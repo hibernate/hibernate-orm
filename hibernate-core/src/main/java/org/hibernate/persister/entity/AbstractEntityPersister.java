@@ -723,7 +723,7 @@ public abstract class AbstractEntityPersister
 			final var selectables = property.getSelectables();
 			for ( int k = 0; k < selectables.size(); k++ ) {
 				final var selectable = selectables.get(k);
-				colAliases[k] = selectable.getAlias( dialect, propertyValue.getTable() );
+				colAliases[k] = selectable.getAlias( dialect, propertyValue.getColumnContainer().requireTable() );
 				if ( selectable instanceof Formula formula ) {
 					foundFormula = true;
 					formula.setFormula( substituteBrackets( formula.getFormula() ) );
@@ -804,7 +804,7 @@ public abstract class AbstractEntityPersister
 			for ( int i = 0; i < selectables.size(); i++ ) {
 				final var selectable = selectables.get(i);
 				if ( selectable instanceof Formula ) {
-					columnAliases[i] = selectable.getAlias( dialect, prop.getValue().getTable() );
+					columnAliases[i] = selectable.getAlias( dialect, prop.getValue().getColumnContainer().requireTable() );
 //					formulaTemplates[i] = selectable.getTemplate( dialect, typeConfiguration );
 					final String formulaAlias = selectable.getAlias( dialect );
 					if ( prop.isSelectable() && !formulaAliases.contains( formulaAlias ) ) {
@@ -814,7 +814,7 @@ public abstract class AbstractEntityPersister
 				else if ( selectable instanceof Column column ) {
 					final String quotedColumnName = column.getQuotedName( dialect );
 					columnNames[i] = quotedColumnName;
-					final String columnAlias = selectable.getAlias( dialect, prop.getValue().getTable() );
+					final String columnAlias = selectable.getAlias( dialect, prop.getValue().getColumnContainer().requireTable() );
 					columnAliases[i] = columnAlias;
 					if ( prop.isSelectable() && !aliases.contains( columnAlias ) ) {
 						aliases.add( columnAlias );
@@ -1005,9 +1005,8 @@ public abstract class AbstractEntityPersister
 		return entityNameByTableNameMap;
 	}
 
-	@Nonnull
-	private static String qualifiedTableName(@Nonnull SqlStringGenerationContext context, @Nonnull AttributeContainer container) {
-		return container.getTable().getQualifiedName( context );
+	private static String qualifiedTableName(SqlStringGenerationContext context, AttributeContainer container) {
+		return container.getColumnContainer().requireTable().getQualifiedName( context );
 	}
 
 	/**
@@ -5685,7 +5684,7 @@ public abstract class AbstractEntityPersister
 	public String determineTableName(@Nonnull Table table) {
 		return table.getSubselect() != null
 				? "( " + createSqlQueryParser( table ).process() + " )"
-				: sqlStringGenerationContext.format( table.getQualifiedTableName() );
+				: table.getTableExpression( sqlStringGenerationContext );
 	}
 
 	@Nonnull
@@ -5955,7 +5954,7 @@ public abstract class AbstractEntityPersister
 						colNames[k] = column.getQuotedName( dialect );
 					}
 				}
-				final String tableName = determineTableName( property.getValue().getTable() );
+				final String tableName = determineTableName( property.getValue().getColumnContainer().requireTable() );
 				genericMappingsBuilder.put(
 						property.getName(),
 						generateNonIdAttributeMapping(

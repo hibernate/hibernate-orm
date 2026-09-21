@@ -52,7 +52,7 @@ public record ResolvedUniqueKey(
 			throw new MappingException( "Unique key constraint involves formulas" );
 		}
 		return new ResolvedUniqueKey(
-				value.getTable(),
+				value.getColumnContainer().requireTable(),
 				value.getConstraintColumns(),
 				metadataBuildingContext,
 				null,

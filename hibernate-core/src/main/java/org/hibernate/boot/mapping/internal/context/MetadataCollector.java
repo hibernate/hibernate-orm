@@ -18,6 +18,7 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
@@ -54,7 +55,8 @@ public interface MetadataCollector {
 			String subselect,
 			boolean isAbstract,
 			MetadataBuildingContext buildingContext,
-			boolean isExplicit);
+			boolean isExplicit,
+			String viewQuery);
 
 	/// Create a denormalized table mapping in the metadata product.
 	DenormalizedTable createDenormalizedTable(
@@ -62,8 +64,7 @@ public interface MetadataCollector {
 			String catalog,
 			String name,
 			boolean isAbstract,
-			String subselect,
-			Table includedTable,
+			PhysicalTable includedTable,
 			MetadataBuildingContext buildingContext);
 
 	/// Register an entity binding.

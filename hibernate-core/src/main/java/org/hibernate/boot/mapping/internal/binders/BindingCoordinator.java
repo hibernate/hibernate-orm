@@ -65,7 +65,6 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.ModelsException;
@@ -357,10 +356,11 @@ public class BindingCoordinator {
 		runAttributeValueResolutionPhase();
 		runPhase( binders, TypeBindingPhase.DiscriminatorValues.class, TypeBindingPhase.DiscriminatorValues::bindDiscriminatorValues );
 		StateManagementBindingPhase.processRootEntities( bindingState );
-		runPhase( binders, TypeBindingPhase.CollectionIndexes.class, TypeBindingPhase.CollectionIndexes::bindCollectionIndexes );
-		runPhase( binders, TypeBindingPhase.AssociationTargets.class, TypeBindingPhase.AssociationTargets::bindAssociationTargets );
 		runPhase( binders, TypeBindingPhase.DerivedIdentifiers.class, TypeBindingPhase.DerivedIdentifiers::bindDerivedIdentifiers );
 		runAssociationIdentifierPhase( binders, true );
+		bindingState.bindDeferredJoinColumns();
+		runPhase( binders, TypeBindingPhase.CollectionIndexes.class, TypeBindingPhase.CollectionIndexes::bindCollectionIndexes );
+		runPhase( binders, TypeBindingPhase.AssociationTargets.class, TypeBindingPhase.AssociationTargets::bindAssociationTargets );
 		runComponentCustomMappingPhase();
 		runAttributeCustomMappingPhase();
 		runAttributeValueResolutionPhase();
@@ -437,7 +437,7 @@ public class BindingCoordinator {
 		final MappedSuperclass mappedSuperclass = new MappedSuperclass(
 				superMappedSuperclass,
 				null,
-				new Table( "orm", type.getName() + "#mapped-superclass" )
+				new org.hibernate.mapping.MappedSuperclassColumnContainer( type.getName() + "#mapped-superclass" )
 		);
 		mappedSuperclass.setClassDetails( type );
 		if ( superMappedSuperclass != null ) {

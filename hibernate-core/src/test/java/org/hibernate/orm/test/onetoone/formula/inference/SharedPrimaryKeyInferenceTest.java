@@ -154,7 +154,7 @@ public class SharedPrimaryKeyInferenceTest {
 		var exception = assertThrows( MappingException.class, () -> withXml( model( "8.0", owner, target(), "" ), false, metadata -> {
 			var value = association( metadata, XmlOwner.class );
 			assertThat( value ).isInstanceOf( org.hibernate.mapping.ManyToOne.class );
-			assertThat( value.getTable().getName() ).isEqualTo( "owner_extra" );
+			assertThat( value.getColumnContainer().requireTable().getName() ).isEqualTo( "owner_extra" );
 			assertThat( value.getColumnInsertability() ).containsExactly( true, false );
 		} ) );
 		assertThat( exception.getMessage() ).contains( "duplicated", "id" );

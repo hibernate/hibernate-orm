@@ -1,5 +1,7 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
 import java.sql.SQLException;
 
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
@@ -104,7 +106,6 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupports;
@@ -311,7 +312,7 @@ public class DB2LegacyDialect extends Dialect implements CurrentTemporalSupport,
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return this.db2TableExporter;
 	}
 

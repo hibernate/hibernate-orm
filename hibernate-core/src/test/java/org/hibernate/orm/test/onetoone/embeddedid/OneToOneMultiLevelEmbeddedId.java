@@ -69,6 +69,7 @@ public class OneToOneMultiLevelEmbeddedId {
 	@Embeddable
 	public static class NestedId {
 
+		@jakarta.persistence.Column(name = "nid")
 		private int nid;
 
 		public NestedId() {
@@ -82,6 +83,7 @@ public class OneToOneMultiLevelEmbeddedId {
 	@Embeddable
 	public static class TopId {
 
+		@jakarta.persistence.Column(name = "tid")
 		private int tid;
 
 		@Embedded

@@ -11,7 +11,7 @@ import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurityDdl;
 import org.hibernate.dialect.rowsecurity.spi.TenantIdentifierSource;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.PhysicalTable;
 
 /**
  * Adapts declarative row-level-security DDL to the internal schema model.
@@ -25,7 +25,7 @@ public final class RowLevelSecurityDdlMaterializer {
 	public static void materialize(
 			RowLevelSecurity strategy,
 			TenantIdentifierSource tenantIdentifierSource,
-			Table table,
+			PhysicalTable table,
 			Column tenantColumn,
 			Metadata metadata,
 			Map<String, Object> configurationValues) {
@@ -58,7 +58,7 @@ public final class RowLevelSecurityDdlMaterializer {
 	private static final class MaterializedDdl extends AbstractAuxiliaryDatabaseObject {
 		private final RowLevelSecurity strategy;
 		private final TenantIdentifierSource tenantIdentifierSource;
-		private final Table table;
+		private final PhysicalTable table;
 		private final Column tenantColumn;
 		private final Metadata metadata;
 		private final String exportIdentifier;
@@ -67,7 +67,7 @@ public final class RowLevelSecurityDdlMaterializer {
 		private MaterializedDdl(
 				RowLevelSecurity strategy,
 				TenantIdentifierSource tenantIdentifierSource,
-				Table table,
+				PhysicalTable table,
 				Column tenantColumn,
 				Metadata metadata,
 				RowLevelSecurityDdl descriptor) {

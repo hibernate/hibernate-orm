@@ -342,6 +342,7 @@ abstract public class DialectChecks {
 	private static boolean supportsLobLocatorMutation(Dialect dialect) {
 		return !isDialectFamily(
 				dialect,
+				"CUBRIDDialect",
 				"CockroachDialect", "CockroachLegacyDialect",
 				"DB2Dialect", "DB2LegacyDialect",
 				"DerbyDialect", "DerbyLegacyDialect",

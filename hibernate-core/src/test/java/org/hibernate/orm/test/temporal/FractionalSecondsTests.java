@@ -34,6 +34,8 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.type.descriptor.DateTimeUtils;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -135,6 +137,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampPrecision0.class)
 	void testUsage0(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
@@ -204,6 +207,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix only supports precision from 1 to 5")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird only supports precision of 4")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNanoSecondPrecision.class)
 	void testUsage9(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;

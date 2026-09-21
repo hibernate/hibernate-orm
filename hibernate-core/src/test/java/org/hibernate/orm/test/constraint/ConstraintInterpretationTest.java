@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
@@ -20,8 +21,10 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 
@@ -33,7 +36,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Jpa(annotatedClasses = {ConstraintInterpretationTest.Enttity1.class, ConstraintInterpretationTest.Entity2.class})
 public class ConstraintInterpretationTest {
-	@Test void testNotNullPrimaryKey(EntityManagerFactoryScope scope) {
+	@Test
+	void testNotNullPrimaryKey(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			try {
 				em.createNativeQuery( "insert into table_1 (id, name, ssn) values (null, 'test', 'abc123')" ).executeUpdate();
@@ -41,8 +45,8 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.NOT_NULL, cve.getKind() );
-				// DB2 and Informix error messages don't contain the primary key constraint name
-				if ( !(scope.getDialect() instanceof DB2Dialect) && !(scope.getDialect() instanceof InformixDialect) && !(scope.getDialect() instanceof SpannerPostgreSQLDialect) ) {
+				// these error messages don't contain the primary key constraint name
+				if ( !(scope.getDialect() instanceof DB2Dialect) && !(scope.getDialect() instanceof InformixDialect) && !(scope.getDialect() instanceof SpannerPostgreSQLDialect) && !(scope.getDialect() instanceof CUBRIDDialect) ) {
 					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "id" ) );
 				}
 			}
@@ -60,7 +64,8 @@ public class ConstraintInterpretationTest {
 			}
 		} );
 	}
-	@Test void testNotNull(EntityManagerFactoryScope scope) {
+	@Test
+	void testNotNull(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			try {
 				em.createNativeQuery( "insert into table_1 (id, name, ssn) values (1, null, 'abc123')" ).executeUpdate();
@@ -68,8 +73,8 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.NOT_NULL, cve.getKind() );
-				// DB2 error message doesn't contain constraint or column name
-				if ( !(scope.getDialect() instanceof DB2Dialect) && !(scope.getDialect() instanceof SpannerPostgreSQLDialect) ) {
+				// these error messages don't contain the constraint or column name
+				if ( !(scope.getDialect() instanceof DB2Dialect) && !(scope.getDialect() instanceof SpannerPostgreSQLDialect) && !(scope.getDialect() instanceof CUBRIDDialect) ) {
 					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "name" ) );
 				}
 			}
@@ -91,7 +96,9 @@ public class ConstraintInterpretationTest {
 			}
 		} );
 	}
-	@Test void testCheck(EntityManagerFactoryScope scope) {
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsColumnCheck.class, comment = "CUBRID does not enforce CHECK constraints")
+	void testCheck(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			try {
 				em.createNativeQuery( "insert into table_1 (id, name, ssn) values (1, ' ', 'abc123')" ).executeUpdate();

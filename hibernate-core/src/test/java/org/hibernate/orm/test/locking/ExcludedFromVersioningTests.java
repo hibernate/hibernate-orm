@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.locking;
 
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityAgent;
@@ -23,6 +25,8 @@ import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.dialect.generated.spi.GeneratedValuesSupport.Capability.UPDATE_RETURNING;
@@ -108,6 +112,41 @@ public class ExcludedFromVersioningTests {
 			assertThat( reloaded.getNumber() ).isEqualTo( "+123-456-7890" );
 			assertThat( reloaded.getVersion() ).isOne();
 		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void testEntityAgentUpsertWithExcludedProperties(boolean multiple, SessionFactoryScope factoryScope) {
+		final var phone = factoryScope.fromTransaction( session -> {
+			final var created = new Phone();
+			created.setId( 1L );
+			created.setNumber( "123-456-7890" );
+			session.persist( created );
+			return created;
+		} );
+
+		for ( int i = 0; i < 3; i++ ) {
+			phone.incrementCallCount();
+			if ( i == 1 ) {
+				phone.setNumber( "+123-456-7890" );
+			}
+			final long expectedVersion = i == 0 ? 0 : 1;
+			factoryScope.getSessionFactory().runInTransaction( EntityAgent.class, agent -> {
+				if ( multiple ) {
+					agent.upsertMultiple( List.of( phone ) );
+				}
+				else {
+					agent.upsert( phone );
+				}
+				assertThat( phone.getVersion() ).isEqualTo( expectedVersion );
+			} );
+			factoryScope.inTransaction( session -> {
+				final var reloaded = session.find( Phone.class, phone.getId() );
+				assertThat( reloaded.getCallCount() ).isEqualTo( phone.getCallCount() );
+				assertThat( reloaded.getNumber() ).isEqualTo( phone.getNumber() );
+				assertThat( reloaded.getVersion() ).isEqualTo( expectedVersion );
+			} );
+		}
 	}
 
 	@Test @JiraKey("HHH-20828")

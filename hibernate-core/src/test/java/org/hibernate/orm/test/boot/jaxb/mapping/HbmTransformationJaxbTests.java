@@ -956,6 +956,30 @@ public class HbmTransformationJaxbTests {
 				.hasMessageContaining( "Unsupported cascade style: lock" );
 	}
 
+	@Test
+	@JiraKey( "HHH-20908" )
+	public void testClassProxyAttributeIsUnsupported(ServiceRegistryScope scope) {
+		// The <class proxy="..."> attribute has no equivalent in mapping.xsd,
+		// so the transformer must route it through handleUnsupported.
+		assertThatThrownBy( () ->
+				transformAndVerify( "xml/jaxb/mapping/proxy-attribute/hbm.xml", scope, transformed -> {} )
+		)
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "proxy" );
+	}
+
+	@Test
+	@JiraKey( "HHH-20908" )
+	public void testSubClassProxyAttributeIsUnsupported(ServiceRegistryScope scope) {
+		// The <subclass proxy="..."> attribute has no equivalent in mapping.xsd,
+		// so the transformer must route it through handleUnsupported.
+		assertThatThrownBy( () ->
+				transformAndVerify( "xml/jaxb/mapping/proxy-attribute/hbm2.xml", scope, transformed -> {} )
+		)
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "proxy" );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,

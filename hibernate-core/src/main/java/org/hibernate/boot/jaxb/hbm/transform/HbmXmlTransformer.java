@@ -5055,7 +5055,7 @@ public class HbmXmlTransformer {
 		return filter;
 	}
 
-	private static JaxbCascadeTypeImpl convertCascadeType(String cascadeStyleName) {
+	private JaxbCascadeTypeImpl convertCascadeType(String cascadeStyleName) {
 		final var cascadeType = new JaxbCascadeTypeImpl();
 
 		if ( isNotEmpty( cascadeStyleName ) ) {
@@ -5064,23 +5064,36 @@ public class HbmXmlTransformer {
 							.replaceAll( " ", "" );
 			final String[] split = split( ",", cascadeStyleName );
 			for ( String hbmCascade : split ) {
+				boolean matched = false;
 				if ( hbmCascade.contains( "all" ) ) {
 					cascadeType.setCascadeAll( new JaxbEmptyTypeImpl() );
+					matched = true;
 				}
 				if ( hbmCascade.contains( "persist" ) ) {
 					cascadeType.setCascadePersist( new JaxbEmptyTypeImpl() );
+					matched = true;
 				}
 				if (hbmCascade.contains( "merge" ) ) {
 					cascadeType.setCascadeMerge( new JaxbEmptyTypeImpl() );
+					matched = true;
 				}
 				if (hbmCascade.contains( "refresh" ) ) {
 					cascadeType.setCascadeRefresh( new JaxbEmptyTypeImpl() );
+					matched = true;
 				}
 				if (hbmCascade.contains( "evict" ) || hbmCascade.contains( "detach" ) ) {
 					cascadeType.setCascadeDetach( new JaxbEmptyTypeImpl() );
+					matched = true;
 				}
 				if (hbmCascade.contains( "delete" ) ) {
 					cascadeType.setCascadeRemove( new JaxbEmptyTypeImpl() );
+					matched = true;
+				}
+				if ( hbmCascade.contains( "none" ) ) {
+					matched = true;
+				}
+				if ( !matched ) {
+					handleUnsupported( "Unsupported cascade style: %s", hbmCascade );
 				}
 			}
 		}

@@ -4,6 +4,11 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+import org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnNamingInput;
+import org.hibernate.boot.model.naming.spi.EntityNamingInput;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -280,6 +285,9 @@ class EmbeddableAttributeBinder {
 				componentTable,
 				contribution,
 				attributeBinding.attributeName() + "_DTYPE",
+				ownerBinding,
+				attributeBinding.attributeName(),
+				EmbeddableDiscriminatorColumnNamingInput.Kind.EMBEDDED_ATTRIBUTE,
 				bindingState,
 				bindingOptions,
 				bindingContext
@@ -291,6 +299,9 @@ class EmbeddableAttributeBinder {
 			ColumnContainer componentTable,
 			EmbeddableContribution contribution,
 			String implicitColumnName,
+			PersistentClass ownerBinding,
+			String attributePath,
+			EmbeddableDiscriminatorColumnNamingInput.Kind namingKind,
 			BindingState bindingState,
 			BindingOptions bindingOptions,
 			BindingContext bindingContext) {
@@ -309,36 +320,34 @@ class EmbeddableAttributeBinder {
 		discriminator.setTypeName( String.class.getName() );
 		final var overrideColumnSource = discriminatorSource.overrideColumnSource();
 		final DiscriminatorColumn discriminatorColumn = discriminatorSource.discriminatorColumn();
-		if ( overrideColumnSource != null ) {
-			final org.hibernate.mapping.Column column = ColumnBinder.bindUntransformedColumn(
-					overrideColumnSource,
-					() -> implicitColumnName,
-					false,
-					true, 255, 0, 0, bindingState.getDatabase()
-		);
-			componentTable.addColumn( column );
-			discriminator.addColumn( column, true, true );
-		}
-		else if ( discriminatorColumn == null ) {
-			final org.hibernate.mapping.Column column = ColumnBinder.bindUntransformedColumn(
-					null,
-					() -> implicitColumnName,
-					false,
-					true, 255, 0, 0, bindingState.getDatabase()
-		);
+		final String defaultName = overrideColumnSource == null && discriminatorColumn != null
+				? ColumnBinder.DEFAULT_DISCRIMINATOR_COLUMN_NAME
+				: implicitColumnName;
+		final var implicitName = ImplicitNamingHelper.once(
+				() -> bindingContext.getImplicitNamingStrategy().determineEmbeddableDiscriminatorColumnName(
+						new EmbeddableDiscriminatorColumnNamingInput(
+								new EntityNamingInput( ownerBinding.getClassName(), ownerBinding.getEntityName(), ownerBinding.getJpaEntityName() ),
+								contribution.componentType().getName(), attributePath,
+								namingKind,
+								defaultName ),
+						ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ),
+				"embeddable discriminator column" );
+		if ( overrideColumnSource != null || discriminatorColumn == null ) {
+			final var logicalName = ColumnBinder.logicalColumnName( overrideColumnSource, implicitName );
+			final var physicalName = ColumnBinder.finalizeColumnName(
+					logicalName.toString(), logicalName.isExplicit(), bindingOptions, bindingState );
+			final var column = ColumnBinder.bindColumn( overrideColumnSource, physicalName,
+					false, true, 255, 0, 0 );
+			ColumnBinder.registerColumnNameBinding( componentTable, logicalName, column, bindingOptions, bindingState );
 			componentTable.addColumn( column );
 			discriminator.addColumn( column, true, true );
 		}
 		else {
 			ColumnBinder.bindDiscriminatorColumn(
-					bindingContext,
-					null,
-					discriminator,
-					discriminatorColumn,
-					bindingOptions,
-					bindingState
-			);
+					bindingContext, null, discriminator, discriminatorColumn,
+					bindingOptions, bindingState, implicitName );
 		}
+
 		bindingState.addAttributeValueResolution(
 				AttributeBindingPhase.valueResolution(
 							discriminator,

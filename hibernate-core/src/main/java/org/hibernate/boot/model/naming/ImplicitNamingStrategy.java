@@ -5,6 +5,7 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.DiscriminatorColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.TenantColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.JoinColumnNamingInput;
@@ -115,6 +116,19 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	/// @return A non-null implicit logical name
 	LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context);
+
+	/// Determine the implicit discriminator-column name for a polymorphic embeddable.
+	/// Supplied strategies preserve the input's default spelling, including terminal
+	/// attribute names and `element_DTYPE` for collection elements.
+	/// A nonempty [jakarta.persistence.DiscriminatorColumn#name()] or a column name
+	/// supplied through [jakarta.persistence.AttributeOverride#column()] for the
+	/// special `{discriminator}` role bypasses this callback. A present discriminator
+	/// annotation supplies its default `DTYPE` unless its name is explicitly empty.
+	///
+	/// @param input Owner, embeddable type, full attribute path, role, and default spelling
+	/// @param context Naming defaults and helpers
+	/// @return A non-null implicit logical column name
+	LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context);
 
 	/// Determine the implicit column name for an [org.hibernate.annotations.TenantId]
 	/// attribute when no name is supplied by [jakarta.persistence.Column#name()].

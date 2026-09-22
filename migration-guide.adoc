@@ -887,3 +887,22 @@ including explicitly named columns. A prefix strategy may therefore change `DTYP
 `p_DTYPE`; applications with existing schemas must account for this when upgrading.
 Requested quoting is preserved. Discriminator formulas and embeddable discriminator
 naming are unchanged by this migration.
+
+=== Embeddable discriminator-column naming
+
+`ImplicitNamingStrategy.determineEmbeddableDiscriminatorColumnName` now handles
+implicit polymorphic embeddable discriminator columns. Its immutable input includes
+the owning entity, embeddable type name, owner-relative path, embedded-attribute or
+collection-element role, and the existing default column spelling. Direct strategy
+implementors must implement the new method; supplied strategy subclasses inherit it.
+
+All supplied strategies retain the existing defaults: terminal attribute name plus
+`_DTYPE`, `element_DTYPE` for collection elements, and `DTYPE` for an explicitly empty
+`@DiscriminatorColumn` name. Standard does not apply its basic-column full-path rule
+to this role. Custom strategies can choose a different name using the full path.
+
+Nonempty discriminator overrides and discriminator-column annotation names bypass
+implicit naming, including annotation-default `DTYPE`. Explicit and generated names
+now undergo physical column naming and additive quoting. Applications with transforming
+physical strategies must account for these formerly untransformed columns when upgrading.
+Entity discriminator naming and source precedence are unchanged.

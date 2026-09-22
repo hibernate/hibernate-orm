@@ -75,6 +75,11 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	}
 
 	@Override
+	public LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+		return context.implicitName( input.defaultColumnName() );
+	}
+
+	@Override
 	public LogicalName determineTenantColumnName(TenantColumnNamingInput input, ImplicitNamingContext context) {
 		return context.implicitName( AttributePath.parse( input.attributePath() ).getProperty() );
 	}

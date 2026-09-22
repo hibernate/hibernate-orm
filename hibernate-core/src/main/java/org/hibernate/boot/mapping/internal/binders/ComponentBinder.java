@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnNamingInput;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -383,6 +385,9 @@ public class ComponentBinder {
 						nestedMemberTarget.table(),
 						nestedContribution,
 						attributeName + "_DTYPE",
+						ownerBinding,
+						componentMember.fullPath(),
+						EmbeddableDiscriminatorColumnNamingInput.Kind.EMBEDDED_ATTRIBUTE,
 						state,
 						options,
 						context

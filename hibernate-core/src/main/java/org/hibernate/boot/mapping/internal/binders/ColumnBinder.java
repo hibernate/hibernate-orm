@@ -264,19 +264,8 @@ public class ColumnBinder {
 			BasicValue value,
 			DiscriminatorColumn columnAnn,
 			BindingOptions bindingOptions,
-			BindingState bindingState) {
-		return bindDiscriminatorColumn( bindingContext, formulaAnn, value, columnAnn,
-				bindingOptions, bindingState, null );
-	}
-
-	static DiscriminatorType bindDiscriminatorColumn(
-			BindingContext bindingContext,
-			DiscriminatorFormula formulaAnn,
-			BasicValue value,
-			DiscriminatorColumn columnAnn,
-			BindingOptions bindingOptions,
 			BindingState bindingState,
-			Supplier<String> implicitEntityName) {
+			Supplier<String> implicitName) {
 		final ColumnSource columnSource = ColumnSource.from( columnAnn );
 		final DiscriminatorType discriminatorType;
 		if ( formulaAnn != null ) {
@@ -288,18 +277,10 @@ public class ColumnBinder {
 					: formulaAnn.discriminatorType();
 		}
 		else {
-			final Column column;
-			if ( implicitEntityName == null ) {
-				// Embeddable discriminators retain their existing naming path.
-				column = new Column( ColumnNameHelper.physicalName(
-						columnName( columnSource, () -> DEFAULT_DISCRIMINATOR_COLUMN_NAME ), bindingState.getDatabase() ) );
-			}
-			else {
-				final LogicalName logicalName = logicalColumnName( columnSource, implicitEntityName );
-				column = new Column( finalizeColumnName(
-						logicalName.toString(), logicalName.isExplicit(), bindingOptions, bindingState ) );
-				registerColumnNameBinding( value.getColumnContainer(), logicalName, column, bindingOptions, bindingState );
-			}
+			final LogicalName logicalName = logicalColumnName( columnSource, implicitName );
+			final Column column = new Column( finalizeColumnName(
+					logicalName.toString(), logicalName.isExplicit(), bindingOptions, bindingState ) );
+			registerColumnNameBinding( value.getColumnContainer(), logicalName, column, bindingOptions, bindingState );
 			value.addColumn( column, true, false );
 			discriminatorType = columnAnn == null ? DiscriminatorType.STRING : columnAnn.discriminatorType();
 

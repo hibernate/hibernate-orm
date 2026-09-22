@@ -33,7 +33,7 @@ class DefaultCascadeBindingTest {
 
 			// Default cascade
 			assertThat( entityBinding.getProperty( "ones" ).getCascadeStyle() )
-					.hasToString( "[STYLE_ALL,STYLE_DELETE_ORPHAN]" );
+					.hasToString( "STYLE_ALL_DELETE_ORPHAN" );
 
 			// Explicit cascade
 			assertThat( entityBinding.getProperty( "fooArray" ).getCascadeStyle() )

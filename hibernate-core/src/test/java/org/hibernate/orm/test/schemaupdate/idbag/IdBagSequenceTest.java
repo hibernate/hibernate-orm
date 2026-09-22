@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.schemaupdate.idbag;
 
+import java.util.Locale;
 import org.hamcrest.MatcherAssert;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -52,6 +53,10 @@ public class IdBagSequenceTest {
 				.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
 
 		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
-		MatcherAssert.assertThat( fileContent.toLowerCase().contains( "create sequence seq_child_id" ) || fileContent.toLowerCase().contains( "create sequence if not exists seq_child_id" ), is( true ) );
+		// ask the dialect how it spells the statement; not every one says "create sequence"
+		final var createSequence = metadata.getDatabase().getDialect().getSequenceSupport()
+				.getCreateSequenceString( "seq_child_id" )
+				.toUpperCase( Locale.ROOT );
+		MatcherAssert.assertThat( fileContent.toUpperCase( Locale.ROOT ).contains( createSequence ), is( true ) );
 	}
 }

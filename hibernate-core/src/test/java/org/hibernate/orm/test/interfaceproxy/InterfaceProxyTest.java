@@ -7,6 +7,7 @@ package org.hibernate.orm.test.interfaceproxy;
 import org.hibernate.Session;
 
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -38,6 +39,7 @@ public class InterfaceProxyTest {
 
 	@SkipForDialect(dialectClass = AltibaseDialect.class, majorVersion = 7, minorVersion = 1,
 					reason = "Altibase 7.1 lob column cannot be not null")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID forbids NOT NULL on a BLOB column, so schema export cannot create the table this mapping needs")
 	public void testInterfaceProxies(SessionFactoryScope scope) {
 		Document doc = new DocumentImpl();
 		SecureDocument doc2 = new SecureDocumentImpl();

@@ -4,12 +4,14 @@
  */
 package org.hibernate.orm.test.softdelete.discovery.simple;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.orm.test.softdelete.MappingVerifier;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("unused")
 public class MappingTests {
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no native boolean type; the @SoftDelete deletion indicator is numeric, not boolean")
 	void verifyEntityMappings(SessionFactoryScope scope) {
 		final MappingMetamodelImplementor metamodel = scope.getSessionFactory().getMappingMetamodel();
 

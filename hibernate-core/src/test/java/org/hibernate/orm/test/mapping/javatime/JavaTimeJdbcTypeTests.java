@@ -23,6 +23,8 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
@@ -83,6 +85,7 @@ public class JavaTimeJdbcTypeTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsInstantViaJdbc.class)
 	void testInstant(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start = adjustToDefaultPrecision( Instant.EPOCH, dialect );
@@ -114,6 +117,7 @@ public class JavaTimeJdbcTypeTests {
 
 	@Test
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner JDBC driver setObject does not accept LocalDateTime")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLocalDateTimeViaJdbc.class)
 	void testLocalDateTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final LocalDateTime start = adjustToDefaultPrecision( LocalDateTime.now(), dialect );
@@ -144,6 +148,7 @@ public class JavaTimeJdbcTypeTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLocalDateViaJdbc.class)
 	void testLocalDate(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final LocalDate startTime = adjustToDefaultPrecision( LocalDate.now(), dialect );
@@ -178,6 +183,7 @@ public class JavaTimeJdbcTypeTests {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA time type does not support fractional seconds")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase drivers truncate fractional seconds from the LocalTime")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner JDBC driver setObject does not accept LocalTime")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLocalTimeViaJdbc.class)
 	void testLocalTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final LocalTime startTime = adjustToPrecision( LocalTime.now(), 0, dialect );

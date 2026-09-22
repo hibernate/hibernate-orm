@@ -6,12 +6,14 @@ package org.hibernate.orm.test.annotations.secondarytable;
 
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -188,6 +190,7 @@ public class ParentChildWithSameSecondaryTableTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "hibernate-core names the multi-table-insert temporary table's discriminator column class and emits it unquoted, and CLASS is a CUBRID reserved word")
 	public void testInsert(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -10,6 +10,13 @@ import static java.util.Objects.requireNonNull;
 
 /// Facts for a join-table column referencing the association target.
 ///
+/// All reference components are non-null.
+///
+/// @param owner The entity declaring the association
+/// @param target The entity referenced by the association
+/// @param attributePath The association attribute path relative to the owner, including embeddable nesting
+/// @param reference The settled target table and ordered target columns, with the column for this decision selected
+///
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public record AssociationKeyNamingInput(

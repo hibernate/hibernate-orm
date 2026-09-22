@@ -11,6 +11,10 @@ import static java.util.Objects.requireNonNull;
 
 /// A named table dependency with both naming stages.
 ///
+/// All reference components are non-null.
+///
+/// @param names The non-null selected logical and finalized physical names of the same table, including their quoting
+///
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public record NamedTableNamingInput(NamingNamePair names) implements TableNamingInput {

@@ -90,7 +90,7 @@ embedded paths; explicit names bypass the callback.
 Source: `EmbeddableAttributeBinder.bindDiscriminator`
 
 Implemented through `EmbeddableDiscriminatorColumnNamingInput`, with owner, type,
-full path, role, and the existing fallback spelling. Supplied strategies preserve
+full path, role, and effective declaration origin. Supplied strategies preserve
 terminal attribute names and `element_DTYPE`; explicit and generated names now receive
 physical naming. Verification is tracked in the replacement proposal.
 
@@ -108,31 +108,31 @@ See the replacement proposal for verification and existing runtime/archive gaps.
 
 Source: `AssociationIdentifierBinder`
 
-Direct property name plus target-column spelling. The target spelling currently
-comes from `Column.getName()`. Needs settled target pairs and identifier-role context.
+Implemented through role-specific join naming with selected logical/physical target
+pairs. Identifier sharing remains reuse rather than a new naming decision.
 
 === Derived identifier columns
 
 Source: `DerivedIdentifierBinder`
 
-Direct concatenation and later renaming. Separate deciding a new implicit name
-from reuse/alias registration, and settle overrides before publishing dependencies.
+Implemented through join-column naming for derived renames, retaining selected
+declarations and prior aliases. Dependent joins wait for derived identifiers in the
+implemented paths; the cross-role readiness and cycle audit remains open.
 
 === Primary-key joins for table keys
 
 Source: `TableKeyBinder.bindKeyColumn`
 
-The default supplier copies `identifierColumn.getName()`. Secondary-table and
-joined-inheritance roles must be represented; a new column's default matching an
-existing column's spelling is still a naming decision.
+Implemented through `PrimaryKeyJoinColumnNamingInput` for secondary-table and
+joined-inheritance roles. Referenced-column dependencies carry both naming stages.
 
 === Entity map-key join columns
 
 Source: `CollectionIndexBinder.implicitMapKeyJoinColumnName`
 
-Single-column PK default is attribute plus `_KEY`; other cases add target-column
-spelling. This path deliberately bypasses ordinary join naming to retain old
-defaults. The clean-room design must specify this role directly.
+Implemented through dedicated map-key join naming. A single primary-key reference
+defaults to attribute plus `_KEY`; other cases include the referenced logical column.
+The input preserves resolved target correspondence and both naming stages.
 
 === Collection identifier column
 
@@ -141,15 +141,21 @@ Source: `CollectionIdBinder`
 `determineCollectionIdColumnName` now receives owner-relative collection facts and
 the settled destination table. Supplied strategies retain `id`; explicit names bypass
 the implicit callback. Both forms receive physical naming and logical correspondence.
-Implementation and verification are tracked in
-link:collection-id-soft-delete-naming-spec.adoc[Collection-Identifier and Soft-Delete Column Naming].
+Verification is recorded in
+link:naming-strategy-verification.adoc#_collection_identifier_and_soft_delete_naming[the verification notes].
 
 === Time-zone companion column
 
-Source: `BasicValueSourceBinder`
+Sources: `ComponentSource.timeZoneStorageColumnSource`,
+`BasicValueSourceBinder.bindTimeZoneStorage`, `TimeZoneStorageHelper`
 
-Empty `@TimeZoneColumn.name` becomes property name plus `_tz` directly.
-Supply the related attribute/column facts and identify the companion-column role.
+`determineTimeZoneColumnName` now receives the user attribute path, mapped owner,
+settled temporal logical/physical names, destination table, and original source facts.
+Supplied strategies calculate the defaults, retaining the absent/empty declaration
+distinction and original-source default derivation. Temporal source decisions are cached per use
+and generated names retain implicit provenance.
+Existing storage-support boundaries and verification are recorded in
+link:naming-strategy-verification.adoc#_time_zone_companion_naming[the verification notes].
 
 === Soft-delete column
 
@@ -159,8 +165,8 @@ Source: `SoftDeleteHelper`, `EntityTypeBinder`
 collection path, destination table, and effective soft-delete strategy. Entity and
 collection binding share name resolution, preserving explicit bypass and provenance.
 Supplied defaults remain `active` or `deleted`; physical naming applies once.
-Implementation and verification are tracked in
-link:collection-id-soft-delete-naming-spec.adoc[Collection-Identifier and Soft-Delete Column Naming].
+Verification is recorded in
+link:naming-strategy-verification.adoc#_collection_identifier_and_soft_delete_naming[the verification notes].
 
 === Primary-key constraint
 
@@ -354,23 +360,14 @@ For every role, the next specification must record:
 . Default logical output, quoting, and physical transformation for the new object.
 . Exactly-once provider participation, bypass, sharing, and restoration behavior.
 
-== Planned Sequence
+== Remaining Sequence
 
-. Work through primary-table, association-table, and ordinary join-column requests
-  together, using the Person/Passport example and nonidentity physical naming.
-  State logical-composition and physical-composition alternatives without assuming
-  either is the chosen default.
-. Extend those requests to non-PK targets, derived identifiers, composite keys,
-  selected aliases, and inline views. Establish readiness before selecting signatures.
-. Complete column-role coverage, including the binder-generated defaults above,
-  then constraint/index coverage with dependencies on the resulting columns.
-. Specify the generator storage-column extension on `ImplicitDatabaseObjectNamingStrategy`
-  separately. Complete state-management and dialect-object boundaries; record any
-  intentional exclusions with a reason and customization mechanism.
-. Consolidate the role requests into the replacement SPI working specification,
-  select default outputs and extension style, and seek explicit approval before
-  implementing the replacement.
+The table and join-column requests and the specialized column slices are implemented.
+The current sequence is in
+link:implicit-naming-strategy-proposal.adoc#_remaining_work_and_sequence[the replacement plan]:
+implicit constraints/indexes, audit/history, separate generator storage-column naming,
+and cross-role readiness and coverage audits.
 
-Keep the dependency-input specification as the common invariant throughout this
-work. Characterization of current names informs choices; it does not impose legacy
-compatibility on the new design.
+Keep the dependency-input specification as the common invariant throughout this work.
+Add characterization and callback-count checks for each remaining role. Current names
+inform choices; changes require explicit decisions and independently asserted outputs.

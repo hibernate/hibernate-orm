@@ -187,6 +187,7 @@ public class BasicValueMappingMaterializer {
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
 			boolean updatable,
+			Supplier<String> implicitColumnName,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -223,7 +224,7 @@ public class BasicValueMappingMaterializer {
 		}
 
 		final Column column = bindComponentMemberColumn(
-				ImplicitNamingHelper.once( () -> member.hasDirectAnnotationUsage( TenantId.class )
+				implicitColumnName != null ? implicitColumnName : ImplicitNamingHelper.once( () -> member.hasDirectAnnotationUsage( TenantId.class )
 						? implicitTenantColumnName( ownerBinding, componentMember.namingPath().getFullPath(), bindingState, bindingContext )
 						: bindingContext.getImplicitNamingStrategy().determineBasicColumnName(
 								new BasicColumnNamingInput( componentMember.namingPath().getFullPath() ),

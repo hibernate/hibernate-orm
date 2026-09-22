@@ -12,5 +12,8 @@ import org.hibernate.relational.naming.spi.LogicalName;
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public sealed interface TableNamingInput permits NamedTableNamingInput, InlineViewNamingInput {
+	/// The selected logical table identity, including for an inline-view dependency.
+	///
+	/// @return The non-null logical name; this does not imply a physical table exists
 	LogicalName logicalName();
 }

@@ -13,6 +13,11 @@ import static java.util.Objects.requireNonNull;
 /// The position is zero-based within the declared key-column sequence; the
 /// discriminator uses position zero. There is no single referenced target table.
 ///
+/// All reference components are non-null.
+///
+/// @param attributePath The Any-valued attribute path supplied by the declaring entity or collection binding
+/// @param columnPosition The zero-based key-column position; zero for the discriminator column
+///
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public record AnyColumnNamingInput(String attributePath, int columnPosition) {

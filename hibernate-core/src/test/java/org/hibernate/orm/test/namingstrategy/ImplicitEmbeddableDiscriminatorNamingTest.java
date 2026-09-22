@@ -81,7 +81,7 @@ class ImplicitEmbeddableDiscriminatorNamingTest {
 			assertThat( implicit.inputs ).allSatisfy( input -> {
 				assertThat( input.embeddableTypeName() ).isEqualTo( Pet.class.getName() );
 				assertThat( input.kind() ).isEqualTo( input.attributePath().equals( "pets" ) ? COLLECTION_ELEMENT : EMBEDDED_ATTRIBUTE );
-				assertThat( input.defaultColumnName() ).isEqualTo( input.kind() == COLLECTION_ELEMENT ? "element_DTYPE" : "pet_DTYPE" );
+				assertThat( input.declaration() ).isEqualTo( EmbeddableDiscriminatorColumnNamingInput.Declaration.ABSENT );
 			} );
 			assertThat( implicit.inputs ).filteredOn( input -> input.attributePath().equals( "home.pet" ) ).singleElement()
 					.satisfies( input -> assertThat( input.entity().getClassName() ).isEqualTo( NestedOwner.class.getName() ) );
@@ -104,6 +104,12 @@ class ImplicitEmbeddableDiscriminatorNamingTest {
 							EmptyPet.class, EmptyDog.class, NamedPet.class, NamedDog.class ), implicit, physical );
 			assertThat( implicit.inputs ).extracting( EmbeddableDiscriminatorColumnNamingInput::attributePath )
 					.containsExactlyInAnyOrder( "empty", "overriddenEmpty" );
+			assertThat( implicit.inputs ).filteredOn( input -> input.attributePath().equals( "empty" ) )
+					.singleElement().satisfies( input -> assertThat( input.declaration() )
+							.isEqualTo( EmbeddableDiscriminatorColumnNamingInput.Declaration.DISCRIMINATOR_COLUMN ) );
+			assertThat( implicit.inputs ).filteredOn( input -> input.attributePath().equals( "overriddenEmpty" ) )
+					.singleElement().satisfies( input -> assertThat( input.declaration() )
+							.isEqualTo( EmbeddableDiscriminatorColumnNamingInput.Declaration.OVERRIDE ) );
 			assertThat( discriminator( precedenceComponent( metadata, owner, collection, "defaulted" ) ).getName() ).isEqualTo( "p_DTYPE" );
 			assertThat( discriminator( precedenceComponent( metadata, owner, collection, "empty" ) ).getName() ).isEqualTo( "p_DTYPE" );
 			assertThat( discriminator( precedenceComponent( metadata, owner, collection, "named" ) ).getName() ).isEqualTo( "p_type_name" );

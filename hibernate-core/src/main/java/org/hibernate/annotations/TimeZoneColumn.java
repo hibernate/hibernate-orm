@@ -35,8 +35,11 @@ import static java.lang.annotation.ElementType.METHOD;
 public @interface TimeZoneColumn {
 
 	/**
-	 * (Optional) The name of the column. Defaults to
-	 * the property or field name, suffixed by <code>_tz</code>.
+	 * (Optional) The name of the column. Implicit naming is handled by
+	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy#determineTimeZoneColumnName}.
+	 * Supplied strategies preserve the existing defaults, including the distinction
+	 * between an absent annotation and an annotation with an empty name.
+	 * Explicit and implicit names both undergo physical column naming.
 	 */
 	String name() default "";
 

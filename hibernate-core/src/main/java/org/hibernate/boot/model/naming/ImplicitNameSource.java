@@ -6,16 +6,12 @@ package org.hibernate.boot.model.naming;
 
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 
-/**
- * Common contract for all implicit naming sources
- *
- * @author Steve Ebersole
- */
+/// Naming context shared by the remaining Identifier-based source contracts.
+///
+/// @author Steve Ebersole
 public interface ImplicitNameSource {
-	/**
-	 * Access to the current naming context.
-	 *
-	 * @return The naming context
-	 */
+	/// Focused defaults and identifier helpers for this naming decision.
+	///
+	/// @return The naming context
 	ImplicitNamingContext getNamingContext();
 }

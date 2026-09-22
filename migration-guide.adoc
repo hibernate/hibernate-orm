@@ -874,7 +874,7 @@ An existing identifier column serving as the tenant column is reused without ren
 `ImplicitNamingStrategy.determineDiscriminatorColumnName` now accepts
 `DiscriminatorColumnNamingInput` and `ImplicitNamingContext` and returns an implicit
 `LogicalName`. The legacy `ImplicitDiscriminatorColumnNameSource` is removed.
-The supplied strategies default to `DTYPE`, preserving the entity binder's default;
+The interface default returns `DTYPE`, preserving the entity binder's default;
 the shared discriminator default used by Any-column naming is unchanged.
 
 A present `@DiscriminatorColumn` supplies its effective name, including default
@@ -893,8 +893,9 @@ naming are unchanged by this migration.
 `ImplicitNamingStrategy.determineEmbeddableDiscriminatorColumnName` now handles
 implicit polymorphic embeddable discriminator columns. Its immutable input includes
 the owning entity, embeddable type name, owner-relative path, embedded-attribute or
-collection-element role, and the existing default column spelling. Direct strategy
-implementors must implement the new method; supplied strategy subclasses inherit it.
+collection-element role, and effective declaration origin (absent, discriminator
+column, or override). The interface default computes the existing spelling and may
+be overridden by any strategy.
 
 All supplied strategies retain the existing defaults: terminal attribute name plus
 `_DTYPE`, `element_DTYPE` for collection elements, and `DTYPE` for an explicitly empty
@@ -928,9 +929,8 @@ name a SQL type and is unaffected by this column-naming callback.
 === Collection-identifier and soft-delete column naming
 
 `ImplicitNamingStrategy` now defines `determineCollectionIdColumnName` and
-`determineSoftDeleteColumnName`, with dedicated immutable inputs. Direct implementors
-must implement these methods. Subclasses of supplied strategies inherit the existing
-logical defaults: `id` for collection identifiers, `active` for `ACTIVE` soft deletion,
+`determineSoftDeleteColumnName`, with dedicated immutable inputs. Interface default
+methods provide the existing logical defaults: `id` for collection identifiers, `active` for `ACTIVE` soft deletion,
 and `deleted` for `DELETED` and `TIMESTAMP` soft deletion.
 
 Collection-identifier columns now undergo `PhysicalNamingStrategy.toPhysicalColumnName`,
@@ -944,3 +944,30 @@ with the supplied implicit defaults and physical strategies based only on spelli
 quoting. Physical strategies inspecting provenance now receive the correct explicit or
 implicit flag. Nonempty explicit names bypass the new implicit callbacks; both roles
 retain requested quoting through physical naming.
+
+=== Time-zone companion column naming
+
+`ImplicitNamingStrategy.determineTimeZoneColumnName` now receives a
+`TimeZoneColumnNamingInput` containing the mapped owner, user attribute path, settled
+logical/physical temporal column names, the companion's destination table, companion
+declaration state, and the original source name when already available. Its interface
+default implements the existing naming rules and may be overridden by any strategy.
+
+Supplied strategies preserve existing default spellings. An absent companion declaration
+uses the original temporal source name plus `_tz`; an empty effective declaration retains
+basic naming of the synthetic `zoneOffset` member path. A temporal-only override does
+not change that original source-based default. The strategy calculates these defaults from source facts supplied separately from
+the resolved temporal dependency. Custom strategies can choose other names without
+triggering unused default calculations. No schema rename from unifying absent and empty declarations is
+intended.
+
+Generated temporal and companion names now retain implicit provenance through physical
+naming. An implicit temporal source decision is cached per use instead of being requested
+twice. An empty companion's synthetic-path default or an overridden temporal column's
+original source default can require a separate basic naming decision in the supplied
+strategy. Physical naming
+still applies to explicit and implicit columns and preserves requested quoting.
+
+This change does not expand two-column time-zone storage support or alter storage
+selection. Existing one-column embedded/collection mappings, split-table restrictions,
+and the native `AUTO` plus `@TimeZoneColumn` rejection remain separate issues.

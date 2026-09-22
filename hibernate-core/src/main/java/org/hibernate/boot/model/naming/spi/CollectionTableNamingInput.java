@@ -10,6 +10,12 @@ import static java.util.Objects.requireNonNull;
 
 /// Facts for naming a table owned by a collection or association attribute.
 ///
+/// All reference components are non-null.
+///
+/// @param owner The entity owning the collection or association
+/// @param owningTable The settled table dependency for that entity
+/// @param attributePath The collection or association path relative to the owner, including embeddable nesting
+///
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public record CollectionTableNamingInput(

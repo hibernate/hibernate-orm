@@ -4,10 +4,6 @@
  */
 package org.hibernate.boot.mapping.internal.sources;
 
-import org.hibernate.boot.model.naming.Identifier;
-
-import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,8 +15,6 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.boot.model.naming.spi.BasicColumnNamingInput;
-import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.categorize.StandardPersistentAttributeMemberResolver;
@@ -732,18 +726,25 @@ public record ComponentSource(
 		return switch ( path ) {
 			case AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME,
 					OffsetTimeCompositeUserType.LOCAL_TIME_NAME ->
-					ColumnSource.from( createTemporalColumn( sourceMember, timeZoneStorageBasePath(), buildingContext ) );
+					ColumnSource.from( createTemporalColumn( sourceMember, buildingContext ) );
 			case AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ->
 					ColumnSource.from( createTimeZoneColumn(
 							sourceMember,
-							createTemporalColumn( sourceMember, timeZoneStorageBasePath(), buildingContext ),
+							createTemporalColumn( sourceMember, buildingContext ),
 							buildingContext
 					) );
 			default -> null;
 		};
 	}
 
-	private String timeZoneStorageBasePath() {
+	/// Whether a companion annotation or override is present, even with an empty name.
+	public boolean timeZoneColumnDeclared() {
+		return sourceMember.hasDirectAnnotationUsage( TimeZoneColumn.class )
+				|| locateAttributeOverride( AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ) != null;
+	}
+
+	/// Owner-relative path of the temporal attribute, excluding synthetic members.
+	public String timeZoneStorageBasePath() {
 		if ( isNotEmpty( namingPathPrefix ) ) {
 			return namingPathPrefix.endsWith( "." )
 					? namingPathPrefix.substring( 0, namingPathPrefix.length() - 1 )
@@ -759,14 +760,8 @@ public record ComponentSource(
 		final var timeZoneColumn = member.getDirectAnnotationUsage( TimeZoneColumn.class );
 		final var created = JpaAnnotations.COLUMN.createUsage( buildingContext.getModelsContext()
 		);
-		if ( timeZoneColumn == null ) {
-			final var baseName = Identifier.toIdentifier( column.name(), false, false );
-			created.name( new org.hibernate.relational.naming.spi.LogicalName(
-					baseName.getText() + "_tz", baseName.isQuoted(), false ).toString() );
-		}
-		else {
-			created.name( timeZoneColumn.name() );
-		}
+		// A missing name stays missing until the role-specific naming decision.
+		created.name( timeZoneColumn == null ? "" : timeZoneColumn.name() );
 		created.nullable( column.nullable() );
 		if ( timeZoneColumn == null ) {
 			created.table( column.table() );
@@ -789,7 +784,6 @@ public record ComponentSource(
 
 	private static Column createTemporalColumn(
 			MemberDetails member,
-			String path,
 			MetadataBuildingContext buildingContext) {
 		final var column = member.getDirectAnnotationUsage( Column.class );
 		if ( column != null && isNotEmpty( column.name() ) ) {
@@ -811,13 +805,6 @@ public record ComponentSource(
 		}
 		else {
 			created.secondPrecision( -1 );
-		}
-
-		final String implicitName = ImplicitNamingHelper.columnName(
-				buildingContext.getBuildingPlan().getImplicitNamingStrategy().determineBasicColumnName(
-						new BasicColumnNamingInput( path ), ImplicitNamingContextImpl.forPhysicalNaming( buildingContext ) ), "basic column" );
-		if ( isNotEmpty( implicitName ) ) {
-			created.name( implicitName );
 		}
 		return created;
 	}

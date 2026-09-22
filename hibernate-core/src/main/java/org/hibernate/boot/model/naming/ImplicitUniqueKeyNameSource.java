@@ -4,9 +4,10 @@
  */
 package org.hibernate.boot.model.naming;
 
-/**
- * @author Steve Ebersole
- */
+/// Naming dependencies for a unique key. The inherited table and column identifiers
+/// describe the table and columns participating in this naming decision.
+///
+/// @author Steve Ebersole
 public non-sealed interface ImplicitUniqueKeyNameSource
 		extends ImplicitConstraintNameSource {
 	@Override

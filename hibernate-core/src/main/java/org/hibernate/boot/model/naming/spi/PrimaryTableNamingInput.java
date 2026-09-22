@@ -10,6 +10,10 @@ import static java.util.Objects.requireNonNull;
 
 /// Facts for naming an entity primary table.
 ///
+/// All reference components are non-null.
+///
+/// @param entity The mapped entity whose primary table needs an implicit name
+///
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public record PrimaryTableNamingInput(

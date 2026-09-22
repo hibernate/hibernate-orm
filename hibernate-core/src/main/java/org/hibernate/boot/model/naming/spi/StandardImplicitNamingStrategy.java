@@ -70,28 +70,8 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	}
 
 	@Override
-	public LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
-		return context.implicitName( "DTYPE" );
-	}
-
-	@Override
-	public LogicalName determineCollectionIdColumnName(CollectionIdColumnNamingInput input, ImplicitNamingContext context) {
-		return context.implicitName( "id" );
-	}
-
-	@Override
-	public LogicalName determineSoftDeleteColumnName(SoftDeleteColumnNamingInput input, ImplicitNamingContext context) {
-		return context.implicitName( input.strategy().getDefaultColumnName() );
-	}
-
-	@Override
 	public LogicalName determineAggregateColumnName(AggregateColumnNamingInput input, ImplicitNamingContext context) {
 		return context.implicitName( input.attributeName() );
-	}
-
-	@Override
-	public LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
-		return context.implicitName( input.defaultColumnName() );
 	}
 
 	@Override

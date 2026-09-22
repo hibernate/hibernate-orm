@@ -11,6 +11,11 @@ import static java.util.Objects.requireNonNull;
 /// Immutable facts for naming a tenant column. The attribute path is relative
 /// to the owning entity, including any embeddable nesting.
 ///
+/// All reference components are non-null.
+///
+/// @param entity The mapped entity receiving the tenant column
+/// @param attributePath The tenant attribute path relative to that entity, including embeddable nesting
+///
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public record TenantColumnNamingInput(EntityNamingInput entity, String attributePath) {

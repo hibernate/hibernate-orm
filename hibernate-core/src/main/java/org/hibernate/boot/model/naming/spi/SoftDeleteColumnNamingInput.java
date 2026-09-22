@@ -16,6 +16,17 @@ import static java.util.Objects.requireNonNull;
 /// relative to the mapped owning entity. For a hierarchy indicator, the owner is
 /// the root entity receiving the indicator, not its annotation declarer.
 ///
+/// All reference components are non-null.
+///
+/// @param owner The mapped entity receiving the indicator, or owning the collection; the root entity
+/// for an entity hierarchy, not a mapped superclass declaring the annotation
+/// @param kind Whether the indicator belongs to an entity or a collection
+/// @param attributePath Empty for an entity indicator; a nonempty owner-relative collection path otherwise,
+/// including embedded paths such as `details.items`. The Optional itself must not be null
+/// @param table The actual destination table for the indicator, with settled dependency names
+/// @param strategy The effective [org.hibernate.annotations.SoftDelete#strategy()], used by the default
+/// naming implementation to select `active` or `deleted`
+///
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public record SoftDeleteColumnNamingInput(
@@ -37,5 +48,10 @@ public record SoftDeleteColumnNamingInput(
 	}
 
 	/// The mapping receiving the indicator.
-	public enum Kind { ENTITY, COLLECTION }
+	public enum Kind {
+		/// Indicator for an entity or entity hierarchy; no attribute path.
+		ENTITY,
+		/// Indicator for collection rows; requires an owner-relative collection path.
+		COLLECTION
+	}
 }

@@ -12,6 +12,12 @@ import static java.util.Objects.requireNonNull;
 /// The nonempty attribute path is relative to the mapped owning entity.
 /// The table describes the actual destination, with settled dependency names.
 ///
+/// All reference components are non-null.
+///
+/// @param owner The mapped entity owning the collection, rather than a mapped superclass declaring it
+/// @param attributePath The nonempty collection path relative to the owner, for example `details.items`
+/// @param table The actual destination table of the collection identifier, with settled dependency names
+///
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public record CollectionIdColumnNamingInput(

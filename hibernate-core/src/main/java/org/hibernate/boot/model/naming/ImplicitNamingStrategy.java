@@ -5,6 +5,8 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.naming.spi.AggregateColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.DiscriminatorColumnNamingInput;
@@ -22,6 +24,7 @@ import org.hibernate.boot.model.naming.spi.IdentifierColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.ListIndexColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.MapKeyColumnNamingInput;
 
+import org.hibernate.boot.model.naming.spi.TimeZoneColumnNamingInput;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.naming.spi.CollectionIdColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.SoftDeleteColumnNamingInput;
@@ -132,7 +135,7 @@ public interface ImplicitNamingStrategy {
 	/// @return a non-null implicit logical column name
 	LogicalName determineTenantColumnName(TenantColumnNamingInput input, ImplicitNamingContext context);
 
-	/// Determine the implicit entity discriminator-column name, defaulting to `DTYPE`.
+	/// Determine the implicit entity discriminator-column name. The default implementation returns `DTYPE`.
 	/// A present [jakarta.persistence.DiscriminatorColumn] with a nonempty
 	/// [name][jakarta.persistence.DiscriminatorColumn#name()],
 	/// including its annotation default `DTYPE`, bypasses this callback.
@@ -140,20 +143,29 @@ public interface ImplicitNamingStrategy {
 	/// @param input Root-entity naming information
 	/// @param context Focused naming defaults and helpers
 	/// @return A non-null implicit logical name
-	LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context);
+	default LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+		return context.implicitName( "DTYPE" );
+	}
 
 	/// Determine the implicit discriminator-column name for a polymorphic embeddable.
-	/// Supplied strategies preserve the input's default spelling, including terminal
-	/// attribute names and `element_DTYPE` for collection elements.
+	/// The default implementation uses `DTYPE` for an empty discriminator-column declaration,
+	/// `element_DTYPE` for collection elements otherwise, or the terminal attribute name
+	/// suffixed with `_DTYPE`. It does not invoke basic or entity discriminator naming.
 	/// A nonempty [jakarta.persistence.DiscriminatorColumn#name()] or a column name
 	/// supplied through [jakarta.persistence.AttributeOverride#column()] for the
 	/// special `{discriminator}` role bypasses this callback. A present discriminator
 	/// annotation supplies its default `DTYPE` unless its name is explicitly empty.
 	///
-	/// @param input Owner, embeddable type, full attribute path, role, and default spelling
+	/// @param input Owner, embeddable type, full attribute path, role, and effective declaration origin
 	/// @param context Naming defaults and helpers
 	/// @return A non-null implicit logical column name
-	LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context);
+	default LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+		return context.implicitName( input.declaration() == EmbeddableDiscriminatorColumnNamingInput.Declaration.DISCRIMINATOR_COLUMN
+				? "DTYPE"
+				: input.kind() == EmbeddableDiscriminatorColumnNamingInput.Kind.COLLECTION_ELEMENT
+						? "element_DTYPE"
+						: AttributePath.parse( input.attributePath() ).getProperty() + "_DTYPE" );
+	}
 
 	/// Determine the column name for a [basic][jakarta.persistence.Basic] or
 	/// [version][jakarta.persistence.Version] attribute when it is not explicitly specified using
@@ -281,14 +293,46 @@ public interface ImplicitNamingStrategy {
 
 	/// Determine the implicit collection-row identifier column name when
 	/// [org.hibernate.annotations.CollectionId#column()] has no explicit
-	/// [jakarta.persistence.Column#name()].
-	LogicalName determineCollectionIdColumnName(CollectionIdColumnNamingInput input, ImplicitNamingContext context);
+	/// [jakarta.persistence.Column#name()]. The default implementation returns `id`.
+	default LogicalName determineCollectionIdColumnName(CollectionIdColumnNamingInput input, ImplicitNamingContext context) {
+		return context.implicitName( "id" );
+	}
 
 	/// Determine the implicit indicator name when
 	/// [org.hibernate.annotations.SoftDelete#columnName()] is empty.
 	/// The effective [org.hibernate.annotations.SoftDelete#strategy()] is supplied
-	/// as [org.hibernate.annotations.SoftDeleteType].
-	LogicalName determineSoftDeleteColumnName(SoftDeleteColumnNamingInput input, ImplicitNamingContext context);
+	/// as [org.hibernate.annotations.SoftDeleteType]. The default implementation uses
+	/// [its default column name][org.hibernate.annotations.SoftDeleteType#getDefaultColumnName()].
+	default LogicalName determineSoftDeleteColumnName(SoftDeleteColumnNamingInput input, ImplicitNamingContext context) {
+		return context.implicitName( input.strategy().getDefaultColumnName() );
+	}
+
+	/// Determine the offset companion name when [org.hibernate.annotations.TimeZoneColumn#name()]
+	/// is absent or empty. With no companion declaration, the default implementation appends
+	/// `_tz` to the original temporal source name, independently of temporal overrides.
+	/// With an empty declaration, it applies basic naming to the synthetic `zoneOffset`
+	/// member path. An already-resolved source name is reused; otherwise basic naming
+	/// is invoked only when the selected algorithm needs it, through
+	/// [#determineBasicColumnName(BasicColumnNamingInput, ImplicitNamingContext)].
+	/// Storage selection through [org.hibernate.annotations.TimeZoneStorage] is separate:
+	/// this callback is used only for an actual companion column under
+	/// [org.hibernate.annotations.TimeZoneStorageType#COLUMN] or
+	/// [org.hibernate.annotations.TimeZoneStorageType#AUTO].
+	///
+	/// @param input The owner, user attribute path, settled temporal name pair, destination table, and original source facts
+	/// @param context Focused naming defaults and helpers
+	/// @return A non-null implicit logical column name
+	default LogicalName determineTimeZoneColumnName(TimeZoneColumnNamingInput input, ImplicitNamingContext context) {
+		if ( input.companionDeclared() ) {
+			return determineBasicColumnName( new BasicColumnNamingInput( input.attributePath() + ".zoneOffset" ), context );
+		}
+		final var sourceName = input.sourceColumnName().orElseGet( () -> {
+			final var name = determineBasicColumnName( new BasicColumnNamingInput( input.attributePath() ), context );
+			ImplicitNamingHelper.columnName( name, "basic column" );
+			return name;
+		} );
+		return context.implicitName( sourceName.getText() + "_tz", sourceName.isQuoted() );
+	}
 
 	/// Determine the foreign key name when it is not explicitly specified using
 	/// [jakarta.persistence.ForeignKey#name()].

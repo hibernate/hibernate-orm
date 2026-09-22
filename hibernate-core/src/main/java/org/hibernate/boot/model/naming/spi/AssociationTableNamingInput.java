@@ -10,6 +10,14 @@ import static java.util.Objects.requireNonNull;
 
 /// Facts for naming an association table between two entity tables.
 ///
+/// All reference components are non-null.
+///
+/// @param owner The entity declaring the owning association
+/// @param owningTable The settled table dependency for the owner
+/// @param target The associated entity
+/// @param targetTable The settled table dependency for the associated entity
+/// @param attributePath The owning association path relative to the owner, including embeddable nesting
+///
 /// @author Steve Ebersole
 @SPI(SPI.Role.USE)
 public record AssociationTableNamingInput(

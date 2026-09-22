@@ -4,35 +4,26 @@
  */
 package org.hibernate.boot.model.naming;
 
-/**
- * @author Steve Ebersole
- */
+/// Entity names made available to implicit naming algorithms.
+/// Hibernate's mapping name and the Jakarta Persistence entity name serve different
+/// purposes and need not be identical. No Java class loading is required.
+///
+/// @author Steve Ebersole
 public interface EntityNaming {
-	/**
-	 * Retrieve the fully-qualified entity class name.  Note that for
-	 * dynamic entities, this may return (what???).
-	 *
-	 * todo : what should this return for dynamic entities?  null?  The entity name?
-	 *
-	 * @return The entity class name.
-	 */
+	/// The fully qualified mapped Java class name, when available.
+	///
+	/// @return The class name, or null for a mapping without a Java class name
 	String getClassName();
 
-	/**
-	 * The Hibernate entity name.  This might be either:<ul>
-	 *     <li>The explicitly specified entity name, if one</li>
-	 *     <li>The unqualified entity class name if no entity name was explicitly specified</li>
-	 * </ul>
-	 *
-	 * @return The Hibernate entity name
-	 */
+	/// The Hibernate entity name identifying the mapping, commonly its qualified class name.
+	///
+	/// @return The Hibernate entity name
 	String getEntityName();
 
-	/**
-	 * The JPA-specific entity name.  See {@link jakarta.persistence.Entity#name()} for details.
-	 *
-	 * @return The JPA entity name, if one was specified.  May return {@code null} if one
-	 * was not explicitly specified.
-	 */
+	/// The effective Jakarta Persistence entity name, including its default when supplied
+	/// by the mapping source. This does not indicate whether the name was explicit.
+	///
+	/// @return The Jakarta Persistence entity name, or null when unavailable
+	/// @see jakarta.persistence.Entity#name()
 	String getJpaEntityName();
 }

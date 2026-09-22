@@ -231,6 +231,11 @@ public class ComponentBinder {
 						? columns
 						: identifierColumns != null ? identifierColumns : columns;
 		final List<ComponentMemberBinding> members = new ArrayList<>( contribution.members() );
+		final var timeZoneNaming = TimeZoneColumnNaming.forComponent( source, ownerBinding, state );
+		if ( timeZoneNaming != null ) {
+			// Explicit dependency order, independent of synthetic member discovery order.
+			members.sort( java.util.Comparator.comparing( member -> TimeZoneColumnNaming.isCompanion( member.attributeName() ) ) );
+		}
 		final List<AppliedAttributeMapping> appliedAttributes = createAppliedAttributes( component, members );
 		final AppliedEmbeddableMapping appliedEmbeddable = component.getMappingRole() == null
 				? null
@@ -394,7 +399,6 @@ public class ComponentBinder {
 						nestedComponent,
 						nestedMemberTarget.table(),
 						nestedContribution,
-						attributeName + "_DTYPE",
 						ownerBinding,
 						componentMember.fullPath(),
 						EmbeddableDiscriminatorColumnNamingInput.Kind.EMBEDDED_ATTRIBUTE,
@@ -439,6 +443,7 @@ public class ComponentBinder {
 			}
 
 			final Property property = createProperty( component, componentMember, appliedAttributes );
+			final var columnSource = componentMember.basicValueIntent().columnSource();
 			final MaterializedBasicValue basicValue = basicValueMappingMaterializer.createComponentMemberBasicValue(
 					source,
 					componentMember,
@@ -449,10 +454,16 @@ public class ComponentBinder {
 					uniqueByDefault,
 					nullableByDefault,
 					updatable,
+					timeZoneNaming == null ? null : timeZoneNaming.implicitName( attributeName,
+							columnSource == null ? null : columnSource.table(),
+							memberTarget.table() ),
 					options,
 					state,
 					context
 			);
+			if ( timeZoneNaming != null && basicValue.column() != null ) {
+				timeZoneNaming.columnBound( attributeName, basicValue.column(), property.getValue().getColumnContainer() );
+			}
 			if ( component.isPolymorphic() && componentMember.declaringType() != source.componentType() ) {
 				property.setOptional( true );
 				if ( basicValue.column() != null ) {

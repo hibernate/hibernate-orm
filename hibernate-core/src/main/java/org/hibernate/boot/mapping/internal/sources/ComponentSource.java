@@ -862,6 +862,21 @@ public record ComponentSource(
 				: transformer.forColumn().equals( columnName );
 	}
 
+	/// Resolve the column declaration for this aggregate value, including an
+	/// enclosing override of the component attribute itself.
+	public ColumnSource aggregateColumnSource() {
+		final String path = isNested()
+				? pathPrefix.substring( 0, pathPrefix.length() - 1 )
+				: "";
+		final var override = locateAttributeOverride( path );
+		if ( override != null ) {
+			return ColumnSource.from( override.column() );
+		}
+		return kind == Kind.MAP_KEY && !isNested()
+				? ColumnSource.from( sourceMember.getDirectAnnotationUsage( jakarta.persistence.MapKeyColumn.class ) )
+				: ColumnSource.from( sourceMember.getDirectAnnotationUsage( Column.class ) );
+	}
+
 	public ColumnSource discriminatorColumnSource() {
 		final var override = locateAttributeOverride( "{discriminator}" );
 		return override == null ? null : ColumnSource.from( override.column() );

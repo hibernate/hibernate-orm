@@ -196,7 +196,17 @@ public class ComponentBinder {
 				List.of( source.componentType() ),
 				contribution
 		);
-		AggregateComponentBinder.processAggregate( ownerBinding, source, component, memberTarget, state );
+		final var aggregateIntent = source.aggregateMappingIntent();
+		AggregateComponentBinder.processAggregate(
+				ownerBinding,
+				source,
+				component,
+				memberTarget,
+				new ComponentMemberTarget( ComponentMemberTarget.Kind.TABLE, table, null ),
+				aggregateIntent.isAggregate() ? aggregateIntent.aggregateColumnSource() : null,
+				options,
+				state
+		);
 		return columns;
 	}
 
@@ -371,7 +381,7 @@ public class ComponentBinder {
 					property.setOptional( true );
 				}
 				final ComponentMemberTarget nestedMemberTarget =
-						ComponentMemberTarget.forSource( nestedSource, memberTarget.table() );
+						memberTarget.forNestedSource( nestedSource );
 				final EmbeddableContribution nestedContribution =
 						embeddedValueIntent.valueMetadata() == null
 								? embeddableMappingMaterializer.createContribution( nestedSource, context )
@@ -413,11 +423,11 @@ public class ComponentBinder {
 						nestedSource,
 						nestedComponent,
 						nestedMemberTarget,
+						memberTarget,
+						source.columnSource( componentMember.path(), member, state.getMetadataBuildingContext() ),
+						options,
 						state
 				);
-				if ( nestedComponent.getAggregateColumn() != null ) {
-					memberTarget.registerMemberColumn( nestedComponent.getAggregateColumn() );
-				}
 				columns.addAll( nestedColumns );
 				alignComponentTable( component, property );
 				applyGenericPropertyMarkers( source, component, componentMember, property, state );

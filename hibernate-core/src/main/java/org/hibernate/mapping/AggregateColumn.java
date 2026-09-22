@@ -83,7 +83,7 @@ public final class AggregateColumn extends Column {
 		final String simpleAggregateName = aggregateColumn.getQuotedName();
 		return parent == null
 				? new SelectablePath( simpleAggregateName )
-				: getSelectablePath( parent.getComponent() ).append( simpleAggregateName );
+				: getSelectablePath( parent.getComponent() ).append( aggregateColumn.getName() );
 	}
 
 	public String getAggregateReadExpressionTemplate(

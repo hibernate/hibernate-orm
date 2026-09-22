@@ -906,3 +906,21 @@ implicit naming, including annotation-default `DTYPE`. Explicit and generated na
 now undergo physical column naming and additive quoting. Applications with transforming
 physical strategies must account for these formerly untransformed columns when upgrading.
 Entity discriminator naming and source precedence are unchanged.
+
+=== Aggregate container-column naming
+
+`ImplicitNamingStrategy.determineAggregateColumnName` now receives an
+`AggregateColumnNamingInput` and `ImplicitNamingContext`. Direct strategy implementors
+must implement this method; supplied strategy subclasses inherit terminal attribute
+names, including Standard. The input distinguishes table columns from members stored
+inside another aggregate, and supplies the owner-relative path, storage kind, and usage.
+
+Aggregate containers now undergo `PhysicalNamingStrategy.toPhysicalColumnName`,
+including explicitly named containers and nested aggregate members. Transforming
+strategies can therefore change existing JSON/XML/STRUCT container names. Review
+existing schemas and stored aggregate member names when upgrading. Requested quoting
+is preserved; SQL identifier quote delimiters do not become part of JSON member keys.
+
+Effective container overrides replace direct declarations. Nonempty effective names
+bypass implicit naming; empty override names invoke it. `@Struct.name` continues to
+name a SQL type and is unaffected by this column-naming callback.

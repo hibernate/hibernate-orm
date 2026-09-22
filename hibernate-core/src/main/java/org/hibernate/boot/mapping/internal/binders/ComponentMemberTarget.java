@@ -38,6 +38,12 @@ public record ComponentMemberTarget(
 				: new ComponentMemberTarget( Kind.TABLE, table, null );
 	}
 
+	/// A flattened component shares its enclosing storage; an aggregate creates
+	/// a separate container for its own members.
+	public ComponentMemberTarget forNestedSource(ComponentSource source) {
+		return source.aggregateMappingIntent().isAggregate() ? forSource( source, table ) : this;
+	}
+
 	public boolean isAggregateMemberTarget() {
 		return kind == Kind.AGGREGATE_MEMBER;
 	}

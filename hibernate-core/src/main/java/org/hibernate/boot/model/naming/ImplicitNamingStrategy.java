@@ -5,6 +5,7 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.model.naming.spi.AggregateColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.DiscriminatorColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.TenantColumnNamingInput;
@@ -116,6 +117,19 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	/// @return A non-null implicit logical name
 	LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context);
+
+	/// Determine the implicit name of an aggregate container column or nested member.
+	/// Supplied strategies use the terminal attribute name. Explicit names from
+	/// [jakarta.persistence.Column#name()], [jakarta.persistence.MapKeyColumn#name()],
+	/// or an applicable [jakarta.persistence.AttributeOverride#column()] bypass this callback.
+	/// Aggregate storage may be selected using [org.hibernate.annotations.JdbcTypeCode],
+	/// [org.hibernate.annotations.MapKeyJdbcTypeCode], or [org.hibernate.annotations.Struct].
+	/// The [SQL type name][org.hibernate.annotations.Struct#name()] is separate from this name.
+	///
+	/// @param input Owner, type, path, usage, storage kind, plurality, and naming scope
+	/// @param context Naming defaults and helpers
+	/// @return A non-null implicit logical name
+	LogicalName determineAggregateColumnName(AggregateColumnNamingInput input, ImplicitNamingContext context);
 
 	/// Determine the implicit discriminator-column name for a polymorphic embeddable.
 	/// Supplied strategies preserve the input's default spelling, including terminal

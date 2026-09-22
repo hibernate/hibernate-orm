@@ -49,6 +49,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private final SqlAstNodeRenderingMode defaultArgumentRenderingMode;
 	private final String countFunctionName;
 	private final String concatOperator;
+	private final boolean concatOperatorIsFunction;
 	private final String concatArgumentCastType;
 	private final boolean castDistinctStringConcat;
 	private final String distinctArgumentCastType;
@@ -140,6 +141,37 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			boolean castDistinctStringConcat,
 			String distinctArgumentCastType,
 			int separatorAsciiCode) {
+		this(
+				dialect,
+				typeConfiguration,
+				defaultArgumentRenderingMode,
+				countFunctionName,
+				concatOperator,
+				false,
+				concatArgumentCastType,
+				castDistinctStringConcat,
+				distinctArgumentCastType,
+				separatorAsciiCode
+		);
+	}
+
+	/**
+	 * @param concatOperatorIsFunction whether {@code concatOperator} is the name of an N-ary
+	 * string concatenation function like {@code concat(a, b)} instead of a binary operator
+	 * like {@code a || b}. When true, the tuple-distinct-count emulation joins its pieces
+	 * with commas, wrapped in a call to that function.
+	 */
+	public CountFunction(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqlAstNodeRenderingMode defaultArgumentRenderingMode,
+			String countFunctionName,
+			String concatOperator,
+			boolean concatOperatorIsFunction,
+			String concatArgumentCastType,
+			boolean castDistinctStringConcat,
+			String distinctArgumentCastType,
+			int separatorAsciiCode) {
 		super(
 				"count",
 				FunctionKind.AGGREGATE,
@@ -153,6 +185,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		this.defaultArgumentRenderingMode = defaultArgumentRenderingMode;
 		this.countFunctionName = countFunctionName;
 		this.concatOperator = concatOperator;
+		this.concatOperatorIsFunction = concatOperatorIsFunction;
 		this.concatArgumentCastType = concatArgumentCastType;
 		this.castDistinctStringConcat = castDistinctStringConcat;
 		this.distinctArgumentCastType = distinctArgumentCastType;
@@ -228,10 +261,61 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 					if ( castDistinctStringConcat ) {
 						sqlAppender.appendSql( "cast(" );
 					}
-					sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
-					boolean needsConcat = renderCastedArgument( sqlAppender, translator, expressions.get( 0 ) );
-					int argumentNumber = 1;
-					for ( int i = 1; i < expressions.size(); i++, argumentNumber++ ) {
+					if ( concatOperatorIsFunction ) {
+						// N-ary concat function form, e.g. for MySQL-style concat(a, b, ...):
+						// count(distinct concat(
+						//     coalesce(nullif(coalesce(E1,SEP),''),concat(SEP,'1')),
+						//     SEP,
+						//     coalesce(nullif(coalesce(E2,SEP),''),concat(SEP,'2')) ))
+						// The concat function converts its arguments implicitly, so the
+						// "concat with empty string" trick of the operator form is not needed.
+						sqlAppender.appendSql( "concat(coalesce(nullif(coalesce(" );
+						renderCastedArgument( sqlAppender, translator, expressions.get( 0 ) );
+						sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
+						chrFunction.render( sqlAppender, chrArguments, returnType, translator );
+						sqlAppender.appendSql( "),''),concat(" );
+						chrFunction.render( sqlAppender, chrArguments, returnType, translator );
+						sqlAppender.appendSql( ",'" );
+						sqlAppender.appendSql( 1 );
+						sqlAppender.appendSql( "'))" );
+						int argumentNumber = 2;
+						for ( int i = 1; i < expressions.size(); i++, argumentNumber++ ) {
+							sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
+							chrFunction.render( sqlAppender, chrArguments, returnType, translator );
+							sqlAppender.appendSql( ",coalesce(nullif(coalesce(" );
+							renderCastedArgument( sqlAppender, translator, expressions.get( i ) );
+							sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
+							chrFunction.render( sqlAppender, chrArguments, returnType, translator );
+							sqlAppender.appendSql( "),''),concat(" );
+							chrFunction.render( sqlAppender, chrArguments, returnType, translator );
+							sqlAppender.appendSql( ",'" );
+							sqlAppender.appendSql( argumentNumber );
+							sqlAppender.appendSql( "'))" );
+						}
+						sqlAppender.appendSql( ')' );
+					}
+					else {
+						sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
+						boolean needsConcat = renderCastedArgument( sqlAppender, translator, expressions.get( 0 ) );
+						int argumentNumber = 1;
+						for ( int i = 1; i < expressions.size(); i++, argumentNumber++ ) {
+							if ( needsConcat ) {
+								// Concat with empty string to get implicit conversion
+								sqlAppender.appendSql( concatOperator );
+								sqlAppender.appendSql( "''" );
+							}
+							sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
+							chrFunction.render( sqlAppender, chrArguments, returnType, translator );
+							sqlAppender.appendSql( "),'')," );
+							chrFunction.render( sqlAppender, chrArguments, returnType, translator );
+							sqlAppender.appendSql( concatOperator );
+							sqlAppender.appendSql( "'" );
+							sqlAppender.appendSql( argumentNumber );
+							sqlAppender.appendSql( "')" );
+							sqlAppender.appendSql( concatOperator );
+							sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
+							needsConcat = renderCastedArgument( sqlAppender, translator, expressions.get( i ) );
+						}
 						if ( needsConcat ) {
 							// Concat with empty string to get implicit conversion
 							sqlAppender.appendSql( concatOperator );
@@ -245,25 +329,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 						sqlAppender.appendSql( "'" );
 						sqlAppender.appendSql( argumentNumber );
 						sqlAppender.appendSql( "')" );
-						sqlAppender.appendSql( concatOperator );
-						chrFunction.render( sqlAppender, chrArguments, returnType, translator );
-						sqlAppender.appendSql( concatOperator );
-						sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
-						needsConcat = renderCastedArgument( sqlAppender, translator, expressions.get( i ) );
 					}
-					if ( needsConcat ) {
-						// Concat with empty string to get implicit conversion
-						sqlAppender.appendSql( concatOperator );
-						sqlAppender.appendSql( "''" );
-					}
-					sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
-					chrFunction.render( sqlAppender, chrArguments, returnType, translator );
-					sqlAppender.appendSql( "),'')," );
-					chrFunction.render( sqlAppender, chrArguments, returnType, translator );
-					sqlAppender.appendSql( concatOperator );
-					sqlAppender.appendSql( "'" );
-					sqlAppender.appendSql( argumentNumber );
-					sqlAppender.appendSql( "')" );
 					if ( castDistinctStringConcat ) {
 						sqlAppender.appendSql( " as " );
 						sqlAppender.appendSql( distinctArgumentCastType );

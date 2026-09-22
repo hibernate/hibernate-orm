@@ -11,10 +11,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -93,7 +91,6 @@ public class CountExpressionTest {
 
 	@Test
 	@JiraKey(value = "HHH-11042")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode (MySQL-compatible kernel) rejects count(distinct (a,b)); the concat+chr emulation cannot apply because M mode treats || as logical OR and rejects cast(... as text). A mode (openGauss PG kernel) supports tuple distinct counts natively.")
 //	@SkipForDialect(dialectClass = InformixDialect.class,
 //			reason = "Informix allows only one column in count(distinct)")
 	public void testCountDistinctTuple(SessionFactoryScope scope) {
@@ -118,7 +115,6 @@ public class CountExpressionTest {
 
 	@Test
 	@JiraKey(value = "HHH-11042")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode: tuple distinct counts are unsupported and the concat+chr emulation is unusable (|| is OR, cast as text rejected); A mode (openGauss PG kernel) supports it natively. Same reason as testCountDistinctTuple.")
 //	@SkipForDialect(dialectClass = InformixDialect.class,
 //			reason = "Informix allows only one column in count(distinct)")
 	public void testCountDistinctTupleSanity(SessionFactoryScope scope) {

@@ -5,9 +5,7 @@
 package org.hibernate.orm.test.where.hbm;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -39,7 +37,6 @@ public class EagerToManyWhereUseClassWhereTest {
 	// M mode (openGauss MySQL-compatible kernel) reports "Column reference ... is ambiguous" for
 	// every bare column of a user-provided where fragment rendered in the ON clause of a left join
 	// during EAGER fetching, so the test cannot run there. A mode is unaffected.
-	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class)
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
 		// The Category flag column is named `inactive_flag` (rather than `inactive`) to avoid the
 		// bare `inactive` column clash that makes A mode report "inactive is ambiguous" for the

@@ -1100,6 +1100,14 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTupleDistinctCounts() {
+		// A mode (openGauss PG kernel) supports the native tuple form count(distinct (a,b));
+		// M mode (MySQL-compatible) rejects it with "Unsupport type", so the CountFunction
+		// concat-based emulation is used there (registered in GaussDBFunctionRegistry).
+		return !isMMode();
+	}
+
+	@Override
 	public boolean supportsIsTrue() {
 		return true;
 	}

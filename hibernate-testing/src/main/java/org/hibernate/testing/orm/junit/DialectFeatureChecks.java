@@ -624,15 +624,6 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class NotGaussDB implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			// Excludes GaussDB in every compatibility mode, for limitations that are not tied to
-			// a single mode; e.g. JSON comparison (json types have no equality operator in both
-			// A mode (openGauss) and M mode (MySQL-compatible)).
-			return !( dialect instanceof GaussDBDialect );
-		}
-	}
-
 	public static class SupportsTemporaryTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.getLocalTemporaryTableStrategy() != null || dialect.getGlobalTemporaryTableStrategy() != null;

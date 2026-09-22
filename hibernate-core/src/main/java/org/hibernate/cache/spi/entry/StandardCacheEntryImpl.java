@@ -162,6 +162,14 @@ public class StandardCacheEntryImpl implements CacheEntry {
 					.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 
 		}
+		else {
+			session.runInterceptorCallback(
+					() -> session.getInterceptor().onLoad(
+							instance, id, state,
+							persister.getPropertyNames(),
+							persister.getPropertyTypes()
+					) );
+		}
 
 		persister.setValues( instance, state );
 

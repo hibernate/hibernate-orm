@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.stream.Stream;
 
 import jakarta.persistence.Entity;
@@ -207,6 +209,7 @@ class ImplicitNamingStrategyMatrixTest {
 			assertThat( table.getIndexes().keySet() ).hasSize( 3 )
 					.contains( test.prefix.isEmpty() ? "owner_code" : "ix_owner_code", test.prefix.isEmpty() ? "\"QuotedIndex\"" : "\"ix_QuotedIndex\"" );
 			assertThat( table.getUniqueKeys().keySet() ).hasSize( 2 ).contains( test.prefix.isEmpty() ? "owner_code" : "uk_owner_code" );
+			assertThat( table.getPrimaryKey() ).isNotNull();
 			assertThat( table.getPrimaryKey().getName() ).isNotBlank();
 			if ( !test.prefix.isEmpty() ) {
 				assertThat( physical.foreignKeys ).hasSize( 2 ).anyMatch( LogicalName::isExplicit ).anyMatch( name -> !name.isExplicit() );
@@ -281,6 +284,45 @@ class ImplicitNamingStrategyMatrixTest {
 		}
 	}
 
+	@ParameterizedTest(name = "{displayName}: {0}") @MethodSource("cases")
+	void primaryKeys(Case test) {
+		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
+			final var logicalNames = new java.util.ArrayList<LogicalName>();
+			final var physical = new PhysicalStrategy( test.prefix ) {
+				@Override
+				@Nonnull
+				public PhysicalName toPhysicalPrimaryKeyName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
+					logicalNames.add( name );
+					return super.toPhysicalPrimaryKeyName( name, context );
+				}
+			};
+			final var metadata = MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
+					ImplicitPrimaryKeyNamingTest.sources(), test.strategy.implementation, physical );
+			assertThat( logicalNames ).allMatch( name -> !name.isExplicit() );
+			assertThat( logicalNames ).extracting( LogicalName::getText ).containsExactlyInAnyOrder(
+					test.prefix + "owner_pk", test.prefix + "details_pk", test.prefix + "target_pk", test.prefix + "sub_pk",
+					test.prefix + "tags_pk", test.prefix + "items_pk", test.prefix + "bag_pk", test.prefix + "links_pk",
+					test.prefix.isEmpty() ? "ordered_link_pk" : "p_ordered_li_pk" );
+			final var ownerKey = metadata.getEntityBinding( ImplicitPrimaryKeyNamingTest.Owner.class.getName() )
+					.getTable().getPrimaryKey();
+			assertThat( ownerKey ).isNotNull();
+			assertThat( ownerKey.getName() ).isEqualTo( test.prefix + "owner_pk" );
+			final var database = metadata.getDatabase();
+			final var ddl = database.getDialect().getTableExporter().getSqlCreateStrings(
+					(org.hibernate.mapping.NamedTable) ownerKey.getTable(), metadata,
+					org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
+			assertThat( String.join( "\n", ddl ) ).contains( "primary key" ).doesNotContain( ownerKey.getName() );
+			for ( String role : new String[] { "tags", "items", "bag", "links", "orderedLinks" } ) {
+				final var key = metadata.getCollectionBinding( ImplicitPrimaryKeyNamingTest.Owner.class.getName() + "." + role )
+						.getCollectionTable().getPrimaryKey();
+				assertThat( key ).isNotNull();
+				assertThat( key.getName() ).isEqualTo( role.equals( "orderedLinks" )
+						? test.prefix.isEmpty() ? "ordered_link_pk" : "p_ordered_li_pk"
+						: test.prefix + role + "_pk" );
+			}
+		}
+	}
+
 	private static void column(org.hibernate.mapping.Column column, Case test, String logical) {
 		assertThat( column.getName() ).isEqualTo( test.physical( logical ) );
 	}
@@ -288,10 +330,14 @@ class ImplicitNamingStrategyMatrixTest {
 	static class PhysicalStrategy extends PhysicalNamingStrategyStandardImpl {
 		private final String prefix;
 		PhysicalStrategy(String prefix) { this.prefix = prefix; }
-		@Override public PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context) {
+		@Override
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return context.getPhysicalNameFactory().create( prefix + name.getText(), name.isQuoted() );
 		}
-		@Override public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Override
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return context.getPhysicalNameFactory().create( prefix + name.getText(), name.isQuoted() );
 		}
 	}

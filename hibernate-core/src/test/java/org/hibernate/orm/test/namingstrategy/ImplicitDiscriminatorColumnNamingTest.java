@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -181,7 +183,9 @@ class ImplicitDiscriminatorColumnNamingTest {
 			assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadataWithImplicitNaming( registry,
 					new MappingSources().addManagedClasses( Root.class, Child.class ), new StandardImplicitNamingStrategy() {
 						@Override
-						public LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+						@Nonnull
+						@SuppressWarnings("DataFlowIssue") // Deliberately invalid strategy result.
+						public LogicalName determineDiscriminatorColumnName(@Nonnull DiscriminatorColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 							return returnNull ? null : new LogicalName( "invalid", false, true );
 						}
 					} ) ).hasMessageContaining( "non-null implicit name for entity discriminator column" );
@@ -197,11 +201,13 @@ class ImplicitDiscriminatorColumnNamingTest {
 	static class Strategy extends StandardImplicitNamingStrategy {
 		final List<DiscriminatorColumnNamingInput> inputs = new ArrayList<>();
 		@Override
-		public LogicalName determineBasicColumnName(BasicColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineBasicColumnName(@Nonnull BasicColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			throw new AssertionError( "Discriminator naming must not invoke basic-column naming" );
 		}
 		@Override
-		public LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineDiscriminatorColumnName(@Nonnull DiscriminatorColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			inputs.add( input );
 			return context.implicitName( "dtype_custom", true );
 		}
@@ -209,7 +215,8 @@ class ImplicitDiscriminatorColumnNamingTest {
 	static class Physical extends PhysicalNamingStrategyStandardImpl {
 		final List<LogicalName> inputs = new ArrayList<>();
 		@Override
-		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			inputs.add( name );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), false );
 		}

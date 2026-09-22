@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,7 +109,9 @@ class ImplicitTenantColumnNamingTest {
 			assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadataWithImplicitNaming( registry,
 					new MappingSources().addManagedClass( Document.class ), new StandardImplicitNamingStrategy() {
 						@Override
-						public LogicalName determineTenantColumnName(TenantColumnNamingInput input, ImplicitNamingContext context) {
+						@Nonnull
+						@SuppressWarnings("DataFlowIssue") // Deliberately invalid strategy result.
+						public LogicalName determineTenantColumnName(@Nonnull TenantColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 							return returnNull ? null : new LogicalName( "invalid", false, true );
 						}
 					} ) ).hasMessageContaining( "non-null implicit name for tenant column" );
@@ -149,12 +153,14 @@ class ImplicitTenantColumnNamingTest {
 	static class TenantStrategy extends StandardImplicitNamingStrategy {
 		final List<TenantColumnNamingInput> inputs = new ArrayList<>();
 		@Override
-		public LogicalName determineTenantColumnName(TenantColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineTenantColumnName(@Nonnull TenantColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			inputs.add( input );
 			return context.implicitName( "scope_" + input.attributePath().replace( '.', '_' ), true );
 		}
 		@Override
-		public LogicalName determineBasicColumnName(BasicColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineBasicColumnName(@Nonnull BasicColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			assertThat( input.attributePath() ).doesNotEndWith( "tenant" );
 			return super.determineBasicColumnName( input, context );
 		}
@@ -162,7 +168,8 @@ class ImplicitTenantColumnNamingTest {
 	static class PrefixStrategy extends PhysicalNamingStrategyStandardImpl {
 		final List<LogicalName> inputs = new ArrayList<>();
 		@Override
-		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			inputs.add( name );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), false );
 		}

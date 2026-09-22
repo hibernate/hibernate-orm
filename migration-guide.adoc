@@ -971,3 +971,52 @@ still applies to explicit and implicit columns and preserves requested quoting.
 This change does not expand two-column time-zone storage support or alter storage
 selection. Existing one-column embedded/collection mappings, split-table restrictions,
 and the native `AUTO` plus `@TimeZoneColumn` rejection remain separate issues.
+
+=== Primary-key and unique-key name emission (planned)
+
+The approved constraint-naming redesign will make schema creation honor finalized
+physical primary-key and unique-key names wherever the dialect supports named constraints.
+This behavior is pending implementation.
+
+Implicit primary keys will remain unnamed in generated DDL. Existing internal PK alias/hash labels will
+not automatically become emitted constraint names. The unified logical PK naming
+algorithm described below does not change that emission policy.
+The existing explicitly named UK-to-PK absorption behavior is retained. A separate
+follow-up proposes direct explicit PK declarations and honoring their finalized physical
+names, with the direct PK declaration taking precedence over an absorbed UK name.
+FK/UK/index physical naming results remain required.
+
+Previously, some create-table paths emitted anonymous primary-key or unique clauses
+even though the mapping had a name. Existing databases may therefore contain
+vendor-assigned constraint names that differ from Hibernate's finalized names.
+Generated schema scripts may change when the exporter policy starts emitting a
+previously omitted PK or UK name, even if its generation algorithm is unchanged.
+
+Review constraint names when comparing or applying schema migrations. Existing databases
+will not be automatically renamed merely by changing the naming strategy; migration
+scripts must account for their actual constraint names. Dialect suppression and
+constraint-versus-index representation rules continue to apply. Existing FK/UK/index
+default naming algorithms are preserved.
+
+=== Implicit primary-key mapping names
+
+`ImplicitNamingStrategy.determinePrimaryKeyName` now receives a `PrimaryKeyNamingInput`
+containing only the table's logical and physical names. Its interface default uses the
+physical table name: up to twelve characters followed by `_pk`, retaining quoting.
+The selected logical PK name then passes through `toPhysicalPrimaryKeyName`.
+
+Entity, dependent-table, and collection PKs created through model binding share this
+algorithm. This replaces their inconsistent internal alias, UK-hash, and absent names;
+set-collection PKs no longer invoke implicit UK naming. Custom strategies may override
+the PK callback. The fifteen-character limit is only the supplied default, not a limit
+on custom or physically transformed names.
+
+These are mapping-model name changes. Schema creation continues to emit unnamed implicit
+PK clauses and retains existing explicit UK-to-PK name absorption. Direct `@PrimaryKey`
+declarations and dialect-aware length handling remain HHH-20914 and HHH-20915 follow-ups.
+
+Both implicit and physical PK naming require non-null results, including from custom
+strategies. The standard physical strategy preserves the logical spelling and quoting
+for explicit and implicit PK names. Hibernate retains the finalized physical name in
+the mapping model; exporters decide whether to emit it. Only catalog/schema physical
+naming permits null results.

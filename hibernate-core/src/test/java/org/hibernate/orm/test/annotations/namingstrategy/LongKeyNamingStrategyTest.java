@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
@@ -99,23 +101,26 @@ public class LongKeyNamingStrategyTest {
 	public static class LongPhysicalNamingStrategy
 			extends PhysicalNamingStrategyStandardImpl {
 		@Override
+		@Nonnull
 		public PhysicalName toPhysicalForeignKeyName(
-				LogicalName name,
-				PhysicalNamingContext context) {
+				@Nonnull LogicalName name,
+				@Nonnull PhysicalNamingContext context) {
 			return limit( name, context );
 		}
 
 		@Override
+		@Nonnull
 		public PhysicalName toPhysicalUniqueKeyName(
-				LogicalName name,
-				PhysicalNamingContext context) {
+				@Nonnull LogicalName name,
+				@Nonnull PhysicalNamingContext context) {
 			return limit( name, context );
 		}
 
 		@Override
+		@Nonnull
 		public PhysicalName toPhysicalIndexName(
-				LogicalName name,
-				PhysicalNamingContext context) {
+				@Nonnull LogicalName name,
+				@Nonnull PhysicalNamingContext context) {
 			return limit( name, context );
 		}
 

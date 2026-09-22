@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.AssociationKeyNamingInput;
 import org.hibernate.boot.model.naming.spi.JoinColumnNamingInput;
 
@@ -44,18 +46,21 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 
 
 	@Override
-	public LogicalName determineJoinColumnName(JoinColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineJoinColumnName(@Nonnull JoinColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) );
 	}
 
 	@Override
-	public LogicalName determineAssociationKeyColumnName(AssociationKeyNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineAssociationKeyColumnName(@Nonnull AssociationKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) );
 	}
 
 
 	@Override
-	public LogicalName determineCollectionKeyColumnName(org.hibernate.boot.model.naming.spi.CollectionKeyNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineCollectionKeyColumnName(@Nonnull org.hibernate.boot.model.naming.spi.CollectionKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
 		if ( input.kind() == org.hibernate.boot.model.naming.spi.CollectionKeyNamingInput.Kind.ONE_TO_MANY ) {
 			return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) );
 		}
@@ -64,7 +69,8 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 	}
 
 	@Override
-	public LogicalName determineAssociationTableName(AssociationTableNamingInput source, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineAssociationTableName(@Nonnull AssociationTableNamingInput source, @Nonnull ImplicitNamingContext context) {
 		final var associationOwningAttributePath = AttributePath.parse( source.attributePath() );
 		if ( associationOwningAttributePath != null ) {
 			final String name = (source.owningTable() instanceof NamedTableNamingInput named

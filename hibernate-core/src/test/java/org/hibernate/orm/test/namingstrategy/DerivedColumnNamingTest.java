@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,9 +43,10 @@ class DerivedColumnNamingTest {
 							.addManagedClass( ImplicitChild.class ).addManagedClass( QuotedChild.class ),
 					new ImplicitNamingStrategyJpaCompliantImpl() {
 						@Override
+						@Nonnull
 						public LogicalName determineMapKeyJoinColumnName(
-								org.hibernate.boot.model.naming.spi.MapKeyJoinColumnNamingInput input,
-								org.hibernate.boot.model.naming.spi.ImplicitNamingContext context) {
+								@Nonnull org.hibernate.boot.model.naming.spi.MapKeyJoinColumnNamingInput input,
+								@Nonnull org.hibernate.boot.model.naming.spi.ImplicitNamingContext context) {
 							assertThat( input.reference().column().logicalName().getText() ).isEqualTo( "parent_fk" );
 							assertThat( input.reference().column().physicalName().getText() ).isEqualTo( "p_parent_fk" );
 							return super.determineMapKeyJoinColumnName( input, context );
@@ -69,7 +72,8 @@ class DerivedColumnNamingTest {
 	static class PrefixStrategy extends PhysicalNamingStrategyStandardImpl {
 		final List<String> inputs = new ArrayList<>();
 		@Override
-		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			inputs.add( name.getText() );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), name.isQuoted() );
 		}

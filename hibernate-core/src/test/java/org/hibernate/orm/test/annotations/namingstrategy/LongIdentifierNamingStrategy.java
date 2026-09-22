@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
@@ -14,17 +16,20 @@ public class LongIdentifierNamingStrategy
 		extends ImplicitNamingStrategyJpaCompliantImpl {
 
 	@Override
-	public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
+	@Nonnull
+	public Identifier determineForeignKeyName(@Nonnull ImplicitForeignKeyNameSource source) {
 		return limitIdentifierName(super.determineForeignKeyName( source ));
 	}
 
 	@Override
-	public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
+	@Nonnull
+	public Identifier determineUniqueKeyName(@Nonnull ImplicitUniqueKeyNameSource source) {
 		return limitIdentifierName(super.determineUniqueKeyName( source ));
 	}
 
 	@Override
-	public Identifier determineIndexName(ImplicitIndexNameSource source) {
+	@Nonnull
+	public Identifier determineIndexName(@Nonnull ImplicitIndexNameSource source) {
 		return limitIdentifierName(super.determineIndexName( source ));
 	}
 

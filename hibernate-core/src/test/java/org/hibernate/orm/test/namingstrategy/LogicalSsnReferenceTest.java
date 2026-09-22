@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.relational.naming.spi.PhysicalName;
@@ -52,7 +54,8 @@ class LogicalSsnReferenceTest {
 	}
 	public static class PrefixNaming extends PhysicalNamingStrategyStandardImpl {
 		@Override
-		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext env) {
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext env) {
 			return name == null ? null : env.getPhysicalNameFactory().create("p_" + name.getText(), name.isQuoted());
 		}
 	}

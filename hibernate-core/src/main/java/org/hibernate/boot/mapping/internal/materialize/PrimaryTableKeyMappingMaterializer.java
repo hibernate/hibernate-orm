@@ -10,7 +10,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.sql.Alias;
 
 /// Explicit materializer for entity primary-table primary keys.
 ///
@@ -22,7 +21,6 @@ import org.hibernate.sql.Alias;
 /// @since 9.0
 /// @author Steve Ebersole
 public class PrimaryTableKeyMappingMaterializer {
-	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	private final MetadataBuildingContext buildingContext;
 
@@ -42,9 +40,7 @@ public class PrimaryTableKeyMappingMaterializer {
 		}
 
 		final PrimaryKey primaryKey = new PrimaryKey( table );
-		primaryKey.setName( org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.resolve(
-				null, () -> org.hibernate.boot.model.naming.Identifier.toIdentifier( PK_ALIAS.toAliasString( table.getName() ) ),
-				org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.Kind.PRIMARY_KEY, buildingContext ) );
+
 		table.setPrimaryKey( primaryKey );
 		return primaryKey;
 	}

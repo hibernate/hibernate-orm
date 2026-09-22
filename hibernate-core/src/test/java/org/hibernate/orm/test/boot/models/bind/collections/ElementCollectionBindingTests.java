@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.boot.models.bind.collections;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
@@ -1325,13 +1327,15 @@ public class ElementCollectionBindingTests {
 
 	public static class CollectionIndexImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
 		@Override
-		public LogicalName determineListIndexColumnName(ListIndexColumnNamingInput source, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineListIndexColumnName(@Nonnull ListIndexColumnNamingInput source, @Nonnull ImplicitNamingContext context) {
 			return context.implicitName(
 					"implicit_list_index_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}
 
 		@Override
-		public LogicalName determineMapKeyColumnName(MapKeyColumnNamingInput source, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineMapKeyColumnName(@Nonnull MapKeyColumnNamingInput source, @Nonnull ImplicitNamingContext context) {
 			return context.implicitName(
 					"implicit_map_key_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}

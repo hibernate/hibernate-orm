@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -78,7 +80,8 @@ class ImplicitTableNamingContractTest {
 						.addManagedClass( reverse ? Source.class : Destination.class );
 				MetadataBuildingTestHelper.buildMetadataWithNaming( registry, sources, strategy, new PrefixStrategy() {
 					@Override
-					public PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context) {
+					@Nonnull
+					public PhysicalName toPhysicalTableName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 						return name.getText().equals( "Source" ) || name.getText().equals( "Destination" )
 								? context.getPhysicalNameFactory().create( "shared", false )
 								: super.toPhysicalTableName( name, context );
@@ -123,7 +126,8 @@ class ImplicitTableNamingContractTest {
 			assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadataWithImplicitNaming( registry,
 					new MappingSources().addManagedClass( SimpleEntity.class ), new StandardImplicitNamingStrategy() {
 						@Override
-						public LogicalName determinePrimaryTableName(PrimaryTableNamingInput input, ImplicitNamingContext context) {
+						@Nonnull
+						public LogicalName determinePrimaryTableName(@Nonnull PrimaryTableNamingInput input, @Nonnull ImplicitNamingContext context) {
 							return new LogicalName( "invalid", false, true );
 						}
 					} ) ).hasMessageContaining( "non-null implicit name for primary table" );
@@ -135,13 +139,15 @@ class ImplicitTableNamingContractTest {
 		int primaryCalls;
 
 		@Override
-		public LogicalName determinePrimaryTableName(PrimaryTableNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determinePrimaryTableName(@Nonnull PrimaryTableNamingInput input, @Nonnull ImplicitNamingContext context) {
 			primaryCalls++;
 			return super.determinePrimaryTableName( input, context );
 		}
 
 		@Override
-		public LogicalName determineAssociationTableName(AssociationTableNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAssociationTableName(@Nonnull AssociationTableNamingInput input, @Nonnull ImplicitNamingContext context) {
 			inputs.add( input );
 			return super.determineAssociationTableName( input, context );
 		}
@@ -149,7 +155,8 @@ class ImplicitTableNamingContractTest {
 
 	static class PrefixStrategy extends PhysicalNamingStrategyStandardImpl {
 		@Override
-		public PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), name.isQuoted() );
 		}
 	}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.boot.models.bind.id;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
@@ -1063,7 +1065,8 @@ public class SimpleIdTests {
 
 	public static class IdentifierImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
 		@Override
-		public LogicalName determineIdentifierColumnName(IdentifierColumnNamingInput source, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineIdentifierColumnName(@Nonnull IdentifierColumnNamingInput source, @Nonnull ImplicitNamingContext context) {
 			return context.implicitName(
 					"implicit_identifier_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}

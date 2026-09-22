@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 import jakarta.persistence.Entity;
@@ -61,7 +63,8 @@ public class MetadataBuilderImplicitListIndexColumnNameTest {
 	public static class CustomImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl
 	{
 		@Override
-		public LogicalName determineListIndexColumnName(ListIndexColumnNamingInput source, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineListIndexColumnName(@Nonnull ListIndexColumnNamingInput source, @Nonnull ImplicitNamingContext context) {
 			return context.implicitName( EXPECTED_INDEX_COLUMN_NAME );
 		}
 	}

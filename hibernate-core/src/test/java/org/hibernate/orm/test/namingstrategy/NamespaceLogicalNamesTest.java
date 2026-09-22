@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 
 import org.hibernate.boot.mapping.internal.context.GlobalMappingDefaultsImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
@@ -121,17 +124,20 @@ class NamespaceLogicalNamesTest {
 		private LogicalName lastInput;
 
 		@Override
-		public PhysicalName toPhysicalSchemaName(LogicalName name, PhysicalNamingContext context) {
+		@Nullable
+		public PhysicalName toPhysicalSchemaName(@Nullable LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return name == null ? null : prefixed( name, context );
 		}
 
 		@Override
-		public PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return prefixed( name, context );
 		}
 
 		@Override
-		public PhysicalName toPhysicalSequenceName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalSequenceName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return prefixed( name, context );
 		}
 

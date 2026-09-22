@@ -4,6 +4,9 @@
  */
 package org.hibernate.tool.reveng.hbm2x.DefaultSchemaCatalog;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
@@ -136,16 +139,18 @@ public class TestCase {
 
 	public static class AlreadyPhysicalStrategy extends PhysicalNamingStrategyStandardImpl {
 		@Override
+		@Nonnull
 		public PhysicalName toPhysicalTableName(
-				LogicalName name,
-				PhysicalNamingContext context) {
+				@Nonnull LogicalName name,
+				@Nonnull PhysicalNamingContext context) {
 			throw new AssertionError( "A JDBC table name must not pass through physical naming" );
 		}
 
 		@Override
+		@Nullable
 		public PhysicalName toPhysicalSchemaName(
-				LogicalName name,
-				PhysicalNamingContext context) {
+				@Nullable LogicalName name,
+				@Nonnull PhysicalNamingContext context) {
 			return name == null ? null : context.getPhysicalNameFactory().create( "renamed_" + name.getText(), false );
 		}
 	}

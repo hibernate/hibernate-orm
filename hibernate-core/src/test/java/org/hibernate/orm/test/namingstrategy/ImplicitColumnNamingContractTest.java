@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -98,12 +100,14 @@ class ImplicitColumnNamingContractTest {
 			final var metadata = MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
 					new MappingSources().addManagedClass( Owner.class ), new StandardImplicitNamingStrategy() {
 						@Override
-						public LogicalName determineCollectionElementColumnName(CollectionElementColumnNamingInput input, ImplicitNamingContext context) {
+						@Nonnull
+						public LogicalName determineCollectionElementColumnName(@Nonnull CollectionElementColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 							return context.implicitName( "element." + input.attributePath() );
 						}
 					}, new PhysicalNamingStrategyStandardImpl() {
 						@Override
-						public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+						@Nonnull
+						public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 							if ( name.getText().startsWith( "element." ) ) {
 								assertThat( name.isQuoted() ).isFalse();
 							}
@@ -136,7 +140,9 @@ class ImplicitColumnNamingContractTest {
 				assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadataWithImplicitNaming( registry,
 						new MappingSources().addManagedClass( InvalidOwner.class ), new StandardImplicitNamingStrategy() {
 							@Override
-							public LogicalName determineBasicColumnName(BasicColumnNamingInput input, ImplicitNamingContext context) {
+							@Nonnull
+							@SuppressWarnings("DataFlowIssue") // Deliberately invalid strategy result.
+							public LogicalName determineBasicColumnName(@Nonnull BasicColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 								return missing ? null : new LogicalName( "invalid", false, true );
 							}
 						} ) ).hasMessageContaining( "non-null implicit name for basic column" );
@@ -156,31 +162,38 @@ class ImplicitColumnNamingContractTest {
 			return context.implicitName( role + '_' + path.replace( '.', '_' ), true );
 		}
 		@Override
-		public LogicalName determineBasicColumnName(BasicColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineBasicColumnName(@Nonnull BasicColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "basic", input.attributePath(), context );
 		}
 		@Override
-		public LogicalName determineIdentifierColumnName(IdentifierColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineIdentifierColumnName(@Nonnull IdentifierColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "identifier", input.attributePath(), context );
 		}
 		@Override
-		public LogicalName determineCollectionElementColumnName(CollectionElementColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineCollectionElementColumnName(@Nonnull CollectionElementColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "element", input.attributePath(), context );
 		}
 		@Override
-		public LogicalName determineListIndexColumnName(ListIndexColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineListIndexColumnName(@Nonnull ListIndexColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "index", input.attributePath(), context );
 		}
 		@Override
-		public LogicalName determineMapKeyColumnName(MapKeyColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineMapKeyColumnName(@Nonnull MapKeyColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "key", input.attributePath(), context );
 		}
 		@Override
-		public LogicalName determineAnyDiscriminatorColumnName(AnyColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAnyDiscriminatorColumnName(@Nonnull AnyColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "any_kind", input.attributePath(), context );
 		}
 		@Override
-		public LogicalName determineAnyKeyColumnName(AnyColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAnyKeyColumnName(@Nonnull AnyColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "any_key", input.attributePath() + '_' + input.columnPosition(), context );
 		}
 	}
@@ -188,7 +201,8 @@ class ImplicitColumnNamingContractTest {
 	static class PrefixStrategy extends PhysicalNamingStrategyStandardImpl {
 		final List<LogicalName> inputs = new ArrayList<>();
 		@Override
-		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			inputs.add( name );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), false );
 		}

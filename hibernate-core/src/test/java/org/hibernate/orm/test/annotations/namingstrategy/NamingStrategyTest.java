@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.relational.naming.spi.PhysicalName;
@@ -65,8 +67,9 @@ public class NamingStrategyTest {
 				new MappingSources().addManagedClass( A.class ),
 				new PhysicalNamingStrategyStandardImpl() {
 					@Override
+					@Nonnull
 					public PhysicalName toPhysicalColumnName(
-							LogicalName logicalName, PhysicalNamingContext context) {
+							@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 						return context.getPhysicalNameFactory().create( logicalName.getText().toUpperCase(), logicalName.isQuoted() );
 					}
 				}

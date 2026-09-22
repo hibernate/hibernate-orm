@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.SPI;
 import org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.spi.AssociationTableNamingInput;
@@ -24,7 +26,8 @@ public class ImplicitNamingStrategyJpaCompliantImpl extends StandardImplicitNami
 	}
 
 	@Override
-	public LogicalName determineAssociationTableName(AssociationTableNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineAssociationTableName(@Nonnull AssociationTableNamingInput input, @Nonnull ImplicitNamingContext context) {
 		final var owner = input.owningTable();
 		final var target = input.targetTable();
 		final var ownerName = owner instanceof NamedTableNamingInput named ? named.names().physicalName() : null;

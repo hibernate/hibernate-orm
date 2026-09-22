@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.naming.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitConstraintNameSource;
@@ -37,7 +39,8 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	}
 
 	@Override
-	public LogicalName determinePrimaryTableName(PrimaryTableNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determinePrimaryTableName(@Nonnull PrimaryTableNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformEntityName( input.entity() ) );
 	}
 
@@ -51,51 +54,60 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 
 
 	@Override
-	public LogicalName determineAssociationTableName(AssociationTableNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineAssociationTableName(@Nonnull AssociationTableNamingInput input, @Nonnull ImplicitNamingContext context) {
 		final var owner = input.owningTable().logicalName();
 		final var target = input.targetTable().logicalName();
 		return context.implicitName( owner.getText() + '_' + target.getText(), owner.isQuoted() || target.isQuoted() );
 	}
 
 	@Override
-	public LogicalName determineCollectionTableName(CollectionTableNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineCollectionTableName(@Nonnull CollectionTableNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformEntityName( input.owner() ) + '_'
 				+ transformAttributePath( AttributePath.parse( input.attributePath() ) ) );
 	}
 
 
 	@Override
-	public LogicalName determineIdentifierColumnName(IdentifierColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineIdentifierColumnName(@Nonnull IdentifierColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) );
 	}
 
 	@Override
-	public LogicalName determineAggregateColumnName(AggregateColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineAggregateColumnName(@Nonnull AggregateColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( input.attributeName() );
 	}
 
 	@Override
-	public LogicalName determineTenantColumnName(TenantColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineTenantColumnName(@Nonnull TenantColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( AttributePath.parse( input.attributePath() ).getProperty() );
 	}
 
 	@Override
-	public LogicalName determineBasicColumnName(BasicColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineBasicColumnName(@Nonnull BasicColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) );
 	}
 
 	@Override
-	public LogicalName determineCollectionElementColumnName(CollectionElementColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineCollectionElementColumnName(@Nonnull CollectionElementColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) );
 	}
 
 	@Override
-	public LogicalName determineJoinColumnName(JoinColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineJoinColumnName(@Nonnull JoinColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return joinName( transformAttributePath( AttributePath.parse( input.attributePath() ) ), input.reference(), context );
 	}
 
 	@Override
-	public LogicalName determineCollectionKeyColumnName(CollectionKeyNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineCollectionKeyColumnName(@Nonnull CollectionKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
 		if ( input.kind() == CollectionKeyNamingInput.Kind.TO_ONE_TABLE ) {
 			return referencedColumnName( input.reference(), context );
 		}
@@ -107,19 +119,22 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	}
 
 	@Override
-	public LogicalName determineAssociationKeyColumnName(AssociationKeyNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineAssociationKeyColumnName(@Nonnull AssociationKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return joinName( transformAttributePath( AttributePath.parse( input.attributePath() ) ), input.reference(), context );
 	}
 
 	@Override
-	public LogicalName determineMapKeyJoinColumnName(MapKeyJoinColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineMapKeyJoinColumnName(@Nonnull MapKeyJoinColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		final String prefix = transformAttributePath( AttributePath.parse( input.attributePath() ) ) + "_KEY";
 		return input.referencesPrimaryKey() && input.reference().columns().size() == 1
 				? context.implicitName( prefix ) : joinName( prefix, input.reference(), context );
 	}
 
 	@Override
-	public LogicalName determinePrimaryKeyJoinColumnName(PrimaryKeyJoinColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determinePrimaryKeyJoinColumnName(@Nonnull PrimaryKeyJoinColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return referencedColumnName( input.reference(), context );
 	}
 
@@ -134,28 +149,33 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	}
 
 	@Override
-	public LogicalName determineAnyDiscriminatorColumnName(AnyColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineAnyDiscriminatorColumnName(@Nonnull AnyColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) + "_" + context.getNamingDefaults().getDefaultDiscriminatorColumnName() );
 	}
 
 	@Override
-	public LogicalName determineAnyKeyColumnName(AnyColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineAnyKeyColumnName(@Nonnull AnyColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) + "_" + context.getNamingDefaults().getDefaultIdColumnName()
 				+ (input.columnPosition() == 0 ? "" : Integer.toString( input.columnPosition() + 1 )) );
 	}
 
 	@Override
-	public LogicalName determineMapKeyColumnName(MapKeyColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineMapKeyColumnName(@Nonnull MapKeyColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) + "_KEY" );
 	}
 
 	@Override
-	public LogicalName determineListIndexColumnName(ListIndexColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineListIndexColumnName(@Nonnull ListIndexColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) + "_ORDER" );
 	}
 
 	@Override
-	public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
+	@Nonnull
+	public Identifier determineForeignKeyName(@Nonnull ImplicitForeignKeyNameSource source) {
 		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
 		return userProvidedIdentifier == null
 				? generateConstraintName( source )
@@ -163,7 +183,8 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	}
 
 	@Override
-	public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
+	@Nonnull
+	public Identifier determineUniqueKeyName(@Nonnull ImplicitUniqueKeyNameSource source) {
 		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
 		return userProvidedIdentifier == null
 				? generateConstraintName( source )
@@ -171,7 +192,8 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	}
 
 	@Override
-	public Identifier determineIndexName(ImplicitIndexNameSource source) {
+	@Nonnull
+	public Identifier determineIndexName(@Nonnull ImplicitIndexNameSource source) {
 		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
 		return userProvidedIdentifier == null
 				? generateConstraintName( source )

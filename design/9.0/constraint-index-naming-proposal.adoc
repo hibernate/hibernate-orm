@@ -1,0 +1,358 @@
+= Constraint And Index Naming: Investigation And Proposal
+:toc2:
+:sectanchors:
+
+Status: direction approved. Improve callback coverage and input clarity while preserving
+existing FK/UK/index default algorithms, dependency stages, and hashing. Implicit PKs
+retain their current unnamed DDL behavior pending the emission-policy decision. Unify
+their implicit logical names using the approved `Alias(15, "_pk")` pattern over the
+physical table name. Inputs expose both logical and physical dependency names.
+Steve also approved honoring finalized PK/UK names in schema DDL wherever supported,
+with migration guidance. Exact contracts and lifecycle details require a working
+specification before implementation.
+
+== Goal And Scope
+
+Complete implicit naming for foreign keys, unique keys, and indexes using
+role-specific inputs and `LogicalName` results. Investigate them together, then implement
+bounded slices. Existing physical callbacks remain the final name transformation.
+A useful naming contract must govern the name emitted by schema tooling, not just a
+mapping-model label.
+
+Preserve the agreed explicit-name bypass, additive quoting, immutable dependency inputs,
+strategy-owned default calculations, and no replay for reuse or restoration. This remains
+a clean-room SPI redesign; preserving old source interfaces is not a requirement.
+Generated database-name compatibility is a separate decision from API compatibility.
+
+== Findings From Current Sources
+
+[cols="1,3,2",options="header"]
+|===
+|Role |Current naming |Important boundary
+|Entity and dependent-table primary key
+|`PrimaryTableKeyMappingMaterializer` and `DependentTableKeyMappingMaterializer` use
+`Alias(15, "PK")` over physical table spelling: at most 13 characters followed by `PK`.
+They invoke physical PK naming but have no implicit PK callback.
+|Entity PK naming occurs during initialization, before all columns are available.
+Partition/state-management columns and derived-ID adjustments can arrive later.
+|Collection primary key
+|Identifier and indexed collections create unnamed PKs. Set PKs use
+`determineUniqueKeyName`, then the physical PRIMARY_KEY hook. Nullable set elements can
+instead produce a real unique key.
+|There is no single existing PK algorithm to preserve across roles. Name only the final
+materialized constraint, after choosing PK versus UK and finalizing membership.
+|Foreign key
+|The final FK pass calls the legacy source callback. Its hash uses local table,
+referenced table, and sorted local columns; it does not include target columns.
+|Table adapters prefer logical names with a mapping-name fallback. Local column identifiers
+come from finalized physical columns. PK target columns may be absent from the source list
+and are resolved by the exporter from the target PK instead.
+|Unique key
+|The normal materializer hashes logical table identity (with fallback) and physical
+column names. Collection-set PKs reach the same algorithm with physical table spelling.
+|Keys may be deduplicated or absorbed into a PK after materialization. An explicit UK
+matching all PK columns can supply the PK ordering and emitted name.
+|Index
+|Naming uses table identity plus the original column/expression strings supplied to
+`ResolvedIndex`, converted to `Identifier`. Resolved selectables and orderings are separate.
+|Expressions are incorrectly represented as identifier-shaped naming inputs. The current
+hash ignores key order, direction, uniqueness, type, and using method.
+|===
+
+`NamingHelper` hashes serialized identifiers with MD5 and base-35 output, using the
+configured schema charset or the platform default. FK, UK, and index prefixes are `FK`,
+`UK`, and `IDX`. Column arrays are copied and sorted by canonical identifier spelling;
+provider inputs must not themselves be sorted to implement a hash.
+
+`ConstraintNamingHelper` currently accepts `Supplier<Identifier>`, derives provenance
+from explicit-name presence, calls the dedicated physical hook, and returns a rendered
+string. It must accept and validate `LogicalName` results when these callbacks migrate.
+Constraint/index storage and archive boundaries still need consideration: a rendered
+string cannot by itself retain a selected logical dependency for future consumers.
+
+=== Exported Names And Fallbacks
+
+* `StandardTableExporter.primaryKeyString` does not render `PrimaryKey.getName()`.
+  It renders a constraint name only for an explicitly named ordering unique key.
+  The Informix override follows that policy with different placement.
+* `CreateTableUniqueDelegate` emits names only for explicitly named table unique keys.
+  Single-column uniqueness may instead be emitted as an anonymous column `unique` clause.
+  Alter-table delegates use the mapping name; nullable-key policies may use an index or
+  suppress an unsupported constraint. Thus create and migration paths differ.
+* FK and index exporters use their materialized names, subject to dialect support,
+  creation enablement, qualification, and unique-key representation policy.
+* `ColumnDefinitions.appendConstraints` has a `UK_` hash fallback when a unique column
+  has no assigned key name. This bypasses both strategies during schema generation.
+  Determine which external/additional mapping paths still reach it before removing it.
+* `@Index(unique=true)` can become a unique constraint or an index, depending on formula,
+  type/using metadata and dialect representation. Its current naming role follows that
+  materialized representation. Collection index parsing is a separate path and does not
+  currently provide the same ordering/expression treatment as entity-table parsing.
+* Compatibility mapping helpers such as `Join.createPrimaryKey()` and value-key helpers
+  are additional entry points; changing the main entity materializer alone is insufficient.
+
+These are source findings, not a database execution matrix. Existing naming tests mainly
+assert mapping names and physical participation. They do not establish that every emitted
+PK/UK clause honors the chosen name.
+
+== Proposed Contract Shape
+
+Use four role-specific callbacks with the existing naming context. The FK/UK working
+specification remains a bounded slice; PK naming requires its own working specification:
+
+[source,java]
+----
+LogicalName determinePrimaryKeyName(PrimaryKeyNamingInput input, ImplicitNamingContext context);
+LogicalName determineForeignKeyName(ForeignKeyNamingInput input, ImplicitNamingContext context);
+LogicalName determineUniqueKeyName(UniqueKeyNamingInput input, ImplicitNamingContext context);
+LogicalName determineIndexName(IndexNamingInput input, ImplicitNamingContext context);
+----
+
+Supply common algorithms as overridable interface default methods. Do not add precomputed
+fallback names, annotation objects, mutable constraints, or broad boot contexts to inputs.
+Proposed facts, subject to the working specification:
+
+* PK: only the actual table dependency, exposing its logical and physical names.
+  No column dependencies or table-role information.
+* UK: the actual table dependency and the ordered participating column-name pairs.
+* FK: local and target table dependencies, primary-key-reference status, and ordered
+  local/target column pairs. Preserve correspondence; two independently sorted lists
+  cannot describe a composite FK. Resolve actual target columns even for PK references.
+* Index: actual table dependency, uniqueness, and an ordered list of terms. Distinguish
+  a named column (`NamingNamePair`) from an SQL expression (opaque SQL text), and carry
+  ordering with each term. Consider type/using metadata where needed to distinguish
+  otherwise identical index definitions; do not parse or normalize arbitrary SQL here.
+
+Reuse `NamingNamePair` and named-table dependencies. The current
+`ReferencedColumnsNamingInput` selects one target column for one join-column decision;
+whole-constraint inputs should represent the complete relationship instead of pretending
+one position describes an entire FK. Column dependencies retain the selected logical
+alias or declaration, both naming stages, quoting, and origin.
+
+For real database constraints, prefer named-table dependencies. Inline views must not
+acquire fabricated physical names or new exportable constraints. Existing nonexportable
+mapping bookkeeping and disabled constraints need an explicit invocation boundary in the
+working specification; schema execution itself must not replay naming.
+
+== Recommended Direction And Tradeoffs
+
+=== Approved Default Policy
+
+Preserve existing algorithms and their logical/physical dependency choices. Do not
+standardize them on logical names or add new facts to the default hash just because
+richer inputs expose those facts. A physical schema name may remain stable through
+logical mapping refactoring; logical-stage consistency alone does not justify renaming
+constraints in mature systems.
+
+For PKs, unify the inconsistent internal names with a table-based implicit naming rule,
+`Alias(15, "_pk")`: at most twelve characters of table text followed by `_pk`.
+The default uses the physical table name; custom strategies have both naming stages
+available. This revises the earlier decision against a generated logical PK name; generating that name and emitting it in DDL are separate decisions.
+Explicit PK declarations remain a separate follow-up proposal.
+
+For FK/UK/index defaults, preserve the current prefixes, dependency spellings and
+quoting, sorting, serialized hash input, charset behavior, and digest encoding. Expose
+ordered column correspondence and index terms to providers without automatically adding
+target columns, order, direction, uniqueness, type, or using method to default hashes.
+Typed index terms mean Java contracts distinguishing column references from opaque SQL
+expressions, not the database datatypes of indexed values. Converting the contract must
+not itself rewrite expression text or change its existing default hash representation.
+
+Preservation applies to the supplied default algorithms, not source compatibility with
+old `*Source` interfaces or custom subclasses that depend on removed implementation hooks.
+The working specification must distinguish an actual database name from any separate
+bookkeeping identity required for currently unnamed constraints.
+
+=== Separate Collision Investigation
+
+Sorting index columns means `(a,b)` and `(b,a)` can produce identical serialized hash
+inputs. That is a potential identity collision, not evidence of an MD5 collision.
+No bug report or failing supported mapping reproducer has been established in this
+investigation. Do not claim a demonstrated defect or change default hashing on that basis.
+If pursued, first build a reproducer showing a user-visible failure and then propose a
+separate correction with its name-compatibility implications.
+
+No new SQL expression normalization, general collision resolution, or dialect-specific
+truncation is included in the approved scope. Retain a limit of fifteen characters for
+the default implicit PK name, including its `_pk` suffix.
+
+=== DDL And Explicit Precedence
+
+Approved: honor the finalized PK/UK name wherever the dialect can render a named
+constraint. For UKs this includes names supplied by custom implicit strategies.
+Document the change in the migration guide. Implicit PKs remain unnamed; explicit PK
+declaration support is a separate follow-up, not a reason to export internal PK labels.
+
+Keep dialect suppression and constraint-versus-index representation rules. When an
+explicit UK covering a PK is absorbed into it, resolve explicit precedence and final
+object identity before selecting the surviving constraint name. Avoid naming two objects and
+then silently substituting one name for the other at export time. Define whether a unique
+index continues to follow the final relational representation for callback selection;
+retaining that existing rule is the recommended starting point.
+
+Changing DDL emission can replace database-assigned names even when Hibernate's old mapping
+name is preserved. Treat this as an observable schema change, separately from hash changes.
+
+=== PK Scope: Unified Logical Naming And Separate Emission Policy
+
+Unify implicit PK naming across entity, dependent-table, and collection PKs using a
+readable table-based pattern. Stop using unrelated alias, UK-hash, and absent-name
+paths as the public naming policy. The approved default is `Alias(15, "_pk")`,
+which truncates the table text to at most twelve characters and appends `_pk`, retaining
+the alias helper's quoting behavior. Apply it to the physical table name.
+
+The agreed input shape is `PrimaryKeyNamingInput(NamedTableNamingInput table)`:
+both naming stages for the table, without PK columns or table-role information.
+The standard default uses the physical table name; custom strategies may choose the
+logical name instead. These decisions are consolidated in
+link:primary-key-naming-spec.adoc[the approved PK specification].
+
+The algorithm belongs in the default implementation of
+`ImplicitNamingStrategy.determinePrimaryKeyName()`. PK materialization paths must reach
+that shared strategy decision rather than instantiate their own `Alias` or duplicate
+the algorithm. Supplied strategies inherit the default unless they intentionally
+override it.
+
+Track the deferred work in comments in the corresponding centralized naming code:
+
+* https://hibernate.atlassian.net/browse/HHH-20915[HHH-20915]: reference beside the
+  fixed `15` in the default algorithm, identifying the follow-up to use the Dialect's
+  maximum identifier length.
+* https://hibernate.atlassian.net/browse/HHH-20914[HHH-20914]: reference at the PK
+  name-resolution boundary, identifying the follow-up to support explicit declarations
+  via `@PrimaryKey` and bypass implicit naming for them.
+
+These comments belong in the centralized PK callback and resolution code, not duplicated
+across individual PK creation sites. Implementation follows
+link:primary-key-naming-spec.adoc[the approved PK specification].
+
+The current `Alias(15, "PK")` helper takes a fixed caller-supplied length, reserves two
+characters for `PK`, and truncates the table text to thirteen characters. It has no
+Dialect reference and does not consult identifier limits. The current physical naming
+finalizer does not enforce length either. This is an internal alias-generation recipe,
+not a dialect-aware constraint-name policy; the original reason for choosing fifteen
+is not established by this source investigation.
+
+Approved: retain fifteen for now rather than derive the limit from the Dialect.
+The materializers do have Dialect access through their building context; retaining
+the fixed limit is a scope decision, not an access limitation. The fifteen-character
+budget includes the three-character `_pk` suffix. Use the existing alias truncation
+behavior; no new hashing or collision-resolution algorithm is introduced.
+This applies to default implicit PK generation, not explicit names or a new final
+physical-name length policy. Dialect-aware length handling remains deferred.
+
+Preserve PK enforcement, membership, ordering, and existing explicit UK-to-PK naming.
+Implicit PK naming must return a non-null logical name, including for custom strategies.
+Physical PK naming must also return a non-null name, which is retained in the mapping
+model. Exporters decide whether to emit it. The distinction between user-selected names
+and built-in defaults informs that emission policy, not naming-result nullability.
+Whether a generated PK name is emitted remains separate from its calculation, including
+the user-selected-versus-built-in-default consideration below. Do not start emitting
+previously internal PK names merely by unifying their generation.
+
+=== Explicit PK Declaration: Proposal
+
+Tracked by https://hibernate.atlassian.net/browse/HHH-20914[HHH-20914].
+
+Steve proposed a Hibernate `@PrimaryKey` annotation with `String table() default ""`
+and required `String name()`. This section records a proposal, not an approved annotation
+contract. It would name an existing mapped PK, not define its columns or create a PK on
+an otherwise keyless mapping.
+
+Recommended placement and selection:
+
+* `TYPE`: an empty table selector identifies the entity's primary table; a nonempty
+  selector identifies a logical table name in that entity's mapping, notably a secondary
+  table. Repeatable declarations allow primary and secondary table names together.
+* `FIELD` / `METHOD`: an empty selector identifies the join/collection table belonging
+  to the annotated association or collection, including an implicitly named table.
+  An explicit selector remains scoped to that mapping use.
+  Only one `@PrimaryKey` declaration is allowed on a field or getter.
+* Joined-subclass and table-per-class entity tables are covered by entity-table placement.
+  Single-table inheritance shares the root table's PK; an inverse association does not
+  introduce another independently named PK. Mapped-superclass/embeddable reuse and
+  normalized XML support must be specified before implementation.
+
+Repeatability is intended for entity-level declarations, principally to name the primary
+and secondary table PKs separately. Java's `@Repeatable` does not express placement-specific
+cardinality, so boot validation must reject multiple declarations on a field or getter.
+At entity level, multiple declarations selecting the same table are also invalid.
+
+Use logical table selection before physical naming. Unknown or ambiguous selectors,
+a mapping with no PK, blank names, and conflicting names for the same shared table should
+produce useful mapping errors, rather than create a constraint, choose a table arbitrarily,
+or silently ignore the annotation. These validation rules are recommendations to settle
+in the working specification.
+
+The explicit name becomes a `LogicalName` with explicit provenance and goes through
+`toPhysicalPrimaryKeyName`; the standard physical strategy therefore retains it.
+Approved precedence: a direct `@PrimaryKey` declaration wins over an absorbed explicit
+unique-key name, even when the names differ. Without a direct declaration, preserve the
+existing absorbed-UK naming behavior. The implementation details of retaining source
+provenance and choosing the physical hook remain part of the follow-up specification.
+
+==== Consideration: User-Selected Names Versus Hibernate Defaults
+
+The `@PrimaryKey` follow-up should consider whether a name supplied by a custom
+`ImplicitNamingStrategy` represents user naming intent, distinct from a default generated
+by a built-in strategy. An explicit mapping declaration and a deliberate custom-strategy
+result could both warrant emitting a PK name, even though only the declaration is
+explicit in the mapping.
+
+Strategy class identity alone may be insufficient: a custom strategy can inherit the
+built-in constraint defaults while overriding unrelated naming methods. Consider the
+origin of the individual naming decision and whether it needs an indication separate
+from `LogicalName.isExplicit()`, which describes explicit mapping provenance.
+
+This is an open consideration for the follow-up, not an approved provenance contract
+or a change to the current decision to preserve unnamed implicit PKs.
+
+=== Readiness
+
+Introduce or reuse a finalization point after constraint membership, derived names,
+partition/auxiliary columns, duplicate suppression, and required correspondence are settled.
+For PK naming, the input depends only on the settled table names; completing PK columns
+is not itself a naming dependency. The surviving constraint and applicable explicit-name
+precedence must still be resolved without replaying naming.
+Constraint naming cannot be inserted at an early initialization point if inputs
+promise settled membership. Explicit names bypass implicit dependency requirements but still
+undergo normal constraint validation and physical naming. No preliminary naming followed
+by a second callback after a late column arrives.
+
+== Working Specification Follow-through
+
+. Specify unified table-based implicit PK naming using `Alias(15, "_pk")` over the
+  physical table name, with both naming stages available in the input. Keep DDL emission and explicit PK declarations as
+  separate decisions.
+. Characterize existing names across all PK forms and FK/UK/index dependency paths,
+  including physical-name fallbacks and expression hashing, before moving algorithms.
+. Specify absorbed-UK precedence and dialect capability handling for the approved PK/UK
+  DDL emission change, retaining the migration-guide note.
+. Define typed index terms and FK correspondence without changing default hash inputs.
+. Separate source-resolution/readiness work needed for reliable inputs from unrelated
+  schema/parser behavior changes; report any required deviation before implementation.
+
+== Proposed Implementation Sequence And Acceptance
+
+. Migrate FK and UK together with selected dependencies, deduplication, explicit bypass,
+  and finalization. Cover PK/non-PK targets, derived/composite keys, denormalized tables,
+  logical aliases, disabled constraints, and additional mapping contributions.
+. Verify unchanged unnamed implicit-PK output across entity, secondary/joined, and
+  collection tables, including UK absorption. Handle the new explicit PK declaration
+  facility under its separate follow-up specification.
+. Migrate indexes with typed terms and defined ordering/hash semantics. Cover entity and
+  collection tables, expressions, unique-index representation, qualification, and options.
+. Remove obsolete source interfaces and strategy helpers after their callers migrate.
+
+Extend the existing strategy matrix and focused tests, rather than create another matrix.
+Assert exact defaults independently; custom callback facts and counts; physical calls and
+quoting; final DDL names as well as model names; stable results across entity registration
+order; and archive restoration without naming replay. Potential collision reproductions
+belong to the separate investigation, not a new default-name requirement. Render representative dialect DDL before claiming database-specific behavior;
+actual database execution is a separate verification level.
+
+The shared link:naming-dependency-inputs-spec.adoc[dependency-readiness specification]
+continues to apply. Named SQL types, audit/history naming, generator objects, and general
+relational name-storage migration are not implicitly added to this slice.
+
+The next working draft is link:foreign-unique-key-naming-spec.adoc[Foreign And Unique Key Naming].

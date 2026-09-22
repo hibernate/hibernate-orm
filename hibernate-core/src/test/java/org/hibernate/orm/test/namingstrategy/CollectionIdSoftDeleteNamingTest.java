@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -141,11 +143,15 @@ class CollectionIdSoftDeleteNamingTest {
 			for (boolean collectionId : new boolean[] {true, false}) {
 				final var strategy = new StandardImplicitNamingStrategy() {
 					@Override
-					public LogicalName determineCollectionIdColumnName(CollectionIdColumnNamingInput input, ImplicitNamingContext context) {
+					@Nonnull
+					@SuppressWarnings("DataFlowIssue") // Deliberately invalid strategy result.
+					public LogicalName determineCollectionIdColumnName(@Nonnull CollectionIdColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 						return collectionId ? (returnNull ? null : new LogicalName( "invalid", false, true )) : super.determineCollectionIdColumnName( input, context );
 					}
 					@Override
-					public LogicalName determineSoftDeleteColumnName(SoftDeleteColumnNamingInput input, ImplicitNamingContext context) {
+					@Nonnull
+					@SuppressWarnings("DataFlowIssue") // Deliberately invalid strategy result.
+					public LogicalName determineSoftDeleteColumnName(@Nonnull SoftDeleteColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 						return collectionId ? super.determineSoftDeleteColumnName( input, context ) : (returnNull ? null : new LogicalName( "invalid", false, true ));
 					}
 				};
@@ -175,7 +181,8 @@ class CollectionIdSoftDeleteNamingTest {
 			final var metadata = MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
 					new MappingSources().addManagedClasses( Owner.class, Details.class ), new Recording(), new Prefix() {
 						@Override
-						public PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context) {
+						@Nonnull
+						public PhysicalName toPhysicalTableName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 							return context.getPhysicalNameFactory().create( "p_" + name.getText(), true );
 						}
 					} );
@@ -295,12 +302,14 @@ class CollectionIdSoftDeleteNamingTest {
 		final List<CollectionIdColumnNamingInput> ids = new ArrayList<>();
 		final List<SoftDeleteColumnNamingInput> soft = new ArrayList<>();
 		@Override
-		public LogicalName determineCollectionIdColumnName(CollectionIdColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineCollectionIdColumnName(@Nonnull CollectionIdColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			ids.add( input );
 			return context.implicitName( "custom_id", true );
 		}
 		@Override
-		public LogicalName determineSoftDeleteColumnName(SoftDeleteColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineSoftDeleteColumnName(@Nonnull SoftDeleteColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			soft.add( input );
 			return context.implicitName( "custom_" + input.strategy().getDefaultColumnName(), true );
 		}
@@ -309,12 +318,14 @@ class CollectionIdSoftDeleteNamingTest {
 	static class Prefix extends PhysicalNamingStrategyStandardImpl {
 		final List<LogicalName> inputs = new ArrayList<>();
 		@Override
-		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			inputs.add( name );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), false );
 		}
 		@Override
-		public PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), false );
 		}
 	}

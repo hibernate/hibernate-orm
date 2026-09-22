@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy.ejb3joincolumn;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.relational.naming.spi.PhysicalName;
@@ -22,12 +24,14 @@ public class PhysicalNamingStrategyImpl extends PhysicalNamingStrategyStandardIm
 	public static final PhysicalNamingStrategyImpl INSTANCE = new PhysicalNamingStrategyImpl();
 
 	@Override
-	public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+	@Nonnull
+	public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
 		return jdbcEnvironment.getPhysicalNameFactory().create( makeCleanIdentifier("tbl_" + logicalName.getText()), logicalName.isQuoted() );
 	}
 
 	@Override
-	public PhysicalName toPhysicalColumnName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+	@Nonnull
+	public PhysicalName toPhysicalColumnName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
 		return logicalName.getText().equals( "DTYPE" )
 				? jdbcEnvironment.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() )
 				: jdbcEnvironment.getPhysicalNameFactory().create( makeCleanIdentifier( "c_" + logicalName.getText() ), logicalName.isQuoted() );

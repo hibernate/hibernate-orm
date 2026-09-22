@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -102,7 +104,8 @@ class PhysicalNamingStrategyContractTest {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 			final var strategy = new PhysicalNamingStrategyStandardImpl() {
 				@Override
-				public PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context) {
+				@Nonnull
+				public PhysicalName toPhysicalTableName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 					assertThat( name.isExplicit() ).isTrue();
 					return super.toPhysicalTableName( name, context );
 				}

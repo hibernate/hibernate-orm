@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -210,7 +212,9 @@ class AggregateColumnNamingTest {
 			assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadataWithImplicitNaming( registry,
 					new MappingSources().addManagedClasses( Direct.class, Address.class ), new StandardImplicitNamingStrategy() {
 						@Override
-						public LogicalName determineAggregateColumnName(AggregateColumnNamingInput input, ImplicitNamingContext context) {
+						@Nonnull
+						@SuppressWarnings("DataFlowIssue") // Deliberately invalid strategy result.
+						public LogicalName determineAggregateColumnName(@Nonnull AggregateColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 							return returnNull ? null : new LogicalName( "invalid", false, true );
 						}
 					} ) ).hasMessageContaining( "non-null implicit name for aggregate column" );
@@ -321,7 +325,8 @@ class AggregateColumnNamingTest {
 	static class Recording extends StandardImplicitNamingStrategy {
 		final List<AggregateColumnNamingInput> inputs = new ArrayList<>();
 		@Override
-		public LogicalName determineAggregateColumnName(AggregateColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAggregateColumnName(@Nonnull AggregateColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			inputs.add( input );
 			return context.implicitName( "agg_" + input.attributeName(), true );
 		}
@@ -330,7 +335,8 @@ class AggregateColumnNamingTest {
 	static class Prefix extends PhysicalNamingStrategyStandardImpl {
 		final List<LogicalName> inputs = new ArrayList<>();
 		@Override
-		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			inputs.add( name );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), false );
 		}

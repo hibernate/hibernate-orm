@@ -9,7 +9,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.sql.Alias;
 
 /// Explicit materializer for dependent table primary keys.
 ///
@@ -21,7 +20,6 @@ import org.hibernate.sql.Alias;
 /// @since 9.0
 /// @author Steve Ebersole
 public final class DependentTableKeyMappingMaterializer {
-	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	private DependentTableKeyMappingMaterializer() {
 	}
@@ -38,9 +36,7 @@ public final class DependentTableKeyMappingMaterializer {
 			org.hibernate.boot.spi.MetadataBuildingContext context) {
 		final Table table = dependentTableKey.table();
 		final PrimaryKey primaryKey = new PrimaryKey( table );
-		primaryKey.setName( org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.resolve(
-				null, () -> org.hibernate.boot.model.naming.Identifier.toIdentifier( PK_ALIAS.toAliasString( table.getName() ) ),
-				org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.Kind.PRIMARY_KEY, context ) );
+
 		table.setPrimaryKey( primaryKey );
 		for ( Column column : dependentTableKey.keyColumns() ) {
 			primaryKey.addColumn( column );

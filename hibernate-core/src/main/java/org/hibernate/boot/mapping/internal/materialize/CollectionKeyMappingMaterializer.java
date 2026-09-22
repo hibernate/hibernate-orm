@@ -4,19 +4,10 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
-import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
-
-import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
-
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
-import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
-import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Collection;
@@ -220,44 +211,9 @@ public final class CollectionKeyMappingMaterializer {
 				key.addColumn( column );
 			}
 		}
-		key.setName( implicitKeyName( collectionTableKey, key ) );
 		if ( key.getColumnSpan() > collection.getKey().getColumnSpan() ) {
 			collectionTable.setPrimaryKey( (PrimaryKey) key );
 		}
-	}
-
-	private static String implicitKeyName(ResolvedCollectionTableKey collectionTableKey, Constraint key) {
-		final Collection collection = collectionTableKey.collection();
-		final MetadataBuildingContext buildingContext = collectionTableKey.metadataBuildingContext();
-		return org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.resolve( null, () -> buildingContext.getBuildingPlan()
-				.getImplicitNamingStrategy()
-				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-					@Override
-					public Identifier getTableName() {
-						return ImplicitNamingSourceHelper.tableName( collection.getColumnContainer() );
-					}
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						final List<Identifier> list = new ArrayList<>();
-						for ( var column : key.getColumns() ) {
-							list.add( ColumnNameHelper.identifier( column ) );
-						}
-						return list;
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return null;
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( buildingContext );
-					}
-				} ), key instanceof PrimaryKey
-						? org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.Kind.PRIMARY_KEY
-						: org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.Kind.UNIQUE_KEY, buildingContext );
 	}
 
 	private static void adjustTemporalPrimaryKey(Collection collection) {

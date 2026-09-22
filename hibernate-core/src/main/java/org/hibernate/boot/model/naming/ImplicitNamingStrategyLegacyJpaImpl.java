@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.CollectionKeyNamingInput;
 
 import org.hibernate.boot.model.naming.spi.CollectionTableNamingInput;
@@ -41,7 +43,8 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 	public static final ImplicitNamingStrategyLegacyJpaImpl INSTANCE = new ImplicitNamingStrategyLegacyJpaImpl();
 
 	@Override
-	public LogicalName determineCollectionTableName(CollectionTableNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineCollectionTableName(@Nonnull CollectionTableNamingInput input, @Nonnull ImplicitNamingContext context) {
 		final var table = input.owningTable();
 		final var physical = table instanceof NamedTableNamingInput named ? named.names().physicalName() : null;
 		return context.implicitName(
@@ -52,7 +55,8 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 
 
 	@Override
-	public LogicalName determineCollectionKeyColumnName(CollectionKeyNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	public LogicalName determineCollectionKeyColumnName(@Nonnull CollectionKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
 		if ( input.kind() == CollectionKeyNamingInput.Kind.TO_ONE_TABLE
 				|| input.kind() == CollectionKeyNamingInput.Kind.ONE_TO_MANY
 				|| input.inverseAttributePath().isPresent() ) {

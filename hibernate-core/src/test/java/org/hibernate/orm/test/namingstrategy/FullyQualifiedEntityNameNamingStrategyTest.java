@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.AssociationTableNamingInput;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
@@ -127,7 +129,8 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 		}
 
 		@Override
-		public LogicalName determineAssociationTableName(AssociationTableNamingInput source, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAssociationTableName(@Nonnull AssociationTableNamingInput source, @Nonnull ImplicitNamingContext context) {
 			final String ownerPortion = transformEntityName( source.owner() );
 			final String ownedPortion;
 			if ( source.target() != null ) {
@@ -141,17 +144,20 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 		}
 
 			@Override
-		public LogicalName determineJoinColumnName(JoinColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineJoinColumnName(@Nonnull JoinColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return joinName( transformEntityName( input.owner() ) + "_" + transformAttributePath( AttributePath.parse( input.attributePath() ) ), input.reference(), context );
 		}
 
 		@Override
-		public LogicalName determineCollectionKeyColumnName(CollectionKeyNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineCollectionKeyColumnName(@Nonnull CollectionKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return joinName( transformEntityName( input.owner() ) + input.inverseAttributePath().map( path -> "_" + transformAttributePath( AttributePath.parse( path ) ) ).orElse( "" ), input.reference(), context );
 		}
 
 		@Override
-		public LogicalName determineAssociationKeyColumnName(AssociationKeyNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAssociationKeyColumnName(@Nonnull AssociationKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return joinName( transformEntityName( input.target() ) + "_" + transformAttributePath( AttributePath.parse( input.attributePath() ) ), input.reference(), context );
 		}
 

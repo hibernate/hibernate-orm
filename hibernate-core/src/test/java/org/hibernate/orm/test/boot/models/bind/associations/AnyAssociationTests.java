@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.boot.models.bind.associations;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
@@ -743,13 +745,15 @@ public class AnyAssociationTests {
 
 	public static class AnyImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
 		@Override
-		public LogicalName determineAnyDiscriminatorColumnName(AnyColumnNamingInput source, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAnyDiscriminatorColumnName(@Nonnull AnyColumnNamingInput source, @Nonnull ImplicitNamingContext context) {
 			return context.implicitName(
 					"implicit_any_discriminator_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}
 
 		@Override
-		public LogicalName determineAnyKeyColumnName(AnyColumnNamingInput source, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAnyKeyColumnName(@Nonnull AnyColumnNamingInput source, @Nonnull ImplicitNamingContext context) {
 			return context.implicitName(
 					"implicit_any_key_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}

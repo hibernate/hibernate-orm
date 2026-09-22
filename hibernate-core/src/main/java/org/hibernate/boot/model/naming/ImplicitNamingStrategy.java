@@ -4,7 +4,11 @@
  */
 package org.hibernate.boot.model.naming;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
+import org.hibernate.boot.model.naming.spi.PrimaryKeyNamingInput;
+import org.hibernate.sql.Alias;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.naming.spi.AggregateColumnNamingInput;
@@ -56,7 +60,8 @@ import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 /// the naming decision, together with naming defaults and helpers in the context.
 /// Dependency inputs may expose both logical and physical names of related objects,
 /// allowing a strategy to choose which spelling to use in composing a new logical name.
-/// Methods returning [LogicalName] must return a non-null name with
+/// Every callback requires non-null inputs and must return a non-null name.
+/// Methods returning [LogicalName] must return a name with
 /// [explicit provenance][LogicalName#isExplicit()] set to `false`; use
 /// [ImplicitNamingContext#implicitName(String)] or its quoting overload to construct it.
 ///
@@ -88,7 +93,8 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	///
 	/// @return The implicit table name.
-	LogicalName determinePrimaryTableName(PrimaryTableNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determinePrimaryTableName(@Nonnull PrimaryTableNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the name of an association join table given the source naming
 	/// information, when a name is not explicitly given. This method is called
@@ -99,7 +105,8 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	///
 	/// @return The implicit table name.
-	LogicalName determineAssociationTableName(AssociationTableNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineAssociationTableName(@Nonnull AssociationTableNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the name of a collection join table given the source naming
 	/// information, when a name is not explicitly given. This method is called
@@ -111,7 +118,8 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	///
 	/// @return The implicit table name.
-	LogicalName determineCollectionTableName(CollectionTableNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineCollectionTableName(@Nonnull CollectionTableNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the name of the [identifier][jakarta.persistence.Id] column
 	/// belonging to the given entity when it is not explicitly specified using
@@ -123,7 +131,8 @@ public interface ImplicitNamingStrategy {
 	///
 	/// @see jakarta.persistence.EmbeddedId
 	/// @see jakarta.persistence.AttributeOverride#column()
-	LogicalName determineIdentifierColumnName(IdentifierColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineIdentifierColumnName(@Nonnull IdentifierColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit column name for an [org.hibernate.annotations.TenantId]
 	/// attribute when no name is supplied by [jakarta.persistence.Column#name()].
@@ -133,7 +142,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input entity naming information and the tenant attribute path
 	/// @param context naming defaults and helpers
 	/// @return a non-null implicit logical column name
-	LogicalName determineTenantColumnName(TenantColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineTenantColumnName(@Nonnull TenantColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit entity discriminator-column name. The default implementation returns `DTYPE`.
 	/// A present [jakarta.persistence.DiscriminatorColumn] with a nonempty
@@ -143,7 +153,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input Root-entity naming information
 	/// @param context Focused naming defaults and helpers
 	/// @return A non-null implicit logical name
-	default LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	default LogicalName determineDiscriminatorColumnName(@Nonnull DiscriminatorColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( "DTYPE" );
 	}
 
@@ -159,7 +170,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input Owner, embeddable type, full attribute path, role, and effective declaration origin
 	/// @param context Naming defaults and helpers
 	/// @return A non-null implicit logical column name
-	default LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	default LogicalName determineEmbeddableDiscriminatorColumnName(@Nonnull EmbeddableDiscriminatorColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( input.declaration() == EmbeddableDiscriminatorColumnNamingInput.Declaration.DISCRIMINATOR_COLUMN
 				? "DTYPE"
 				: input.kind() == EmbeddableDiscriminatorColumnNamingInput.Kind.COLLECTION_ELEMENT
@@ -175,7 +187,8 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	///
 	/// @return The implicit column name.
-	LogicalName determineBasicColumnName(BasicColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineBasicColumnName(@Nonnull BasicColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit name of an aggregate container column or nested member.
 	/// Supplied strategies use the terminal attribute name. Explicit names from
@@ -188,7 +201,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input Owner, type, path, usage, storage kind, plurality, and naming scope
 	/// @param context Naming defaults and helpers
 	/// @return A non-null implicit logical name
-	LogicalName determineAggregateColumnName(AggregateColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineAggregateColumnName(@Nonnull AggregateColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit column name for a basic [jakarta.persistence.ElementCollection]
 	/// element when no name is supplied by [jakarta.persistence.Column#name()].
@@ -196,7 +210,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input Collection attribute information
 	/// @param context Naming defaults and helpers
 	/// @return The implicit element column name
-	LogicalName determineCollectionElementColumnName(CollectionElementColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineCollectionElementColumnName(@Nonnull CollectionElementColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit join-column name for a [jakarta.persistence.ManyToOne]
 	/// or [jakarta.persistence.OneToOne] association, including association identifiers
@@ -208,7 +223,8 @@ public interface ImplicitNamingStrategy {
 	/// @return The implicit join-column name
 	/// @see jakarta.persistence.Id
 	/// @see jakarta.persistence.MapsId
-	LogicalName determineJoinColumnName(JoinColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineJoinColumnName(@Nonnull JoinColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit name of a column referencing the owner of a collection
 	/// or association table. Explicit names are supplied by [jakarta.persistence.JoinColumn#name()]
@@ -219,7 +235,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input Owner, collection/association role, and referenced-column dependencies
 	/// @param context Naming defaults and helpers
 	/// @return The implicit owner-key column name
-	LogicalName determineCollectionKeyColumnName(CollectionKeyNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineCollectionKeyColumnName(@Nonnull CollectionKeyNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit name of a column referencing the association target
 	/// from a join table. Explicit names are supplied by [jakarta.persistence.JoinColumn#name()]
@@ -228,7 +245,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input Association information and target-column dependencies
 	/// @param context Naming defaults and helpers
 	/// @return The implicit target-key column name
-	LogicalName determineAssociationKeyColumnName(AssociationKeyNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineAssociationKeyColumnName(@Nonnull AssociationKeyNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit join-column name for an entity-valued map key when no
 	/// name is supplied by [jakarta.persistence.MapKeyJoinColumn#name()], directly or
@@ -237,7 +255,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input Map attribute information and key-entity column dependencies
 	/// @param context Naming defaults and helpers
 	/// @return The implicit map-key join-column name
-	LogicalName determineMapKeyJoinColumnName(MapKeyJoinColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineMapKeyJoinColumnName(@Nonnull MapKeyJoinColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit column name for a dependent table's primary-key join,
 	/// including [secondary tables][jakarta.persistence.SecondaryTable] and
@@ -249,7 +268,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input Dependent table and referenced primary-key column dependencies
 	/// @param context Naming defaults and helpers
 	/// @return The implicit primary-key join-column name
-	LogicalName determinePrimaryKeyJoinColumnName(PrimaryKeyJoinColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determinePrimaryKeyJoinColumnName(@Nonnull PrimaryKeyJoinColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the column name related to the discriminator portion of an
 	/// [org.hibernate.annotations.Any] or [org.hibernate.annotations.ManyToAny] mapping
@@ -260,7 +280,8 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	///
 	/// @return The determined column name
-	LogicalName determineAnyDiscriminatorColumnName(AnyColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineAnyDiscriminatorColumnName(@Nonnull AnyColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the join column name related to the key/id portion of an
 	/// [org.hibernate.annotations.Any] or [org.hibernate.annotations.ManyToAny] mapping
@@ -271,7 +292,8 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	///
 	/// @return The determined identifier column name
-	LogicalName determineAnyKeyColumnName(AnyColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineAnyKeyColumnName(@Nonnull AnyColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the column name for a basic map key when it is not explicitly specified using
 	/// [jakarta.persistence.MapKeyColumn#name()].
@@ -280,7 +302,8 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	///
 	/// @return The implicit column name.
-	LogicalName determineMapKeyColumnName(MapKeyColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineMapKeyColumnName(@Nonnull MapKeyColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the list index column name when it is not explicitly specified using
 	/// [jakarta.persistence.OrderColumn#name()].
@@ -289,12 +312,14 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	///
 	/// @return The implicit column name.
-	LogicalName determineListIndexColumnName(ListIndexColumnNamingInput input, ImplicitNamingContext context);
+	@Nonnull
+	LogicalName determineListIndexColumnName(@Nonnull ListIndexColumnNamingInput input, @Nonnull ImplicitNamingContext context);
 
 	/// Determine the implicit collection-row identifier column name when
 	/// [org.hibernate.annotations.CollectionId#column()] has no explicit
 	/// [jakarta.persistence.Column#name()]. The default implementation returns `id`.
-	default LogicalName determineCollectionIdColumnName(CollectionIdColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	default LogicalName determineCollectionIdColumnName(@Nonnull CollectionIdColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( "id" );
 	}
 
@@ -303,7 +328,8 @@ public interface ImplicitNamingStrategy {
 	/// The effective [org.hibernate.annotations.SoftDelete#strategy()] is supplied
 	/// as [org.hibernate.annotations.SoftDeleteType]. The default implementation uses
 	/// [its default column name][org.hibernate.annotations.SoftDeleteType#getDefaultColumnName()].
-	default LogicalName determineSoftDeleteColumnName(SoftDeleteColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	default LogicalName determineSoftDeleteColumnName(@Nonnull SoftDeleteColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		return context.implicitName( input.strategy().getDefaultColumnName() );
 	}
 
@@ -322,7 +348,8 @@ public interface ImplicitNamingStrategy {
 	/// @param input The owner, user attribute path, settled temporal name pair, destination table, and original source facts
 	/// @param context Focused naming defaults and helpers
 	/// @return A non-null implicit logical column name
-	default LogicalName determineTimeZoneColumnName(TimeZoneColumnNamingInput input, ImplicitNamingContext context) {
+	@Nonnull
+	default LogicalName determineTimeZoneColumnName(@Nonnull TimeZoneColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 		if ( input.companionDeclared() ) {
 			return determineBasicColumnName( new BasicColumnNamingInput( input.attributePath() + ".zoneOffset" ), context );
 		}
@@ -334,13 +361,30 @@ public interface ImplicitNamingStrategy {
 		return context.implicitName( sourceName.getText() + "_tz", sourceName.isQuoted() );
 	}
 
+	/// Determine the implicit primary-key constraint name for a mapped table.
+	/// The default uses the physical table name, truncated to twelve characters,
+	/// followed by `_pk`, preserving the table's quoting.
+	/// Naming the mapping constraint does not itself cause its name to be emitted in DDL.
+	///
+	/// @param input The table's logical and physical names
+	/// @param context Focused naming defaults and helpers
+	/// @return A non-null implicit logical constraint name
+	@Nonnull
+	default LogicalName determinePrimaryKeyName(@Nonnull PrimaryKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+		final var tableName = input.table().names().physicalName();
+		// HHH-20915: use the Dialect's maximum identifier length instead of the fixed limit.
+		final var name = new Alias( 15, "_pk" ).toUnquotedAliasString( tableName.toString() );
+		return context.implicitName( name, tableName.isQuoted() );
+	}
+
 	/// Determine the foreign key name when it is not explicitly specified using
 	/// [jakarta.persistence.ForeignKey#name()].
 	///
 	/// @param source The source information
 	///
 	/// @return The determined foreign key name
-	Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source);
+	@Nonnull
+	Identifier determineForeignKeyName(@Nonnull ImplicitForeignKeyNameSource source);
 
 	/// Determine the unique key name when it is not explicitly specified using
 	/// [jakarta.persistence.UniqueConstraint#name()]. This also covers generated
@@ -350,7 +394,8 @@ public interface ImplicitNamingStrategy {
 	/// @param source The source information
 	///
 	/// @return The implicit unique-key name
-	Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source);
+	@Nonnull
+	Identifier determineUniqueKeyName(@Nonnull ImplicitUniqueKeyNameSource source);
 
 	/// Determine the index name when it is not explicitly specified using
 	/// [jakarta.persistence.Index#name()].
@@ -358,5 +403,6 @@ public interface ImplicitNamingStrategy {
 	/// @param source The source information
 	///
 	/// @return The implicit index name
-	Identifier determineIndexName(ImplicitIndexNameSource source);
+	@Nonnull
+	Identifier determineIndexName(@Nonnull ImplicitIndexNameSource source);
 }

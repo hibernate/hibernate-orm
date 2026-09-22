@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -159,7 +161,9 @@ class ImplicitEmbeddableDiscriminatorNamingTest {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 			assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadataWithImplicitNaming( registry, sources(), new StandardImplicitNamingStrategy() {
 				@Override
-				public LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+				@Nonnull
+				@SuppressWarnings("DataFlowIssue") // Deliberately invalid strategy result.
+				public LogicalName determineEmbeddableDiscriminatorColumnName(@Nonnull EmbeddableDiscriminatorColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 					return returnNull ? null : new LogicalName( "invalid", false, true );
 				}
 			} ) ).hasMessageContaining( "non-null implicit name for embeddable discriminator column" );
@@ -206,18 +210,21 @@ class ImplicitEmbeddableDiscriminatorNamingTest {
 	static class Defaults extends StandardImplicitNamingStrategy {
 		final List<EmbeddableDiscriminatorColumnNamingInput> inputs = new ArrayList<>();
 		@Override
-		public LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineEmbeddableDiscriminatorColumnName(@Nonnull EmbeddableDiscriminatorColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			inputs.add( input );
 			return super.determineEmbeddableDiscriminatorColumnName( input, context );
 		}
 		@Override
-		public LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineDiscriminatorColumnName(@Nonnull DiscriminatorColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			throw new AssertionError( "Embeddable naming must not invoke entity discriminator naming" );
 		}
 	}
 	static class Strategy extends Defaults {
 		@Override
-		public LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineEmbeddableDiscriminatorColumnName(@Nonnull EmbeddableDiscriminatorColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			super.determineEmbeddableDiscriminatorColumnName( input, context );
 			return context.implicitName( "kind_" + input.attributePath().replace( '.', '_' ), true );
 		}
@@ -225,7 +232,8 @@ class ImplicitEmbeddableDiscriminatorNamingTest {
 	static class Physical extends PhysicalNamingStrategyStandardImpl {
 		final List<LogicalName> inputs = new ArrayList<>();
 		@Override
-		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			inputs.add( name );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), false );
 		}

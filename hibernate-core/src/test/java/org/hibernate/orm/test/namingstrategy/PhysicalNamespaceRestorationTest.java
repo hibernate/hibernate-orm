@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.boot.model.relational.Database;
@@ -166,22 +169,26 @@ class PhysicalNamespaceRestorationTest {
 		boolean forbidNaming;
 
 		@Override
-		public PhysicalName toPhysicalCatalogName(LogicalName name, PhysicalNamingContext context) {
+		@Nullable
+		public PhysicalName toPhysicalCatalogName(@Nullable LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return resolve( name, context, "fallback_catalog" );
 		}
 
 		@Override
-		public PhysicalName toPhysicalSchemaName(LogicalName name, PhysicalNamingContext context) {
+		@Nullable
+		public PhysicalName toPhysicalSchemaName(@Nullable LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return resolve( name, context, "fallback_schema" );
 		}
 
 		@Override
-		public PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return resolve( name, context, "unused" );
 		}
 
 		@Override
-		public PhysicalName toPhysicalSequenceName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalSequenceName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return resolve( name, context, "unused" );
 		}
 

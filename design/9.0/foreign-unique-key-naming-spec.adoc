@@ -1,0 +1,179 @@
+= Foreign And Unique Key Naming
+:toc2:
+:sectanchors:
+
+Status: working specification; not approved for implementation.
+
+This specifies the next slice of
+link:constraint-index-naming-proposal.adoc[the constraint/index proposal].
+It replaces the legacy FK/UK source contracts while preserving supplied default names.
+It does not introduce implicit PK naming or the proposed `@PrimaryKey` annotation.
+
+== Observable Behavior
+
+* Nonempty explicit FK/UK names bypass implicit naming and enter physical naming with
+  explicit provenance. Generated names have implicit provenance.
+* Default FK/UK names retain their existing spelling, quoting, prefixes, dependency
+  stages, sorting, serialization, charset behavior, and digest encoding.
+* Custom implicit strategies receive both logical and physical dependency names.
+  Composite FK inputs preserve local-to-target column correspondence.
+* Each surviving naming decision has one physical transformation. Null implicit or
+  physical FK/UK results produce a mapping error identifying the constraint role.
+  Physical strategies cannot remove quoting requested by the logical name.
+* Schema creation honors finalized UK names wherever the dialect supports named
+  uniqueness. Existing dialect suppression and constraint/index representation choices
+  remain in force. A nullable uniqueness rule must not gain stronger semantics merely
+  to make its name visible.
+* Implicit database PKs remain unnamed. Existing explicitly named UK-to-PK absorption
+  continues to work. Internal PK alias/hash labels must not become emitted names.
+
+== Input Contracts
+
+New records belong to `org.hibernate.boot.model.naming.spi` and follow the existing
+SPI annotations and Markdown Javadoc conventions. Every component must document its
+meaning, nullability, ordering, and naming stage.
+
+[source,java]
+----
+record ForeignKeyColumnNamingInput(
+        NamingNamePair localColumn,
+        NamingNamePair referencedColumn) {}
+
+record ForeignKeyNamingInput(
+        NamedTableNamingInput table,
+        NamedTableNamingInput referencedTable,
+        boolean referencesPrimaryKey,
+        List<ForeignKeyColumnNamingInput> columns) {}
+
+record UniqueKeyNamingInput(
+        NamedTableNamingInput table,
+        List<NamingNamePair> columns) {}
+
+LogicalName determineForeignKeyName(
+        ForeignKeyNamingInput input, ImplicitNamingContext context);
+
+LogicalName determineUniqueKeyName(
+        UniqueKeyNamingInput input, ImplicitNamingContext context);
+----
+
+All components and list elements are non-null. Lists are immutable defensive copies
+and nonempty. Each FK entry describes one actual local/target pair; even a PK reference
+includes its resolved target columns. `referencesPrimaryKey` describes the referenced
+key, not whether the declaration omitted `referencedColumnName`.
+
+Dependencies retain the selected logical declaration or reference alias and finalized
+physical name. Never reconstruct a logical name by relabeling physical text, or select
+an arbitrary alias from a map. A missing dependency must be resolved before invoking
+the callback or reported as an unsupported mapping contribution with useful context.
+
+The order is settled mapping correspondence at naming time. It is not a promise about
+later dialect column-layout ordering. `MetadataImpl.orderColumns` may reorder PK and
+corresponding FK columns later; that must not cause naming to run again.
+
+There is no precomputed fallback name, explicit-name component, mutable mapping object,
+annotation instance, or boot context in these inputs. Explicit bypass happens before
+constructing an implicit request.
+
+== Supplied Defaults And Compatibility
+
+Provide the algorithms as overridable `ImplicitNamingStrategy` interface defaults.
+Standard and JPA strategies inherit them unless an existing behavior requires otherwise.
+
+The default FK recipe continues to use its current local/referenced table spellings and
+physical local column spellings. The default UK recipe continues to use its current table
+spelling and physical column spellings. Resolve logical table dependencies for ordinary
+mapped tables; characterize existing physical-table fallback paths before replacing them.
+If a fallback path changes the serialized hash input, report that deviation before
+implementation rather than silently renaming its constraints.
+
+Preserve the `FK` and `UK` prefixes, canonical column sorting on a copy, quote markers,
+configured schema charset (including its existing platform-default fallback), MD5,
+and base-35 encoding. Target columns and mapping order are available to custom strategies
+but are not added to the default hash. No collision algorithm or name truncation is added.
+
+Remove the migrated `ImplicitForeignKeyNameSource` and `ImplicitUniqueKeyNameSource`
+contracts after migrating their callers and supplied implementations. Custom strategies
+must migrate to the new contracts; a compatibility adapter is not required.
+Index contract migration is a subsequent slice.
+
+== Materialization And Name Finalization
+
+Retain explicit logical names separately from rendered physical names until finalization.
+Do not infer explicitness from a populated mapping name: a generated name can populate
+the same field. Adapt `ConstraintNamingHelper` to consume `LogicalName` results while
+keeping FK/UK physical results mandatory.
+
+Resolve constraint membership, target correspondence, duplicate suppression, and final
+relational role before issuing the naming request. UK collections currently use names
+as map keys during materialization; moving their naming later must also provide an
+internal identity independent of the eventual exported name. Do not invoke a strategy
+early simply to obtain a temporary map key.
+
+An absorbed UK is not a surviving UK naming decision. Preserve its column-ordering
+effect and, when explicitly named, its existing emitted PK name without applying
+physical naming twice. The direct `@PrimaryKey` precedence rule belongs to the separate
+explicit-PK follow-up and does not add that annotation in this slice.
+
+Collection-set PK creation currently calls the UK callback for its internal label.
+Separate that bookkeeping use from actual UK requests. Keep its PK enforcement and
+unnamed DDL behavior; nullable sets which materialize a real UK use the UK contract.
+The separately planned unified PK naming contract must not be introduced incidentally
+by this FK/UK slice.
+
+Do not fabricate named-table inputs for inline views. Disabled and nonexportable
+constraints must be characterized before changing their callback boundary; record any
+required behavioral change in the implementation review. Reuse and metadata restoration
+retain finalized names without replaying either strategy.
+
+== Schema Tooling
+
+Use finalized UK names consistently in create-table and alter-table paths wherever
+the dialect supports the corresponding named construct. In particular, explicitness
+alone must no longer decide whether a finalized UK name is rendered. Where a dialect
+supports a named table constraint, single-column uniqueness should use that form if
+the anonymous inline clause would discard the finalized name.
+
+Preserve dialect-specific nullable-uniqueness and unique-index representation semantics.
+Do not apply the index physical hook to a finalized UK merely because its dialect
+representation uses an index. Trace the `ColumnDefinitions` export-time `UK_` fallback:
+supported mapping contributions must finalize naming before export, not invoke a
+strategy from schema tooling.
+
+Update the planned migration-guide note when behavior is implemented. Explain changes
+to emitted UK names separately from unchanged hash recipes. Existing database constraints
+are not automatically renamed.
+
+== Verification And Acceptance
+
+Extend the existing naming strategy suite with independent expected names and DDL
+assertions. Required coverage includes:
+
+* Explicit/implicit FK and UK names, quoted names, custom logical results, physical
+  transformations, null-result errors, and callback counts.
+* Single/composite FK pairs, PK and alternate-key references, derived identifiers,
+  selected aliases, secondary tables, joined inheritance, and collection tables.
+* Column uniqueness, table UKs, nullable-set UKs, duplicate UKs, and explicitly named
+  UK-to-PK absorption. Discarded candidates must not produce implicit requests.
+* Unchanged unnamed PK output across entity, dependent, identifier/indexed/set collection
+  mappings; a PK must retain its columns and enforcement.
+* Exact existing FK/UK default names under identity and prefixing physical strategies,
+  quoted dependencies, and configured charset behavior.
+* Named UK create/alter DDL and representative dialect nullable-uniqueness behavior;
+  distinguish SQL rendering checks from actual database execution.
+* Stable dependency selection under reversed mapping registration order, additional
+  mapping contributions, and metadata restoration without naming replay.
+
+Approval covers the specified behavior and contracts. Before implementation changes
+an existing fallback path or disabled-constraint callback boundary, present the concrete
+case and required deviation. Do not treat these characterization requirements as
+permission to change default names.
+
+== Characterization Finding From The PK Slice
+
+`Table.cleanseUniqueKeyMap()` has different single-UK and multiple-UK paths. The
+single-UK path removes a key matching the PK without assigning `orderingUniqueKey`;
+the multiple-UK path calls `isRedundantUniqueKey()`, which retains that information.
+A focused mapping/export test during the PK work exposed the missing name in the
+single-UK case. The relevant cleanup code is unchanged by that work. Investigate this
+existing inconsistency when specifying absorbed-UK finalization; the PK slice tests
+preservation through the multiple-UK absorption path and does not correct cleanup.

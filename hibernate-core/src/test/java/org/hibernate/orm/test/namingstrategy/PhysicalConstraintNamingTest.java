@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,17 +64,20 @@ class PhysicalConstraintNamingTest {
 
 	static class BypassCheckingStrategy extends StandardImplicitNamingStrategy {
 		@Override
-		public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
+		@Nonnull
+		public Identifier determineForeignKeyName(@Nonnull ImplicitForeignKeyNameSource source) {
 			assertThat( source.getUserProvidedIdentifier() ).isNull();
 			return super.determineForeignKeyName( source );
 		}
 		@Override
-		public Identifier determineIndexName(ImplicitIndexNameSource source) {
+		@Nonnull
+		public Identifier determineIndexName(@Nonnull ImplicitIndexNameSource source) {
 			assertThat( source.getUserProvidedIdentifier() ).isNull();
 			return super.determineIndexName( source );
 		}
 		@Override
-		public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
+		@Nonnull
+		public Identifier determineUniqueKeyName(@Nonnull ImplicitUniqueKeyNameSource source) {
 			assertThat( source.getUserProvidedIdentifier() ).isNull();
 			return super.determineUniqueKeyName( source );
 		}
@@ -83,21 +88,25 @@ class PhysicalConstraintNamingTest {
 		final List<LogicalName> indexes = new ArrayList<>();
 		final List<LogicalName> uniqueKeys = new ArrayList<>();
 		@Override
-		public PhysicalName toPhysicalPrimaryKeyName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalPrimaryKeyName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			return context.getPhysicalNameFactory().create( "pk_" + name.getText(), name.isQuoted() );
 		}
 		@Override
-		public PhysicalName toPhysicalForeignKeyName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalForeignKeyName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			foreignKeys.add( name );
 			return context.getPhysicalNameFactory().create( "fk_" + name.getText(), name.isQuoted() );
 		}
 		@Override
-		public PhysicalName toPhysicalIndexName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalIndexName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			indexes.add( name );
 			return context.getPhysicalNameFactory().create( "ix_" + name.getText(), false );
 		}
 		@Override
-		public PhysicalName toPhysicalUniqueKeyName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalUniqueKeyName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			uniqueKeys.add( name );
 			return context.getPhysicalNameFactory().create( "uk_" + name.getText(), name.isQuoted() );
 		}

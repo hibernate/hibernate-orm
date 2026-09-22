@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.model.naming;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
@@ -30,60 +33,68 @@ public class PhysicalNamingStrategySnakeCaseImpl implements PhysicalNamingStrate
 
 
 	@Override
-	public PhysicalName toPhysicalCatalogName(LogicalName logicalName, PhysicalNamingContext context) {
+	@Nullable
+	public PhysicalName toPhysicalCatalogName(@Nullable LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
+		return logicalName == null ? null : apply( logicalName, context );
+	}
+
+	@Override
+	@Nullable
+	public PhysicalName toPhysicalSchemaName(@Nullable LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
+		return logicalName == null ? null : apply( logicalName, context );
+	}
+
+	@Override
+	@Nonnull
+	public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return apply( logicalName, context );
 	}
 
 	@Override
-	public PhysicalName toPhysicalSchemaName(LogicalName logicalName, PhysicalNamingContext context) {
+	@Nonnull
+	public PhysicalName toPhysicalSequenceName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return apply( logicalName, context );
 	}
 
 	@Override
-	public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext context) {
+	@Nonnull
+	public PhysicalName toPhysicalColumnName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return apply( logicalName, context );
 	}
 
 	@Override
-	public PhysicalName toPhysicalSequenceName(LogicalName logicalName, PhysicalNamingContext context) {
+	@Nonnull
+	public PhysicalName toPhysicalTypeName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return apply( logicalName, context );
 	}
 
 	@Override
-	public PhysicalName toPhysicalColumnName(LogicalName logicalName, PhysicalNamingContext context) {
+	@Nonnull
+	public PhysicalName toPhysicalPrimaryKeyName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return apply( logicalName, context );
 	}
 
 	@Override
-	public PhysicalName toPhysicalTypeName(LogicalName logicalName, PhysicalNamingContext context) {
+	@Nonnull
+	public PhysicalName toPhysicalForeignKeyName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return apply( logicalName, context );
 	}
 
 	@Override
-	public PhysicalName toPhysicalPrimaryKeyName(LogicalName logicalName, PhysicalNamingContext context) {
+	@Nonnull
+	public PhysicalName toPhysicalUniqueKeyName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return apply( logicalName, context );
 	}
 
 	@Override
-	public PhysicalName toPhysicalForeignKeyName(LogicalName logicalName, PhysicalNamingContext context) {
+	@Nonnull
+	public PhysicalName toPhysicalIndexName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return apply( logicalName, context );
 	}
 
-	@Override
-	public PhysicalName toPhysicalUniqueKeyName(LogicalName logicalName, PhysicalNamingContext context) {
-		return apply( logicalName, context );
-	}
-
-	@Override
-	public PhysicalName toPhysicalIndexName(LogicalName logicalName, PhysicalNamingContext context) {
-		return apply( logicalName, context );
-	}
-
-	private PhysicalName apply(LogicalName name, PhysicalNamingContext context) {
-		if ( name == null ) {
-			return null;
-		}
-		else if ( name.isQuoted() ) {
+	@Nonnull
+	private PhysicalName apply(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
+		if ( name.isQuoted() ) {
 			return quotedIdentifier( name, context );
 		}
 		else {
@@ -101,11 +112,13 @@ public class PhysicalNamingStrategySnakeCaseImpl implements PhysicalNamingStrate
 		return builder.toString();
 	}
 
-	protected PhysicalName unquotedIdentifier(LogicalName name, PhysicalNamingContext context) {
+	@Nonnull
+	protected PhysicalName unquotedIdentifier(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 		return context.getPhysicalNameFactory().create( camelCaseToSnakeCase( name.getText() ).toLowerCase( Locale.ROOT ), false );
 	}
 
-	protected PhysicalName quotedIdentifier(LogicalName quotedName, PhysicalNamingContext context) {
+	@Nonnull
+	protected PhysicalName quotedIdentifier(@Nonnull LogicalName quotedName, @Nonnull PhysicalNamingContext context) {
 		return context.getPhysicalNameFactory().create( quotedName.getText(), true );
 	}
 

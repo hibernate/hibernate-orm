@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.boot.models.bind;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,13 +122,15 @@ class TableReferenceNamingTest {
 		final Map<LogicalName, Integer> schemaCalls = new HashMap<>();
 
 		@Override
-		public PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			tableCalls.merge( name, 1, Integer::sum );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), name.isQuoted() );
 		}
 
 		@Override
-		public PhysicalName toPhysicalSchemaName(LogicalName name, PhysicalNamingContext context) {
+		@Nullable
+		public PhysicalName toPhysicalSchemaName(@Nullable LogicalName name, @Nonnull PhysicalNamingContext context) {
 			if ( name == null ) {
 				return context.getPhysicalNameFactory().create( "strategy_schema", false );
 			}

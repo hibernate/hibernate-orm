@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -136,6 +137,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final String explicitDiscriminatorColumnName;
 	private final String discriminatorAlias;
 	private final boolean forceDiscriminator;
+	private final boolean discriminatorInsertable;
 
 	// Span of the tables directly mapped by this entity and super-classes, if any
 	private final int coreTableSpan;
@@ -187,6 +189,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				discriminatorType = DiscriminatorHelper.getDiscriminatorType( persistentClass );
 				discriminatorValue = DiscriminatorHelper.getDiscriminatorValue( persistentClass );
 				discriminatorSQLString = DiscriminatorHelper.getDiscriminatorSQLValue( persistentClass, dialect );
+				discriminatorInsertable = isDiscriminatorInsertable( persistentClass );
 			}
 			else {
 				explicitDiscriminatorColumnName = null;
@@ -199,6 +202,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				catch ( Exception e ) {
 					throw new MappingException( "Could not format discriminator value to SQL string", e );
 				}
+				discriminatorInsertable = true;
 			}
 		}
 		else {
@@ -208,6 +212,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			discriminatorValue = null;
 			discriminatorSQLString = null;
 			forceDiscriminator = false;
+			discriminatorInsertable = false;
 		}
 
 		if ( optimisticLockStyle().isAllOrDirty() ) {
@@ -763,7 +768,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
-		if ( explicitDiscriminatorColumnName != null ) {
+		if ( explicitDiscriminatorColumnName != null && discriminatorInsertable ) {
 			final TableInsertBuilder tableInsertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
@@ -771,6 +776,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					getDiscriminatorMapping()
 			);
 		}
+	}
+
+	private static boolean isDiscriminatorInsertable(@Nonnull PersistentClass persistentClass) {
+		return !persistentClass.isDiscriminatorValueNull()
+			&& !persistentClass.isDiscriminatorValueNotNull()
+			&& persistentClass.isDiscriminatorInsertable()
+			&& !persistentClass.getDiscriminator().hasFormula();
 	}
 
 	private String getDiscriminatorValueString() {

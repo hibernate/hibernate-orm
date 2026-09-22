@@ -28,7 +28,6 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -90,8 +89,6 @@ public class CollectionFetchPaginationAppliedGraphTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-20911",
-			reason = "The limit is stripped from the SQL and no in-memory slice is applied")
 	void appliedGraphWithChildrenLeftJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Parent> parents = selectParents( session, ChildrenLeftJoin.UNREFERENCED )
@@ -135,8 +132,6 @@ public class CollectionFetchPaginationAppliedGraphTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-20911",
-			reason = "The limit is stripped from the SQL and no in-memory slice is applied")
 	void appliedGraphWithChildrenLeftJoinHql(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Parent> parents = session.createSelectionQuery(

@@ -2222,14 +2222,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// This is arguably silly, but let's play safe here and disable the transformation in this case.
 				return false;
 			}
-			else if ( sqmQueryPart.getFetchExpression() != null
-					|| sqmQueryPart.getOffsetExpression() != null ) {
-				return true;
-			}
 			else {
-				final var limit = queryOptions.peekOriginalLimit();
-				return limit != null && !limit.isEmpty();
+				return hasPagination( sqmQueryPart );
 			}
+		}
+	}
+
+	private boolean hasPagination(SqmQueryPart<?> sqmQueryPart) {
+		if ( sqmQueryPart.getFetchExpression() != null || sqmQueryPart.getOffsetExpression() != null ) {
+			return true;
+		}
+		else {
+			final var limit = queryOptions.peekOriginalLimit();
+			return limit != null && !limit.isEmpty();
 		}
 	}
 
@@ -8933,7 +8938,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							if ( compatibleTableGroup == null
 									// If the compatible table group is used in the where clause it cannot be reused for fetching
 									|| ( queryPart != null && queryPart.getFirstQuerySpec()
-											.whereClauseContains( compatibleTableGroup.getNavigablePath(), this ) ) ) {
+											.whereClauseContains( compatibleTableGroup.getNavigablePath(), this ) )
+									// A paginated plural fetch must remain a fetched join
+									|| ( joinProducer instanceof PluralAttributeMapping
+											&& queryPart != null
+											&& queryOptions.isLimitInMemoryEnabled() != TRUE
+											&& hasPagination( queryPart ) ) ) {
 								final var tableGroupJoin = joinProducer.createTableGroupJoin(
 										fetchablePath,
 										lhs,

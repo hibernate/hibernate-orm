@@ -1292,7 +1292,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					}
 					else {
 						for ( int i = subclassCoreTableSpan; i < subclassTableNameClosure.length; i++ ) {
-							if ( joinedTableReference.getTableExpression().equals( subclassTableNameClosure[i] ) ) {
+							if ( joinedTableReference.getTableExpression().equals( subclassTableNameClosure[i] )
+								 || joinedTableReference.getTableExpression()
+										 .equals( subclassTableNameClosure[i] + "_AUD" )
+							) {
 								// Retain joins to secondary tables
 								tableReferenceJoins.add( oldJoin );
 								break;

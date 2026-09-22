@@ -312,8 +312,23 @@ public class BasicValue extends SimpleValue
 		super.copyTypeFrom( sourceValue );
 		if ( sourceValue instanceof BasicValue basicValue ) {
 			resolution = basicValue.resolution;
+			jdbcTypeCode = basicValue.jdbcTypeCode;
+			explicitTypeName = basicValue.explicitTypeName;
+			explicitLocalTypeParams = basicValue.explicitLocalTypeParams;
+			explicitJavaTypeAccess =
+					typeConfiguration -> basicValue.explicitJavaTypeAccess.apply( typeConfiguration );
+			explicitJdbcTypeAccess =
+					typeConfiguration -> basicValue.explicitJdbcTypeAccess.apply( typeConfiguration );
+			explicitMutabilityPlanAccess =
+					typeConfiguration -> basicValue.explicitMutabilityPlanAccess.apply( typeConfiguration );
 			implicitJavaTypeAccess =
 					typeConfiguration -> basicValue.implicitJavaTypeAccess.apply( typeConfiguration );
+			enumerationStyle = basicValue.enumerationStyle;
+			temporalPrecision = basicValue.temporalPrecision;
+			timeZoneStorageType = basicValue.timeZoneStorageType;
+			isSoftDelete = basicValue.isSoftDelete;
+			softDeleteStrategy = basicValue.softDeleteStrategy;
+			resolvedJavaType = basicValue.resolvedJavaType;
 		}
 	}
 

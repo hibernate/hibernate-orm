@@ -230,8 +230,8 @@ public final class PropertyValueAccessor {
 					t,
 					"Accessing the underlying property resulted in an exception: " + t.getMessage(),
 					false,
-					null,
-					null
+					owner.getClass(),
+					propertyName
 			);
 		}
 	}
@@ -260,8 +260,8 @@ public final class PropertyValueAccessor {
 							t,
 							"Accessing the underlying property resulted in an exception: " + t.getMessage(),
 							false,
-							null,
-							null
+							target.getClass(),
+							propertyName
 					);
 				}
 			}

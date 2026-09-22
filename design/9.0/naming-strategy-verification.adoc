@@ -180,3 +180,22 @@ The matrix covers both supported strategies and all three deprecated variants.
 Deprecation tests verify effective-strategy selection and one warning per resolution.
 Existing fixtures with native SQL, shared columns, and explicit referenced-column
 names now declare their intended column names; default-naming assertions expect full paths.
+
+== Aggregate Container Naming
+
+`AggregateColumnNamingTest` covers terminal defaults across all five supplied strategies,
+custom implicit and physical naming, additive quoting, callback input scope and role,
+explicit bypass, effective container overrides, invalid results, plural storage,
+collection elements, and map keys. It verifies that identical nested member names stay
+isolated in separate aggregate containers. JSON runtime cases exercise H2; XML/STRUCT
+cases use PostgreSQL dialect metadata without PostgreSQL database execution.
+
+Two expected-failure reproductions remain: the JDBC binding defect tracked by
+https://hibernate.atlassian.net/browse/HHH-20913[HHH-20913], and aggregate type restoration
+from metadata archives. Both predate this naming migration. The build executes them in
+expected-failure validation mode; their successful validation confirms the bugs remain
+reproducible and does not count as passing runtime/archive acceptance.
+
+Final commit-cleanup validation: the complete core suite passed with 17,895 tests,
+1,525 skipped, and zero unexpected failures or errors. This includes all 22
+aggregate naming cases and execution of both expected-failure reproductions.

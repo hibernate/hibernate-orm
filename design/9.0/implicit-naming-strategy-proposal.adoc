@@ -752,3 +752,143 @@ This slice does not expand that XML schema.
 Embeddable-discriminator validation: focused naming and embeddable-inheritance tests
 passed 296 tests (7 skipped). The complete core suite passed 17,873 tests
 (1,525 skipped), with zero failures or errors.
+
+== Aggregate Container Naming
+
+Status: approved naming design implemented. The naming changes are ready for commit;
+known aggregate binding and archive-restoration limitations remain separate follow-ups.
+
+Aggregate containers previously bypassed both implicit and physical naming, and their
+column declarations bypassed applicable overrides. The dedicated implicit callback
+preserves terminal attribute defaults while allowing strategies to distinguish
+containers from scalar members. Reusing basic-column naming would change Standard's
+defaults and would not expose the aggregate role.
+
+Physical naming uses the existing `PhysicalNamingStrategy.toPhysicalColumnName`.
+Named SQL types remain deferred: `@Struct.name` names a type, not its container column.
+Existing scalar aggregate members retain their current naming callbacks.
+
+=== Callback and Inputs
+
+`ImplicitNamingStrategy` exposes:
+
+[source,java]
+----
+LogicalName determineAggregateColumnName(
+        AggregateColumnNamingInput input, ImplicitNamingContext context);
+----
+
+The immutable `AggregateColumnNamingInput` record is defined in
+`org.hibernate.boot.model.naming.spi`, marked `@SPI(USE)`, with required fields:
+
+* `EntityNamingInput entity`: the owning entity.
+* `String embeddableTypeName`: the mapped aggregate type's model name; no Java class loading.
+* `String attributePath`: owner-relative path without synthetic collection markers.
+* `String attributeName`: terminal source attribute name, retaining the existing fallback.
+* `Usage usage`: `ATTRIBUTE`, `COLLECTION_ELEMENT`, or `MAP_KEY`, describing the actual
+  naming site rather than an inherited internal component-kind flag.
+* `StorageKind storageKind`: `STRUCT`, `JSON`, or `XML`.
+* `boolean plural`: whether this aggregate value itself uses plural storage.
+* `Scope scope`: `TABLE_COLUMN` or `AGGREGATE_MEMBER`.
+
+Required reference fields reject null. Public enums belong to the input contract,
+not to internal `AggregateMappingIntent`. Construct the input only for an implicit
+naming decision. No mutable component, table, source annotation, service registry,
+or type configuration is exposed.
+
+All supplied strategies return `context.implicitName(input.attributeName())`, retaining
+existing aggregate container defaults, including map-key and plural forms. Standard
+must not introduce full-path expansion for this role merely by reusing its basic-column
+algorithm. A custom provider may use the full path, role, and storage kind to choose
+a different name. Scalar member naming remains on its existing callback.
+
+=== Storage Scope and Registration
+
+Determine scope from the destination of the aggregate value, separately from the
+container holding that aggregate's own members. The caller must retain the enclosing
+storage target when entering nested component binding.
+
+* For flattened `Person.details` containing aggregate attribute `address`, the input
+  path is `details.address`, default name is `address`, usage is `ATTRIBUTE`, and
+  scope is `TABLE_COLUMN`. Register the resulting aggregate column with the actual
+  table and its logical-name correspondence.
+* If `Person.details` itself is aggregate storage, it has path/name `details` and
+  scope `TABLE_COLUMN`. A nested aggregate `details.address` has default `address`
+  and scope `AGGREGATE_MEMBER`. Register it within the enclosing aggregate, without
+  adding a separate table column or a table-scoped alias for `address`.
+* Flattened components inside an aggregate retain the enclosing aggregate scope;
+  further Java nesting does not restore table scope.
+* Aggregate values in collection tables and map keys use that table as their
+  `TABLE_COLUMN` destination. Aggregates nested inside those values use
+  `AGGREGATE_MEMBER`. Nested ordinary attributes use `ATTRIBUTE` even if an internal
+  component source retains a collection or map-key kind.
+
+Register the final `AggregateColumn`, not the temporary `Column` copied during
+construction. Distinct aggregates may contain the same member name; table-wide
+alias registration must not make those members conflict. Existing aggregate-member
+ordering and metadata remain intact.
+
+=== Effective Source and Naming Sequence
+
+For supported container override forms, resolve the effective column declaration
+using the existing path-aware override machinery. The nearest applicable override
+wins over the direct declaration. A direct attribute/element container uses `@Column`;
+a map-key container uses `@MapKeyColumn`. Preserve the existing key/value path syntax
+and declaration validity rules rather than inventing a new override syntax.
+
+An override replaces the column declaration. If its name is empty, invoke implicit
+naming rather than falling back to the overridden declaration's nonempty name.
+With no override, a nonempty direct name bypasses implicit naming; an empty or absent
+name invokes it. Preserve all other metadata from the effective declaration.
+
+For each new container or aggregate member:
+
+. Resolve the effective source and actual storage scope.
+. Obtain one explicit logical name or invoke the dedicated implicit callback once.
+. Require a non-null implicit `LogicalName` from the callback.
+. Invoke existing `PhysicalNamingStrategy.toPhysicalColumnName` once and apply normal
+  additive quoting finalization.
+. Build the final aggregate column and register it in the correct scope using the
+  same naming result.
+
+Do not replay naming for existing basic members, copied columns, registration, or
+archive restoration. Nested aggregate names use the same physical column callback,
+consistent with existing scalar aggregate-member naming. Named SQL types and struct
+attribute ordering are outside this change; `@Struct.name` is not a column name.
+
+=== Verification and Follow-ups
+
+`AggregateColumnNamingTest` covers defaults across all five supplied strategies,
+custom implicit and physical names, explicit bypass, quoting, invalid callback results,
+effective overrides (including an empty override replacing a direct name), and column
+metadata. Scope tests cover table columns, nested aggregate members, flattened components
+inside aggregates, repeated member names in separate containers, plural storage,
+collection elements, and map keys. H2 runtime tests persist and load transformed,
+quoted nested aggregates. XML/STRUCT checks use PostgreSQL dialect metadata only.
+
+Nested selectable paths use raw physical member spelling, while SQL expressions retain
+identifier quoting. This prevents SQL quote delimiters from becoming JSON member keys.
+
+Two expected-failure reproductions remain in the suite:
+
+* https://hibernate.atlassian.net/browse/HHH-20913[HHH-20913]: insertion of an aggregate
+  inside a flattened embeddable uses its scalar member's JDBC mapping. This occurs on
+  `main` (`29f2b10042d`), `8.0` (`f0b49ce0106`), and `wip/9.0` (`a3b3bab74bd`).
+  The 9.0 binder also omitted the table column; this naming slice fixes that registration,
+  exposing the existing binding failure. H2 fails with both graph and legacy queues.
+  H2, PostgreSQL, and MySQL runtime-descriptor checks all pair the aggregate expression
+  `address` with the member `street` and String/VARCHAR mapping. Database execution was
+  tested only on H2; this is not a database-server matrix.
+* Aggregate metadata archive restoration fails because the container's `BasicValue`
+  resolution is missing when restoring member resolutions. This also reproduces on
+  `wip/9.0` before the naming changes. Archive round-trip acceptance remains outstanding;
+  the retained test expresses the required name preservation and absence of callback replay.
+
+The build enables `hibernate.test.validatefailureexpected`, so these tests execute and
+validate the known failures instead of silently skipping them. They do not count as
+successful binding or archive-restoration coverage.
+
+Current validation results are recorded in
+link:naming-strategy-verification.adoc#_aggregate_container_naming[Aggregate Container Naming].
+Migration guidance documents the new SPI method and the schema/storage-name impact of
+physical naming now applying to aggregate containers.

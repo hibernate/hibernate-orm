@@ -98,8 +98,11 @@ physical naming. Verification is tracked in the replacement proposal.
 
 Source: `AggregateComponentBinder`
 
-Fallback to the member's attribute name through `bindUntransformedColumn`.
-Represent aggregate container naming rather than silently treating it as explicit.
+Implemented through `determineAggregateColumnName(AggregateColumnNamingInput, ImplicitNamingContext)`.
+Supplied strategies preserve terminal attribute defaults. Effective explicit names
+bypass implicit naming; all aggregate containers use physical column naming.
+The input distinguishes actual table columns from nested aggregate members.
+See the replacement proposal for verification and existing runtime/archive gaps.
 
 === Association identifier columns
 

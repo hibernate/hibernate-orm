@@ -32,41 +32,52 @@ import static org.assertj.core.api.Assertions.assertThat;
 @BaseUnitTest
 public class QueryReturnTest {
 
-	private static final String QUERY_RETURN_HBM_XML =
-			"<hibernate-mapping package='org.hibernate.orm.test.xml.query'>          " +
-			"    <class name='QueryReturnTest$Bar'>                                  " +
-			"        <id name='id'>                                                  " +
-			"            <generator class='sequence'/>                               " +
-			"        </id>                                                           " +
-			"        <property name='foo' type='string'/>                            " +
-			"    </class>                                                            " +
-			"    <sql-query name='myQuery'>                                          " +
-			"        <synchronize table='myTable'/>                                  " +
-			"        <return                                                         " +
-			"                alias='e'                                               " +
-			"                class='org.hibernate.orm.test.xml.query.QueryReturnTest$Bar'" +
-			"        />                                                              " +
-			"        <![CDATA[from elephant as {e} where {e.age} > 50]]>             " +
-			"    </sql-query>                                                        " +
-			"</hibernate-mapping>                                                    ";
+	private static final String QUERY_RETURN_XML =
+			"""
+					<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping">
+						<package>org.hibernate.orm.test.xml.query</package>
+						<attribute-accessor>property</attribute-accessor>
+						<named-native-query name="myQuery" result-set-mapping="myQuery-implicitResultSetMapping">
+							<query>from elephant as e where e.age > 50</query>
+							<synchronize table="myTable"/>
+						</named-native-query>
+						<sql-result-set-mapping name="myQuery-implicitResultSetMapping">
+							<description>ResultSet mapping implicitly created for named native query `myQuery` during hbm.xml transformation</description>
+							<entity-result entity-class="org.hibernate.orm.test.xml.query.QueryReturnTest$Bar"/>
+						</sql-result-set-mapping>
+						<entity class="QueryReturnTest$Bar" metadata-complete="true">
+							<table name="QueryReturnTest$Bar"/>
+							<optimistic-locking>VERSION</optimistic-locking>
+							<attributes>
+								<id name="id">
+									<column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+									<generated-value generator="id-id-generator"/>
+									<generic-generator name="id-id-generator" class="sequence"/>
+								</id>
+								<basic name="foo" fetch="EAGER" optional="true" optimistic-lock="true">
+								</basic>
+							</attributes>
+						</entity>
+					</entity-mappings>
+			""";
 
 	@Test
 	public void testQueryReturn() {
 		Configuration cfg = new Configuration();
 		cfg.setProperty( "hibernate.temp.use_jdbc_metadata_defaults", false );
-		cfg.addInputStream( new ReaderInputStream( new StringReader( QUERY_RETURN_HBM_XML ) ) );
+		cfg.addInputStream( new ReaderInputStream( new StringReader( QUERY_RETURN_XML ) ) );
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory();
 		try {
 			NamedResultSetMappingMemento mappingMemento = sessionFactory.getQueryEngine()
 					.getNamedObjectRepository()
-					.getResultSetMappingMemento( "myQuery" );
+					.getResultSetMappingMemento( "myQuery-implicitResultSetMapping" );
 			assertThat( mappingMemento ).isNotNull();
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// NYI
 
-			final ResultSetMapping mapping = new ResultSetMappingImpl( "myQuery" );
+			final ResultSetMapping mapping = new ResultSetMappingImpl( "myQuery-implicitResultSetMapping" );
 			final ResultSetMappingResolutionContext resolutionContext = new ResultSetMappingResolutionContext() {
 				@Override
 				public SessionFactoryImplementor getSessionFactory() {

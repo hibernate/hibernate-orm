@@ -7,27 +7,41 @@ deprecating the other three strategies with runtime warnings. That work is imple
 and validated. This document retains the test contract and outstanding coverage work.
 All five registrations remain available; Standard remains the default.
 
-Latest full core validation: 17,951 tests, 1,525 skipped,
+Latest full core validation: 17,965 tests, 1,525 skipped,
 0 failures and 0 errors.
-After relocating the shared algorithms to interface defaults, all 66 focused naming
-tests passed with no skips, failures, or errors. Slice-local counts below describe
-their individual runs; they are not cumulative totals.
+This run includes the FK contract migration, HHH-20916 unique-column finalization, and
+null-only PK result validation. Slice-local counts below describe historical runs;
+they are not cumulative totals.
 
 See link:implicit-naming-strategy-proposal.adoc[the replacement contract] and
 link:naming-strategy-redesign.adoc[the broader naming redesign].
 
 == Unified PK Naming Validation
 
-The link:primary-key-naming-spec.adoc[PK naming slice] passed 623 tests across the naming
-and model-binding packages, with no skips, failures, or errors. This includes 130 strategy
-matrix cases and seven focused PK tests. Coverage includes all seven ordinary PK creation
-sites, table dependency pairs, custom and physical callback counts, quoted/truncated
-names, invalid results, unchanged unnamed-PK DDL, the existing multiple-UK absorption
-path, inline views, and metadata restoration without naming replay. The full core suite
-was not rerun for this slice.
+The completed PK contract is summarized in
+link:constraint-index-naming-proposal.adoc[the constraint/index proposal]. Coverage includes
+all seven ordinary PK creation sites, table dependency pairs, callback counts,
+quoted/truncated names, unchanged unnamed-PK DDL, multiple-UK absorption, inline views,
+and metadata restoration. The eight focused PK tests reject null results and accept either
+explicitness flag from custom implicit strategies. The full core run above includes them.
 
-A separate single-UK cleanup inconsistency found during characterization is recorded in
-link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification].
+== FK And Unique-Column Validation
+
+`ImplicitForeignKeyNamingTest` covers composite PK and alternate-key correspondences,
+logical/physical table and column pairs, explicit-name bypass, immutable inputs, null
+rejection, additive quoting, independent expected hashes, and archive restoration without
+callback replay. The full suite also covers aggregate and audit dependency retention.
+
+`ConstraintNamingCharacterizationTest` checks corrected logical table identity for
+schema-distinct tables sharing a physical spelling, inline-view participation/export
+boundaries, and existing absorbed-UK selection. Its HHH-20916 regressions assert normal UK
+hashes for basic-column, owning one-to-one, and Changelog uniqueness, distinct keys for
+two unique columns, and exactly-once custom callbacks before repeated export.
+
+The sole-UK absorption inconsistency remains intentionally characterized. UK input
+migration and named UK DDL acceptance are still pending in
+link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification]. Rendering
+assertions do not claim execution coverage across dialects.
 
 == Purpose and Test Contract
 
@@ -293,4 +307,4 @@ strategy coverage remains in place. Invalid null or explicit results from implic
 naming, and null physical PK results, are rejected with mapping errors.
 
 This replaces the earlier nullable-physical-PK and standard-suppression expectations.
-Full core validation of the revised contract passed: 17,951 tests, 1,525 skipped, zero failures or errors.
+Full core validation of the revised contract passed: 17,965 tests, 1,525 skipped, zero failures or errors.

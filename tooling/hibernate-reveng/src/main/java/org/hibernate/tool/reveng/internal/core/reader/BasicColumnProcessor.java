@@ -90,6 +90,7 @@ public class BasicColumnProcessor {
 				// isPk - detected when finding primary keys
 
 				table.addColumn(column);
+				collector.registerObservedColumn( table, table.getColumn( column ) );
 			}
 		}
 		finally {

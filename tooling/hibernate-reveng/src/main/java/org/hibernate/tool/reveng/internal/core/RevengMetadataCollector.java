@@ -2,6 +2,7 @@ package org.hibernate.tool.reveng.internal.core;
 
 import java.util.Objects;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 import org.hibernate.relational.naming.spi.LogicalName;
@@ -29,7 +30,7 @@ public class RevengMetadataCollector {
 				|| !policy.toDatabaseName( spelling, false ).equals( spelling ) );
 	}
 
-	public org.hibernate.mapping.Column findObservedColumn(Table table, String name) {
+	public Column findObservedColumn(Table table, String name) {
 		return table.getColumnByDatabaseName( name, physicalNameFactory.getComparisonPolicy() );
 	}
 
@@ -98,8 +99,21 @@ public class RevengMetadataCollector {
 			result = createTable(catalog, schema, name);
 		}
 
+		if ( metadataCollector != null ) {
+			metadataCollector.getRelationalModelCorrespondences().registerTableCreationName(
+					result, new LogicalName( result.getName(), result.isQuoted(), true ) );
+		}
 		tables.put(tableIdentifier, result);
 		return result;
+	}
+
+	/// Retain the observed spelling without applying the physical naming strategy again.
+	public void registerObservedColumn(Table table, Column column) {
+		final var metadataCollector = getMetadataCollector();
+		if ( metadataCollector != null ) {
+			metadataCollector.getRelationalModelCorrespondences().columnNames().registerDeclaration(
+					table, new LogicalName( column.getName(), column.isQuoted(), true ), column );
+		}
 	}
 
 	public Table getTable(TableIdentifier tableIdentifier) {

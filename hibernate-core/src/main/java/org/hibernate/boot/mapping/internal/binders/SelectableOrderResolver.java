@@ -66,6 +66,11 @@ class SelectableOrderResolver {
 					sourceRole,
 				columnNames
 			);
+			if ( columnNames != null ) {
+				columnNames.registerReferenceName( localColumns.get( i ), referencedColumn,
+						columnNames.selectReferenceName( referencedColumn.getValue() == null ? null : referencedColumn.getValue().getColumnContainer(),
+								referencedColumn, database.toLogicalName( referencedColumnName ) ) );
+			}
 			correspondences.add( new SelectableCorrespondence(
 					localColumns.get( i ),
 					referencedColumn,
@@ -107,6 +112,11 @@ class SelectableOrderResolver {
 			);
 			if ( referencedColumn == null ) {
 				return null;
+			}
+			if ( columnNames != null ) {
+				columnNames.registerReferenceName( localColumns.get( i ), referencedColumn,
+						columnNames.selectReferenceName( referencedColumn.getValue() == null ? null : referencedColumn.getValue().getColumnContainer(),
+								referencedColumn, database.toLogicalName( referencedColumnName ) ) );
 			}
 			correspondences.add( new SelectableCorrespondence(
 					localColumns.get( i ),

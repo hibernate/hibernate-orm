@@ -921,13 +921,15 @@ public class InFlightMetadataCollectorImpl
 				return existing;
 			}
 			else {
-				return namespace.createTable(
+				final var created = namespace.createTable(
 						logicalName,
 						physicalName ->
 								viewQuery == null
 										? new PhysicalTable( buildingContext.getCurrentContributorName(), namespace, physicalName, isAbstract )
 										: new org.hibernate.mapping.DatabaseView( buildingContext.getCurrentContributorName(), namespace, physicalName, viewQuery )
 				);
+				getRelationalModelCorrespondences().registerTableCreationName( created, logicalName );
+				return created;
 			}
 		}
 	}
@@ -1015,11 +1017,23 @@ public class InFlightMetadataCollectorImpl
 	}
 
 
+	private org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences relationalModelCorrespondences;
+
+	@Override
+	public org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences getRelationalModelCorrespondences() {
+		if ( relationalModelCorrespondences == null ) {
+			relationalModelCorrespondences = new org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences( getDatabase() );
+		}
+		return relationalModelCorrespondences;
+	}
+
 	private final Map<org.hibernate.relational.naming.spi.LogicalName,PhysicalName> logicalToPhysicalTableNameMap = new HashMap<>();
 	private final Map<PhysicalName,org.hibernate.relational.naming.spi.LogicalName> physicalToLogicalTableNameMap = new HashMap<>();
 
 	@Override
 	public void addTableNameBinding(Identifier logicalName, Table table) {
+		getRelationalModelCorrespondences().registerTableName( table,
+				org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName( logicalName ) );
 		if ( table instanceof NamedTable namedTable ) {
 			final var name = org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName( logicalName );
 			logicalToPhysicalTableNameMap.put( name, namedTable.getPhysicalName().objectName() );
@@ -1117,6 +1131,8 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public void addColumnNameBinding(Table table, Identifier logicalName, Column column) throws DuplicateMappingException {
+		getRelationalModelCorrespondences().columnNames().register( table,
+				org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName( logicalName ), column );
 		TableColumnNameBinding binding;
 
 		if ( columnNameBindingByTableMap == null ) {
@@ -1567,10 +1583,7 @@ public class InFlightMetadataCollectorImpl
 				if ( foreignKey.getReferencedTable() == null ) {
 					foreignKey.setReferencedTable( referencedClass.getTable() );
 				}
-				foreignKey.setName( org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.resolve(
-						foreignKey.getName(), () -> getMappingResolutionOptions().getImplicitNamingStrategy()
-								.determineForeignKeyName( new ForeignKeyNameSource( foreignKey, table, buildingContext ) ),
-						org.hibernate.boot.model.naming.internal.ConstraintNamingHelper.Kind.FOREIGN_KEY, buildingContext ) );
+				org.hibernate.boot.model.naming.internal.ForeignKeyNaming.finish( foreignKey, buildingContext );
 				foreignKey.alignColumns();
 			}
 		}
@@ -1655,6 +1668,8 @@ public class InFlightMetadataCollectorImpl
 	public MetadataImpl buildMetadataInstance(MetadataBuildingContext buildingContext) {
 		processSecondPasses( buildingContext );
 		processGeneratorContributions();
+		org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer.finishColumnUniqueKeys(
+				collectTableMappings(), buildingContext );
 
 		try {
 			return new MetadataImpl(

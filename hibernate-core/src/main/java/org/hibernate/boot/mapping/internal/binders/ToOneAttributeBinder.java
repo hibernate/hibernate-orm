@@ -996,6 +996,10 @@ class ToOneAttributeBinder {
 					registerImplicitTerminalColumnAlias( table, source, targetColumnName, column, bindingState );
 				}
 			}
+			else {
+				bindingState.getRelationalModelCorrespondences().columnNames().registerDeclarationName( column,
+						ColumnBinder.logicalColumnName( ColumnSource.from( joinColumnAnn == null ? null : joinColumnAnn.column() ), implicitName ) );
+			}
 			final boolean sharedIdentifierColumn = source.oneToOne() != null
 					&& !(source.oneToOne() instanceof LegacyOneToOneXmlAnnotation)
 					&& isSharedIdentifierColumn( column, sharedIdentifierColumns, database );

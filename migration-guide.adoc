@@ -1041,6 +1041,11 @@ The `SpannerPostgreSQLDialect`, which was previously part of the `hibernate-comm
 
 Users currently using the community dialect must update their dialect configuration to use `org.hibernate.dialect.SpannerPostgreSQLDialect` (or rely on Hibernate's automatic dialect resolution).
 
+
+=== Interceptor.onLoad() callback implemented for Stateless Sessions
+
+In previous versions the Interceptor.onLoad() callback had not been implemented for Stateless Sessions. This has now been corrected.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

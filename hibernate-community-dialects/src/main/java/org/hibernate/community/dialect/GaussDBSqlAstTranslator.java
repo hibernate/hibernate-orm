@@ -266,8 +266,41 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		// Multi-table UPDATE renders MySQL-style `update t1 alias join t2 ...`: unqualified
+		// SET-clause columns of the target table are ambiguous when the joined tables have
+		// the same column names ("Column reference ... is ambiguous"), so qualify them with
+		// the target table's identification variable (probe-verified: `set p1_0.code=` works,
+		// bare `set code=` is rejected).
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode()
+				&& getCurrentDmlStatement() instanceof UpdateStatement updateStatement
+				&& !updateStatement.getFromClause().getRoots().isEmpty() ) {
+			final String dmlAlias = updateStatement.getTargetTable().getIdentificationVariable();
+			if ( dmlAlias != null ) {
+				column.appendColumnForWrite( this, dmlAlias );
+				return;
+			}
+		}
+		column.appendColumnForWrite( this, null );
+	}
+
+	@Override
 	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
 		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			// Multi-table UPDATE renders MySQL-style `update t1 alias join t2 ...`: unqualified
+			// SET-clause columns of the target table are ambiguous when the joined tables have
+			// the same column names ("Column reference ... is ambiguous"), so qualify them with
+			// the target table's identification variable (probe-verified: `set p1_0.code=` works,
+			// bare `set code=` is rejected).
+			if ( getClauseStack().getCurrent() == Clause.SET
+					&& getCurrentDmlStatement() instanceof UpdateStatement updateStatement
+					&& !updateStatement.getFromClause().getRoots().isEmpty() ) {
+				final String dmlAlias = updateStatement.getTargetTable().getIdentificationVariable();
+				if ( columnReference.getQualifier() == null && dmlAlias != null ) {
+					return dmlAlias;
+				}
+				return columnReference.getQualifier();
+			}
 			// M mode (MySQL-compatible) does not alias the INSERT target table, so a column reference
 			// qualified with the target table's identification variable (e.g. be1_0) in the ON DUPLICATE
 			// KEY UPDATE SET clause has no resolvable table &mdash; GaussDB raises "Missing FROM-clause

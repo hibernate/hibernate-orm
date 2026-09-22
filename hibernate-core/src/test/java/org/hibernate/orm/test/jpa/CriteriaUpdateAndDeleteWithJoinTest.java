@@ -17,11 +17,9 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +53,6 @@ public class CriteriaUpdateAndDeleteWithJoinTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode is strict about ambiguous columns: the UPDATE SET code (Parent) and the joined WHERE code (Child) render ambiguously; A mode is unaffected.")
 	public void testUpdate(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

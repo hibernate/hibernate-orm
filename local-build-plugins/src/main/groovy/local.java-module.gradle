@@ -228,16 +228,6 @@ tasks.withType( Test.class ).configureEach { test ->
     test.systemProperties['hibernate.highlight_sql'] = false
     test.systemProperties += providers.systemPropertiesPrefixedBy("hibernate.").get()
 
-    // GaussDBDialect detects the compatibility mode (A/M) from `datcompatibility` via JDBC metadata,
-    // but tests that set hibernate.temp.use_jdbc_metadata_defaults=false disable metadata on boot,
-    // leaving the dialect defaulting to A mode (breaks information_schema.sequences extraction,
-    // which M mode lacks). Pass the mode explicitly so detection works regardless of metadata; the
-    // prefixed-by copy above already picked up -Dhibernate.dialect.gaussdb.compatibility_mode, so
-    // M-mode test runs can override the default without editing this script.
-    if ( db == 'gaussdb' && !test.systemProperties.containsKey( 'hibernate.dialect.gaussdb.compatibility_mode' ) ) {
-        test.systemProperties['hibernate.dialect.gaussdb.compatibility_mode'] = 'A'
-    }
-
     test.enableAssertions = true
 
     if ( project.name != 'hibernate-testing' ) {

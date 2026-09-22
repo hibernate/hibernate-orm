@@ -13,10 +13,8 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -66,7 +64,6 @@ public class ManyToManyWithDynamicFilterTest {
 
 	@Test
 	@JiraKey(value = "HHH-11410")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode is strict about ambiguous columns: the @Filter defaultCondition active = true applies to both User and Role, so the unqualified active column is ambiguous in the many-to-many join SQL; A mode is unaffected.")
 	void testManyToManyCollectionWithActiveFilterOnJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.enableFilter( "activeUserFilter" );

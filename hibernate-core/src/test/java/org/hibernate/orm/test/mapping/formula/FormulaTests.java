@@ -14,6 +14,7 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
 
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -24,9 +25,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -76,7 +75,6 @@ public class FormulaTests {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode (MySQL kernel) treats || as logical OR, so the @Formula (rate * 100) || '%' yields true instead of the expected string; the MySQLDialect @DialectOverride.Formula does not apply because GaussDBDialect is not a MySQLDialect subtype, and @Formula is user SQL the dialect does not rewrite; A mode (PG kernel) supports || as concatenation.")
 	void testCriteria(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder criteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
@@ -110,6 +108,8 @@ public class FormulaTests {
 
 		@Formula(value = "(rate * 100) || '%'")
 		@DialectOverride.Formula(dialect = MySQLDialect.class,
+				override = @Formula("concat(rate * 100, '%')"))
+		@DialectOverride.Formula(dialect = GaussDBDialect.class,
 				override = @Formula("concat(rate * 100, '%')"))
 		@DialectOverride.Formula(dialect = HSQLDialect.class,
 				override = @Formula("replace(cast(rate * 100 as varchar(10)),'E0','') || '%'"))

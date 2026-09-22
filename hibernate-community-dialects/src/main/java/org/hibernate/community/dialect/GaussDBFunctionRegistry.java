@@ -18,12 +18,14 @@ import org.hibernate.community.dialect.function.array.GaussDBArrayRemoveIndexFun
 import org.hibernate.community.dialect.function.array.GaussDBArrayReplaceFunction;
 import org.hibernate.community.dialect.function.array.GaussDBArraySetFunction;
 import org.hibernate.community.dialect.function.json.GaussDBJsonObjectFunction;
+import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.RegexpLikeOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayIntersectsOperatorFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -110,6 +112,27 @@ public class GaussDBFunctionRegistry {
 		// second argument. Register the window-emulation variants instead, which render standard
 		// window (OVER) constructs that both modes support.
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		if ( mMode ) {
+			// M mode (MySQL-compatible) rejects the native tuple form count(distinct (a,b)) with
+			// "Unsupport type", and the || / chr(0) based emulation cannot apply because || is the
+			// logical OR operator there and chr(0) returns NULL; use the N-ary concat() function
+			// (probe-verified) with chr(1) as the tuple-element separator instead.
+			functionRegistry.register(
+					"count",
+					new CountFunction(
+							functionContributions.getDialect(),
+							functionContributions.getTypeConfiguration(),
+							SqlAstNodeRenderingMode.DEFAULT,
+							"count",
+							"concat",
+							true,
+							"char",
+							false,
+							null,
+							1
+					)
+			);
+		}
 		functionFactory.listagg_stringAgg( "varchar" );
 		functionFactory.arrayAggregate();
 		functionFactory.arraySlice_operator();

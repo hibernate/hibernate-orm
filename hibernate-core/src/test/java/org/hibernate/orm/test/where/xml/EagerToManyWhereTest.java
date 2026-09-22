@@ -35,6 +35,9 @@ public class EagerToManyWhereTest {
 
 	@Test
 	@JiraKey( value = "HHH-13011" )
+	// M mode (openGauss MySQL-compatible kernel) reports "Column reference ... is ambiguous" for
+	// every bare column of a user-provided where fragment rendered in the ON clause of a left join
+	// during EAGER fetching, so the test cannot run there. A mode is unaffected.
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
 		// The Category flag column is named `inactive_flag` (rather than `inactive`) to avoid the

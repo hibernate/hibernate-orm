@@ -1094,11 +1094,19 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	}
 
 	@Override
+	@Override
 	public TupleCountSupport getTupleCountSupport() {
-		return TupleCountSupport.builder()
-				.nonDistinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
-				.distinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
-				.build();
+		// A mode (openGauss PG kernel) supports the native tuple form count(distinct (a,b));
+		// M mode (MySQL-compatible) rejects it with "Unsupport type", so select UNSUPPORTED to
+		// request Hibernate's CountFunction concat-based emulation (registered in
+		// GaussDBFunctionRegistry for M mode).
+		return isMMode()
+				? TupleCountSupport.NONE
+				: TupleCountSupport.builder()
+						.nonDistinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
+						.distinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
+						.build();
+	}
 	}
 
 	@Override

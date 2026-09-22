@@ -941,11 +941,13 @@ public class ToOneAttributeMapping
 	@Nonnull
 	@Override
 	public ForeignKeyDescriptor.Nature getSideNature() {
+		checkIsReady();
 		return sideNature;
 	}
 
 	@Override
 	public boolean isReferenceToPrimaryKey() {
+		checkIsReady();
 		return foreignKeyDescriptor.getSide( sideNature.inverse() ).getModelPart().isEntityIdentifierMapping();
 	}
 
@@ -1032,6 +1034,7 @@ public class ToOneAttributeMapping
 	@Nullable
 	@Override
 	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType targetType) {
+		checkIsReady();
 		// Prefer resolving the key part of the foreign key rather than the target part if possible
 		// This way, we don't have to register table groups the target entity type
 		if ( canUseParentTableGroup && targetKeyPropertyNames.contains( name ) ) {
@@ -2700,6 +2703,7 @@ public class ToOneAttributeMapping
 	@Nonnull
 	@Override
 	public ModelPart getKeyTargetMatchPart() {
+		checkIsReady();
 		return foreignKeyDescriptor.getPart( sideNature );
 	}
 
@@ -2781,6 +2785,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
+		checkIsReady();
 		return sideNature == ForeignKeyDescriptor.Nature.KEY
 				? foreignKeyDescriptor.visitKeySelectables( offset, consumer )
 				: 0;
@@ -2815,6 +2820,7 @@ public class ToOneAttributeMapping
 	@Nonnull
 	@Override
 	public String getContainingTableExpression() {
+		checkIsReady();
 		return sideNature == ForeignKeyDescriptor.Nature.KEY
 				? foreignKeyDescriptor.getKeyTable()
 				: foreignKeyDescriptor.getTargetTable();
@@ -2822,9 +2828,21 @@ public class ToOneAttributeMapping
 
 	@Override
 	public int getJdbcTypeCount() {
+		checkIsReady();
 		return sideNature == ForeignKeyDescriptor.Nature.KEY
 				? foreignKeyDescriptor.getJdbcTypeCount()
 				: 0;
+	}
+
+	private void checkIsReady() {
+		if ( sideNature == null ) {
+			// This is expected to happen when processing a
+			// PostInitCallbackEntry because the callbacks
+			// are not ordered. The exception is caught in
+			// MappingModelCreationProcess.executePostInitCallbacks()
+			// and the callback is re-queued.
+			throw new IllegalStateException( "Not yet ready" );
+		}
 	}
 
 	@Nonnull

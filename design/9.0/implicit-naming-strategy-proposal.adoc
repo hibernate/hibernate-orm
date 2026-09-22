@@ -282,7 +282,20 @@ is retained while they remain available.
 
 == Remaining Work And Sequence
 
-. Migrate implicit primary-key, foreign-key, unique-key, and index naming to typed
+The next slice is investigated in
+link:constraint-index-naming-proposal.adoc[Constraint And Index Naming]. The approved
+direction improves callback coverage and input clarity while preserving default names,
+including existing dependency stages and hash algorithms. Emitting selected PK/UK names
+where supported is also approved, with migration guidance. Unify implicit logical PK
+names using `Alias(15, "_pk")`: at most twelve characters of table text plus `_pk`.
+The default uses the physical table name. PK inputs expose only the table's logical
+and physical names, without columns or table-role information. Dialect-aware length handling is deferred.
+This does not by itself change unnamed implicit-PK DDL. Explicit PK declarations are a separate
+follow-up, with direct declarations taking precedence over absorbed UK names.
+The current implementation follows link:primary-key-naming-spec.adoc[Unified PK Naming].
+The separate working draft is link:foreign-unique-key-naming-spec.adoc[FK And UK Naming].
+
+. Migrate implicit foreign-key, unique-key, and index naming to typed
   logical-name contracts. Trace check-constraint and expression cases before assigning
   callbacks; verify the names actually emitted by schema tooling.
 . Specify and implement audit/history table and companion-column roles.

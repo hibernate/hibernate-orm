@@ -1,0 +1,103 @@
+= Unified Implicit Primary-Key Naming
+:toc2:
+:sectanchors:
+
+Status: implemented following approval of the revised contract requiring physical PK
+names. Full core validation passed: 17,951 tests, 1,525 skipped, zero failures or errors.
+
+== Contract And Default
+
+Add `PrimaryKeyNamingInput(NamedTableNamingInput table)` in
+`org.hibernate.boot.model.naming.spi`. The table is non-null and exposes its selected
+logical name and finalized physical name, with quoting and logical provenance.
+No columns or table-role information are included.
+
+Add the overridable interface default
+`LogicalName determinePrimaryKeyName(PrimaryKeyNamingInput input, ImplicitNamingContext context)`
+to `ImplicitNamingStrategy`. Supplied strategies inherit this algorithm. It lives once:
+apply `Alias(15, "_pk")` to the physical table name, keeping up to twelve characters of
+table text followed by `_pk`, preserving quoting. The result is an implicit logical
+constraint name. Custom implementations can use either table naming stage.
+
+Pass the result once through `PhysicalNamingStrategy.toPhysicalPrimaryKeyName` and normal
+additive quoting/finalization. Reject null or explicitly marked implicit results with a
+mapping error. Physical PK naming must also return a non-null name; a null physical
+result is a mapping error. The standard physical strategy preserves logical spelling
+and quoting for both explicit and implicit names. Store the finalized physical name
+regardless of whether the exporter emits it. Only catalog/schema physical callbacks
+permit null results.
+
+The built-in-versus-custom implicit-result distinction remains an exporter-policy
+follow-up, not a nullability decision. The fifteen-character bound applies to the
+supplied implicit algorithm, not explicit names, custom algorithms, or the physical
+strategy's output.
+
+== Binding And Scope
+
+Centralize name resolution after model binding, using the table reference's retained
+logical name rather than reconstructing it from physical spelling. Entity/dependent
+materializers no longer generate aliases. Collection-set PK creation no longer calls
+the UK naming strategy. Previously unnamed identifier/indexed/value PKs reach the same
+final naming step.
+
+Name only surviving PK objects on named tables registered by model binding. A PK whose
+name is already resolved is not renamed. Shared/inherited PK objects retain their
+existing ownership; do not rename the same object for a denormalized table which exposes
+its included table's PK. Changing that mapping representation is outside this slice.
+Disabled PKs and inline views do not create requests. Completing columns is not a
+naming-input dependency, and later column reordering must not replay naming.
+
+Audit/history and generator table naming remain separate follow-ups. The deprecated
+`Join.createPrimaryKey()` compatibility hook is not migrated in this slice. Additional
+mapping contributions processed through model binding use the same final naming step.
+Restoration reuses stored names and does not run the binding step again.
+
+== Schema Behavior And Follow-ups
+
+Preserve schema emission: assigning a mapping-model PK name does not start rendering
+that name in DDL. Existing explicitly named UK-to-PK absorption retains its emitted name
+and ordering behavior. No new annotation, provenance category, or length/collision policy is introduced here.
+
+Required comments in centralized code:
+
+* https://hibernate.atlassian.net/browse/HHH-20914[HHH-20914] at name resolution:
+  add explicit `@PrimaryKey` support, bypassing the implicit callback.
+* https://hibernate.atlassian.net/browse/HHH-20915[HHH-20915] beside the fixed length:
+  use the Dialect maximum identifier length in a follow-up.
+
+The explicit-PK follow-up also considers distinguishing deliberate custom-strategy
+results from inherited built-in defaults. That is not part of this implementation.
+
+== Acceptance
+
+Extend the existing strategy matrix to assert the same default algorithm across supplied
+strategies with identity and prefixing physical naming. Cover entity, secondary,
+joined-subclass, collection identifier, indexed/set collections, and one-to-many
+association-table PK creation paths.
+
+Focused tests must check table-name pairs and provenance, one implicit and physical
+callback per surviving PK, custom logical results, invalid implicit results, rejected null physical PK results, long and
+quoted table names, additive physical quoting, unchanged unnamed PK DDL, and retention
+of an explicitly named UK absorbed into the PK. Verify restoration without naming replay
+and disabled/inline-view boundaries. Keep the broader naming suite passing.
+
+== Verification Results
+
+The run covered `org.hibernate.orm.test.namingstrategy.*` and
+`org.hibernate.orm.test.boot.models.bind.*`: 623 tests across 56 suites, all passing.
+The strategy matrix now contains 130 cases; the focused PK class contains seven tests,
+including archive restoration and inline-view exclusion. Core compilation and whitespace
+checks also passed. This was not a full core test-suite run.
+
+Disabled-PK exclusion follows the finalization boundary and absence of a surviving key;
+no separate disabled-PK naming fixture was added. Audit/history, generator, and deprecated
+compatibility paths remain outside this slice as described above.
+
+The absorbed-UK fixture uses the existing multiple-UK cleanup path. A single-UK cleanup
+inconsistency is recorded in link:foreign-unique-key-naming-spec.adoc[the FK/UK working
+specification]; it is not fixed by this change.
+
+The revised physical PK contract requires a stored physical name. Matrix tests record
+generated logical names, assert finalized physical names, and independently verify that
+existing exporters still omit implicit PK names from DDL. The focused null-result test
+now verifies rejection of an invalid physical strategy result.

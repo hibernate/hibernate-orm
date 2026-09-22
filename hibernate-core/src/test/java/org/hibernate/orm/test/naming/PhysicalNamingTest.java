@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.naming;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Set;
 
 import jakarta.persistence.ElementCollection;
@@ -31,7 +33,8 @@ public class PhysicalNamingTest {
 	public static class NamingStrategy
 			extends CamelCaseToUnderscoresNamingStrategy {
 		@Override
-		protected PhysicalName unquotedIdentifier(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		protected PhysicalName unquotedIdentifier(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			PhysicalName identifier = super.unquotedIdentifier( name, context );
 			return context.getPhysicalNameFactory().create( identifier.getText() + "_",
 					identifier.isQuoted() );

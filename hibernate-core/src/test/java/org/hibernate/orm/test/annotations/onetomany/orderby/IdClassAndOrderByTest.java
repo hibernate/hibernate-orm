@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.annotations.onetomany.orderby;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.AssociationTableNamingInput;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.naming.spi.NamedTableNamingInput;
@@ -88,7 +90,8 @@ public class IdClassAndOrderByTest {
 		}
 
 		@Override
-		public LogicalName determineAssociationTableName(AssociationTableNamingInput source, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAssociationTableName(@Nonnull AssociationTableNamingInput source, @Nonnull ImplicitNamingContext context) {
 			String var10000 = ((NamedTableNamingInput) source.owningTable()).names().physicalName().getText();
 			String name = var10000 + "_" + AttributePath.parse( source.attributePath() ).getProperty();
 			return context.implicitName( name );

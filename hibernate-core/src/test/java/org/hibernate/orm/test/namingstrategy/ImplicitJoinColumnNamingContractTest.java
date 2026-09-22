@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +101,8 @@ class ImplicitJoinColumnNamingContractTest {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 			final var strategy = new RecordingStrategy() {
 				@Override
-				public LogicalName determineJoinColumnName(JoinColumnNamingInput input, ImplicitNamingContext context) {
+				@Nonnull
+				public LogicalName determineJoinColumnName(@Nonnull JoinColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 					assertThat( input.reference().table() ).isInstanceOf( org.hibernate.boot.model.naming.spi.InlineViewNamingInput.class );
 					return super.determineJoinColumnName( input, context );
 				}
@@ -122,24 +125,29 @@ class ImplicitJoinColumnNamingContractTest {
 			return context.implicitName( name, true );
 		}
 		@Override
-		public LogicalName determineJoinColumnName(JoinColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineJoinColumnName(@Nonnull JoinColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			positions.add( input.reference().columnPosition() );
 			return name( "toOne_" + input.attributePath(), input.reference(), context );
 		}
 		@Override
-		public LogicalName determineCollectionKeyColumnName(CollectionKeyNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineCollectionKeyColumnName(@Nonnull CollectionKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "owner_" + input.attributePath(), input.reference(), context );
 		}
 		@Override
-		public LogicalName determineAssociationKeyColumnName(AssociationKeyNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineAssociationKeyColumnName(@Nonnull AssociationKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "target_" + input.attributePath(), input.reference(), context );
 		}
 		@Override
-		public LogicalName determineMapKeyJoinColumnName(MapKeyJoinColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determineMapKeyJoinColumnName(@Nonnull MapKeyJoinColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "map_" + input.attributePath(), input.reference(), context );
 		}
 		@Override
-		public LogicalName determinePrimaryKeyJoinColumnName(PrimaryKeyJoinColumnNamingInput input, ImplicitNamingContext context) {
+		@Nonnull
+		public LogicalName determinePrimaryKeyJoinColumnName(@Nonnull PrimaryKeyJoinColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			return name( "pk", input.reference(), context );
 		}
 	}
@@ -147,7 +155,8 @@ class ImplicitJoinColumnNamingContractTest {
 	static class PrefixStrategy extends PhysicalNamingStrategyStandardImpl {
 		final List<LogicalName> inputs = new ArrayList<>();
 		@Override
-		public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			inputs.add( name );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), false );
 		}

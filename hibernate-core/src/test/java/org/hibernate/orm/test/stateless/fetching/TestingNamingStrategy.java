@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.stateless.fetching;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.relational.naming.spi.PhysicalName;
@@ -18,7 +20,8 @@ public class TestingNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 	}
 
 	@Override
-	public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+	@Nonnull
+	public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
 		return jdbcEnvironment.getPhysicalNameFactory().create( applyPrefix( logicalName.getText() ), logicalName.isQuoted() );
 	}
 

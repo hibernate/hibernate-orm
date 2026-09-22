@@ -158,6 +158,7 @@ public class BindingCoordinator {
 		coordinateGlobalBindings();
 		coordinateModelBindings();
 		coordinateGlobalBindingsRequiringModel();
+		PrimaryKeyNaming.finish( bindingState );
 	}
 
 	private void registerConfiguredUserTypes() {

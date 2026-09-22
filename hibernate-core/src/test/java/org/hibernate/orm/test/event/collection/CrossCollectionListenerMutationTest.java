@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.event.collection;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.relational.naming.spi.PhysicalName;
@@ -121,7 +123,8 @@ public class CrossCollectionListenerMutationTest {
 		}
 
 		@Override
-		public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
 			return jdbcEnvironment.getPhysicalNameFactory().create( prefix + logicalName.getText(), logicalName.isQuoted() );
 		}
 	}

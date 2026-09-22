@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.annotations.secondarytable;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.relational.naming.spi.PhysicalName;
@@ -56,7 +58,8 @@ public class SecondaryTableQuotingTest {
 
 	public static class TestNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 		@Override
-		public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
 			return jdbcEnvironment.getPhysicalNameFactory().create( "TAB_" + logicalName.getText(), logicalName.isQuoted() );
 		}
 	}

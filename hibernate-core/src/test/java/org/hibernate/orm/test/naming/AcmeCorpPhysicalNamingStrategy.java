@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.naming;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.relational.naming.spi.PhysicalName;
@@ -36,7 +38,8 @@ public class AcmeCorpPhysicalNamingStrategy extends PhysicalNamingStrategyStanda
 	}
 
 	@Override
-	public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+	@Nonnull
+	public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
 		final List<String> parts = splitAndReplace( logicalName.getText());
 		return jdbcEnvironment.getPhysicalNameFactory().create(
 				String.join("_", parts),
@@ -45,7 +48,8 @@ public class AcmeCorpPhysicalNamingStrategy extends PhysicalNamingStrategyStanda
 	}
 
 	@Override
-	public PhysicalName toPhysicalSequenceName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+	@Nonnull
+	public PhysicalName toPhysicalSequenceName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
 		final List<String> parts = splitAndReplace( logicalName.getText());
 		// Acme Corp says all sequences should end with _seq
 		if (!"seq".equals(parts.get(parts.size() - 1))) {
@@ -58,7 +62,8 @@ public class AcmeCorpPhysicalNamingStrategy extends PhysicalNamingStrategyStanda
 	}
 
 	@Override
-	public PhysicalName toPhysicalColumnName(LogicalName logicalName, PhysicalNamingContext jdbcEnvironment) {
+	@Nonnull
+	public PhysicalName toPhysicalColumnName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
 		final List<String> parts = splitAndReplace( logicalName.getText());
 		return jdbcEnvironment.getPhysicalNameFactory().create(
 				String.join("_", parts),

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.time.OffsetDateTime;
@@ -95,7 +97,8 @@ class TimeZoneColumnNamingTest {
 		final List<String> decisions = new ArrayList<>();
 		final var strategy = new StandardImplicitNamingStrategy() {
 			@Override
-			public LogicalName determineBasicColumnName(BasicColumnNamingInput input, ImplicitNamingContext context) {
+			@Nonnull
+			public LogicalName determineBasicColumnName(@Nonnull BasicColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 				decisions.add( input.attributePath() );
 				return context.implicitName( "basic_" + input.attributePath().replace( '.', '_' ), true );
 			}
@@ -200,7 +203,10 @@ class TimeZoneColumnNamingTest {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 			assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
 					new MappingSources().addManagedClass( Defaults.class ), new StandardImplicitNamingStrategy() {
-						@Override public LogicalName determineTimeZoneColumnName(TimeZoneColumnNamingInput input, ImplicitNamingContext context) {
+						@Override
+						@Nonnull
+						@SuppressWarnings("DataFlowIssue") // Deliberately invalid strategy result.
+						public LogicalName determineTimeZoneColumnName(@Nonnull TimeZoneColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 							return nullResult ? null : new LogicalName( "invalid", false, true );
 						}
 					}, new Prefix() ) ).hasMessageContaining( "non-null implicit name for time-zone column" );
@@ -258,7 +264,9 @@ class TimeZoneColumnNamingTest {
 			final var physicalInputs = new ArrayList<LogicalName>();
 			final var metadata = MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
 					new MappingSources().addManagedClass( QuotedPatterns.class ), new StandardImplicitNamingStrategy(), new Prefix() {
-						@Override public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+						@Override
+						@Nonnull
+						public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 							physicalInputs.add( name );
 							return context.getPhysicalNameFactory().create( "p_" + name.getText(), true );
 						}
@@ -278,7 +286,9 @@ class TimeZoneColumnNamingTest {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 			final var recordedInputs = new ArrayList<TimeZoneColumnNamingInput>();
 			final var strategy = new Recording() {
-				@Override public LogicalName determineTimeZoneColumnName(TimeZoneColumnNamingInput input, ImplicitNamingContext context) {
+				@Override
+				@Nonnull
+				public LogicalName determineTimeZoneColumnName(@Nonnull TimeZoneColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 					recordedInputs.add( input );
 					return context.implicitName( input.owner().getClassName().equals( InheritedOwner.class.getName() ) ? "first_tz" : "second_tz" );
 				}
@@ -329,18 +339,24 @@ class TimeZoneColumnNamingTest {
 	static class Recording extends StandardImplicitNamingStrategy {
 		final List<String> basics = new ArrayList<>();
 		final List<TimeZoneColumnNamingInput> inputs = new ArrayList<>();
-		@Override public LogicalName determineBasicColumnName(BasicColumnNamingInput input, ImplicitNamingContext context) {
+		@Override
+		@Nonnull
+		public LogicalName determineBasicColumnName(@Nonnull BasicColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			basics.add( input.attributePath() );
 			return context.implicitName( "basic_" + input.attributePath().replace( '.', '_' ), true );
 		}
-		@Override public LogicalName determineTimeZoneColumnName(TimeZoneColumnNamingInput input, ImplicitNamingContext context) {
+		@Override
+		@Nonnull
+		public LogicalName determineTimeZoneColumnName(@Nonnull TimeZoneColumnNamingInput input, @Nonnull ImplicitNamingContext context) {
 			inputs.add( input );
 			return context.implicitName( "tz_" + input.temporalColumn().logicalName().getText(), true );
 		}
 	}
 	static class Prefix extends PhysicalNamingStrategyStandardImpl {
 		final List<LogicalName> inputs = new ArrayList<>();
-		@Override public PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context) {
+		@Override
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 			inputs.add( name );
 			return context.getPhysicalNameFactory().create( "p_" + name.getText(), false );
 		}

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.namingstrategy.synchronizedTables;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.relational.naming.spi.PhysicalName;
@@ -74,7 +76,8 @@ public class SynchronizeTableNamingTest {
 		public static final TestingPhysicalNamingStrategy INSTANCE = new TestingPhysicalNamingStrategy();
 
 		@Override
-		public PhysicalName toPhysicalTableName(LogicalName logicalName, PhysicalNamingContext context) {
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 			String baseName = logicalName.getText();
 			if ( baseName.equals( "table_a" ) ) {
 				baseName = "tbl_a";

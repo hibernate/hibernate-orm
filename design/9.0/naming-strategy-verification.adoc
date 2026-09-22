@@ -7,13 +7,27 @@ deprecating the other three strategies with runtime warnings. That work is imple
 and validated. This document retains the test contract and outstanding coverage work.
 All five registrations remain available; Standard remains the default.
 
-Latest full core validation: 17,934 tests, 1,525 skipped, no failures or errors.
+Latest full core validation: 17,951 tests, 1,525 skipped,
+0 failures and 0 errors.
 After relocating the shared algorithms to interface defaults, all 66 focused naming
 tests passed with no skips, failures, or errors. Slice-local counts below describe
 their individual runs; they are not cumulative totals.
 
 See link:implicit-naming-strategy-proposal.adoc[the replacement contract] and
 link:naming-strategy-redesign.adoc[the broader naming redesign].
+
+== Unified PK Naming Validation
+
+The link:primary-key-naming-spec.adoc[PK naming slice] passed 623 tests across the naming
+and model-binding packages, with no skips, failures, or errors. This includes 130 strategy
+matrix cases and seven focused PK tests. Coverage includes all seven ordinary PK creation
+sites, table dependency pairs, custom and physical callback counts, quoted/truncated
+names, invalid results, unchanged unnamed-PK DDL, the existing multiple-UK absorption
+path, inline views, and metadata restoration without naming replay. The full core suite
+was not rerun for this slice.
+
+A separate single-UK cleanup inconsistency found during characterization is recorded in
+link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification].
 
 == Purpose and Test Contract
 
@@ -269,3 +283,14 @@ soft-delete, and time-zone companion algorithms to `ImplicitNamingStrategy` defa
 methods, all 66 focused naming tests passed with no skips, failures, or errors.
 The unchanged algorithms are inherited by supplied strategies; existing tests exercise
 custom overrides and time-zone delegation to custom basic-column naming.
+
+== Required Physical PK Names
+
+The PK matrix asserts generated logical names and stored physical names independently
+of DDL emission. The standard physical strategy preserves the name for every PK; the
+existing exporter policy still omits implicit PK names from DDL. Custom physical
+strategy coverage remains in place. Invalid null or explicit results from implicit PK
+naming, and null physical PK results, are rejected with mapping errors.
+
+This replaces the earlier nullable-physical-PK and standard-suppression expectations.
+Full core validation of the revised contract passed: 17,951 tests, 1,525 skipped, zero failures or errors.

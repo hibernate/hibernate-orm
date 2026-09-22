@@ -3,18 +3,27 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stateless;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
+
 import java.util.Date;
 
 /**
  * @author Gavin King
  */
+@Entity
 public class Document {
 
 	private String text;
+	@Id
 	private String name;
+	@Version
+	@Column(name = "last_modified")
 	private Date lastModified;
 
-	Document() {}
+	public Document() {}
 
 	public Document(String text, String name) {
 		this.text = text;

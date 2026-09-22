@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/stateless/Document.hbm.xml"
+		annotatedClasses = {Document.class, Paper.class}
 )
 @SessionFactory
 public class StatelessSessionTest {

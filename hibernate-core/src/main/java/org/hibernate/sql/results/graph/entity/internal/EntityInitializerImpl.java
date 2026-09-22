@@ -2206,6 +2206,17 @@ public class EntityInitializerImpl
 					.eventListenerGroup_PRE_LOAD
 					.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 		}
+		else {
+			final var concreteDescriptor = data.concreteDescriptor;
+			session.runInterceptorCallback(
+					() -> session.getInterceptor().onLoad(
+							data.getInstance(),
+							data.entityKey.getIdentifier(),
+							resolvedEntityState,
+							concreteDescriptor.getPropertyNames(),
+							concreteDescriptor.getPropertyTypes()
+					) );
+		}
 	}
 
 	@Override

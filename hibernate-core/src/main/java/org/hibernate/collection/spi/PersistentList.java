@@ -432,6 +432,10 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	@Override
 	public boolean hasDeletes(CollectionPersister persister) {
 		final List<?> sn = (List<?>) getSnapshot();
+		if ( sn == null ) {
+			// the collection was never initialized, so it has no deletes
+			return false;
+		}
 		int snSize = sn.size();
 		if ( snSize > list.size() ) {
 			return true;

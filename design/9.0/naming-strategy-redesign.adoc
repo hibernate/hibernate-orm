@@ -54,10 +54,10 @@ configuration names, JDBC metadata/extraction boundaries, and remaining
 stage-neutral qualified-name contracts and `Identifier` conversions.
 |3. Implicit naming coverage and inputs
 |Complete the invocation/input inventory for all supported database-object roles.
-Finish specialized columns (including embeddable discriminators, soft-delete,
+Finish specialized columns (including soft-delete,
 time-zone companions, and collection identifiers), constraints, audit/history,
 and separate generator storage-column defaults. Tenant and entity-discriminator
-naming and the role-specific join callbacks are implemented.
+naming, embeddable discriminator naming, and the role-specific join callbacks are implemented.
 |4. Provenance, explicit names, and defaults
 |Finish provenance/default rules for the unmigrated roles. Uniform explicit-name
 bypass is agreed; annotation-default entity discriminator names count as supplied.

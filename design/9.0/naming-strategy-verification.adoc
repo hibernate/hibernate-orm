@@ -109,7 +109,12 @@ strategies and becomes `p_DTYPE` under the matrix's prefix physical strategy.
 `ImplicitDiscriminatorColumnNamingTest` covers the dedicated callback, annotation and
 XML defaults as supplied names, custom quoted names at runtime, physical transformation,
 joined-inheritance settings, suppression, formulas, and invalid callback results.
-Embeddable and Any discriminator naming are separate from this entity-only slice.
+Embeddable discriminator naming has a separate callback.
+`ImplicitEmbeddableDiscriminatorNamingTest` reuses the shared five-strategy/two-physical-policy
+matrix for direct, nested, collection-element, and nested collection-element defaults.
+Its focused tests cover source precedence, input facts, XML, quoting, explicit bypass,
+invalid results, logical-name index resolution, and runtime subtype loading.
+Any discriminator naming remains a separate role.
 
 == JPA Conformance Boundary
 

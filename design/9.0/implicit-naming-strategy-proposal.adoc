@@ -4,8 +4,8 @@
 
 Status: implementation authorized by Steve. The replacement is being implemented
 in stages. Table, independent-column, role-specific join-column, tenant-column,
-and entity-discriminator callbacks are implemented, along with physical constraint/index
-hooks. Remaining work covers other specialized columns, implicit constraints,
+entity-discriminator, and embeddable-discriminator callbacks are implemented, along
+with physical constraint/index hooks. Remaining work covers other specialized columns, implicit constraints,
 audit/history, generator storage-column defaults on their separate contract, and
 the cross-role dependency-readiness audit.
 
@@ -582,4 +582,173 @@ comments is a separate localized fix. Other column metadata handling is unchange
 
 Entity-discriminator validation: focused naming/inheritance tests passed 568 tests
 (9 skipped). The complete core suite passed 17,855 tests
+(1,525 skipped), with zero failures or errors.
+
+== Embeddable Discriminator Naming: Working Specification
+
+Status: Steve approved the working specification and requested implementation.
+The callback and binding integration are implemented and validated.
+
+=== Goal and Current Behavior
+
+Expose polymorphic embeddable discriminator-column naming through a dedicated
+implicit callback, followed by physical column naming and logical-name registration.
+Keep this role distinct from entity inheritance discriminators.
+
+The inspected entry points are `EmbeddableAttributeBinder`, nested components in
+`ComponentBinder`, and component elements in `ElementCollectionAttributeBinder`.
+Their current implicit defaults are respectively the terminal attribute name plus
+`_DTYPE`, the nested terminal attribute name plus `_DTYPE`, and `element_DTYPE`.
+All three converge on `EmbeddableAttributeBinder.bindDiscriminator`, which previously
+bypassed physical naming. Non-polymorphic contributions create no discriminator.
+
+Source precedence is an effective `@AttributeOverride` for `{discriminator}`, then
+`@DiscriminatorColumn` on the component type, then the caller's default. An override
+with an empty column name currently uses the caller's default; it does not fall back
+to the component type's discriminator-column name. A present `@DiscriminatorColumn`
+with an empty name currently falls back to `DTYPE` through the shared column binder.
+Its normal annotation default also supplies `DTYPE`, as in the entity slice.
+
+=== Callback and Input Contract
+
+Add the following method to `ImplicitNamingStrategy`, with Markdown Javadoc linking
+`@DiscriminatorColumn.name()` and `@AttributeOverride.column()` and explaining the
+special `{discriminator}` override role:
+
+[source,java]
+----
+LogicalName determineEmbeddableDiscriminatorColumnName(
+        EmbeddableDiscriminatorColumnNamingInput input,
+        ImplicitNamingContext context);
+----
+
+Define `EmbeddableDiscriminatorColumnNamingInput` as an immutable record in
+`org.hibernate.boot.model.naming.spi`, marked `@SPI(USE)`, with these required fields:
+
+* `EntityNamingInput entity`: the owning entity, including for collection elements.
+* `String embeddableTypeName`: the mapped embeddable type's model name, without
+  loading its Java class or exposing `ClassDetails`.
+* `String attributePath`: the full owner-relative attribute path. Examples are
+  `pet`, `home.pet`, `pets` for a collection's element, and `pets.details` for an
+  embedded attribute within that element. Do not include the entity name or
+  synthetic element markers in this path.
+* `Kind kind`: `EMBEDDED_ATTRIBUTE` or `COLLECTION_ELEMENT`. A nested embedded
+  attribute within a collection element uses `EMBEDDED_ATTRIBUTE`; the component
+  representing the element itself uses `COLLECTION_ELEMENT`.
+* `String defaultColumnName`: the effective existing fallback for this exact
+  naming decision. This is a suggested unquoted spelling, not a finalized logical
+  or physical name. It is `pet_DTYPE`, `element_DTYPE`, or `DTYPE` according to the
+  source rules below. Keeping it explicit avoids exposing annotation objects or
+  making providers reconstruct default precedence.
+
+Reject null fields. Construct the input only when an implicit name is actually
+needed. All supplied strategies implement this callback as
+`context.implicitName(input.defaultColumnName())`; custom providers may use the
+entity, type, path, and kind to replace that default. Do not call an entity-discriminator
+or basic-column callback to implement this role.
+
+=== Binding Boundaries
+
+A nonempty name in the effective source bypasses implicit naming. A present
+`@DiscriminatorColumn` supplies its annotation-default `DTYPE`, consistent with the
+approved entity rule. Explicit and generated logical names receive physical column
+naming once, preserve requested quoting, and register the same logical/physical pair.
+Validate implicit results using the existing non-null/implicit-provenance contract.
+
+Preserve source precedence, polymorphism detection, discriminator values and types,
+length/nullability/write flags, and supported mapping forms. Identifier embeddables
+must not acquire new polymorphic support. Changes to default spelling must be explicit
+in the working specification and migration guide. This slice does not add formula
+support or alter the entity discriminator callback.
+
+=== Selected Default Direction
+
+Steve selected preserving existing discriminator defaults for all supplied strategies,
+including Standard. Do not apply Standard's full component-path expansion to this role.
+
+* Direct and nested embedded attributes retain terminal attribute name plus `_DTYPE`.
+* Collection elements retain `element_DTYPE`.
+* A present `@DiscriminatorColumn` with a nonempty name, including annotation-default
+  `DTYPE`, supplies that name and bypasses implicit naming.
+* Preserve the existing `DTYPE` fallback for an explicitly empty
+  `@DiscriminatorColumn(name = "")`; the implicit callback must receive sufficient
+  facts to retain this distinction from an absent annotation.
+* An empty-name discriminator override retains the caller's attribute/element default,
+  rather than inheriting the component type's discriminator-column name.
+
+Custom strategies receive full path information and may choose qualified names.
+Repeated nested embeddables may still require explicit discriminator overrides under
+the supplied strategies. Physical naming participation remains an intentional change.
+
+=== Source Precedence and Observable Names
+
+Resolve the effective source before invoking naming. Preserve these cases for every
+supplied strategy, shown for embedded attribute `home.pet` and collection `pets`:
+
+[cols="3,2,2,1",options="header"]
+|===
+|Effective source |Embedded attribute |Collection element |Implicit callback
+|No override or discriminator-column annotation
+|`pet_DTYPE` |`element_DTYPE` |Yes
+|Discriminator override with nonempty column name `kind`
+|`kind` |`kind` |No
+|Discriminator override with empty column name, regardless of type-level annotation
+|`pet_DTYPE` |`element_DTYPE` |Yes
+|Present discriminator-column annotation with default or explicit `DTYPE`
+|`DTYPE` |`DTYPE` |No
+|Present discriminator-column annotation with another nonempty name `kind`
+|`kind` |`kind` |No
+|Present discriminator-column annotation with explicitly empty name
+|`DTYPE` |`DTYPE` |Yes
+|===
+
+Every column above passes through physical naming. For example, a prefix strategy
+produces `p_pet_DTYPE`, `p_element_DTYPE`, `p_DTYPE`, or `p_kind`. Requested quoting
+from either an explicit source or custom implicit result survives physical naming.
+Normal automatic/global quoting finalization applies afterward. Preserve logical
+provenance: even when both spellings are `DTYPE`, a generated fallback is implicit
+and the effective nonempty annotation name is explicit.
+
+Use the successful implicit result for both column construction and logical-name
+registration; do not invoke the provider again to register an alias. Non-polymorphic
+components create no discriminator and invoke neither naming strategy for this role.
+Source normalization for supported XML mappings follows the same effective-source
+rules; no bytecode-level explicit-member tracking is introduced.
+
+=== Compatibility and Acceptance
+
+This adds a method to the redesigned SPI; direct implementors must implement it,
+while subclasses inherit the supplied default. No old-contract adapter is required.
+Document the new physical naming participation: previously untransformed discriminator
+columns may need schema or strategy adjustments when upgrading. Default logical names
+remain unchanged for every supplied strategy. Existing entity discriminator behavior
+and Standard's full-path basic-column naming are unchanged.
+
+Acceptance tests must cover every row of the precedence table, direct and nested
+embeddables, collection elements and nested collection-element attributes, repeated
+occurrences with discriminator overrides, and supported XML mappings. Assert exact
+input paths, kinds, owning entity, mapped type, and fallback names. Retain existing
+metadata flags/types/lengths and discriminator-value behavior.
+
+Extend the shared strategy matrix with implicit embeddable discriminator defaults
+under all five supplied strategies and identity/prefix physical naming. Focused tests
+must prove custom callback participation, explicit bypass, no basic/entity callback
+substitution, one implicit decision, one physical transformation per new column,
+quoting, logical correspondence, invalid-result rejection, and non-polymorphic bypass.
+Runtime tests must persist and reload different subtypes using transformed and quoted
+names, including collection elements. Reuse existing embeddable-inheritance fixtures
+where practical. Run focused naming/inheritance tests and the complete core suite.
+
+If implementation or verification exposes a supported path that cannot supply these facts, report that
+concrete discrepancy and revise the specification before narrowing support.
+
+Implementation notes: nested components inside collection elements retain a collection
+kind in the internal contribution model. The binding caller supplies the naming role
+explicitly so `homes.pet` is an embedded attribute while `pets` is a collection element.
+XML coverage uses supported attribute overrides; the current mapping schema does not
+allow a type-level discriminator-column element inside an embeddable declaration.
+This slice does not expand that XML schema.
+
+Embeddable-discriminator validation: focused naming and embeddable-inheritance tests
+passed 296 tests (7 skipped). The complete core suite passed 17,873 tests
 (1,525 skipped), with zero failures or errors.

@@ -89,8 +89,10 @@ embedded paths; explicit names bypass the callback.
 
 Source: `EmbeddableAttributeBinder.bindDiscriminator`
 
-Default attribute name plus `_DTYPE`. Distinguish this role from entity discriminator
-naming, with its component path available.
+Implemented through `EmbeddableDiscriminatorColumnNamingInput`, with owner, type,
+full path, role, and the existing fallback spelling. Supplied strategies preserve
+terminal attribute names and `element_DTYPE`; explicit and generated names now receive
+physical naming. Verification is tracked in the replacement proposal.
 
 === Aggregate container column
 

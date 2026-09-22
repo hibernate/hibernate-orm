@@ -1,5 +1,7 @@
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnNamingInput;
+
 import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
 
 import java.util.List;
@@ -383,6 +385,9 @@ class ElementCollectionAttributeBinder {
 				table,
 				contribution,
 				"element_DTYPE",
+				ownerBinding,
+				collectionRolePath,
+				EmbeddableDiscriminatorColumnNamingInput.Kind.COLLECTION_ELEMENT,
 				bindingState,
 				bindingOptions,
 				bindingContext

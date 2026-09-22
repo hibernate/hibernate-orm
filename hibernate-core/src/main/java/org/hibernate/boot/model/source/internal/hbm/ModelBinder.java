@@ -6,7 +6,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -16,7 +15,6 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
@@ -2154,7 +2152,7 @@ public class ModelBinder {
 			final String cascadeStyleName = cascadeStyleSource.getCascadeStyleName();
 			property.setCascade( isNotEmpty( cascadeStyleName )
 					? cascadeStyleName
-					: toCascadeString( mappingDocument.getEffectiveDefaults().getDefaultCascadeTypes() ) );
+					: mappingDocument.getEffectiveDefaults().getDefaultCascadeStyleName() );
 		}
 
 		property.setOptimisticLocked( propertySource.isIncludedInOptimisticLocking() );
@@ -2174,26 +2172,6 @@ public class ModelBinder {
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
 			BOOT_LOGGER.mappedProperty( propertySource.getName(),
 					columns( property.getValue() ) );
-		}
-	}
-
-	private String toCascadeString(EnumSet<CascadeType> defaultCascadeTypes) {
-		if ( isEmpty( defaultCascadeTypes ) ) {
-			return "none";
-		}
-		else {
-			boolean firstPass = true;
-			final var buffer = new StringBuilder();
-			for ( var cascadeType : defaultCascadeTypes ) {
-				if ( firstPass ) {
-					firstPass = false;
-				}
-				else {
-					buffer.append( ", " );
-				}
-				buffer.append( cascadeType.name().toLowerCase( Locale.ROOT ) );
-			}
-			return buffer.toString();
 		}
 	}
 

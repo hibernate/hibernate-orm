@@ -5,9 +5,11 @@
 package org.hibernate.orm.test.annotations.namingstrategy;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.relational.naming.spi.LogicalName;
 
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
+import org.hibernate.boot.model.naming.spi.ForeignKeyNamingInput;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
@@ -17,8 +19,9 @@ public class LongIdentifierNamingStrategy
 
 	@Override
 	@Nonnull
-	public Identifier determineForeignKeyName(@Nonnull ImplicitForeignKeyNameSource source) {
-		return limitIdentifierName(super.determineForeignKeyName( source ));
+	public LogicalName determineForeignKeyName(@Nonnull ForeignKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+		final var name = super.determineForeignKeyName( input, context );
+		return context.implicitName( name.getText().substring( 0, Math.min( 30, name.getText().length() ) ), name.isQuoted() );
 	}
 
 	@Override

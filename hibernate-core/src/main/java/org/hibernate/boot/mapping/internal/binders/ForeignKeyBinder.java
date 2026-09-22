@@ -60,6 +60,7 @@ class ForeignKeyBinder {
 		);
 		if ( resolvedForeignKey != null ) {
 			applyForeignKeySource( resolvedForeignKey, foreignKeyBinding.foreignKeySource() );
+			rememberReferenceNames( resolvedForeignKey, foreignKeyBinding );
 			return;
 		}
 		final ForeignKey foreignKey;
@@ -85,6 +86,26 @@ class ForeignKeyBinder {
 			foreignKey = null;
 		}
 		applyForeignKeySource( foreignKey, foreignKeyBinding.foreignKeySource() );
+		rememberReferenceNames( foreignKey, foreignKeyBinding );
+	}
+
+	private void rememberReferenceNames(ForeignKey key, ForeignKeyBinding binding) {
+		if ( key == null || binding.referencedColumnNames().isEmpty() ) {
+			return;
+		}
+		final var state = entityBinder.getBindingState();
+		final var referenced = state.getEntityBinding( key.getReferencedEntityName() );
+		final var table = key.getReferencedTable() == null ? referenced.getTable() : key.getReferencedTable();
+		final var names = state.getRelationalModelCorrespondences();
+		for ( var text : binding.referencedColumnNames() ) {
+			if ( text != null && !text.isEmpty() ) {
+				final var selected = state.getDatabase().toLogicalName( text );
+				final var column = names.columnNames().findPhysicalColumn( table, selected );
+				if ( column != null ) {
+					names.registerReferenceName( key, column, names.columnNames().selectReferenceName( table, column, selected ) );
+				}
+			}
+		}
 	}
 
 	private ForeignKey materializePropertyRefForeignKey(
@@ -180,7 +201,16 @@ class ForeignKeyBinder {
 	}
 
 	private void applyForeignKeySource(ForeignKey foreignKey, ForeignKeySource foreignKeySource) {
-		if ( foreignKey == null || foreignKeySource == null ) {
+		if ( foreignKey == null ) {
+			return;
+		}
+		final var state = entityBinder.getBindingState();
+		final var referenced = state.getEntityBinding( foreignKey.getReferencedEntityName() );
+		final var targetTable = foreignKey.getReferencedTable() == null ? referenced.getTable() : foreignKey.getReferencedTable();
+		state.getRelationalModelCorrespondences().registerForeignKeyTables( foreignKey,
+				JoinColumnNaming.table( foreignKey.getTable(), entityBinder.getTypeBinding(), state ).logicalName(),
+				JoinColumnNaming.table( targetTable, referenced, state ).logicalName() );
+		if ( foreignKeySource == null ) {
 			return;
 		}
 		if ( isNoConstraint( foreignKeySource ) ) {

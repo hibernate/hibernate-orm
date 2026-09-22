@@ -2,14 +2,12 @@
 :toc2:
 :sectanchors:
 
-Status: direction approved. Improve callback coverage and input clarity while preserving
-existing FK/UK/index default algorithms, dependency stages, and hashing. Implicit PKs
-retain their current unnamed DDL behavior pending the emission-policy decision. Unify
-their implicit logical names using the approved `Alias(15, "_pk")` pattern over the
-physical table name. Inputs expose both logical and physical dependency names.
-Steve also approved honoring finalized PK/UK names in schema DDL wherever supported,
-with migration guidance. Exact contracts and lifecycle details require a working
-specification before implementation.
+Status: PK and FK contracts are implemented, as is the HHH-20916 unique-column
+finalization correction. UK contract/lifecycle and name-emission work remains in
+link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification]; index inputs
+remain proposed. Existing default hashes are preserved except for the documented
+logical-dependency corrections and removal of the defective exporter UK fallback.
+Implicit PK names are stored but remain omitted from DDL under existing exporter policy.
 
 == Goal And Scope
 
@@ -24,7 +22,10 @@ strategy-owned default calculations, and no replay for reuse or restoration. Thi
 a clean-room SPI redesign; preserving old source interfaces is not a requirement.
 Generated database-name compatibility is a separate decision from API compatibility.
 
-== Findings From Current Sources
+== Baseline Findings Before Migration
+
+This section records the investigation baseline, not the current implementation.
+PK/FK contracts and the exporter UK fallback have since been addressed as summarized above.
 
 [cols="1,3,2",options="header"]
 |===
@@ -64,9 +65,10 @@ configured schema charset or the platform default. FK, UK, and index prefixes ar
 `UK`, and `IDX`. Column arrays are copied and sorted by canonical identifier spelling;
 provider inputs must not themselves be sorted to implement a hash.
 
-`ConstraintNamingHelper` currently accepts `Supplier<Identifier>`, derives provenance
-from explicit-name presence, calls the dedicated physical hook, and returns a rendered
-string. It must accept and validate `LogicalName` results when these callbacks migrate.
+The original `ConstraintNamingHelper` accepted `Supplier<Identifier>`, derived provenance
+from explicit-name presence, called the dedicated physical hook, and returned a rendered
+string. Its new `resolveLogical` path validates `LogicalName` results for FK naming; UK/index
+still use the legacy bridge.
 Constraint/index storage and archive boundaries still need consideration: a rendered
 string cannot by itself retain a selected logical dependency for future consumers.
 
@@ -97,8 +99,7 @@ PK/UK clause honors the chosen name.
 
 == Proposed Contract Shape
 
-Use four role-specific callbacks with the existing naming context. The FK/UK working
-specification remains a bounded slice; PK naming requires its own working specification:
+Use four role-specific callbacks with the existing naming context. PK and FK are implemented. UK/index signatures below remain proposed:
 
 [source,java]
 ----
@@ -204,8 +205,7 @@ the alias helper's quoting behavior. Apply it to the physical table name.
 The agreed input shape is `PrimaryKeyNamingInput(NamedTableNamingInput table)`:
 both naming stages for the table, without PK columns or table-role information.
 The standard default uses the physical table name; custom strategies may choose the
-logical name instead. These decisions are consolidated in
-link:primary-key-naming-spec.adoc[the approved PK specification].
+logical name instead. This contract is implemented.
 
 The algorithm belongs in the default implementation of
 `ImplicitNamingStrategy.determinePrimaryKeyName()`. PK materialization paths must reach
@@ -223,10 +223,9 @@ Track the deferred work in comments in the corresponding centralized naming code
   via `@PrimaryKey` and bypass implicit naming for them.
 
 These comments belong in the centralized PK callback and resolution code, not duplicated
-across individual PK creation sites. Implementation follows
-link:primary-key-naming-spec.adoc[the approved PK specification].
+across individual PK creation sites. The completed PK implementation uses this shared resolution boundary.
 
-The current `Alias(15, "PK")` helper takes a fixed caller-supplied length, reserves two
+The previous `Alias(15, "PK")` call takes a fixed caller-supplied length, reserves two
 characters for `PK`, and truncates the table text to thirteen characters. It has no
 Dialect reference and does not consult identifier limits. The current physical naming
 finalizer does not enforce length either. This is an internal alias-generation recipe,
@@ -249,6 +248,24 @@ and built-in defaults informs that emission policy, not naming-result nullabilit
 Whether a generated PK name is emitted remains separate from its calculation, including
 the user-selected-versus-built-in-default consideration below. Do not start emitting
 previously internal PK names merely by unifying their generation.
+
+=== Completed PK Finalization Boundaries
+
+`PrimaryKeyNaming` names surviving PKs on named tables registered by model binding,
+using retained logical table identity and finalized physical spelling. Already named
+keys are reused; shared/inherited PKs are not renamed for another table. Disabled PKs
+and inline views do not introduce requests. Later column reordering and archive
+restoration do not replay naming. Collection-set PKs no longer invoke UK naming.
+
+Null implicit or physical PK results are mapping errors. Either `LogicalName.isExplicit()`
+value from a custom implicit strategy is accepted and passed unchanged to physical naming.
+Physical finalization preserves requested quoting. The stored physical name and the
+exporter's decision to emit it are separate concerns.
+
+Audit/history and generator PK lifecycles, and the deprecated `Join.createPrimaryKey()`
+hook, remain outside this completed model-binding slice. Additional contributions through
+model binding use the same finalization. The sole absorbed-UK defect remains in the UK
+working specification; the completed PK tests cover the existing multiple-UK path.
 
 === Explicit PK Declaration: Proposal
 
@@ -319,30 +336,17 @@ promise settled membership. Explicit names bypass implicit dependency requiremen
 undergo normal constraint validation and physical naming. No preliminary naming followed
 by a second callback after a late column arrives.
 
-== Working Specification Follow-through
+== Remaining Implementation Sequence
 
-. Specify unified table-based implicit PK naming using `Alias(15, "_pk")` over the
-  physical table name, with both naming stages available in the input. Keep DDL emission and explicit PK declarations as
-  separate decisions.
-. Characterize existing names across all PK forms and FK/UK/index dependency paths,
-  including physical-name fallbacks and expression hashing, before moving algorithms.
-. Specify absorbed-UK precedence and dialect capability handling for the approved PK/UK
-  DDL emission change, retaining the migration-guide note.
-. Define typed index terms and FK correspondence without changing default hash inputs.
-. Separate source-resolution/readiness work needed for reliable inputs from unrelated
-  schema/parser behavior changes; report any required deviation before implementation.
-
-== Proposed Implementation Sequence And Acceptance
-
-. Migrate FK and UK together with selected dependencies, deduplication, explicit bypass,
-  and finalization. Cover PK/non-PK targets, derived/composite keys, denormalized tables,
-  logical aliases, disabled constraints, and additional mapping contributions.
-. Verify unchanged unnamed implicit-PK output across entity, secondary/joined, and
-  collection tables, including UK absorption. Handle the new explicit PK declaration
-  facility under its separate follow-up specification.
-. Migrate indexes with typed terms and defined ordering/hash semantics. Cover entity and
-  collection tables, expressions, unique-index representation, qualification, and options.
-. Remove obsolete source interfaces and strategy helpers after their callers migrate.
+. Complete and approve the UK working specification: selected dependencies, candidate
+  identity, deduplication, single/multiple-UK absorption, and finalized-name emission.
+  Preserve last-eligible named-UK selection and unchanged unnamed implicit-PK DDL.
+. Implement that UK slice and remove its obsolete source contract.
+. Specify and migrate indexes with typed column/expression terms and defined ordering/hash
+  semantics. Cover entity/collection tables, unique-index representation, qualification,
+  and options. Preserve default hash inputs unless a separate correction is approved.
+. Handle explicit PK declarations and dialect-aware identifier length in their tracked
+  follow-ups. Audit/history and generator PK lifecycles also remain separate.
 
 Extend the existing strategy matrix and focused tests, rather than create another matrix.
 Assert exact defaults independently; custom callback facts and counts; physical calls and
@@ -355,4 +359,4 @@ The shared link:naming-dependency-inputs-spec.adoc[dependency-readiness specific
 continues to apply. Named SQL types, audit/history naming, generator objects, and general
 relational name-storage migration are not implicitly added to this slice.
 
-The next working draft is link:foreign-unique-key-naming-spec.adoc[Foreign And Unique Key Naming].
+The remaining UK working draft is link:foreign-unique-key-naming-spec.adoc[Foreign And Unique Key Naming].

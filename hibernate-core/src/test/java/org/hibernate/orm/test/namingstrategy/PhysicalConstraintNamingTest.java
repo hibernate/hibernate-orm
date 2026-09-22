@@ -19,7 +19,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
+import org.hibernate.boot.model.naming.spi.ForeignKeyNamingInput;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
@@ -65,9 +66,9 @@ class PhysicalConstraintNamingTest {
 	static class BypassCheckingStrategy extends StandardImplicitNamingStrategy {
 		@Override
 		@Nonnull
-		public Identifier determineForeignKeyName(@Nonnull ImplicitForeignKeyNameSource source) {
-			assertThat( source.getUserProvidedIdentifier() ).isNull();
-			return super.determineForeignKeyName( source );
+		public LogicalName determineForeignKeyName(@Nonnull ForeignKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+
+			return super.determineForeignKeyName( input, context );
 		}
 		@Override
 		@Nonnull

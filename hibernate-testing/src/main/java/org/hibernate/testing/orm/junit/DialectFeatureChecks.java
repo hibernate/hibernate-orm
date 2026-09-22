@@ -1685,6 +1685,16 @@ abstract public class DialectFeatureChecks {
 			this.database = new Database( buildingPlan );
 		}
 
+		private org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences relationalNames;
+
+		@Override
+		public org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences getRelationalModelCorrespondences() {
+			if ( relationalNames == null ) {
+				relationalNames = new org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences( database );
+			}
+			return relationalNames;
+		}
+
 		@Override
 		public BootstrapContext getBootstrapContext() {
 			return bootstrapContext;

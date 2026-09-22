@@ -29,6 +29,13 @@ public final class ConstraintNamingHelper {
 			throw new MappingException( "Implicit naming strategy returned null for " + kind );
 		}
 		final var logical = new LogicalName( identifier.getText(), identifier.isQuoted(), explicit );
+		return resolveLogical( logical, kind, context );
+	}
+
+	public static String resolveLogical(LogicalName logical, Kind kind, MetadataBuildingContext context) {
+		if ( logical == null ) {
+			throw new MappingException( "Implicit naming strategy returned null for " + kind );
+		}
 		final var database = context.getMetadataCollector().getDatabase();
 		final var strategy = context.getBuildingPlan().getPhysicalNamingStrategy();
 		final var physical = PhysicalNamingStrategyHelper.resolve( logical, database.getJdbcEnvironment(),

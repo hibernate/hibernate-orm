@@ -5,7 +5,6 @@
 package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.constraint.spi.CheckConstraintPlacement;
@@ -21,11 +20,8 @@ import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Locale;
 
-import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isStringType;
@@ -142,14 +138,11 @@ public class ColumnDefinitions {
 			Dialect dialect,
 			SqlStringGenerationContext context) {
 		if ( column.isUnique() && !table.isPrimaryKey( column ) ) {
-			final String uniqueKeyName = column.getUniqueKeyName();
-			final String keyName = uniqueKeyName == null
-					// fallback in case the ImplicitNamingStrategy name was not assigned
-					// (we don't have access to the ImplicitNamingStrategy here)
-					? generateName( "UK_", table, column )
-					: uniqueKeyName;
-			final var uniqueKey = table.getOrCreateUniqueKey( keyName );
-			uniqueKey.addColumn( column );
+			if ( column.getUniqueKeyName() == null ) {
+				throw new org.hibernate.tool.schema.spi.SchemaManagementException(
+						"Unique column name was not finalized before schema export: "
+								+ table.getName() + "." + column.getName() );
+			}
 			definition.append( dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment( column, context ) );
 		}
 
@@ -285,36 +278,6 @@ public class ColumnDefinitions {
 			final int i = typeExpression.indexOf('(');
 			return i>0 ? typeExpression.substring(0,i).trim() : typeExpression;
 		}
-	}
-
-	/**
-	 * If a constraint is not explicitly named, this is called to generate
-	 * a unique hash using the table and column names.
-	 * Static so the name can be generated prior to creating the Constraint.
-	 * They're cached, keyed by name, in multiple locations.
-	 *
-	 * @return String The generated name
-	 *
-	 * @deprecated This method does not respect the
-	 *             {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	private static String generateName(String prefix, Table table, Column... columns) {
-		// Use a concatenation that guarantees uniqueness, even if identical names
-		// exist between all table and column identifiers.
-		final var builder = new StringBuilder( "table`" + table.getName() + "`" );
-		// Ensure a consistent ordering of columns, regardless of the order
-		// they were bound.
-		// Clone the list, as sometimes a set of order-dependent Column
-		// bindings are given.
-		final var alphabeticalColumns = columns.clone();
-		Arrays.sort( alphabeticalColumns, comparing( Column::getName ) );
-		for ( var column : alphabeticalColumns ) {
-			final String columnName = column == null ? "" : column.getName();
-			builder.append( "column`" ).append( columnName ).append( "`" );
-		}
-		final byte[] hashed = NamingHelper.hash( builder.toString().getBytes() );
-		return prefix + new BigInteger( 1, hashed ).toString( 35 );
 	}
 
 }

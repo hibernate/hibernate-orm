@@ -27,11 +27,28 @@ import org.hibernate.mapping.ColumnContainer;
 /// @author Steve Ebersole
 public class ColumnNameCorrespondence {
 	private final Database database;
+	private final Map<Column, Map<Column, LogicalName>> selectedReferences = new IdentityHashMap<>();
+
+	/// Retain the selected reference alias alongside the actual local/target pair.
+	public void registerReferenceName(Column local, Column target, LogicalName selected) {
+		selectedReferences.computeIfAbsent( local, ignored -> new IdentityHashMap<>() ).putIfAbsent( target, selected );
+	}
+
+	public LogicalName findReferenceName(Column local, Column target) {
+		final var references = selectedReferences.get( local );
+		return references == null ? null : references.get( target );
+	}
+
 	private final Map<Column, LogicalName> declarationNames = new IdentityHashMap<>();
 	private final Map<ColumnContainer, TableColumnNames> tableColumnNames = new IdentityHashMap<>();
 
 	public ColumnNameCorrespondence(Database database) {
 		this.database = database;
+	}
+
+	/// Retain a declaration without projecting an aggregate member onto the owner table.
+	public void registerDeclarationName(Column column, LogicalName name) {
+		declarationNames.putIfAbsent( column, name );
 	}
 
 	public void register(ColumnContainer table, LogicalName logicalName, Column physicalColumn) {

@@ -1020,3 +1020,45 @@ strategies. The standard physical strategy preserves the logical spelling and qu
 for explicit and implicit PK names. Hibernate retains the finalized physical name in
 the mapping model; exporters decide whether to emit it. Only catalog/schema physical
 naming permits null results.
+
+=== Unique-column constraint naming (HHH-20916)
+
+Uniqueness inferred from an owning `@OneToOne`, declared by basic `@Column(unique=true)`,
+or required for a non-ID `@Changelog.ChangesetId` now receives its constraint name during
+boot through `ImplicitNamingStrategy` and `PhysicalNamingStrategy`.
+Previously these paths could bypass both strategies and generate a `UK_` name during
+schema export. That fallback omitted MD5 padding and could assign identical names to
+unrelated constraints. It has been removed.
+
+The built-in implicit strategy now uses the normal `UK` hashing recipe for these cases;
+custom implicit and physical UK naming callbacks are honored. Already strategy-named
+unique constraints retain their existing default naming behavior. Dialect rules governing
+whether uniqueness is rendered inline, as a named constraint, or as an index are unchanged.
+
+Names for affected constraints may change. Existing database constraints are not renamed
+automatically; review their actual names when preparing schema migration scripts.
+See https://hibernate.atlassian.net/browse/HHH-20916[HHH-20916].
+
+=== Foreign-key naming strategy input
+
+`ImplicitNamingStrategy.determineForeignKeyName()` now accepts `ForeignKeyNamingInput`
+and `ImplicitNamingContext`, and returns a non-null `LogicalName`.
+`ImplicitForeignKeyNameSource` has been removed. Custom strategies must migrate their
+override to the new signature. The built-in algorithm now lives in the interface default;
+overrides of the old shared Identifier-based constraint helper no longer customize FK names.
+
+The input exposes logical and physical table/column dependencies, actual local-to-target
+column pairs (including primary-key references), and whether the resolved reference targets
+the PK. Inline-view dependencies expose a logical identity without a physical table name;
+this does not make their foreign keys exportable. Explicit FK names continue to bypass
+implicit naming and pass through the physical FK naming callback.
+
+The normal FK hash recipe is unchanged. A corrected table lookup can change names where
+schema-distinct tables share a physical object name: each FK now uses its own logical
+table identity instead of whichever table last overwrote the unqualified reverse lookup.
+Existing database constraints are not automatically renamed.
+
+Audit helper tables which previously omitted logical-name registration now retain their
+creation names for FK naming inputs. With a transforming physical naming strategy, their
+FK hashes may change from the former physical-table-name fallback to the known logical
+creation name. Explicitly registered table aliases retain their existing selection.

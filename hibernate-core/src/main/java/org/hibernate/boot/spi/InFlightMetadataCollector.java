@@ -65,6 +65,9 @@ import java.util.Map;
 public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
 
+	/// Logical/physical correspondences retained through constraint finalization.
+	org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences getRelationalModelCorrespondences();
+
 	/**
 	 * @deprecated Use {@linkplain BootstrapContext#getModelsContext()} instead.
 	 */

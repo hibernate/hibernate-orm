@@ -30,6 +30,24 @@ public final class UniqueKeyMappingMaterializer {
 	private UniqueKeyMappingMaterializer() {
 	}
 
+	/// Finalize column uniqueness after all mapping contributions, before schema tooling.
+	/// Existing names have already passed through the naming strategies and must not be replayed.
+	public static void finishColumnUniqueKeys(Iterable<Table> tables, MetadataBuildingContext context) {
+		for ( var table : tables ) {
+			for ( var column : table.getColumns() ) {
+				if ( column.isUnique() && !table.isPrimaryKey( column ) ) {
+					var name = column.getUniqueKeyName();
+					if ( name == null ) {
+						// HHH-20916: use normal UK naming instead of the defective export-time hash.
+						name = implicitUniqueKeyName( table, List.of( column ), null, context );
+						table.markColumnUnique( name, column );
+					}
+					table.getOrCreateUniqueKey( name ).addColumn( column );
+				}
+			}
+		}
+	}
+
 	public static UniqueKey materializeUniqueKey(ResolvedUniqueKey uniqueKey) {
 		final List<Column> keyColumns = uniqueKey.columns();
 		if ( keyColumns.size() == 1 ) {

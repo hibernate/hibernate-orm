@@ -118,20 +118,40 @@ class ImplicitPrimaryKeyNamingTest {
 	}
 
 	@Test
-	void rejectsNullAndExplicitImplicitResults() {
+	void rejectsNullImplicitResult() {
+		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
+			final var strategy = new StandardImplicitNamingStrategy() {
+				@Override
+				@Nonnull
+				@SuppressWarnings("DataFlowIssue") // Deliberately violates the SPI to verify result validation.
+				public LogicalName determinePrimaryKeyName(@Nonnull PrimaryKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+					return null;
+				}
+			};
+			assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
+					new MappingSources().addManagedClass( Quoted.class ), strategy, new PhysicalNamingStrategyStandardImpl() ) )
+					.isInstanceOf( MappingException.class ).hasMessageContaining( "non-null name for primary key" );
+		}
+	}
+
+	@Test
+	void acceptsEitherExplicitnessFlagFromImplicitStrategy() {
 		for ( boolean explicit : new boolean[] { false, true } ) {
 			try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 				final var strategy = new StandardImplicitNamingStrategy() {
 					@Override
 					@Nonnull
-					@SuppressWarnings("DataFlowIssue") // Deliberately violates the SPI to verify result validation.
 					public LogicalName determinePrimaryKeyName(@Nonnull PrimaryKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
-						return explicit ? new LogicalName( "wrong", false, true ) : null;
+						return new LogicalName( "chosen_pk", false, explicit );
 					}
 				};
-				assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
-						new MappingSources().addManagedClass( Quoted.class ), strategy, new PhysicalNamingStrategyStandardImpl() ) )
-						.isInstanceOf( MappingException.class ).hasMessageContaining( "non-null implicit name for primary key" );
+				final var physical = new Prefix();
+				final var metadata = MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
+						new MappingSources().addManagedClass( Quoted.class ), strategy, physical );
+				assertThat( physical.keys ).singleElement().satisfies( name ->
+						assertThat( name.isExplicit() ).isEqualTo( explicit ) );
+				assertThat( metadata.getEntityBinding( Quoted.class.getName() ).getTable().getPrimaryKey().getName() )
+						.isEqualTo( "k_chosen_pk" );
 			}
 		}
 	}

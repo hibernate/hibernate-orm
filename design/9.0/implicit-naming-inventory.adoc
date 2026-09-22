@@ -3,8 +3,8 @@
 :sectanchors:
 
 Status: historical source inventory with outstanding coverage investigations.
-Table, independent-column, join-column, tenant, and entity-discriminator migrations
-are now implemented. Use link:implicit-naming-strategy-proposal.adoc[the replacement
+Table, column, PK, and FK callback migrations are implemented, along with boot-time
+unique-column finalization (HHH-20916). Use link:implicit-naming-strategy-proposal.adoc[the replacement
 proposal] for current implementation status; the baseline findings below are not
 a list of still-open defects. See link:naming-strategy-redesign.adoc[the parent design] and
 link:naming-dependency-inputs-spec.adoc[the dependency-input working specification].
@@ -172,8 +172,10 @@ link:naming-strategy-verification.adoc#_collection_identifier_and_soft_delete_na
 
 Source: `PrimaryTableKeyMappingMaterializer.initializePrimaryKey`, `DependentTableKeyMappingMaterializer`, `Join.createPrimaryKey`
 
-Names use `PK_ALIAS.toAliasString(table.getName())` directly. Primary-key constraint
-naming is distinct from naming primary-key columns and requires its own coverage.
+Completed for model-bound tables: `determinePrimaryKeyName` uses the shared
+`Alias(15, "_pk")` default over physical table spelling, followed by physical PK naming.
+Implicit PK DDL remains unnamed. Audit/generator and deprecated compatibility paths
+remain follow-ups in link:constraint-index-naming-proposal.adoc[the constraint proposal].
 
 === Index default before materialization
 

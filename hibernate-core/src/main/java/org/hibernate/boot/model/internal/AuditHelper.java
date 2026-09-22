@@ -170,7 +170,7 @@ public final class AuditHelper {
 			final var excludedColumns = auditable instanceof RootClass rootClass
 					? resolveExcludedColumns( rootClass )
 					: Set.<org.hibernate.relational.naming.spi.PhysicalName>of();
-			copyTableColumns( table, auditLogTable, excludedColumns );
+			copyTableColumns( table, auditLogTable, excludedColumns, context );
 			final var changesetIdColumn =
 					createAuditColumn( csIdColumnName, getChangesetIdType( context ), auditLogTable, context );
 			final var modificationTypeColumn =
@@ -428,16 +428,16 @@ public final class AuditHelper {
 			final var keyColumns = new ArrayList<Column>();
 			// Copy the FK columns (parent key) from the collection's key
 			for ( var column : collection.getKey().getColumns() ) {
-				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
+				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable, context ) );
 			}
 			// Copy the child identifier columns from the referenced entity
 			for ( var column : referencedEntity.getKey().getColumns() ) {
-				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
+				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable, context ) );
 			}
 			if ( collection instanceof IndexedCollection indexedCollection && indexedCollection.getIndex() != null ) {
 				for ( var selectable : indexedCollection.getIndex().getSelectables() ) {
 					if ( selectable instanceof Column column ) {
-						keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
+						keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable, context ) );
 					}
 				}
 			}
@@ -695,7 +695,7 @@ public final class AuditHelper {
 				context,
 				ImplicitNamingSourceHelper.tableName( sourceTable ).isExplicit()
 		);
-		copyTableColumns( sourceTable, auditTable, excludedColumns );
+		copyTableColumns( sourceTable, auditTable, excludedColumns, context );
 		final var revColumn = createAuditColumn( csIdColumnName, getChangesetIdType( context ), auditTable, context );
 		auditTable.addColumn( revColumn );
 		createAuditPrimaryKey( auditTable, revColumn, sourceTable.getPrimaryKey().getColumns() );
@@ -719,16 +719,22 @@ public final class AuditHelper {
 		return context.getChangesetCoordinator().getIdentifierType();
 	}
 
-	private static void copyTableColumns(Table sourceTable, Table targetTable, Set<org.hibernate.relational.naming.spi.PhysicalName> excludedColumns) {
+	private static void copyTableColumns(Table sourceTable, Table targetTable, Set<org.hibernate.relational.naming.spi.PhysicalName> excludedColumns, MetadataBuildingContext context) {
 		for ( var column : sourceTable.getColumns() ) {
 			if ( !excludedColumns.contains( column.getPhysicalName() ) ) {
-				copyColumnRemovingUnique( column, targetTable );
+				copyColumnRemovingUnique( column, targetTable, context );
 			}
 		}
 	}
 
-	private static Column copyColumnRemovingUnique(Column sourceColumn, Table auditTable) {
+	private static Column copyColumnRemovingUnique(Column sourceColumn, Table auditTable, MetadataBuildingContext context) {
 		final var auditColumn = copyColumn( auditTable, sourceColumn );
+		final var names = context.getMetadataCollector().getRelationalModelCorrespondences().columnNames();
+		final var sourceTable = sourceColumn.getValue() == null ? null : sourceColumn.getValue().getColumnContainer();
+		final var logical = names.findDeclarationName( sourceTable, sourceColumn );
+		if ( logical != null ) {
+			names.register( auditTable, logical, auditColumn );
+		}
 		removeUniqueConstraint( auditColumn );
 		return auditColumn;
 	}
@@ -763,6 +769,8 @@ public final class AuditHelper {
 		final var basicValue = BasicValue.unregistered( context, table );
 		final var column = new Column( setColumnName( columnName, context.getMetadataCollector().getDatabase(),
 				context.getBuildingPlan().getPhysicalNamingStrategy() ) );
+		context.getMetadataCollector().getRelationalModelCorrespondences().columnNames().register( table,
+				context.getMetadataCollector().getDatabase().toLogicalName( columnName ), column );
 		column.setNullable( false );
 		column.setValue( basicValue );
 		basicValue.addColumn( column );

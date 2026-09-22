@@ -9,7 +9,6 @@ import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitConstraintNameSource;
-import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
@@ -173,14 +172,6 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 		return context.implicitName( transformAttributePath( AttributePath.parse( input.attributePath() ) ) + "_ORDER" );
 	}
 
-	@Override
-	@Nonnull
-	public Identifier determineForeignKeyName(@Nonnull ImplicitForeignKeyNameSource source) {
-		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
-		return userProvidedIdentifier == null
-				? generateConstraintName( source )
-				: userProvidedIdentifier;
-	}
 
 	@Override
 	@Nonnull
@@ -262,19 +253,8 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	protected String generateConstraintNameString(ImplicitConstraintNameSource source) {
 		final var namingHelper = namingHelper( source.getNamingContext() );
 		final String prefix = constraintNamePrefix( source.kind() );
-		return source instanceof ImplicitForeignKeyNameSource foreignKeySource
-				? namingHelper.generateHashedFkName(
-						prefix,
-						source.getTableName(),
-						// include the referenced table in the hash
-						foreignKeySource.getReferencedTableName(),
-						source.getColumnNames()
-				)
-				: namingHelper.generateHashedConstraintName(
-						prefix,
-						source.getTableName(),
-						source.getColumnNames()
-				);
+		return namingHelper.generateHashedConstraintName(
+				prefix, source.getTableName(), source.getColumnNames() );
 	}
 
 		/// Obtain a {@link NamingHelper} for use in constraint name generation.
@@ -290,7 +270,6 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 		return switch ( kind ) {
 			case INDEX -> "IDX";
 			case UNIQUE_KEY -> "UK";
-			case FOREIGN_KEY -> "FK";
 		};
 	}
 }

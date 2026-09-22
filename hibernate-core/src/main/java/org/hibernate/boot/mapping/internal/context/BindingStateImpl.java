@@ -215,7 +215,7 @@ public class BindingStateImpl implements BindingState {
 		this.metadataCollector = metadataCollector;
 		this.globalRegistrations = globalRegistrations;
 		this.database = metadataCollector.getDatabase();
-		this.relationalModelCorrespondences = new RelationalModelCorrespondences( database );
+		this.relationalModelCorrespondences = metadataBuildingContext.getMetadataCollector().getRelationalModelCorrespondences();
 		this.jdbcServices = metadataBuildingContext.getJdbcServices();
 	}
 

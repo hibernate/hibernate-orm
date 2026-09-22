@@ -41,6 +41,10 @@ final class PrimaryKeyNaming {
 					new NamingNamePair( reference.logicalName(), namedTable.getPhysicalName().objectName() )
 			) );
 			final var logical = implicitStrategy.determinePrimaryKeyName( input, implicitContext );
+			//noinspection ConstantValue
+			if ( logical == null ) {
+				throw new MappingException( "Implicit naming strategy must return a non-null name for primary key" );
+			}
 			final var physical = PhysicalNamingStrategyHelper.resolve(
 					logical,
 					database.getJdbcEnvironment(),

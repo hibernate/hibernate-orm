@@ -377,14 +377,32 @@ public interface ImplicitNamingStrategy {
 		return context.implicitName( name, tableName.isQuoted() );
 	}
 
-	/// Determine the foreign key name when it is not explicitly specified using
-	/// [jakarta.persistence.ForeignKey#name()].
+	/// Determine a foreign-key name when [jakarta.persistence.ForeignKey#name()] is absent.
+	/// Covers foreign keys of [jakarta.persistence.JoinColumn], [jakarta.persistence.JoinTable],
+	/// [jakarta.persistence.CollectionTable], [jakarta.persistence.SecondaryTable], and
+	/// [jakarta.persistence.PrimaryKeyJoinColumn] mappings.
+	/// The default hashes logical table names and physical local column names, preserving
+	/// the existing FK recipe. Target column names and mapping order do not enter the hash.
 	///
-	/// @param source The source information
-	///
-	/// @return The determined foreign key name
+	/// @param input Logical/physical dependencies and settled local-to-target column pairs
+	/// @param context Naming helpers and configured schema charset
+	/// @return A non-null logical constraint name
 	@Nonnull
-	Identifier determineForeignKeyName(@Nonnull ImplicitForeignKeyNameSource source);
+	default LogicalName determineForeignKeyName(
+			@Nonnull org.hibernate.boot.model.naming.spi.ForeignKeyNamingInput input,
+			@Nonnull ImplicitNamingContext context) {
+		final var table = input.table().logicalName();
+		final var referencedTable = input.referencedTable().logicalName();
+		return context.implicitName( NamingHelper.withCharset( context.getSchemaCharset() ).generateHashedFkName(
+				"FK",
+				new Identifier( table.getText(), table.isQuoted() ),
+				new Identifier( referencedTable.getText(), referencedTable.isQuoted() ),
+				input.columns().stream().map( pair -> {
+					final var name = pair.localColumn().physicalName();
+					return new Identifier( name.getText(), name.isQuoted() );
+				} ).toList()
+		) );
+	}
 
 	/// Determine the unique key name when it is not explicitly specified using
 	/// [jakarta.persistence.UniqueConstraint#name()]. This also covers generated

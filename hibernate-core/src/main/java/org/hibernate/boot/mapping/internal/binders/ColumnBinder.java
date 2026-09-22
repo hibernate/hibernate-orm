@@ -195,6 +195,17 @@ public class ColumnBinder {
 		if ( table == null || bindingOptions == null || bindingState == null ) {
 			return;
 		}
+		registerColumnNameBinding( table, logicalName, column, bindingState );
+	}
+
+	public static void registerColumnNameBinding(
+			ColumnContainer table,
+			LogicalName logicalName,
+			Column column,
+			BindingState bindingState) {
+		if ( table == null || bindingState == null ) {
+			return;
+		}
 		final var logicalIdentifier = logicalName;
 		bindingState.getRelationalModelCorrespondences()
 				.columnNames()

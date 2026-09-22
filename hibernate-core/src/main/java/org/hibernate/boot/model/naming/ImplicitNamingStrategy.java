@@ -23,6 +23,8 @@ import org.hibernate.boot.model.naming.spi.ListIndexColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.MapKeyColumnNamingInput;
 
 import org.hibernate.SPI;
+import org.hibernate.boot.model.naming.spi.CollectionIdColumnNamingInput;
+import org.hibernate.boot.model.naming.spi.SoftDeleteColumnNamingInput;
 import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.boot.model.naming.spi.PrimaryTableNamingInput;
 import org.hibernate.boot.model.naming.spi.AssociationTableNamingInput;
@@ -108,6 +110,28 @@ public interface ImplicitNamingStrategy {
 	/// @return The implicit table name.
 	LogicalName determineCollectionTableName(CollectionTableNamingInput input, ImplicitNamingContext context);
 
+	/// Determine the name of the [identifier][jakarta.persistence.Id] column
+	/// belonging to the given entity when it is not explicitly specified using
+	/// [jakarta.persistence.Column#name()].
+	///
+	/// @param input Immutable facts for the naming decision
+	/// @param context Focused naming defaults and helpers
+	/// @return The determined identifier column name
+	///
+	/// @see jakarta.persistence.EmbeddedId
+	/// @see jakarta.persistence.AttributeOverride#column()
+	LogicalName determineIdentifierColumnName(IdentifierColumnNamingInput input, ImplicitNamingContext context);
+
+	/// Determine the implicit column name for an [org.hibernate.annotations.TenantId]
+	/// attribute when no name is supplied by [jakarta.persistence.Column#name()].
+	/// Supplied strategies use the terminal attribute name, including for embedded attributes.
+	/// Explicit column names bypass this callback; existing identifier columns are reused.
+	///
+	/// @param input entity naming information and the tenant attribute path
+	/// @param context naming defaults and helpers
+	/// @return a non-null implicit logical column name
+	LogicalName determineTenantColumnName(TenantColumnNamingInput input, ImplicitNamingContext context);
+
 	/// Determine the implicit entity discriminator-column name, defaulting to `DTYPE`.
 	/// A present [jakarta.persistence.DiscriminatorColumn] with a nonempty
 	/// [name][jakarta.persistence.DiscriminatorColumn#name()],
@@ -117,19 +141,6 @@ public interface ImplicitNamingStrategy {
 	/// @param context Focused naming defaults and helpers
 	/// @return A non-null implicit logical name
 	LogicalName determineDiscriminatorColumnName(DiscriminatorColumnNamingInput input, ImplicitNamingContext context);
-
-	/// Determine the implicit name of an aggregate container column or nested member.
-	/// Supplied strategies use the terminal attribute name. Explicit names from
-	/// [jakarta.persistence.Column#name()], [jakarta.persistence.MapKeyColumn#name()],
-	/// or an applicable [jakarta.persistence.AttributeOverride#column()] bypass this callback.
-	/// Aggregate storage may be selected using [org.hibernate.annotations.JdbcTypeCode],
-	/// [org.hibernate.annotations.MapKeyJdbcTypeCode], or [org.hibernate.annotations.Struct].
-	/// The [SQL type name][org.hibernate.annotations.Struct#name()] is separate from this name.
-	///
-	/// @param input Owner, type, path, usage, storage kind, plurality, and naming scope
-	/// @param context Naming defaults and helpers
-	/// @return A non-null implicit logical name
-	LogicalName determineAggregateColumnName(AggregateColumnNamingInput input, ImplicitNamingContext context);
 
 	/// Determine the implicit discriminator-column name for a polymorphic embeddable.
 	/// Supplied strategies preserve the input's default spelling, including terminal
@@ -144,28 +155,6 @@ public interface ImplicitNamingStrategy {
 	/// @return A non-null implicit logical column name
 	LogicalName determineEmbeddableDiscriminatorColumnName(EmbeddableDiscriminatorColumnNamingInput input, ImplicitNamingContext context);
 
-	/// Determine the implicit column name for an [org.hibernate.annotations.TenantId]
-	/// attribute when no name is supplied by [jakarta.persistence.Column#name()].
-	/// Supplied strategies use the terminal attribute name, including for embedded attributes.
-	/// Explicit column names bypass this callback; existing identifier columns are reused.
-	///
-	/// @param input entity naming information and the tenant attribute path
-	/// @param context naming defaults and helpers
-	/// @return a non-null implicit logical column name
-	LogicalName determineTenantColumnName(TenantColumnNamingInput input, ImplicitNamingContext context);
-
-	/// Determine the name of the [identifier][jakarta.persistence.Id] column
-	/// belonging to the given entity when it is not explicitly specified using
-	/// [jakarta.persistence.Column#name()].
-	///
-	/// @param input Immutable facts for the naming decision
-	/// @param context Focused naming defaults and helpers
-	/// @return The determined identifier column name
-	///
-	/// @see jakarta.persistence.EmbeddedId
-	/// @see jakarta.persistence.AttributeOverride#column()
-	LogicalName determineIdentifierColumnName(IdentifierColumnNamingInput input, ImplicitNamingContext context);
-
 	/// Determine the column name for a [basic][jakarta.persistence.Basic] or
 	/// [version][jakarta.persistence.Version] attribute when it is not explicitly specified using
 	/// [jakarta.persistence.Column#name()].
@@ -175,6 +164,19 @@ public interface ImplicitNamingStrategy {
 	///
 	/// @return The implicit column name.
 	LogicalName determineBasicColumnName(BasicColumnNamingInput input, ImplicitNamingContext context);
+
+	/// Determine the implicit name of an aggregate container column or nested member.
+	/// Supplied strategies use the terminal attribute name. Explicit names from
+	/// [jakarta.persistence.Column#name()], [jakarta.persistence.MapKeyColumn#name()],
+	/// or an applicable [jakarta.persistence.AttributeOverride#column()] bypass this callback.
+	/// Aggregate storage may be selected using [org.hibernate.annotations.JdbcTypeCode],
+	/// [org.hibernate.annotations.MapKeyJdbcTypeCode], or [org.hibernate.annotations.Struct].
+	/// The [SQL type name][org.hibernate.annotations.Struct#name()] is separate from this name.
+	///
+	/// @param input Owner, type, path, usage, storage kind, plurality, and naming scope
+	/// @param context Naming defaults and helpers
+	/// @return A non-null implicit logical name
+	LogicalName determineAggregateColumnName(AggregateColumnNamingInput input, ImplicitNamingContext context);
 
 	/// Determine the implicit column name for a basic [jakarta.persistence.ElementCollection]
 	/// element when no name is supplied by [jakarta.persistence.Column#name()].
@@ -276,6 +278,17 @@ public interface ImplicitNamingStrategy {
 	///
 	/// @return The implicit column name.
 	LogicalName determineListIndexColumnName(ListIndexColumnNamingInput input, ImplicitNamingContext context);
+
+	/// Determine the implicit collection-row identifier column name when
+	/// [org.hibernate.annotations.CollectionId#column()] has no explicit
+	/// [jakarta.persistence.Column#name()].
+	LogicalName determineCollectionIdColumnName(CollectionIdColumnNamingInput input, ImplicitNamingContext context);
+
+	/// Determine the implicit indicator name when
+	/// [org.hibernate.annotations.SoftDelete#columnName()] is empty.
+	/// The effective [org.hibernate.annotations.SoftDelete#strategy()] is supplied
+	/// as [org.hibernate.annotations.SoftDeleteType].
+	LogicalName determineSoftDeleteColumnName(SoftDeleteColumnNamingInput input, ImplicitNamingContext context);
 
 	/// Determine the foreign key name when it is not explicitly specified using
 	/// [jakarta.persistence.ForeignKey#name()].

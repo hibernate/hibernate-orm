@@ -1,0 +1,218 @@
+= Collection-Identifier and Soft-Delete Column Naming
+
+Status: approved specification implemented and verified.
+
+Source baseline: `9.0-next-steps` at `8842373c3a5`.
+
+== Scope and Existing Behavior
+
+This slice routes collection-identifier and soft-delete column naming through the
+redesigned implicit naming SPI. It preserves current logical defaults and mapping
+semantics while applying the established explicit-name, physical-name, quoting, and
+logical-correspondence rules.
+
+`CollectionIdBinder` currently uses `bindUntransformedColumn`, defaulting to
+`IdentifierCollection.DEFAULT_IDENTIFIER_COLUMN_NAME` (`id`). Both implicit and
+physical strategies are bypassed. Generator configuration is separate from naming
+this collection-row identifier column.
+
+Soft-delete columns already undergo physical naming but bypass implicit naming.
+Entity binding in `EntityTypeBinder` and collection binding through `SoftDeleteHelper`
+resolve their names independently. Defaults are `active` for `ACTIVE`, and `deleted`
+for both `DELETED` and `TIMESTAMP`.
+
+This slice does not change which mappings support identifier bags or soft deletion,
+annotation precedence, generator selection, converter resolution, nullability,
+inheritance behavior, or deletion semantics. It adds no physical-strategy callbacks.
+
+== Public Contracts
+
+Add these methods to `ImplicitNamingStrategy`:
+
+[source,java]
+----
+LogicalName determineCollectionIdColumnName(
+        CollectionIdColumnNamingInput input,
+        ImplicitNamingContext context);
+
+LogicalName determineSoftDeleteColumnName(
+        SoftDeleteColumnNamingInput input,
+        ImplicitNamingContext context);
+----
+
+Add immutable records in `org.hibernate.boot.model.naming.spi`, marked `@SPI(USE)`:
+
+[source,java]
+----
+public record CollectionIdColumnNamingInput(
+        EntityNamingInput owner,
+        String attributePath,
+        TableNamingInput table) {
+}
+
+public record SoftDeleteColumnNamingInput(
+        EntityNamingInput owner,
+        Kind kind,
+        Optional<String> attributePath,
+        TableNamingInput table,
+        SoftDeleteType strategy) {
+    public enum Kind { ENTITY, COLLECTION }
+}
+----
+
+All reference fields reject null, including the `Optional` itself. Collection paths
+are nonempty and owner-relative, including embedded paths such as `details.items`.
+Do not expose an entity-name prefix or synthetic collection-element/map-key markers.
+
+For soft deletion, `ENTITY` requires an empty `attributePath`; `COLLECTION` requires
+a present, nonempty path. Invalid combinations are rejected by the record constructor.
+The owner is the mapped entity owning the collection, or the entity receiving the
+entity-level indicator. For a hierarchy-wide indicator, use the bound root entity;
+do not report a mapped superclass merely because it declared the annotation.
+
+`table` describes the actual destination of the column. Use the existing settled
+`TableNamingInput`: named tables expose their logical/physical name pair, including
+quoting and logical provenance; inline views retain their distinct representation.
+Do not fabricate a physical table name or expand support for a mapping shape that the
+current binder rejects. Resolve table naming before constructing this input.
+
+`strategy` reuses the public `org.hibernate.annotations.SoftDeleteType` enum. Do not
+expose the annotation instance, converter, mutable mapping objects, binding context,
+or services through either input. Construct inputs only when implicit naming is needed.
+
+== Supplied Defaults
+
+[cols="2,1",options="header"]
+|===
+|Role |Implicit logical spelling
+|Collection identifier |`id`
+|Soft delete, `ACTIVE` |`active`
+|Soft delete, `DELETED` |`deleted`
+|Soft delete, `TIMESTAMP` |`deleted`
+|===
+
+All five supplied strategies preserve these defaults. Collection identifiers do not
+inherit Standard's basic-column component-path expansion, or a customized entity-id
+column default. Soft-delete defaults follow `SoftDeleteType.getDefaultColumnName()`.
+Custom strategies can use the owner, path, target table, and soft-delete strategy.
+
+== Effective Source and Naming Sequence
+
+For collection identifiers, use the effective `@CollectionId.column()` declaration,
+including supported normalized mapping XML. Preserve its other column metadata and
+existing source-resolution rules; do not introduce an identifier-column override syntax.
+
+For soft deletion, first resolve the effective annotation using existing
+`SoftDeleteBindingHelper` rules. Preserve entity, mapped-superclass, collection-member,
+declaring-type, package, and supported composed-annotation behavior. The implicit
+strategy neither selects the annotation nor enables soft deletion on a new target.
+
+For either role:
+
+. A nonempty effective name is explicit and bypasses the implicit callback.
+. An absent or empty effective name invokes its dedicated callback once. The mere
+  presence of `@CollectionId` or `@SoftDelete` does not make an empty name explicit.
+. Require a non-null, implicit `LogicalName`. Reject null or explicit callback results
+  with the existing role-specific implicit-naming validation behavior.
+. Apply `PhysicalNamingStrategy.toPhysicalColumnName` exactly once per newly named
+  column, for both explicit and implicit names. Preserve logical provenance and apply
+  the standard additive quoting rules; a strategy cannot remove requested quoting.
+. Register logical correspondence using the same logical name and final `Column`
+  instance that is attached to the value and destination table.
+
+Preserve existing whitespace interpretation and invalid-identifier validation.
+Do not route these decisions through basic-, tenant-, or entity-id naming callbacks.
+Do not replay naming during alias registration, copying/reuse of already named columns,
+or metadata restoration.
+
+Entity and collection soft-delete paths must share name resolution so that explicit
+bypass, default selection, physical naming, and quoting cannot diverge. Preserve their
+existing value materialization and resolution lifecycle. This is not a general
+consolidation of the two soft-delete binders.
+
+== Compatibility and Documentation
+
+Collection identifiers now participate in physical naming. For example, a prefix
+strategy can change `id` to `p_id` and an explicit `row_id` to `p_row_id`. Document this
+schema impact and the need to account for existing collection tables.
+
+Soft-delete physical naming already occurs. With default implicit behavior and a
+physical strategy based only on spelling/quoting, names remain unchanged. Physical
+strategies inspecting explicit/implicit provenance may observe a difference once that
+provenance is correctly retained; document that distinction.
+
+Direct implementations of the redesigned implicit SPI must implement the new methods.
+Subclasses of supplied strategies inherit the preserved defaults. No legacy-contract
+adapter is introduced.
+
+Method Javadoc must link to `CollectionId.column()`, `Column.name()`,
+`SoftDelete.columnName()`, `SoftDelete.strategy()`, and `SoftDeleteType` as appropriate.
+New Java files use Markdown Javadoc and `@author Steve Ebersole`.
+
+== Verification and Acceptance
+
+Before modifying binding, characterize the supported direct/embedded collection-id and
+entity/collection soft-delete forms, including an identifier bag with soft deletion.
+If a proposed combination is rejected by the baseline, report it and retain existing
+support boundaries rather than adding a new mapping feature in this slice.
+
+Coverage must include:
+
+* All five supplied strategies with identity and transforming physical naming; assert
+  exact preserved defaults, including `TIMESTAMP` using `deleted`.
+* Distinct custom implicit and physical prefixes; assert one callback per implicit
+  decision and one physical transformation per new column. Explicit names bypass only
+  implicit naming. Verify provenance, quoting, null/explicit-result rejection, and
+  final-column logical correspondence.
+* Collection identifiers in supported basic, embeddable, and association id-bag forms;
+  direct and embedded collection paths, explicit/default names, generator behavior,
+  and preserved column metadata. Reuse existing accepted fixtures.
+* Entity and collection soft deletion for all three strategies, effective annotation
+  precedence, inheritance, converter-backed boolean indicators, timestamp nullability,
+  and comment/options preservation. Existing invalid mappings remain invalid.
+* A supported collection with both an identifier and soft-delete column. Verify separate
+  callbacks, correct shared table dependency, collection insert/load, and soft deletion.
+* Runtime insert/load and delete/filter behavior using transformed and quoted names.
+  Use existing dialect feature checks and do not claim unexecuted database coverage.
+* Supported mapping XML and metadata archive round trips. Verify names and provenance
+  survive without callback replay. Report unrelated pre-existing archive failures
+  explicitly instead of counting them as successful acceptance.
+
+Run focused naming/id-bag/soft-delete tests and the complete core suite. Update the
+naming inventory, verification notes, migration guide, and overarching proposal.
+
+
+
+== Implementation Notes
+
+Name resolution is implemented by `CollectionIdBinder` and the shared internal
+`SoftDeleteColumnNaming` helper. Entity and collection soft-delete materialization
+retain their existing deferred and immediate resolution paths, respectively.
+
+The quoted runtime test exposed a name-transport defect in `GeneratorBinder`:
+configuration copied table and primary-key spelling with `getName()`, discarding
+quoting. The handoff now uses the existing quoted names. This localized correction
+was called out during implementation; it does not change generator selection or
+introduce generator naming callbacks. The same runtime test exposed quoting loss
+in `SoftDeleteMappingImpl`; its SQL column expression now uses the dialect-rendered
+physical name.
+
+The pre-change characterization passed for direct and embedded identifier bags with
+soft deletion, together with entity soft deletion. The focused suite also exercises
+existing accepted collection and soft-delete mappings.
+
+Archive verification preserves the existing archive boundary: completed metadata
+retains physical names and quoting, not the binding-time logical correspondence map.
+Explicit/implicit provenance is verified at the naming callback boundary; restoration
+is verified for physical spelling, quoting, and absence of naming replay. No archive
+format or lifecycle expansion is included in this slice.
+
+== Validation Results
+
+* Focused naming, collection-id, and soft-delete suite: 152 tests, no failures or skips.
+* `CollectionIdSoftDeleteNamingTest`: 19 tests, all passing.
+* Complete `hibernate-core` suite: 17,914 tests, 1,525 skipped, no failures or errors.
+* `git diff --check`: clean.
+
+Validation used the configured H2 test environment; it does not claim a cross-dialect
+runtime matrix. The archive verification boundary is described above.

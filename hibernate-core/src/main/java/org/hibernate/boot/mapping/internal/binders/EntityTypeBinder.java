@@ -9,8 +9,6 @@ import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
 import org.hibernate.boot.model.naming.spi.DiscriminatorColumnNamingInput;
 import org.hibernate.boot.model.naming.spi.EntityNamingInput;
 
-import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
-
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Cacheable;
@@ -47,8 +45,6 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.internal.QueryBinder;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.mapping.internal.relational.SecondaryTable;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
@@ -107,7 +103,6 @@ import static org.hibernate.boot.mapping.ModelBindingLogging.MODEL_BINDING_LOGGE
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotationUsages;
 import static org.hibernate.internal.util.ReflectHelper.ensureAccessibility;
-import static org.hibernate.internal.util.StringHelper.coalesce;
 
 /// Binder for binding an entity type to a {@link PersistentClass}.
 ///
@@ -1309,7 +1304,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 
 		final BasicValue softDeleteIndicatorValue = createSoftDeleteIndicatorValue( softDeleteConfig, primaryTable );
-		final Column softDeleteIndicatorColumn = createSoftDeleteIndicatorColumn( softDeleteConfig, softDeleteIndicatorValue );
+		final Column softDeleteIndicatorColumn = createSoftDeleteIndicatorColumn( softDeleteConfig, softDeleteIndicatorValue, primaryTable );
 		primaryTable.addColumn( softDeleteIndicatorColumn );
 		rootClass.enableSoftDelete( softDeleteIndicatorColumn, softDeleteConfig.strategy() );
 	}
@@ -1353,8 +1348,9 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 	private Column createSoftDeleteIndicatorColumn(
 			SoftDelete softDeleteConfig,
-			BasicValue softDeleteIndicatorValue) {
-		final Column softDeleteColumn = new Column( applyColumnName( softDeleteConfig, getBindingState(), getBindingContext() ) );
+			BasicValue softDeleteIndicatorValue, Table table) {
+		final Column softDeleteColumn = SoftDeleteColumnNaming.column( softDeleteConfig, getTypeBinding(), java.util.Optional.empty(),
+				table, getBindingState() );
 
 
 		softDeleteColumn.setOptions( softDeleteConfig.options() );
@@ -1374,22 +1370,6 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		softDeleteIndicatorValue.addColumn( softDeleteColumn );
 
 		return softDeleteColumn;
-	}
-
-	private static org.hibernate.relational.naming.spi.PhysicalName applyColumnName(
-			SoftDelete softDeleteConfig,
-			BindingState state,
-			BindingContext context) {
-		final Database database = state.getDatabase();
-		final PhysicalNamingStrategy namingStrategy = context.getPhysicalNamingStrategy();
-		final SoftDeleteType strategy = softDeleteConfig.strategy();
-		final String logicalColumnName = coalesce(
-				strategy.getDefaultColumnName(),
-				softDeleteConfig.columnName()
-		);
-		return PhysicalNamingStrategyHelper.resolve(
-				PhysicalNamingStrategyHelper.logicalName( database.toIdentifier( logicalColumnName ) ),
-				database.getJdbcEnvironment(), namingStrategy::toPhysicalColumnName, "column", false );
 	}
 
 	private void processOptimisticLocking(

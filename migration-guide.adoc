@@ -924,3 +924,23 @@ is preserved; SQL identifier quote delimiters do not become part of JSON member 
 Effective container overrides replace direct declarations. Nonempty effective names
 bypass implicit naming; empty override names invoke it. `@Struct.name` continues to
 name a SQL type and is unaffected by this column-naming callback.
+
+=== Collection-identifier and soft-delete column naming
+
+`ImplicitNamingStrategy` now defines `determineCollectionIdColumnName` and
+`determineSoftDeleteColumnName`, with dedicated immutable inputs. Direct implementors
+must implement these methods. Subclasses of supplied strategies inherit the existing
+logical defaults: `id` for collection identifiers, `active` for `ACTIVE` soft deletion,
+and `deleted` for `DELETED` and `TIMESTAMP` soft deletion.
+
+Collection-identifier columns now undergo `PhysicalNamingStrategy.toPhysicalColumnName`,
+including explicit `@CollectionId.column` names. For example, a prefix strategy may
+change `id` to `p_id` and an explicit `row_id` to `p_row_id`. Applications using existing
+collection tables must account for that schema impact in their mappings or physical
+strategy. Generator naming and identifier generation are unchanged.
+
+Soft-delete columns already underwent physical naming. Their spelling remains unchanged
+with the supplied implicit defaults and physical strategies based only on spelling and
+quoting. Physical strategies inspecting provenance now receive the correct explicit or
+implicit flag. Nonempty explicit names bypass the new implicit callbacks; both roles
+retain requested quoting through physical naming.

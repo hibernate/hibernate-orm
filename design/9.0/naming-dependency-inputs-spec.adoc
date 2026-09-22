@@ -48,9 +48,10 @@ passed onward as if explicitly supplied. Searching existing strategy invocations
 is insufficient. Determine the semantic naming role first, then design the request
 and the strategy contract needed to support it.
 
-Known paths requiring that review include discriminator defaults, tenant naming
-through basic-value processing, primary-key joins, direct derived-identifier name
-construction, and collection-index names generated before the strategy is called.
+Completed reviews cover discriminator and tenant defaults, primary-key joins,
+derived-identifier naming, and collection-index names formerly generated before
+the strategy was called. Remaining reviews include implicit constraints/indexes and
+audit/history roles, plus cross-role readiness and selected-alias guarantees.
 Generator and auxiliary-object naming must also be reconciled with the full
 coverage inventory rather than silently excluded because the current interface
 has no callback.
@@ -71,11 +72,11 @@ observable output. Use this inventory to shape the replacement SPI; do not force
 newly discovered roles into an ill-fitting existing callback.
 
 
-== Proposed Input Contracts
+== Implemented Input Contracts
 
-Introduce an immutable `NamingNamePair` in `org.hibernate.boot.model.naming.spi`,
+The immutable `NamingNamePair` is implemented in `org.hibernate.boot.model.naming.spi`,
 with required `LogicalName logicalName()` and `PhysicalName physicalName()` accessors.
-Mark the public contract `@SPI(USE)`. It represents two names for the same object,
+The public contract is marked `@SPI(USE)`. It represents two names for the same object,
 not two independently selected strings. It exposes no mapping model, factory,
 comparison-policy override, service registry, or mutation operation.
 
@@ -86,8 +87,8 @@ For table dependencies, distinguish two immutable input variants:
   accessor and no SQL-expression text exposed to naming providers.
 
 Both implement a sealed `TableNamingInput` contract exposing `logicalName()`;
-the named variant delegates that accessor to its pair. These are proposed names
-for new contracts, not changes to the existing mapping `TableReference` hierarchy.
+the named variant delegates that accessor to its pair. These naming contracts are
+separate from the mapping `TableReference` hierarchy.
 The pair describes the individual object name. Qualification belongs to an
 explicit role-specific input if required; do not concatenate catalog/schema into
 its identifier text.

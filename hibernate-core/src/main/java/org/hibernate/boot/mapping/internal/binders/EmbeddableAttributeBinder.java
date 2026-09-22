@@ -283,7 +283,6 @@ class EmbeddableAttributeBinder {
 				component,
 				componentTable,
 				contribution,
-				attributeBinding.attributeName() + "_DTYPE",
 				ownerBinding,
 				attributeBinding.attributeName(),
 				EmbeddableDiscriminatorColumnNamingInput.Kind.EMBEDDED_ATTRIBUTE,
@@ -297,7 +296,6 @@ class EmbeddableAttributeBinder {
 			Component component,
 			ColumnContainer componentTable,
 			EmbeddableContribution contribution,
-			String implicitColumnName,
 			PersistentClass ownerBinding,
 			String attributePath,
 			EmbeddableDiscriminatorColumnNamingInput.Kind namingKind,
@@ -319,16 +317,16 @@ class EmbeddableAttributeBinder {
 		discriminator.setTypeName( String.class.getName() );
 		final var overrideColumnSource = discriminatorSource.overrideColumnSource();
 		final DiscriminatorColumn discriminatorColumn = discriminatorSource.discriminatorColumn();
-		final String defaultName = overrideColumnSource == null && discriminatorColumn != null
-				? ColumnBinder.DEFAULT_DISCRIMINATOR_COLUMN_NAME
-				: implicitColumnName;
+
 		final var implicitName = ImplicitNamingHelper.once(
 				() -> bindingContext.getImplicitNamingStrategy().determineEmbeddableDiscriminatorColumnName(
 						new EmbeddableDiscriminatorColumnNamingInput(
 								new EntityNamingInput( ownerBinding.getClassName(), ownerBinding.getEntityName(), ownerBinding.getJpaEntityName() ),
 								contribution.componentType().getName(), attributePath,
 								namingKind,
-								defaultName ),
+								overrideColumnSource != null ? EmbeddableDiscriminatorColumnNamingInput.Declaration.OVERRIDE
+										: discriminatorColumn != null ? EmbeddableDiscriminatorColumnNamingInput.Declaration.DISCRIMINATOR_COLUMN
+										: EmbeddableDiscriminatorColumnNamingInput.Declaration.ABSENT ),
 						ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ),
 				"embeddable discriminator column" );
 		if ( overrideColumnSource != null || discriminatorColumn == null ) {

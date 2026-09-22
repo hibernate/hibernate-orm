@@ -4,7 +4,13 @@
 
 Status: Steve approved retaining JPA, moving component-path safety into Standard, and
 deprecating the other three strategies with runtime warnings. That work is implemented
-and validated. This document retains the test contract and outstanding conformance/coverage work. All five registrations remain available; Standard remains the default.
+and validated. This document retains the test contract and outstanding coverage work.
+All five registrations remain available; Standard remains the default.
+
+Latest full core validation: 17,934 tests, 1,525 skipped, no failures or errors.
+After relocating the shared algorithms to interface defaults, all 66 focused naming
+tests passed with no skips, failures, or errors. Slice-local counts below describe
+their individual runs; they are not cumulative totals.
 
 See link:implicit-naming-strategy-proposal.adoc[the replacement contract] and
 link:naming-strategy-redesign.adoc[the broader naming redesign].
@@ -229,3 +235,37 @@ Focused naming, collection-id, and soft-delete regressions: 152 tests, no failur
 or skips, including 19 new naming tests. Complete core suite: 17,914 tests,
 1,525 skipped, no failures or errors. Runtime validation used the configured H2
 environment; no cross-dialect execution is claimed.
+
+== Time-Zone Companion Naming
+
+`TimeZoneColumnNamingTest` has 20 cases covering all five supplied implicit strategies
+with identity and transforming physical naming; preserved absent/empty declaration
+defaults; explicit names and overrides; settled dependency pairs; provenance and callback counts; secondary
+tables; inherited attributes with independent concrete entity uses; quoted logical names;
+physical-only quoting; and once-only column naming patterns. Temporal-only overrides
+retain the original source-derived companion default; empty overrides retain synthetic-path naming.
+Default calculations now live in the strategy. Custom callbacks avoid unused source
+naming, while supplied defaults reuse resolved temporal names and honor custom basic
+column naming. Embeddable discriminator tests assert effective declaration origin.
+
+Storage-selection checks exercise global `COLUMN` and both `AUTO` capability branches,
+retaining the characterized native `AUTO` annotation rejection and existing one-column
+nested/collection behavior. The non-native capability test uses an H2 dialect stub and
+is not a separate database execution claim.
+
+Quoted transformed names work through H2 persistence/loading for `OffsetDateTime`,
+`OffsetTime`, and `ZonedDateTime`. Metadata archives preserve finalized names and quoting
+without replaying callbacks. Binding-time provenance is verified separately.
+
+The strategy-owned default calculation refinement passes 38 focused tests: 20 time-zone
+and 18 embeddable discriminator cases, with no skips, failures, or errors. Complete
+core verification passed: 17,934 tests, 1,525 skipped, no failures or errors. Runtime
+verification used H2.
+
+== Shared Interface Defaults
+
+After moving entity discriminator, embeddable discriminator, collection identifier,
+soft-delete, and time-zone companion algorithms to `ImplicitNamingStrategy` default
+methods, all 66 focused naming tests passed with no skips, failures, or errors.
+The unchanged algorithms are inherited by supplied strategies; existing tests exercise
+custom overrides and time-zone delegation to custom basic-column naming.

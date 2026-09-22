@@ -4,12 +4,13 @@
 
 == Status
 
-Current review: 2026-09-21.
+Current review: 2026-09-22.
 
 The name-type and physical-strategy foundations are implemented and validated.
 The replacement implicit naming SPI is approved and partially implemented. Table,
-independent-column, join-column, tenant-column, and entity-discriminator callbacks
-are migrated, and physical constraint/index hooks are implemented. The current
+independent-column, join-column, tenant-column, entity/embeddable-discriminator,
+aggregate, collection-identifier, soft-delete, and time-zone callbacks are migrated.
+Shared column defaults live on the interface; physical constraint/index hooks are implemented. The current
 contract and remaining roles are tracked in
 link:implicit-naming-strategy-proposal.adoc[the replacement proposal].
 
@@ -54,10 +55,9 @@ configuration names, JDBC metadata/extraction boundaries, and remaining
 stage-neutral qualified-name contracts and `Identifier` conversions.
 |3. Implicit naming coverage and inputs
 |Complete the invocation/input inventory for all supported database-object roles.
-Finish specialized columns (including soft-delete,
-time-zone companions, and collection identifiers), constraints, audit/history,
-and separate generator storage-column defaults. Tenant and entity-discriminator
-naming, embeddable discriminator naming, and the role-specific join callbacks are implemented.
+Finish implicit constraints/indexes, audit/history, separate generator storage-column
+defaults, and cross-role dependency readiness. The specialized column slices and
+role-specific join callbacks are implemented.
 |4. Provenance, explicit names, and defaults
 |Finish provenance/default rules for the unmigrated roles. Uniform explicit-name
 bypass is agreed; annotation-default entity discriminator names count as supplied.

@@ -4,8 +4,9 @@
 
 Status: implementation authorized by Steve. The replacement is being implemented
 in stages. Table, independent-column, role-specific join-column, tenant-column,
-entity-discriminator, and embeddable-discriminator callbacks are implemented, along
-with physical constraint/index hooks. Remaining work covers other specialized columns, implicit constraints,
+entity/embeddable-discriminator, aggregate-column, collection-identifier, soft-delete,
+and time-zone companion callbacks are implemented, along with physical constraint/index
+hooks. Remaining work covers implicit constraints,
 audit/history, generator storage-column defaults on their separate contract, and
 the cross-role dependency-readiness audit.
 
@@ -199,11 +200,9 @@ document the source/API break and intentional database-name changes.
 
 == Working Specification And Acceptance Gates
 
-After direction is accepted, specify exact input types, callbacks, default outputs,
-quoting, collision diagnostics, and constraint physical finalization.
-Start with primary/association tables and ordinary join columns, then derived,
-composite, non-PK and inline-view dependencies. Cover the remaining roles using the
-inventory before declaring the replacement complete.
+For each remaining slice, specify exact input types, callbacks, default outputs,
+quoting, collision diagnostics, and physical finalization before implementation.
+Use the inventory to account for all remaining roles before declaring completion.
 
 Tests must demonstrate custom-provider coverage for every supported implicit role,
 uniform explicit-name bypass, stable selected aliases and column ordering, final
@@ -215,692 +214,104 @@ composition, and subsequently approved dedicated physical constraint/index hooks
 The detailed contracts for remaining roles must still be recorded as they are
 implemented; call out any deviation from this direction before making it.
 
-== Implementation Progress
+== Implemented Coverage
 
-The first stage introduces immutable primary/association/collection table inputs,
-entity naming snapshots, logical/physical name pairs, and the explicit inline-view
-variant. It replaces those three old source interfaces without adapters. The new
-standard implementation is selected by default; existing named strategy variants
-are ported to the new table signatures while the remaining callbacks are migrated.
+Completed slice specifications have been retired. Public Javadocs describe the current
+contracts, the link:../../migration-guide.adoc[migration guide] describes compatibility
+impacts, and link:naming-strategy-verification.adoc[verification notes] identify regression
+coverage and its limits.
 
-Table decisions reject null or explicitly marked implicit results. Association
-composition uses logical dependency text and propagates quoting if either logical
-table name is quoted. Collection tables use entity-name plus the transformed attribute path
-(full path for Standard, terminal property for JPA). Physical finalization still applies automatic/global quoting afterward.
-Explicit table names bypass all input construction and implicit execution.
-
-Primary-key, foreign-key, unique-key, and index physical callbacks are added with
-identity and snake-case implementations. Boot materializers route these roles
-through physical naming; explicit FK/unique/index names bypass implicit naming.
-Unnamed collection indexes no longer receive binder-generated explicit names.
-Denormalized foreign-key naming is deferred to the existing final foreign-key pass
-so the same new key is not named twice.
-
-Still required: migrate specialized column callbacks and remaining implicit
-constraint callbacks to LogicalName and typed inputs, add missing semantic
-callbacks and their invocation paths, finish the cross-role dependency-readiness audit,
-cover audit/history objects,
-and implement the separate generator storage-column extension. Existing implicit
-column/constraint source contracts remain temporarily for these unmigrated roles;
-this stage does not complete the replacement proposal.
-
-Validation: core and test compilation passed. The broader naming, binding, schema,
-collection, and inheritance run passed 902 tests with 30 skipped and no failures.
-After the final entity-specific table-alias selection change, naming and metadata
-archive checks passed 57 tests with no skips or failures. These runs overlap.
-The new contract tests cover both name stages, explicit bypass, logical composition,
-inline views, quoting, registration-order independence, shared physical tables with
-distinct logical aliases, invalid implicit results, and physical constraint hooks.
-`git diff --check` passed.
-
-=== Independent Column Callbacks: Implemented
-
-Basic columns, identifier columns, collection-element columns, list indexes, scalar
-map-key columns, and any discriminator/key columns now return `LogicalName` and take
-immutable role inputs plus the separate naming context. The six old source
-interfaces for those callbacks are removed without adapters. Collection elements
-have a dedicated callback instead of the old basic-column collection flag.
-
-Inputs and defaults:
-
-* `BasicColumnNamingInput`: attribute path; full component-safe path in Standard.
-* `IdentifierColumnNamingInput`: entity naming snapshot and attribute path;
-  full component-safe path in Standard.
-* `CollectionElementColumnNamingInput`: collection attribute path; full component-safe path
-  in Standard. Override this callback to customize basic collection elements.
-* `ListIndexColumnNamingInput`: collection attribute path; full component-safe path plus
-  `_ORDER` by default.
-* `MapKeyColumnNamingInput`: collection attribute path; full component-safe path plus
-  `_KEY` by default. Entity-valued map-key join columns use the separate join-column role below.
-* `AnyColumnNamingInput`: attribute path and zero-based column position, shared by
-  separate discriminator and key callbacks. The discriminator uses position zero
-  and the configured discriminator suffix. Keys use the configured identifier suffix;
-  positions after zero add the one-based number. A custom strategy now controls the
-  entire name, including any suffix; the binder does not append to the result.
-
-These roles have no referenced-name dependencies. They do not invent table/column
-pairs or wait for association target resolution. Ordinary basic attributes now
-invoke the basic callback instead of taking the property name directly. Tenant
-materialization uses the dedicated tenant callback described below, rather than
-routing the decision through the basic-column callback.
-
-Null and explicitly marked implicit results are rejected. Quoting survives the
-remaining encoded-string supplier boundaries. Basic and identifier materialization
-share one lazy naming result with logical alias registration, avoiding duplicate
-provider invocation. Explicit column names do not evaluate that supplier; formulas
-have no column-name callback.
-
-Collection-element, list-index, scalar map-key, and any columns now pass through
-physical column naming, including explicitly named columns. Previously these paths
-skipped it. Their logical bindings retain the original origin/quoting, and physical
-finalization preserves requested quoting even if a physical provider omits it.
-Automatic quoting occurs after physical transformation, allowing the physical
-strategy to replace punctuation in unquoted logical names. The existing temporal
-companion suffix composition also preserves a quoted base name; a dedicated
-temporal-column naming callback and its lifecycle remain pending.
-
-Validation: 167 focused naming, identifier, collection, and any-association tests
-passed. The broader binding, naming, collection, embeddable, mapping, temporal,
-time-zone, and archive run passed 2,049 tests with 133 skipped and no failures.
-These runs overlap. New tests verify custom role participation, exact callback counts,
-explicit/formula bypass, origin, quoting, physical naming, and invalid results.
-
-After the quoted temporal-companion composition fix, the final column-contract and
-time-zone run passed 34 tests with 3 skipped and no failures.
-
-== Join-Column Implementation Slice
-
-The accepted direction is separate callbacks and immutable inputs for to-one
-association columns, collection/association-table owner keys, join-table target
-keys, entity-valued map keys, and dependent-table primary-key joins. These return
-`LogicalName` and receive `ImplicitNamingContext`. No old source-contract adapter
-is retained.
-
-`ReferencedColumnsNamingInput` carries the referenced table alternative, an
-immutable ordered list of logical/physical column-name pairs, and a zero-based
-position into that list. Order follows resolved join correspondence; primary-key
-references are aligned with target order rather than `@JoinColumn` declaration order. A named reference selects its declared logical
-alias; an unnamed reference uses the column declaration rather than an arbitrary
-reverse lookup by physical spelling. An unresolved or ambiguous declaration is
-an error before provider invocation.
-
-Owner-key inputs distinguish element collections, association tables, one-to-many
-foreign keys, and to-one association tables. They carry the owning attribute path
-and, where present, the inverse association path. Primary-key joins carry the local
-table and referenced dependencies without an invented association attribute.
-
-Standard defaults use logical referenced-column spelling and full component-safe
-attribute paths. JPA retains terminal attribute names:
-
-* To-one and join-table target keys: attribute name plus `_` plus referenced column.
-* Element-collection and unidirectional association-table owner keys: owner entity
-  name plus `_` plus referenced column. A mapped inverse association supplies the
-  prefix instead; one-to-many foreign keys use the collection attribute.
-* To-one association-table owner keys and dependent-table primary-key joins:
-  referenced column name.
-* Entity map keys: attribute plus `_KEY` for a single primary-key reference;
-  otherwise append `_` plus the referenced column.
-
-Composed names retain quoting requested by the referenced logical column. Explicit
-local names bypass implicit naming, and all newly named columns pass through
-physical column naming. The successful implicit result is reused for logical-name
-registration. Sharing an existing identifier column is reuse, not a new naming
-decision; a derived-identifier rename is a separate join-column decision.
-
-Acceptance coverage includes role-specific customization, both dependency stages,
-composite ordering, explicit bypass, quoting and provenance, single invocation,
-secondary/inheritance joins, map keys, and association/derived identifiers.
-
-The implementation also records a selected declaration per column independently
-of physical-name aliases. Derived-identifier renames replace that declaration while
-retaining prior aliases. Derived bindings complete once, including recursive target
-preparation. To-one, association-table target, and entity map-key naming that depends on derived
-identifiers or not-yet-bound referenced members is deferred until the member/identifier
-phases complete;
-association-target resolution then sees the completed local columns. Explicit local
-names do not enter this naming-only deferral path.
-
-Validation: the complete `:hibernate-core:test` run succeeded with 17,694
-tests, 1,525 skipped, and no failures or errors. The join-contract tests cover all
-five role families, to-one join tables, reversed composite declarations, explicit
-bypass, selected logical/physical dependencies, quoting, provenance, and inline
-views. Derived-identifier coverage verifies final dependency names for ordinary
-joins, association-table targets, and entity map keys, with no repeated physical
-transformation of generated dependency names.
-
-== Cross-Strategy Verification and Retention
-
-See link:naming-strategy-verification.adoc[the verification suite and retention proposal]
-for the shared mapping matrix, observed differences among all five current strategies,
-and the approved consolidation: Standard gains component-path safety; JPA remains;
-legacy-JPA, legacy-HBM, and component-path are deprecated with runtime warnings.
-All aliases remain available, and Standard remains the default.
-
-== Tenant-Column Naming Slice
-
-Status: Steve approved the specification and requested implementation. The tenant
-callback and binding integration are implemented and validated.
-
-=== API and Inputs
-
-Replace `ImplicitTenantIdColumnNameSource` and its `Identifier`-returning callback with:
-
-[source,java]
-----
-LogicalName determineTenantColumnName(
-        TenantColumnNamingInput input, ImplicitNamingContext context);
-----
-
-`TenantColumnNamingInput` is an immutable input in `org.hibernate.boot.model.naming.spi`
-containing an `EntityNamingInput entity` and a `String attributePath`. The entity
-identifies the owning entity; the path identifies the tenant attribute within that
-entity, including any supported embeddable nesting. Both values are required.
-The input exposes no mutable boot model or building context.
-
-=== Approved Default
-
-Use the tenant attribute's terminal name, preserving the existing `property::getName`
-behavior. For example, `@TenantId String tenant` defaults to logical column `tenant`,
-not `tenant_id`. This rule applies to Standard, JPA, and the deprecated supplied
-strategies. Do not apply Standard's full component-path transformation to this
-callback: that would change the existing tenant naming behavior.
-
-The full path remains available for custom strategies that intentionally choose
-qualified or otherwise customized names. The default does not use
-`getDefaultTenantIdColumnName()` or `DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME`.
-
-=== Binding and Validation
-
-* Route supported tenant attribute bindings through the dedicated tenant callback
-  when there is no explicit column name. Do not invoke the basic-column callback
-  for the same naming decision.
-* An explicit column name bypasses the tenant callback.
-* Require a non-null implicit `LogicalName`, using the same result validation as
-  other migrated column roles. Preserve requested quoting.
-* Apply physical column naming once to either the explicit logical name or the
-  generated logical name, then apply normal quoting finalization.
-* Register logical/physical correspondence using that same naming result. Tenant
-  filter binding must continue to refer to the actual mapped physical column.
-* Preserve current tenant-mapping validity rules; this slice does not add new
-  forms of embedded tenant support.
-
-=== Compatibility and Tests
-
-The callback signature and source interface are replaced without a legacy adapter.
-Existing custom implementations must migrate to the new input and return type.
-Direct tenant attributes retain their mapped-name default. Embedded tenant attributes
-previously went through basic-column naming; they now follow the approved terminal-name
-rule even under Standard. Custom overrides of the previously unused callback become
-effective only after adapting to the new contract. A tenant attribute reusing an already
-mapped identifier column does not trigger a second naming decision.
-
-Acceptance tests must cover the terminal attribute-name default under all supplied
-strategies, a custom tenant callback, explicit-name bypass, absence of a basic-column
-callback for the same decision, one physical transformation, requested quoting,
-invalid results, logical/physical correspondence, and tenant filtering against the
-resulting column. Include supported inherited/embedded tenant paths where applicable.
-Extend the shared matrix and retain existing tenant-isolation regression tests.
-
-=== Defaults Cleanup
-
-Audit the tenant-column default accessor, constants, implementations, and configuration
-or XML default propagation before removing them. They are currently exposed beyond
-the naming strategy, so absence of a live naming consumer alone does not establish
-that every related declaration can be deleted mechanically. They must not influence
-the newly wired tenant callback. Record any broader cleanup separately from the
-behavior-preserving callback migration.
-
-Defaults audit: `RootMappingDefaults` and `OverriddenMappingDefaults` still carry
-and propagate the tenant-column default, and `ImplicitNamingDefaults` exposes it
-for custom consumers. Those declarations remain for a separate defaults cleanup;
-none influences the supplied strategies' tenant naming decision.
-
-Tenant-slice validation: the focused naming and tenancy run passed 965 tests
-(4 skipped). The complete core suite passed 17,846 tests (1,525 skipped),
-with zero failures or errors. The runtime regression test also exposed and fixed
-loss of quoting in tenant filter conditions: both direct and embedded tenant
-filters now render the mapped physical column using the dialect's quoting.
-
-== Entity Discriminator-Column Naming Slice
-
-Status: Steve approved the specification and requested implementation. The callback
-and entity binding integration are implemented and validated. The
-annotation's effective name is supplied, including its default `DTYPE`.
-
-=== Goals and Scope
-
-Route implicit entity discriminator-column names through the dedicated implicit
-callback and route both explicit and implicit names through physical column naming.
-Preserve the existing `DTYPE` default and all decisions about whether a discriminator
-exists. This slice excludes embeddable discriminator naming and discriminator formulas.
-
-Previously, `ColumnBinder.bindDiscriminatorColumn` constructed a physical name directly,
-bypassing both strategies. It is shared by entity and embeddable binding. The entity
-caller now supplies a lazy implicit-name decision that selects the physical strategy
-and correspondence-registration path; the embeddable caller retains its previous path.
-
-The former binder comment referred to HHH-20613 beside its `DTYPE` default. The issue
-page and REST endpoint could not be retrieved during this investigation, so its contents
-have not been verified. The source established the discrepancy: the previously unused
-implicit callback read a shared default of `class`, while entity binding used `DTYPE`.
-
-=== API and Default Behavior
-
-Replace `ImplicitDiscriminatorColumnNameSource` and its legacy callback with:
-
-[source,java]
-----
-LogicalName determineDiscriminatorColumnName(
-        DiscriminatorColumnNamingInput input, ImplicitNamingContext context);
-----
-
-`DiscriminatorColumnNamingInput` is an immutable input in
-`org.hibernate.boot.model.naming.spi`, containing a required `EntityNamingInput entity`
-identifying the root entity whose discriminator is being bound. It exposes no mutable
-mapping model or building context. All supplied strategies default to the implicit
-logical name `DTYPE`; custom strategies may choose another name.
-
-Do not change `ImplicitNamingDefaults.getDefaultDiscriminatorColumnName()` or its
-`class` fallback in this slice: Any-column naming currently uses that setting for its
-suffix. Entity inheritance naming must not change Any-column naming as a side effect.
-
-=== Binding and Validation
-
-* A supplied logical column name bypasses the implicit callback, including the
-  effective default name of a present discriminator-column annotation.
-* Invoke the callback once for an implicit naming decision. Require a non-null,
-  implicit `LogicalName`, consistent with other migrated column callbacks.
-* Apply physical column naming once, then normal quoting finalization. Preserve
-  requested quoting even if the physical strategy returns an unquoted name.
-* Register logical/physical correspondence using the same logical naming result
-  and final physical column name.
-* Retain discriminator type, length, SQL definition and its quoting, options,
-  comment, insertability, and discriminator-value handling.
-* Formula mappings invoke neither column-naming callback and retain their existing
-  formula/type precedence.
-* Retain SINGLE_TABLE and JOINED discriminator creation/suppression rules, including
-  the joined-inheritance configuration switches. TABLE_PER_CLASS continues to have
-  no entity discriminator column. No callback runs for a suppressed discriminator.
-
-=== Annotation Defaults Count as Supplied Names
-
-The normalized annotation exposes the same `name()` value for these declarations:
-
-[source,java]
-----
-@DiscriminatorColumn
-@DiscriminatorColumn(length = 64)
-@DiscriminatorColumn(name = "DTYPE")
-----
-
-`DiscriminatorColumnJpaAnnotation` stores the resolved name, with no separate
-explicitness marker. Its reflection-based constructor receives `annotation.name()`,
-which already includes the Java annotation default. XML normalization also initializes
-the name to `DTYPE`. Comparing the value with `DTYPE` cannot establish provenance.
-
-Steve clarified that the annotation's effective definition supplies its default
-member values as well. All three declarations therefore supply logical name `DTYPE`,
-marked explicit, and bypass implicit naming. This is the intended interpretation,
-not a workaround for missing source provenance. Do not add member-explicitness tracking.
-
-A nonempty name from a present discriminator-column annotation is supplied, even if
-the annotation was written only to customize length or type. An absent annotation
-or an empty name uses the implicit callback when a discriminator column is required.
-Physical naming applies in either case. Apply the same rule to normalized XML
-discriminator-column declarations, including their effective `DTYPE` default.
-
-=== Compatibility and Acceptance Tests
-
-Replace the legacy source contract without an adapter. Document that custom physical
-naming now affects entity discriminator columns; for example a prefix strategy changes
-`DTYPE` to `p_DTYPE`. Existing databases using the formerly untransformed spelling may
-need mapping/strategy adjustments or a schema migration.
-
-Acceptance tests must cover:
-
-* `DTYPE` defaults across the five supplied strategies, with identity and prefix
-  physical naming. Replace the matrix's current discriminator-gap expectation.
-* A recording custom implicit strategy, correct root-entity input, one callback,
-  and no basic-column callback for this decision.
-* Explicit-name bypass for all three annotation forms above, empty-name fallback,
-  and equivalent XML behavior.
-* One physical transformation for explicit and generated names, requested/global
-  quoting, logical correspondence, and invalid implicit results.
-* SINGLE_TABLE and JOINED hierarchies, discriminator-suppression settings,
-  TABLE_PER_CLASS, and formula bypass.
-* Preservation of discriminator type/length/definition/options/comment, and a runtime
-  persistence/query test proving discriminator values use the resulting physical column.
-* Existing embeddable and Any discriminator behavior remaining unchanged.
-
-Update the migration guide and verification document with the implemented behavior.
-Run focused naming/inheritance tests followed by the complete core test suite.
-
-Implementation finding: `ColumnSource.DiscriminatorColumnSource` does not expose the
-annotation's comment, so existing entity binding drops it. This naming slice preserves
-that behavior and records it in the metadata regression test; propagating discriminator
-comments is a separate localized fix. Other column metadata handling is unchanged.
-
-Entity-discriminator validation: focused naming/inheritance tests passed 568 tests
-(9 skipped). The complete core suite passed 17,855 tests
-(1,525 skipped), with zero failures or errors.
-
-== Embeddable Discriminator Naming: Working Specification
-
-Status: Steve approved the working specification and requested implementation.
-The callback and binding integration are implemented and validated.
-
-=== Goal and Current Behavior
-
-Expose polymorphic embeddable discriminator-column naming through a dedicated
-implicit callback, followed by physical column naming and logical-name registration.
-Keep this role distinct from entity inheritance discriminators.
-
-The inspected entry points are `EmbeddableAttributeBinder`, nested components in
-`ComponentBinder`, and component elements in `ElementCollectionAttributeBinder`.
-Their current implicit defaults are respectively the terminal attribute name plus
-`_DTYPE`, the nested terminal attribute name plus `_DTYPE`, and `element_DTYPE`.
-All three converge on `EmbeddableAttributeBinder.bindDiscriminator`, which previously
-bypassed physical naming. Non-polymorphic contributions create no discriminator.
-
-Source precedence is an effective `@AttributeOverride` for `{discriminator}`, then
-`@DiscriminatorColumn` on the component type, then the caller's default. An override
-with an empty column name currently uses the caller's default; it does not fall back
-to the component type's discriminator-column name. A present `@DiscriminatorColumn`
-with an empty name currently falls back to `DTYPE` through the shared column binder.
-Its normal annotation default also supplies `DTYPE`, as in the entity slice.
-
-=== Callback and Input Contract
-
-Add the following method to `ImplicitNamingStrategy`, with Markdown Javadoc linking
-`@DiscriminatorColumn.name()` and `@AttributeOverride.column()` and explaining the
-special `{discriminator}` override role:
-
-[source,java]
-----
-LogicalName determineEmbeddableDiscriminatorColumnName(
-        EmbeddableDiscriminatorColumnNamingInput input,
-        ImplicitNamingContext context);
-----
-
-Define `EmbeddableDiscriminatorColumnNamingInput` as an immutable record in
-`org.hibernate.boot.model.naming.spi`, marked `@SPI(USE)`, with these required fields:
-
-* `EntityNamingInput entity`: the owning entity, including for collection elements.
-* `String embeddableTypeName`: the mapped embeddable type's model name, without
-  loading its Java class or exposing `ClassDetails`.
-* `String attributePath`: the full owner-relative attribute path. Examples are
-  `pet`, `home.pet`, `pets` for a collection's element, and `pets.details` for an
-  embedded attribute within that element. Do not include the entity name or
-  synthetic element markers in this path.
-* `Kind kind`: `EMBEDDED_ATTRIBUTE` or `COLLECTION_ELEMENT`. A nested embedded
-  attribute within a collection element uses `EMBEDDED_ATTRIBUTE`; the component
-  representing the element itself uses `COLLECTION_ELEMENT`.
-* `String defaultColumnName`: the effective existing fallback for this exact
-  naming decision. This is a suggested unquoted spelling, not a finalized logical
-  or physical name. It is `pet_DTYPE`, `element_DTYPE`, or `DTYPE` according to the
-  source rules below. Keeping it explicit avoids exposing annotation objects or
-  making providers reconstruct default precedence.
-
-Reject null fields. Construct the input only when an implicit name is actually
-needed. All supplied strategies implement this callback as
-`context.implicitName(input.defaultColumnName())`; custom providers may use the
-entity, type, path, and kind to replace that default. Do not call an entity-discriminator
-or basic-column callback to implement this role.
-
-=== Binding Boundaries
-
-A nonempty name in the effective source bypasses implicit naming. A present
-`@DiscriminatorColumn` supplies its annotation-default `DTYPE`, consistent with the
-approved entity rule. Explicit and generated logical names receive physical column
-naming once, preserve requested quoting, and register the same logical/physical pair.
-Validate implicit results using the existing non-null/implicit-provenance contract.
-
-Preserve source precedence, polymorphism detection, discriminator values and types,
-length/nullability/write flags, and supported mapping forms. Identifier embeddables
-must not acquire new polymorphic support. Changes to default spelling must be explicit
-in the working specification and migration guide. This slice does not add formula
-support or alter the entity discriminator callback.
-
-=== Selected Default Direction
-
-Steve selected preserving existing discriminator defaults for all supplied strategies,
-including Standard. Do not apply Standard's full component-path expansion to this role.
-
-* Direct and nested embedded attributes retain terminal attribute name plus `_DTYPE`.
-* Collection elements retain `element_DTYPE`.
-* A present `@DiscriminatorColumn` with a nonempty name, including annotation-default
-  `DTYPE`, supplies that name and bypasses implicit naming.
-* Preserve the existing `DTYPE` fallback for an explicitly empty
-  `@DiscriminatorColumn(name = "")`; the implicit callback must receive sufficient
-  facts to retain this distinction from an absent annotation.
-* An empty-name discriminator override retains the caller's attribute/element default,
-  rather than inheriting the component type's discriminator-column name.
-
-Custom strategies receive full path information and may choose qualified names.
-Repeated nested embeddables may still require explicit discriminator overrides under
-the supplied strategies. Physical naming participation remains an intentional change.
-
-=== Source Precedence and Observable Names
-
-Resolve the effective source before invoking naming. Preserve these cases for every
-supplied strategy, shown for embedded attribute `home.pet` and collection `pets`:
-
-[cols="3,2,2,1",options="header"]
+[cols="1,3",options="header"]
 |===
-|Effective source |Embedded attribute |Collection element |Implicit callback
-|No override or discriminator-column annotation
-|`pet_DTYPE` |`element_DTYPE` |Yes
-|Discriminator override with nonempty column name `kind`
-|`kind` |`kind` |No
-|Discriminator override with empty column name, regardless of type-level annotation
-|`pet_DTYPE` |`element_DTYPE` |Yes
-|Present discriminator-column annotation with default or explicit `DTYPE`
-|`DTYPE` |`DTYPE` |No
-|Present discriminator-column annotation with another nonempty name `kind`
-|`kind` |`kind` |No
-|Present discriminator-column annotation with explicitly empty name
-|`DTYPE` |`DTYPE` |Yes
+|Area |Implemented behavior
+|Tables
+|Primary, association, and collection table callbacks use immutable entity and table
+inputs, including named-table pairs and an explicit inline-view variant. Standard
+composes association names from logical table names; JPA retains its mapped-name rule.
+|Independent columns
+|Basic, identifier, collection element, map key, list index, and Any column callbacks
+use role-specific inputs and return implicit logical names.
+|Join columns
+|To-one, owner keys, association-table target keys, entity map keys, and dependent-table
+primary-key joins expose selected logical/physical dependencies and composite ordering.
+Derived-ID and late member dependencies are deferred in the implemented paths.
+|Tenant and discriminators
+|Tenant naming uses the terminal attribute. Entity discriminator naming defaults to
+`DTYPE`. Embeddable discriminator defaults use terminal-name `_DTYPE`, `element_DTYPE`,
+or `DTYPE` according to effective declaration origin. Annotation-default nonempty names
+are explicit. Inputs carry mapping facts rather than calculated fallback names.
+|Aggregate containers
+|Dedicated naming covers table columns and nested aggregate members. Effective overrides
+precede naming, explicit names bypass implicit naming, and physical naming applies to
+containers. Nested selectable paths retain raw member spelling independently of SQL quoting.
+|Collection identifiers and soft-delete
+|Dedicated callbacks preserve `id`, `active`, and `deleted`. Both roles use physical naming
+and final-column logical correspondence. Entity and collection soft-delete paths share
+name resolution. Generator configuration and soft-delete SQL expressions preserve quoting.
+|Time-zone companions
+|The strategy derives existing defaults from companion declaration state and original
+temporal source facts, separately from the settled temporal name pair. Absent declarations
+retain source-name `_tz`; empty declarations retain synthetic `zoneOffset` basic naming.
+Temporal-only overrides do not change the original source-derived default. Naming is
+cached per concrete use, including inherited mappings; custom callbacks avoid unused
+basic naming. Existing storage support boundaries remain unchanged.
+|Physical constraints and indexes
+|Dedicated physical callbacks cover primary keys, foreign keys, unique keys, and indexes.
+Explicit FK/unique/index names bypass implicit naming. Implicit constraint contracts still
+need migration; physical callback coverage does not complete that work.
 |===
 
-Every column above passes through physical naming. For example, a prefix strategy
-produces `p_pet_DTYPE`, `p_element_DTYPE`, `p_DTYPE`, or `p_kind`. Requested quoting
-from either an explicit source or custom implicit result survives physical naming.
-Normal automatic/global quoting finalization applies afterward. Preserve logical
-provenance: even when both spellings are `DTYPE`, a generated fallback is implicit
-and the effective nonempty annotation name is explicit.
+All migrated implicit callbacks preserve explicit-name bypass, implicit provenance,
+additive quoting, and one physical transformation per newly named object. Reuse, aliases,
+and restoration do not introduce new naming decisions. The broader readiness audit below
+is still required; completed local paths are not a universal naming-cycle guarantee.
 
-Use the successful implicit result for both column construction and logical-name
-registration; do not invoke the provider again to register an alias. Non-polymorphic
-components create no discriminator and invoke neither naming strategy for this role.
-Source normalization for supported XML mappings follows the same effective-source
-rules; no bytecode-level explicit-member tracking is introduced.
+== Shared Defaults And Strategy Retention
 
-=== Compatibility and Acceptance
+`ImplicitNamingStrategy` supplies overridable default methods for entity discriminator,
+embeddable discriminator, collection identifier, soft-delete, and time-zone companion
+columns. `StandardImplicitNamingStrategy` inherits these algorithms. Time-zone defaults
+call the strategy's basic-column callback only when needed and reuse an already-resolved
+original temporal name. Default calculations belong in the strategy, not binder-created
+fallback fields in the input.
 
-This adds a method to the redesigned SPI; direct implementors must implement it,
-while subclasses inherit the supplied default. No old-contract adapter is required.
-Document the new physical naming participation: previously untransformed discriminator
-columns may need schema or strategy adjustments when upgrading. Default logical names
-remain unchanged for every supplied strategy. Existing entity discriminator behavior
-and Standard's full-path basic-column naming are unchanged.
+Standard and JPA remain supported. Standard uses full component paths for ordinary
+column naming. Legacy JPA, legacy HBM, and component-path variants are deprecated with
+runtime warnings pointing to supported or custom strategies. Their tested naming behavior
+is retained while they remain available.
 
-Acceptance tests must cover every row of the precedence table, direct and nested
-embeddables, collection elements and nested collection-element attributes, repeated
-occurrences with discriminator overrides, and supported XML mappings. Assert exact
-input paths, kinds, owning entity, mapped type, and fallback names. Retain existing
-metadata flags/types/lengths and discriminator-value behavior.
+== Remaining Work And Sequence
 
-Extend the shared strategy matrix with implicit embeddable discriminator defaults
-under all five supplied strategies and identity/prefix physical naming. Focused tests
-must prove custom callback participation, explicit bypass, no basic/entity callback
-substitution, one implicit decision, one physical transformation per new column,
-quoting, logical correspondence, invalid-result rejection, and non-polymorphic bypass.
-Runtime tests must persist and reload different subtypes using transformed and quoted
-names, including collection elements. Reuse existing embeddable-inheritance fixtures
-where practical. Run focused naming/inheritance tests and the complete core suite.
+. Migrate implicit primary-key, foreign-key, unique-key, and index naming to typed
+  logical-name contracts. Trace check-constraint and expression cases before assigning
+  callbacks; verify the names actually emitted by schema tooling.
+. Specify and implement audit/history table and companion-column roles.
+. Add generator storage-column defaults to `ImplicitDatabaseObjectNamingStrategy`;
+  sequence/table generator naming remains on that separate contract.
+. Complete the cross-role dependency-readiness and naming-cycle audit in
+  link:naming-dependency-inputs-spec.adoc[the dependency specification], including
+  additional mapping contributions and selected-alias guarantees.
+. Extend the existing strategy matrix with each remaining role and substantiate any
+  uncovered JPA naming rules with independent expected outputs. Do not duplicate the
+  matrix as a separate verification project.
 
-If implementation or verification exposes a supported path that cannot supply these facts, report that
-concrete discrepancy and revise the specification before narrowing support.
+Named SQL types remain deferred. Mutation temporary tables and dialect-generated helper
+objects remain under their specialized mechanisms; the source inventory retains the
+investigation and any unresolved boundary questions. Remaining relational name-type
+boundaries are tracked in link:naming-strategy-redesign.adoc[the parent design].
 
-Implementation notes: nested components inside collection elements retain a collection
-kind in the internal contribution model. The binding caller supplies the naming role
-explicitly so `homes.pet` is an embedded attribute while `pets` is a collection element.
-XML coverage uses supported attribute overrides; the current mapping schema does not
-allow a type-level discriminator-column element inside an embeddable declaration.
-This slice does not expand that XML schema.
+== Known Aggregate Follow-ups
 
-Embeddable-discriminator validation: focused naming and embeddable-inheritance tests
-passed 296 tests (7 skipped). The complete core suite passed 17,873 tests
-(1,525 skipped), with zero failures or errors.
+These failures predate the naming migration and are retained as expected-failure tests:
 
-== Aggregate Container Naming
+* https://hibernate.atlassian.net/browse/HHH-20913[HHH-20913]: an aggregate inside a
+  flattened embeddable uses a scalar member's JDBC mapping. It reproduces on `main`,
+  `8.0`, and the pre-change `wip/9.0`. H2 execution and H2/PostgreSQL/MySQL runtime
+  descriptor checks establish the observed scope; only H2 database execution was tested.
+* Aggregate metadata archive restoration lacks the container `BasicValue` resolution
+  when restoring member resolutions. Successful aggregate archive round-trip acceptance
+  remains outstanding; the retained test requires names to survive without callback replay.
 
-Status: approved naming design implemented. The naming changes are ready for commit;
-known aggregate binding and archive-restoration limitations remain separate follow-ups.
-
-Aggregate containers previously bypassed both implicit and physical naming, and their
-column declarations bypassed applicable overrides. The dedicated implicit callback
-preserves terminal attribute defaults while allowing strategies to distinguish
-containers from scalar members. Reusing basic-column naming would change Standard's
-defaults and would not expose the aggregate role.
-
-Physical naming uses the existing `PhysicalNamingStrategy.toPhysicalColumnName`.
-Named SQL types remain deferred: `@Struct.name` names a type, not its container column.
-Existing scalar aggregate members retain their current naming callbacks.
-
-=== Callback and Inputs
-
-`ImplicitNamingStrategy` exposes:
-
-[source,java]
-----
-LogicalName determineAggregateColumnName(
-        AggregateColumnNamingInput input, ImplicitNamingContext context);
-----
-
-The immutable `AggregateColumnNamingInput` record is defined in
-`org.hibernate.boot.model.naming.spi`, marked `@SPI(USE)`, with required fields:
-
-* `EntityNamingInput entity`: the owning entity.
-* `String embeddableTypeName`: the mapped aggregate type's model name; no Java class loading.
-* `String attributePath`: owner-relative path without synthetic collection markers.
-* `String attributeName`: terminal source attribute name, retaining the existing fallback.
-* `Usage usage`: `ATTRIBUTE`, `COLLECTION_ELEMENT`, or `MAP_KEY`, describing the actual
-  naming site rather than an inherited internal component-kind flag.
-* `StorageKind storageKind`: `STRUCT`, `JSON`, or `XML`.
-* `boolean plural`: whether this aggregate value itself uses plural storage.
-* `Scope scope`: `TABLE_COLUMN` or `AGGREGATE_MEMBER`.
-
-Required reference fields reject null. Public enums belong to the input contract,
-not to internal `AggregateMappingIntent`. Construct the input only for an implicit
-naming decision. No mutable component, table, source annotation, service registry,
-or type configuration is exposed.
-
-All supplied strategies return `context.implicitName(input.attributeName())`, retaining
-existing aggregate container defaults, including map-key and plural forms. Standard
-must not introduce full-path expansion for this role merely by reusing its basic-column
-algorithm. A custom provider may use the full path, role, and storage kind to choose
-a different name. Scalar member naming remains on its existing callback.
-
-=== Storage Scope and Registration
-
-Determine scope from the destination of the aggregate value, separately from the
-container holding that aggregate's own members. The caller must retain the enclosing
-storage target when entering nested component binding.
-
-* For flattened `Person.details` containing aggregate attribute `address`, the input
-  path is `details.address`, default name is `address`, usage is `ATTRIBUTE`, and
-  scope is `TABLE_COLUMN`. Register the resulting aggregate column with the actual
-  table and its logical-name correspondence.
-* If `Person.details` itself is aggregate storage, it has path/name `details` and
-  scope `TABLE_COLUMN`. A nested aggregate `details.address` has default `address`
-  and scope `AGGREGATE_MEMBER`. Register it within the enclosing aggregate, without
-  adding a separate table column or a table-scoped alias for `address`.
-* Flattened components inside an aggregate retain the enclosing aggregate scope;
-  further Java nesting does not restore table scope.
-* Aggregate values in collection tables and map keys use that table as their
-  `TABLE_COLUMN` destination. Aggregates nested inside those values use
-  `AGGREGATE_MEMBER`. Nested ordinary attributes use `ATTRIBUTE` even if an internal
-  component source retains a collection or map-key kind.
-
-Register the final `AggregateColumn`, not the temporary `Column` copied during
-construction. Distinct aggregates may contain the same member name; table-wide
-alias registration must not make those members conflict. Existing aggregate-member
-ordering and metadata remain intact.
-
-=== Effective Source and Naming Sequence
-
-For supported container override forms, resolve the effective column declaration
-using the existing path-aware override machinery. The nearest applicable override
-wins over the direct declaration. A direct attribute/element container uses `@Column`;
-a map-key container uses `@MapKeyColumn`. Preserve the existing key/value path syntax
-and declaration validity rules rather than inventing a new override syntax.
-
-An override replaces the column declaration. If its name is empty, invoke implicit
-naming rather than falling back to the overridden declaration's nonempty name.
-With no override, a nonempty direct name bypasses implicit naming; an empty or absent
-name invokes it. Preserve all other metadata from the effective declaration.
-
-For each new container or aggregate member:
-
-. Resolve the effective source and actual storage scope.
-. Obtain one explicit logical name or invoke the dedicated implicit callback once.
-. Require a non-null implicit `LogicalName` from the callback.
-. Invoke existing `PhysicalNamingStrategy.toPhysicalColumnName` once and apply normal
-  additive quoting finalization.
-. Build the final aggregate column and register it in the correct scope using the
-  same naming result.
-
-Do not replay naming for existing basic members, copied columns, registration, or
-archive restoration. Nested aggregate names use the same physical column callback,
-consistent with existing scalar aggregate-member naming. Named SQL types and struct
-attribute ordering are outside this change; `@Struct.name` is not a column name.
-
-=== Verification and Follow-ups
-
-`AggregateColumnNamingTest` covers defaults across all five supplied strategies,
-custom implicit and physical names, explicit bypass, quoting, invalid callback results,
-effective overrides (including an empty override replacing a direct name), and column
-metadata. Scope tests cover table columns, nested aggregate members, flattened components
-inside aggregates, repeated member names in separate containers, plural storage,
-collection elements, and map keys. H2 runtime tests persist and load transformed,
-quoted nested aggregates. XML/STRUCT checks use PostgreSQL dialect metadata only.
-
-Nested selectable paths use raw physical member spelling, while SQL expressions retain
-identifier quoting. This prevents SQL quote delimiters from becoming JSON member keys.
-
-Two expected-failure reproductions remain in the suite:
-
-* https://hibernate.atlassian.net/browse/HHH-20913[HHH-20913]: insertion of an aggregate
-  inside a flattened embeddable uses its scalar member's JDBC mapping. This occurs on
-  `main` (`29f2b10042d`), `8.0` (`f0b49ce0106`), and `wip/9.0` (`a3b3bab74bd`).
-  The 9.0 binder also omitted the table column; this naming slice fixes that registration,
-  exposing the existing binding failure. H2 fails with both graph and legacy queues.
-  H2, PostgreSQL, and MySQL runtime-descriptor checks all pair the aggregate expression
-  `address` with the member `street` and String/VARCHAR mapping. Database execution was
-  tested only on H2; this is not a database-server matrix.
-* Aggregate metadata archive restoration fails because the container's `BasicValue`
-  resolution is missing when restoring member resolutions. This also reproduces on
-  `wip/9.0` before the naming changes. Archive round-trip acceptance remains outstanding;
-  the retained test expresses the required name preservation and absence of callback replay.
-
-The build enables `hibernate.test.validatefailureexpected`, so these tests execute and
-validate the known failures instead of silently skipping them. They do not count as
-successful binding or archive-restoration coverage.
-
-Current validation results are recorded in
-link:naming-strategy-verification.adoc#_aggregate_container_naming[Aggregate Container Naming].
-Migration guidance documents the new SPI method and the schema/storage-name impact of
-physical naming now applying to aggregate containers.
-
-== Collection-Identifier and Soft-Delete Column Naming
-
-Implemented dedicated implicit callbacks with existing logical defaults,
-normal physical column naming, additive quoting, and final-column logical correspondence.
-Entity and collection soft-delete paths share naming resolution while preserving their
-existing source precedence and value lifecycle.
-
-The approved link:collection-id-soft-delete-naming-spec.adoc[specification] defines the
-input records, invariants, compatibility impact, and acceptance tests. Collection-id
-columns now receive physical naming, including explicit names. Generator configuration
-preserves the quoting of the already named table and identifier column.
+Expected-failure validation confirms these failures remain reproducible. It is not
+successful runtime/archive acceptance. Detailed coverage and validation results remain in
+link:naming-strategy-verification.adoc[the verification notes].

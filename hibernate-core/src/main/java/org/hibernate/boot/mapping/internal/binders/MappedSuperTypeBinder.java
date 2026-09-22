@@ -135,6 +135,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				true,
 				false,
 				(attributeMetadata) -> !isUnresolvedGenericAttribute( attributeMetadata )
+						&& !isTimeZoneStorageAttribute( attributeMetadata )
 		);
 		applyDeclaredVersion( mappedSuperclassTable );
 		applyDeclaredPropertiesToNearestEntityConsumers( getManagedType() );
@@ -372,6 +373,12 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			return false;
 		}
 
+		final var attribute = getManagedType().findAttribute( property.getName() );
+		if ( isTimeZoneStorageAttribute( attribute ) && !hasDeclaredProperty( binding, property.getName() ) ) {
+			// Naming requires a concrete table. The declaration reuses finalized names
+			// from an applied use, without replaying either naming strategy.
+			binding.addDeclaredProperty( property.copyForDeclarationView() );
+		}
 		addGenericDeclaredPropertyIfNeeded( property );
 		if ( secondaryTableJoin == null ) {
 			entityBinding.addMappedSuperclassProperty( property );
@@ -455,6 +462,12 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				getBindingState().getMappingResolutionState()
 		);
 		return basicValue;
+	}
+
+	private boolean isTimeZoneStorageAttribute(AttributeMetadataImplementor attribute) {
+		return attribute != null && org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType(
+				attribute.getMember(), attribute.getMember().getType().determineRawClass(),
+				getBindingState().getMetadataBuildingContext() ) != null;
 	}
 
 	private boolean isUnresolvedGenericAttribute(AttributeMetadataImplementor attributeMetadata) {

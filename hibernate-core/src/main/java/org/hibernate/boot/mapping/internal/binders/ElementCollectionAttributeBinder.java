@@ -384,7 +384,6 @@ class ElementCollectionAttributeBinder {
 				component,
 				table,
 				contribution,
-				"element_DTYPE",
 				ownerBinding,
 				collectionRolePath,
 				EmbeddableDiscriminatorColumnNamingInput.Kind.COLLECTION_ELEMENT,

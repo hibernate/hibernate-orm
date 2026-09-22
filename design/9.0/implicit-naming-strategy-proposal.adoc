@@ -892,3 +892,15 @@ Current validation results are recorded in
 link:naming-strategy-verification.adoc#_aggregate_container_naming[Aggregate Container Naming].
 Migration guidance documents the new SPI method and the schema/storage-name impact of
 physical naming now applying to aggregate containers.
+
+== Collection-Identifier and Soft-Delete Column Naming
+
+Implemented dedicated implicit callbacks with existing logical defaults,
+normal physical column naming, additive quoting, and final-column logical correspondence.
+Entity and collection soft-delete paths share naming resolution while preserving their
+existing source precedence and value lifecycle.
+
+The approved link:collection-id-soft-delete-naming-spec.adoc[specification] defines the
+input records, invariants, compatibility impact, and acceptance tests. Collection-id
+columns now receive physical naming, including explicit names. Generator configuration
+preserves the quoting of the already named table and identifier column.

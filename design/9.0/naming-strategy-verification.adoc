@@ -140,7 +140,7 @@ entire naming implementation is already conformant.
 The matrix is broad but not exhaustive. Add strategy-matrix cases alongside the remaining
 callback migrations, especially implicit composite joins and composite MapsId across all
 variants, IdClass, embeddable associations/overrides, table-per-class, XML mappings supported
-in 9.0, soft-delete and audit/history columns, and schema/catalog quoting.
+in 9.0, audit/history columns, and schema/catalog quoting.
 Generator storage names remain a separate `ImplicitDatabaseObjectNamingStrategy` concern.
 Named SQL types remain deferred and mutation temporary tables remain internal.
 
@@ -199,3 +199,33 @@ reproducible and does not count as passing runtime/archive acceptance.
 Final commit-cleanup validation: the complete core suite passed with 17,895 tests,
 1,525 skipped, and zero unexpected failures or errors. This includes all 22
 aggregate naming cases and execution of both expected-failure reproductions.
+
+== Collection-Identifier and Soft-Delete Naming
+
+`CollectionIdSoftDeleteNamingTest` covers the five supplied implicit strategies with
+identity and prefixing physical strategies. Expected defaults are independently
+asserted as `id`, `active`, and `deleted` (including `TIMESTAMP`).
+
+Focused tests verify owner-relative direct and embedded collection paths, settled
+table dependencies, custom implicit names, explicit bypass, provenance, additive
+quoting, invalid callback results, and record invariants. Logical index references
+on collection identifiers and soft-delete indicators resolve to the final columns.
+Basic, embeddable, and association identifier bags are covered, together with normalized
+mapping XML. Existing collection and soft-delete tests retain coverage of annotation
+precedence, inheritance, converters, metadata options, and invalid mappings.
+
+The H2 runtime case combines an identifier bag with soft deletion and a collection
+inside an embeddable, using quoted transformed column and table names. It exercises
+insert/load, collection-element removal, and entity deletion/filtering. Generator
+configuration and runtime soft-delete column expressions now retain physical quoting.
+
+Metadata archive tests check restored names and quoting for identifiers and both
+soft-delete targets without replaying naming callbacks. This is independent of the
+previously documented aggregate archive failure. Explicit/implicit provenance is
+verified at the callback boundary: completed metadata archives do not retain the
+binding-time logical correspondence map.
+
+Focused naming, collection-id, and soft-delete regressions: 152 tests, no failures
+or skips, including 19 new naming tests. Complete core suite: 17,914 tests,
+1,525 skipped, no failures or errors. Runtime validation used the configured H2
+environment; no cross-dialect execution is claimed.

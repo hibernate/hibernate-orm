@@ -190,7 +190,7 @@ public class GeneratorBinder {
 		configuration.put( GENERATOR_NAME, generatorName );
 		applyTableDetails( identifierValue, configuration, context );
 		if ( identifierValue.getColumnSpan() == 1 ) {
-			configuration.put( PersistentIdentifierGenerator.PK, identifierValue.getColumns().get(0).getName() );
+			configuration.put( PersistentIdentifierGenerator.PK, identifierValue.getColumns().get(0).getQuotedName() );
 		}
 		return configuration;
 	}
@@ -200,7 +200,7 @@ public class GeneratorBinder {
 			Map<String, Object> configuration,
 			MetadataBuildingContext context) {
 		final Table table = value.getColumnContainer().requireTable();
-		configuration.put( PersistentIdentifierGenerator.TABLE, table.getName() );
+		configuration.put( PersistentIdentifierGenerator.TABLE, table.getQuotedName() );
 		final String catalog = implicitNamespaceCatalog( table.getCatalog(), context )
 				? defaultCatalog( context )
 				: table.getCatalog();

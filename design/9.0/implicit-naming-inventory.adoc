@@ -138,8 +138,11 @@ defaults. The clean-room design must specify this role directly.
 
 Source: `CollectionIdBinder`
 
-Fallback to `IdentifierCollection.DEFAULT_IDENTIFIER_COLUMN_NAME` without an
-implicit callback. Distinct from an entity identifier and a list index.
+`determineCollectionIdColumnName` now receives owner-relative collection facts and
+the settled destination table. Supplied strategies retain `id`; explicit names bypass
+the implicit callback. Both forms receive physical naming and logical correspondence.
+Implementation and verification are tracked in
+link:collection-id-soft-delete-naming-spec.adoc[Collection-Identifier and Soft-Delete Column Naming].
 
 === Time-zone companion column
 
@@ -152,8 +155,12 @@ Supply the related attribute/column facts and identify the companion-column role
 
 Source: `SoftDeleteHelper`, `EntityTypeBinder`
 
-Configured/default column names go straight to physical resolution. Distinguish
-an explicitly configured name from the strategy-specific soft-delete default.
+`determineSoftDeleteColumnName` now receives the target kind, mapped owner, optional
+collection path, destination table, and effective soft-delete strategy. Entity and
+collection binding share name resolution, preserving explicit bypass and provenance.
+Supplied defaults remain `active` or `deleted`; physical naming applies once.
+Implementation and verification are tracked in
+link:collection-id-soft-delete-naming-spec.adoc[Collection-Identifier and Soft-Delete Column Naming].
 
 === Primary-key constraint
 

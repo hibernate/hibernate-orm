@@ -102,7 +102,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 		final var resolution = columnValue.resolve();
 
 		this.tableName = tableName;
-		columnName = softDeleteColumn.getName();
+		columnName = softDeleteColumn.getQuotedName( dialect );
 		jdbcMapping = resolution.getJdbcMapping();
 
 		if ( bootMapping.getSoftDeleteStrategy() == SoftDeleteType.TIMESTAMP ) {

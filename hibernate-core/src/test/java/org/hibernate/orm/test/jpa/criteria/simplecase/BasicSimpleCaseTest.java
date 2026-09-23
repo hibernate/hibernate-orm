@@ -20,7 +20,6 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -173,7 +172,6 @@ public class BasicSimpleCaseTest {
 
 	@Test
 	@JiraKey(value = "HHH-13016")
-	@FailureExpected(jiraKey = "HHH-13016")
 	public void testCaseEnumResult(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			// create entities

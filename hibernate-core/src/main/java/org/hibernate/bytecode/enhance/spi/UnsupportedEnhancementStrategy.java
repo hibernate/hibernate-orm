@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
  * The expected behavior when encountering a class that cannot be enhanced,
  * in particular when attribute names don't match field names.
  *
- * @see org.hibernate.bytecode.enhance.spi.EnhancementContext#getUnsupportedEnhancementStrategy
+ * @see EnhancementOptions#getUnsupportedEnhancementStrategy
  */
 @Incubating(since = "6.6")
 public enum UnsupportedEnhancementStrategy {

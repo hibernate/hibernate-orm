@@ -4,7 +4,6 @@
  */
 package org.hibernate.testing.bytecode.enhancement;
 
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 
@@ -13,7 +12,7 @@ import org.hibernate.bytecode.enhance.spi.UnloadedField;
  *
  * @author Luis Barreiro
  */
-public class EnhancerTestContext extends DefaultEnhancementContext {
+public class EnhancerTestContext extends EnhancementTestConfiguration {
 
 	@Override
 	public boolean doBiDirectionalAssociationManagement(UnloadedField field) {

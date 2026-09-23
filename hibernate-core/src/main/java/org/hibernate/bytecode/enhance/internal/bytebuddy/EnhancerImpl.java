@@ -35,7 +35,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -51,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,7 +74,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchException.Feature.ASSOCIATION_MANAGEMENT;
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchException.Feature.DIRTY_CHECK;
-import static org.hibernate.bytecode.enhance.internal.bytebuddy.ModelTypePool.buildModelTypePool;
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.PersistentAttributeTransformer.collectPersistentFields;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENCE_INFO_SETTER_NAME;
@@ -102,39 +100,18 @@ public class EnhancerImpl implements Enhancer {
 	private final EnhancerClassLocator typePool;
 	private final EnhancerImplConstants constants;
 	private final AnnotationList.ForLoadedAnnotations infoAnnotationList;
-	private final Set<String> managedCandidates = ConcurrentHashMap.newKeySet();
+	private final ByteBuddyEnhancementSession session;
+	private final Set<String> managedCandidates;
 	private final Set<String> failedCandidates = ConcurrentHashMap.newKeySet();
 
-	/**
-	 * Constructs the Enhancer, using the given context.
-	 *
-	 * @param enhancementContext Describes the context in which enhancement will occur so as to give access
-	 * to contextual/environmental information.
-	 * @param byteBuddyState refers to the ByteBuddy instance to use
-	 */
-	public EnhancerImpl(
-			final EnhancementContext enhancementContext,
-			final ByteBuddyState byteBuddyState) {
-		this( enhancementContext, byteBuddyState,
-				buildModelTypePool( enhancementContext.getLoadingClassLoader() ) );
-	}
-
-	/**
-	 * Expert level constructor, this allows for more control of state and bytecode loading,
-	 * which allows integrators to optimise for particular contexts of use.
-	 */
-	public EnhancerImpl(
-			final EnhancementContext enhancementContext,
-			final ByteBuddyState byteBuddyState,
-			final EnhancerClassLocator classLocator) {
-		this.enhancementContext =
-				new ByteBuddyEnhancementContext( enhancementContext, byteBuddyState.getEnhancerConstants() );
-		this.byteBuddyState = Objects.requireNonNull( byteBuddyState );
-		this.typePool = Objects.requireNonNull( classLocator );
+	EnhancerImpl(ByteBuddyEnhancementSession session, EnhancementOptions options) {
+		this.session = session;
+		this.managedCandidates = session.candidates;
+		this.enhancementContext = new ByteBuddyEnhancementContext(session, options);
+		this.byteBuddyState = session.byteBuddyState;
+		this.typePool = session.typePool;
 		this.constants = byteBuddyState.getEnhancerConstants();
-
-		this.infoAnnotationList =
-				new AnnotationList.ForLoadedAnnotations( List.of( createInfoAnnotation( enhancementContext ) ) );
+		this.infoAnnotationList = new AnnotationList.ForLoadedAnnotations(List.of(createInfoAnnotation(options)));
 	}
 
 
@@ -151,10 +128,12 @@ public class EnhancerImpl implements Enhancer {
 	 */
 	@Override
 	public byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
+		session.checkOpen();
 		//Classpool#describe does not accept '/' in the description name as it expects a class name. See HHH-12545
 		final String safeClassName = className.replace( '/', '.' );
 		failedCandidates.remove( safeClassName );
 		typePool.registerClassNameAndBytes( safeClassName, originalBytes );
+		session.metadata.beginOperation(true);
 		try {
 			final var typeDescription = typePool.describe( safeClassName ).resolve();
 			return byteBuddyState.rewrite( typePool, safeClassName, byteBuddy ->
@@ -174,35 +153,24 @@ public class EnhancerImpl implements Enhancer {
 		}
 		finally {
 			typePool.deregisterClassNameAndBytes( safeClassName );
+			session.metadata.endOperation();
 		}
 	}
 
 	@Override
 	public void discoverTypes(String className, byte[] originalBytes) {
-		className = className.replace( '/', '.' );
-		managedCandidates.add( className );
-		if ( originalBytes != null ) {
-			typePool.registerClassNameAndBytes( className, originalBytes );
-		}
-		try {
-			final var typeDescription = typePool.describe( className ).resolve();
-			enhancementContext.discoverCompositeTypes( typeDescription, typePool );
-		}
-		catch (RuntimeException e) {
-			throw new EnhancementException( "Failed to discover types for class " + className, e );
-		}
-		finally {
-			typePool.deregisterClassNameAndBytes( className );
-		}
+		session.discoverTypes(className, originalBytes);
 	}
 
 	@Override
 	public byte[] enhanceClient(String className, byte[] originalBytes) {
+		session.checkOpen();
 		final String safeClassName = className.replace( '/', '.' );
 		if ( CorePrefixFilter.DEFAULT_INSTANCE.isCoreClassName( safeClassName ) ) {
 			return null;
 		}
 		typePool.registerClassNameAndBytes( safeClassName, originalBytes );
+		session.metadata.beginOperation(true);
 		try {
 			final var type = typePool.describe( safeClassName ).resolve();
 			final var visitor = new FieldAccessEnhancer( type, enhancementContext, typePool, this::isClientField );
@@ -217,6 +185,7 @@ public class EnhancerImpl implements Enhancer {
 		}
 		finally {
 			typePool.deregisterClassNameAndBytes( safeClassName );
+			session.metadata.endOperation();
 		}
 	}
 
@@ -1098,7 +1067,7 @@ public class EnhancerImpl implements Enhancer {
 		}
 	}
 
-	private static EnhancementInfo createInfoAnnotation(EnhancementContext enhancementContext) {
+	private static EnhancementInfo createInfoAnnotation(EnhancementOptions enhancementContext) {
 		return new EnhancementInfoImpl( enhancementContext.doDirtyCheckingInline(),
 				enhancementContext.doBiDirectionalAssociationManagement() );
 	}

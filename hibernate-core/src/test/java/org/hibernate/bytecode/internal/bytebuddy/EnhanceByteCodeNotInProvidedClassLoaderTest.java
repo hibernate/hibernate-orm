@@ -9,8 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -29,7 +28,7 @@ public class EnhanceByteCodeNotInProvidedClassLoaderTest {
 		Enhancer enhancer = createByteBuddyEnhancer();
 		byte[] buffer = readResource( SimpleEntity.class );
 		// Now use a fake class name so it won't be found in the ClassLoader
-		// provided by DefaultEnhancementContext
+		// provided by EnhancementTestConfiguration
 		byte[] enhanced = enhancer.enhance( SimpleEntity.class.getName() + "Fake", buffer );
 		Assertions.assertNotNull( enhanced, "This is null when there have been swallowed exceptions during enhancement. Check Logs!" );
 		// Make sure enhanced bytecode is different from original bytecode.
@@ -59,8 +58,8 @@ public class EnhanceByteCodeNotInProvidedClassLoaderTest {
 
 	private Enhancer createByteBuddyEnhancer() {
 		ByteBuddyState bytebuddy = new ByteBuddyState();
-		DefaultEnhancementContext enhancementContext = new DefaultEnhancementContext();
-		EnhancerImpl impl = new EnhancerImpl( enhancementContext, bytebuddy );
+		EnhancementTestConfiguration enhancementContext = new EnhancementTestConfiguration();
+		org.hibernate.bytecode.enhance.spi.Enhancer impl = EnhancementTestConfiguration.createEnhancer( enhancementContext, bytebuddy );
 		return impl;
 	}
 }

@@ -9,7 +9,7 @@ import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyGroup;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
@@ -205,7 +205,7 @@ public class BidirectionalLazyGroupsTest {
 		}
 	}
 
-	public static class NoDirtyCheckEnhancementContext extends DefaultEnhancementContext {
+	public static class NoDirtyCheckEnhancementContext extends EnhancementTestConfiguration {
 		@Override
 		public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
 			return false;

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @BytecodeEnhanced
 @CustomEnhancementContext({
 		EnhancerTestContext.class, // supports laziness and dirty-checking
-		DefaultEnhancementContext.class
+		EnhancementTestConfiguration.class
 })
 public class OneToManyPersistAndLoad2Test {
 

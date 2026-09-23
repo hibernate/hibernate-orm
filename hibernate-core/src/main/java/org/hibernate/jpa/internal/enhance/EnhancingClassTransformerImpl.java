@@ -10,8 +10,9 @@ import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.CorePrefixFilter;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.EnhancementContextWrapper;
+import org.hibernate.bytecode.enhance.spi.EnhancementEnvironment;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.bytecode.spi.BytecodeProvider;
@@ -25,16 +26,16 @@ import jakarta.persistence.spi.TransformerException;
  */
 public class EnhancingClassTransformerImpl implements ClassTransformer {
 
-	private final EnhancementContext enhancementContext;
+	private final EnhancementModel model;
+	private final EnhancementOptions options;
 	private final BytecodeProvider bytecodeProvider;
 	private final ReentrantLock lock = new ReentrantLock();
 	private volatile WeakReference<Entry> entryReference;
 
-	public EnhancingClassTransformerImpl(EnhancementContext enhancementContext) {
-		Objects.requireNonNull( enhancementContext );
-		this.enhancementContext = enhancementContext;
-		final BytecodeProvider overriddenProvider = enhancementContext.getBytecodeProvider();
-		this.bytecodeProvider = overriddenProvider == null ? BytecodeProviderInitiator.buildDefaultBytecodeProvider() : overriddenProvider;
+	public EnhancingClassTransformerImpl(EnhancementModel model, EnhancementOptions options, BytecodeProvider provider) {
+		this.model = Objects.requireNonNull(model);
+		this.options = Objects.requireNonNull(options);
+		this.bytecodeProvider = provider == null ? BytecodeProviderInitiator.buildDefaultBytecodeProvider() : provider;
 	}
 
 	@Override
@@ -97,7 +98,7 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 	}
 
 	private Enhancer createEnhancer(ClassLoader loader) {
-		return bytecodeProvider.getEnhancer( new EnhancementContextWrapper( enhancementContext, loader ) );
+		return bytecodeProvider.createEnhancementSession(model, EnhancementEnvironment.forClassLoader(loader)).createEnhancer(options);
 	}
 
 	private static class Entry {

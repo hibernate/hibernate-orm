@@ -13,9 +13,8 @@ import net.bytebuddy.dynamic.ClassFileLocator.Compound;
 import net.bytebuddy.dynamic.ClassFileLocator.ForClassLoader;
 import net.bytebuddy.pool.TypePool;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchException;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.bytecode.spi.ByteCodeHelper;
@@ -37,9 +36,9 @@ import static org.assertj.core.api.Assertions.fail;
 public class ReEnhancementTests {
 	@Test
 	void testVersionMismatch() {
-		final DefaultEnhancementContext enhancementContext = new DefaultEnhancementContext();
+		final EnhancementTestConfiguration enhancementContext = new EnhancementTestConfiguration();
 		final ByteBuddyState byteBuddyState = new ByteBuddyState();
-		final Enhancer enhancer = new EnhancerImpl( enhancementContext, byteBuddyState );
+		final Enhancer enhancer = EnhancementTestConfiguration.createEnhancer( enhancementContext, byteBuddyState );
 
 		try {
 			attemptEnhancement( SimpleEntity.class, enhancer );
@@ -52,14 +51,14 @@ public class ReEnhancementTests {
 
 	@Test
 	void testDirtyCheckingSettingMismatch() {
-		final DefaultEnhancementContext enhancementContext = new DefaultEnhancementContext() {
+		final EnhancementTestConfiguration enhancementContext = new EnhancementTestConfiguration() {
 			@Override
 			public boolean doDirtyCheckingInline() {
 				return true;
 			}
 		};
 		final ByteBuddyState byteBuddyState = new ByteBuddyState();
-		final Enhancer enhancer = new EnhancerImpl( enhancementContext, byteBuddyState );
+		final Enhancer enhancer = EnhancementTestConfiguration.createEnhancer( enhancementContext, byteBuddyState );
 
 		try {
 			attemptEnhancement( SimpleEntity2.class, enhancer );
@@ -74,14 +73,14 @@ public class ReEnhancementTests {
 
 	@Test
 	void testAssociationManagementSettingMismatch() {
-		final DefaultEnhancementContext enhancementContext = new DefaultEnhancementContext() {
+		final EnhancementTestConfiguration enhancementContext = new EnhancementTestConfiguration() {
 			@Override
 			public boolean doDirtyCheckingInline() {
 				return false;
 			}
 		};
 		final ByteBuddyState byteBuddyState = new ByteBuddyState();
-		final Enhancer enhancer = new EnhancerImpl( enhancementContext, byteBuddyState );
+		final Enhancer enhancer = EnhancementTestConfiguration.createEnhancer( enhancementContext, byteBuddyState );
 
 		try {
 			attemptEnhancement( SimpleEntity2.class, enhancer );
@@ -97,9 +96,9 @@ public class ReEnhancementTests {
 	@ParameterizedTest
 	@ValueSource(classes = {MappedSuper.class, EntityClass.class})
 	void testAlreadyEnhancedEntitiesShouldNotGetEnhancedAgain(Class<?> testClass) {
-		final var enhancementContext = new DefaultEnhancementContext();
+		final var enhancementContext = new EnhancementTestConfiguration();
 		final var byteBuddyState = new ByteBuddyState();
-		final var enhancer = new EnhancerImpl( enhancementContext, byteBuddyState );
+		final var enhancer = EnhancementTestConfiguration.createEnhancer( enhancementContext, byteBuddyState );
 
 		final var firstRoundEnhancement = attemptEnhancement( testClass, enhancer );
 		final var secondRoundEnhancement = enhancer.enhance( testClass.getName(), firstRoundEnhancement );

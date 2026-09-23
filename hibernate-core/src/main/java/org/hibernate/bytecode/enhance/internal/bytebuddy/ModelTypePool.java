@@ -96,7 +96,15 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 						new ClassFileLocator.Resolution.Explicit( Objects.requireNonNull( bytes ) ) );
 		// Set the state first because the ClassFileLocator needs this in the doDescribe() call below
 		poolCache.setEnhancementState( state );
-		state.setTypePoolResolution( doDescribe( className ) );
+		try {
+			state.setTypePoolResolution( doDescribe( className ) );
+		}
+		catch (RuntimeException | Error failure) {
+			// Registration owns the override only after the re-entrancy check above.
+			// Parsing may fail before the caller can enter its cleanup block.
+			poolCache.removeEnhancementState();
+			throw failure;
+		}
 	}
 
 	@Override

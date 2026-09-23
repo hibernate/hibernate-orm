@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.Properties;
 
 import jakarta.persistence.FetchType;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.TransformerTracker;
@@ -160,7 +162,7 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	}
 
 	@Override
-	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
+	public ClassTransformer pushClassTransformer(EnhancementModel model, EnhancementOptions options, BytecodeProvider provider) {
 		if ( this.classTransformer != null ) {
 			throw new PersistenceException(
 					"Persistence unit ["
@@ -184,10 +186,10 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 		// in cases where we don't care about enhancement
 		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {
 			if ( JPA_LOGGER.isTraceEnabled() ) {
-				JPA_LOGGER.pushingClassTransformers( getName(), String.valueOf( enhancementContext.getLoadingClassLoader() ) );
+				JPA_LOGGER.pushingClassTransformers( getName(), String.valueOf( persistenceUnitInfo.getClassLoader() ) );
 			}
 			final EnhancingClassTransformerImpl classTransformer =
-					new EnhancingClassTransformerImpl( enhancementContext );
+					new EnhancingClassTransformerImpl( model, options, provider );
 			this.classTransformer = classTransformer;
 			persistenceUnitInfo.addTransformer( classTransformer );
 		}

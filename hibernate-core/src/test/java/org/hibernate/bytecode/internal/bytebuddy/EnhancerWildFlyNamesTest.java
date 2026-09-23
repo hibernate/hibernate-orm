@@ -8,8 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -57,8 +56,8 @@ public class EnhancerWildFlyNamesTest {
 
 	private Enhancer createByteBuddyEnhancer() {
 		ByteBuddyState bytebuddy = new ByteBuddyState();
-		DefaultEnhancementContext enhancementContext = new DefaultEnhancementContext();
-		EnhancerImpl impl = new EnhancerImpl( enhancementContext, bytebuddy );
+		EnhancementTestConfiguration enhancementContext = new EnhancementTestConfiguration();
+		org.hibernate.bytecode.enhance.spi.Enhancer impl = EnhancementTestConfiguration.createEnhancer( enhancementContext, bytebuddy );
 		return impl;
 	}
 

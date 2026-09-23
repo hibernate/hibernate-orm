@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.basic;
 
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
@@ -153,7 +153,7 @@ public class InheritedTest {
 
 	// --- //
 
-	public static class EagerEnhancementContext extends DefaultEnhancementContext {
+	public static class EagerEnhancementContext extends EnhancementTestConfiguration {
 		@Override
 		public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
 			// HHH-10981 - Without lazy loading, the generation of getters and setters has a different code path

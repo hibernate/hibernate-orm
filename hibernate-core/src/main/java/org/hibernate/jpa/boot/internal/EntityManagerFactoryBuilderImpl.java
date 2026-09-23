@@ -41,11 +41,10 @@ import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
+import org.hibernate.jpa.internal.enhance.PersistenceUnitEnhancementModel;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
-import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
@@ -419,13 +418,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
-			final var enhancementContext =
-					getEnhancementContext( dirtyTrackingEnabled,
-							lazyInitializationEnabled,
-							associationManagementEnabled );
-			// push back class transformation to the environment; for the time being this only has any effect in EE
-			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
-			final var classTransformer = persistenceUnit.pushClassTransformer( enhancementContext );
+			final var classTransformer = persistenceUnit.pushClassTransformer(
+					getEnhancementModel(),
+					EnhancementOptions.of(dirtyTrackingEnabled, lazyInitializationEnabled, associationManagementEnabled),
+					getEnhancementBytecodeProvider());
 			if ( classTransformer != null ) {
 				final var classLoader = persistenceUnit.getTempClassLoader();
 				if ( classLoader == null ) {
@@ -508,61 +504,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 * @param associationManagementEnabled To enable association management feature
 	 * @return An enhancement context for classes managed by this EM
 	 */
-	protected EnhancementContext getEnhancementContext(
-			final boolean dirtyTrackingEnabled,
-			final boolean lazyInitializationEnabled,
-			final boolean associationManagementEnabled ) {
-		final Object propValue = configurationValues.get( BYTECODE_PROVIDER_INSTANCE );
-		if ( propValue != null && ( ! ( propValue instanceof BytecodeProvider ) ) ) {
-			throw new PersistenceException( "Property " + BYTECODE_PROVIDER_INSTANCE + " was set to '" + propValue
-							+ "', which is not compatible with the expected type " + BytecodeProvider.class );
+	protected EnhancementModel getEnhancementModel() {
+		return new PersistenceUnitEnhancementModel(managedResources.getAnnotatedClassNames());
+	}
+
+	private BytecodeProvider getEnhancementBytecodeProvider() {
+		final Object value = configurationValues.get(BYTECODE_PROVIDER_INSTANCE);
+		if (value != null && !(value instanceof BytecodeProvider)) {
+			throw new PersistenceException("Property " + BYTECODE_PROVIDER_INSTANCE + " was set to '" + value
+					+ "', which is not compatible with the expected type " + BytecodeProvider.class);
 		}
-		final var overriddenBytecodeProvider = (BytecodeProvider) propValue;
-		return new DefaultEnhancementContext() {
-
-			@Override
-			public boolean isEntityClass(UnloadedClass classDescriptor) {
-				return managedResources.getAnnotatedClassNames().contains( classDescriptor.getName() )
-					&& super.isEntityClass( classDescriptor );
-			}
-
-			@Override
-			public boolean isCompositeClass(UnloadedClass classDescriptor) {
-				return managedResources.getAnnotatedClassNames().contains( classDescriptor.getName() )
-					&& super.isCompositeClass( classDescriptor );
-			}
-
-			@Override
-			public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
-				return associationManagementEnabled;
-			}
-
-			@Override
-			public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
-				return dirtyTrackingEnabled;
-			}
-
-			@Override
-			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
-				return lazyInitializationEnabled;
-			}
-
-			@Override
-			public boolean isLazyLoadable(UnloadedField field) {
-				return lazyInitializationEnabled;
-			}
-
-			@Override
-			public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
-				// doesn't make any sense to have extended enhancement enabled at runtime. we only enhance entities anyway.
-				return false;
-			}
-
-			@Override
-			public BytecodeProvider getBytecodeProvider() {
-				return overriddenBytecodeProvider;
-			}
-		};
+		return (BytecodeProvider) value;
 	}
 
 	/**

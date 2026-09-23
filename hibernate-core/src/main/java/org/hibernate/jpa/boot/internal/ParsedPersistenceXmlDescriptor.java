@@ -11,7 +11,9 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import org.hibernate.boot.archive.internal.ArchiveHelper;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
@@ -250,7 +252,7 @@ public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor
 	}
 
 	@Override
-	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
+	public ClassTransformer pushClassTransformer(EnhancementModel model, EnhancementOptions options, BytecodeProvider provider) {
 		if ( JPA_LOGGER.isDebugEnabled() ) {
 			JPA_LOGGER.pushingClassTransformerUnsupported( getName() );
 		}

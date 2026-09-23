@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Hibernate;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @CustomEnhancementContext({
 		EnhancerTestContext.class, // supports laziness and dirty-checking
 		NoDirtyCheckEnhancementContext.class, // supports laziness; does not support dirty-checking,
-		DefaultEnhancementContext.class
+		EnhancementTestConfiguration.class
 })
 public class EagerOneToManyPersistAndLoad2Test {
 

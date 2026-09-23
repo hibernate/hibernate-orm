@@ -8,16 +8,16 @@ import java.lang.reflect.Member;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerClassLocator;
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.ByteBuddyEnhancementSession;
+import org.hibernate.bytecode.enhance.spi.EnhancementEnvironment;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementSession;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
 import net.bytebuddy.ClassFileVersion;
-import jakarta.annotation.Nullable;
 
 public class BytecodeProviderImpl implements BytecodeProvider {
 
@@ -81,19 +81,16 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	}
 
 	@Override
-	public @Nullable Enhancer getEnhancer(@Nonnull EnhancementContext enhancementContext) {
-		return new EnhancerImpl( enhancementContext, byteBuddyState );
+	public EnhancementSession createEnhancementSession(
+			EnhancementModel model,
+			EnhancementEnvironment environment) {
+		return new ByteBuddyEnhancementSession(model, environment, byteBuddyState);
 	}
 
-	/**
-	 * Similar to {@link #getEnhancer(EnhancementContext)} but intended for advanced users who wish
-	 * to customize how ByteBuddy is locating the class files and caching the types.
-	 * Used in Quarkus.
-	 */
-	public @Nullable Enhancer getEnhancer(
-			@Nonnull EnhancementContext enhancementContext,
-			@Nonnull EnhancerClassLocator classLocator) {
-		return new EnhancerImpl( enhancementContext, byteBuddyState, classLocator );
+	/// Creates a session with a borrowed custom locator.
+	public EnhancementSession createEnhancementSession(
+			EnhancementModel model, EnhancerClassLocator locator) {
+		return new ByteBuddyEnhancementSession(model, byteBuddyState, locator);
 	}
 
 	@Override

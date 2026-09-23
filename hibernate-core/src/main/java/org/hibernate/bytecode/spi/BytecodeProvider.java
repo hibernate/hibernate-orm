@@ -5,12 +5,13 @@
 package org.hibernate.bytecode.spi;
 
 import jakarta.annotation.Nonnull;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.bytecode.enhance.spi.EnhancementEnvironment;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementSession;
 import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.Service;
 
-import jakarta.annotation.Nullable;
+
 
 /**
  * Contract for providers of bytecode services to Hibernate.
@@ -32,14 +33,10 @@ public interface BytecodeProvider extends Service {
 	@Nonnull
 	ProxyFactoryFactory getProxyFactoryFactory();
 
-	/**
-	 * Returns a byte code enhancer that implements the enhancements described in the supplied enhancement context.
-	 *
-	 * @param enhancementContext The enhancement context that describes the enhancements to apply.
-	 *
-	 * @return An enhancer to perform byte code manipulations.
-	 */
-	@Nullable Enhancer getEnhancer(@Nonnull EnhancementContext enhancementContext);
+	/// Creates a privately owned session for a stable model and bytecode environment.
+	@Nonnull EnhancementSession createEnhancementSession(
+			EnhancementModel model,
+			EnhancementEnvironment environment);
 
 	/**
 	 * Some BytecodeProvider implementations will have classloader specific caching.

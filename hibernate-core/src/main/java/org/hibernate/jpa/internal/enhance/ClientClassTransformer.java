@@ -6,9 +6,10 @@ package org.hibernate.jpa.internal.enhance;
 
 import java.lang.ref.WeakReference;
 import java.security.ProtectionDomain;
-import java.util.List;
-import java.util.HashSet;
-import java.util.function.Function;
+import org.hibernate.bytecode.enhance.spi.EnhancementEnvironment;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.TransformerException;
@@ -23,14 +24,14 @@ import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 /// @author Steve Ebersole
 public final class ClientClassTransformer implements ClassTransformer {
 
-	private final Function<ClassLoader, ClientEnhancementContext> contextFactory;
+	private final EnhancementModel model;
+	private final BytecodeProvider provider;
 	private WeakReference<Entry> entry = new WeakReference<>( null );
 
-	public ClientClassTransformer(
-			Function<ClassLoader, ClientEnhancementContext> contextFactory,
-			ClassLoader temporaryLoader) {
-		this.contextFactory = contextFactory;
-		getEnhancer( temporaryLoader );
+	public ClientClassTransformer(EnhancementModel model, BytecodeProvider provider, ClassLoader temporaryLoader) {
+		this.model = model;
+		this.provider = provider == null ? BytecodeProviderInitiator.buildDefaultBytecodeProvider() : provider;
+		getEnhancer(temporaryLoader);
 	}
 
 	@Override
@@ -54,17 +55,11 @@ public final class ClientClassTransformer implements ClassTransformer {
 	private synchronized Enhancer getEnhancer(ClassLoader loader) {
 		var current = entry.get();
 		if ( current == null || current.loader != loader ) {
-			final var context = contextFactory.apply( loader );
-			final var configuredProvider = context.getBytecodeProvider();
-			final var provider = configuredProvider == null
-					? BytecodeProviderInitiator.buildDefaultBytecodeProvider() : configuredProvider;
-			final var enhancer = provider.getEnhancer( context );
-			final var discovered = new HashSet<String>();
-			while ( discovered.addAll( context.getCandidates() ) ) {
-				for ( String candidate : List.copyOf( discovered ) ) {
-					enhancer.discoverTypes( candidate, null );
-				}
+			final var session = provider.createEnhancementSession(model, EnhancementEnvironment.forClassLoader(loader));
+			for (String candidate : model.getCandidates()) {
+				session.discoverTypes(candidate, null);
 			}
+			final var enhancer = session.createEnhancer(EnhancementOptions.of(false, false, false));
 			current = new Entry( loader, enhancer );
 			entry = new WeakReference<>( current );
 		}

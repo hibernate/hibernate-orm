@@ -10,7 +10,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -284,7 +286,8 @@ public class EntityManagerFactoryBasedFunctionalTest
 		}
 
 		@Override
-		public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
+		@org.hibernate.SPI
+		public ClassTransformer pushClassTransformer(EnhancementModel model, EnhancementOptions options, BytecodeProvider provider) {
 			return null;
 		}
 	}

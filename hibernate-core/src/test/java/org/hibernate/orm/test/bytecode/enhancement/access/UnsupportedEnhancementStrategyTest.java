@@ -14,8 +14,7 @@ import jakarta.persistence.PostLoad;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Transient;
 
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
@@ -112,9 +111,9 @@ public class UnsupportedEnhancementStrategyTest {
 		assertThat( doEnhance( PropertyAccessInheritedEntity.class, context ) ).isNotNull();
 	}
 
-	private static byte[] doEnhance(Class<?> entityClass, EnhancementContext context) throws IOException {
+	private static byte[] doEnhance(Class<?> entityClass, EnhancementTestConfiguration context) throws IOException {
 		final ByteBuddyState byteBuddyState = new ByteBuddyState();
-		final Enhancer enhancer = new EnhancerImpl( context, byteBuddyState );
+		final Enhancer enhancer = EnhancementTestConfiguration.createEnhancer( context, byteBuddyState );
 		return enhancer.enhance( entityClass.getName(), getAsBytes( entityClass ) );
 	}
 

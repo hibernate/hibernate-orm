@@ -4,11 +4,14 @@
  */
 package org.hibernate.testing.orm.module;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.module.ModuleFinder;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,15 +36,18 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 /// Fixtures are compiled by the normal test build and packaged using ShrinkWrap;
 /// only the supplied module declaration is compiled at runtime.
 ///
-/// The caller owns the temporary directory and its cleanup. There is no close
-/// operation: a module layer cannot be explicitly unloaded.
+/// The caller owns the temporary directory and its cleanup. Closing a test module
+/// releases the class loader and its underlying JAR file handle, allowing the
+/// temporary directory to be deleted. The module layer itself cannot be unloaded.
 ///
 /// @author Steve Ebersole
-public final class TestModule {
+public final class TestModule implements Closeable {
 	private final Module module;
+	private final ModuleAwareClassLoader classLoader;
 
-	private TestModule(Module module) {
+	private TestModule(Module module, ModuleAwareClassLoader classLoader) {
 		this.module = module;
+		this.classLoader = classLoader;
 	}
 
 	/// Loads an archive using the current thread's context class loader as parent.
@@ -122,8 +128,12 @@ public final class TestModule {
 		moduleArchive.as( ZipExporter.class ).exportTo( jar.toFile(), true );
 		final var configuration = ModuleLayer.boot().configuration().resolve(
 				ModuleFinder.of( jar ), ModuleFinder.of(), Set.of( moduleName ) );
-		final var controller = ModuleLayer.defineModulesWithOneLoader(
-				configuration, List.of( ModuleLayer.boot() ), parentClassLoader );
+		final var packages = configuration.findModule( moduleName ).orElseThrow()
+				.reference().descriptor().packages();
+		final var classLoader = new ModuleAwareClassLoader(
+				new URL[] { jar.toUri().toURL() }, parentClassLoader, packages );
+		final var controller = ModuleLayer.defineModules(
+				configuration, List.of( ModuleLayer.boot() ), name -> classLoader );
 		final var module = controller.layer().findModule( moduleName ).orElseThrow();
 		for (var loader = parentClassLoader; loader != null; loader = loader.getParent()) {
 			controller.addReads( module, loader.getUnnamedModule() );
@@ -131,7 +141,7 @@ public final class TestModule {
 		for (var dependency : compilationDependencies) {
 			controller.addReads( module, dependency.getModule() );
 		}
-		return new TestModule( module );
+		return new TestModule( module, classLoader );
 	}
 
 	// The JDK compiler's public tree API is needed to parse annotated declarations reliably.
@@ -156,12 +166,17 @@ public final class TestModule {
 		return new IllegalArgumentException( message.toString() );
 	}
 
+	@Override
+	public void close() throws IOException {
+		classLoader.close();
+	}
+
 	public Module module() {
 		return module;
 	}
 
 	public ClassLoader classLoader() {
-		return module.getClassLoader();
+		return classLoader;
 	}
 
 	/// Loads a fixture and rejects accidental resolution from the parent loader.
@@ -172,5 +187,57 @@ public final class TestModule {
 					+ module.getName() + "'" );
 		}
 		return type;
+	}
+
+	/// A child-first class loader for module packages, backed by a closeable JAR URL.
+	/// The JDK's internal {@code Loader} created by {@code defineModulesWithOneLoader}
+	/// is not closeable, so this replaces it and is used with {@code defineModules}.
+	private static final class ModuleAwareClassLoader extends URLClassLoader {
+		private final Set<String> packages;
+
+		ModuleAwareClassLoader(URL[] urls, ClassLoader parent, Set<String> packages) {
+			super(urls, parent);
+			this.packages = packages;
+		}
+
+		@Override
+		protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+			synchronized ( getClassLoadingLock( name ) ) {
+				Class<?> c = findLoadedClass( name );
+				if ( c == null ) {
+					final int lastDot = name.lastIndexOf( '.' );
+					if ( lastDot >= 0 && packages.contains( name.substring( 0, lastDot ) ) ) {
+						c = findClass( name );
+					}
+					else {
+						c = super.loadClass( name, false );
+					}
+				}
+				if ( resolve ) {
+					resolveClass( c );
+				}
+				return c;
+			}
+		}
+
+		@Override
+		protected Class<?> findClass(String moduleName, String name) {
+			final int lastDot = name.lastIndexOf( '.' );
+			if ( lastDot >= 0 && packages.contains( name.substring( 0, lastDot ) ) ) {
+				try {
+					return findClass( name );
+				}
+				catch (ClassNotFoundException e) {
+					return null;
+				}
+			}
+			return null;
+		}
+
+		@Override
+		protected URL findResource(String moduleName, String name) {
+			// Allow access to all resources from this class loader to allow reading the module-info.class
+			return super.findResource( name );
+		}
 	}
 }

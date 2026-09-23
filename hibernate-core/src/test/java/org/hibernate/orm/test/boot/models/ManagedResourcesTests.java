@@ -9,6 +9,8 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
 import org.hibernate.models.UnknownClassException;
 import org.hibernate.annotations.FilterDef;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -16,6 +18,7 @@ import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.spi.ClassTransformer;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -73,6 +76,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 ///
 /// @author Steve Ebersole
 class ManagedResourcesTests {
+
+	// Ensure no JAR files are being cached to avoid file deletion issues on Windows
+	private static boolean jarDefaultUseCaches;
+
+	@BeforeAll
+	public static void setup() {
+		jarDefaultUseCaches = URLConnection.getDefaultUseCaches( "jar" );
+		URLConnection.setDefaultUseCaches( "jar", false );
+	}
+
+	@AfterAll
+	public static void cleanup() {
+		URLConnection.setDefaultUseCaches( "jar", jarDefaultUseCaches );
+	}
+
 	static class SampleType {
 	}
 
@@ -340,13 +358,13 @@ class ManagedResourcesTests {
 
 	@Test
 	void resolvedTypesRetainSuppliedDetailsAndSeparateDescriptors(@TempDir Path directory) throws Exception {
-		final var module = TestModule.load( ShrinkWrap.create( JavaArchive.class, "inventory.jar" )
+		try (var module = TestModule.load( ShrinkWrap.create( JavaArchive.class, "inventory.jar" )
 				.addClass( org.hibernate.orm.test.boot.models.inventory.UnlistedEntity.class ), """
 				/// @author Steve Ebersole
 				@org.hibernate.annotations.FilterDef(name = "moduleInventoryFilter")
 				module test.inventory {}
 				""", directory, FilterDef.class );
-		try ( var registry = new StandardServiceRegistryBuilder().build() ) {
+			var registry = new StandardServiceRegistryBuilder().build()) {
 			final var options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( registry );
 			final var bootstrap = new BootstrapContextImpl( registry, options );
 			options.setBootstrapContext( bootstrap );

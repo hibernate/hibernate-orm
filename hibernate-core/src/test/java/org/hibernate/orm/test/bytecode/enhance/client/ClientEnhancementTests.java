@@ -476,7 +476,7 @@ public class ClientEnhancementTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Book")
 	public static class Book {
 		@Id
 		public long id;
@@ -514,7 +514,7 @@ public class ClientEnhancementTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "OtherBook")
 	public static class OtherBook extends Book {
 		public String readOther(Book book) {
 			return book.title;
@@ -536,7 +536,7 @@ public class ClientEnhancementTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Skipped")
 	@jakarta.persistence.Access(jakarta.persistence.AccessType.PROPERTY)
 	public static class Skipped {
 		public String title;
@@ -567,7 +567,7 @@ public class ClientEnhancementTests {
 		public int count;
 	}
 
-	@Entity
+	@Entity(name = "WithEmbedded")
 	public static class WithEmbedded extends Mapped {
 		@jakarta.persistence.Embedded
 		public Address address;
@@ -585,7 +585,7 @@ public class ClientEnhancementTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "WithFinal")
 	public static class WithFinal {
 		@Id
 		public long id;
@@ -601,7 +601,7 @@ public class ClientEnhancementTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "ShadowBook")
 	public static class ShadowBook extends Book {
 		public int title;
 	}
@@ -612,7 +612,7 @@ public class ClientEnhancementTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Incompatible")
 	@org.hibernate.bytecode.enhance.spi.EnhancementInfo(
 			version = "incompatible", includesDirtyChecking = true, includesAssociationManagement = false)
 	public static class Incompatible {

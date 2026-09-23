@@ -870,10 +870,21 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 	}
 
-	private static boolean hasHandwrittenMetamodel(TypeElement element) {
-		return element.getEnclosingElement().getEnclosedElements()
-				.stream().anyMatch(e -> e.getSimpleName()
-						.contentEquals('_' + element.getSimpleName().toString()));
+	private boolean hasHandwrittenMetamodel(TypeElement element) {
+		final var dataMetamodelName = '_' + element.getSimpleName().toString();
+		return hasMetamodelSourceFile( element, dataMetamodelName );
+	}
+
+	private boolean hasMetamodelSourceFile(TypeElement entity, String dataMetamodelName) {
+		final var packageName = context.getElementUtils().getPackageOf( entity ).getQualifiedName();
+		try (var source = context.getProcessingEnvironment().getFiler()
+				.getResource( StandardLocation.SOURCE_PATH, packageName, dataMetamodelName + ".java" )
+				.openInputStream()) {
+			return true;
+		}
+		catch (IOException ignored) {
+			return false;
+		}
 	}
 
 	private void indexEntityName(TypeElement typeElement) {

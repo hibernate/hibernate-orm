@@ -12,8 +12,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Transient;
-import jakarta.persistence.metamodel.Type;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.annotation.AnnotationList;
 import net.bytebuddy.description.annotation.AnnotationSource;
@@ -54,13 +54,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import net.bytebuddy.asm.AsmVisitorWrapper;
 
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.emptyList;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.hasDescriptor;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isSetter;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -97,6 +102,8 @@ public class EnhancerImpl implements Enhancer {
 	private final EnhancerClassLocator typePool;
 	private final EnhancerImplConstants constants;
 	private final AnnotationList.ForLoadedAnnotations infoAnnotationList;
+	private final Set<String> managedCandidates = ConcurrentHashMap.newKeySet();
+	private final Set<String> failedCandidates = ConcurrentHashMap.newKeySet();
 
 	/**
 	 * Constructs the Enhancer, using the given context.
@@ -146,6 +153,7 @@ public class EnhancerImpl implements Enhancer {
 	public byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		//Classpool#describe does not accept '/' in the description name as it expects a class name. See HHH-12545
 		final String safeClassName = className.replace( '/', '.' );
+		failedCandidates.remove( safeClassName );
 		typePool.registerClassNameAndBytes( safeClassName, originalBytes );
 		try {
 			final var typeDescription = typePool.describe( safeClassName ).resolve();
@@ -157,9 +165,11 @@ public class EnhancerImpl implements Enhancer {
 					) );
 		}
 		catch (EnhancementException e) {
+			failedCandidates.add( safeClassName );
 			throw e;
 		}
 		catch (RuntimeException e) {
+			failedCandidates.add( safeClassName );
 			throw new EnhancementException( "Failed to enhance class " + className, e );
 		}
 		finally {
@@ -169,12 +179,13 @@ public class EnhancerImpl implements Enhancer {
 
 	@Override
 	public void discoverTypes(String className, byte[] originalBytes) {
+		className = className.replace( '/', '.' );
+		managedCandidates.add( className );
 		if ( originalBytes != null ) {
 			typePool.registerClassNameAndBytes( className, originalBytes );
 		}
 		try {
 			final var typeDescription = typePool.describe( className ).resolve();
-			enhancementContext.registerDiscoveredType( typeDescription, Type.PersistenceType.ENTITY );
 			enhancementContext.discoverCompositeTypes( typeDescription, typePool );
 		}
 		catch (RuntimeException e) {
@@ -183,6 +194,87 @@ public class EnhancerImpl implements Enhancer {
 		finally {
 			typePool.deregisterClassNameAndBytes( className );
 		}
+	}
+
+	@Override
+	public byte[] enhanceClient(String className, byte[] originalBytes) {
+		final String safeClassName = className.replace( '/', '.' );
+		if ( CorePrefixFilter.DEFAULT_INSTANCE.isCoreClassName( safeClassName ) ) {
+			return null;
+		}
+		typePool.registerClassNameAndBytes( safeClassName, originalBytes );
+		try {
+			final var type = typePool.describe( safeClassName ).resolve();
+			final var visitor = new FieldAccessEnhancer( type, enhancementContext, typePool, this::isClientField );
+			final byte[] result = byteBuddyState.rewrite( typePool, safeClassName, byteBuddy ->
+					byteBuddy.redefine( type, typePool.asClassFileLocator() )
+							.visit( new AsmVisitorWrapper.ForDeclaredMethods()
+									.invokable( not( nameStartsWith( "$$_hibernate_" ) ), visitor ) ) );
+			return visitor.isTransformed() ? result : null;
+		}
+		catch (RuntimeException e) {
+			throw new EnhancementException( "Failed to enhance client class " + className, e );
+		}
+		finally {
+			typePool.deregisterClassNameAndBytes( safeClassName );
+		}
+	}
+
+	private boolean isClientField(TypeDescription owner, AnnotatedFieldDescription field, int opcode) {
+		if ( failedCandidates.contains( owner.getName() ) ) {
+			throw unavailableClientAccessor( owner, field );
+		}
+		final var info = owner.getDeclaredAnnotations().ofType( EnhancementInfo.class );
+		if ( info != null ) {
+			verifyEnhancementVersion( owner, info.load() );
+			final boolean read = opcode == Opcodes.GETFIELD;
+			final String prefix = read ? EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX
+					: EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX;
+			final String descriptor = read ? "()" + field.asDefined().getDescriptor()
+					: "(" + field.asDefined().getDescriptor() + ")V";
+			if ( hasClientAccessor( owner, prefix + field.getName(), descriptor ) ) {
+				return true;
+			}
+			// Managed enhancement removes final modifiers for optimizer access, but
+			// deliberately does not generate writers for the original final fields.
+			if ( !read && hasClientAccessor( owner, EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + field.getName(),
+					"()" + field.asDefined().getDescriptor() ) ) {
+				return false;
+			}
+			throw unavailableClientAccessor( owner, field );
+		}
+		if ( !managedCandidates.contains( owner.getName() ) ) {
+			return false;
+		}
+		if ( owner.isInterface() || owner.isRecord() || alreadyEnhanced( owner )
+				|| checkUnderlyingFields( owner, enhancementContext ) ) {
+			throw unavailableClientAccessor( owner, field );
+		}
+		for ( var candidate : collectPersistentFields( owner, enhancementContext, typePool, constants ).getEnhancedFields() ) {
+			if ( candidate.asDefined().equals( field.asDefined() ) ) {
+				return true;
+			}
+		}
+		// Entity-inherited fields are enhanced by the entity superclass.
+		final var declaringType = field.getDeclaringType().asErasure();
+		return !declaringType.equals( owner ) && isClientField( declaringType, field, opcode );
+	}
+
+	private static boolean hasClientAccessor(TypeDescription owner, String name, String descriptor) {
+		for ( TypeDefinition type = owner; type != null; type = type.getSuperClass() ) {
+			if ( !type.getDeclaredMethods().filter( named( name )
+					.and( hasDescriptor( descriptor ) )
+					.and( isPublic() )
+					.and( not( isStatic() ) ) ).isEmpty() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static EnhancementException unavailableClientAccessor(TypeDescription owner, AnnotatedFieldDescription field) {
+		return new EnhancementException( "Client enhancement requires a compatible enhanced target for "
+				+ owner.getName() + "." + field.getName() );
 	}
 
 	private DynamicType.Builder<?> doEnhance(
@@ -507,16 +599,7 @@ public class EnhancerImpl implements Enhancer {
 			TypeDescription managedCtClass,
 			EnhancementInfo existingInfo,
 			ByteBuddyEnhancementContext enhancementContext) {
-		// first, make sure versions match
-		final String enhancementVersion = existingInfo.version();
-		if ( "ignore".equals( enhancementVersion ) ) {
-			// for testing
-			ENHANCEMENT_LOGGER.skippingReEnhancementVersionCheck( managedCtClass.getName() );
-		}
-		else if ( !Version.getVersionString().equals( enhancementVersion ) ) {
-			throw new VersionMismatchException( managedCtClass, enhancementVersion,
-					Version.getVersionString() );
-		}
+		verifyEnhancementVersion( managedCtClass, existingInfo );
 
 		FeatureMismatchException.checkFeatureEnablement(
 				managedCtClass,
@@ -531,6 +614,20 @@ public class EnhancerImpl implements Enhancer {
 				enhancementContext.doBiDirectionalAssociationManagement(),
 				existingInfo.includesAssociationManagement()
 		);
+	}
+
+	private static void verifyEnhancementVersion(TypeDescription managedCtClass, EnhancementInfo existingInfo) {
+		// first, make sure versions match
+		final String enhancementVersion = existingInfo.version();
+		if ( "ignore".equals( enhancementVersion ) ) {
+			// for testing
+			ENHANCEMENT_LOGGER.skippingReEnhancementVersionCheck( managedCtClass.getName() );
+		}
+		else if ( !Version.getVersionString().equals( enhancementVersion ) ) {
+			throw new VersionMismatchException( managedCtClass, enhancementVersion,
+					Version.getVersionString() );
+		}
+
 	}
 
 

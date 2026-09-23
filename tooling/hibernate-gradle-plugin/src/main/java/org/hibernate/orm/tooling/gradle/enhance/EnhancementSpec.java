@@ -18,7 +18,6 @@ abstract public class EnhancementSpec {
 		getEnableLazyInitialization().convention( true );
 		getEnableDirtyTracking().convention( true );
 		getEnableAssociationManagement().convention( false );
-		getEnableExtendedEnhancement().convention( false );
 		getClassNames().convention(new ArrayList<>());
 	}
 
@@ -42,9 +41,15 @@ abstract public class EnhancementSpec {
 
 	/**
 	 * Whether extended enhancement should be performed.
+	 *
+	 * @deprecated Use {@linkplain #getEnableClientEnhancement()} instead.
 	 */
 	@Deprecated(forRemoval = true)
 	abstract public Property<Boolean> getEnableExtendedEnhancement();
+
+	/// Enables client field-access enhancement. Defaults to false; takes precedence
+	/// over the deprecated extended-enhancement alias when explicitly configured.
+	abstract public Property<Boolean> getEnableClientEnhancement();
 
 	/**
 	 * Returns the classes on which enhancement needs to be done

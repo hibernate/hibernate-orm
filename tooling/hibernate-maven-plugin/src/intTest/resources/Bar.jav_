@@ -4,7 +4,7 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class Bar {
 
-    private String foo;
+    String foo;
 
     @ManyToOne
     private Baz baz;

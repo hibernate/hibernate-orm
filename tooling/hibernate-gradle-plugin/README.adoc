@@ -67,7 +67,7 @@ hibernate {
         enableLazyInitialization = true
         enableDirtyTracking = true
         enableAssociationManagement = false
-        enableExtendedEnhancement = false
+        enableClientEnhancement = false
     }
 }
 ----
@@ -99,3 +99,10 @@ tasks.register("transformHbmXml", TransformHbmXmlTask) {
 }
 ```
 More coming soon...
+
+=== Client enhancement
+
+Set `enableClientEnhancement = true` to route client field accesses through Hibernate's enhanced readers and writers.
+Targets must be selected for managed enhancement or already be compatibly enhanced.
+The deprecated `enableExtendedEnhancement` option remains an alias; an explicitly configured
+`enableClientEnhancement` takes precedence, including `false`. Client enhancement is disabled by default.

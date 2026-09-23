@@ -56,9 +56,34 @@ If your application does not need to care about "internal state changing data-ty
 In this approach Hibernate will manipulate the bytecode of your classes to add "dirty tracking" directly to the entity, allowing the entity itself to keep track of which of its attributes have changed.
 During the flush time, Hibernate asks your entity what has changed rather than having to perform the state-diff calculations.
 
-[IMPORTANT]
-Hibernate's extended bytecode enhancement feature has been deprecated, primarily because it relies on assumptions and behaviors that often require a broader runtime scope than what Hibernate alone can reliably provide, similar to container-based environments such as Quarkus or WildFly.
-Applications which make use of this feature should instead use proper object-oriented encapsulation, exposing managed state via getters and setters.
+[[BytecodeEnhancement-client]]
+==== Client enhancement
+
+Optional client enhancement rewrites direct accesses to persistent fields into calls to Hibernate's generated field readers and writers.
+This allows client writes to participate in dirty tracking and client reads to trigger lazy loading.
+It does not make the client a managed class or add managed-class interfaces or state.
+
+NOTE:: Managed classes may themselves access persistent fields of other managed objects.
+When client enhancement is enabled, it also processes those accesses, after managed enhancement of the class.
+Generated accessor methods are excluded from client rewriting.
+
+Enable it with `enableClientEnhancement = true` in Gradle, `<enableClientEnhancement>true</enableClientEnhancement>` in Maven,
+or `enableClientEnhancement="true"` on the Ant enhancement task.
+The default is false. The deprecated `enableExtendedEnhancement` name remains an alias;
+an explicitly supplied `enableClientEnhancement` value takes precedence, including false.
+Tool file sets and class-name filters still apply. Target classes must be selected for managed enhancement in the same invocation,
+or already have compatible Hibernate enhancement. Unenhanced dependency classes are not automatically enhanced.
+
+Containers may request `HibernatePersistenceProvider.getClientClassTransformer(PersistenceUnitInfo, Map)` and install the returned Jakarta `ClassTransformer`.
+Targets must already have compatible managed-class enhancement from tooling, or the container must arrange it before those classes are defined.
+A client may still be loaded before a target scheduled for managed enhancement; generated accessors need not be present in the original class resources.
+A container can therefore use runtime client enhancement with runtime managed enhancement disabled when tooling has already enhanced the targets.
+Without prior or scheduled managed enhancement, there is no client enhancement work to perform.
+This Hibernate entry point anticipates the proposed Jakarta Persistence client-transformer API.
+It neither registers a transformer nor consumes the managed-class transformer's registration.
+
+Client enhancement uses the existing enhancer's mapping recognition; listing an XML-only mapped class does not by itself make it eligible.
+It does not intercept reflection or method handles. Identifier accesses, static fields, nonpersistent fields, and final-field writes remain unchanged.
 
 [[BytecodeEnhancement-dirty-tracking-bidirectional]]
 ==== Bidirectional association management

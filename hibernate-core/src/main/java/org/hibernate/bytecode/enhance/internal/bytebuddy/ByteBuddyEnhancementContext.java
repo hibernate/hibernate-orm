@@ -7,6 +7,7 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,6 +39,7 @@ class ByteBuddyEnhancementContext {
 
 	private final ConcurrentHashMap<TypeDescription, Map<String, MethodDescription>> getterByTypeMap = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, Object> locksMap = new ConcurrentHashMap<>();
+	private final Set<TypeDescription> compositeDiscovery = ConcurrentHashMap.newKeySet();
 
 	ByteBuddyEnhancementContext(final EnhancementContext enhancementContext, EnhancerImplConstants enhancerConstants) {
 		this.enhancementContext = Objects.requireNonNull( enhancementContext );
@@ -105,7 +107,7 @@ class ByteBuddyEnhancementContext {
 	}
 
 	public void discoverCompositeTypes(TypeDescription managedCtClass, TypePool typePool) {
-		if ( !isDiscoveredType( managedCtClass ) ) {
+		if ( compositeDiscovery.add( managedCtClass ) ) {
 			final var determinedPersistenceType = determinePersistenceType( managedCtClass );
 			registerDiscoveredType( managedCtClass, determinedPersistenceType );
 			if ( determinedPersistenceType != Type.PersistenceType.BASIC ) {

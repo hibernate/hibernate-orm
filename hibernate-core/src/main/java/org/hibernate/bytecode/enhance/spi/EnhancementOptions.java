@@ -22,7 +22,7 @@ public interface EnhancementOptions {
 	/**
 	 * Whether to enable support for extended enhancement.
 	 *
-	 * @deprecated Will be removed without replacement. See HHH-19661
+	 * @deprecated Use the separate {@link Enhancer#enhanceClient} operation instead.
 	 */
 	@Deprecated(forRemoval = true, since = "7.1")
 	default boolean doExtendedEnhancement() {

@@ -141,10 +141,12 @@ to enable <<BytecodeEnhancement-dirty-tracking-bidirectional,association managem
 ====
 
 [[maven-enhance-enableExtendedEnhancement-paremeter]]
-===== `*enableExtendedEnhancement*` =====
+[[maven-enhance-enableClientEnhancement]]
+===== `*enableClientEnhancement*` =====
 This parameter has a default value of `false`. It indicates whether the enhance task should perform the changes
-to enable the extended enhancement: enhancement of non-entities to trigger lazy-loading and inline dirty tracking
-even when accessing entity fields directly..
+to enable client enhancement: rewriting direct persistent-field accesses to trigger lazy loading and inline dirty tracking.
+Targets must be selected for managed enhancement or already be compatibly enhanced.
+The deprecated `enableExtendedEnhancement` name is retained as an alias. An explicit `enableClientEnhancement` value takes precedence, including `false`.
 
 ====
 [source,xml]
@@ -152,7 +154,7 @@ even when accessing entity fields directly..
 [...]
 <execution>
   <configuration>
-    <enableExtendedEnhancement>true</enableExtendedEnhancement>
+    <enableClientEnhancement>true</enableClientEnhancement>
   </configuration>
   [...]
 </execution>

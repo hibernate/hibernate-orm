@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
 
 import jakarta.persistence.Id;
+import jakarta.persistence.EmbeddedId;
 
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.utility.OpenedClassReader;
@@ -36,11 +37,28 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 	private final ByteBuddyEnhancementContext enhancementContext;
 
 	private final TypePool classPool;
+	private final AccessorResolver eligibleField;
+	private boolean transformed;
 
 	FieldAccessEnhancer(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext, TypePool classPool) {
+		this( managedCtClass, enhancementContext, classPool, (owner, field, opcode) -> true );
+	}
+
+	FieldAccessEnhancer(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext,
+			TypePool classPool, AccessorResolver eligibleField) {
 		this.managedCtClass = managedCtClass;
 		this.enhancementContext = enhancementContext;
 		this.classPool = classPool;
+		this.eligibleField = eligibleField;
+	}
+
+	@FunctionalInterface
+	interface AccessorResolver {
+		boolean isEligible(TypeDescription owner, AnnotatedFieldDescription field, int opcode);
+	}
+
+	boolean isTransformed() {
+		return transformed;
 	}
 
 	@Override
@@ -65,11 +83,15 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 					enhancementContext.discoverCompositeTypes( declaredOwnerType, typePool );
 
 					if ( (enhancementContext.isEntityClass( declaredOwnerType.asErasure() )
-						|| enhancementContext.isCompositeClass( declaredOwnerType.asErasure() ))
-							&& !field.getType().asErasure().equals( managedCtClass )
+						|| enhancementContext.isCompositeClass( declaredOwnerType.asErasure() )
+						|| enhancementContext.isMappedSuperclassClass( declaredOwnerType.asErasure() ))
 							&& enhancementContext.isPersistentField( field )
 							&& !field.hasAnnotation( Id.class )
-							&& !field.getName().equals( "this$0" ) ) {
+							&& !field.hasAnnotation( EmbeddedId.class )
+							&& !field.getName().startsWith( "$$_hibernate_" )
+							&& !field.getName().equals( "this$0" )
+							&& !( opcode == Opcodes.PUTFIELD && field.getFieldDescription().isFinal() )
+							&& eligibleField.isEligible( declaredOwnerType, field, opcode ) ) {
 
 						ENHANCEMENT_LOGGER.extendedTransformingFieldAccess(
 								declaredOwnerType.getName(),
@@ -80,6 +102,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 
 						switch ( opcode ) {
 							case Opcodes.GETFIELD:
+								transformed = true;
 								methodVisitor.visitMethodInsn(
 										Opcodes.INVOKEVIRTUAL,
 										owner,
@@ -89,6 +112,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 								);
 								return;
 							case Opcodes.PUTFIELD:
+								transformed = true;
 								if ( field.getFieldDescription().isFinal() ) {
 									// Final fields will only be written to from the constructor,
 									// so there's no point trying to replace final field writes with a method call.

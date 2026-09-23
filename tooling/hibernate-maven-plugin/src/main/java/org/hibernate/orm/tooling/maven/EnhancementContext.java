@@ -61,9 +61,6 @@ public class EnhancementContext extends DefaultEnhancementContext {
 
 	@Override
 	public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
-		if (enableExtendedEnhancement) {
-			DEPRECATION_LOGGER.deprecatedSettingForRemoval("extended enhancement", "false");
-		}
 		return enableExtendedEnhancement;
 	}
 

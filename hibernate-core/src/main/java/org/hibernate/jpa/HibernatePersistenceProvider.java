@@ -4,7 +4,10 @@
  */
 package org.hibernate.jpa;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.process.internal.EnhancementCandidates;
+import org.hibernate.SPI;
+import org.hibernate.Incubating;
 
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceConfiguration;
@@ -30,6 +33,8 @@ import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.internal.TransformerTracker;
 import org.hibernate.jpa.internal.TransformerTracker.TransformerKey;
 import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
+import org.hibernate.jpa.internal.enhance.ClientClassTransformer;
+import org.hibernate.jpa.internal.enhance.ClientEnhancementContext;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper.MetadataCache;
 
@@ -272,7 +277,10 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	}
 
 	@Override
-	public ClassTransformer getClassTransformer(PersistenceUnitInfo persistenceUnit, Map<?, ?> integrationSettings) {
+	@Nonnull
+	public ClassTransformer getClassTransformer(
+			@Nonnull PersistenceUnitInfo persistenceUnit,
+			@Nullable Map<?, ?> integrationSettings) {
 		final var enhancementCandidates = EnhancementCandidates.forContainer( persistenceUnit );
 		var transformerKey = TransformerKey.from( persistenceUnit );
 		if ( !TransformerTracker.canSupplyTransformer( transformerKey ) ) {
@@ -318,6 +326,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 		if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
 			final var classLoader = persistenceUnit.getNewTempClassLoader();
+			//noinspection ConstantValue
 			if ( classLoader == null ) {
 				throw new PersistenceException( String.format( Locale.ROOT,
 						"[persistence unit: %s] Enhancement requires a temp class loader, but none was given",
@@ -346,6 +355,46 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 
 		return null;
+	}
+
+	/// Returns an optional client-code transformer for a container to install.
+	/// Targets must already have compatible managed enhancement from tooling, or
+	/// the container must arrange it before defining them. When both transformations
+	/// apply to a class, managed enhancement precedes client enhancement; a client
+	/// may still be transformed before another class scheduled as its target.
+	/// Runtime managed-feature settings do not disable this transformer, since
+	/// tooling may already have enhanced its targets. Requesting this transformer
+	/// does not register or consume the managed-class transformer.
+	///
+	/// @since 8.1
+	@SPI
+	@Incubating(since = "8.1")
+	@Nonnull
+	public ClassTransformer getClientClassTransformer(
+			@Nonnull PersistenceUnitInfo info,
+			@Nullable Map<?, ?> properties) {
+		final var settings = properties == null ? Map.of() : properties;
+		final var candidates = EnhancementCandidates.forContainer( info );
+		final var temporaryLoader = info.getNewTempClassLoader();
+		//noinspection ConstantValue
+		if ( temporaryLoader == null ) {
+			throw new PersistenceException( "[persistence unit: " + info.getPersistenceUnitName()
+					+ "] Client enhancement requires a temp class loader, but none was given" );
+		}
+		return new ClientClassTransformer(
+				loader -> new ClientEnhancementContext(
+						createEnhancementContext(
+								false,
+								false,
+								false,
+								settings,
+								info
+						),
+						loader,
+						candidates
+				),
+				temporaryLoader
+		);
 	}
 
 	private boolean resolveEnhancementProperty(
@@ -385,7 +434,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 			@Override
 			public boolean isCompositeClass(UnloadedClass classDescriptor) {
-				return persistenceUnit.getAllClassNames().contains( classDescriptor.getName() )
+				return ( persistenceUnit.getAllClassNames().contains( classDescriptor.getName() )
+						|| super.isDiscoveredType( classDescriptor ) )
 					&& super.isCompositeClass( classDescriptor );
 			}
 

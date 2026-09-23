@@ -18,6 +18,7 @@ import org.gradle.api.logging.Logger;
 
 import org.gradle.api.logging.Logging;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.bytecode.enhance.internal.EnhancementPipeline;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
@@ -53,25 +54,31 @@ public class EnhancementHelper {
 		if ( !enhancementDsl.getEnableDirtyTracking().get() ) {
 			logger.warn( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
 		}
-		if ( enhancementDsl.getEnableExtendedEnhancement().get() ) {
-			logger.warn("Extended enhancement is deprecated and will be removed. Set the value to 'false' to get rid of this warning" );
+		if ( enhancementDsl.getEnableExtendedEnhancement().isPresent() ) {
+			logger.warn("'enableExtendedEnhancement' is deprecated; use 'enableClientEnhancement', which takes precedence when both are set" );
 		}
-		final Enhancer enhancer = generateEnhancer( classLoader, enhancementDsl );
+		final var pipeline = (EnhancementPipeline) generateEnhancer( classLoader, enhancementDsl );
+		final Enhancer enhancer = pipeline.managedPass();
 
-		discoverTypes( classesDir, classesDir, enhancer, ormDsl.getFileOperations() );
+		discoverTypes( classesDir, classesDir, enhancer, ormDsl.getFileOperations(), classesToEnhance );
 		doEnhancement( classesDir, classesDir, enhancer, ormDsl.getFileOperations(), classesToEnhance );
+		if ( enhancementDsl.getEnableClientEnhancement().orElse( enhancementDsl.getEnableExtendedEnhancement() ).getOrElse( false ) ) {
+			doEnhancement( classesDir, classesDir, pipeline.clientPass(), ormDsl.getFileOperations(), classesToEnhance );
+		}
 	}
 
-	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, FileOperations fileOperations) {
+	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, FileOperations fileOperations, List<String> classesToEnhance) {
 		for ( File subLocation : dir.listFiles() ) {
 			if ( subLocation.isDirectory() ) {
-				discoverTypes( classesDir, subLocation, enhancer, fileOperations );
+				discoverTypes( classesDir, subLocation, enhancer, fileOperations, classesToEnhance );
 			}
 			else if ( subLocation.isFile() && subLocation.getName().endsWith( ".class" ) ) {
 				final String className = determineClassName( classesDir, subLocation );
 				final long lastModified = subLocation.lastModified();
 
-				discoverTypes( subLocation, className, enhancer);
+				if ( classesToEnhance.isEmpty() || classesToEnhance.contains( className ) ) {
+					discoverTypes( subLocation, className, enhancer );
+				}
 
 				final boolean timestampReset = subLocation.setLastModified( lastModified );
 				if ( !timestampReset ) {
@@ -172,12 +179,15 @@ public class EnhancementHelper {
 
 			@Override
 			public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
-				return enhancementDsl.getEnableExtendedEnhancement().get();
+				return false;
 			}
 		};
 
 		//TODO allow the Gradle plugin to configure the bytecode enhancer?
-		return buildDefaultBytecodeProvider().getEnhancer( enhancementContext );
+		return new EnhancementPipeline( buildDefaultBytecodeProvider().getEnhancer( enhancementContext ),
+				enhancementDsl.getEnableLazyInitialization().get() || enhancementDsl.getEnableDirtyTracking().get()
+						|| enhancementDsl.getEnableAssociationManagement().get(),
+				enhancementDsl.getEnableClientEnhancement().orElse( enhancementDsl.getEnableExtendedEnhancement() ).getOrElse( false ) );
 	}
 
 	private static void writeOutEnhancedClass(byte[] enhancedBytecode, File file) {

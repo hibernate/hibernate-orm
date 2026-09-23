@@ -135,17 +135,18 @@ to enable association management. To enable, set the value of this attribute to 
 ====
 
 [[ant-enhance-enableExtendedEnhancement-attribute]]
-===== `*enableExtendedEnhancement*` =====
-This attribute has a default value of `false`. It indicates that the enhance task should not perform the changes
-to enable the extended enhancement (i.e. even on non-entities).
-To enable this, set the value of this attribute to `true`.
+[[ant-enhance-enableClientEnhancement]]
+===== `*enableClientEnhancement*` =====
+This attribute defaults to `false`. Set it to `true` to rewrite client accesses to persistent fields through Hibernate's generated readers and writers.
+Targets must be selected for managed enhancement or already be compatibly enhanced.
+The deprecated `enableExtendedEnhancement` name is retained as an alias. An explicit `enableClientEnhancement` value takes precedence, including `false`.
 
 ====
 [source, xml]]
 ----
 <enhance
    ...
-   enableExtendedEnhancement='true'/>
+   enableClientEnhancement='true'/>
 ----
 ====
 
@@ -165,7 +166,7 @@ when it encounters a problem. If you prefer the build to continue, you can set t
 
 ===== *Final Remark* =====
 If the values of the four attributes `enableLazyInitialization`, `enableDirtyTracking`, `enableAssociationManagement`,
-`enableExtendedEnhancement` are all `false`, the enhancement task is not executed.
+the effective `enableClientEnhancement` option are all `false`, the enhancement task is not executed.
 
 [[tooling-ant-modelgen]]
 ==== Static Metamodel Generation in Ant

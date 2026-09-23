@@ -14,6 +14,7 @@ import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -269,13 +270,22 @@ public class JoinedDiscriminatedEntityInitializer
 			}
 
 			data.setState( State.INITIALIZED );
-			data.setInstance( data.getRowProcessingState().getSession()
-					.internalLoad(
-							data.concreteDescriptor.getEntityName(),
-							data.entityIdentifier,
-							eager,
-							false
-					) );
+			final var session = data.getRowProcessingState().getSession();
+			// The target may be the very row being initialized: an @Any pointing back at its own owner
+			// would otherwise re-enter the same load plan, so look it up in the persistence context first.
+			final var holder = session.getPersistenceContextInternal()
+					.getEntityHolder( new EntityKey( data.entityIdentifier, data.concreteDescriptor ) );
+			if ( holder != null && holder.getEntity() != null ) {
+				data.setInstance( holder.getEntity() );
+			}
+			else {
+				data.setInstance( session.internalLoad(
+						data.concreteDescriptor.getEntityName(),
+						data.entityIdentifier,
+						eager,
+						false
+				) );
+			}
 		}
 	}
 

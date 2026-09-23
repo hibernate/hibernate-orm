@@ -112,20 +112,30 @@ public @interface FilterDef {
 	boolean autoEnabled() default false;
 
 	/**
-	 * Specifies that the filter should be applied to operations
-	 * which fetch an entity by its identifier.
+	 * Specifies that the filter should be applied to operations which fetch
+	 * an entity by its identifier.
 	 * <p>
-	 * By default, a filter does not apply to lookups by primary
-	 * key, for example, when:
+	 * By default, a filter declared by an entity does not apply to lookups
+	 * by primary key, for example, when:
 	 * <ul>
 	 * <li> fetching a {@code @ManyToOne} association, or
 	 * <li>{@link org.hibernate.Session#find(Class, Object) find()}
 	 *     is called.
 	 * </ul>
 	 * <p>
-	 * If the effect of a filter with {@code applyToLoadByKey = true}
-	 * would be to nullify a to-one association,
-	 * {@link org.hibernate.EntityFilterException} is thrown.
+	 * This setting does not govern a filter declared directly by a to-one
+	 * association. Such a filter applies to that association whenever it
+	 * is enabled.
+	 * <p>
+	 * If a filter with {@code applyToLoadByKey = true} excludes the target
+	 * of a {@link jakarta.persistence.ManyToOne} or {@link jakarta.persistence.OneToOne}
+	 * association, the association is represented as {@code null}. Hibernate retains
+	 * the stored reference in the persistence context so that flushing unrelated
+	 * changes does not erase it. Assigning a non-null target replaces the reference.
+	 * <p>
+	 * Merging a detached entity assumes that the same filters and parameter values
+	 * apply as when the detached entity was loaded. A null association in the
+	 * detached state does not erase a reference hidden by these filters.
 	 */
 	@Incubating(since = "6.6")
 	boolean applyToLoadByKey() default false;

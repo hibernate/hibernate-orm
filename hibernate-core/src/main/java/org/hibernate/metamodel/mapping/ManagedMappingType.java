@@ -149,17 +149,25 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
-			if ( mappedFetchOptions.getTiming() == FetchTiming.IMMEDIATE
-					&& mappedFetchOptions.getStyle() == FetchStyle.JOIN ) {
+			if ( attributeMapping instanceof EmbeddableValuedModelPart
+					|| attributeMapping instanceof ToOneAttributeMapping
+					|| mappedFetchOptions.getTiming() == FetchTiming.IMMEDIATE
+							&& mappedFetchOptions.getStyle() == FetchStyle.JOIN ) {
 				if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
 					final CollectionPersister collectionDescriptor = pluralAttributeMapping.getCollectionDescriptor();
 					if ( collectionDescriptor.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
 						return true;
 					}
 				}
+				else if ( attributeMapping instanceof EmbeddableValuedModelPart embedded ) {
+					if ( embedded.getEmbeddableTypeDescriptor().isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
+						return true;
+					}
+				}
 				else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 					final EntityMappingType entityMappingType = toOneAttributeMapping.getEntityMappingType();
-					if ( entityMappingType.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
+					if ( toOneAttributeMapping.isAffectedByAssociationFilters( influencers )
+							|| entityMappingType.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
 						return true;
 					}
 				}

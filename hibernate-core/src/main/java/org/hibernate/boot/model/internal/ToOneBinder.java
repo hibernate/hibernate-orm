@@ -11,14 +11,17 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
@@ -168,6 +171,7 @@ public class ToOneBinder {
 		}
 		final var targetEntityClassDetails = getTargetEntity( inferredData, context );
 		manyToOne.setReferencedEntityName( getReferenceEntityName( inferredData, targetEntityClassDetails ) );
+		bindRestrictions( manyToOne, memberDetails, context );
 		defineFetchingStrategy( manyToOne, memberDetails, inferredData, propertyHolder );
 		//value.setFetchMode( fetchMode );
 		manyToOne.setNotFoundAction( notFoundAction );
@@ -570,6 +574,7 @@ public class ToOneBinder {
 		final String propertyName = inferredData.getPropertyName();
 		oneToOne.setPropertyName( propertyName );
 		oneToOne.setReferencedEntityName( getReferenceEntityName( inferredData, targetEntityClassDetails ) );
+		bindRestrictions( oneToOne, memberDetails, context );
 		defineFetchingStrategy( oneToOne, memberDetails, inferredData, propertyHolder );
 		//value.setFetchMode( fetchMode );
 		oneToOne.setOnDeleteAction( onDeleteAction( memberDetails ) );
@@ -619,6 +624,41 @@ public class ToOneBinder {
 		else {
 			context.getMetadataCollector().addSecondPass( secondPass, mappedBy == null );
 		}
+	}
+
+	private static void bindRestrictions(ToOne association, MemberDetails member, MetadataBuildingContext context) {
+		final var restriction = DialectOverridesAnnotationHelper.getOverridableAnnotation(
+				member, SQLRestriction.class, context );
+		if ( restriction != null ) {
+			association.setSqlRestriction( restriction.value() );
+		}
+		member.forEachAnnotationUsage( Filter.class, context.getBootstrapContext().getModelsContext(),
+				filter -> {
+					final SecondPass secondPass = persistentClasses -> bindFilter( association, member, filter, context );
+					if ( context.getMetadataCollector().isInSecondPass() ) {
+						secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );
+					}
+					else {
+						context.getMetadataCollector().addSecondPass( secondPass );
+					}
+				} );
+	}
+
+	private static void bindFilter(ToOne association, MemberDetails member, Filter filter, MetadataBuildingContext context) {
+		final var definition = context.getMetadataCollector().getFilterDefinition( filter.name() );
+		final String path = qualify( member.getDeclaringType().getName(), member.getName() );
+		if ( definition == null ) {
+			throw new AnnotationException( "Association '" + path
+					+ "' refers to an undefined filter named '" + filter.name() + "'" );
+		}
+		final String condition = filter.condition().isBlank()
+				? definition.getDefaultFilterCondition() : filter.condition();
+		if ( isBlank( condition ) ) {
+			throw new AnnotationException( "Association '" + path
+					+ "' has no condition for filter '" + filter.name() + "'" );
+		}
+		association.addFilter( filter.name(), condition, filter.deduceAliasInjectionPoints(),
+				BinderHelper.toAliasTableMap( filter.aliases() ), BinderHelper.toAliasEntityMap( filter.aliases() ) );
 	}
 
 	private static boolean isMappedToPrimaryKey(

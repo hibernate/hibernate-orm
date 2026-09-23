@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -30,6 +31,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
@@ -228,6 +230,12 @@ public class SqmUtil {
 			SqmPath<?> sqmPath,
 			ModelPartContainer modelPartContainer,
 			SqmToSqlAstConverter sqlAstCreationState) {
+		if ( sqlAstCreationState.getLoadQueryInfluencers().hasEnabledFilters() ) {
+			final var filteredMapping = getFilteredTargetMapping( sqmPath, modelPartContainer, sqlAstCreationState );
+			if ( filteredMapping != modelPartContainer ) {
+				return filteredMapping;
+			}
+		}
 		// We only need to do this for queries
 		if ( sqlAstCreationState.getCurrentClauseStack().getCurrent() != Clause.FROM
 				&& modelPartContainer.getPartMappingType() != modelPartContainer
@@ -242,6 +250,38 @@ public class SqmUtil {
 			}
 		}
 		return modelPartContainer;
+	}
+
+	private static ModelPartContainer getFilteredTargetMapping(
+			SqmPath<?> sqmPath,
+			ModelPartContainer modelPartContainer,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		if ( isAssociationAffectedByEnabledFilters( modelPartContainer, sqlAstCreationState ) ) {
+			return ( (EntityAssociationMapping) modelPartContainer ).getAssociatedEntityMappingType();
+		}
+		if ( modelPartContainer instanceof EmbeddableValuedModelPart
+				&& sqmPath.getLhs() != null && sqmPath.getLhs().getLhs() != null ) {
+			// Resolve nested identifier parts through the same target mapping as the complete key.
+			final var parentGroup = sqlAstCreationState.getFromClauseAccess()
+					.findTableGroup( sqmPath.getLhs().getLhs().getNavigablePath() );
+			if ( parentGroup != null ) {
+				final var parentMapping = getFilteredTargetMapping(
+						sqmPath.getLhs(), parentGroup.getModelPart(), sqlAstCreationState );
+				if ( parentMapping != parentGroup.getModelPart() ) {
+					return (ModelPartContainer) parentMapping.findSubPart(
+							sqmPath.getLhs().getReferencedPathSource().getPathName(), null );
+				}
+			}
+		}
+		return modelPartContainer;
+	}
+
+	/** A filtered target's key must be read from the joined target, not the owner's foreign key. */
+	public static boolean isAssociationAffectedByEnabledFilters(
+			ModelPart modelPart, SqmToSqlAstConverter creationState) {
+		return modelPart instanceof ToOneAttributeMapping toOne
+				&& toOne.hasFilterForLoadByKey()
+				&& toOne.isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers() );
 	}
 
 	private static boolean shouldRenderTargetSide(

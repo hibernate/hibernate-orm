@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.PreDeleteHandling;
@@ -38,7 +39,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
-
 
 /// [Decomposer][org.hibernate.action.queue.spi.decompose.entity.EntityActionDecomposer] for entity delete operations.
 ///
@@ -102,7 +102,10 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			Consumer<FlushOperation> operationConsumer) {
 		final Object identifier = action.getId();
 		final Object version = action.getVersion();
-		final Object[] state = action.getState();
+		final var entityEntry = session.getPersistenceContextInternal().getEntry( action.getInstance() );
+		final var filteredState = entityEntry == null ? null : entityEntry.getExtraState( FilteredAssociationState.class );
+		final Object[] state = filteredState == null ? action.getState()
+				: filteredState.physicalState( action.getState(), entityPersister );
 
 		if ( decompositionContext != null && decompositionContext.isBeingInsertedInCurrentFlush( action.getInstance() ) ) {
 			operationConsumer.accept( createCancelledDeleteCallbackCarrier( ordinalBase, action ) );
@@ -152,8 +155,9 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 
 		// Match AbstractDeleteCoordinator pattern for obtaining loadedState and rowId
 		final var isImpliedOptimisticLocking = definedOptimisticLockStyle.isAllOrDirty();
-		final var entityEntry = session.getPersistenceContextInternal().getEntry( action.getInstance() );
-		final var loadedState = entityEntry != null && isImpliedOptimisticLocking ? entityEntry.getLoadedState() : null;
+		final Object[] originalLoadedState = entityEntry == null ? null : entityEntry.getLoadedState();
+		final Object[] loadedState = filteredState == null ? originalLoadedState
+				: filteredState.physicalState( originalLoadedState, entityPersister );
 		final Object rowId = entityEntry != null ? entityEntry.getRowId() : null;
 
 		// Decide between static and dynamic delete operations (matches AbstractDeleteCoordinator pattern)
@@ -188,7 +192,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 					rowId,
 					version,
 					state,
-					entityEntry == null ? null : entityEntry.getLoadedState(),
+					loadedState,
 					getUpdatedAttributeIndexesForDeletedEntity( decompositionContext, action ),
 					definedOptimisticLockStyle,
 					postDeleteHandling,

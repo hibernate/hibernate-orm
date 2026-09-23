@@ -134,13 +134,15 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		if ( aggregateMapping == null ) {
 			return false;
 		}
-		// Cache this maybe?
-		final int aggregateSqlTypeCode = aggregateMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
-		return castNonNull( findContainingEntityMapping() ).getEntityPersister().getFactory()
-				.getJdbcServices()
-				.getDialect()
-				.getAggregateSupport()
-				.requiresAggregateCustomWriteExpressionRenderer( aggregateSqlTypeCode );
+		else {
+			// Cache this maybe?
+			final int aggregateSqlTypeCode =
+					aggregateMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
+			return castNonNull( findContainingEntityMapping() )
+					.getEntityPersister().getFactory().getJdbcServices()
+					.getDialect().getAggregateSupport()
+					.requiresAggregateCustomWriteExpressionRenderer( aggregateSqlTypeCode );
+		}
 	}
 
 	/**
@@ -250,7 +252,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 					offset++;
 				}
 				else {
-					final int selectableIndex = embeddableMappingType.getSelectableIndex( selectableName );
+					final int selectableIndex =
+							embeddableMappingType.getSelectableIndex( selectableName );
 					if ( selectableIndex != -1 ) {
 						return offset + selectableIndex;
 					}
@@ -264,7 +267,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 				offset++;
 			}
 			else {
-				final MutableInteger position = new MutableInteger( -1 );
+				final var position = new MutableInteger( -1 );
 				final int jdbcTypeCount = attributeMapping.forEachSelectable(
 						(selectionIndex, selectableMapping) -> {
 							if ( selectableMapping.getSelectableName().equals( selectableName ) ) {
@@ -279,7 +282,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 			}
 		}
 		final var discriminatorMapping = getDiscriminatorMapping();
-		if ( discriminatorMapping != null && discriminatorMapping.getSelectableName().equals( selectableName ) ) {
+		if ( discriminatorMapping != null
+				&& discriminatorMapping.getSelectableName().equals( selectableName ) ) {
 			return offset;
 		}
 		return -1;
@@ -374,20 +378,26 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		if ( value1 == value2 ) {
 			return 0;
 		}
-		if ( value1 == null ) {
+		else if ( value1 == null ) {
 			return -1;
 		}
-		if ( value2 == null ) {
+		else if ( value2 == null ) {
 			return 1;
 		}
-		final AttributeMappingsList attributeMappings = getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attribute = attributeMappings.get( i );
-			final int comparison = attribute.compare( attribute.getValue( value1 ), attribute.getValue( value2 ) );
-			if ( comparison != 0 ) {
-				return comparison;
+		else {
+			final var attributeMappings = getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final var attribute = attributeMappings.get( i );
+				final int comparison =
+						attribute.compare(
+								attribute.getValue( value1 ),
+								attribute.getValue( value2 )
+						);
+				if ( comparison != 0 ) {
+					return comparison;
+				}
 			}
+			return 0;
 		}
-		return 0;
 	}
 }

@@ -56,6 +56,8 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 			String tableName,
 			String columnName,
 			ParameterUsage usage) {
+		assert !(value instanceof org.hibernate.engine.internal.FilteredAssociationState.Key)
+				: "Hidden association keys must be decomposed by their attribute mapping before JDBC binding";
 		final String physicalTableName = jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName );
 		final var bindingGroup = resolveBindingGroup( physicalTableName );
 		final int descriptorCount = jdbcValueDescriptorAccess.forEachValueDescriptor(

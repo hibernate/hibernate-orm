@@ -11,6 +11,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.engine.internal.FilteredAssociationState;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
@@ -252,7 +253,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		// check nullability but do not doAfterTransactionCompletion command execute
 		// we'll use scheduled updates for that.
-		new Nullability( session, NullabilityCheckType.UPDATE ).checkNullability( values, persister );
+		final var filteredState = entry.getExtraState( FilteredAssociationState.class );
+		new Nullability( session, NullabilityCheckType.UPDATE ).checkNullability(
+				values, persister, filteredState );
 
 		addEntityUpdateActionToActionQueue( event, session, entry, values, dirtyProperties, status, persister, entity, nextVersion );
 

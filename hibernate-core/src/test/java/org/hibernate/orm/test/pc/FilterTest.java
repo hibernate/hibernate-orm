@@ -8,7 +8,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -17,8 +16,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import org.hibernate.EntityFilterException;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Filter;
@@ -43,7 +40,6 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Vlad Mihalcea
@@ -294,12 +290,8 @@ public class FilterTest {
 					.setParameter( "type", "DEBIT" );
 
 			Account account = entityManager.find( Account.class, 2L );
-			EntityNotFoundException exception = assertThrows(
-					EntityNotFoundException.class,
-					() -> Hibernate.initialize( account.getParentAccount() )
-			);
-			// Account with id 1 does not exist
-			assertThat( exception.getMessage() ).endsWith( "'1']" );
+			assertThat( account.getParentAccount() ).isNull();
+			account.setAmount( 1d );
 		} );
 	}
 
@@ -313,17 +305,11 @@ public class FilterTest {
 			EntityGraph<Account> entityGraph = entityManager.createEntityGraph( Account.class );
 			entityGraph.addAttributeNodes( "parentAccount" );
 
-			EntityFilterException exception = assertThrows(
-					EntityFilterException.class,
-					() -> entityManager.find(
+			assertThat( entityManager.find(
 							Account.class,
 							2L,
 							Map.of( AvailableHints.HINT_SPEC_LOAD_GRAPH, entityGraph )
-					)
-			);
-			// Account with id 1 does not exist
-			assertThat( exception.getRole() ).endsWith( "parentAccount" );
-			assertThat( exception.getIdentifier() ).isEqualTo( 1L );
+					).getParentAccount() ).isNull();
 		} );
 	}
 
@@ -335,16 +321,10 @@ public class FilterTest {
 					.enableFilter( "accountType" )
 					.setParameter( "type", "DEBIT" );
 
-			EntityFilterException exception = assertThrows(
-					EntityFilterException.class,
-					() -> entityManager.createQuery(
+			assertThat( entityManager.createQuery(
 							"select a from Account a left join fetch a.parentAccount where a.id = 2",
 							Account.class
-					).getResultList()
-			);
-			// Account with id 1 does not exist
-			assertThat( exception.getRole() ).contains( "parentAccount" );
-			assertThat( exception.getIdentifier() ).isEqualTo( 1L );
+					).getSingleResult().getParentAccount() ).isNull();
 		} );
 	}
 
@@ -356,16 +336,10 @@ public class FilterTest {
 					.enableFilter( "accountType" )
 					.setParameter( "type", "DEBIT" );
 
-			EntityFilterException exception = assertThrows(
-					EntityFilterException.class,
-					() -> entityManager.createQuery(
+			assertThat( entityManager.createQuery(
 							"select a from AccountEager a where a.id = 2",
 							AccountEager.class
-					).getResultList()
-			);
-			// Account with id 1 does not exist
-			assertThat( exception.getRole() ).contains( "parentAccount" );
-			assertThat( exception.getIdentifier() ).isEqualTo( 1L );
+					).getSingleResult().getParentAccount() ).isNull();
 		} );
 	}
 
@@ -377,32 +351,20 @@ public class FilterTest {
 					.enableFilter( "accountType" )
 					.setParameter( "type", "DEBIT" );
 
-			EntityFilterException exception = assertThrows(
-					EntityFilterException.class,
-					() -> entityManager.createQuery(
+			assertThat( entityManager.createQuery(
 							"select a from AccountNotFoundException a where a.id = 2",
 							AccountNotFoundException.class
-					).getSingleResult()
-			);
-			// Account with id 1 does not exist
-			assertThat( exception.getRole() ).contains( "parentAccount" );
-			assertThat( exception.getIdentifier() ).isEqualTo( 1L );
+					).getSingleResult().getParentAccount() ).isNull();
 		} );
 		scope.inTransaction( entityManager -> {
 			entityManager.unwrap( Session.class )
 					.enableFilter( "accountType" )
 					.setParameter( "type", "DEBIT" );
 
-			EntityFilterException exception = assertThrows(
-					EntityFilterException.class,
-					() -> entityManager.createQuery(
+			assertThat( entityManager.createQuery(
 							"select a from AccountNotFoundException a left join fetch a.parentAccount where a.id = 2",
 							AccountNotFoundException.class
-					).getSingleResult()
-			);
-			// Account with id 1 does not exist
-			assertThat( exception.getRole() ).contains( "parentAccount" );
-			assertThat( exception.getIdentifier() ).isEqualTo( 1L );
+					).getSingleResult().getParentAccount() ).isNull();
 		} );
 	}
 

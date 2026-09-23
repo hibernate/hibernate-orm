@@ -48,6 +48,7 @@ import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
 import org.hibernate.sql.ast.spi.creation.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
@@ -129,6 +130,18 @@ public class LoaderSelectBuilder {
 				sqlAliasBaseGenerator
 		);
 		return process.generateSelect();
+	}
+
+	static SelectStatement createAssociationKeySelect(
+			ToOneAttributeMapping association,
+			ModelPart restrictedPart, LoadQueryInfluencers influencers,
+			Consumer<JdbcParameter> parameterConsumer) {
+		final var target = association.getEntityMappingType();
+		final var factory = influencers.getSessionFactory();
+		final var builder = new LoaderSelectBuilder( factory.getSqlTranslationEngine(), target,
+				List.of( target.getIdentifierMapping() ), restrictedPart, null, 1, influencers,
+				LockOptions.NONE, parameterConsumer, new SqlAliasBaseManager() );
+		return builder.generateSelect( association );
 	}
 
 	/**
@@ -547,6 +560,10 @@ public class LoaderSelectBuilder {
 
 	@Nonnull
 	private SelectStatement generateSelect() {
+		return generateSelect( null );
+	}
+
+	private SelectStatement generateSelect(@Nullable ToOneAttributeMapping association) {
 		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final var rootQuerySpec = new QuerySpec( true );
@@ -593,6 +610,9 @@ public class LoaderSelectBuilder {
 			applyFiltering( rootQuerySpec, rootTableGroup, (Restrictable) loadable, sqlAstCreationState );
 		}
 
+		if ( association != null ) {
+			association.applyAssociationRestrictions( rootQuerySpec::applyPredicate, rootTableGroup, sqlAstCreationState );
+		}
 		return new SelectStatement( rootQuerySpec, domainResults );
 	}
 

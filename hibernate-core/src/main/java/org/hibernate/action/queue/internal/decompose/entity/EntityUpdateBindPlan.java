@@ -40,6 +40,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			(valueIndex, bindPlan, attribute, jdbcValue, selectableMapping) -> {
 				if ( selectableMapping.isUpdateable()
 						&& !selectableMapping.isFormula()
+						&& bindPlan.valuesAnalysis.includesColumn( selectableMapping )
 						&& bindPlan.shouldBindUpdateValue( attribute, valueIndex, bindPlan.bindingSession ) ) {
 					bindPlan.valueBindings.bindValue(
 							jdbcValue,

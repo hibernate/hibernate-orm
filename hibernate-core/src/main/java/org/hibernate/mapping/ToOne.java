@@ -5,12 +5,16 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.Internal;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.MappingContext;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColumnOwner;
@@ -22,7 +26,7 @@ import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
  * @author Gavin King
  */
 public abstract sealed class ToOne
-		extends SimpleValue implements Fetchable, SortableValue
+		extends SimpleValue implements Fetchable, SortableValue, Filterable
 		permits OneToOne, ManyToOne {
 
 	private FetchStyle fetchStyle;
@@ -34,6 +38,8 @@ public abstract sealed class ToOne
 	private boolean unwrapProxy;
 	private boolean unwrapProxyImplicit;
 	private boolean referenceToPrimaryKey = true;
+	private String sqlRestriction;
+	private List<FilterConfiguration> filters = List.of();
 
 	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -50,6 +56,36 @@ public abstract sealed class ToOne
 		this.unwrapProxy = original.unwrapProxy;
 		this.unwrapProxyImplicit = original.unwrapProxyImplicit;
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
+		copyRestrictions( original );
+	}
+
+	public String getSqlRestriction() {
+		return sqlRestriction;
+	}
+
+	public void setSqlRestriction(String sqlRestriction) {
+		this.sqlRestriction = sqlRestriction;
+	}
+
+	@Override
+	public void addFilter(String name, String condition, boolean autoAliasInjection,
+			Map<String, String> aliasTableMap, Map<String, String> aliasEntityMap) {
+		if ( filters.isEmpty() ) {
+			filters = new ArrayList<>();
+		}
+		filters.add( new FilterConfiguration( name, condition, autoAliasInjection,
+				aliasTableMap, aliasEntityMap, null ) );
+	}
+
+	@Override
+	public List<FilterConfiguration> getFilters() {
+		return filters;
+	}
+
+	@Internal
+	public void copyRestrictions(ToOne original) {
+		sqlRestriction = original.sqlRestriction;
+		filters = original.filters.isEmpty() ? List.of() : new ArrayList<>( original.filters );
 	}
 
 	@Override

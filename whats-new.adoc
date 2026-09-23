@@ -12,6 +12,17 @@ Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
+[[to-one-association-restrictions]]
+== Restrictions on to-one associations
+
+`@SQLRestriction` and `@Filter` may now be declared directly on `@ManyToOne` and `@OneToOne`
+associations, including associations mapped using join tables.
+Restrictions apply to the target through that association, consistently across eager and lazy fetching.
+An excluded target is represented as null while its stored reference is preserved during unrelated updates.
+Association filters apply whenever enabled, independently of `@FilterDef.applyToLoadByKey`.
+See the link:{userGuideBase}#pc-to-one-restrictions[user guide] for examples and
+the link:{migrationGuide}#filtered-to-one-associations[migration guide] for the update and merge semantics.
+
 [[jpa4]]
 == Jakarta Persistence 4.0
 

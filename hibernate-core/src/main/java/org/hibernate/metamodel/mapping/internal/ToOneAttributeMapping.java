@@ -11,6 +11,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.sql.results.graph.entity.internal.RestrictedForeignKeyResult;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -20,6 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.loader.ast.internal.ToOneVisibilityLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
@@ -95,6 +98,7 @@ import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 import org.hibernate.sql.results.internal.NullValueAssembler;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.type.ComponentType;
@@ -118,7 +122,6 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.LOGICAL_ONE_TO_ONE;
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.MANY_TO_ONE;
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.ONE_TO_ONE;
-
 
 /**
  * @author Steve Ebersole
@@ -161,6 +164,8 @@ public class ToOneAttributeMapping
 	private final boolean unwrapProxy;
 	private final boolean isOptional;
 	private final EntityMappingType entityMappingType;
+	private final ToOneRestrictions restrictions;
+	private volatile @Nullable ToOneVisibilityLoader visibilityLoader;
 
 	@Nullable private final String referencedPropertyName;
 	private final String targetKeyPropertyName;
@@ -196,6 +201,7 @@ public class ToOneAttributeMapping
 		unwrapProxy = original.unwrapProxy;
 		isOptional = original.isOptional;
 		entityMappingType = original.entityMappingType;
+		restrictions = original.restrictions;
 		referencedPropertyName = original.referencedPropertyName;
 		targetKeyPropertyName = original.targetKeyPropertyName;
 		cardinality = original.cardinality;
@@ -300,6 +306,7 @@ public class ToOneAttributeMapping
 		referencedPropertyName = bootValue.getReferencedPropertyName();
 		unwrapProxy = bootValue.isUnwrapProxy();
 		this.entityMappingType = entityMappingType;
+		restrictions = ToOneRestrictions.create( bootValue, entityMappingType );
 
 		this.navigableRole = navigableRole;
 		declaringTableGroupProducer = resolveDeclaringTableGroupProducer(
@@ -730,6 +737,7 @@ public class ToOneAttributeMapping
 		this.notFoundAction = original.notFoundAction;
 		this.unwrapProxy = original.unwrapProxy;
 		this.entityMappingType = original.entityMappingType;
+		restrictions = original.restrictions;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.targetKeyPropertyName = original.targetKeyPropertyName;
 		this.targetKeyPropertyNames = original.targetKeyPropertyNames;
@@ -887,7 +895,7 @@ public class ToOneAttributeMapping
 		// Otherwise we need to join to the associated entity table(s)
 		final boolean forceJoin = hasNotFoundAction()
 				|| entityMappingType.getSoftDeleteMapping() != null
-				|| entityMappingType.hasWhereRestrictions()
+				|| hasWhereRestrictions()
 				|| cardinality == ONE_TO_ONE && isNullable();
 		canUseParentTableGroup = ! forceJoin
 				&& sideNature == ForeignKeyDescriptor.Nature.KEY
@@ -1102,6 +1110,17 @@ public class ToOneAttributeMapping
 				|| localName.equals( ForeignKeyDescriptor.TARGET_PART_NAME ) ) {
 				// todo (6.0): maybe it's better to have a flag in creation state that marks if we are building a circular fetch domain result already to skip this?
 				return null;
+			}
+
+			final var sqlAstCreationState = creationState.getSqlAstCreationState();
+			if ( restrictions.hasSqlRestriction()
+					|| restrictions.isAffectedByFilters( sqlAstCreationState.getLoadQueryInfluencers() )
+					|| sqlAstCreationState.isProcedureOrNativeQuery() && restrictions.hasFilters() ) {
+				// An entity loaded through another path has not satisfied this association's predicate.
+				// Resolve its visibility before reusing the instance, retaining the physical key as usual.
+				return generateNonJoinedFetch( fetchParent, fetchablePath, fetchTiming,
+						sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParentNavigablePath ),
+						getSide( creationState ), creationState );
 			}
 
 			ModelPart parentModelPart = creationState.resolveModelPart( parentNavigablePath );
@@ -1693,10 +1712,9 @@ public class ToOneAttributeMapping
 
 			return withRegisteredAssociationKeys(
 					() -> {
-						// When a filter exists that affects a singular association, we have to enable NotFound handling
-						// to force an exception if the filter would result in the entity not being found.
-						// If we silently just read null, this could lead to data loss on flush
-						final boolean affectedByEnabledFilters = isAffectedByEnabledFilters( creationState );
+						// Retain the physical key when a restriction excludes the target.
+						// The persistence context uses it to distinguish a filtered null from an absent reference.
+						final boolean affectedByEnabledFilters = isAffectedByRestrictions( creationState );
 						DomainResult<?> keyResult = null;
 						if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 							// If the key side is non-nullable we also need to add the keyResult
@@ -1759,18 +1777,38 @@ public class ToOneAttributeMapping
 
 		 */
 
-		final var keyResult =
+		return generateNonJoinedFetch( fetchParent, fetchablePath, fetchTiming, parentTableGroup, side, creationState );
+	}
+
+	private EntityFetch generateNonJoinedFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			TableGroup parentTableGroup,
+			ForeignKeyDescriptor.Nature side,
+			DomainResultCreationState creationState) {
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		DomainResult<?> keyResult =
 				getKeyResult( fetchParent, fetchablePath, creationState, side, parentTableGroup );
+		if ( isAffectedByRestrictions( creationState )
+				&& !sqlAstCreationState.isProcedureOrNativeQuery() ) {
+			final var tableGroup = createTableGroupForDelayedFetch(
+					fetchablePath, parentTableGroup, null, creationState );
+			final var targetResult = entityMappingType.getIdentifierMapping().createDomainResult(
+					fetchablePath, tableGroup, null, creationState );
+			keyResult = new RestrictedForeignKeyResult<>( keyResult, targetResult );
+		}
 		final boolean selectByUniqueKey = isSelectByUniqueKey( side );
 
-		if ( needsImmediateFetch( fetchTiming ) ) {
+		if ( needsImmediateFetch( fetchTiming )
+				|| sqlAstCreationState.isProcedureOrNativeQuery() && isAffectedByRestrictions( creationState ) ) {
 			return buildEntityFetchSelect(
 					fetchParent,
 					this,
 					fetchablePath,
 					keyResult,
 					selectByUniqueKey,
-					isAffectedByEnabledFilters( creationState ),
+					isAffectedByRestrictions( creationState ),
 					creationState
 			);
 		}
@@ -1857,10 +1895,60 @@ public class ToOneAttributeMapping
 		return false;
 	}
 
-	private boolean isAffectedByEnabledFilters(DomainResultCreationState creationState) {
+	private boolean isAffectedByRestrictions(DomainResultCreationState creationState) {
 		final LoadQueryInfluencers loadQueryInfluencers = creationState.getSqlAstCreationState()
 				.getLoadQueryInfluencers();
-		return entityMappingType.isAffectedByEnabledFilters( loadQueryInfluencers, true );
+		return isAffectedByRestrictions( loadQueryInfluencers )
+				|| creationState.getSqlAstCreationState().isProcedureOrNativeQuery()
+						&& hasFilterForLoadByKey();
+	}
+
+	public boolean hasWhereRestrictions() {
+		return restrictions.hasSqlRestriction() || entityMappingType.hasWhereRestrictions();
+	}
+
+	public boolean hasFilterForLoadByKey() {
+		return restrictions.hasFilters() || entityMappingType.getEntityPersister().hasFilterForLoadByKey();
+	}
+
+	public boolean hasAssociationSqlRestriction() {
+		return restrictions.hasSqlRestriction();
+	}
+
+	public String[] getAssociationFilterNames() {
+		return restrictions.getFilterNames();
+	}
+
+	public boolean isAffectedByAssociationFilters(LoadQueryInfluencers influencers) {
+		return restrictions.isAffectedByFilters( influencers );
+	}
+
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		return restrictions.isAffectedByFilters( influencers )
+				|| entityMappingType.isAffectedByEnabledFilters( influencers, true );
+	}
+
+	public boolean isAffectedByRestrictions(LoadQueryInfluencers influencers) {
+		return hasWhereRestrictions() || isAffectedByEnabledFilters( influencers );
+	}
+
+	public boolean isAssociationKeyVisible(
+			Object key, boolean byUniqueKey, JdbcValuesSourceProcessingState processingState) {
+		final var session = processingState.getSession();
+		if ( !restrictions.hasSqlRestriction() && !restrictions.isAffectedByFilters( session.getLoadQueryInfluencers() ) ) {
+			return true;
+		}
+		var loader = visibilityLoader;
+		if ( loader == null ) {
+			visibilityLoader = loader = new ToOneVisibilityLoader( this );
+		}
+		return loader.isVisible( key, byUniqueKey, processingState );
+	}
+
+	public void applyAssociationRestrictions(
+			Consumer<Predicate> consumer,
+			TableGroup tableGroup, SqlAstCreationState creationState) {
+		restrictions.apply( consumer, entityMappingType, tableGroup, creationState );
 	}
 
 	private boolean needsImmediateFetch(FetchTiming fetchTiming) {
@@ -2094,7 +2182,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
-		if ( isKeyTableNullable || isNullable ) {
+		if ( isKeyTableNullable || isNullable || hasWhereRestrictions() || hasFilterForLoadByKey() ) {
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( parentTableGroup.getModelPart() instanceof CollectionPart ) {
@@ -2290,6 +2378,7 @@ public class ToOneAttributeMapping
 							true,
 							creationState
 					);
+					applyAssociationRestrictions( join::applyPredicate, lazyTableGroup, creationState );
 					if ( associatedEntityMappingType.getSuperMappingType() != null
 							&& !creationState.supportsEntityNameUsage() ) {
 						associatedEntityMappingType.applyDiscriminator( null, null, tableGroup, creationState );
@@ -2640,6 +2729,9 @@ public class ToOneAttributeMapping
 		if ( domainValue == null ) {
 			return null;
 		}
+		if ( domainValue instanceof FilteredAssociationState.Key key ) {
+			return key.value();
+		}
 
 		if ( referencedPropertyName != null ) {
 			domainValue = lazyInitialize( domainValue );
@@ -2759,7 +2851,9 @@ public class ToOneAttributeMapping
 	@Override
 	public Object disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session) {
 		return foreignKeyDescriptor.disassemble(
-				foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
+				value instanceof FilteredAssociationState.Key key
+						? key.value()
+						: foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
 				session
 		);
 	}
@@ -2769,6 +2863,8 @@ public class ToOneAttributeMapping
 		final Object cacheValue =
 				value != null && foreignKeyDescriptor.getJavaType().getJavaTypeClass() == value.getClass()
 						? value
+						: value instanceof FilteredAssociationState.Key key
+						? key.value()
 						: foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session );
 		// the value may come from a database snapshot, in this case it corresponds to the value of the key and can be
 		// added to the cache key
@@ -2796,7 +2892,9 @@ public class ToOneAttributeMapping
 			@Nullable SharedSessionContractImplementor session) {
 		return foreignKeyDescriptor.forEachDisassembledJdbcValue(
 				foreignKeyDescriptor.disassemble(
-						foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
+						value instanceof FilteredAssociationState.Key key
+						? key.value()
+						: foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
 						session
 				),
 				offset,

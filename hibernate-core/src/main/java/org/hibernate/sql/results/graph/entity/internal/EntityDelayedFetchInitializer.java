@@ -109,6 +109,13 @@ public class EntityDelayedFetchInitializer
 	}
 
 	@Override
+	public Object getFilteredAssociationKey(RowProcessingState rowProcessingState) {
+		return identifierAssembler instanceof RestrictedForeignKeyResult.Assembler<?> assembler
+				? assembler.getFilteredKey( rowProcessingState )
+				: null;
+	}
+
+	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
@@ -367,9 +374,14 @@ public class EntityDelayedFetchInitializer
 
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
-		final var initializer = identifierAssembler.getInitializer();
-		if ( initializer != null ) {
-			consumer.accept( initializer, data.getRowProcessingState() );
+		if ( identifierAssembler instanceof RestrictedForeignKeyResult.Assembler<?> assembler ) {
+			assembler.forEachInitializer( consumer, data.getRowProcessingState() );
+		}
+		else {
+			final var initializer = identifierAssembler.getInitializer();
+			if ( initializer != null ) {
+				consumer.accept( initializer, data.getRowProcessingState() );
+			}
 		}
 	}
 

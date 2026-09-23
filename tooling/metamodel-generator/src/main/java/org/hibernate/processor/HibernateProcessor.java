@@ -268,6 +268,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	public static final String ENTITY_INDEX = "entity.index";
 
 	private Context context;
+	private Set<String> compilationRoots = Set.of();
 
 	@Override
 	public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -470,6 +471,14 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private void processClasses(RoundEnvironment roundEnvironment) {
+		final var roots = new HashSet<String>();
+		for ( var root : roundEnvironment.getRootElements() ) {
+			if ( root instanceof TypeElement type ) {
+				roots.add( type.getQualifiedName().toString() );
+			}
+		}
+		compilationRoots = roots;
+
 		for ( var elementName : new HashSet<>( context.getElementsToRedo() ) ) {
 			context.logMessage( Diagnostic.Kind.OTHER, "Redoing element '" + elementName + "'" );
 			final TypeElement typeElement = context.getElementUtils().getTypeElement( elementName );
@@ -870,13 +879,23 @@ public class HibernateProcessor extends AbstractProcessor {
 
 	private boolean hasHandwrittenMetamodel(TypeElement element) {
 		final var dataMetamodelName = '_' + element.getSimpleName().toString();
-		return hasMetamodelSourceFile( element, dataMetamodelName );
+		final var packageName = context.getElementUtils().getPackageOf( element ).getQualifiedName();
+		final var qualifiedName = packageName.length() == 0 ? dataMetamodelName : packageName + "." + dataMetamodelName;
+		// An explicitly compiled source is a root even when SOURCE_PATH is not configured.
+		if ( compilationRoots.contains( qualifiedName )
+				|| hasMetamodelFile( StandardLocation.SOURCE_PATH, packageName, dataMetamodelName + ".java" ) ) {
+			return true;
+		}
+		// Preserve a metamodel supplied by a dependency, but regenerate one left in this
+		// compilation's output directory by an earlier incremental build.
+		final var classFileName = dataMetamodelName + ".class";
+		return hasMetamodelFile( StandardLocation.CLASS_PATH, packageName, classFileName )
+				&& !hasMetamodelFile( StandardLocation.CLASS_OUTPUT, packageName, classFileName );
 	}
 
-	private boolean hasMetamodelSourceFile(TypeElement entity, String dataMetamodelName) {
-		final var packageName = context.getElementUtils().getPackageOf( entity ).getQualifiedName();
-		try (var source = context.getProcessingEnvironment().getFiler()
-				.getResource( StandardLocation.SOURCE_PATH, packageName, dataMetamodelName + ".java" )
+	private boolean hasMetamodelFile(StandardLocation location, CharSequence packageName, String fileName) {
+		try (var resource = context.getProcessingEnvironment().getFiler()
+				.getResource( location, packageName, fileName )
 				.openInputStream()) {
 			return true;
 		}

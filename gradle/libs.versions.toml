@@ -122,7 +122,7 @@ asciidoctorj = "3.0.0"
 
 # Compilation (static checks)
 jetbrainsAnnotations = "26.1.0"
-jspecify = "1.0.0"
+jspecify = "1.0.1"
 errorprone = "2.50.0"
 nullaway = "0.14.1"
 ## For custom NullAway LibraryModels

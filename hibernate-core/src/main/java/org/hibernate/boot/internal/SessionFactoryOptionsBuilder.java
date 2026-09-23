@@ -64,6 +64,11 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
+import org.hibernate.callback.internal.GlobalInterceptorStrategy;
+import org.hibernate.callback.internal.NoInterceptorStrategy;
+import org.hibernate.callback.internal.ProvidedInterceptorStrategy;
+import org.hibernate.callback.internal.ScopedInterceptorStrategy;
+import org.hibernate.callback.spi.InterceptorStrategy;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -174,6 +179,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private StatementObserver statementObserver;
 	@Nullable
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
+	@Nonnull
+	private InterceptorStrategy interceptorStrategy;
 	@Nullable
 	private StatementInspector statementInspector;
 	@Nullable
@@ -404,8 +411,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		statisticsEnabled =
 				configurationService.getSetting( GENERATE_STATISTICS, BOOLEAN, false );
 
-		interceptor = determineInterceptor( settings, strategySelector );
-		statelessInterceptorSupplier = determineStatelessInterceptor( settings, strategySelector );
+		interceptorStrategy = determineInterceptorStrategy( settings, strategySelector, serviceRegistry );
+		if ( interceptorStrategy instanceof NoInterceptorStrategy ) {
+			interceptor = determineInterceptor( settings, strategySelector );
+			statelessInterceptorSupplier = determineStatelessInterceptor( settings, strategySelector );
+		}
 
 		statementObserver = interpretStatementObserver( settings );
 
@@ -966,6 +976,38 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Nonnull
+	private static InterceptorStrategy determineInterceptorStrategy(
+			Map<String, Object> configurationSettings,
+			StrategySelector strategySelector,
+			StandardServiceRegistry serviceRegistry) {
+		final Object interceptorSetting = configurationSettings.get( INTERCEPTOR );
+		if ( interceptorSetting instanceof Interceptor instance ) {
+			return new ProvidedInterceptorStrategy( instance );
+		}
+		else if ( interceptorSetting != null ) {
+			final Class<? extends Interceptor> clazz =
+					interceptorSetting instanceof Class
+							? (Class<? extends Interceptor>) interceptorSetting
+							: strategySelector.selectStrategyImplementor( Interceptor.class, interceptorSetting.toString() );
+			return new GlobalInterceptorStrategy( clazz, serviceRegistry );
+		}
+
+		final Object sessionScopedSetting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
+		if ( sessionScopedSetting instanceof Supplier ) {
+			return NoInterceptorStrategy.INSTANCE;
+		}
+		else if ( sessionScopedSetting != null ) {
+			final Class<? extends Interceptor> clazz =
+					sessionScopedSetting instanceof Class
+							? (Class<? extends Interceptor>) sessionScopedSetting
+							: strategySelector.selectStrategyImplementor( Interceptor.class, sessionScopedSetting.toString() );
+			return new ScopedInterceptorStrategy( clazz, serviceRegistry );
+		}
+
+		return NoInterceptorStrategy.INSTANCE;
+	}
+
+	@Nonnull
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
 			Map<String, Object> configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
@@ -1141,7 +1183,17 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	@Nonnull
 	public Interceptor getInterceptor() {
+		final var strategyInterceptor = interceptorStrategy.getFactoryInterceptor();
+		if ( strategyInterceptor != null ) {
+			return strategyInterceptor;
+		}
 		return interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
+	}
+
+	@Override
+	@Nonnull
+	public InterceptorStrategy getInterceptorStrategy() {
+		return interceptorStrategy;
 	}
 
 	@Override

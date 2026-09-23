@@ -62,6 +62,15 @@ public interface ManagedBeanRegistry extends Service {
 	<T> ManagedBean<T> getBootstrapSafeBean(Class<T> beanClass);
 
 	/**
+	 * Get a bean reference that is safe to acquire during bootstrap,
+	 * with control over bean instance caching.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0", group = "bootstrap-safe-beans")
+	<T> ManagedBean<T> getBootstrapSafeBean(Class<T> beanClass, BeanInstanceCaching caching);
+
+	/**
 	 * Get a bean reference by class, with control over bean instance caching.
 	 * <p>
 	 * With {@link BeanInstanceCaching#DISALLOW}, the caller should invoke

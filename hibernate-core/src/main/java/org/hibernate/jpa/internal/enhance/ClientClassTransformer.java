@@ -4,9 +4,7 @@
  */
 package org.hibernate.jpa.internal.enhance;
 
-import java.lang.ref.WeakReference;
 import java.security.ProtectionDomain;
-import org.hibernate.bytecode.enhance.spi.EnhancementEnvironment;
 import org.hibernate.bytecode.enhance.spi.EnhancementModel;
 import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 import org.hibernate.bytecode.spi.BytecodeProvider;
@@ -14,24 +12,27 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.TransformerException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.CorePrefixFilter;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 
 /// Rewrites client instructions without performing managed-class enhancement.
-/// Each defining loader receives its own enhancement context and type cache.
+/// Shares defining-loader discovery and metadata with its paired managed transformer.
 ///
 /// @since 8.0
 /// @author Steve Ebersole
 public final class ClientClassTransformer implements ClassTransformer {
 
-	private final EnhancementModel model;
+	private final PersistenceUnitEnhancementState state;
 	private final BytecodeProvider provider;
-	private WeakReference<Entry> entry = new WeakReference<>( null );
+	private final Object transformerToken = new Object();
+	private final EnhancementOptions options = EnhancementOptions.of(false, false, false);
 
 	public ClientClassTransformer(EnhancementModel model, BytecodeProvider provider, ClassLoader temporaryLoader) {
-		this.model = model;
-		this.provider = provider == null ? BytecodeProviderInitiator.buildDefaultBytecodeProvider() : provider;
-		getEnhancer(temporaryLoader);
+		this(new PersistenceUnitEnhancementState(model), provider);
+		state.discoverTemporaryTypes(temporaryLoader, this.provider);
+	}
+
+	public ClientClassTransformer(PersistenceUnitEnhancementState state, BytecodeProvider provider) {
+		this.state = state;
+		this.provider = state.resolveProvider(provider);
 	}
 
 	@Override
@@ -45,27 +46,11 @@ public final class ClientClassTransformer implements ClassTransformer {
 			return null;
 		}
 		try {
-			return getEnhancer( loader ).enhanceClient( className, classfileBuffer );
+			return state.transform(loader, provider, transformerToken, options, true, className, classfileBuffer);
 		}
 		catch (RuntimeException e) {
 			throw new TransformerException( "Error performing client enhancement of " + className, e );
 		}
 	}
 
-	private synchronized Enhancer getEnhancer(ClassLoader loader) {
-		var current = entry.get();
-		if ( current == null || current.loader != loader ) {
-			final var session = provider.createEnhancementSession(model, EnhancementEnvironment.forClassLoader(loader));
-			for (String candidate : model.getCandidates()) {
-				session.discoverTypes(candidate, null);
-			}
-			final var enhancer = session.createEnhancer(EnhancementOptions.of(false, false, false));
-			current = new Entry( loader, enhancer );
-			entry = new WeakReference<>( current );
-		}
-		return current.enhancer;
-	}
-
-	private record Entry(ClassLoader loader, Enhancer enhancer) {
-	}
 }

@@ -26,6 +26,8 @@ import jakarta.persistence.spi.TransformerException;
  */
 public class EnhancingClassTransformerImpl implements ClassTransformer {
 
+	private final PersistenceUnitEnhancementState sharedState;
+	private final Object transformerToken = new Object();
 	private final EnhancementModel model;
 	private final EnhancementOptions options;
 	private final BytecodeProvider bytecodeProvider;
@@ -33,9 +35,19 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 	private volatile WeakReference<Entry> entryReference;
 
 	public EnhancingClassTransformerImpl(EnhancementModel model, EnhancementOptions options, BytecodeProvider provider) {
+		this.sharedState = null;
 		this.model = Objects.requireNonNull(model);
 		this.options = Objects.requireNonNull(options);
 		this.bytecodeProvider = provider == null ? BytecodeProviderInitiator.buildDefaultBytecodeProvider() : provider;
+	}
+
+	/// Creates the managed view of a paired-factory owner.
+	public EnhancingClassTransformerImpl(PersistenceUnitEnhancementState state, EnhancementOptions options,
+			BytecodeProvider provider) {
+		this.sharedState = Objects.requireNonNull(state);
+		this.model = null;
+		this.options = Objects.requireNonNull(options);
+		this.bytecodeProvider = Objects.requireNonNull(provider);
 	}
 
 	@Override
@@ -56,7 +68,9 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 		}
 
 		try {
-			return getEnhancer( loader ).enhance( className, classfileBuffer );
+			return sharedState == null
+					? getEnhancer( loader ).enhance( className, classfileBuffer )
+					: sharedState.transform(loader, bytecodeProvider, transformerToken, options, false, className, classfileBuffer);
 		}
 		catch (final Exception e) {
 			throw new TransformerException( "Error performing enhancement of " + className, e );
@@ -65,7 +79,12 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 
 	@Override
 	public void discoverTypes(ClassLoader loader, String className) {
-		getEnhancer( loader ).discoverTypes( className, null );
+		if ( sharedState == null ) {
+			getEnhancer( loader ).discoverTypes( className, null );
+		}
+		else {
+			sharedState.discoverType(loader, bytecodeProvider, className);
+		}
 	}
 
 	private Enhancer getEnhancer(ClassLoader loader) {

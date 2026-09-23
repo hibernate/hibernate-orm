@@ -78,13 +78,15 @@ public class ClientEnhancementTests {
 	void clientTransformerIntegratesWithDirtyTrackingAndInterception() throws Exception {
 		final var loader = new ModelLoader();
 		final var provider = new HibernatePersistenceProvider();
-		final var transformer = provider.getClientClassTransformer( unit( loader ), null );
+		final var info = unit( loader );
+		final var transformer = provider.getClientClassTransformer( info, null );
+		final var managed = provider.getClassTransformer( info, null );
 		final byte[] client = transformer.transform( loader, Client.class.getName().replace( '.', '/' ),
 				null, null, bytes( Client.class ) );
 		assertThat( client ).isNotNull();
 		assertThat( transformer.transform( loader, Client.class.getName(), null, null, client ) ).isNull();
 		loader.definitions.put( Client.class.getName(), client );
-		loader.definitions.put( Book.class.getName(), enhancer().enhance( Book.class.getName(), bytes( Book.class ) ) );
+		loader.definitions.put( Book.class.getName(), managed.transform( loader, Book.class.getName(), null, null, bytes( Book.class ) ) );
 		final var bookType = loader.loadClass( Book.class.getName() );
 		final var clientType = loader.loadClass( Client.class.getName() );
 		assertThat( Managed.class.isAssignableFrom( clientType ) ).isFalse();

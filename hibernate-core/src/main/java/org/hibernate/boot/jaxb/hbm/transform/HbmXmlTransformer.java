@@ -227,6 +227,7 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.LockModeConverter;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.split;
@@ -3088,7 +3089,7 @@ public class HbmXmlTransformer {
 
 		final var nativeQuery = findNamedNativeQuery( queryRef );
 		if ( nativeQuery != null ) {
-			mappingEntity.setSqlSelect( toSqlSelect( nativeQuery ) );
+			mappingEntity.setSqlSelect( toSqlSelect( nativeQuery, queryRef ) );
 			return;
 		}
 
@@ -3113,7 +3114,7 @@ public class HbmXmlTransformer {
 
 		final var nativeQuery = findNamedNativeQuery( queryRef );
 		if ( nativeQuery != null ) {
-			target.setSqlSelect( toSqlSelect( nativeQuery ) );
+			target.setSqlSelect( toSqlSelect( nativeQuery, queryRef ) );
 			return;
 		}
 
@@ -3147,8 +3148,10 @@ public class HbmXmlTransformer {
 		return null;
 	}
 
-	private static JaxbSqlSelectImpl toSqlSelect(JaxbHbmNamedNativeQueryType nativeQuery) {
+	private JaxbSqlSelectImpl toSqlSelect(JaxbHbmNamedNativeQueryType nativeQuery, String queryRef) {
 		final var sqlSelect = new JaxbSqlSelectImpl();
+		JaxbHbmNativeQueryCollectionLoadReturnType collectionLoadReturn = null;
+
 		for ( Object content : nativeQuery.getContent() ) {
 			if ( content instanceof String sql ) {
 				final String trimmed = sql.trim();
@@ -3156,14 +3159,119 @@ public class HbmXmlTransformer {
 					sqlSelect.setSql( trimmed );
 				}
 			}
-			else if ( content instanceof JAXBElement<?> element
-					&& element.getValue() instanceof JaxbHbmSynchronizeType hbmSynchronize ) {
-				final var synchronize = new JaxbSynchronizedTableImpl();
-				synchronize.setTable( hbmSynchronize.getTable() );
-				sqlSelect.getSynchronize().add( synchronize );
+			else if ( content instanceof JAXBElement<?> element ) {
+				if ( element.getValue() instanceof JaxbHbmSynchronizeType hbmSynchronize ) {
+					final var synchronize = new JaxbSynchronizedTableImpl();
+					synchronize.setTable( hbmSynchronize.getTable() );
+					sqlSelect.getSynchronize().add( synchronize );
+				}
+				else if ( element.getValue() instanceof JaxbHbmNativeQueryCollectionLoadReturnType loadReturn ) {
+					collectionLoadReturn = loadReturn;
+				}
 			}
 		}
+
+		// If this is a collection loader query, create an implicit result-set-mapping
+		if ( collectionLoadReturn != null ) {
+			final String implicitResultSetMappingName = queryRef + "-collectionLoader-implicitResultSetMapping";
+			final var resultSetMapping = createCollectionLoaderResultSetMapping(
+					implicitResultSetMappingName,
+					collectionLoadReturn
+			);
+			mappingXmlBinding.getRoot().getSqlResultSetMappings().add( resultSetMapping );
+			sqlSelect.setResultSetMapping( resultSetMapping );
+		}
+
 		return sqlSelect;
+	}
+
+	private JaxbSqlResultSetMappingImpl createCollectionLoaderResultSetMapping(
+			String mappingName,
+			JaxbHbmNativeQueryCollectionLoadReturnType collectionLoadReturn) {
+		final var resultSetMapping = new JaxbSqlResultSetMappingImpl();
+		resultSetMapping.setName( mappingName );
+
+		// Extract the entity class from the role (e.g., "Owner.employments" -> "Employment")
+		// The role format is "EntityName.collectionProperty"
+		final String role = collectionLoadReturn.getRole();
+		final String entityClassName = extractCollectionElementType( role );
+
+		// Create an entity-result for the collection element
+		final var entityResult = new JaxbEntityResultImpl();
+		entityResult.setEntityClass( getFullyQualifiedClassName( entityClassName ) );
+
+		// Transfer lock mode if specified
+		if ( collectionLoadReturn.getLockMode() != null ) {
+			entityResult.setLockMode(
+				LockModeConverter.convertToLockModeType( collectionLoadReturn.getLockMode() )
+			);
+		}
+
+		// Transfer field results if any
+		for ( var propertyReturn : collectionLoadReturn.getReturnProperty() ) {
+			final var field = new JaxbFieldResultImpl();
+			field.setName( propertyReturn.getName() );
+			if ( !isEmpty( propertyReturn.getColumn() ) ) {
+				field.setColumn( propertyReturn.getColumn() );
+			}
+			entityResult.getFieldResult().add( field );
+		}
+
+		resultSetMapping.getEntityResult().add( entityResult );
+		return resultSetMapping;
+	}
+
+	private String extractCollectionElementType(String role) {
+		// The role is in format "OwnerEntityName.collectionPropertyName"
+		// We need to find the collection's element type from the boot model
+		final int dotIndex = role.lastIndexOf( '.' );
+		if ( dotIndex == -1 ) {
+			handleUnsupported(
+				"Invalid collection role format: %s. Expected 'EntityName.propertyName'",
+				role
+			);
+			return null;
+		}
+
+		final String ownerEntityName = role.substring( 0, dotIndex );
+		final String propertyName = role.substring( dotIndex + 1 );
+
+		// Look up the entity in the transformation state
+		final var entityInfo = transformationState.getEntityInfoByName().get(
+			getFullyQualifiedClassName( ownerEntityName )
+		);
+
+		if ( entityInfo == null ) {
+			handleUnsupported(
+				"Could not find entity info for collection role: %s",
+				role
+			);
+			return null;
+		}
+
+		// Get the collection property from the boot model
+		final var bootEntity = entityInfo.getPersistentClass();
+		try {
+			final var property = bootEntity.getProperty( propertyName );
+			if ( property.getValue() instanceof org.hibernate.mapping.Collection collection ) {
+				final var elementValue = collection.getElement();
+				if ( elementValue instanceof org.hibernate.mapping.OneToMany oneToMany ) {
+					return oneToMany.getReferencedEntityName();
+				}
+				else if ( elementValue instanceof org.hibernate.mapping.ManyToOne manyToOne ) {
+					return manyToOne.getReferencedEntityName();
+				}
+			}
+		}
+		catch ( Exception e ) {
+			handleUnsupported(
+				"Could not determine element type for collection role: %s - %s",
+				role,
+				e.getMessage()
+			);
+		}
+
+		return null;
 	}
 
 	private static String extractQueryText(List<?> content) {

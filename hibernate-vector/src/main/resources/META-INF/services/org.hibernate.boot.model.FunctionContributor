@@ -6,3 +6,5 @@ org.hibernate.vector.internal.DB2VectorFunctionContributor
 org.hibernate.vector.internal.CockroachFunctionContributor
 org.hibernate.vector.internal.HANAVectorFunctionContributor
 org.hibernate.vector.internal.SQLServerVectorFunctionContributor
+org.hibernate.vector.internal.SpannerVectorFunctionContributor
+org.hibernate.vector.internal.SpannerPostgreSQLVectorFunctionContributor

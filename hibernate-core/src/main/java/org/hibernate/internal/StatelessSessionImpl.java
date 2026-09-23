@@ -866,10 +866,40 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			final Object cachedEntity =
 					loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, lockMode );
 			if ( cachedEntity != null ) {
+				callOnLoadForEntity( cachedEntity, id, persister );
 				return cachedEntity;
 			}
 		}
-		return persister.load( id, null, getNullSafeLockMode( lockMode ), this );
+		final Object entity = persister.load( id, null, getNullSafeLockMode( lockMode ), this );
+		if ( entity != null ) {
+			callOnLoadForEntity( entity, id, persister );
+		}
+		return entity;
+	}
+
+	private void callOnLoadForEntity(Object entity, Object id, EntityPersister persister) {
+		final Object[] state = persister.getValues( entity );
+		final boolean modified = getInterceptor().onLoad(
+				entity,
+				id,
+				state,
+				persister.getPropertyNames(),
+				persister.getPropertyTypes()
+		);
+		if ( modified ) {
+			persister.setValues( entity, state );
+		}
+	}
+
+	private void callOnLoadForEntities(List<?> results, List<?> ids, EntityPersister persister) {
+		if ( results != null ) {
+			for ( int i = 0; i < results.size(); i++ ) {
+				final Object entity = results.get( i );
+				if ( entity != null ) {
+					callOnLoadForEntity( entity, ids.get( i ), persister );
+				}
+			}
+		}
 	}
 
 	@Override
@@ -915,6 +945,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 		final var persister = requireEntityPersister( entityClass.getName() );
 		final var results = persister.multiLoad( ids.toArray(), this, new MultiLoadOptions(lockMode) );
+
+		callOnLoadForEntities( results, ids, persister );
+
 		//noinspection unchecked
 		return (List<T>) results;
 	}
@@ -939,6 +972,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		try {
 			final var persister = requireEntityPersister( rootGraph.getGraphedType().getTypeName() );
 			final var results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
+
+			callOnLoadForEntities( results, ids, persister );
+
 			//noinspection unchecked
 			return (List<T>) results;
 		}
@@ -957,6 +993,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		try {
 			final var persister = requireEntityPersister( entityClass.getName() );
 			final var results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
+
+			callOnLoadForEntities( results, ids, persister );
+
 			//noinspection unchecked
 			return (List<T>) results;
 		}
@@ -1047,6 +1086,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 							.fromInternalFetchProfile( CascadingFetchProfile.REFRESH,
 									() -> persister.load( id, entity, getNullSafeLockMode( lockMode ), this ) );
 			UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
+			callOnLoadForEntity( result, id, persister );
 		}
 		finally {
 			afterOperation();

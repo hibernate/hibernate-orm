@@ -1176,6 +1176,38 @@ class Book { ... }
 
 This annotation looks a bit ugly perhaps, but it's actually useful even as documentation.
 
+
+[[constraint-column-references]]
+Both `@UniqueConstraint.columnNames` and <<indexes,`@Index.columnList`>> identify mapped columns.
+Except for explicit collection-role markers, Hibernate resolves each reference in this order:
+
+. The logical column name, before physical naming.
+. The physical column name, if no logical name matches.
+. An entity attribute path, if neither column lookup matches and the declaration belongs to an entity's primary or secondary table.
+
+For example, `@Column(name="person_name") String name` may be referenced as `person_name`,
+as its physically transformed name, or as `name` when that spelling does not match a column.
+Column matches always take precedence over attribute matches.
+Use full embeddable paths such as `address.city`; Hibernate does not guess the enclosing embeddable from `city`.
+
+For collection and association join tables, use explicit `\{element}` and `\{key}` markers:
+
+- `\{element}` selects the element or map value; `\{key}` selects a map key.
+- `\{element}.address.city` and `\{key}.code` traverse embeddable attributes.
+- `\{key}` never means the owner's foreign key or a list index. Reference owner foreign-key columns by column name.
+
+These markers bypass column lookup. To select a literal column named `\{element}.city`, quote the whole identifier:
+
+[source,java]
+----
+@Index(columnList="`{element}.city`")
+----
+
+Every attribute or role reference must resolve to one actual column on the declaring table.
+A single-column association may identify its local foreign-key column, but paths into associated entities are rejected.
+Multi-column values, formulas, and references to other tables are also rejected.
+Unknown references fail when Hibernate builds the mappings; naming the constraint or index explicitly does not bypass validation.
+
 The `@CheckConstraint` annotation adds a check constraint to the table.
 
 [source,java]

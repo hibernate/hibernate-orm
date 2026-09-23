@@ -498,7 +498,9 @@ public record CollectionSource(
 		return joinTable != null
 				&& ( StringHelper.isNotEmpty( joinTable.name() )
 						|| joinTable.joinColumns().length > 0
-						|| joinTable.inverseJoinColumns().length > 0 );
+						|| joinTable.inverseJoinColumns().length > 0
+						|| joinTable.indexes().length > 0
+						|| joinTable.uniqueConstraints().length > 0 );
 	}
 
 	private static TypeDetails associationElementType(

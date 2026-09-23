@@ -3,7 +3,7 @@
 :sectanchors:
 
 Status: historical source inventory with outstanding coverage investigations.
-Table, column, PK, and FK callback migrations are implemented, along with boot-time
+Table, column, PK, FK, UK, and index callback migrations are implemented, along with boot-time
 unique-column finalization (HHH-20916). Use link:implicit-naming-strategy-proposal.adoc[the replacement
 proposal] for current implementation status; the baseline findings below are not
 a list of still-open defects. See link:naming-strategy-redesign.adoc[the parent design] and

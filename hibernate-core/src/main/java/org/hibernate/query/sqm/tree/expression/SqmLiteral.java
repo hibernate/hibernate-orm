@@ -34,7 +34,7 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	private final @Nullable T value;
 
 	public SqmLiteral(@NonNull T value, @Nullable SqmBindableType<? super T> inherentType, NodeBuilder nodeBuilder) {
-		super( inherentType, nodeBuilder );
+		super( null, nodeBuilder );
 		assert value != null;
 		assert inherentType == null
 			|| inherentType.getExpressibleJavaType().isInstance( castNonNull( value ) );

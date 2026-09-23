@@ -313,6 +313,11 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			lockingWrapper.getSelectClause().addSqlSelection( sqlSelection );
 		}
 		lockingWrapper.applyPredicate( new InSubQueryPredicate( idExpression, subquery, false ) );
+		if ( querySpec.hasSortSpecifications() ) {
+			for ( SortSpecification sortSpecification : querySpec.getSortSpecifications() ) {
+				lockingWrapper.addSortSpecification( sortSpecification );
+			}
+		}
 		return lockingWrapper;
 	}
 

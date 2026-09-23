@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.enhance.spi.EnhancementModel;
 import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 import org.hibernate.jpa.internal.enhance.PersistenceUnitEnhancementModel;
+import org.hibernate.jpa.internal.enhance.PersistenceUnitEnhancementState;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -60,6 +61,8 @@ import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
  * @author Brett Meyer
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
+	private final PersistenceUnitEnhancementState.Registry enhancementStates = new PersistenceUnitEnhancementState.Registry();
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -279,7 +282,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	public ClassTransformer getClassTransformer(
 			@Nonnull PersistenceUnitInfo persistenceUnit,
 			@Nullable Map<?, ?> integrationSettings) {
-		final var enhancementCandidates = EnhancementCandidates.forContainer( persistenceUnit );
+		EnhancementCandidates.forContainer( persistenceUnit );
+		integrationSettings = integrationSettings == null ? Map.of() : integrationSettings;
 		var transformerKey = TransformerKey.from( persistenceUnit );
 		if ( !TransformerTracker.canSupplyTransformer( transformerKey ) ) {
 			if ( JPA_LOGGER.isTraceEnabled() ) {
@@ -332,16 +336,12 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				) );
 			}
 
-			final EnhancingClassTransformerImpl classTransformer = new EnhancingClassTransformerImpl(
-					createEnhancementModel(persistenceUnit),
+			final var state = enhancementStates.get(persistenceUnit, () -> createEnhancementModel(persistenceUnit));
+			final var provider = state.resolveProvider(getExplicitBytecodeProvider(integrationSettings, persistenceUnit));
+			state.discoverTemporaryTypes(classLoader, provider);
+			final var classTransformer = new EnhancingClassTransformerImpl(state,
 					EnhancementOptions.of(dirtyTrackingEnabled, lazyInitializationEnabled, associationManagementEnabled),
-					getExplicitBytecodeProvider(integrationSettings, persistenceUnit));
-
-			// NOTE : the ClassTransformer method is called discoverType, but in reality it
-			// pre-enhances the classes...
-			enhancementCandidates.forEach( (className) -> {
-				classTransformer.discoverTypes( classLoader, className );
-			} );
+					provider);
 
 			return classTransformer;
 		}
@@ -358,9 +358,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	/// tooling may already have enhanced its targets. Requesting this transformer
 	/// does not register or consume the managed-class transformer.
 	///
-	/// @since 8.1
+	/// @since 8.0
 	@SPI
-	@Incubating(since = "8.1")
+	@Incubating(since = "8.0")
 	@Nonnull
 	public ClassTransformer getClientClassTransformer(
 			@Nonnull PersistenceUnitInfo info,
@@ -372,8 +372,10 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			throw new PersistenceException( "[persistence unit: " + info.getPersistenceUnitName()
 					+ "] Client enhancement requires a temp class loader, but none was given" );
 		}
-		return new ClientClassTransformer(createEnhancementModel(info),
-				getExplicitBytecodeProvider(settings, info), temporaryLoader);
+		final var state = enhancementStates.get(info, () -> createEnhancementModel(info));
+		final var provider = state.resolveProvider(getExplicitBytecodeProvider(settings, info));
+		state.discoverTemporaryTypes(temporaryLoader, provider);
+		return new ClientClassTransformer(state, provider);
 	}
 
 	private boolean resolveEnhancementProperty(

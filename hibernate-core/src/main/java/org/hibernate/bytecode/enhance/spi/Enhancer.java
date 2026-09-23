@@ -30,7 +30,7 @@ public interface Enhancer {
 	/// Returns null if no instructions change. Supports concurrent calls for
 	/// different classes, with the same restriction as [#enhance].
 	///
-	/// @since 8.1
+	/// @since 8.0
 	default byte[] enhanceClient(String className, byte[] originalBytes) throws EnhancementException {
 		throw new EnhancementException( "Client enhancement is not supported by " + getClass().getName() );
 	}

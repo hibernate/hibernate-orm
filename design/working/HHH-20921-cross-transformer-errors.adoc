@@ -1,0 +1,33 @@
+= Follow-up: Cross-transformer error handling
+
+Status: Deferred; no cross-transformer failure coordination is implemented.
+
+Client enhancement assumes an eligible managed target has been or will be enhanced.
+Determine what should happen when managed enhancement fails but processing continues
+and a separate client transformer would generate calls to that target's accessors.
+
+Current behavior and constraints:
+
+* JPA transformers propagate `TransformerException`. The Jakarta Persistence
+  4.0.0-M7 Javadoc does not establish whether the container then aborts or continues.
+  Confirm the relevant container behavior before choosing a policy.
+* Gradle aborts on enhancement exceptions; Maven aborts before the client pass.
+  Ant with `failOnError=false` continues, using the existing failure guard in its
+  single enhancer. This guard does not coordinate separate enhancers.
+* A null managed-enhancement result is not necessarily a failure. Client eligibility
+  already checks detectable unsupported targets and compatible pre-enhanced accessors.
+* Managed enhancement precedes client enhancement when both apply to a class, but
+  clients may be transformed before other classes scheduled as their targets.
+  A later target failure cannot retroactively change client bytes already returned.
+* Producing enhanced bytes and successfully writing or installing those bytes are
+  distinct events; the enhancer cannot observe the latter itself.
+
+Decide whether continuation requires rejecting affected client accesses, aborting
+further client processing, or another integration-level policy. Do not introduce
+permanent failure records merely as part of metadata caching.
+
+If outcome tracking is needed, define its scope by persistence unit, defining
+loader, bytecode provider, and managed configuration. Decide whether records must
+survive reclamation of the shared metadata cache, without retaining deployment
+loaders through descriptors or exception objects. Cover continuation, retries,
+client-before-target loading, and cache reconstruction in regression tests.

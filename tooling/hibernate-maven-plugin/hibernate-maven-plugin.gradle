@@ -42,7 +42,8 @@ dependencies {
     intTestRuntimeOnly libs.test.junitJupiterLauncher
     intTestRuntimeOnly libs.maven.resolverHttp
     intTestRuntimeOnly libs.maven.resolverBasic
-    intTestRuntimeOnly libs.test.logbackClassic
+    intTestRuntimeOnly libs.test.log4j2
+    intTestRuntimeOnly libs.test.log4j2Slf4j
     intTestRuntimeOnly libs.maven.resolverHttp
     intTestRuntimeOnly libs.maven.plexusXml
     intTestRuntimeOnly libs.jdbc.h2

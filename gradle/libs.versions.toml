@@ -58,7 +58,6 @@ byteman = "4.0.26"
 jbossJta = "7.3.4.Final"
 jbossTxSpi = "8.0.0.Final"
 log4j = "2.26.1"
-logBackClassic = "1.5.34"
 mockito = "5.23.0"
 shrinkwrap = "1.2.6"
 shrinkwrapDescriptors = "2.0.0"
@@ -212,7 +211,7 @@ test-assertjCore = { group = "org.assertj", name = "assertj-core", version.ref =
 test-assertjApi = { group = "org.assertj", name = "assertj-core-api", version.ref = "assertj" }
 test-hamcrest = { group = "org.hamcrest", name = "hamcrest", version.ref = "hamcrest" }
 test-log4j2 = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4j" }
-test-logbackClassic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logBackClassic" }
+test-log4j2Slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl", version.ref = "log4j" }
 test-shrinkwrap = { group = "org.jboss.shrinkwrap", name = "shrinkwrap-impl-base", version.ref = "shrinkwrap" }
 test-shrinkwrapDescriptors = { group = "org.jboss.shrinkwrap.descriptors", name = "shrinkwrap-descriptors-impl-javaee", version.ref = "shrinkwrapDescriptors" }
 test-bytemanBmunit = { group = "org.jboss.byteman", name = "byteman-bmunit", version.ref = "byteman" }

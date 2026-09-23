@@ -40,7 +40,7 @@ hashes for basic-column, owning one-to-one, and Changelog uniqueness, distinct k
 two unique columns, and exactly-once custom callbacks before repeated export.
 
 The sole-UK absorption inconsistency is corrected. Typed UK inputs, actual-column
-resolution, logical-first lookup, explicit-name merging, strategy collisions, named
+resolution, logical-first lookup, duplicate explicit-name rejection (HHH-20918), strategy collisions, named
 UK DDL, and archive restoration now have regression coverage. Temporal naming and
 aggregate UK behavior remain explicitly deferred in
 link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification]. Rendering

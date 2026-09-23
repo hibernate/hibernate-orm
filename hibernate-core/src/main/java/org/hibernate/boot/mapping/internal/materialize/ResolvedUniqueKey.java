@@ -28,6 +28,7 @@ import org.hibernate.mapping.Table;
 /// @param sourceRole Human-readable role used in diagnostics.
 ///
 /// @param columnReferences Optional unresolved annotation references, resolved after column binding
+/// @param declarationLocation Location of a source `@UniqueConstraint`, or null for other UK sources.
 /// @since 9.0
 /// @author Steve Ebersole
 public record ResolvedUniqueKey(
@@ -42,19 +43,27 @@ public record ResolvedUniqueKey(
 		boolean nullsNotDistinct,
 		boolean tableUniqueKey,
 		@Nullable String sourceRole,
-		@Nullable List<String> columnReferences) {
+		@Nullable List<String> columnReferences,
+		@Nullable String declarationLocation) {
 	public ResolvedUniqueKey(Table table, List<Column> columns, MetadataBuildingContext context,
 			String name, boolean nameExplicit, boolean explicit, String options,
 			List<String> orderings, boolean nullsNotDistinct, boolean tableUniqueKey, String sourceRole) {
 		this( table, columns, context, name, nameExplicit, explicit, options, orderings,
-				nullsNotDistinct, tableUniqueKey, sourceRole, null );
+				nullsNotDistinct, tableUniqueKey, sourceRole, null, null );
 	}
 
 	/// Retain annotation references until column binding is complete (HHH-20917).
 	public static ResolvedUniqueKey references(Table table, List<String> references,
 			MetadataBuildingContext context, String name, String options, List<String> orderings, String role) {
 		return new ResolvedUniqueKey( table, List.of(), context, name, name != null && !name.isEmpty(),
-				true, options, orderings, false, true, role, references );
+				true, options, orderings, false, true, role, references, null );
+	}
+
+	/// Retain the declaration location for duplicate explicit-name validation (HHH-20918).
+	public static ResolvedUniqueKey uniqueConstraint(Table table, List<String> references,
+			MetadataBuildingContext context, String name, String options, String location) {
+		return new ResolvedUniqueKey( table, List.of(), context, name, name != null && !name.isEmpty(),
+				true, options, null, false, true, location, references, location );
 	}
 
 	public ResolvedUniqueKey {

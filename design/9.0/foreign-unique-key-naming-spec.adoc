@@ -9,7 +9,8 @@ policy and consolidated working specification are approved, implemented, and ver
 as described below. Index migration and explicit PK declarations are
 separate slices in link:constraint-index-naming-proposal.adoc[the constraint/index proposal].
 
-Follow-up: HHH-20918 tracks reconsidering explicit-name merging with the team.
+Follow-up: HHH-20918 now has an accepted direction to reject duplicate explicit
+`@UniqueConstraint` names; the revised working specification below is approved.
 The HHH-20919 temporal membership correction below is a working specification awaiting
 approval; it is not part of the implementation and validation reported above.
 
@@ -51,7 +52,8 @@ contributions from audit/generator code does not add new naming callbacks for th
   when the constraint name is explicit; do not invoke physical column naming for lookup.
 . Determine surviving UKs and PK absorption before invoking implicit UK naming.
   Keep an internal candidate identity independent of generated names. Preserve source
-  order and existing declaration-merging semantics. Explicitly declared UKs are not
+  order, but reject duplicate explicit `@UniqueConstraint` names before this step
+  (HHH-20918). Other contributor merging rules are unchanged. Explicitly declared UKs are not
   discarded merely because another UK has the same columns; redundant automatically
   inferred UKs do not introduce additional naming decisions.
 . For a UK covering the PK, retain its ordering effect consistently in both the sole-UK
@@ -63,7 +65,9 @@ contributions from audit/generator code does not add new naming callbacks for th
   to any corresponding unique columns. Completed metadata and schema exporters must
   not perform candidate cleanup or replay naming. Restoration retains finalized names.
 
-Preserve previously accepted duplicate declarations rather than introduce blanket
+The original compatibility requirement below is superseded for explicitly named
+`@UniqueConstraint` declarations by HHH-20918. Other contributor policies remain unchanged.
+Originally: preserve previously accepted duplicate declarations rather than introduce blanket
 conflicting-name errors. Characterize same-name merging, options/order retention, and
 custom-strategy name collisions before replacing name-keyed registration. If retaining
 that behavior conflicts with correct membership or exactly-once naming, present the
@@ -79,7 +83,8 @@ appends the second column. Thus independent uniqueness on `first` and `second` b
 uniqueness only on `(first, second)`. No production behavior has changed yet.
 
 The specification requires preserving existing declaration merging but also prohibits
-silently merging unrelated constraints. Approved distinction, following confirmation in local `main` source:
+silently merging unrelated constraints. Original approved distinction (superseded for duplicate `@UniqueConstraint` declarations
+by HHH-20918 below), following confirmation in local `main` source:
 retain repeated explicit-name declaration merging for compatibility, but reject final-name
 collisions between independent candidates with different membership when the shared name
 arises through implicit or physical naming. Report the table, final name, and conflicting
@@ -91,7 +96,7 @@ explicit name), calls `Table.getOrCreateUniqueKey(name)`, and appends each decla
 columns. Identical explicit names therefore merge column membership there as well.
 This is source verification, not a new test run on `main`.
 
-Distinguish cases using retained source declarations, before naming: the same explicit
+Original compatibility rule (superseded by HHH-20918 below): the same explicit
 logical name on the same table may identify one merged candidate. Distinct explicit
 logical names that a physical strategy maps to the same final name are a strategy
 collision, not repeated explicit-name declarations. Likewise a custom implicit result
@@ -101,13 +106,49 @@ strategy-result provenance.
 
 ==== Explicit-Name Merging Follow-Up (HHH-20918)
 
-https://hibernate.atlassian.net/browse/HHH-20918[HHH-20918] tracks the team discussion
-about rejecting conflicting explicit-name declarations with a mapping exception instead
-of merging their columns. Steve prefers rejection: merging independent uniqueness
-declarations silently weakens the intended constraints. The current implementation
-retains the previously approved compatibility behavior pending that discussion.
-This follow-up must also settle whether equivalent repeated declarations remain
-eligible for deduplication.
+https://hibernate.atlassian.net/browse/HHH-20918[HHH-20918]: Steve has requested
+replacing explicit-name merging with a mapping exception identifying the name and
+where the annotations occur. This supersedes the compatibility direction above;
+the revised specification is approved and implemented; validation results are recorded below.
+
+Approved specification:
+
+* Reject two distinct explicitly named `@UniqueConstraint` declarations with the same
+  logical constraint name on the same mapped table. Use existing logical-name equality,
+  including its quoting rules. Validate before equivalent-key deduplication or PK
+  absorption, even when both declarations specify identical columns.
+* Raise `AnnotationException` (a `MappingException`) identifying the duplicate name,
+  owning table, and both declaration locations. Identify the declaring class, member
+  where applicable, containing annotation (`@Table`, `@SecondaryTable`, `@JoinTable`,
+  or `@CollectionTable`), and position in its `uniqueConstraints` array. Do not promise
+  source-file line numbers, which reflection-backed annotation metadata does not supply.
+* Retain source declaration locations through deferred resolution and materialization.
+  Current generic source-role strings such as `table-unique-constraint` are insufficient.
+  Distinguish separate declarations from repeated internal processing of one declaration.
+* Keep unnamed constraints, distinct names, and names reused on different tables
+  subject to their existing rules. This is not a new schema-wide name validation pass.
+  Preserve separate physical/implicit strategy-collision validation.
+* Do not extend this change to general index collision handling. Any overlap with
+  unique indexes represented internally as UKs must be identified during implementation.
+* Replace the explicit-name merging regression with rejection assertions; cover identical
+  and differing column sets, class-level and member-level annotation locations, secondary
+  tables, and rejection before PK absorption. Verify controls for unnamed constraints
+  and separate tables. Add a migration note explaining that a composite UK must be
+  expressed with one declaration containing all intended columns.
+
+Implemented and verified on this branch. `ResolvedUniqueKey` retains a dedicated
+declaration location, and finalization checks names per table before resolving and
+deduplicating candidates. Repeated visits to the same declaration location do not
+constitute separate declarations. Unique indexes retain their existing policy; they
+do not acquire `@UniqueConstraint` declaration provenance.
+
+Validation: the naming-strategy and annotation unique-constraint suites passed with
+356 tests, zero failures/errors, and zero skips. The 11 new
+`DuplicateUniqueConstraintTest` cases cover identical columns, PK absorption, secondary
+tables, collection/join members, two classes sharing a table, logical-name case/quoting,
+and allowed unnamed/distinct-name/separate-table cases. The existing different-column
+merging test now asserts rejection and both declaration positions. Migration guidance
+is updated. This validation does not constitute a new full-core run or a backport.
 
 The annotation implementation already groups by name in the 2008 annotation import
 (`7337743c93574823424ed6c399cfcf6bd75614f8`). Older hbm.xml binding uses the same

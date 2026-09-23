@@ -239,7 +239,7 @@ public class TableBinder {
 		applyOptions( binding, tableSource );
 		applyType( binding, tableSource );
 		applyCheckConstraints( binding, tableSource );
-		applyUniqueConstraints( binding, tableSource );
+		applyUniqueConstraints( binding, tableSource, type.getClassDetails().getName() + " @Table" );
 		applyIndexes( binding, tableSource );
 
 		return new UnionTable( PhysicalNamingStrategyHelper.logicalName( logicalName ), superTypeTable, binding, !type.hasSubTypes() );
@@ -388,7 +388,7 @@ public class TableBinder {
 		applyOptions( binding, tableSource );
 		applyType( binding, tableSource );
 		applyCheckConstraints( binding, tableSource );
-		applyUniqueConstraints( binding, tableSource );
+		applyUniqueConstraints( binding, tableSource, type.getClassDetails().getName() + " @Table" );
 		applyIndexes( binding, tableSource );
 
 		return createPhysicalTableReference(
@@ -649,7 +649,8 @@ public class TableBinder {
 		applyOptions( binding, tableSource );
 		applyType( binding, tableSource );
 		applyCheckConstraints( binding, tableSource );
-		applyUniqueConstraints( binding, tableSource );
+		applyUniqueConstraints( binding, tableSource, entityBinder.getManagedType().getClassDetails().getName()
+				+ " @SecondaryTable(name=\"" + secondaryTableAnn.name() + "\")" );
 		applyIndexes( binding, tableSource );
 
 		final Join join = new Join();
@@ -766,18 +767,19 @@ public class TableBinder {
 		}
 	}
 
-	private void applyUniqueConstraints(Table table, TableSource tableSource) {
+	private void applyUniqueConstraints(Table table, TableSource tableSource, String location) {
 		if ( tableSource == null || tableSource.uniqueConstraints() == null ) {
 			return;
 		}
 
-		for ( jakarta.persistence.UniqueConstraint uniqueConstraint : tableSource.uniqueConstraints() ) {
+		for ( int i = 0; i < tableSource.uniqueConstraints().length; i++ ) {
+			final var uniqueConstraint = tableSource.uniqueConstraints()[i];
 			validateUniqueConstraintColumns( uniqueConstraint.columnNames(), table.getName() );
 			UniqueKeyMappingMaterializer.materializeUniqueKey(
-					ResolvedUniqueKey.references( table, Arrays.asList( uniqueConstraint.columnNames() ),
+					ResolvedUniqueKey.uniqueConstraint( table, Arrays.asList( uniqueConstraint.columnNames() ),
 							bindingState.getMetadataBuildingContext(),
 							StringHelper.nullIfEmpty( uniqueConstraint.name() ), uniqueConstraint.options(),
-							null, "table-unique-constraint" ) );
+							location + ".uniqueConstraints[" + i + "]" ) );
 		}
 	}
 

@@ -396,7 +396,9 @@ class PluralAssociationAttributeBinder {
 					resolveOnDeleteAction(),
 					associationTableUniqueConstraints( source ),
 					associationTableIndexes( source ),
-					uniqueTargetColumns
+					uniqueTargetColumns,
+					source.member().getDeclaringType().getName() + "." + source.member().getName()
+							+ (source.joinTable() == null ? " @CollectionTable" : " @JoinTable")
 			) );
 			bindingState.addCollectionBinding( collection );
 		}
@@ -491,7 +493,9 @@ class PluralAssociationAttributeBinder {
 						resolveOnDeleteAction(),
 						new jakarta.persistence.UniqueConstraint[0],
 						new jakarta.persistence.Index[0],
-						false
+						false,
+						source.member().getDeclaringType().getName() + "." + source.member().getName()
+								+ (source.joinTable() == null ? " @CollectionTable" : " @JoinTable")
 				) );
 				bindingState.addCollectionBinding( collection );
 			}
@@ -575,7 +579,9 @@ class PluralAssociationAttributeBinder {
 					),
 					resolveOnDeleteAction(),
 					associationTableUniqueConstraints( source ),
-					associationTableIndexes( source )
+					associationTableIndexes( source ),
+					source.member().getDeclaringType().getName() + "." + source.member().getName()
+							+ (source.joinTable() == null ? " @CollectionTable" : " @JoinTable")
 			) );
 			bindingState.addCollectionBinding( collection );
 		}

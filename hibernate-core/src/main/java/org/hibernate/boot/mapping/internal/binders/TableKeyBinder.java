@@ -317,14 +317,15 @@ public class TableKeyBinder {
 	}
 
 	private void applyUniqueConstraints(CollectionTableBinding collectionTableBinding) {
-		for ( jakarta.persistence.UniqueConstraint uniqueConstraint : collectionTableBinding.uniqueConstraints() ) {
+		for ( int i = 0; i < collectionTableBinding.uniqueConstraints().length; i++ ) {
+			final var uniqueConstraint = collectionTableBinding.uniqueConstraints()[i];
 			final Table table = collectionTableBinding.collection().getCollectionTable();
 			validateUniqueConstraintColumns( uniqueConstraint.columnNames(), table.getName() );
 			UniqueKeyMappingMaterializer.materializeUniqueKey(
-					ResolvedUniqueKey.references( table, Arrays.asList( uniqueConstraint.columnNames() ),
+					ResolvedUniqueKey.uniqueConstraint( table, Arrays.asList( uniqueConstraint.columnNames() ),
 							bindingState.getMetadataBuildingContext(),
 							StringHelper.nullIfEmpty( uniqueConstraint.name() ), uniqueConstraint.options(),
-							null, "table-unique-constraint" ) );
+							collectionTableBinding.uniqueConstraintLocation() + ".uniqueConstraints[" + i + "]" ) );
 		}
 	}
 

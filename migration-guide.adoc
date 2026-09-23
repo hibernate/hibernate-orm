@@ -1010,8 +1010,17 @@ also makes collection/join-table handling consistent: where a spelling matches d
 logical and physical columns, the logical reference wins. Unknown columns fail during
 boot even when the constraint name is explicit.
 
-Repeated declarations of the same explicit UK name on the same table retain their
-existing column-merging behavior. Independent constraints with different columns whose
+Duplicate explicitly named `@UniqueConstraint` declarations on the same table now
+fail with `AnnotationException` instead of merging their columns (HHH-20918). This
+also applies when their column lists are identical or match the primary key. The error
+identifies the constraint name, table, and both declaration locations, including the
+class/member, containing annotation, and zero-based `uniqueConstraints` array position.
+Use a single `@UniqueConstraint` with all intended columns for a composite constraint;
+remove redundant declarations, or give independent constraints distinct names.
+Unnamed declarations and name reuse on different tables are unaffected by this check.
+See https://hibernate.atlassian.net/browse/HHH-20918[HHH-20918].
+
+Independent constraints with different columns whose
 names collide through implicit or physical naming now cause a mapping error instead of
 silently becoming one composite UK. Source declaration provenance determines this rule;
 a custom strategy returning an explicitly flagged logical name does not turn it into

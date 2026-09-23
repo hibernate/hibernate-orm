@@ -93,8 +93,14 @@ class UniqueKeyColumnResolutionTest {
 	}
 
 	@Test
-	void repeatedExplicitNameMergesDifferentColumnSets() {
-		inspectNameCollision( RepeatedName.class, new StandardImplicitNamingStrategy() );
+	@JiraKey("HHH-20918")
+	void repeatedExplicitNameRejectsDifferentColumnSets() {
+		assertThatThrownBy( () -> inspectNameCollision( RepeatedName.class, new StandardImplicitNamingStrategy() ) )
+				.isInstanceOf( org.hibernate.AnnotationException.class )
+				.hasMessageContaining( "same_name" )
+				.hasMessageContaining( RepeatedName.class.getName() )
+				.hasMessageContaining( "@Table.uniqueConstraints[0]" )
+				.hasMessageContaining( "@Table.uniqueConstraints[1]" );
 	}
 
 	@Test

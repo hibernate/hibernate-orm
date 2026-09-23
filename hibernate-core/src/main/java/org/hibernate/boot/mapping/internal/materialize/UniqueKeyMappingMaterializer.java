@@ -5,6 +5,7 @@
 package org.hibernate.boot.mapping.internal.materialize;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,22 @@ public final class UniqueKeyMappingMaterializer {
 	public static void finishColumnUniqueKeys(Iterable<Table> tables, MetadataBuildingContext context) {
 		final var names = context.getMetadataCollector().getRelationalModelCorrespondences();
 		final Map<Table, List<Candidate>> candidates = new LinkedHashMap<>();
+		final Map<Table, Map<LogicalName, String>> declarations = new IdentityHashMap<>();
 		for ( var resolved : names.uniqueKeyCandidates() ) {
+			// HHH-20918: validate declarations before deduplication, naming, or PK absorption.
+			if ( resolved.declarationLocation() != null && resolved.nameExplicit() ) {
+				final var logicalName = context.getMetadataCollector().getDatabase().toLogicalName( resolved.name(), true );
+				final var previous = declarations.computeIfAbsent( resolved.table(), ignored -> new LinkedHashMap<>() )
+						.putIfAbsent( logicalName, resolved.declarationLocation() );
+				if ( previous != null ) {
+					if ( previous.equals( resolved.declarationLocation() ) ) {
+						continue; // The same source declaration was visited more than once.
+					}
+					throw new org.hibernate.AnnotationException( "Duplicate explicit @UniqueConstraint name '"
+							+ resolved.name() + "' on table '" + resolved.table().getName()
+							+ "' declared at " + previous + " and " + resolved.declarationLocation() );
+				}
+			}
 			candidates.computeIfAbsent( resolved.table(), ignored -> new ArrayList<>() )
 					.add( resolve( resolved ) );
 		}
@@ -131,6 +147,8 @@ public final class UniqueKeyMappingMaterializer {
 	}
 
 	private static void finish(Table table, List<Candidate> candidates, MetadataBuildingContext context) {
+		// Duplicate @UniqueConstraint declarations were rejected before resolution.
+		// Other contributors, including unique indexes, retain their existing merging policy.
 		final var merged = new ArrayList<Candidate>();
 		final Map<LogicalName, Candidate> explicitNames = new LinkedHashMap<>();
 		for ( var candidate : candidates ) {

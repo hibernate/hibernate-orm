@@ -28,7 +28,7 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 		super( negated, nodeBuilder );
 		this.expression = expression;
 
-		expression.applyInferableType( expression.getNodeType() );
+		expression.applyInferableType( expression.getNodeType(), expression.getJavaTypeDescriptor() );
 	}
 
 	@Nonnull

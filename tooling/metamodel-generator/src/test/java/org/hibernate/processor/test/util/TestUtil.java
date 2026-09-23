@@ -335,7 +335,8 @@ public class TestUtil {
 		final var compilerOptions = new ArrayList<>( options );
 		compilerOptions.addAll( List.of(
 				"-d", classesDir.getAbsolutePath(),
-				"-s", generatedSourcesDir.getAbsolutePath()
+				"-s", generatedSourcesDir.getAbsolutePath(),
+				"-classpath", classesDir.getAbsolutePath() + File.pathSeparator + System.getProperty( "java.class.path" )
 		) );
 		if ( sourceDir != null ) {
 			compilerOptions.addAll( List.of( "-sourcepath", sourceDir.getAbsolutePath() ) );

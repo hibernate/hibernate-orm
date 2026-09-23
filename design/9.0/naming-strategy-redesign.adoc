@@ -47,6 +47,10 @@ sections describe their respective runs, not a cumulative total or a new run.
 
 == Remaining Work And Sequence
 
+Named enum and array type naming is the current investigation in
+link:named-sql-type-naming-proposal.adoc[the focused proposal]. Struct naming and
+independent helper-function naming are outside that scope.
+
 [cols="1,3",options="header"]
 |===
 |Area |Remaining scope

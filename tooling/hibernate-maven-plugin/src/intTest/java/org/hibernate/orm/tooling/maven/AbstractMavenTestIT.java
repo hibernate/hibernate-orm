@@ -126,7 +126,18 @@ public abstract class AbstractMavenTestIT {
 							</repository>
 						""" );
 			}
-			settings.append( "</repositories>\n</profile>\n" );
+			settings.append( "</repositories>\n<pluginRepositories>\n" );
+			if ( hasCentralFallback ) {
+				settings.append( """
+							<pluginRepository>
+							<id>central-fallback</id>
+							<url>https://repo.maven.apache.org/maven2/</url>
+							<releases><enabled>true</enabled></releases>
+							<snapshots><enabled>false</enabled></snapshots>
+							</pluginRepository>
+						""" );
+			}
+			settings.append( "</pluginRepositories>\n</profile>\n" );
 		}
 		settings.append( "</profiles>\n" );
 		settings.append( "<activeProfiles>\n" );

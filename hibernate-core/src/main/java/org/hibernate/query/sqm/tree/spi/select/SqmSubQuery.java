@@ -818,6 +818,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		expressibleType = (SqmBindableType<T>) type;
 	}
 
+	@Override
+	public void applyInferableType(@Nullable SqmBindableType<?> type, @Nullable JavaType<?> clazz) {
+		//noinspection unchecked
+		expressibleType = (SqmBindableType<T>) type;
+	}
+
 	private void applyInferableType(SqmSubQuery<T> this, @Nullable Class<T> type, @Nonnull NodeBuilder nodeBuilder) {
 		if ( type != null ) {
 			final EntityDomainType<T> entityDescriptor = nodeBuilder.getDomainModel().findEntityType( type );

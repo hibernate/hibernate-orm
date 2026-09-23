@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
@@ -79,7 +80,10 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 
 	public void value(@Nonnull SqmExpression<? extends T> expression) {
 		arguments.add( expression );
-		internalApplyInferableType( highestPrecedenceType2( getNodeType(), expression.getNodeType() ) );
+		internalApplyInferableType(
+				highestPrecedenceType2( getNodeType(), expression.getNodeType() ),
+				highestPrecedenceType2( getJavaTypeDescriptor(), expression.getJavaTypeDescriptor() )
+		);
 	}
 
 	@Override
@@ -87,6 +91,14 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		super.internalApplyInferableType( newType );
 		for ( var argument : arguments ) {
 			argument.applyInferableType( newType );
+		}
+	}
+
+	@Override
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType, @Nullable JavaType<?> newJavaType) {
+		super.internalApplyInferableType( newType, newJavaType );
+		for ( var argument : arguments ) {
+			argument.applyInferableType( newType, newJavaType );
 		}
 	}
 

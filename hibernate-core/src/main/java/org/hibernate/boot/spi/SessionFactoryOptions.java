@@ -302,6 +302,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isOrderInsertsEnabled();
 
 	/**
+	 * @see org.hibernate.cfg.BatchSettings#BATCH_IDENTITY_INSERTS
+	 */
+	boolean isBatchIdentityInsertsEnabled();
+
+	/**
 	 * Is there a
 	 * {@linkplain org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider
 	 * multi-tenant connection provider} configured?

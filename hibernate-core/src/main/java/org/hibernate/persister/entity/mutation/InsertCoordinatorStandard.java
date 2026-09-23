@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
@@ -18,6 +19,7 @@ import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.jdbc.mutation.internal.MutationExecutorSingleBatched;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -25,6 +27,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -42,6 +45,7 @@ import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCustomSql;
 
 /**
  * Coordinates the insertion of an entity.
@@ -54,13 +58,15 @@ import static org.hibernate.generator.EventType.INSERT;
 public class InsertCoordinatorStandard extends AbstractMutationCoordinator implements InsertCoordinator {
 	private final MutationOperationGroup staticInsertGroup;
 	private final BasicBatchKey batchKey;
+	private final BasicBatchKey identityBatchKey;
+	private final boolean batchGeneratedIdentityInserts;
 
 	public InsertCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
 		batchKey =
 				entityPersister.isIdentifierAssignedByInsert() || entityPersister.hasInsertGeneratedProperties()
-						// disable batching in case of insert-generated identifier or properties
+						// the synchronous insert path cannot be batched when there are generated values
 						? null
 						: new BasicBatchKey( entityPersister.getEntityName() + "#INSERT" );
 
@@ -70,6 +76,24 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 						// static inserts as we will create them every time
 						? null
 						: generateStaticOperationGroup();
+
+		batchGeneratedIdentityInserts =
+				staticInsertGroup != null
+						&& staticInsertGroup.getNumberOfOperations() == 1
+						&& entityPersister.getInsertDelegate() instanceof GetGeneratedKeysDelegate insertDelegate
+						&& !insertDelegate.supportsArbitraryValues()
+						&& !insertDelegate.supportsRowId()
+						&& entityPersister.getInsertGeneratedProperties().size() == 1
+						&& entityPersister.getInsertGeneratedProperties().get( 0 ).isEntityIdentifierMapping()
+						&& !entityPersister.hasPreInsertGeneratedProperties()
+						&& entityPersister.getRowIdMapping() == null
+						&& entityPersister.getIdentifierMapping().asBasicValuedModelPart() != null
+						&& noCustomSql( entityPersister, EventType.INSERT )
+						&& dialect().supportsBatchInsertReturningGeneratedKeys();
+
+		identityBatchKey = batchGeneratedIdentityInserts
+				? new BasicBatchKey( entityPersister.getEntityName() + "#IDENTITY_INSERT" )
+				: null;
 	}
 
 	@Override
@@ -121,6 +145,54 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			|| forceIdentifierBinding
 				? doDynamicInserts( id, values, entity, session, forceIdentifierBinding )
 				: doStaticInserts( id, values, entity, session );
+	}
+
+	@Override
+	public boolean canBatchGeneratedIdentityInserts() {
+		return batchGeneratedIdentityInserts;
+	}
+
+	@Override
+	public void insertDeferred(
+			Object entity,
+			Object[] values,
+			Consumer<Object> generatedIdConsumer,
+			SharedSessionContractImplementor session) {
+		if ( !batchGeneratedIdentityInserts ) {
+			throw new UnsupportedOperationException(
+					"Generated identity inserts are not batchable for " + entityPersister().getEntityName() );
+		}
+
+		final var insertValuesAnalysis = new InsertValuesAnalysis( entityPersister(), values );
+		final var tableInclusionChecker = getTableInclusionChecker( insertValuesAnalysis );
+
+		final var mutationExecutor = (MutationExecutorSingleBatched)
+				mutationExecutorService.createExecutor( () -> identityBatchKey, staticInsertGroup, session );
+		mutationExecutor.setGeneratedKeyConsumer( generatedIdConsumer );
+
+		decomposeForInsert(
+				mutationExecutor,
+				null,
+				values,
+				entity,
+				staticInsertGroup,
+				entityPersister().getPropertyInsertability(),
+				tableInclusionChecker,
+				session
+		);
+
+		try {
+			mutationExecutor.execute(
+					entity,
+					insertValuesAnalysis,
+					tableInclusionChecker,
+					InsertCoordinatorStandard::verifyOutcome,
+					session
+			);
+		}
+		finally {
+			mutationExecutor.release();
+		}
 	}
 
 	protected boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
@@ -202,7 +274,27 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			boolean[] propertyInclusions,
 			TableInclusionChecker tableInclusionChecker,
 			SharedSessionContractImplementor session) {
-		final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+		decomposeForInsert(
+				mutationExecutor.getJdbcValueBindings(),
+				id,
+				values,
+				object,
+				mutationGroup,
+				propertyInclusions,
+				tableInclusionChecker,
+				session
+		);
+	}
+
+	protected void decomposeForInsert(
+			JdbcValueBindings jdbcValueBindings,
+			Object id,
+			Object[] values,
+			Object object,
+			MutationOperationGroup mutationGroup,
+			boolean[] propertyInclusions,
+			TableInclusionChecker tableInclusionChecker,
+			SharedSessionContractImplementor session) {
 		final var attributeMappings = entityPersister().getAttributeMappings();
 
 		for ( int position = 0; position < mutationGroup.getNumberOfOperations(); position++ ) {
@@ -469,7 +561,6 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		return tableMapping -> !tableMapping.isOptional()
 			|| insertValuesAnalysis.hasNonNullBindings( tableMapping );
 	}
-
 
 	/**
 	 * Transform the array of property indexes to an array of booleans,

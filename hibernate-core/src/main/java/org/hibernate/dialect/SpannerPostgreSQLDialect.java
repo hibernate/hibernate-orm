@@ -24,7 +24,10 @@ import org.hibernate.dialect.type.internal.SpannerPostgreSQLEnumSupport;
 import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
 import org.hibernate.dialect.jdbc.spi.ParameterLimits;
 
+import org.hibernate.dialect.schema.internal.SpannerPostgreSQLIndexExporter;
 import org.hibernate.dialect.schema.internal.SpannerPostgreSQLTableExporter;
+import org.hibernate.mapping.Index;
+import org.hibernate.tool.schema.spi.Exporter;
 
 import org.hibernate.dialect.function.spi.Replacer;
 
@@ -206,6 +209,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 
 	private final UniqueDelegate SPANNER_UNIQUE_DELEGATE = UniqueDelegates.alwaysIndex( this );
 	private final StandardTableExporter SPANNER_TABLE_EXPORTER = new SpannerPostgreSQLTableExporter( this );
+	private final Exporter<Index> SPANNER_INDEX_EXPORTER = new SpannerPostgreSQLIndexExporter( this );
 	private final SequenceSupport SPANNER_SEQUENCE_SUPPORT = new SpannerPostgreSQLSequenceSupport(this);
 
 	// This will use a monotonically increasing value that is within the range of a 32-bit integer
@@ -397,6 +401,11 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 	@Override
 	public StandardTableExporter getTableExporter() {
 		return SPANNER_TABLE_EXPORTER;
+	}
+
+	@Override
+	public Exporter<Index> getIndexExporter() {
+		return SPANNER_INDEX_EXPORTER;
 	}
 
 	@Override

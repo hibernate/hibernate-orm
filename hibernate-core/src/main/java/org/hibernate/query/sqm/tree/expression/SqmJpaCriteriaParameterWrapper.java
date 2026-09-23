@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.function.Consumer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -14,6 +15,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.query.sqm.tree.expression.SqmExpressionHelper.toSqmType;
 
@@ -101,6 +103,12 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	@Override
 	public @Nullable Class<T> getParameterType() {
 		return jpaCriteriaParameter.getParameterType();
+	}
+
+	@Override
+	public @Nullable JavaType<T> getJavaTypeDescriptor() {
+		final SqmBindableType<T> nodeType = getNodeType();
+		return nodeType == null ? jpaCriteriaParameter.getJavaTypeDescriptor() : nodeType.getExpressibleJavaType();
 	}
 
 	@Override

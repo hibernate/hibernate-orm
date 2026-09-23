@@ -24,7 +24,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	private final @Nullable T value;
 
 	public ValueBindJpaCriteriaParameter(@Nullable BindableType<? super T> type, @Nullable T value, NodeBuilder nodeBuilder) {
-		super( null, type, null, false, nodeBuilder );
+		super( null, null, null, false, nodeBuilder );
 		assert value == null || type == null
 			|| ( type instanceof SqmBindableType<? super T> bindable
 					// TODO: why does SqmExpressible.getJavaType() return an apparently-wrong type?
@@ -42,6 +42,10 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 
 	private ValueBindJpaCriteriaParameter(ValueBindJpaCriteriaParameter<T> original) {
 		super( original );
+		setExpressibleType(
+				original.getNodeType(),
+				original.getJavaTypeDescriptor()
+		);
 		this.value = original.value;
 	}
 

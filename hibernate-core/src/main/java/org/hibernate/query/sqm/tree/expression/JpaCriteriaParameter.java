@@ -136,7 +136,8 @@ public class JpaCriteriaParameter<T>
 	@Override
 	public @Nullable Class<T> getParameterType() {
 		final SqmExpressible<T> nodeType = getNodeType();
-		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
+		final var javaType = nodeType == null ? getJavaTypeDescriptor() : nodeType.getExpressibleJavaType();
+		return javaType == null ? null : javaType.getJavaTypeClass();
 	}
 
 	@Override

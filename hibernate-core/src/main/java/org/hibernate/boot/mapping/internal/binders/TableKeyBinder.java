@@ -325,7 +325,8 @@ public class TableKeyBinder {
 					ResolvedUniqueKey.uniqueConstraint( table, Arrays.asList( uniqueConstraint.columnNames() ),
 							bindingState.getMetadataBuildingContext(),
 							StringHelper.nullIfEmpty( uniqueConstraint.name() ), uniqueConstraint.options(),
-							collectionTableBinding.uniqueConstraintLocation() + ".uniqueConstraints[" + i + "]" ) );
+							collectionTableBinding.tableAnnotationLocation() + ".uniqueConstraints[" + i + "]", null,
+							collectionTableBinding.collection().getRole() ) );
 		}
 	}
 
@@ -364,38 +365,16 @@ public class TableKeyBinder {
 		}
 	}
 
-	private void applyIndexes(CollectionTableBinding collectionTableBinding) {
-		for ( jakarta.persistence.Index indexAnn : collectionTableBinding.indexes() ) {
-			if ( StringHelper.isEmpty( indexAnn.columnList() ) ) {
-				continue;
-			}
-
-			if ( !(collectionTableBinding.collection().getCollectionTable() instanceof PhysicalTable table) ) {
-				continue;
-			}
-			final String indexName = indexAnn.name();
-			final List<Selectable> indexColumns = new ArrayList<>();
-			final List<String> columnNames = new ArrayList<>();
-			for ( String columnName : indexAnn.columnList().split( "," ) ) {
-				final String trimmedColumnName = columnName.trim();
-				columnNames.add( trimmedColumnName );
-				indexColumns.add( resolveColumn( table, trimmedColumnName ) );
-			}
-			IndexMappingMaterializer.materializeIndex(
-					ResolvedIndex.explicit(
-							table,
-							indexColumns,
-							columnNames,
-							bindingState.getMetadataBuildingContext(),
-							indexName,
-							indexAnn.unique(),
-							indexAnn.type(),
-							indexAnn.using(),
-							indexAnn.options(),
-							null,
-							collectionTableBinding.collection().getRole()
-					)
-			);
+	private void applyIndexes(CollectionTableBinding binding) {
+		if ( !(binding.collection().getCollectionTable() instanceof PhysicalTable table) ) { return; }
+		for ( int i = 0; i < binding.indexes().length; i++ ) {
+			final var index = binding.indexes()[i];
+			IndexMappingMaterializer.materializeIndex( new ResolvedIndex(
+					table, bindingState.getRelationalModelCorrespondences().tableName( table ),
+					index.columnList(), bindingState.getMetadataBuildingContext(),
+					StringHelper.nullIfEmpty( index.name() ), index.unique(), StringHelper.nullIfEmpty( index.type() ),
+					StringHelper.nullIfEmpty( index.using() ), StringHelper.nullIfEmpty( index.options() ),
+					binding.tableAnnotationLocation() + ".indexes[" + i + "]", null, binding.collection().getRole() ) );
 		}
 	}
 

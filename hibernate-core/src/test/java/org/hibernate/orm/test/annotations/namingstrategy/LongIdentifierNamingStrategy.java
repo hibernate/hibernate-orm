@@ -10,7 +10,7 @@ import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.spi.ForeignKeyNamingInput;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
-import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
+import org.hibernate.boot.model.naming.spi.IndexNamingInput;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.spi.UniqueKeyNamingInput;
 
@@ -33,8 +33,9 @@ public class LongIdentifierNamingStrategy
 
 	@Override
 	@Nonnull
-	public Identifier determineIndexName(@Nonnull ImplicitIndexNameSource source) {
-		return limitIdentifierName(super.determineIndexName( source ));
+	public LogicalName determineIndexName(@Nonnull IndexNamingInput input, @Nonnull ImplicitNamingContext context) {
+		final var name = super.determineIndexName( input, context );
+		return context.implicitName( name.getText().substring( 0, Math.min( 30, name.getText().length() ) ), name.isQuoted() );
 	}
 
 	public Identifier limitIdentifierName(Identifier identifier) {

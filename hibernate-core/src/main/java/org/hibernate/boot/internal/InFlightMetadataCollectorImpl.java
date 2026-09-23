@@ -1650,6 +1650,7 @@ public class InFlightMetadataCollectorImpl
 	public MetadataImpl buildMetadataInstance(MetadataBuildingContext buildingContext) {
 		processSecondPasses( buildingContext );
 		processGeneratorContributions();
+		org.hibernate.boot.mapping.internal.materialize.IndexMappingMaterializer.finishIndexes( buildingContext );
 		org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer.finishColumnUniqueKeys(
 				collectTableMappings(), buildingContext );
 

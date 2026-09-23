@@ -4,70 +4,38 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
-import org.hibernate.mapping.PhysicalTable;
-
-import java.util.List;
-
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.PhysicalTable;
+import org.hibernate.relational.naming.spi.LogicalName;
 
-/// Resolved index materialization input.
+/// An index declaration retained until its table columns are available.
 ///
-/// @param table The table that owns the index.
-/// @param selectables The ordered index selectables.
-/// @param columnNames The logical column/formula names used for implicit naming.
-/// @param metadataBuildingContext The metadata-building context used for
-/// 		implicit index naming.
-/// @param sourceRole Human-readable role used in diagnostics.
-///
-/// @since 9.0
+/// @param table Owning physical table
+/// @param logicalTableName Selected source identity, captured before source binding is discarded
+/// @param columnList Original declaration, parsed without rewriting expression text
+/// @param metadataBuildingContext Mapping context used for resolution and naming
+/// @param name Optional explicit index name
+/// @param unique Source unique flag
+/// @param type Optional index type
+/// @param using Optional indexing method
+/// @param options Optional export SQL options
+/// @param sourceRole Class/member, containing annotation, and index declaration position
+/// @param entityName Declaring entity for attribute-path fallback, or null for collection/join-table declarations
+/// @param collectionRole Declaring collection role for explicit collection references, or null
 /// @author Steve Ebersole
 public record ResolvedIndex(
 		@Nonnull PhysicalTable table,
-		@Nonnull List<Selectable> selectables,
-		@Nonnull List<String> columnNames,
+		@Nonnull LogicalName logicalTableName,
+		@Nonnull String columnList,
 		@Nonnull MetadataBuildingContext metadataBuildingContext,
 		@Nullable String name,
 		boolean unique,
 		@Nullable String type,
 		@Nullable String using,
 		@Nullable String options,
-		@Nullable List<String> columnOrderings,
-		@Nullable String sourceRole) {
-	public ResolvedIndex {
-		selectables = List.copyOf( selectables );
-		columnNames = List.copyOf( columnNames );
-		if ( columnOrderings != null ) {
-			columnOrderings = java.util.Collections.unmodifiableList( new java.util.ArrayList<>( columnOrderings ) );
-		}
-	}
-
-	public static ResolvedIndex explicit(
-			PhysicalTable table,
-			List<Selectable> selectables,
-			List<String> columnNames,
-			MetadataBuildingContext metadataBuildingContext,
-			@Nullable String name,
-			boolean unique,
-			@Nullable String type,
-			@Nullable String using,
-			@Nullable String options,
-			@Nullable List<String> columnOrderings,
-			@Nullable String sourceRole) {
-		return new ResolvedIndex(
-				table,
-				selectables,
-				columnNames,
-				metadataBuildingContext,
-				name,
-				unique,
-				type,
-				using,
-				options,
-				columnOrderings,
-				sourceRole
-		);
-	}
+		@Nonnull String sourceRole,
+		@Nullable String entityName,
+		@Nullable String collectionRole) {
 }

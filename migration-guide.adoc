@@ -1027,8 +1027,8 @@ a custom strategy returning an explicitly flagged logical name does not turn it 
 an explicit mapping declaration.
 
 See https://hibernate.atlassian.net/browse/HHH-20917[HHH-20917] for the placeholder-column
-correction. Index naming remains on its existing contract; unique indexes represented
-as UK constraints use the UK lifecycle and naming hooks.
+correction. Unique indexes represented as UK constraints use the UK lifecycle and naming
+hooks, as described below.
 
 Temporal period-start additions retain their previous exclusion from UK naming inputs
 while remaining part of the constraint. Inferred aggregate-collection UKs also retain
@@ -1099,3 +1099,94 @@ Audit helper tables which previously omitted logical-name registration now retai
 creation names for FK naming inputs. With a transforming physical naming strategy, their
 FK hashes may change from the former physical-table-name fallback to the known logical
 creation name. Explicitly registered table aliases retain their existing selection.
+
+
+=== Index naming and column resolution
+
+`ImplicitNamingStrategy.determineIndexName()` now accepts `IndexNamingInput` and
+`ImplicitNamingContext` and returns a non-null `LogicalName`. `ImplicitIndexNameSource`
+and `ImplicitConstraintNameSource` and their source-based subclass helpers are removed.
+The interface default preserves the existing `IDX` hash over the logical table name
+and sorted source term spellings. Order, direction, uniqueness, `type`, and `using`
+do not enter that default hash, though custom strategies can inspect them.
+
+Each column term exposes resolved logical/physical names plus its original reference
+spelling. Expression terms carry opaque SQL, not identifiers. Explicit names bypass
+implicit naming; physical index naming applies once and cannot remove requested quoting.
+
+Index column references now resolve actual mapped columns after binding. Logical lookup
+wins, with physical-name fallback only when no logical match exists. Physical column
+naming is not repeated, and unknown columns fail boot even for explicitly named indexes.
+A collection index whose reference previously matched a different physical column now
+selects the logical match. Entity and collection/join-table index lists share parsing
+for `ASC`/`DESC`, parenthesized expressions, nesting, and quoted commas. Malformed lists
+fail with declaration locations. Corrected expression parsing can change names for
+previously misparsed definitions.
+
+Repeated explicit `@Index` names on the same table now fail with both declaration
+locations, even for identical definitions or unique indexes represented as UKs. Generated
+or physical-name collisions between different definitions also fail instead of merging.
+For example, `(first, second)` and `(second, first)` still have the same default hash:
+give them distinct explicit names or supply a custom naming strategy. Equivalent unnamed
+index declarations are deduplicated before naming.
+
+Collection and join-table `@Index(unique=true)` now use the same dialect representation
+policy as entity tables. When represented as a UK, they use UK naming callbacks, default
+UK names, and UK export rules rather than index naming and export. This may change both
+schema object representation and generated names; different custom physical UK/index
+strategies can also change explicitly named objects. Review schema migration scripts.
+Explicit index `type`, `using`, expressions, ordering, and SQL options are retained as
+appropriate for the dialect-selected representation.
+
+[[column-reference-resolution]]
+=== Explicit column-reference resolution sequence
+
+Hibernate 9.0 defines the following resolution sequence for both `@Index.columnList`
+and `@UniqueConstraint.columnNames`, including collection and association join tables.
+Index ordering keywords (`ASC` or `DESC`) are removed before resolving the reference.
+
+. An unquoted `\{key}` or `\{element}` marker selects the collection role directly,
+  bypassing column lookup. These forms are valid only in collection/join-table declarations.
+. Otherwise, resolve the logical column name first.
+. If no logical column matches, resolve the existing physical column name.
+. If neither column lookup matches, an entity primary/secondary-table declaration may
+  resolve an attribute path relative to its declaring entity. Collection/join-table
+  declarations do not infer unprefixed attribute paths.
+
+The first match wins: logical names take precedence over physical names, and column
+names take precedence over entity attribute paths. Actual mapped columns are reused;
+physical naming is not invoked again. Unknown references fail at boot, even for explicitly
+named constraints or indexes. Applications relying on placeholder columns must correct
+those references.
+
+Entity paths such as `summary.text` must explicitly name enclosing embeddables; bare
+`text` does not search them. Collection roles use `\{element}` for the element/map value
+and `\{key}` for the map key, with optional embeddable paths such as
+`\{element}.address.city` or `\{key}.code`. The key marker does not select an owner FK
+or list index. Owner FK columns remain addressable by column name.
+
+Each attribute/role reference must identify one actual column on the declaring table.
+A whole entity-valued role may select its single local FK column, but paths into the
+associated entity are rejected. Multi-column values, formulas, inverse associations
+without local columns, and references to other tables are rejected.
+
+Quote the entire identifier to reference a literal marker-shaped column instead of a role:
+
+[source,java]
+----
+@Index(columnList = "`{element}.city`")
+@UniqueConstraint(columnNames = "`{element}.city`")
+----
+
+Parenthesized index expressions remain SQL expressions, not attribute/role references.
+Use physical column names inside those expressions.
+
+Source term spelling remains the default index-hash input, so switching from a column
+reference to an attribute or role path can change an implicitly generated index name.
+Unique-key hashing continues to use resolved column dependencies, not path spellings.
+Review schema migration scripts when changing reference forms.
+
+Collection association `@JoinTable` declarations containing only indexes or unique
+constraints are now retained even when their table name and join columns are implicit.
+These declarations were previously ignored, so their constraints/indexes now participate
+in validation and schema generation.

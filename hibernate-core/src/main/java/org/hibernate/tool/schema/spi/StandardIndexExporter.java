@@ -96,7 +96,7 @@ public final class StandardIndexExporter implements Exporter<Index> {
 			);
 		}
 		else {
-			return index.getName();
+			return index.getQuotedName( dialect );
 		}
 	}
 
@@ -126,8 +126,8 @@ public final class StandardIndexExporter implements Exporter<Index> {
 			final String tableName = index.getTable().getTableExpression( context );
 			final String indexNameForCreation = dialect.getIndexDdlSupport().nameQualification()
 					== IndexNameQualification.QUALIFIED
-					? qualify( tableName, index.getName() )
-					: index.getName();
+					? qualify( tableName, index.getQuotedName( dialect ) )
+					: index.getQuotedName( dialect );
 			return new String[] {"drop index " + indexNameForCreation};
 		}
 	}

@@ -95,18 +95,31 @@ public final class UniqueKeyMappingMaterializer {
 			if ( resolved.columnReferences() != null ) {
 				final var reference = resolved.columnReferences().get( i );
 				final var requested = database.toLogicalName( reference );
-				column = names.findPhysicalColumn( table, requested );
-				if ( column != null ) {
-					logical = names.selectReferenceName( table, column, requested );
+				if ( AttributeColumnReference.isRoleReference( reference ) ) {
+					column = new AttributeColumnReference( table, context, resolved.entityName(),
+							resolved.sourceRole(), resolved.collectionRole() ).resolveRole( reference );
+					logical = names.findDeclarationName( table, column );
 				}
 				else {
-					column = table.getColumn( ColumnNameHelper.physicalName( reference, database ) );
+					column = names.findPhysicalColumn( table, requested );
+					if ( column != null ) {
+						logical = names.selectReferenceName( table, column, requested );
+					}
+					else {
+						column = table.getColumn( ColumnNameHelper.physicalName( reference, database ) );
+						logical = column == null ? null : names.findDeclarationName( table, column );
+					}
+				}
+				if ( column == null && resolved.entityName() != null ) {
+					column = new AttributeColumnReference( table, context, resolved.entityName(), resolved.sourceRole(), resolved.collectionRole() )
+							.resolve( reference );
 					logical = column == null ? null : names.findDeclarationName( table, column );
 				}
 				// HHH-20917: resolve references; never construct or physically rename placeholders.
 				if ( column == null ) {
 					throw new org.hibernate.AnnotationException( "Unique constraint '" + resolved.name()
-							+ "' on table '" + table.getName() + "' references unknown column '" + reference + "'" );
+							+ "' on table '" + table.getName() + "' references unknown column '" + reference
+							+ "' at " + resolved.sourceRole() );
 				}
 			}
 			else {
@@ -143,12 +156,14 @@ public final class UniqueKeyMappingMaterializer {
 		}
 		final var explicit = resolved.nameExplicit() && resolved.name() != null && !resolved.name().isEmpty()
 				? database.toLogicalName( resolved.name(), true ) : null;
-		return new Candidate( key, explicit, pairs, false );
+		final var candidate = new Candidate( key, explicit, pairs, false );
+		candidate.indexSource = resolved.indexSource();
+		return candidate;
 	}
 
 	private static void finish(Table table, List<Candidate> candidates, MetadataBuildingContext context) {
 		// Duplicate @UniqueConstraint declarations were rejected before resolution.
-		// Other contributors, including unique indexes, retain their existing merging policy.
+		// Index declarations are validated before being submitted to this lifecycle.
 		final var merged = new ArrayList<Candidate>();
 		final Map<LogicalName, Candidate> explicitNames = new LinkedHashMap<>();
 		for ( var candidate : candidates ) {
@@ -158,6 +173,11 @@ public final class UniqueKeyMappingMaterializer {
 				if ( candidate.explicitName != null ) { explicitNames.put( candidate.explicitName, candidate ); }
 			}
 			else {
+				if ( (previous.indexSource || candidate.indexSource) && !sameDefinition( previous, candidate ) ) {
+					throw new MappingException( "Unique index/constraint name collision on table '" + table.getName()
+							+ "' for name '" + candidate.explicitName + "'" );
+				}
+				previous.indexSource |= candidate.indexSource;
 				for ( int i = 0; i < candidate.key.getColumns().size(); i++ ) {
 					final var column = candidate.key.getColumn( i );
 					if ( !previous.key.containsColumn( column ) ) { previous.pairs.add( candidate.pairs.get( i ) ); }
@@ -194,19 +214,19 @@ public final class UniqueKeyMappingMaterializer {
 			primaryKey.setOrderingUniqueKey( absorbed.key );
 		}
 		final Map<String, UniqueKey> finalized = new LinkedHashMap<>();
-		final Map<org.hibernate.relational.naming.spi.PhysicalName, UniqueKey> physicalNames = new LinkedHashMap<>();
+		final Map<org.hibernate.relational.naming.spi.PhysicalName, Candidate> physicalNames = new LinkedHashMap<>();
 		if ( absorbed != null && absorbed.key.isNameExplicit() && absorbed.key.getName() != null ) {
 			physicalNames.put( ColumnNameHelper.physicalName( absorbed.key.getName(),
-					context.getMetadataCollector().getDatabase() ), absorbed.key );
+					context.getMetadataCollector().getDatabase() ), absorbed );
 		}
 		for ( var candidate : survivors ) {
 			if ( primaryKey != null && sameColumns( primaryKey.getColumns(), candidate.key.getColumns() ) ) { continue; }
 			name( candidate, context );
 			final var physicalName = ColumnNameHelper.physicalName( candidate.key.getName(), context.getMetadataCollector().getDatabase() );
-			final var previous = physicalNames.putIfAbsent( physicalName, candidate.key );
-			if ( previous != null && !sameColumns( previous.getColumns(), candidate.key.getColumns() ) ) {
+			final var previous = physicalNames.putIfAbsent( physicalName, candidate );
+			if ( previous != null && !sameDefinition( previous, candidate ) ) {
 				throw new MappingException( "Unique-key naming collision on table '" + table.getName()
-						+ "' for name '" + candidate.key.getName() + "': " + previous.getColumns()
+						+ "' for name '" + candidate.key.getName() + "': " + previous.key.getColumns()
 						+ " versus " + candidate.key.getColumns() );
 			}
 			if ( previous == null ) { finalized.put( candidate.key.getName(), candidate.key ); }
@@ -216,6 +236,15 @@ public final class UniqueKeyMappingMaterializer {
 			}
 		}
 		table.finalizeUniqueKeys( finalized );
+	}
+
+	private static boolean sameDefinition(Candidate first, Candidate second) {
+		if ( first.indexSource || second.indexSource ) {
+			return first.key.getColumns().equals( second.key.getColumns() )
+					&& first.key.getColumnOrderMap().equals( second.key.getColumnOrderMap() )
+					&& java.util.Objects.equals( first.key.getOptions(), second.key.getOptions() );
+		}
+		return sameColumns( first.key.getColumns(), second.key.getColumns() );
 	}
 
 	private static boolean sameColumns(List<Column> first, List<Column> second) {
@@ -253,6 +282,7 @@ public final class UniqueKeyMappingMaterializer {
 		final LogicalName explicitName;
 		final List<NamingNamePair> pairs;
 		boolean finalized;
+		boolean indexSource;
 		Candidate(UniqueKey key, LogicalName explicitName, List<NamingNamePair> pairs, boolean finalized) {
 			this.key = key;
 			this.explicitName = explicitName;

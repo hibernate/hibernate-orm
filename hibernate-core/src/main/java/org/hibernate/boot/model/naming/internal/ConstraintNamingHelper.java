@@ -4,10 +4,8 @@
  */
 package org.hibernate.boot.model.naming.internal;
 
-import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.relational.naming.spi.LogicalName;
 
@@ -18,18 +16,6 @@ public final class ConstraintNamingHelper {
 	public enum Kind { PRIMARY_KEY, FOREIGN_KEY, UNIQUE_KEY, INDEX }
 
 	private ConstraintNamingHelper() {
-	}
-
-	public static String resolve(String explicitName, Supplier<Identifier> implicitName,
-			Kind kind, MetadataBuildingContext context) {
-		final boolean explicit = explicitName != null && !explicitName.isEmpty();
-		final Identifier identifier = explicit
-				? Identifier.toIdentifier( explicitName, false, false, true ) : implicitName.get();
-		if ( identifier == null ) {
-			throw new MappingException( "Implicit naming strategy returned null for " + kind );
-		}
-		final var logical = new LogicalName( identifier.getText(), identifier.isQuoted(), explicit );
-		return resolveLogical( logical, kind, context );
 	}
 
 	public static String resolveLogical(LogicalName logical, Kind kind, MetadataBuildingContext context) {

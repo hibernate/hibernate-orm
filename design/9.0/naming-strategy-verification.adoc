@@ -7,9 +7,10 @@ deprecating the other three strategies with runtime warnings. That work is imple
 and validated. This document retains the test contract and outstanding coverage work.
 All five registrations remain available; Standard remains the default.
 
-Latest full core validation: 17,976 tests, 1,525 skipped,
+Latest full core validation: 18,039 tests, 1,525 skipped,
 0 failures and 0 errors.
-This run includes the FK and UK contract migrations, HHH-20916 unique-column
+This run includes entity attribute fallback, explicit collection role references,
+join-table declaration detection, the index contract/resolution migration, the FK and UK contract migrations, HHH-20916 unique-column
 finalization, HHH-20917 reference resolution, UK absorption and name emission, and
 null-only PK result validation. Slice-local counts below describe historical runs;
 they are not cumulative totals.
@@ -45,6 +46,32 @@ UK DDL, and archive restoration now have regression coverage. Temporal naming an
 aggregate UK behavior remain explicitly deferred in
 link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification]. Rendering
 assertions do not claim execution coverage across dialects.
+
+== Index And Column-Reference Validation
+
+The link:constraint-index-naming-proposal.adoc#completed-index-and-column-references[completed contracts]
+cover typed index naming, actual-column resolution, explicit collection roles, and shared
+entity attribute fallback for indexes and UKs. Eight initial characterization tests
+established the former placeholder, parsing, representation, and collision behavior;
+`IndexColumnResolutionTest` now asserts the corrections.
+
+`ImplicitIndexNamingTest` verifies typed terms, type/using, null rejection, original
+source spelling, quoting, parsing, collisions, and export/archive stability.
+`IndexAttributeReferenceTest` and `UniqueConstraintAttributeReferenceTest` each contain
+ten cases for precedence, basic/inherited/embedded attributes, local associations,
+secondary tables, and unsupported-reference errors. `CollectionRoleColumnReferenceTest`
+adds fourteen cases for map keys/values, quoted role escapes, local join-table FKs,
+association boundaries, and detection of index/constraint-only join-table declarations.
+Older fixtures now exercise actual attribute resolution and qualified embedded paths.
+
+All 400 naming-strategy tests passed. The final full-core run passed: 18,039 tests,
+1,525 skipped, zero failures or errors in the configured H2 environment. It includes
+all attribute and collection-role work; no cross-dialect execution is claimed.
+
+User Guide, Introduction, and migration-guide sections document these contracts.
+Introduction and migration-guide rendering passed. The User Guide produced the new
+section correctly, but its render task fails on four existing missing converter/hbm
+example includes in `chapters/domain/basic_types.adoc`.
 
 == Purpose and Test Contract
 
@@ -306,8 +333,8 @@ custom overrides and time-zone delegation to custom basic-column naming.
 The PK matrix asserts generated logical names and stored physical names independently
 of DDL emission. The standard physical strategy preserves the name for every PK; the
 existing exporter policy still omits implicit PK names from DDL. Custom physical
-strategy coverage remains in place. Invalid null or explicit results from implicit PK
-naming, and null physical PK results, are rejected with mapping errors.
+strategy coverage remains in place. Null results from implicit or physical PK naming are rejected with mapping errors;
+custom implicit results may carry either explicitness flag.
 
 This replaces the earlier nullable-physical-PK and standard-suppression expectations.
 Full core validation of the revised contract passed: 17,965 tests, 1,525 skipped, zero failures or errors.

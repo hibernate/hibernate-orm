@@ -29,6 +29,9 @@ import org.hibernate.mapping.Table;
 ///
 /// @param columnReferences Optional unresolved annotation references, resolved after column binding
 /// @param declarationLocation Location of a source `@UniqueConstraint`, or null for other UK sources.
+/// @param indexSource Whether this candidate originated from a unique index declaration
+/// @param entityName Declaring entity for attribute fallback, or null for other contributors
+/// @param collectionRole Declaring collection role for explicit collection references, or null
 /// @since 9.0
 /// @author Steve Ebersole
 public record ResolvedUniqueKey(
@@ -44,26 +47,35 @@ public record ResolvedUniqueKey(
 		boolean tableUniqueKey,
 		@Nullable String sourceRole,
 		@Nullable List<String> columnReferences,
-		@Nullable String declarationLocation) {
+		@Nullable String declarationLocation,
+		boolean indexSource,
+		@Nullable String entityName,
+		@Nullable String collectionRole) {
 	public ResolvedUniqueKey(Table table, List<Column> columns, MetadataBuildingContext context,
 			String name, boolean nameExplicit, boolean explicit, String options,
 			List<String> orderings, boolean nullsNotDistinct, boolean tableUniqueKey, String sourceRole) {
 		this( table, columns, context, name, nameExplicit, explicit, options, orderings,
-				nullsNotDistinct, tableUniqueKey, sourceRole, null, null );
+				nullsNotDistinct, tableUniqueKey, sourceRole, null, null, false, null, null );
 	}
 
 	/// Retain annotation references until column binding is complete (HHH-20917).
 	public static ResolvedUniqueKey references(Table table, List<String> references,
 			MetadataBuildingContext context, String name, String options, List<String> orderings, String role) {
 		return new ResolvedUniqueKey( table, List.of(), context, name, name != null && !name.isEmpty(),
-				true, options, orderings, false, true, role, references, null );
+				true, options, orderings, false, true, role, references, null, false, null, null );
 	}
 
 	/// Retain the declaration location for duplicate explicit-name validation (HHH-20918).
 	public static ResolvedUniqueKey uniqueConstraint(Table table, List<String> references,
-			MetadataBuildingContext context, String name, String options, String location) {
+			MetadataBuildingContext context, String name, String options, String location, String entityName, String collectionRole) {
 		return new ResolvedUniqueKey( table, List.of(), context, name, name != null && !name.isEmpty(),
-				true, options, null, false, true, location, references, location );
+				true, options, null, false, true, location, references, location, false, entityName, collectionRole );
+	}
+
+	/// Preserve unique-index provenance while using the UK finalization lifecycle.
+	public static ResolvedUniqueKey index(ResolvedIndex index, List<Column> columns, List<String> orderings) {
+		return new ResolvedUniqueKey( index.table(), columns, index.metadataBuildingContext(), index.name(),
+				index.name() != null, true, index.options(), orderings, false, true, index.sourceRole(), null, null, true, index.entityName(), index.collectionRole() );
 	}
 
 	public ResolvedUniqueKey {

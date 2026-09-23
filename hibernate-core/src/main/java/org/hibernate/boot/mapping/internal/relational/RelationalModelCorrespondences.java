@@ -24,6 +24,12 @@ import org.hibernate.boot.model.relational.Database;
 /// @since 9.0
 /// @author Steve Ebersole
 public class RelationalModelCorrespondences {
+	private final java.util.List<org.hibernate.boot.mapping.internal.materialize.ResolvedIndex> indexes = new java.util.ArrayList<>();
+
+	public java.util.List<org.hibernate.boot.mapping.internal.materialize.ResolvedIndex> indexCandidates() {
+		return indexes;
+	}
+
 	private final java.util.List<org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey> uniqueKeys = new java.util.ArrayList<>();
 
 	public java.util.List<org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey> uniqueKeyCandidates() {

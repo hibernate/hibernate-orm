@@ -6,11 +6,10 @@ Status: FK contract migration and HHH-20916 are implemented and verified.
 The complete UK slice below consolidates naming, column resolution (HHH-20917),
 duplicate handling, PK absorption, and name emission. Its scope and column-resolution
 policy and consolidated working specification are approved, implemented, and verified. Temporal naming and aggregate UK behavior are explicitly deferred
-as described below. Index migration and explicit PK declarations are
-separate slices in link:constraint-index-naming-proposal.adoc[the constraint/index proposal].
+as described below. Completed index/reference work and outstanding explicit PK declarations are
+tracked in link:constraint-index-naming-proposal.adoc[the constraint/index proposal].
 
-Follow-up: HHH-20918 now has an accepted direction to reject duplicate explicit
-`@UniqueConstraint` names; the revised working specification below is approved.
+HHH-20918 duplicate explicit `@UniqueConstraint` name rejection is implemented and verified.
 The HHH-20919 temporal membership correction below is a working specification awaiting
 approval; it is not part of the implementation and validation reported above.
 
@@ -47,7 +46,10 @@ contributions from audit/generator code does not add new naming callbacks for th
   explicitly declared constraint.
 . Resolve membership after the table's mapped columns, overrides, inherited bindings,
   and additional contributions are available. Use the approved logical-first lookup,
-  then physical fallback only when no logical match exists. Retain selected logical
+  then physical fallback only when no logical match exists. Entity primary/secondary-table
+  declarations additionally try the explicitly supplied attribute path after both column
+  lookups fail, using the shared single-column resolver described in
+  link:constraint-index-naming-proposal.adoc#completed-index-and-column-references[the completed index and reference contracts]. Retain selected logical
   aliases and actual mapped columns. Missing references fail during boot, including
   when the constraint name is explicit; do not invoke physical column naming for lookup.
 . Determine surviving UKs and PK absorption before invoking implicit UK naming.
@@ -650,6 +652,14 @@ labeling the physical input text as a logical name. A spelling matching logical 
 and physical column A therefore selects B. This intentionally changes the collection
 collision case above and must be documented. Entity physical-only references gain
 resolution to an existing column instead of being transformed again.
+
+Steve subsequently approved attribute-path fallback for entity primary/secondary-table
+`@UniqueConstraint` declarations after both column-name lookups fail. Resolve explicit
+nested paths without leaf-name guessing; require one actual local column and reject
+multi-column attributes, formulas, inverse associations, and wrong-table references.
+The resolver is shared with indexes. Collection/join-table declarations use the approved
+`{key}` and `{element}` syntax in link:constraint-index-naming-proposal.adoc#completed-index-and-column-references[the completed index and reference contracts].
+UK naming retains the resolved column dependencies, not the attribute spelling.
 
 An unresolved reference should fail during boot with the owning table, constraint, and
 column reference identified. A physical match without a recoverable logical declaration

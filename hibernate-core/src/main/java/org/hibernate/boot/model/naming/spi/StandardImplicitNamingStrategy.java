@@ -8,10 +8,7 @@ import jakarta.annotation.Nonnull;
 
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitConstraintNameSource;
-import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.relational.naming.spi.LogicalName;
 
 import java.io.Serializable;
@@ -172,15 +169,6 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	}
 
 
-	@Override
-	@Nonnull
-	public Identifier determineIndexName(@Nonnull ImplicitIndexNameSource source) {
-		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
-		return userProvidedIdentifier == null
-				? generateConstraintName( source )
-				: userProvidedIdentifier;
-	}
-
 	/// Use the full attribute path so repeated embeddables have distinct default names.
 	///
 	/// @param attributePath The attribute path
@@ -230,35 +218,4 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 		return identifierHelper.toIdentifier( stringForm );
 	}
 
-		/// Generate a name for the given constraint.
-	///
-	/// @return The identifier
-	protected Identifier generateConstraintName(ImplicitConstraintNameSource source) {
-		return toIdentifier( generateConstraintNameString( source ), source.getNamingContext() );
-	}
-
-		/// Generate a name for the given constraint.
-	///
-	/// @return The name as a string
-	protected String generateConstraintNameString(ImplicitConstraintNameSource source) {
-		final var namingHelper = namingHelper( source.getNamingContext() );
-		final String prefix = constraintNamePrefix( source.kind() );
-		return namingHelper.generateHashedConstraintName(
-				prefix, source.getTableName(), source.getColumnNames() );
-	}
-
-		/// Obtain a {@link NamingHelper} for use in constraint name generation.
-	protected NamingHelper namingHelper(ImplicitNamingContext context) {
-		return NamingHelper.withCharset( context.getSchemaCharset() );
-	}
-
-		/// The prefix for a generated constraint name of the given
-	/// {@linkplain ImplicitConstraintNameSource.Kind kind}.
-	///
-	/// @return The prefix as a string
-	protected String constraintNamePrefix(ImplicitConstraintNameSource.Kind kind) {
-		return switch ( kind ) {
-			case INDEX -> "IDX";
-		};
-	}
 }

@@ -18,10 +18,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.spi.ForeignKeyNamingInput;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
-import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
+import org.hibernate.boot.model.naming.spi.IndexNamingInput;
 import org.hibernate.boot.model.naming.spi.UniqueKeyNamingInput;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
@@ -72,9 +71,8 @@ class PhysicalConstraintNamingTest {
 		}
 		@Override
 		@Nonnull
-		public Identifier determineIndexName(@Nonnull ImplicitIndexNameSource source) {
-			assertThat( source.getUserProvidedIdentifier() ).isNull();
-			return super.determineIndexName( source );
+		public LogicalName determineIndexName(@Nonnull IndexNamingInput input, @Nonnull ImplicitNamingContext context) {
+			return super.determineIndexName( input, context );
 		}
 		@Override
 		@Nonnull

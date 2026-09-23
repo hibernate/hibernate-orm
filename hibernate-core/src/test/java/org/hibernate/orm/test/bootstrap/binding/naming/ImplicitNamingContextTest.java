@@ -8,8 +8,12 @@ import java.util.List;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
-import org.hibernate.boot.model.naming.NamingHelper;
+import org.hibernate.boot.model.naming.spi.IndexNamingInput;
+import org.hibernate.boot.model.naming.spi.IndexTermNamingInput;
+import org.hibernate.boot.model.naming.spi.NamedTableNamingInput;
+import org.hibernate.boot.model.naming.spi.NamingNamePair;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -49,24 +53,21 @@ class ImplicitNamingContextTest {
 	}
 
 	@Test
-	void constraintHashingUsesContextCharsetAndSubclassHook() {
+	void indexHashingUsesContextCharset() {
 		final var buildingContext = mock( MetadataBuildingContext.class, RETURNS_DEEP_STUBS );
 		when( buildingContext.getBuildingPlan().getSchemaCharset() ).thenReturn( "ISO-8859-1" );
 		final var context = ImplicitNamingContextImpl.from( buildingContext );
-		final var source = mock( ImplicitIndexNameSource.class );
-		when( source.getNamingContext() ).thenReturn( context );
-		when( source.kind() ).thenReturn( org.hibernate.boot.model.naming.ImplicitConstraintNameSource.Kind.INDEX );
-		when( source.getTableName() ).thenReturn( Identifier.toIdentifier( "café" ) );
-		when( source.getColumnNames() ).thenReturn( List.of(
-				Identifier.toIdentifier( "col1" ), Identifier.toIdentifier( "col2" ), Identifier.toIdentifier( "col3" ) ) );
-		final var strategy = new TrackingStrategy();
-		assertThat( strategy.constraintName( source ) ).isEqualTo( "IDX1pitt5gtytwpy6ea02o7l5men" );
-		assertThat( strategy.hashContext ).isSameAs( context );
+		final var input = new IndexNamingInput( new NamedTableNamingInput( new NamingNamePair(
+				new LogicalName( "café", false, true ), mock( PhysicalName.class ) ) ),
+				List.of( "col1", "col2", "col3" ).stream().<IndexTermNamingInput>map( name ->
+						new IndexTermNamingInput.ColumnTerm( new NamingNamePair(
+								new LogicalName( name, false, true ), mock( PhysicalName.class ) ), name,
+								IndexTermNamingInput.Order.UNSPECIFIED ) ).toList(), false, null, null );
+		assertThat( new TrackingStrategy().determineIndexName( input, context ).getText() ).isEqualTo( "IDX1pitt5gtytwpy6ea02o7l5men" );
 	}
 
 	private static class TrackingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
 		private ImplicitNamingContext identifierContext;
-		private ImplicitNamingContext hashContext;
 
 		@Override
 		protected Identifier toIdentifier(String name, ImplicitNamingContext context) {
@@ -74,14 +75,5 @@ class ImplicitNamingContextTest {
 			return super.toIdentifier( name, context );
 		}
 
-		@Override
-		protected NamingHelper namingHelper(ImplicitNamingContext context) {
-			hashContext = context;
-			return super.namingHelper( context );
-		}
-
-		String constraintName(ImplicitIndexNameSource source) {
-			return generateConstraintNameString( source );
-		}
 	}
 }

@@ -1232,6 +1232,10 @@ class Book { ... }
 
 This lets us create a customized index for a particular query.
 
+Column terms follow the <<constraint-column-references,same resolution rules as unique constraints>>: logical column name, then physical column name, then an entity attribute path.
+Explicit `\{key}` and `\{element}` references on collection/join tables instead select the collection role directly.
+An optional `ASC` or `DESC` applies to the resolved column.
+
 Note that SQL expressions like `lower(title)` must be enclosed in parentheses in the `columnList` of the index definition.
 
 [TIP]

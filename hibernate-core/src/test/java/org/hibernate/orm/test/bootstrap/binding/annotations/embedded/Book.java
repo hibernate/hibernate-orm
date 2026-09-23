@@ -16,7 +16,7 @@ import jakarta.persistence.SecondaryTable;
  * @author Emmanuel Bernard
  */
 @Entity
-@SecondaryTable(name = "BookSummary", indexes = @Index( columnList = "summ_size ASC, text DESC"))
+@SecondaryTable(name = "BookSummary", indexes = @Index( columnList = "summ_size ASC, summary.text DESC"))
 public class Book {
 	private String isbn;
 	private String name;

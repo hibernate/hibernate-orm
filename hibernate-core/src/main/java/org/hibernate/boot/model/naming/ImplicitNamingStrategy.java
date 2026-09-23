@@ -481,12 +481,27 @@ public interface ImplicitNamingStrategy {
 		) );
 	}
 
-	/// Determine the index name when it is not explicitly specified using
-	/// [jakarta.persistence.Index#name()].
+	/// Determine the name of an index whose [jakarta.persistence.Index#name()] is absent.
+	/// The default hashes the logical table name and sorted source term spellings,
+	/// preserving existing names. Term order, direction, uniqueness, type, and using
+	/// are available to custom strategies but do not participate in the default hash.
+	/// Unique declarations represented as UKs instead use [#determineUniqueKeyName].
 	///
-	/// @param source The source information
-	///
-	/// @return The implicit index name
+	/// @param input Resolved table and ordered column/expression dependencies
+	/// @param context Naming defaults, identifier conversion, and schema charset
+	/// @return A non-null logical index name
+	/// @see jakarta.persistence.Table#indexes()
+	/// @see jakarta.persistence.SecondaryTable#indexes()
+	/// @see jakarta.persistence.CollectionTable#indexes()
+	/// @see jakarta.persistence.JoinTable#indexes()
 	@Nonnull
-	Identifier determineIndexName(@Nonnull ImplicitIndexNameSource source);
+	default LogicalName determineIndexName(
+			@Nonnull org.hibernate.boot.model.naming.spi.IndexNamingInput input,
+			@Nonnull ImplicitNamingContext context) {
+		final var table = input.table().logicalName();
+		return context.implicitName( withCharset( context.getSchemaCharset() ).generateHashedConstraintName(
+				"IDX", new Identifier( table.getText(), table.isQuoted() ),
+				input.terms().stream().map( term -> Identifier.toIdentifier( term.sourceText(), false, false, false ) ).toList()
+		) );
+	}
 }

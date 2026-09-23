@@ -170,6 +170,8 @@ If the column value should be generated not only when a row is inserted, but als
 
 The {jpaJavadocUrlPrefix}UniqueConstraint.html[`@UniqueConstraint`] annotation is used to specify a unique constraint to be included by the automated schema generator for the primary or secondary table associated with the current annotated entity.
 
+See <<schema-generation-column-references>> for the resolution of `columnNames`.
+
 Considering the following entity mapping, Hibernate generates the unique constraint DDL when creating the database schema:
 
 [[schema-generation-columns-unique-constraint-mapping-example]]
@@ -210,6 +212,8 @@ The second INSERT statement fails because of the unique constraint violation.
 
 The {jpaJavadocUrlPrefix}Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
 
+See <<schema-generation-column-references>> for the resolution of `columnList` terms.
+
 TIP: Creating unique index containing all primary key columns will result in ordering primary key columns specified by `columnList`
 
 Considering the following entity mapping. Hibernate generates the index when creating the database schema:
@@ -227,3 +231,85 @@ include::{example-dir-schemagen}/IndexTest.java[tag=schema-generation-columns-in
 include::{extrasdir}/schema-generation-columns-index-mapping-example.sql[]
 ----
 ====
+
+
+[[schema-generation-column-references]]
+=== Column references in indexes and unique constraints
+
+Hibernate uses the same column-reference rules for `@Index.columnList` and `@UniqueConstraint.columnNames`,
+including declarations on `@Table`, `@SecondaryTable`, `@CollectionTable`, and collection association `@JoinTable` mappings.
+An index term may additionally specify `ASC` or `DESC`; the direction is separated from the reference before lookup.
+
+An unquoted reference starting with `\{key}` or `\{element}` is an explicit collection-role reference, resolved as described below.
+All other references are resolved in this order:
+
+. Look up the *logical column name*: the name supplied by the mapping or implicit naming strategy, before physical naming.
+. If there is no logical match, look up the *physical column name* already produced by the physical naming strategy.
+. For an entity's primary or secondary table, if neither column lookup matches, look up an *attribute path* relative to the declaring entity.
+
+The first match wins. A column name takes precedence over an attribute of the same name, and a logical column name takes precedence over a different column's physical name.
+Hibernate reuses the actual mapped column; it does not invoke physical naming again to resolve a reference.
+Unknown references fail during metadata building, even when the index or constraint has an explicit name.
+
+For example, given:
+
+[source,java]
+----
+@Column(name = "person_name")
+String name;
+----
+
+if physical naming transforms `person_name` into `p_person_name`, either column spelling may identify the mapped column.
+The attribute reference `name` also works if neither column lookup matches it.
+An embeddable attribute requires its path, such as `address.city`; Hibernate does not search embeddables for a leaf named `city`.
+
+Attribute references must resolve to exactly one actual column on the table containing the index or constraint.
+A basic attribute or an owning association with one local foreign-key column may be referenced.
+Multi-column attributes, formulas, inverse associations without local columns, and columns on another table are rejected.
+Paths may traverse embeddables, but must not traverse an association to another entity.
+
+==== Collection and join-table roles
+
+Collection references use explicit role markers instead of unprefixed attribute paths:
+
+[cols="1,3",options="header"]
+|===
+|Reference |Meaning
+|`\{element}` |The collection element, or the value of a map
+|`\{key}` |The key of a map; not the owner's foreign key or a list's order column
+|`\{element}.address.city` |An attribute reached through embeddables within the element or map value
+|`\{key}.code` |An attribute of an embeddable map key
+|===
+
+For example, the same role paths may be used in both declarations:
+
+[source,java]
+----
+@ElementCollection
+@CollectionTable(
+    indexes = @Index(columnList = "{key}.code, {element}.address.city DESC"),
+    uniqueConstraints = @UniqueConstraint(columnNames = {
+        "{key}.code", "{element}.address.city"
+    })
+)
+Map<RegionKey, ContactDetails> contacts;
+----
+
+Here, `RegionKey` is an embeddable with a `code` attribute, and `ContactDetails` is an embeddable containing an embedded `address` with a `city` attribute.
+Each reference must resolve to one actual column on the collection table.
+A whole entity-valued key or element may identify its single local join-table foreign-key column, but `\{element}.name` must not dereference the associated entity.
+Owner foreign-key columns remain addressable by column name.
+
+Unquoted role markers *bypass column-name lookup*.
+To reference a literal column whose name resembles a role path, quote the entire identifier using Hibernate's identifier-quoting syntax:
+
+[source,java]
+----
+@Index(columnList = "`{element}.city`")
+@UniqueConstraint(columnNames = "`{element}.city`")
+----
+
+These annotation fragments reference the literal column named `\{element}.city`, rather than an element's `city` attribute.
+
+Parenthesized index expressions, such as `(lower(person_name))`, are SQL expressions and do not undergo column or attribute-path resolution.
+Use database column names inside SQL expressions; collection-role markers are not SQL syntax.

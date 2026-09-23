@@ -2,11 +2,12 @@
 :toc2:
 :sectanchors:
 
-Status: PK, FK, and UK contracts are implemented, including column resolution,
+Status: PK, FK, UK, and index contracts are implemented, including column resolution,
 finalization, PK absorption, and UK name emission. Deferred temporal naming and aggregate
 UK behavior are recorded in
-link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification]; index inputs
-remain proposed. Existing default hashes are preserved except for the documented
+link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification]. Completed index
+and column-reference contracts are summarized below; verification is recorded in
+link:naming-strategy-verification.adoc[the verification record]. Existing default hashes are preserved except for the documented
 logical-dependency corrections and removal of the defective exporter UK fallback.
 Implicit PK names are stored but remain omitted from DDL under existing exporter policy.
 
@@ -100,7 +101,7 @@ PK/UK clause honors the chosen name.
 
 == Proposed Contract Shape
 
-Use four role-specific callbacks with the existing naming context. PK, FK, and UK are implemented. The index signature below remains proposed:
+Use four role-specific callbacks with the existing naming context. All four signatures are implemented:
 
 [source,java]
 ----
@@ -168,11 +169,10 @@ bookkeeping identity required for currently unnamed constraints.
 === Separate Collision Investigation
 
 Sorting index columns means `(a,b)` and `(b,a)` can produce identical serialized hash
-inputs. That is a potential identity collision, not evidence of an MD5 collision.
-No bug report or failing supported mapping reproducer has been established in this
-investigation. Do not claim a demonstrated defect or change default hashing on that basis.
-If pursued, first build a reproducer showing a user-visible failure and then propose a
-separate correction with its name-compatibility implications.
+inputs. The index-slice characterization now demonstrates that these declarations
+collapse into one index. This is an input-identity collision, not an MD5 collision.
+The working specification proposes rejecting conflicting definitions while preserving
+the default hash; changing that hash still requires a separate compatibility decision.
 
 No new SQL expression normalization, general collision resolution, or dialect-specific
 truncation is included in the approved scope. Retain a limit of fifteen characters for
@@ -339,10 +339,8 @@ by a second callback after a late column arrives.
 
 == Remaining Implementation Sequence
 
-. Revisit temporal UK naming dependencies and aggregate UK membership in their deferred investigations.
-. Specify and migrate indexes with typed column/expression terms and defined ordering/hash
-  semantics. Cover entity/collection tables, unique-index representation, qualification,
-  and options. Preserve default hash inputs unless a separate correction is approved.
+. Revisit temporal UK naming dependencies (including HHH-20919) and aggregate key
+  membership (HHH-20920); neither is included in the completed index/reference work.
 . Handle explicit PK declarations and dialect-aware identifier length in their tracked
   follow-ups. Audit/history and generator PK lifecycles also remain separate.
 
@@ -358,3 +356,76 @@ continues to apply. Named SQL types, audit/history naming, generator objects, an
 relational name-storage migration are not implicitly added to this slice.
 
 The remaining UK working draft is link:foreign-unique-key-naming-spec.adoc[Foreign And Unique Key Naming].
+
+[[completed-index-and-column-references]]
+== Completed Index And Column-Reference Contracts
+
+Status: approved, implemented, and validated. The standalone index working specification
+has been retired. The User Guide and Introduction document the user-facing resolution
+rules; the migration guide records compatibility changes.
+
+=== Naming And Materialization
+
+* `ImplicitNamingStrategy.determineIndexName(IndexNamingInput, ImplicitNamingContext)`
+  returns a non-null `LogicalName`. Legacy `ImplicitIndexNameSource` and
+  `ImplicitConstraintNameSource` contracts are removed.
+* Inputs expose settled logical/physical table and column names, immutable ordered terms,
+  opaque SQL expressions, direction, uniqueness, and optional `type`/`using` strings.
+  SQL options remain export metadata. Original term spelling is retained separately
+  from resolved column names.
+* The default preserves `IDX` hashing over the logical table and sorted source term
+  spellings, including existing charset and identifier conversion. Order, direction,
+  uniqueness, type, using, and options are not added to the hash. Corrected parsing or
+  changing reference forms may change source terms and therefore generated names.
+* Shared parsing respects nested parentheses, quoted commas, escaped quotes, and
+  trailing `ASC`/`DESC`. Empty lists retain skip behavior; malformed terms fail boot.
+  Parenthesized expressions remain opaque SQL, outside reference resolution.
+* Declarations are resolved after column binding. Actual mapped columns replace
+  placeholders; physical column naming is never repeated for lookup.
+* Explicit index names bypass implicit naming. Physical naming runs once, requires a
+  non-null result, and preserves requested quoting through DDL and restoration.
+* Repeated explicit index names on one table fail with both source locations, even
+  for identical declarations. Repeated visits to one declaration are not duplicates.
+  Generated/physical collisions between different definitions fail instead of merging;
+  definition comparison includes ordered terms, direction, uniqueness, type, using,
+  and options. Equivalent unnamed declarations may be deduplicated before naming.
+* Entity, secondary, collection, and join tables use the same dialect-selected UK/index
+  representation for unique indexes. UK results enter the existing UK lifecycle;
+  index results use index callbacks. Collection representation/name changes are documented.
+
+=== Shared Reference Resolution
+
+Both index and unique-constraint declarations use these rules:
+
+. Unquoted `{key}` and `{element}` markers select collection roles directly, bypassing
+  column lookup. Quoting the entire identifier escapes role syntax.
+. Ordinary references first match logical column names, then existing physical names.
+. Entity primary/secondary-table declarations may then resolve an explicit attribute
+  path relative to their retained declaring entity. Nested leaf names are not guessed.
+
+Collection declarations retain their owning collection role. `{key}` means a map key,
+not an owner FK or list index; `{element}` means the element or map value. Paths may
+traverse embeddables only. Whole entity-valued roles may select one local FK column,
+but never traverse into the associated entity. Unprefixed collection paths are not
+inferred, and owner FK columns remain addressable by column name.
+
+Every attribute/role reference must identify exactly one actual column on the declaring
+table. Multi-column values, formulas, inverse associations without local columns, and
+nonlocal columns are rejected with declaration-aware errors. Column matches take
+precedence over entity attributes. Resolved logical/physical dependencies reach naming
+callbacks; index hashes retain source spelling, while UK hashes retain resolved columns.
+
+Collection association `@JoinTable` declarations containing only indexes or unique
+constraints are retained even when table and join-column names are implicit.
+
+=== Validation And Remaining Work
+
+All 400 naming-strategy tests passed, including 34 entity/UK/collection reference tests.
+The complete core suite passed: 18,039 tests, 1,525 skipped, zero failures or errors
+in the configured H2 environment. Coverage includes exact defaults, callback inputs,
+quoting, collisions, column identity, representation, export/restoration, escaped role
+names, and association boundaries. This does not claim cross-dialect execution.
+
+Remaining work is the temporal/aggregate UK and explicit-PK/identifier-length follow-up
+sequence above, plus the broader naming coverage and storage work tracked by the parent
+design. There are no pending decisions for this completed index/reference slice.

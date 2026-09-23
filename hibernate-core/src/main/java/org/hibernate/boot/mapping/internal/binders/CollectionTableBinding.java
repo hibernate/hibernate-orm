@@ -23,7 +23,7 @@ import jakarta.persistence.UniqueConstraint;
 /// dependent key, call the mapping model's key-creation hooks, and apply table
 /// indexes and unique constraints.
 ///
-/// @param uniqueConstraintLocation Declaring class/member and containing table annotation,
+/// @param tableAnnotationLocation Declaring class/member and containing table annotation,
 /// used to identify each unique-constraint declaration during deferred validation.
 /// @since 9.0
 /// @author Steve Ebersole
@@ -37,7 +37,7 @@ public record CollectionTableBinding(
 		UniqueConstraint[] uniqueConstraints,
 		Index[] indexes,
 		boolean oneToManyAssociationTable,
-		String uniqueConstraintLocation) {
+		String tableAnnotationLocation) {
 	public CollectionTableBinding(
 			Collection collection,
 			List<JoinColumn> joinColumns,
@@ -45,7 +45,7 @@ public record CollectionTableBinding(
 			OnDeleteAction onDeleteAction,
 			UniqueConstraint[] uniqueConstraints,
 			Index[] indexes,
-			String uniqueConstraintLocation) {
+			String tableAnnotationLocation) {
 		this(
 				collection,
 				joinColumns,
@@ -56,7 +56,7 @@ public record CollectionTableBinding(
 				uniqueConstraints,
 				indexes,
 				false,
-				uniqueConstraintLocation
+				tableAnnotationLocation
 		);
 	}
 
@@ -68,7 +68,7 @@ public record CollectionTableBinding(
 			UniqueConstraint[] uniqueConstraints,
 			Index[] indexes,
 			boolean oneToManyAssociationTable,
-			String uniqueConstraintLocation) {
+			String tableAnnotationLocation) {
 		this(
 				collection,
 				joinColumns,
@@ -79,7 +79,7 @@ public record CollectionTableBinding(
 				uniqueConstraints,
 				indexes,
 				oneToManyAssociationTable,
-				uniqueConstraintLocation
+				tableAnnotationLocation
 		);
 	}
 }

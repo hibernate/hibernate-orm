@@ -5,6 +5,8 @@
 package org.hibernate.test.scan.jandex;
 
 import jakarta.persistence.spi.Discoverable;
+
+import java.net.URLConnection;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.ByteArrayAsset;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -28,6 +32,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 ///
 /// @author Steve Ebersole
 class DescriptorScanningTests {
+
+	// Ensure no JAR files are being cached to avoid file deletion issues on Windows
+	private static boolean jarDefaultUseCaches;
+
+	@BeforeAll
+	public static void setup() {
+		jarDefaultUseCaches = URLConnection.getDefaultUseCaches( "jar" );
+		URLConnection.setDefaultUseCaches( "jar", false );
+	}
+
+	@AfterAll
+	public static void cleanup() {
+		URLConnection.setDefaultUseCaches( "jar", jarDefaultUseCaches );
+	}
+
 	@Test
 	void descriptorsRespectBoundariesAndDiscoverability(@TempDir Path directory) throws Exception {
 		final var indexer = new Indexer();
@@ -74,10 +93,11 @@ class DescriptorScanningTests {
 		}
 		final var declaration = ( discoverable ? "@" + DescriptorMarker.class.getName() + "\n" : "" )
 				+ "module " + packageName + " {}";
-		final var module = TestModule.load( archive, declaration, directory, DescriptorMarker.class, Discoverable.class );
-		try ( var stream = module.module().getResourceAsStream( "module-info.class" ) ) {
-			assertThat( stream ).isNotNull();
-			archive.add( new ByteArrayAsset( stream.readAllBytes() ), "module-info.class" );
+		try (var module = TestModule.load( archive, declaration, directory, DescriptorMarker.class, Discoverable.class )) {
+			try ( var stream = module.module().getResourceAsStream( "module-info.class" ) ) {
+				assertThat( stream ).isNotNull();
+				archive.add( new ByteArrayAsset( stream.readAllBytes() ), "module-info.class" );
+			}
 		}
 		for ( var entry : archive.getContent().entrySet() ) {
 			if ( entry.getKey().get().endsWith( ".class" ) ) {

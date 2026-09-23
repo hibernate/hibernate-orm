@@ -3,7 +3,7 @@
 :sectanchors:
 
 Status: implementation authorized as part of the naming-strategy proposal.
-Table, PK, FK, and role-specific join-column inputs are implemented, including selected
+Table, PK, FK, UK, and role-specific join-column inputs are implemented, including selected
 column declarations, composite correspondence, and deferral for late member/derived-ID
 dependencies in to-one, association-table target, and entity map-key naming. The broader
 cross-role readiness and naming-cycle audit remains open; do not treat every guarantee
@@ -51,7 +51,7 @@ and the strategy contract needed to support it.
 Completed reviews cover discriminator and tenant defaults, primary-key joins,
 derived-identifier naming, and collection-index names formerly generated before
 the strategy was called. FK finalization now retains table identities, selected column
-references, and aggregate/audit declarations. Remaining reviews include UK/index inputs and
+references, and aggregate/audit declarations. Remaining reviews include index inputs, deferred temporal/aggregate UK dependencies, and
 audit/history roles, plus cross-role readiness and selected-alias guarantees.
 Generator and auxiliary-object naming must also be reconciled with the full
 coverage inventory rather than silently excluded because the current interface

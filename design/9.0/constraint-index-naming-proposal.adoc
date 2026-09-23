@@ -2,8 +2,9 @@
 :toc2:
 :sectanchors:
 
-Status: PK and FK contracts are implemented, as is the HHH-20916 unique-column
-finalization correction. UK contract/lifecycle and name-emission work remains in
+Status: PK, FK, and UK contracts are implemented, including column resolution,
+finalization, PK absorption, and UK name emission. Deferred temporal naming and aggregate
+UK behavior are recorded in
 link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification]; index inputs
 remain proposed. Existing default hashes are preserved except for the documented
 logical-dependency corrections and removal of the defective exporter UK fallback.
@@ -99,7 +100,7 @@ PK/UK clause honors the chosen name.
 
 == Proposed Contract Shape
 
-Use four role-specific callbacks with the existing naming context. PK and FK are implemented. UK/index signatures below remain proposed:
+Use four role-specific callbacks with the existing naming context. PK, FK, and UK are implemented. The index signature below remains proposed:
 
 [source,java]
 ----
@@ -338,10 +339,7 @@ by a second callback after a late column arrives.
 
 == Remaining Implementation Sequence
 
-. Complete and approve the UK working specification: selected dependencies, candidate
-  identity, deduplication, single/multiple-UK absorption, and finalized-name emission.
-  Preserve last-eligible named-UK selection and unchanged unnamed implicit-PK DDL.
-. Implement that UK slice and remove its obsolete source contract.
+. Revisit temporal UK naming dependencies and aggregate UK membership in their deferred investigations.
 . Specify and migrate indexes with typed column/expression terms and defined ordering/hash
   semantics. Cover entity/collection tables, unique-index representation, qualification,
   and options. Preserve default hash inputs unless a separate correction is approved.

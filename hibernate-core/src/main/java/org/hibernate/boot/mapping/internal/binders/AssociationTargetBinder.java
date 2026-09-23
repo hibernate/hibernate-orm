@@ -10,6 +10,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences.UniquePropertyReference;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
 import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.relational.naming.spi.LogicalName;
@@ -21,7 +22,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Selectable;
@@ -76,16 +76,12 @@ class AssociationTargetBinder {
 				throw new MappingException( "Association '" + associationTargetBinding.role() + "' has "
 						+ value.getColumnSpan() + " join selectables but its target property has " + columns.size() + " columns" );
 			}
-			final var table = property.getValue().getColumnContainer().requireTable();
-			final boolean unique = columns.size() == 1 && columns.get( 0 ).isUnique()
-					|| table.getPrimaryKey() != null && sameColumns( table.getPrimaryKey().getColumns(), columns )
-					|| table.getUniqueKeys().values().stream().anyMatch( key -> sameColumns( key.getColumns(), columns ) )
-					|| table instanceof PhysicalTable physicalTable && physicalTable.getIndexes().values().stream().anyMatch( index -> index.isUnique() && sameColumns( index.getSelectables(), columns ) );
-			if ( !unique && associationTargetBinding.propertyReferenceColumns() != null ) {
-				throw new MappingException( "Association '" + associationTargetBinding.role() + "' references property '"
-						+ property.getName() + "' which is not unique" );
+			if ( associationTargetBinding.propertyReferenceColumns() != null ) {
+				entityBinder.getBindingState().getRelationalModelCorrespondences().uniquePropertyReferences().add(
+						new UniquePropertyReference( property.getValue().getColumnContainer().requireTable(), columns,
+								associationTargetBinding.role(), property.getName() ) );
 			}
-			if ( !unique && property.getValue() instanceof SimpleValue simpleValue ) {
+			else if ( property.getValue() instanceof SimpleValue simpleValue ) {
 				materializeUniqueKey( simpleValue, associationTargetBinding.role() );
 			}
 			return property;

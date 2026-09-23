@@ -41,7 +41,7 @@ public class UniqueConstraintValidationTest {
 
 	@Test
 	public void testUniqueConstraintWithNotExistsColumnName() {
-		buildSessionFactory(NotExistsColumnEntity.class);
+		assertThrows( AnnotationException.class, () -> buildSessionFactory( NotExistsColumnEntity.class ) );
 	}
 
 	private void buildSessionFactory(Class<?> entity) {

@@ -265,7 +265,9 @@ class ElementCollectionAttributeBinder {
 					),
 					resolveOnDeleteAction(),
 					uniqueConstraints( source ),
-					indexes( source )
+					indexes( source ),
+					source.member().getDeclaringType().getName() + "." + source.member().getName()
+							+ (source.joinTable() == null ? " @CollectionTable" : " @JoinTable")
 			) );
 			bindingState.addCollectionBinding( collection );
 		}

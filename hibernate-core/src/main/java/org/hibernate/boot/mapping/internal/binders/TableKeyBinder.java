@@ -313,25 +313,15 @@ public class TableKeyBinder {
 	}
 
 	private void applyUniqueConstraints(CollectionTableBinding collectionTableBinding) {
-		for ( jakarta.persistence.UniqueConstraint uniqueConstraint : collectionTableBinding.uniqueConstraints() ) {
+		for ( int i = 0; i < collectionTableBinding.uniqueConstraints().length; i++ ) {
+			final var uniqueConstraint = collectionTableBinding.uniqueConstraints()[i];
 			final Table table = collectionTableBinding.collection().getCollectionTable();
 			validateUniqueConstraintColumns( uniqueConstraint.columnNames(), table.getName() );
-			final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( uniqueConstraint.columnNames().length );
-			for ( String columnName : uniqueConstraint.columnNames() ) {
-				uniqueKeyColumns.add( resolveColumn( table, columnName ) );
-			}
 			UniqueKeyMappingMaterializer.materializeUniqueKey(
-					ResolvedUniqueKey.explicit(
-							table,
-							uniqueKeyColumns,
+					ResolvedUniqueKey.uniqueConstraint( table, Arrays.asList( uniqueConstraint.columnNames() ),
 							bindingState.getMetadataBuildingContext(),
-							StringHelper.nullIfEmpty( uniqueConstraint.name() ),
-							StringHelper.isNotEmpty( uniqueConstraint.name() ),
-							uniqueConstraint.options(),
-							null,
-							collectionTableBinding.collection().getRole()
-					)
-			);
+							StringHelper.nullIfEmpty( uniqueConstraint.name() ), uniqueConstraint.options(),
+							collectionTableBinding.uniqueConstraintLocation() + ".uniqueConstraints[" + i + "]" ) );
 		}
 	}
 

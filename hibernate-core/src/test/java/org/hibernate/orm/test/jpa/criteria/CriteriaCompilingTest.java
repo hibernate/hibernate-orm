@@ -244,7 +244,7 @@ public class CriteriaCompilingTest {
 			byteIn.close();
 		}
 		catch (Exception e) {
-			Assertions.fail( "Unable to serialize / deserialize the object: " + e.getMessage() );
+			Assertions.fail( "Unable to serialize / deserialize the object: " + e.getMessage(), e );
 		}
 		return serializedObject;
 	}

@@ -9,7 +9,7 @@ import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
-
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
@@ -40,10 +40,15 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 				lowerBound.getExpressible(),
 				upperBound.getExpressible()
 		);
+		final JavaType<?> javaType = QueryHelper.highestPrecedenceType(
+				expression.getJavaTypeDescriptor(),
+				lowerBound.getJavaTypeDescriptor(),
+				upperBound.getJavaTypeDescriptor()
+		);
 
-		expression.applyInferableType( expressibleType );
-		lowerBound.applyInferableType( expressibleType );
-		upperBound.applyInferableType( expressibleType );
+		expression.applyInferableType( expressibleType, javaType );
+		lowerBound.applyInferableType( expressibleType, javaType );
+		upperBound.applyInferableType( expressibleType, javaType );
 	}
 
 	@Nonnull

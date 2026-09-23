@@ -1,0 +1,201 @@
+= Named Enum And Array Type Naming
+:toc2:
+:sectanchors:
+
+Status: investigation and design proposal. Steve authorized investigation of named
+SQL enum and array types. No new API, compatibility policy, or implementation is
+approved by this document. Develop a working specification after the direction is
+accepted. Findings below are source inspection, not reproduced runtime failures.
+
+== Scope And Constraints
+
+Provide consistent naming of actual named SQL enum and array schema objects across
+boot, schema tooling, SQL generation, JDBC use, and metadata restoration.
+
+* Cover named textual and ordinal enums, and dialects requiring named array types.
+* Preserve existing explicit struct-name handling. Arrays of structs consume the
+  existing struct identity; they do not imply a struct naming redesign.
+* Do not name SQL type expressions such as `integer[]` or `varchar(50) array` as
+  schema identifiers. PostgreSQL array use still needs the resolved named element
+  type when that element is an enum.
+* Do not apply naming strategies to registered query functions or introduce helper
+  function callbacks. Dialect-generated array helper DDL and SQL references must
+  consistently derive from the resolved array identity under dialect control.
+* Reuse the existing physical type-name hook, additive quoting, logical/physical
+  value types, explicit-name bypass, and no callback replay on restoration.
+
+== Source Findings
+
+Source paths below are relative to `hibernate-core/src/main/java`.
+
+=== Named Enums
+
+* `type/descriptor/sql/internal/NamedNativeEnumDdlTypeImpl` and
+  `NamedNativeOrdinalEnumDdlTypeImpl` derive column and cast type names from Java
+  simple names independently of schema-object registration.
+* `dialect/type/internal/PostgreSQLEnumJdbcType` and `OracleEnumJdbcType` derive
+  auxiliary-object names and create commands from Java simple names. Drop commands
+  use `EnumSupport`'s Class convenience, which derives the same default again.
+  Objects are contributed in the default namespace through `NamedAuxiliaryDatabaseObject`.
+* Enum literal formatters call `EnumSupport.getTypeDeclaration(Class)`, another
+  simple-name derivation. Naming must reach literals and casts as well as column DDL.
+* `dialect/type/spi/EnumSupport` already offers string-based declaration/create/drop
+  operations. Those are useful consumers of resolved names; Class conveniences
+  cannot be used where customized names must survive.
+* `mapping/BasicValue.finalizeResolution()` contributes auxiliary objects after
+  resolving column type/size. The current contribution API receives Java type,
+  converter, size, and database, not an owner-selected named SQL type identity.
+* `boot/model/relational/Database.addAuxiliaryDatabaseObject()` replaces entries by
+  export identifier. It does not itself validate enum definition equivalence.
+
+Consequences to characterize: same-simple-name enums from different packages,
+textual versus ordinal representations, converted relational values, repeated use,
+and defaults/qualification/quoting. Do not claim these are all demonstrated failures.
+Shared singleton enum JDBC descriptors must not acquire mutable per-mapping names.
+
+=== Named Arrays
+
+* `dialect/type/internal/OracleArrayJdbcTypeConstructor` uses
+  `ColumnTypeInformation.getTypeName()` when supplied, otherwise derives a name from
+  the element type. A supplied type name is not automatically proof of user provenance:
+  mapping input and JDBC metadata extraction must be distinguished.
+* `OracleArrayJdbcType` retains a string type name, creates an uppercase variant for
+  JDBC operations, and has fallback derivation paths. Binding, null binding, and
+  callable out-parameter registration consume these names.
+* Array defaults account for Java/JDBC element representations, converters, nested
+  arrays, and structured elements. `OracleDialect.getArrayTypeName()` adds `Array`.
+* `OracleArrayJdbcType.addAuxiliaryDatabaseObjects()` registers non-struct arrays
+  through `Namespace.createUserDefinedArrayType()`. Struct arrays use aggregate
+  support for registration; this path must join the same identity lifecycle.
+* `Namespace.createUserDefinedArrayType()` keys UDTs by logical `Identifier` and
+  applies `toPhysicalTypeName()` when creating the mapping object. The JDBC
+  descriptor does not obtain that resulting physical name from this call.
+* `type/descriptor/sql/internal/ArrayDdlTypeImpl` independently derives column and
+  cast declarations using element facts and `Dialect.getArrayTypeName()`.
+* `dialect/schema/internal/OracleUserDefinedTypeExporter` creates array support
+  objects. Renderers such as `OracleArrayPositionFunction` obtain a DDL type name
+  through `DdlTypeHelper` and append a helper suffix. These paths must agree even
+  with qualification and quoting; appending text after a rendered quoted name is
+  not a general identifier-composition solution.
+* `type/descriptor/jdbc/ArrayJdbcType.getElementTypeName()` derives the element's
+  SQL name for `createArrayOf()`. PostgreSQL arrays of renamed enums therefore
+  require the enum identity even though no separate user-named array object is added.
+
+Consequences to characterize: physical renaming may affect exported Oracle array
+objects without reaching every consumer; unconditional uppercasing is unsuitable
+for arbitrary quoted names; repeated registrations may reuse an object then set
+its definition from the current contributor. These are design risks established
+by separate source paths, not verified cross-dialect runtime outcomes.
+
+== Recommended Direction
+
+=== Resolve A Shared Type Identity
+
+Introduce a boot-time named-type definition/registration carrying kind, namespace,
+logical name, finalized physical name, and the facts defining the database type.
+The name alone is not its definition or its identity key. Runtime and export
+consumers must retain the resulting identity instead of deriving its spelling again.
+The concrete representation and registry ownership belong in the working specification.
+
+Proposed lifecycle:
+
+. Resolve relational representation, enum values or array element definition,
+  dialect-relevant dimensions, and any explicit name/provenance.
+. Find or register the shared definition and verify compatible reuse.
+. For an unnamed definition, obtain its logical name from a role-specific implicit
+  callback. An explicit name bypasses that callback.
+. Finalize through `PhysicalNamingStrategy.toPhysicalTypeName()` exactly once per
+  registered definition, retaining catalog/schema/object parts and quoting.
+. Make JDBC mappings, column/cast/literal rendering, creation/drop, and dialect helper
+  dependencies consume that same identity, using appropriate SQL/JDBC rendering.
+. Restore finalized names and rebuild lookups under the restored comparison policy
+  without rerunning naming strategies.
+
+The finalization point must precede all column/cast/JDBC consumers. Simply invoking
+naming from `addAuxiliaryDatabaseObjects()` is too late to be the complete solution.
+Array element dependencies must be settled first, including named enums and existing
+structs. Normal dialect array syntax continues through dialect rendering.
+
+=== Naming Contracts
+
+Recommend separate implicit enum and array callbacks on `ImplicitNamingStrategy`,
+returning non-null `LogicalName`, and the existing physical type-name callback for both.
+Do not introduce a second physical naming SPI for SQL types.
+
+Candidate input facts, subject to the working specification:
+
+* Enum: Java type identity, textual/ordinal representation, ordered relational values,
+  and converter identity where relevant. No mutable mapping objects or broad contexts.
+* Array: Java/relational element identity, resolved named-element dependency when one
+  exists, converter facts, dimensions, and dialect-relevant length/precision/scale.
+  Distinguish an identifier dependency from an element SQL type expression.
+
+Inputs should describe a shared type definition, not whichever owning attribute was
+bound first. Preserve existing defaults for compatible ordinary mappings where possible;
+characterization must establish dialect-specific recipes before moving their calculation.
+Do not globally apply Oracle's `Array` recipe to dialects without named array objects.
+
+=== Definition Reuse And Collisions
+
+Recommend reusing compatible definitions and rejecting different definitions mapped
+to the same finalized qualified name. No last-writer-wins replacement or implicit merging.
+Enum relational labels/order and textual/ordinal representation matter. Array element
+identity, dimensions, and effective dialect-specific size constraints may matter.
+
+Exact equivalence rules remain open: two different Java enums with identical SQL values
+might intentionally share an explicitly named database type. Separate Java mapping
+identity from SQL definition compatibility when deciding whether this is legal.
+Default naming collisions should produce actionable errors rather than silently inventing
+new suffixes. Qualification and physical comparison policy must participate consistently.
+
+=== Explicit Names And Existing Types
+
+Explicit naming needs a deliberate mapping contract for each family. `@Column(columnDefinition)`
+is an SQL fragment, not a general structured type-name declaration; do not parse arbitrary
+SQL to invent name/provenance facts. Existing uses must be characterized before any change.
+`@Array` currently specifies length, not a named schema identity.
+
+Recommend a focused structured name input capable of catalog/schema/object and quoting,
+with separate treatment of an already existing externally managed type if required.
+Naming a type and deciding whether Hibernate owns its creation/drop are distinct concerns.
+The annotation/API shape, supported declaration locations, and lifecycle controls are
+open decisions, not approved additions.
+
+== Alternatives And Tradeoffs
+
+* Customize only exported DDL: small change, but leaves casts, literals, JDBC binding,
+  and helper references inconsistent. Not recommended.
+* Customize only the dialect string methods: keeps existing APIs but mixes actual
+  identifiers with SQL type syntax and does not resolve shared identity/provenance.
+* Retain one resolved identity per definition: wider JDBC/DDL/boot integration, but
+  makes naming, compatibility checks, sharing, and restoration coherent. Recommended.
+* Expose one generic implicit SQL-type callback: fewer methods, but requires a tagged
+  input family with different enum/array facts. Separate callbacks fit current role-specific
+  contracts; a common internal registration model may still serve both.
+
+== Proposed Sequence And Verification
+
+. Characterize current enum and array defaults and explicit-name behavior. Include
+  named ordinal/textual enums, converters/EnumeratedValue, arrays of enums/structs,
+  quoting, qualification, size differences, and reversed mapping registration order.
+. Specify shared-definition identity, explicit naming/provenance, collision rules,
+  finalized-name storage, and the JDBC/DDL consumption boundary.
+. Implement enums end-to-end, including PostgreSQL array element-name consumption.
+. Implement named arrays, including aggregate registration, JDBC binding/out parameters,
+  casts and dialect helper references. Preserve existing struct handling.
+. Verify schema metadata, exact create/drop/column/cast/literal SQL, callback counts,
+  independent boot contexts, and metadata restoration. Use JDBC boundary tests for
+  actual name arguments; run PostgreSQL/Oracle integration tests where available.
+
+Existing tests include `PostgresNamedEnumTest`, `NamedEnumEnumerateValueTests`, array
+mapping/type tests, and struct-array tests. Extend these and the naming suite rather
+than creating another strategy matrix. DDL rendering and mocked JDBC checks alone
+must not be reported as successful PostgreSQL/Oracle database execution.
+
+== Decisions Before A Working Specification
+
+* Accept shared named-definition identity and reuse the existing physical type hook,
+  with separate implicit enum/array callbacks?
+* What explicit type-name declaration and namespace/lifecycle scope should be supported?
+* Which definitions may share a name, especially different Java enums with equivalent
+  relational values and arrays whose dialect-relevant sizes differ?

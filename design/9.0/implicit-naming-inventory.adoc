@@ -238,13 +238,14 @@ another object's name must be distinguished from those operations.
 == Proposed Role Model
 
 The dialect/auxiliary-object investigation below refines the remaining boundaries.
-Its recommendations are proposals except for Steve's decision to defer named SQL
-types from the current redesign. No implementation changes accompany this investigation.
+Its recommendations are investigation background. Named enum/array work has since
+been reopened in the focused proposal below; no implementation accompanies it.
 
 === Dialect Objects: Investigation
 
-Named SQL type callbacks are deferred at Steve's request. The findings below are
-retained for future work, not current coverage or acceptance requirements.
+The earlier deferral has been reopened for named enums and arrays in
+link:named-sql-type-naming-proposal.adoc[the focused design proposal]. The findings below
+remain investigation background, not implemented coverage or acceptance requirements.
 
 Named SQL types are a meaningful candidate for user naming control. They may be
 shared schema objects or types which already exist independently of Hibernate.
@@ -282,7 +283,7 @@ sources. Do not invent a trigger callback without a concrete contributing path.
 This is a source investigation, not database execution or an exhaustive plugin audit.
 
 Future option: support naming actual named SQL types, with dialect-owned syntax,
-capabilities, and validation. This is deferred from the current redesign.
+capabilities, and validation. This is now being designed for named enums and arrays.
 The recommendation for implementation helper functions/policies is to keep them under
 their dialect/feature support for now. A future specialized override could address
 DBA naming requirements, but it must resolve the whole linked set of names; changing

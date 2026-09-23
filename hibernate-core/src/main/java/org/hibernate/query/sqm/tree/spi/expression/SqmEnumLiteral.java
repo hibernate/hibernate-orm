@@ -40,7 +40,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 			@Nonnull EnumJavaType<E> referencedEnumTypeDescriptor,
 			@Nonnull String enumValueName,
 			@Nonnull NodeBuilder nodeBuilder) {
-		super( null, enumValue, nodeBuilder );
+		super( null, referencedEnumTypeDescriptor, enumValue, nodeBuilder );
 		this.referencedEnumTypeDescriptor = referencedEnumTypeDescriptor;
 		this.enumValueName = enumValueName;
 	}

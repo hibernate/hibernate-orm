@@ -6021,11 +6021,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			else {
 				final var nodeType = (BasicSqmPathSource<?>) literal.getNodeType();
-				return new QueryLiteral<>(
-						literal.getLiteralValue(),
-						getTypeConfiguration().getBasicTypeRegistry()
-								.getRegisteredType( nodeType.getPathType().getTypeName() )
-				);
+				final BasicType<?> basicType;
+				if ( nodeType == null ) {
+					assert literal.getJavaType().isEnum();
+					//noinspection unchecked,rawtypes
+					basicType = createEnumType( (Class<Enum>) literal.getJavaType() );
+				}
+				else {
+					basicType = getTypeConfiguration().getBasicTypeRegistry()
+							.getRegisteredType( nodeType.getPathType().getTypeName() );
+				}
+				return new QueryLiteral<>( literal.getLiteralValue(), basicType );
 			}
 		}
 	}
@@ -6506,9 +6512,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			(SqmParameter<?> sqmParameter, @Nullable BindableType<?> paramType, boolean bindingTypeExplicit) {
 		if ( paramType == null ) {
 			final var inferredValueMapping = getInferredValueMapping();
-			return inferredValueMapping != null
-					? resolveInferredValueMappingForParameter( inferredValueMapping )
-					: basicType( Object.class ); // Default to the Object type
+			if ( inferredValueMapping != null ) {
+				return resolveInferredValueMappingForParameter( inferredValueMapping );
+			}
+			// Handle plain enum java type specially
+			return sqmParameter.getJavaTypeDescriptor() instanceof EnumJavaType<?> enumJavaType
+					? createEnumType( enumJavaType.getJavaTypeClass() )
+					// Default to the Object type
+					: basicType( Object.class );
 		}
 		else if ( paramType instanceof MappingModelExpressible<?> paramModelType ) {
 			final var inferredValueMapping = getInferredValueMapping();

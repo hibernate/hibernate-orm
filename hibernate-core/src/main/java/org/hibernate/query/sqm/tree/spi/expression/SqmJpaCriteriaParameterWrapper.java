@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.tree.spi.jpa.ParameterCollector;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -16,6 +17,7 @@ import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectableNode;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.query.sqm.tree.spi.expression.SqmExpressionHelper.toSqmType;
 
@@ -105,6 +107,12 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	@Override
 	public @Nonnull Class<T> getParameterType() {
 		return jpaCriteriaParameter.getParameterType();
+	}
+
+	@Override
+	public @Nullable JavaType<T> getJavaTypeDescriptor() {
+		final SqmBindableType<T> nodeType = getNodeType();
+		return nodeType == null ? jpaCriteriaParameter.getJavaTypeDescriptor() : nodeType.getExpressibleJavaType();
 	}
 
 	@Override

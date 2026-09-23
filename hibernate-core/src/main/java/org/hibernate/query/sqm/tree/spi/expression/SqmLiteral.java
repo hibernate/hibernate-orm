@@ -34,10 +34,16 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	private final @Nullable T value;
 
 	public SqmLiteral(@Nonnull T value, @Nullable SqmBindableType<? super T> inherentType, @Nonnull NodeBuilder nodeBuilder) {
-		super( inherentType, nodeBuilder );
+		super( null, nodeBuilder );
 		assert value != null;
 		assert inherentType == null
 			|| inherentType.getExpressibleJavaType().isInstance( castNonNull( value ) );
+		setExpressibleType(
+				inherentType,
+				inherentType == null
+						? nodeBuilder().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( value.getClass() )
+						: null
+		);
 		this.value = value;
 	}
 
@@ -47,8 +53,9 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	}
 
 	// Constructor for SqmEnumLiteral
-	SqmLiteral(@Nullable SqmBindableType<T> inherentType, @Nonnull T value, @Nonnull NodeBuilder nodeBuilder) {
+	SqmLiteral(@Nullable SqmBindableType<T> inherentType, JavaType<T> javaType, @Nonnull T value, @Nonnull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
+		setExpressibleType( inherentType, javaType );
 		this.value = value;
 	}
 

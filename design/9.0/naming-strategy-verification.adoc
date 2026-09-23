@@ -7,9 +7,10 @@ deprecating the other three strategies with runtime warnings. That work is imple
 and validated. This document retains the test contract and outstanding coverage work.
 All five registrations remain available; Standard remains the default.
 
-Latest full core validation: 17,965 tests, 1,525 skipped,
+Latest full core validation: 17,976 tests, 1,525 skipped,
 0 failures and 0 errors.
-This run includes the FK contract migration, HHH-20916 unique-column finalization, and
+This run includes the FK and UK contract migrations, HHH-20916 unique-column
+finalization, HHH-20917 reference resolution, UK absorption and name emission, and
 null-only PK result validation. Slice-local counts below describe historical runs;
 they are not cumulative totals.
 
@@ -38,8 +39,10 @@ boundaries, and existing absorbed-UK selection. Its HHH-20916 regressions assert
 hashes for basic-column, owning one-to-one, and Changelog uniqueness, distinct keys for
 two unique columns, and exactly-once custom callbacks before repeated export.
 
-The sole-UK absorption inconsistency remains intentionally characterized. UK input
-migration and named UK DDL acceptance are still pending in
+The sole-UK absorption inconsistency is corrected. Typed UK inputs, actual-column
+resolution, logical-first lookup, explicit-name merging, strategy collisions, named
+UK DDL, and archive restoration now have regression coverage. Temporal naming and
+aggregate UK behavior remain explicitly deferred in
 link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification]. Rendering
 assertions do not claim execution coverage across dialects.
 
@@ -308,3 +311,10 @@ naming, and null physical PK results, are rejected with mapping errors.
 
 This replaces the earlier nullable-physical-PK and standard-suppression expectations.
 Full core validation of the revised contract passed: 17,965 tests, 1,525 skipped, zero failures or errors.
+
+== Unique-Key Migration Validation
+
+The affected naming, temporal/state-management, and schema follow-up run passed
+712 tests, with 6 skipped and no failures or errors. This corrected the archive test
+configuration and retained temporal naming compatibility. Final full-core verification, including the aggregate compatibility exception, passed:
+17,976 tests, 1,525 skipped, zero failures and zero errors.

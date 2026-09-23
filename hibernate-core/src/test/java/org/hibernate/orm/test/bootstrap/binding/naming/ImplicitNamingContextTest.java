@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
@@ -53,14 +53,14 @@ class ImplicitNamingContextTest {
 		final var buildingContext = mock( MetadataBuildingContext.class, RETURNS_DEEP_STUBS );
 		when( buildingContext.getBuildingPlan().getSchemaCharset() ).thenReturn( "ISO-8859-1" );
 		final var context = ImplicitNamingContextImpl.from( buildingContext );
-		final var source = mock( ImplicitUniqueKeyNameSource.class );
+		final var source = mock( ImplicitIndexNameSource.class );
 		when( source.getNamingContext() ).thenReturn( context );
-		when( source.kind() ).thenReturn( org.hibernate.boot.model.naming.ImplicitConstraintNameSource.Kind.UNIQUE_KEY );
+		when( source.kind() ).thenReturn( org.hibernate.boot.model.naming.ImplicitConstraintNameSource.Kind.INDEX );
 		when( source.getTableName() ).thenReturn( Identifier.toIdentifier( "café" ) );
 		when( source.getColumnNames() ).thenReturn( List.of(
 				Identifier.toIdentifier( "col1" ), Identifier.toIdentifier( "col2" ), Identifier.toIdentifier( "col3" ) ) );
 		final var strategy = new TrackingStrategy();
-		assertThat( strategy.constraintName( source ) ).isEqualTo( "UK1pitt5gtytwpy6ea02o7l5men" );
+		assertThat( strategy.constraintName( source ) ).isEqualTo( "IDX1pitt5gtytwpy6ea02o7l5men" );
 		assertThat( strategy.hashContext ).isSameAs( context );
 	}
 
@@ -80,7 +80,7 @@ class ImplicitNamingContextTest {
 			return super.namingHelper( context );
 		}
 
-		String constraintName(ImplicitUniqueKeyNameSource source) {
+		String constraintName(ImplicitIndexNameSource source) {
 			return generateConstraintNameString( source );
 		}
 	}

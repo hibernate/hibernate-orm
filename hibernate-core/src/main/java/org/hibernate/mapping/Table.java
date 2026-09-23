@@ -129,6 +129,16 @@ public abstract class Table extends ColumnContainer implements Contributable {
 		return uniqueKeys.values();
 	}
 
+	private boolean uniqueKeysFinalized;
+
+	public boolean areUniqueKeysFinalized() { return uniqueKeysFinalized; }
+
+	public void finalizeUniqueKeys(Map<String, UniqueKey> keys) {
+		uniqueKeys.clear();
+		uniqueKeys.putAll( keys );
+		uniqueKeysFinalized = true;
+	}
+
 	public Map<String, UniqueKey> getUniqueKeys() {
 		cleanseUniqueKeyMapIfNeeded();
 		return unmodifiableMap( uniqueKeys );
@@ -137,7 +147,7 @@ public abstract class Table extends ColumnContainer implements Contributable {
 	private int sizeOfUniqueKeyMapOnLastCleanse;
 
 	private void cleanseUniqueKeyMapIfNeeded() {
-		if ( uniqueKeys.size() != sizeOfUniqueKeyMapOnLastCleanse ) {
+		if ( !uniqueKeysFinalized && uniqueKeys.size() != sizeOfUniqueKeyMapOnLastCleanse ) {
 			cleanseUniqueKeyMap();
 			sizeOfUniqueKeyMapOnLastCleanse = uniqueKeys.size();
 		}
@@ -158,6 +168,7 @@ public abstract class Table extends ColumnContainer implements Contributable {
 				// we have to worry about condition 2 above, but not condition 1
 				final var uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
 				if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
+					primaryKey.setOrderingUniqueKey( uniqueKeyEntry.getValue() );
 					uniqueKeys.remove( uniqueKeyEntry.getKey() );
 				}
 			}

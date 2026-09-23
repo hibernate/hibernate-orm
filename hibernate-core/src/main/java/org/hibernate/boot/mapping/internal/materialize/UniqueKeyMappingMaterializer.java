@@ -4,147 +4,242 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
-import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
-
-import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
-
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
 import org.hibernate.boot.model.naming.internal.ConstraintNamingHelper;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
-import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
+import org.hibernate.boot.model.naming.spi.NamedTableNamingInput;
+import org.hibernate.boot.model.naming.spi.NamingNamePair;
+import org.hibernate.boot.model.naming.spi.UniqueKeyNamingInput;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.NamedTable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.relational.naming.spi.LogicalName;
 
-/// Explicit materializer bridge for physical unique-key constraints.
+/// Collects unique-key candidates and finalizes resolved, surviving constraints before export.
 ///
-/// @since 9.0
 /// @author Steve Ebersole
 public final class UniqueKeyMappingMaterializer {
-	private UniqueKeyMappingMaterializer() {
+	private UniqueKeyMappingMaterializer() {}
+
+	public static void materializeUniqueKey(ResolvedUniqueKey key) {
+		key.metadataBuildingContext().getMetadataCollector().getRelationalModelCorrespondences()
+				.uniqueKeyCandidates().add( key );
 	}
 
-	/// Finalize column uniqueness after all mapping contributions, before schema tooling.
-	/// Existing names have already passed through the naming strategies and must not be replayed.
+	/// Complete membership, absorption and naming after all mapping contributions.
 	public static void finishColumnUniqueKeys(Iterable<Table> tables, MetadataBuildingContext context) {
+		final var names = context.getMetadataCollector().getRelationalModelCorrespondences();
+		final Map<Table, List<Candidate>> candidates = new LinkedHashMap<>();
+		for ( var resolved : names.uniqueKeyCandidates() ) {
+			candidates.computeIfAbsent( resolved.table(), ignored -> new ArrayList<>() )
+					.add( resolve( resolved ) );
+		}
+		names.uniqueKeyCandidates().clear();
 		for ( var table : tables ) {
+			if ( table.areUniqueKeysFinalized() ) { continue; }
+			final var keys = candidates.computeIfAbsent( table, ignored -> new ArrayList<>() );
+			// Preserve already materialized contributions and their finalized names.
+			for ( var key : table.getUniqueKeys().values() ) {
+				keys.add( new Candidate( key, null, new ArrayList<>(), true ) );
+			}
 			for ( var column : table.getColumns() ) {
 				if ( column.isUnique() && !table.isPrimaryKey( column ) ) {
-					var name = column.getUniqueKeyName();
-					if ( name == null ) {
-						// HHH-20916: use normal UK naming instead of the defective export-time hash.
-						name = implicitUniqueKeyName( table, List.of( column ), null, context );
-						table.markColumnUnique( name, column );
-					}
-					table.getOrCreateUniqueKey( name ).addColumn( column );
+					final var key = new UniqueKey( table );
+					key.addColumn( column );
+					keys.add( new Candidate( key, null, new ArrayList<>(), false ) );
 				}
 			}
+			finish( table, keys, context );
 		}
 	}
 
-	public static UniqueKey materializeUniqueKey(ResolvedUniqueKey uniqueKey) {
-		final List<Column> keyColumns = uniqueKey.columns();
-		if ( keyColumns.size() == 1 ) {
-			if ( uniqueKey.tableUniqueKey() ) {
-				return materializeTableUniqueKey( uniqueKey );
+	private static Candidate resolve(ResolvedUniqueKey resolved) {
+		final var context = resolved.metadataBuildingContext();
+		final var database = context.getMetadataCollector().getDatabase();
+		final var names = context.getMetadataCollector().getRelationalModelCorrespondences().columnNames();
+		final var table = resolved.table();
+		final var key = new UniqueKey( table );
+		key.setExplicit( resolved.explicit() );
+		key.setNameExplicit( resolved.nameExplicit() );
+		key.setOptions( resolved.options() );
+		key.setNullsNotDistinct( resolved.nullsNotDistinct() );
+		final var pairs = new ArrayList<NamingNamePair>();
+		final int size = resolved.columnReferences() == null ? resolved.columns().size() : resolved.columnReferences().size();
+		for ( int i = 0; i < size; i++ ) {
+			Column column;
+			LogicalName logical;
+			if ( resolved.columnReferences() != null ) {
+				final var reference = resolved.columnReferences().get( i );
+				final var requested = database.toLogicalName( reference );
+				column = names.findPhysicalColumn( table, requested );
+				if ( column != null ) {
+					logical = names.selectReferenceName( table, column, requested );
+				}
+				else {
+					column = table.getColumn( ColumnNameHelper.physicalName( reference, database ) );
+					logical = column == null ? null : names.findDeclarationName( table, column );
+				}
+				// HHH-20917: resolve references; never construct or physically rename placeholders.
+				if ( column == null ) {
+					throw new org.hibernate.AnnotationException( "Unique constraint '" + resolved.name()
+							+ "' on table '" + table.getName() + "' references unknown column '" + reference + "'" );
+				}
 			}
-			return materializeSingleColumnUniqueKey(
-					uniqueKey.table(),
-					keyColumns.get( 0 ),
-					uniqueKey.metadataBuildingContext()
-			);
+			else {
+				final var supplied = resolved.columns().get( i );
+				column = table.getColumn( supplied );
+				if ( column == null && !resolved.explicit()
+						&& supplied.getValue() instanceof org.hibernate.mapping.BasicValue basic
+						&& basic.getAggregateColumn() != null ) {
+					// Preserve inferred aggregate-member UK behavior until its separate investigation.
+					// This is an existing mapped member, never an annotation placeholder.
+					column = supplied;
+				}
+				if ( column == null ) {
+					throw new MappingException( "Unresolved unique-key column " + table.getName() + "." + supplied.getName() );
+				}
+				logical = names.findDeclarationName( table, column );
+			}
+			if ( logical == null ) {
+				throw new MappingException( "Missing logical unique-key column dependency: " + table.getName() + "." + column.getName() );
+			}
+			key.addColumn( column, resolved.columnOrderings() == null ? null : resolved.columnOrderings().get( i ) );
+			pairs.add( new NamingNamePair( logical, column.getPhysicalName() ) );
 		}
-		return materializeTableUniqueKey( uniqueKey );
-	}
-
-	private static UniqueKey materializeSingleColumnUniqueKey(
-			Table table,
-			Column column,
-			MetadataBuildingContext context) {
-		final String keyName = implicitUniqueKeyName( table, List.of( column ), null, context );
-		table.markColumnUnique( keyName, column );
-		return null;
-	}
-
-	private static UniqueKey materializeTableUniqueKey(ResolvedUniqueKey resolvedUniqueKey) {
-		final UniqueKey uniqueKey = resolvedUniqueKey.table().getOrCreateUniqueKey( keyName( resolvedUniqueKey ) );
-		applyMetadata( uniqueKey, resolvedUniqueKey );
-		final List<Column> keyColumns = resolvedUniqueKey.columns();
-		for ( int i = 0; i < keyColumns.size(); i++ ) {
-			uniqueKey.addColumn( keyColumns.get( i ), columnOrdering( resolvedUniqueKey, i ) );
+		if ( !resolved.tableUniqueKey() && key.getColumns().size() == 1 ) {
+			key.getColumn( 0 ).setUnique( true );
 		}
-		return uniqueKey;
-	}
+		for ( var extra : context.getMetadataCollector().getRelationalModelCorrespondences().uniqueKeyAdditionalColumns( table ) ) {
+			if ( !key.containsColumn( extra ) ) {
+				key.addColumn( extra );
+				// Temporal naming dependencies remain unchanged pending the separate compatibility decision.
+				// The actual constraint still includes the period-start column.
 
-	private static void applyMetadata(UniqueKey uniqueKey, ResolvedUniqueKey resolvedUniqueKey) {
-		uniqueKey.setExplicit( resolvedUniqueKey.explicit() );
-		uniqueKey.setNameExplicit( resolvedUniqueKey.nameExplicit() );
-		uniqueKey.setNullsNotDistinct( resolvedUniqueKey.nullsNotDistinct() );
-		if ( StringHelper.isNotEmpty( resolvedUniqueKey.options() ) ) {
-			uniqueKey.setOptions( resolvedUniqueKey.options() );
+			}
 		}
+		final var explicit = resolved.nameExplicit() && resolved.name() != null && !resolved.name().isEmpty()
+				? database.toLogicalName( resolved.name(), true ) : null;
+		return new Candidate( key, explicit, pairs, false );
 	}
 
-	private static String keyName(ResolvedUniqueKey uniqueKey) {
-		return implicitUniqueKeyName(
-				uniqueKey.table(),
-				uniqueKey.columns(),
-				uniqueKey.name(),
-				uniqueKey.metadataBuildingContext()
-		);
-	}
-
-	private static String columnOrdering(ResolvedUniqueKey uniqueKey, int position) {
-		return uniqueKey.columnOrderings() == null ? null : uniqueKey.columnOrderings().get( position );
-	}
-
-	private static String implicitUniqueKeyName(
-			Table table,
-			List<Column> keyColumns,
-			String userProvidedName,
-			MetadataBuildingContext context) {
-		return ConstraintNamingHelper.resolve( userProvidedName, () -> context.getBuildingPlan().getImplicitNamingStrategy()
-				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-					@Override
-					public Identifier getTableName() {
-						return logicalTableName( table, context );
-					}
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						return keyColumns.stream()
-								.map( column -> ColumnNameHelper.identifier( column ) )
-								.toList();
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return StringHelper.isEmpty( userProvidedName )
-								? null
-								: context.getMetadataCollector().getDatabase().toIdentifier( userProvidedName );
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( context );
-					}
-				} ), ConstraintNamingHelper.Kind.UNIQUE_KEY, context );
-	}
-
-	private static Identifier logicalTableName(Table table, MetadataBuildingContext context) {
-		try {
-			return context.getMetadataCollector()
-					.getDatabase()
-					.toIdentifier( context.getMetadataCollector().getLogicalTableName( table ) );
+	private static void finish(Table table, List<Candidate> candidates, MetadataBuildingContext context) {
+		final var merged = new ArrayList<Candidate>();
+		final Map<LogicalName, Candidate> explicitNames = new LinkedHashMap<>();
+		for ( var candidate : candidates ) {
+			final var previous = candidate.explicitName == null ? null : explicitNames.get( candidate.explicitName );
+			if ( previous == null ) {
+				merged.add( candidate );
+				if ( candidate.explicitName != null ) { explicitNames.put( candidate.explicitName, candidate ); }
+			}
+			else {
+				for ( int i = 0; i < candidate.key.getColumns().size(); i++ ) {
+					final var column = candidate.key.getColumn( i );
+					if ( !previous.key.containsColumn( column ) ) { previous.pairs.add( candidate.pairs.get( i ) ); }
+					previous.key.addColumn( column, candidate.key.getColumnOrderMap().get( column ) );
+				}
+				if ( candidate.key.getOptions() != null && !candidate.key.getOptions().isEmpty() ) {
+					previous.key.setOptions( candidate.key.getOptions() );
+				}
+				previous.key.setNullsNotDistinct( candidate.key.isNullsNotDistinct() );
+			}
 		}
-		catch (MappingException ignored) {
-			return ImplicitNamingSourceHelper.tableName( table );
+		final var survivors = new ArrayList<Candidate>();
+		for ( int i = 0; i < merged.size(); i++ ) {
+			final var candidate = merged.get( i );
+			boolean redundant = false;
+			if ( !candidate.key.isExplicit() ) {
+				for ( int j = 0; j < merged.size(); j++ ) {
+					final var other = merged.get( j );
+					if ( i != j && sameColumns( candidate.key.getColumns(), other.key.getColumns() )
+							&& (other.key.isExplicit() || j > i) ) { redundant = true; break; }
+				}
+			}
+			if ( !redundant ) { survivors.add( candidate ); }
+		}
+		Candidate absorbed = null;
+		final var primaryKey = table.getPrimaryKey();
+		if ( primaryKey != null && !primaryKey.getColumns().isEmpty() ) {
+			for ( var candidate : survivors ) {
+				if ( sameColumns( primaryKey.getColumns(), candidate.key.getColumns() ) ) { absorbed = candidate; }
+			}
+		}
+		if ( absorbed != null ) {
+			if ( absorbed.explicitName != null ) { name( absorbed, context ); }
+			primaryKey.setOrderingUniqueKey( absorbed.key );
+		}
+		final Map<String, UniqueKey> finalized = new LinkedHashMap<>();
+		final Map<org.hibernate.relational.naming.spi.PhysicalName, UniqueKey> physicalNames = new LinkedHashMap<>();
+		if ( absorbed != null && absorbed.key.isNameExplicit() && absorbed.key.getName() != null ) {
+			physicalNames.put( ColumnNameHelper.physicalName( absorbed.key.getName(),
+					context.getMetadataCollector().getDatabase() ), absorbed.key );
+		}
+		for ( var candidate : survivors ) {
+			if ( primaryKey != null && sameColumns( primaryKey.getColumns(), candidate.key.getColumns() ) ) { continue; }
+			name( candidate, context );
+			final var physicalName = ColumnNameHelper.physicalName( candidate.key.getName(), context.getMetadataCollector().getDatabase() );
+			final var previous = physicalNames.putIfAbsent( physicalName, candidate.key );
+			if ( previous != null && !sameColumns( previous.getColumns(), candidate.key.getColumns() ) ) {
+				throw new MappingException( "Unique-key naming collision on table '" + table.getName()
+						+ "' for name '" + candidate.key.getName() + "': " + previous.getColumns()
+						+ " versus " + candidate.key.getColumns() );
+			}
+			if ( previous == null ) { finalized.put( candidate.key.getName(), candidate.key ); }
+			if ( candidate.key.getColumns().size() == 1 ) {
+				final var column = candidate.key.getColumn( 0 );
+				if ( column.isUnique() ) { column.setUniqueKeyName( candidate.key.getName() ); }
+			}
+		}
+		table.finalizeUniqueKeys( finalized );
+	}
+
+	private static boolean sameColumns(List<Column> first, List<Column> second) {
+		return first.size() == second.size() && first.containsAll( second );
+	}
+
+	private static void name(Candidate candidate, MetadataBuildingContext context) {
+		if ( candidate.finalized ) { return; }
+		LogicalName logical = candidate.explicitName;
+		if ( logical == null ) {
+			final var names = context.getMetadataCollector().getRelationalModelCorrespondences();
+			final var table = candidate.key.getTable();
+			final var tableName = names.tableName( table );
+			if ( !(table instanceof NamedTable namedTable) || tableName == null ) {
+				throw new MappingException( "Missing named-table dependency for unique key: " + table.getName() );
+			}
+			if ( candidate.pairs.isEmpty() ) {
+				for ( var column : candidate.key.getColumns() ) {
+					final var declaration = names.columnNames().findDeclarationName( table, column );
+					if ( declaration == null ) { throw new MappingException( "Missing logical unique-key column: " + column.getName() ); }
+					candidate.pairs.add( new NamingNamePair( declaration, column.getPhysicalName() ) );
+				}
+			}
+			logical = context.getBuildingPlan().getImplicitNamingStrategy().determineUniqueKeyName(
+					new UniqueKeyNamingInput( new NamedTableNamingInput( new NamingNamePair(
+							tableName, namedTable.getPhysicalName().objectName() ) ), candidate.pairs ),
+					ImplicitNamingContextImpl.from( context ) );
+		}
+		candidate.key.setName( ConstraintNamingHelper.resolveLogical( logical, ConstraintNamingHelper.Kind.UNIQUE_KEY, context ) );
+		candidate.finalized = true;
+	}
+
+	private static final class Candidate {
+		final UniqueKey key;
+		final LogicalName explicitName;
+		final List<NamingNamePair> pairs;
+		boolean finalized;
+		Candidate(UniqueKey key, LogicalName explicitName, List<NamingNamePair> pairs, boolean finalized) {
+			this.key = key;
+			this.explicitName = explicitName;
+			this.pairs = pairs;
+			this.finalized = finalized;
 		}
 	}
 }

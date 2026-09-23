@@ -27,6 +27,7 @@ import org.hibernate.mapping.Table;
 /// 		was specified for that column.
 /// @param sourceRole Human-readable role used in diagnostics.
 ///
+/// @param columnReferences Optional unresolved annotation references, resolved after column binding
 /// @since 9.0
 /// @author Steve Ebersole
 public record ResolvedUniqueKey(
@@ -40,8 +41,24 @@ public record ResolvedUniqueKey(
 		@Nullable List<String> columnOrderings,
 		boolean nullsNotDistinct,
 		boolean tableUniqueKey,
-		@Nullable String sourceRole) {
+		@Nullable String sourceRole,
+		@Nullable List<String> columnReferences) {
+	public ResolvedUniqueKey(Table table, List<Column> columns, MetadataBuildingContext context,
+			String name, boolean nameExplicit, boolean explicit, String options,
+			List<String> orderings, boolean nullsNotDistinct, boolean tableUniqueKey, String sourceRole) {
+		this( table, columns, context, name, nameExplicit, explicit, options, orderings,
+				nullsNotDistinct, tableUniqueKey, sourceRole, null );
+	}
+
+	/// Retain annotation references until column binding is complete (HHH-20917).
+	public static ResolvedUniqueKey references(Table table, List<String> references,
+			MetadataBuildingContext context, String name, String options, List<String> orderings, String role) {
+		return new ResolvedUniqueKey( table, List.of(), context, name, name != null && !name.isEmpty(),
+				true, options, orderings, false, true, role, references );
+	}
+
 	public ResolvedUniqueKey {
+		if ( columnReferences != null ) { columnReferences = List.copyOf( columnReferences ); }
 		columns = List.copyOf( columns );
 		if ( columnOrderings != null ) {
 			columnOrderings = java.util.Collections.unmodifiableList( new java.util.ArrayList<>( columnOrderings ) );

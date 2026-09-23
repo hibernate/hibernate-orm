@@ -972,31 +972,59 @@ This change does not expand two-column time-zone storage support or alter storag
 selection. Existing one-column embedded/collection mappings, split-table restrictions,
 and the native `AUTO` plus `@TimeZoneColumn` rejection remain separate issues.
 
-=== Primary-key and unique-key name emission (planned)
+=== Unique-key names and primary-key absorption
 
-The approved constraint-naming redesign will make schema creation honor finalized
-physical primary-key and unique-key names wherever the dialect supports named constraints.
-This behavior is pending implementation.
+Schema creation now honors finalized unique-key names wherever the dialect supports
+named uniqueness, including names supplied by custom implicit and physical strategies.
+Single-column uniqueness uses a named table constraint instead of an anonymous inline
+clause where supported. Dialect-specific nullable-key suppression and unique-index
+representation remain in force.
 
-Implicit primary keys will remain unnamed in generated DDL. Existing internal PK alias/hash labels will
-not automatically become emitted constraint names. The unified logical PK naming
-algorithm described below does not change that emission policy.
-The existing explicitly named UK-to-PK absorption behavior is retained. A separate
-follow-up proposes direct explicit PK declarations and honoring their finalized physical
-names, with the direct PK declaration taking precedence over an absorbed UK name.
-FK/UK/index physical naming results remain required.
+Implicit primary keys remain unnamed in generated DDL. An explicitly named UK covering
+the PK still supplies its exported name, through the UK physical hook. This now works
+consistently when it is the table's only UK as well as when multiple UKs are declared.
+The existing last-eligible-declaration selection is preserved. Direct `@PrimaryKey`
+declarations remain a separate follow-up.
 
-Previously, some create-table paths emitted anonymous primary-key or unique clauses
-even though the mapping had a name. Existing databases may therefore contain
-vendor-assigned constraint names that differ from Hibernate's finalized names.
-Generated schema scripts may change when the exporter policy starts emitting a
-previously omitted PK or UK name, even if its generation algorithm is unchanged.
+Previously anonymous UK clauses may have database-assigned names that differ from the
+names now emitted by Hibernate. Review generated migration scripts against actual
+constraint names; existing database constraints are not automatically renamed.
 
-Review constraint names when comparing or applying schema migrations. Existing databases
-will not be automatically renamed merely by changing the naming strategy; migration
-scripts must account for their actual constraint names. Dialect suppression and
-constraint-versus-index representation rules continue to apply. Existing FK/UK/index
-default naming algorithms are preserved.
+=== Unique-key inputs and column resolution (HHH-20917)
+
+`ImplicitNamingStrategy.determineUniqueKeyName` now takes `UniqueKeyNamingInput` and
+`ImplicitNamingContext`, returning a non-null `LogicalName`. The input exposes the
+selected table and ordered columns with both logical and physical names. Its interface
+default retains the existing `UK` hash recipe and configured schema charset.
+`ImplicitUniqueKeyNameSource` is removed. Custom strategies must migrate their override;
+overriding the old shared constraint-hashing helper no longer customizes UK naming.
+
+Explicit names bypass implicit naming. The physical UK callback runs once for each
+surviving naming decision, preserves requested quoting, and must return a non-null result.
+Discarded inferred UKs and unnamed UKs absorbed into a PK do not invoke UK naming.
+
+`@UniqueConstraint.columnNames` now resolves actual mapped columns after binding,
+without invoking physical column naming again or creating placeholders. Logical lookup
+has precedence, with physical-name fallback only when no logical match exists. This
+also makes collection/join-table handling consistent: where a spelling matches different
+logical and physical columns, the logical reference wins. Unknown columns fail during
+boot even when the constraint name is explicit.
+
+Repeated declarations of the same explicit UK name on the same table retain their
+existing column-merging behavior. Independent constraints with different columns whose
+names collide through implicit or physical naming now cause a mapping error instead of
+silently becoming one composite UK. Source declaration provenance determines this rule;
+a custom strategy returning an explicitly flagged logical name does not turn it into
+an explicit mapping declaration.
+
+See https://hibernate.atlassian.net/browse/HHH-20917[HHH-20917] for the placeholder-column
+correction. Index naming remains on its existing contract; unique indexes represented
+as UK constraints use the UK lifecycle and naming hooks.
+
+Temporal period-start additions retain their previous exclusion from UK naming inputs
+while remaining part of the constraint. Inferred aggregate-collection UKs also retain
+their existing member-column behavior. Both are deferred investigations; this change
+does not claim to correct aggregate UK membership or rename temporal keys.
 
 === Implicit primary-key mapping names
 

@@ -11,7 +11,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitConstraintNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.relational.naming.spi.LogicalName;
 
@@ -175,15 +174,6 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 
 	@Override
 	@Nonnull
-	public Identifier determineUniqueKeyName(@Nonnull ImplicitUniqueKeyNameSource source) {
-		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
-		return userProvidedIdentifier == null
-				? generateConstraintName( source )
-				: userProvidedIdentifier;
-	}
-
-	@Override
-	@Nonnull
 	public Identifier determineIndexName(@Nonnull ImplicitIndexNameSource source) {
 		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
 		return userProvidedIdentifier == null
@@ -269,7 +259,6 @@ public class StandardImplicitNamingStrategy implements ImplicitNamingStrategy, S
 	protected String constraintNamePrefix(ImplicitConstraintNameSource.Kind kind) {
 		return switch ( kind ) {
 			case INDEX -> "IDX";
-			case UNIQUE_KEY -> "UK";
 		};
 	}
 }

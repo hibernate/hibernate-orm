@@ -773,22 +773,11 @@ public class TableBinder {
 
 		for ( jakarta.persistence.UniqueConstraint uniqueConstraint : tableSource.uniqueConstraints() ) {
 			validateUniqueConstraintColumns( uniqueConstraint.columnNames(), table.getName() );
-			final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( uniqueConstraint.columnNames().length );
-			for ( String columnName : uniqueConstraint.columnNames() ) {
-				uniqueKeyColumns.add( createColumn( columnName ) );
-			}
 			UniqueKeyMappingMaterializer.materializeUniqueKey(
-					ResolvedUniqueKey.explicit(
-							table,
-							uniqueKeyColumns,
+					ResolvedUniqueKey.references( table, Arrays.asList( uniqueConstraint.columnNames() ),
 							bindingState.getMetadataBuildingContext(),
-							StringHelper.nullIfEmpty( uniqueConstraint.name() ),
-							StringHelper.isNotEmpty( uniqueConstraint.name() ),
-							uniqueConstraint.options(),
-							null,
-							"table-unique-constraint"
-					)
-			);
+							StringHelper.nullIfEmpty( uniqueConstraint.name() ), uniqueConstraint.options(),
+							null, "table-unique-constraint" ) );
 		}
 	}
 
@@ -819,7 +808,8 @@ public class TableBinder {
 			final String[] orderings = new String[parsed.size()];
 			initializeColumns( columnExpressions, orderings, parsed );
 
-			final Selectable[] selectables = selectables( columnExpressions );
+			final boolean hasExpression = Arrays.stream( columnExpressions ).anyMatch( expression -> expression.startsWith( "(" ) );
+			final Selectable[] selectables = indexAnn.unique() && !hasExpression ? new Selectable[0] : selectables( columnExpressions );
 			boolean hasFormula = false;
 			for ( Selectable selectable : selectables ) {
 				if ( selectable.isFormula() ) {
@@ -836,28 +826,16 @@ public class TableBinder {
 									!StringHelper.isEmpty( indexAnn.using() )
 							)
 					) == UniqueKeyRepresentation.CONSTRAINT ) {
-				final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( selectables.length );
-				for ( Selectable selectable : selectables ) {
-					uniqueKeyColumns.add( (Column) selectable );
-				}
 				UniqueKeyMappingMaterializer.materializeUniqueKey(
-						ResolvedUniqueKey.explicit(
-								table,
-								uniqueKeyColumns,
-								bindingState.getMetadataBuildingContext(),
-								StringHelper.nullIfEmpty( indexAnn.name() ),
-								StringHelper.isNotEmpty( indexAnn.name() ),
-								indexAnn.options(),
-								Arrays.asList( orderings ),
-								"table-index"
-						)
-				);
+						ResolvedUniqueKey.references( table, Arrays.asList( columnExpressions ),
+								bindingState.getMetadataBuildingContext(), StringHelper.nullIfEmpty( indexAnn.name() ),
+								indexAnn.options(), Arrays.asList( orderings ), "table-index" ) );
 			}
 			else {
 				IndexMappingMaterializer.materializeIndex(
 						ResolvedIndex.explicit(
 								physicalTable,
-								Arrays.asList( selectables ),
+								Arrays.asList( selectables.length == 0 ? selectables( columnExpressions ) : selectables ),
 								Arrays.asList( columnExpressions ),
 								bindingState.getMetadataBuildingContext(),
 								StringHelper.nullIfEmpty( indexAnn.name() ),

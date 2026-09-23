@@ -483,6 +483,8 @@ public class BasicValueMappingMaterializer {
 		applyChecks( basicValueIntent, column );
 		basicValue.addColumn( column, insertable, updatable );
 		memberTarget.registerMemberColumn( column );
+		bindingState.getRelationalModelCorrespondences().columnNames()
+				.registerDeclarationName( column, logicalColumnName );
 		registerTableColumn( basicValue, memberTarget, column );
 		if ( !memberTarget.isAggregateMemberTarget() ) {
 			ColumnBinder.registerColumnNameBinding(

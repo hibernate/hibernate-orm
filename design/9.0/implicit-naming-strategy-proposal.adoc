@@ -5,8 +5,8 @@
 Status: implementation authorized by Steve. The replacement is being implemented
 in stages. Table, independent-column, role-specific join-column, tenant-column,
 entity/embeddable-discriminator, aggregate-column, collection-identifier, soft-delete,
-time-zone companion, primary-key, and foreign-key callbacks are implemented, along with
-physical constraint/index hooks. Remaining work covers unique-key and index contracts,
+time-zone companion, primary-key, foreign-key, and unique-key callbacks are implemented, along with
+physical constraint/index hooks. Remaining work covers index contracts, deferred temporal/aggregate UK behavior,
 audit/history, generator storage-column defaults on their separate contract, and
 the cross-role dependency-readiness audit.
 
@@ -257,8 +257,8 @@ cached per concrete use, including inherited mappings; custom callbacks avoid un
 basic naming. Existing storage support boundaries remain unchanged.
 |Physical constraints and indexes
 |Dedicated physical callbacks cover primary keys, foreign keys, unique keys, and indexes.
-Explicit FK/unique/index names bypass implicit naming. PK and FK use typed logical-name
-contracts; UK/index still require migration. Unique-column UKs are finalized before export
+Explicit FK/unique/index names bypass implicit naming. PK, FK, and UK use typed logical-name
+contracts; indexes still require migration. Unique-column UKs are finalized before export
 through the normal strategy hooks (HHH-20916).
 |===
 
@@ -296,7 +296,8 @@ follow-up, with direct declarations taking precedence over absorbed UK names.
 PK naming is implemented; its contract and follow-ups are retained in the constraint/index proposal.
 The separate working draft is link:foreign-unique-key-naming-spec.adoc[FK And UK Naming].
 
-. Migrate the remaining implicit unique-key and index naming to typed
+. Revisit the explicitly deferred temporal naming and aggregate UK behavior in the FK/UK specification.
+. Migrate the remaining implicit index naming to typed
   logical-name contracts. Trace check-constraint and expression cases before assigning
   callbacks; verify the names actually emitted by schema tooling.
 . Specify and implement audit/history table and companion-column roles.

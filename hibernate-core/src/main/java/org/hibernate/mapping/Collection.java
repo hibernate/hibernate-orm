@@ -696,8 +696,8 @@ public abstract sealed class Collection
 						primaryKey.addColumn( startingColumn );
 					}
 				}
-				// TODO: we should probably only do this for the UK created in
-				//       Set.createPrimaryKey() and not one the user defined
+				// TODO HHH-20919: Apply period-start only to Hibernate's synthesized set-membership UK,
+				// not to every UK on the collection table, including user-declared constraints.
 				else if ( !collectionTable.requireTable().getUniqueKeys().isEmpty() ) {
 					for ( var uniqueKey : collectionTable.requireTable().getUniqueKeys().values() ) {
 						if ( !uniqueKey.containsColumn( startingColumn ) ) {

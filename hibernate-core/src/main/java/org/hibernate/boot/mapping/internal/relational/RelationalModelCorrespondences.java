@@ -24,6 +24,22 @@ import org.hibernate.boot.model.relational.Database;
 /// @since 9.0
 /// @author Steve Ebersole
 public class RelationalModelCorrespondences {
+	private final java.util.List<org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey> uniqueKeys = new java.util.ArrayList<>();
+
+	public java.util.List<org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey> uniqueKeyCandidates() {
+		return uniqueKeys;
+	}
+
+	private final Map<Table, java.util.List<Column>> uniqueKeyAdditionalColumns = new IdentityHashMap<>();
+
+	public void addUniqueKeyColumn(Table table, Column column) {
+		uniqueKeyAdditionalColumns.computeIfAbsent( table, ignored -> new java.util.ArrayList<>() ).add( column );
+	}
+
+	public java.util.List<Column> uniqueKeyAdditionalColumns(Table table) {
+		return uniqueKeyAdditionalColumns.getOrDefault( table, java.util.List.of() );
+	}
+
 	private final ColumnNameCorrespondence columnNames;
 	private final Map<Table, LogicalName> tableNames = new IdentityHashMap<>();
 	private final Map<Table, LogicalName> tableCreationNames = new IdentityHashMap<>();

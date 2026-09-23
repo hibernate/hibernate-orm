@@ -272,11 +272,11 @@ public class StateManagementBindingPhase {
 					context,
 					bindingState
 			);
-			applySingleTableTemporalCollectionKey( collection );
+			applySingleTableTemporalCollectionKey( collection, bindingState );
 		}
 	}
 
-	private static void applySingleTableTemporalCollectionKey(Collection collection) {
+	private static void applySingleTableTemporalCollectionKey(Collection collection, BindingState bindingState) {
 		if ( collection.isPrimaryKeyDisabled() || !collection.isAuxiliaryColumnInPrimaryKey() ) {
 			return;
 		}
@@ -293,6 +293,9 @@ public class StateManagementBindingPhase {
 			}
 		}
 		else {
+			// TODO HHH-20919: Apply period-start only to Hibernate's synthesized set-membership UK,
+			// not to every UK on the collection table, including user-declared constraints.
+			bindingState.getRelationalModelCorrespondences().addUniqueKeyColumn( collection.getCollectionTable(), startingColumn );
 			for ( var uniqueKey : collection.getCollectionTable().getUniqueKeys().values() ) {
 				if ( !uniqueKey.containsColumn( startingColumn ) ) {
 					uniqueKey.addColumn( startingColumn );

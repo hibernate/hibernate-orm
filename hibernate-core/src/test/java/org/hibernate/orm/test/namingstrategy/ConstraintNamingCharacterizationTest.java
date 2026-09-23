@@ -18,10 +18,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Subselect;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.spi.ForeignKeyNamingInput;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.naming.spi.UniqueKeyNamingInput;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -77,12 +76,12 @@ class ConstraintNamingCharacterizationTest {
 	}
 
 	@Test
-	void soleAbsorbedUniqueKeyCurrentlyLosesName() {
+	void soleAbsorbedUniqueKeyRetainsName() {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, new MappingSources().addManagedClass( Sole.class ) );
 			final var table = metadata.getEntityBinding( Sole.class.getName() ).getTable();
 			assertThat( table.getUniqueKeys() ).isEmpty();
-			assertThat( table.getPrimaryKey().getOrderingUniqueKey() ).isNull();
+			assertThat( table.getPrimaryKey().getOrderingUniqueKey().getName() ).isEqualTo( "sole_pk" );
 		}
 	}
 
@@ -180,9 +179,9 @@ class ConstraintNamingCharacterizationTest {
 					new MappingSources().addManagedClass( BasicUnique.class ),
 					new StandardImplicitNamingStrategy() {
 						@Override @Nonnull
-						public Identifier determineUniqueKeyName(@Nonnull ImplicitUniqueKeyNameSource source) {
-							implicitCalls.add( source.getTableName().getText() );
-							return Identifier.toIdentifier( "chosen", true );
+						public LogicalName determineUniqueKeyName(@Nonnull UniqueKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+							implicitCalls.add( input.table().logicalName().getText() );
+							return context.implicitName( "chosen", true );
 						}
 					}, new PhysicalNamingStrategyStandardImpl() {
 						@Override @Nonnull
@@ -227,9 +226,9 @@ class ConstraintNamingCharacterizationTest {
 			return super.determineForeignKeyName( input, context );
 		}
 		@Override @Nonnull
-		public Identifier determineUniqueKeyName(@Nonnull ImplicitUniqueKeyNameSource source) {
-			uniqueKeys.add( source.getTableName().getText() );
-			return super.determineUniqueKeyName( source );
+		public LogicalName determineUniqueKeyName(@Nonnull UniqueKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+			uniqueKeys.add( input.table().logicalName().getText() );
+			return super.determineUniqueKeyName( input, context );
 		}
 	}
 

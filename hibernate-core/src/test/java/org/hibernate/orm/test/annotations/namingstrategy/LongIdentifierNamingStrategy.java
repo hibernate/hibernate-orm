@@ -12,7 +12,7 @@ import org.hibernate.boot.model.naming.spi.ForeignKeyNamingInput;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.naming.spi.UniqueKeyNamingInput;
 
 public class LongIdentifierNamingStrategy
 		extends ImplicitNamingStrategyJpaCompliantImpl {
@@ -26,8 +26,9 @@ public class LongIdentifierNamingStrategy
 
 	@Override
 	@Nonnull
-	public Identifier determineUniqueKeyName(@Nonnull ImplicitUniqueKeyNameSource source) {
-		return limitIdentifierName(super.determineUniqueKeyName( source ));
+	public LogicalName determineUniqueKeyName(@Nonnull UniqueKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+		final var name = super.determineUniqueKeyName( input, context );
+		return context.implicitName( name.getText().substring( 0, Math.min( 30, name.getText().length() ) ), name.isQuoted() );
 	}
 
 	@Override

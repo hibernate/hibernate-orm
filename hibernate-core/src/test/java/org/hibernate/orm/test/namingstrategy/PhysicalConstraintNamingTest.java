@@ -22,7 +22,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.spi.ForeignKeyNamingInput;
 import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.naming.spi.UniqueKeyNamingInput;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
 import org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy;
@@ -78,9 +78,8 @@ class PhysicalConstraintNamingTest {
 		}
 		@Override
 		@Nonnull
-		public Identifier determineUniqueKeyName(@Nonnull ImplicitUniqueKeyNameSource source) {
-			assertThat( source.getUserProvidedIdentifier() ).isNull();
-			return super.determineUniqueKeyName( source );
+		public LogicalName determineUniqueKeyName(@Nonnull UniqueKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+			return super.determineUniqueKeyName( input, context );
 		}
 	}
 

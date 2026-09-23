@@ -104,7 +104,7 @@ public final class CollectionKeyMappingMaterializer {
 		}
 
 		createPrimaryKey( collectionTableKey );
-		adjustTemporalPrimaryKey( collection );
+		adjustTemporalPrimaryKey( collection, collectionTableKey.metadataBuildingContext() );
 	}
 
 	public static PrimaryKey materializeValuePrimaryKey(Table table, Value value, String sourceRole) {
@@ -162,7 +162,9 @@ public final class CollectionKeyMappingMaterializer {
 		final Collection collection = collectionTableKey.collection();
 		final var metadata = collectionTableKey.metadataBuildingContext().getMetadataCollector();
 		final Table collectionTable = collection.getCollectionTable();
-		if ( collectionTable.hasPrimaryKey() || !collectionTable.getUniqueKeys().isEmpty() ) {
+		if ( collectionTable.hasPrimaryKey() || !collectionTable.getUniqueKeys().isEmpty()
+				|| metadata.getRelationalModelCorrespondences().uniqueKeyCandidates().stream().anyMatch( key -> key.table() == collectionTable
+						&& (key.tableUniqueKey() || key.columns().size() > 1) ) ) {
 			return;
 		}
 
@@ -216,7 +218,7 @@ public final class CollectionKeyMappingMaterializer {
 		}
 	}
 
-	private static void adjustTemporalPrimaryKey(Collection collection) {
+	private static void adjustTemporalPrimaryKey(Collection collection, org.hibernate.boot.spi.MetadataBuildingContext context) {
 		if ( collection.isAuxiliaryColumnInPrimaryKey() ) {
 			final var startingColumn = collection.getAuxiliaryColumn( collection.getAuxiliaryColumnInPrimaryKey() );
 			if ( startingColumn != null ) {
@@ -226,7 +228,10 @@ public final class CollectionKeyMappingMaterializer {
 						primaryKey.addColumn( startingColumn );
 					}
 				}
-				else if ( !collection.getCollectionTable().getUniqueKeys().isEmpty() ) {
+			else {
+				// TODO HHH-20919: Apply period-start only to Hibernate's synthesized set-membership UK,
+				// not to every UK on the collection table, including user-declared constraints.
+				context.getMetadataCollector().getRelationalModelCorrespondences().addUniqueKeyColumn( collection.getCollectionTable(), startingColumn );
 					for ( var uniqueKey : collection.getCollectionTable().getUniqueKeys().values() ) {
 						if ( !uniqueKey.containsColumn( startingColumn ) ) {
 							uniqueKey.addColumn( startingColumn );

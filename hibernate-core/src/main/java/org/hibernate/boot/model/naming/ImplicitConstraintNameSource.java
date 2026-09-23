@@ -14,7 +14,7 @@ import java.util.List;
 /// @author Steve Ebersole
 public sealed interface ImplicitConstraintNameSource
 		extends ImplicitNameSource
-		permits ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
+		permits ImplicitIndexNameSource {
 	/// The table containing the constraint or index. Boot adapters use the registered
 	/// logical table name when available and otherwise the mapping table name.
 	///
@@ -38,7 +38,6 @@ public sealed interface ImplicitConstraintNameSource
 
 	/// The database-object role being named.
 	enum Kind {
-		UNIQUE_KEY,
 		INDEX
 	}
 }

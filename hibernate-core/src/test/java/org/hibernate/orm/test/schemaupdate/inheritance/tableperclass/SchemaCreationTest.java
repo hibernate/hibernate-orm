@@ -79,7 +79,7 @@ public class SchemaCreationTest {
 					|| statement.startsWith("create table category")
 						&& statement.contains("code " + varchar255 + " not null unique")
 					|| statement.startsWith("create table category")
-						&& statement.contains("unique(code)");
+						&& (statement.contains("unique(code)") || statement.contains("unique (code)"));
 		}
 
 		MatcherAssert.assertThat( "Unique constraint for table category is not created", isUniqueConstraintCreated,

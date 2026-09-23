@@ -43,7 +43,7 @@ public class CommentTest {
 			Table table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
 					.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(TABLE_NAME))
 					.findFirst().orElse(null);
-			assertThat(table.getComment(), is(TABLE_COMMENT));
+			assertThat(((org.hibernate.mapping.NamedTable) table).getComment(), is(TABLE_COMMENT));
 			for (Column col : table.getColumns()) {
 				assertThat(col.getComment(), is("I am " + col.getName()));
 			}

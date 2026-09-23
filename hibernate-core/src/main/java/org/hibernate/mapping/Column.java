@@ -15,14 +15,12 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.internal.AggregateCastTypeSizingSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.loader.internal.AliasConstantsHelper;
-import org.hibernate.internal.util.QuotingHelper;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.internal.PhysicalNameSnapshot;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
@@ -59,15 +57,15 @@ public sealed class Column
 	private Integer arrayLength;
 	private Value value;
 	private int typeIndex;
-	private String name;
+	private transient PhysicalName physicalName;
+	private PhysicalNameSnapshot physicalNameSnapshot;
+	private transient java.util.List<ColumnContainer> containers;
 	private boolean nullable = true;
 	private boolean unique;
 	private String uniqueKeyName;
 	private String sqlTypeName;
 	private Integer sqlTypeCode;
 	private Boolean sqlTypeLob;
-	private boolean quoted;
-	private boolean explicit;
 	int uniqueInteger;
 	private boolean identity;
 	private String comment;
@@ -81,11 +79,43 @@ public sealed class Column
 	private java.util.List<CheckConstraint> checkConstraints = new ArrayList<>();
 	private String options;
 
-	public Column() {
+	public Column(PhysicalName physicalName) {
+		replacePhysicalName( physicalName );
 	}
 
-	public Column(String columnName) {
-		setName( columnName );
+	public PhysicalName getPhysicalName() {
+		if ( physicalName == null ) {
+			throw new IllegalStateException( "Column physical names require attached system services" );
+		}
+		return physicalName;
+	}
+
+	void registerContainer(ColumnContainer container) {
+		if ( containers == null ) {
+			containers = new java.util.ArrayList<>();
+		}
+		if ( containers.stream().noneMatch( existing -> existing == container ) ) {
+			containers.add( container );
+		}
+	}
+
+	void validateRename(PhysicalName replacement) {
+		if ( containers != null ) {
+			containers.forEach( container -> container.validateRename( this, replacement ) );
+		}
+	}
+
+	void replacePhysicalName(PhysicalName name) {
+		physicalName = java.util.Objects.requireNonNull( name );
+		physicalNameSnapshot = PhysicalNameSnapshot.from( name );
+		if ( containers != null ) {
+			containers.forEach( ColumnContainer::invalidateColumnIndex );
+		}
+	}
+
+	@Internal
+	public void reattachPhysicalName(PhysicalName.Factory factory) {
+		physicalName = physicalNameSnapshot.restore( factory );
 	}
 
 	public Long getLength() {
@@ -122,35 +152,7 @@ public sealed class Column
 	}
 
 	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		if ( isQuoted( name ) ) {
-			quoted = true;
-			this.name = name.substring( 1, name.length() - 1 );
-		}
-		else {
-			this.name = name;
-		}
-	}
-
-	@Internal
-	public Identifier getNameIdentifier(MetadataBuildingContext buildingContext) {
-		return getNameIdentifier( buildingContext.getMetadataCollector().getDatabase() );
-	}
-
-	@Internal
-	public Identifier getNameIdentifier(Database database) {
-		return database.toIdentifier( getQuotedName() );
-	}
-
-	public boolean isExplicit() {
-		return explicit;
-	}
-
-	public void setExplicit(boolean explicit) {
-		this.explicit = explicit;
+		return getPhysicalName().getText();
 	}
 
 	public boolean isIdentity() {
@@ -161,36 +163,19 @@ public sealed class Column
 		this.identity = identity;
 	}
 
-	private static boolean isQuoted(String name) {
-		//TODO: deprecated, remove eventually
-		return name != null
-			&& name.length() >= 2
-			&& isOpenQuote( name.charAt( 0 ) )
-			&& isCloseQuote( name.charAt( name.length() - 1 ) );
-	}
-
-	private static boolean isOpenQuote(char ch) {
-		return QuotingHelper.isIdentifierQuote( ch );
-	}
-
-	private static boolean isCloseQuote(char ch) {
-		return QuotingHelper.isClosingIdentifierQuote( ch );
-	}
 
 	/**
 	 * @return the quoted name as it would occur in the mapping file
 	 */
 	public String getQuotedName() {
-		return safeInterning( quoted ? "`" + name + "`" : name );
+		return safeInterning( getPhysicalName().toString() );
 	}
 
 	/**
 	 * @return the quoted name using the quoting syntax of the given dialect
 	 */
 	public String getQuotedName(Dialect dialect) {
-		return safeInterning( quoted
-				? dialect.getIdentifierSupport().openQuote() + name + dialect.getIdentifierSupport().closeQuote()
-				: name );
+		return safeInterning( dialect.getIdentifierSupport().render( getPhysicalName() ) );
 	}
 
 	@Override
@@ -200,12 +185,12 @@ public sealed class Column
 	}
 
 	private @Nonnull String aliasRoot() {
-		final int lastLetter = lastIndexOfLetter( name );
+		final int lastLetter = lastIndexOfLetter( getName() );
 		if ( lastLetter == -1 ) {
 			return "column";
 		}
 		else {
-			final String lowerCaseName = name.toLowerCase( Locale.ROOT );
+			final String lowerCaseName = getName().toLowerCase( Locale.ROOT );
 			return lowerCaseName.length() > lastLetter + 1
 					? lowerCaseName.substring( 0, lastLetter + 1 )
 					: lowerCaseName;
@@ -217,9 +202,9 @@ public sealed class Column
 		final int maxAliasLength = dialect.getIdentifierSupport().getMaxAliasLength();
 		final int freeLength = maxAliasLength - suffixLength;
 		final boolean useRawName =
-				name.length() <= freeLength
-				&& !quoted
-				&& !name.equalsIgnoreCase( dialect.getRowIdSupport().resolveExpression( null ) );
+				getName().length() <= freeLength
+				&& !isQuoted()
+				&& !getName().equalsIgnoreCase( dialect.getRowIdSupport().resolveExpression( null ) );
 		if ( !useRawName ) {
 			if ( suffixLength >= maxAliasLength ) {
 				throw new MappingException(
@@ -269,23 +254,16 @@ public sealed class Column
 
 	@Override
 	public int hashCode() {
-		//used also for generation of FK names!
-		return isQuoted()
-				? name.hashCode()
-				: name.toLowerCase( Locale.ROOT ).hashCode();
+		return getPhysicalName().hashCode();
 	}
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof Column column
-			&& equals( column );
+		return object instanceof Column column && equals( column );
 	}
 
 	public boolean equals(Column column) {
-		return column != null
-			&& ( this == column || isQuoted()
-				? name.equals( column.name )
-				: name.equalsIgnoreCase( column.name ) );
+		return this == column || column != null && getPhysicalName().equals( column.getPhysicalName() );
 	}
 
 	public int getSqlTypeCode(MappingContext mapping) throws MappingException {
@@ -311,9 +289,9 @@ public sealed class Column
 				throw new MappingException(
 						String.format(
 								Locale.ROOT,
-								"Unable to determine SQL type name for column '%s' of table '%s' because there is no type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
+								"Unable to determine SQL type name for column '%s' of column container '%s' because there is no type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
 								getName(),
-								getValue().getTable().getName(),
+								getValue().getColumnContainer(),
 								jdbcType.getDefaultSqlTypeCode(),
 								JdbcTypeNameMapper.getTypeName( jdbcType.getDefaultSqlTypeCode() )
 						)
@@ -333,9 +311,9 @@ public sealed class Column
 				throw new MappingException(
 						String.format(
 								Locale.ROOT,
-								"Unable to determine SQL type name for column '%s' of table '%s': %s",
+								"Unable to determine SQL type name for column '%s' of column container '%s': %s",
 								getName(),
-								getValue().getTable().getName(),
+								getValue().getColumnContainer(),
 								cause.getMessage()
 						),
 						cause
@@ -496,9 +474,9 @@ public sealed class Column
 		throw new MappingException(
 				String.format(
 						Locale.ROOT,
-						"Unable to resolve Hibernate type for column '%s' of table '%s'",
+						"Unable to resolve Hibernate type for column '%s' of column container '%s'",
 						getName(),
-						getValue().getTable().getName()
+						getValue().getColumnContainer()
 				)
 		);
 	}
@@ -570,9 +548,9 @@ public sealed class Column
 				throw new MappingException(
 						String.format(
 								Locale.ROOT,
-								"Unable to determine SQL type name for column '%s' of table '%s'",
+								"Unable to determine SQL type name for column '%s' of column container '%s'",
 								getName(),
-								getValue().getTable().getName()
+								getValue().getColumnContainer()
 						),
 						cause
 				);
@@ -594,7 +572,7 @@ public sealed class Column
 	}
 
 	public boolean isQuoted() {
-		return quoted;
+		return getPhysicalName().isQuoted();
 	}
 
 	@Override
@@ -749,9 +727,6 @@ public sealed class Column
 		this.customRead = safeInterning( nullIfEmpty( customRead ) );
 	}
 
-	public String getCanonicalName() {
-		return quoted ? name : name.toLowerCase( Locale.ROOT );
-	}
 
 	public String getOptions() {
 		return options;
@@ -794,15 +769,13 @@ public sealed class Column
 	 */
 	@Override
 	public Column clone() {
-		final Column copy = new Column();
+		final Column copy = new Column( getPhysicalName() );
 		copy.length = length;
 		copy.precision = precision;
 		copy.scale = scale;
 		copy.arrayLength = arrayLength;
 		copy.value = value;
 		copy.typeIndex = typeIndex;
-		copy.name = name;
-		copy.quoted = quoted;
 		copy.nullable = nullable;
 		copy.unique = unique;
 		copy.uniqueKeyName = uniqueKeyName;

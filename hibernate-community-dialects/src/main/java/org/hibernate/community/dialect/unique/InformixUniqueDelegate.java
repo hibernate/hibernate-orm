@@ -51,7 +51,7 @@ public class InformixUniqueDelegate extends DelegatingUniqueDelegate {
 		if ( uniqueKey.hasNullableColumn() || !context.isMigration() ) {
 			return "";
 		}
-		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
+		final String tableName = uniqueKey.getTable().getTableExpression( context );
 		final String constraintName = dialect.quote( uniqueKey.getName() );
 		return dialect.getAlterTableSupport().alterTableCommand(
 				tableName,

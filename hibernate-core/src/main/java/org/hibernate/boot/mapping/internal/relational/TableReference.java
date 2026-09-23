@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.mapping.Table;
 
 /// Binding-time reference to a relational table expression.
@@ -30,7 +30,7 @@ public interface TableReference {
 	/// For physical tables and views, the logical name might differ from the final
 	/// physical name after the {@linkplain org.hibernate.boot.model.naming.PhysicalNamingStrategy}
 	/// is applied.
-	Identifier logicalName();
+	LogicalName logicalName();
 
 	/// Whether this table reference should be exposed to schema tooling.
 	boolean exportable();

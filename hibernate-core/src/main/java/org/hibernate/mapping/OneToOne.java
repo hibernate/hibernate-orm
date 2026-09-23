@@ -28,7 +28,7 @@ public final class OneToOne extends ToOne {
 	private String mappedByProperty;
 	private transient TypeConfiguration typeConfiguration;
 
-	public OneToOne(MetadataBuildingContext buildingContext, Table table, PersistentClass owner) throws MappingException {
+	public OneToOne(MetadataBuildingContext buildingContext, ColumnContainer table, PersistentClass owner) throws MappingException {
 		super( buildingContext, table );
 		this.identifier = owner.getKey();
 		this.entityName = owner.getEntityName();

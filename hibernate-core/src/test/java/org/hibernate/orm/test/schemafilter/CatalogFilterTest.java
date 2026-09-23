@@ -10,7 +10,6 @@ import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.SQLServerDialect;
@@ -129,7 +128,7 @@ public class CatalogFilterTest {
 		@Override
 		public boolean includeNamespace(Namespace namespace) {
 			// exclude schema "the_catalog_2"
-			Identifier identifier = namespace.getName().catalog();
+			var identifier = namespace.getName().catalog();
 			return identifier == null || !"the_catalog_2".equals( identifier.getText() );
 		}
 

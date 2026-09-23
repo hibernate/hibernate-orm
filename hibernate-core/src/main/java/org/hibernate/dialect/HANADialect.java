@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
@@ -103,7 +105,6 @@ import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.mapping.Table;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupports;
 import org.hibernate.query.common.TemporalUnit;
@@ -333,7 +334,7 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 	private final StandardTableExporter hanaTableExporter = new StandardTableExporter( this ) {
 
 		@Override
-		public String[] getSqlCreateStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
+		public String[] getSqlCreateStrings(NamedTable table, Metadata metadata, SqlStringGenerationContext context) {
 			String[] sqlCreateStrings = super.getSqlCreateStrings( table, metadata, context );
 			return quoteTypeIfNecessary(
 					table,
@@ -343,19 +344,19 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 		}
 
 		@Override
-		public String[] getSqlDropStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
+		public String[] getSqlDropStrings(NamedTable table, Metadata metadata, SqlStringGenerationContext context) {
 			String[] sqlDropStrings = super.getSqlDropStrings( table, metadata, context );
 			return quoteTypeIfNecessary( table, sqlDropStrings, "drop table" );
 		}
 
-		private String[] quoteTypeIfNecessary(Table table, String[] strings, String prefix) {
-			if ( table.getNameIdentifier() == null || table.getNameIdentifier().isQuoted()
-					|| !"type".equalsIgnoreCase( table.getNameIdentifier().getText() ) ) {
+		private String[] quoteTypeIfNecessary(NamedTable table, String[] strings, String prefix) {
+			if ( table.getPhysicalName().objectName().isQuoted()
+					|| !"type".equalsIgnoreCase( table.getPhysicalName().objectName().getText() ) ) {
 				return strings;
 			}
 
-			Pattern createTableTypePattern = Pattern.compile( "(" + prefix + "\\s+)(" + table.getNameIdentifier().getText() + ")(.+)" );
-			Pattern commentOnTableTypePattern = Pattern.compile( "(comment\\s+on\\s+table\\s+)(" + table.getNameIdentifier().getText() + ")(.+)" );
+			Pattern createTableTypePattern = Pattern.compile( "(" + prefix + "\\s+)(" + table.getPhysicalName().objectName().getText() + ")(.+)" );
+			Pattern commentOnTableTypePattern = Pattern.compile( "(comment\\s+on\\s+table\\s+)(" + table.getPhysicalName().objectName().getText() + ")(.+)" );
 			for ( int i = 0; i < strings.length; i++ ) {
 				Matcher createTableTypeMatcher = createTableTypePattern.matcher( strings[i] );
 				Matcher commentOnTableTypeMatcher = commentOnTableTypePattern.matcher( strings[i] );
@@ -1088,7 +1089,7 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return this.hanaTableExporter;
 	}
 

@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.id.custom;
 
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.lang.reflect.Member;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -44,10 +47,10 @@ public class CustomSequenceGenerator implements IdentifierGenerator {
 
 		final Identifier identifier = identifierHelper.toIdentifier( name );
 		final Namespace defaultNamespace = database.getDefaultNamespace();
-		org.hibernate.boot.model.relational.Sequence sequence = defaultNamespace.locateSequence( identifier );
+		org.hibernate.boot.model.relational.Sequence sequence = defaultNamespace.locateSequence( logicalName( identifier ) );
 		if ( sequence == null ) {
 			sequence = defaultNamespace.createSequence(
-					identifier,
+					logicalName( identifier ),
 					(physicalName) -> new org.hibernate.boot.model.relational.Sequence(
 							null,
 							defaultNamespace.getPhysicalName().catalog(),
@@ -61,7 +64,7 @@ public class CustomSequenceGenerator implements IdentifierGenerator {
 
 		this.sqlSelectFrag =
 				database.getDialect().getSequenceSupport()
-						.getSequenceNextValString( sequence.getName().getSequenceName().render( database.getDialect() ) );
+						.getSequenceNextValString( database.getDialect().getIdentifierSupport().render( sequence.getName().getObjectName() ) );
 
 //tag::identifiers-IdGeneratorType-example[]
 	}

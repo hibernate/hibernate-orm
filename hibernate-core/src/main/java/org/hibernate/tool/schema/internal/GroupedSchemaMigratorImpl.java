@@ -4,11 +4,14 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.NamedTable;
+
 import java.sql.SQLException;
 import java.util.Set;
 
+import org.hibernate.relational.naming.spi.LogicalName;
+
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -48,7 +51,7 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			Set<String> exportIdentifiers,
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
-			Set<Identifier> exportedCatalogs,
+			Set<LogicalName> exportedCatalogs,
 			Namespace namespace,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
@@ -70,7 +73,10 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			);
 
 			final var tables = existingDatabase.getTablesInformation( namespace );
-			for ( var table : namespace.getTables() ) {
+			for ( var candidate : namespace.getTables() ) {
+				if ( !( candidate instanceof NamedTable table ) ) {
+					continue;
+				}
 				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
@@ -87,7 +93,10 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 				}
 			}
 
-			for ( var table : namespace.getTables() ) {
+			for ( var candidate : namespace.getTables() ) {
+				if ( !( candidate instanceof NamedTable table ) ) {
+					continue;
+				}
 				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {

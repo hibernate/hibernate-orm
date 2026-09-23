@@ -15,10 +15,6 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
-import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
-import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.categorize.StandardPersistentAttributeMemberResolver;
@@ -730,18 +726,25 @@ public record ComponentSource(
 		return switch ( path ) {
 			case AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME,
 					OffsetTimeCompositeUserType.LOCAL_TIME_NAME ->
-					ColumnSource.from( createTemporalColumn( sourceMember, timeZoneStorageBasePath(), buildingContext ) );
+					ColumnSource.from( createTemporalColumn( sourceMember, buildingContext ) );
 			case AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ->
 					ColumnSource.from( createTimeZoneColumn(
 							sourceMember,
-							createTemporalColumn( sourceMember, timeZoneStorageBasePath(), buildingContext ),
+							createTemporalColumn( sourceMember, buildingContext ),
 							buildingContext
 					) );
 			default -> null;
 		};
 	}
 
-	private String timeZoneStorageBasePath() {
+	/// Whether a companion annotation or override is present, even with an empty name.
+	public boolean timeZoneColumnDeclared() {
+		return sourceMember.hasDirectAnnotationUsage( TimeZoneColumn.class )
+				|| locateAttributeOverride( AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ) != null;
+	}
+
+	/// Owner-relative path of the temporal attribute, excluding synthetic members.
+	public String timeZoneStorageBasePath() {
 		if ( isNotEmpty( namingPathPrefix ) ) {
 			return namingPathPrefix.endsWith( "." )
 					? namingPathPrefix.substring( 0, namingPathPrefix.length() - 1 )
@@ -757,7 +760,8 @@ public record ComponentSource(
 		final var timeZoneColumn = member.getDirectAnnotationUsage( TimeZoneColumn.class );
 		final var created = JpaAnnotations.COLUMN.createUsage( buildingContext.getModelsContext()
 		);
-		created.name( timeZoneColumn == null ? column.name() + "_tz" : timeZoneColumn.name() );
+		// A missing name stays missing until the role-specific naming decision.
+		created.name( timeZoneColumn == null ? "" : timeZoneColumn.name() );
 		created.nullable( column.nullable() );
 		if ( timeZoneColumn == null ) {
 			created.table( column.table() );
@@ -780,7 +784,6 @@ public record ComponentSource(
 
 	private static Column createTemporalColumn(
 			MemberDetails member,
-			String path,
 			MetadataBuildingContext buildingContext) {
 		final var column = member.getDirectAnnotationUsage( Column.class );
 		if ( column != null && isNotEmpty( column.name() ) ) {
@@ -802,31 +805,6 @@ public record ComponentSource(
 		}
 		else {
 			created.secondPrecision( -1 );
-		}
-
-		final Identifier implicitName = buildingContext.getObjectNameNormalizer().normalizeIdentifierQuoting(
-				buildingContext.getBuildingPlan().getImplicitNamingStrategy()
-						.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
-							final AttributePath attributePath = AttributePath.parse( path );
-
-							@Override
-							public AttributePath getAttributePath() {
-								return attributePath;
-							}
-
-							@Override
-							public boolean isCollectionElement() {
-								return false;
-							}
-
-							@Override
-							public ImplicitNamingContext getNamingContext() {
-								return ImplicitNamingContextImpl.from( buildingContext );
-							}
-						} )
-		);
-		if ( isNotEmpty( implicitName.getText() ) ) {
-			created.name( implicitName.getText() );
 		}
 		return created;
 	}
@@ -869,6 +847,21 @@ public record ComponentSource(
 		return StringHelper.isEmpty( transformer.forColumn() )
 				? StringHelper.isEmpty( columnName )
 				: transformer.forColumn().equals( columnName );
+	}
+
+	/// Resolve the column declaration for this aggregate value, including an
+	/// enclosing override of the component attribute itself.
+	public ColumnSource aggregateColumnSource() {
+		final String path = isNested()
+				? pathPrefix.substring( 0, pathPrefix.length() - 1 )
+				: "";
+		final var override = locateAttributeOverride( path );
+		if ( override != null ) {
+			return ColumnSource.from( override.column() );
+		}
+		return kind == Kind.MAP_KEY && !isNested()
+				? ColumnSource.from( sourceMember.getDirectAnnotationUsage( jakarta.persistence.MapKeyColumn.class ) )
+				: ColumnSource.from( sourceMember.getDirectAnnotationUsage( Column.class ) );
 	}
 
 	public ColumnSource discriminatorColumnSource() {

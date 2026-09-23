@@ -57,19 +57,19 @@ public final class ForeignKeyMappingMaterializer {
 		if ( value.isConstrained() && !hasAuxiliaryColumnInPrimaryKey( referencedClass ) ) {
 			final ForeignKey foreignKey = materializeForeignKey(
 					new ResolvedForeignKey(
-							value.getTable(),
+							value.getColumnContainer().requireTable(),
 							value.getForeignKeyName(),
 							value.getType().getAssociatedEntityName(),
 							value.getForeignKeyDefinition(),
 							value.getForeignKeyOptions(),
 							value.getOnDeleteAction(),
 							columnMappings( value, new ArrayList<>( property.getColumns() ), sourceRole ),
-							property.getValue().getTable()
+							property.getValue().getColumnContainer().requireTable()
 					),
 					referencedClass
 			);
 			if ( foreignKey != null ) {
-				foreignKey.setReferencedTable( property.getValue().getTable() );
+				foreignKey.setReferencedTable( property.getValue().getColumnContainer().requireTable() );
 			}
 			return foreignKey;
 		}

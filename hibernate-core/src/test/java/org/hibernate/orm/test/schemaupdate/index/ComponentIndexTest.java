@@ -42,6 +42,7 @@ public class ComponentIndexTest {
 		boolean createIndexCommandIsGenerated = false;
 		for ( String command : commands ) {
 			if ( command.toLowerCase().contains( "create index city_index" ) ) {
+				Assertions.assertTrue( command.contains( "address_city" ), "Index must use the mapped component column" );
 				createIndexCommandIsGenerated = true;
 				break;
 			}
@@ -50,7 +51,7 @@ public class ComponentIndexTest {
 	}
 
 	@Entity(name = "user")
-	@Table(indexes = @Index(name = "city_index", columnList = "city"))
+	@Table(indexes = @Index(name = "city_index", columnList = "address.city"))
 	public static class User {
 		@Id
 		private Long id;

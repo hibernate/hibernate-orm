@@ -64,8 +64,8 @@ public final class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				.map( column -> column.getQuotedName( dialect ) )
 				.toList();
 
-		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
-		final String targetTableName = context.format( foreignKey.getReferencedTable().getQualifiedTableName() );
+		final String sourceTableName = foreignKey.getTable().getTableExpression( context );
+		final String targetTableName = foreignKey.getReferencedTable().getTableExpression( context );
 
 		final var buffer =
 				new StringBuilder( dialect.getAlterTableSupport().alterTableCommand(
@@ -165,7 +165,7 @@ public final class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			return NO_COMMANDS;
 		}
 		else {
-			final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
+			final String sourceTableName = foreignKey.getTable().getTableExpression( context );
 			final var alterTable = dialect.getAlterTableSupport().alterTableCommand(
 					sourceTableName,
 					dialect.getIfExistsSupport().alterTablePlacement()

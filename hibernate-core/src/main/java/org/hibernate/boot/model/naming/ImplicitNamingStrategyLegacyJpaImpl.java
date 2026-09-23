@@ -4,8 +4,17 @@
  */
 package org.hibernate.boot.model.naming;
 
+import jakarta.annotation.Nonnull;
+
+import org.hibernate.boot.model.naming.spi.CollectionKeyNamingInput;
+
+import org.hibernate.boot.model.naming.spi.CollectionTableNamingInput;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
+import org.hibernate.boot.model.naming.spi.NamedTableNamingInput;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.boot.model.source.spi.AttributePath;
+
 import org.hibernate.SPI;
-import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature;
 
 /**
  * Implementation of the ImplicitNamingStrategy contract which conforms to the
@@ -16,8 +25,12 @@ import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature;
  * <p>
  * Corresponds roughly to the legacy org.hibernate.cfg.EJB3NamingStrategy class.
  *
+ * @deprecated Use {@link org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy}
+ * or {@link ImplicitNamingStrategyJpaCompliantImpl}. Verify mapping names when migrating.
+ *
  * @author Steve Ebersole
  */
+@Deprecated(since = "9.0", forRemoval = true)
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJpaCompliantImpl {
 	@SPI(SPI.Role.USE)
@@ -30,48 +43,27 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 	public static final ImplicitNamingStrategyLegacyJpaImpl INSTANCE = new ImplicitNamingStrategyLegacyJpaImpl();
 
 	@Override
-	public Identifier determineCollectionTableName(ImplicitCollectionTableNameSource source) {
-		final Identifier owningPhysicalTableName = source.getOwningPhysicalTableName();
-		final Identifier identifier = toIdentifier(
-				owningPhysicalTableName.getText()
-				+ "_" + transformAttributePath( source.getOwningAttributePath() ),
-				source.getNamingContext()
-		);
-		return owningPhysicalTableName.isQuoted() ? identifier.quoted() : identifier;
+	@Nonnull
+	public LogicalName determineCollectionTableName(@Nonnull CollectionTableNamingInput input, @Nonnull ImplicitNamingContext context) {
+		final var table = input.owningTable();
+		final var physical = table instanceof NamedTableNamingInput named ? named.names().physicalName() : null;
+		return context.implicitName(
+				(physical == null ? table.logicalName().getText() : physical.getText())
+						+ '_' + transformAttributePath( AttributePath.parse( input.attributePath() ) ),
+				physical == null ? table.logicalName().isQuoted() : physical.isQuoted() );
 	}
 
-	@Override
-	public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
-		final String ownerPortion = source.getOwningPhysicalTableName();
-		final String ownedPortion =
-				source.getNonOwningPhysicalTableName() == null
-						? transformAttributePath( source.getAssociationOwningAttributePath() )
-						: source.getNonOwningPhysicalTableName();
-		return toIdentifier( ownerPortion + "_" + ownedPortion, source.getNamingContext() );
-	}
 
 	@Override
-	public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source) {
-		// legacy JPA-based naming strategy preferred to use {TableName}_{ReferencedColumnName}
-		// where JPA was later clarified to prefer {EntityName}_{ReferencedColumnName}.
-		//
-		// The spec-compliant one implements the clarified {EntityName}_{ReferencedColumnName}
-		// naming. Here we implement the older {TableName}_{ReferencedColumnName} naming
-//		final String name;
-//		if ( source.getNature() == Nature.ENTITY && source.getAttributePath() != null ) {
-//			// many-to-one / one-to-one
-//			//
-//			// legacy naming used the attribute name here, following suit with legacy hbm naming
-//			//
-//			// NOTE: attribute path being null here would be an error, so for now don't bother checking
-//			name = transformAttributePath( source.getAttributePath() );
-//		}
-//		else if ( source.getNature() == Nature.ELEMENT_COLLECTION
-		final String qualifier =
-				source.getNature() == Nature.ELEMENT_COLLECTION || source.getAttributePath() == null
-						? source.getReferencedTableName().getText()
-						: transformAttributePath( source.getAttributePath() );
-		final String name = qualifier + '_' + source.getReferencedColumnName().getText();
-		return toIdentifier( name, source.getNamingContext() );
+	@Nonnull
+	public LogicalName determineCollectionKeyColumnName(@Nonnull CollectionKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+		if ( input.kind() == CollectionKeyNamingInput.Kind.TO_ONE_TABLE
+				|| input.kind() == CollectionKeyNamingInput.Kind.ONE_TO_MANY
+				|| input.inverseAttributePath().isPresent() ) {
+			return super.determineCollectionKeyColumnName( input, context );
+		}
+		final var table = input.reference().table();
+		final var physical = table instanceof NamedTableNamingInput named ? named.names().physicalName() : null;
+		return joinName( physical == null ? table.logicalName().getText() : physical.getText(), input.reference(), context );
 	}
 }

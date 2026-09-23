@@ -4,16 +4,20 @@
  */
 package org.hibernate.orm.test.annotations.secondarytable;
 
+import jakarta.annotation.Nonnull;
+
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import org.hibernate.annotations.SecondaryRow;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -58,8 +62,9 @@ public class SecondaryTableQuotingTest {
 
 	public static class TestNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 		@Override
-		public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return Identifier.toIdentifier( "TAB_" + logicalName.getText() );
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
+			return jdbcEnvironment.getPhysicalNameFactory().create( "TAB_" + logicalName.getText(), logicalName.isQuoted() );
 		}
 	}
 }

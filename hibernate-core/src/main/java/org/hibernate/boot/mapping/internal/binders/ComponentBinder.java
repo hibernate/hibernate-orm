@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnNamingInput;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,6 +62,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
@@ -115,7 +118,7 @@ public class ComponentBinder {
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
-			Table table,
+			ColumnContainer table,
 			BiConsumer<MemberDetails, Column> columnConsumer,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
@@ -139,7 +142,7 @@ public class ComponentBinder {
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
-			Table table,
+			ColumnContainer table,
 			BiConsumer<MemberDetails, Column> columnConsumer,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
@@ -167,7 +170,7 @@ public class ComponentBinder {
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
-			Table table,
+			ColumnContainer table,
 			BiConsumer<MemberDetails, Column> columnConsumer,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
@@ -193,7 +196,17 @@ public class ComponentBinder {
 				List.of( source.componentType() ),
 				contribution
 		);
-		AggregateComponentBinder.processAggregate( ownerBinding, source, component, memberTarget, state );
+		final var aggregateIntent = source.aggregateMappingIntent();
+		AggregateComponentBinder.processAggregate(
+				ownerBinding,
+				source,
+				component,
+				memberTarget,
+				new ComponentMemberTarget( ComponentMemberTarget.Kind.TABLE, table, null ),
+				aggregateIntent.isAggregate() ? aggregateIntent.aggregateColumnSource() : null,
+				options,
+				state
+		);
 		return columns;
 	}
 
@@ -218,6 +231,11 @@ public class ComponentBinder {
 						? columns
 						: identifierColumns != null ? identifierColumns : columns;
 		final List<ComponentMemberBinding> members = new ArrayList<>( contribution.members() );
+		final var timeZoneNaming = TimeZoneColumnNaming.forComponent( source, ownerBinding, state );
+		if ( timeZoneNaming != null ) {
+			// Explicit dependency order, independent of synthetic member discovery order.
+			members.sort( java.util.Comparator.comparing( member -> TimeZoneColumnNaming.isCompanion( member.attributeName() ) ) );
+		}
 		final List<AppliedAttributeMapping> appliedAttributes = createAppliedAttributes( component, members );
 		final AppliedEmbeddableMapping appliedEmbeddable = component.getMappingRole() == null
 				? null
@@ -368,7 +386,7 @@ public class ComponentBinder {
 					property.setOptional( true );
 				}
 				final ComponentMemberTarget nestedMemberTarget =
-						ComponentMemberTarget.forSource( nestedSource, memberTarget.table() );
+						memberTarget.forNestedSource( nestedSource );
 				final EmbeddableContribution nestedContribution =
 						embeddedValueIntent.valueMetadata() == null
 								? embeddableMappingMaterializer.createContribution( nestedSource, context )
@@ -381,7 +399,9 @@ public class ComponentBinder {
 						nestedComponent,
 						nestedMemberTarget.table(),
 						nestedContribution,
-						attributeName + "_DTYPE",
+						ownerBinding,
+						componentMember.fullPath(),
+						EmbeddableDiscriminatorColumnNamingInput.Kind.EMBEDDED_ATTRIBUTE,
 						state,
 						options,
 						context
@@ -407,11 +427,11 @@ public class ComponentBinder {
 						nestedSource,
 						nestedComponent,
 						nestedMemberTarget,
+						memberTarget,
+						source.columnSource( componentMember.path(), member, state.getMetadataBuildingContext() ),
+						options,
 						state
 				);
-				if ( nestedComponent.getAggregateColumn() != null ) {
-					memberTarget.registerMemberColumn( nestedComponent.getAggregateColumn() );
-				}
 				columns.addAll( nestedColumns );
 				alignComponentTable( component, property );
 				applyGenericPropertyMarkers( source, component, componentMember, property, state );
@@ -423,6 +443,7 @@ public class ComponentBinder {
 			}
 
 			final Property property = createProperty( component, componentMember, appliedAttributes );
+			final var columnSource = componentMember.basicValueIntent().columnSource();
 			final MaterializedBasicValue basicValue = basicValueMappingMaterializer.createComponentMemberBasicValue(
 					source,
 					componentMember,
@@ -433,10 +454,16 @@ public class ComponentBinder {
 					uniqueByDefault,
 					nullableByDefault,
 					updatable,
+					timeZoneNaming == null ? null : timeZoneNaming.implicitName( attributeName,
+							columnSource == null ? null : columnSource.table(),
+							memberTarget.table() ),
 					options,
 					state,
 					context
 			);
+			if ( timeZoneNaming != null && basicValue.column() != null ) {
+				timeZoneNaming.columnBound( attributeName, basicValue.column(), property.getValue().getColumnContainer() );
+			}
 			if ( component.isPolymorphic() && componentMember.declaringType() != source.componentType() ) {
 				property.setOptional( true );
 				if ( basicValue.column() != null ) {
@@ -597,8 +624,8 @@ public class ComponentBinder {
 	}
 
 	private static BasicValue genericBasicValue(BasicValue source, MetadataBuildingContext context) {
-		final BasicValue basicValue = BasicValue.unregistered( context, source.getTable() );
-		basicValue.setTable( source.getTable() );
+		final BasicValue basicValue = BasicValue.unregistered( context, source.getColumnContainer() );
+		basicValue.setTable( source.getColumnContainer() );
 		basicValue.setTypeName( Object.class.getName() );
 		for ( int i = 0; i < source.getSelectables().size(); i++ ) {
 			final var selectable = source.getSelectables().get( i );
@@ -668,7 +695,7 @@ public class ComponentBinder {
 			ClassDetails componentType,
 			ComponentMemberBinding componentMember,
 			Property property,
-			Table table,
+			ColumnContainer table,
 			AssociationOverride associationOverride,
 			List<Column> identifierColumns) {
 		final String attributeName = componentMember.attributeName();
@@ -705,7 +732,7 @@ public class ComponentBinder {
 		}
 
 		final JoinTable joinTable = source.joinTable();
-		final Table valueTable = joinTable == null
+		final ColumnContainer valueTable = joinTable == null
 				? table
 				: bindAssociationIdentifierTable(
 						resolveOwnerEntityType( ownerType ),
@@ -751,7 +778,7 @@ public class ComponentBinder {
 			String attributeName,
 			ToOneSource source,
 			Property property,
-			Table table,
+			ColumnContainer table,
 			EntityTypeBinder targetTypeBinder,
 			List<Column> identifierColumns) {
 		final OneToOne value = new OneToOne(
@@ -790,14 +817,14 @@ public class ComponentBinder {
 	private Table bindAssociationIdentifierTable(
 			EntityTypeMetadataImpl ownerType,
 			PersistentClass ownerBinding,
-			Table primaryTable,
+			ColumnContainer primaryTable,
 			String attributeName,
 			EntityTypeBinder targetTypeBinder,
 			JoinTable joinTable) {
 		final Table associationTable = modelBinders.getTableBinder()
 				.bindAssociationTable(
 						ownerType,
-						primaryTable,
+						primaryTable.requireTable(),
 						attributeName,
 						targetTypeBinder.getManagedType(),
 						targetTypeBinder.getTypeBinding().getTable(),
@@ -815,6 +842,7 @@ public class ComponentBinder {
 		final List<JoinColumn> joinColumns = listJoinColumns( joinTable.joinColumns() );
 		state.addAssociationTableBinding( new AssociationTableBinding(
 				join,
+				attributeName,
 				joinColumns,
 				ForeignKeySource.firstSpecified(
 						ForeignKeySource.fromFirstSpecifiedJoinColumn( joinColumns ),
@@ -1015,8 +1043,8 @@ public class ComponentBinder {
 	}
 
 	private static void alignComponentTable(Component component, Property property) {
-		final Table propertyTable = property.getValue().getTable();
-		if ( propertyTable == null || propertyTable.equals( component.getTable() ) ) {
+		final ColumnContainer propertyTable = property.getValue().getColumnContainer();
+		if ( propertyTable == null || propertyTable.equals( component.getColumnContainer() ) ) {
 			return;
 		}
 		if ( component.getPropertySpan() == 0 ) {

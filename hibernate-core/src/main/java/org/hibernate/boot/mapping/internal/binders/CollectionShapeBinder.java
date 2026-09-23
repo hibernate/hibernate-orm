@@ -123,6 +123,9 @@ class CollectionShapeBinder {
 					softDelete,
 					collection,
 					collection.getCollectionTable(),
+					SoftDeleteColumnNaming.column( softDelete, collection.getOwner(),
+							java.util.Optional.of( collection.getRole().substring( collection.getOwnerEntityName().length() + 1 ) ),
+							collection.getCollectionTable(), bindingState ),
 					bindingState.getMetadataBuildingContext()
 			);
 		}

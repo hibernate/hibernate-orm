@@ -80,7 +80,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		final var sessionFactoryAccess = creationContext.getSessionFactoryAccess();
 		final var dialect = creationContext.getDialect();
 		final String tableName =
-				getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess );
+				getTableIdentifierExpression( bootValueMapping.getColumnContainer().requireTable(), creationProcess );
 
 		assert bootValueMapping.getColumnSpan() == 2;
 		final var columnIterator = bootValueMapping.getSelectables().iterator();

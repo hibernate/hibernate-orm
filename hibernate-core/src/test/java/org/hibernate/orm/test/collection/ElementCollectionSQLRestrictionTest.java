@@ -159,8 +159,10 @@ public class ElementCollectionSQLRestrictionTest {
 
 	@Embeddable
 	public static class LocalizedLabel {
+		@jakarta.persistence.Column(name = "identifier")
 		private String identifier;
 
+		@jakarta.persistence.Column(name = "label")
 		private String label;
 
 		public LocalizedLabel() {

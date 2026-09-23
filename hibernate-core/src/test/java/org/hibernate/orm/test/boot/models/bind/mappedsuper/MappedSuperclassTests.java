@@ -103,6 +103,8 @@ public class MappedSuperclassTests {
 
 					assertThat( rootBinding.getMappedClass() ).isEqualTo( HierarchyRoot.class );
 					assertThat( rootBinding.getSuperMappedSuperclass() ).isSameAs( superBinding );
+					assertThat( superBinding.getImplicitTable() )
+							.isInstanceOf( org.hibernate.mapping.MappedSuperclassColumnContainer.class );
 					assertThat( rootBinding.getSuperType() ).isSameAs( superBinding );
 					assertThat( superBinding.getSubTypes() ).containsExactly( rootBinding );
 					assertThat( rootBinding.getImplicitTable() ).isNotNull();
@@ -495,7 +497,7 @@ public class MappedSuperclassTests {
 							otherApplicationProperties
 					);
 					assertThat( otherApplication.getMappingRole() ).isEqualTo( otherApplicationRole );
-					assertThat( otherApplication.getTable() ).isSameAs( firstComponent.getTable() );
+					assertThat( otherApplication.getColumnContainer() ).isSameAs( firstComponent.getColumnContainer() );
 					assertThat( otherApplication.getOwner() ).isSameAs( firstComponent.getOwner() );
 					assertThat( otherApplication.getProperties() ).containsExactlyElementsOf( otherApplicationProperties );
 					assertThat( otherApplication.getProperties().get( 0 ) )

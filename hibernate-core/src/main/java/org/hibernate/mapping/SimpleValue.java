@@ -62,7 +62,7 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 	private NullValueSemantic nullValueSemantic;
 	private String nullValue;
 
-	private Table table;
+	private ColumnContainer table;
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
 	private String foreignKeyOptions;
@@ -78,7 +78,7 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 	public SimpleValue(MetadataBuildingContext buildingContext) {
 	}
 
-	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
+	public SimpleValue(MetadataBuildingContext buildingContext, ColumnContainer table) {
 		this( buildingContext );
 		this.table = table;
 	}
@@ -270,7 +270,7 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 		return isLob;
 	}
 
-	public void setTable(Table table) {
+	public void setTable(ColumnContainer table) {
 		this.table = table;
 	}
 
@@ -309,7 +309,7 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 	}
 
 	@Override
-	public Table getTable() {
+	public ColumnContainer getColumnContainer() {
 		return table;
 	}
 
@@ -715,9 +715,9 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 				classLoaderService.classForTypeName( typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS ) ),
 				attribute != null ? attribute.getType() : null,
 				getAnnotations( attribute ),
-				table.getCatalog(),
-				table.getSchema(),
-				table.getName(),
+				table.requireTable().getCatalog(),
+				table.requireTable().getSchema(),
+				table.requireTable().getName(),
 				parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
 				columnNames,
 				columnLengths

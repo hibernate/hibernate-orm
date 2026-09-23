@@ -173,7 +173,7 @@ class RowLevelSecurityTest {
 					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
 
 			assertThat( metadata.getDatabase().getAuxiliaryDatabaseObjects() ).isEmpty();
-			assertThat( table.getInitCommands( context ) ).isEmpty();
+			assertThat( ((org.hibernate.mapping.PhysicalTable) table).getInitCommands( context ) ).isEmpty();
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( registry );

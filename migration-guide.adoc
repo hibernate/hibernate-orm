@@ -822,3 +822,371 @@ preserving deferred database initialization. Restored metadata already contains
 resolved names: calling `getObjectNameNormalizer()` on its building context now
 throws `IllegalStateException` immediately, instead of returning a normalizer
 that fails when it tries to access the unavailable metadata collector.
+
+=== Implicit naming strategy consolidation
+
+The default `StandardImplicitNamingStrategy` now uses full attribute paths for
+embedded mappings. For example, `home.location.zip` becomes `home_location_zip`
+and `work.location.zip` becomes `work_location_zip`, avoiding the duplicate `zip`
+columns produced by terminal-property naming. This changes implicitly named
+embedded columns, including embedded identifier columns. Explicit names continue
+to bypass implicit naming and are still processed by physical naming.
+
+`ImplicitNamingStrategyJpaCompliantImpl` remains supported and retains
+terminal-property naming. Select `jpa` for JPA naming conventions and use explicit
+mapping overrides where repeated embeddables require distinct names.
+
+The following strategies are deprecated for removal:
+
+* `ImplicitNamingStrategyLegacyHbmImpl` (`legacy-hbm`)
+* `ImplicitNamingStrategyLegacyJpaImpl` (`legacy-jpa`)
+* `ImplicitNamingStrategyComponentPathImpl` (`component-path`)
+
+Their aliases and existing algorithms remain available during the deprecation
+period. Selecting one, including a subclass, emits deprecation warning `HHH90000046`
+once per mapping resolution. Migrate to Standard or JPA after comparing resolved
+schema names. Standard now supplies component-path's embedded naming behavior,
+but its association-table composition uses logical dependency names, so replacing
+component-path is not guaranteed to preserve every schema name.
+
+To preserve an existing schema, make affected mapping names explicit and verify
+the result under the configured physical strategy. Do not copy physical database
+names directly into annotations if that strategy would transform them again.
+
+=== Tenant column naming callback
+
+`ImplicitNamingStrategy.determineTenantIdColumnName(ImplicitTenantIdColumnNameSource)`
+has been replaced by `determineTenantColumnName(TenantColumnNamingInput, ImplicitNamingContext)`,
+returning `LogicalName`. The old source interface is removed. Custom implementations
+must return a non-null implicit name, for example with `context.implicitName(...)`.
+
+Tenant columns now participate in this dedicated callback, including supported embedded
+tenant attributes. Supplied strategies use the terminal tenant attribute name rather
+than a fixed `tenant_id` default. Direct attributes retain their previous default;
+embedded attributes now use the same terminal-name convention instead of ordinary
+basic-column naming. Under Standard this removes any implicit embeddable path prefix
+from tenant columns. Declare a column name explicitly to preserve a different existing name.
+An explicit column bypasses implicit naming and still undergoes physical naming.
+An existing identifier column serving as the tenant column is reused without renaming.
+
+=== Entity discriminator-column naming
+
+`ImplicitNamingStrategy.determineDiscriminatorColumnName` now accepts
+`DiscriminatorColumnNamingInput` and `ImplicitNamingContext` and returns an implicit
+`LogicalName`. The legacy `ImplicitDiscriminatorColumnNameSource` is removed.
+The interface default returns `DTYPE`, preserving the entity binder's default;
+the shared discriminator default used by Any-column naming is unchanged.
+
+A present `@DiscriminatorColumn` supplies its effective name, including default
+`DTYPE` when only another member such as `length` is specified. It therefore bypasses
+implicit naming unless its name is empty. Normalized XML declarations follow the same
+rule. Without a supplied name, the dedicated callback now controls the name.
+
+Entity discriminator columns now pass through `PhysicalNamingStrategy.toPhysicalColumnName`,
+including explicitly named columns. A prefix strategy may therefore change `DTYPE` to
+`p_DTYPE`; applications with existing schemas must account for this when upgrading.
+Requested quoting is preserved. Discriminator formulas and embeddable discriminator
+naming are unchanged by this migration.
+
+=== Embeddable discriminator-column naming
+
+`ImplicitNamingStrategy.determineEmbeddableDiscriminatorColumnName` now handles
+implicit polymorphic embeddable discriminator columns. Its immutable input includes
+the owning entity, embeddable type name, owner-relative path, embedded-attribute or
+collection-element role, and effective declaration origin (absent, discriminator
+column, or override). The interface default computes the existing spelling and may
+be overridden by any strategy.
+
+All supplied strategies retain the existing defaults: terminal attribute name plus
+`_DTYPE`, `element_DTYPE` for collection elements, and `DTYPE` for an explicitly empty
+`@DiscriminatorColumn` name. Standard does not apply its basic-column full-path rule
+to this role. Custom strategies can choose a different name using the full path.
+
+Nonempty discriminator overrides and discriminator-column annotation names bypass
+implicit naming, including annotation-default `DTYPE`. Explicit and generated names
+now undergo physical column naming and additive quoting. Applications with transforming
+physical strategies must account for these formerly untransformed columns when upgrading.
+Entity discriminator naming and source precedence are unchanged.
+
+=== Aggregate container-column naming
+
+`ImplicitNamingStrategy.determineAggregateColumnName` now receives an
+`AggregateColumnNamingInput` and `ImplicitNamingContext`. Direct strategy implementors
+must implement this method; supplied strategy subclasses inherit terminal attribute
+names, including Standard. The input distinguishes table columns from members stored
+inside another aggregate, and supplies the owner-relative path, storage kind, and usage.
+
+Aggregate containers now undergo `PhysicalNamingStrategy.toPhysicalColumnName`,
+including explicitly named containers and nested aggregate members. Transforming
+strategies can therefore change existing JSON/XML/STRUCT container names. Review
+existing schemas and stored aggregate member names when upgrading. Requested quoting
+is preserved; SQL identifier quote delimiters do not become part of JSON member keys.
+
+Effective container overrides replace direct declarations. Nonempty effective names
+bypass implicit naming; empty override names invoke it. `@Struct.name` continues to
+name a SQL type and is unaffected by this column-naming callback.
+
+=== Collection-identifier and soft-delete column naming
+
+`ImplicitNamingStrategy` now defines `determineCollectionIdColumnName` and
+`determineSoftDeleteColumnName`, with dedicated immutable inputs. Interface default
+methods provide the existing logical defaults: `id` for collection identifiers, `active` for `ACTIVE` soft deletion,
+and `deleted` for `DELETED` and `TIMESTAMP` soft deletion.
+
+Collection-identifier columns now undergo `PhysicalNamingStrategy.toPhysicalColumnName`,
+including explicit `@CollectionId.column` names. For example, a prefix strategy may
+change `id` to `p_id` and an explicit `row_id` to `p_row_id`. Applications using existing
+collection tables must account for that schema impact in their mappings or physical
+strategy. Generator naming and identifier generation are unchanged.
+
+Soft-delete columns already underwent physical naming. Their spelling remains unchanged
+with the supplied implicit defaults and physical strategies based only on spelling and
+quoting. Physical strategies inspecting provenance now receive the correct explicit or
+implicit flag. Nonempty explicit names bypass the new implicit callbacks; both roles
+retain requested quoting through physical naming.
+
+=== Time-zone companion column naming
+
+`ImplicitNamingStrategy.determineTimeZoneColumnName` now receives a
+`TimeZoneColumnNamingInput` containing the mapped owner, user attribute path, settled
+logical/physical temporal column names, the companion's destination table, companion
+declaration state, and the original source name when already available. Its interface
+default implements the existing naming rules and may be overridden by any strategy.
+
+Supplied strategies preserve existing default spellings. An absent companion declaration
+uses the original temporal source name plus `_tz`; an empty effective declaration retains
+basic naming of the synthetic `zoneOffset` member path. A temporal-only override does
+not change that original source-based default. The strategy calculates these defaults from source facts supplied separately from
+the resolved temporal dependency. Custom strategies can choose other names without
+triggering unused default calculations. No schema rename from unifying absent and empty declarations is
+intended.
+
+Generated temporal and companion names now retain implicit provenance through physical
+naming. An implicit temporal source decision is cached per use instead of being requested
+twice. An empty companion's synthetic-path default or an overridden temporal column's
+original source default can require a separate basic naming decision in the supplied
+strategy. Physical naming
+still applies to explicit and implicit columns and preserves requested quoting.
+
+This change does not expand two-column time-zone storage support or alter storage
+selection. Existing one-column embedded/collection mappings, split-table restrictions,
+and the native `AUTO` plus `@TimeZoneColumn` rejection remain separate issues.
+
+=== Unique-key names and primary-key absorption
+
+Schema creation now honors finalized unique-key names wherever the dialect supports
+named uniqueness, including names supplied by custom implicit and physical strategies.
+Single-column uniqueness uses a named table constraint instead of an anonymous inline
+clause where supported. Dialect-specific nullable-key suppression and unique-index
+representation remain in force.
+
+Implicit primary keys remain unnamed in generated DDL. An explicitly named UK covering
+the PK still supplies its exported name, through the UK physical hook. This now works
+consistently when it is the table's only UK as well as when multiple UKs are declared.
+The existing last-eligible-declaration selection is preserved. Direct `@PrimaryKey`
+declarations remain a separate follow-up.
+
+Previously anonymous UK clauses may have database-assigned names that differ from the
+names now emitted by Hibernate. Review generated migration scripts against actual
+constraint names; existing database constraints are not automatically renamed.
+
+=== Unique-key inputs and column resolution (HHH-20917)
+
+`ImplicitNamingStrategy.determineUniqueKeyName` now takes `UniqueKeyNamingInput` and
+`ImplicitNamingContext`, returning a non-null `LogicalName`. The input exposes the
+selected table and ordered columns with both logical and physical names. Its interface
+default retains the existing `UK` hash recipe and configured schema charset.
+`ImplicitUniqueKeyNameSource` is removed. Custom strategies must migrate their override;
+overriding the old shared constraint-hashing helper no longer customizes UK naming.
+
+Explicit names bypass implicit naming. The physical UK callback runs once for each
+surviving naming decision, preserves requested quoting, and must return a non-null result.
+Discarded inferred UKs and unnamed UKs absorbed into a PK do not invoke UK naming.
+
+`@UniqueConstraint.columnNames` now resolves actual mapped columns after binding,
+without invoking physical column naming again or creating placeholders. Logical lookup
+has precedence, with physical-name fallback only when no logical match exists. This
+also makes collection/join-table handling consistent: where a spelling matches different
+logical and physical columns, the logical reference wins. Unknown columns fail during
+boot even when the constraint name is explicit.
+
+Duplicate explicitly named `@UniqueConstraint` declarations on the same table now
+fail with `AnnotationException` instead of merging their columns (HHH-20918). This
+also applies when their column lists are identical or match the primary key. The error
+identifies the constraint name, table, and both declaration locations, including the
+class/member, containing annotation, and zero-based `uniqueConstraints` array position.
+Use a single `@UniqueConstraint` with all intended columns for a composite constraint;
+remove redundant declarations, or give independent constraints distinct names.
+Unnamed declarations and name reuse on different tables are unaffected by this check.
+See https://hibernate.atlassian.net/browse/HHH-20918[HHH-20918].
+
+Independent constraints with different columns whose
+names collide through implicit or physical naming now cause a mapping error instead of
+silently becoming one composite UK. Source declaration provenance determines this rule;
+a custom strategy returning an explicitly flagged logical name does not turn it into
+an explicit mapping declaration.
+
+See https://hibernate.atlassian.net/browse/HHH-20917[HHH-20917] for the placeholder-column
+correction. Unique indexes represented as UK constraints use the UK lifecycle and naming
+hooks, as described below.
+
+Temporal period-start additions retain their previous exclusion from UK naming inputs
+while remaining part of the constraint. Inferred aggregate-collection UKs also retain
+their existing member-column behavior. Both are deferred investigations; this change
+does not claim to correct aggregate UK membership or rename temporal keys.
+
+=== Implicit primary-key mapping names
+
+`ImplicitNamingStrategy.determinePrimaryKeyName` now receives a `PrimaryKeyNamingInput`
+containing only the table's logical and physical names. Its interface default uses the
+physical table name: up to twelve characters followed by `_pk`, retaining quoting.
+The selected logical PK name then passes through `toPhysicalPrimaryKeyName`.
+
+Entity, dependent-table, and collection PKs created through model binding share this
+algorithm. This replaces their inconsistent internal alias, UK-hash, and absent names;
+set-collection PKs no longer invoke implicit UK naming. Custom strategies may override
+the PK callback. The fifteen-character limit is only the supplied default, not a limit
+on custom or physically transformed names.
+
+These are mapping-model name changes. Schema creation continues to emit unnamed implicit
+PK clauses and retains existing explicit UK-to-PK name absorption. Direct `@PrimaryKey`
+declarations and dialect-aware length handling remain HHH-20914 and HHH-20915 follow-ups.
+
+Both implicit and physical PK naming require non-null results, including from custom
+strategies. The standard physical strategy preserves the logical spelling and quoting
+for explicit and implicit PK names. Hibernate retains the finalized physical name in
+the mapping model; exporters decide whether to emit it. Only catalog/schema physical
+naming permits null results.
+
+=== Unique-column constraint naming (HHH-20916)
+
+Uniqueness inferred from an owning `@OneToOne`, declared by basic `@Column(unique=true)`,
+or required for a non-ID `@Changelog.ChangesetId` now receives its constraint name during
+boot through `ImplicitNamingStrategy` and `PhysicalNamingStrategy`.
+Previously these paths could bypass both strategies and generate a `UK_` name during
+schema export. That fallback omitted MD5 padding and could assign identical names to
+unrelated constraints. It has been removed.
+
+The built-in implicit strategy now uses the normal `UK` hashing recipe for these cases;
+custom implicit and physical UK naming callbacks are honored. Already strategy-named
+unique constraints retain their existing default naming behavior. Dialect rules governing
+whether uniqueness is rendered inline, as a named constraint, or as an index are unchanged.
+
+Names for affected constraints may change. Existing database constraints are not renamed
+automatically; review their actual names when preparing schema migration scripts.
+See https://hibernate.atlassian.net/browse/HHH-20916[HHH-20916].
+
+=== Foreign-key naming strategy input
+
+`ImplicitNamingStrategy.determineForeignKeyName()` now accepts `ForeignKeyNamingInput`
+and `ImplicitNamingContext`, and returns a non-null `LogicalName`.
+`ImplicitForeignKeyNameSource` has been removed. Custom strategies must migrate their
+override to the new signature. The built-in algorithm now lives in the interface default;
+overrides of the old shared Identifier-based constraint helper no longer customize FK names.
+
+The input exposes logical and physical table/column dependencies, actual local-to-target
+column pairs (including primary-key references), and whether the resolved reference targets
+the PK. Inline-view dependencies expose a logical identity without a physical table name;
+this does not make their foreign keys exportable. Explicit FK names continue to bypass
+implicit naming and pass through the physical FK naming callback.
+
+The normal FK hash recipe is unchanged. A corrected table lookup can change names where
+schema-distinct tables share a physical object name: each FK now uses its own logical
+table identity instead of whichever table last overwrote the unqualified reverse lookup.
+Existing database constraints are not automatically renamed.
+
+Audit helper tables which previously omitted logical-name registration now retain their
+creation names for FK naming inputs. With a transforming physical naming strategy, their
+FK hashes may change from the former physical-table-name fallback to the known logical
+creation name. Explicitly registered table aliases retain their existing selection.
+
+
+=== Index naming and column resolution
+
+`ImplicitNamingStrategy.determineIndexName()` now accepts `IndexNamingInput` and
+`ImplicitNamingContext` and returns a non-null `LogicalName`. `ImplicitIndexNameSource`
+and `ImplicitConstraintNameSource` and their source-based subclass helpers are removed.
+The interface default preserves the existing `IDX` hash over the logical table name
+and sorted source term spellings. Order, direction, uniqueness, `type`, and `using`
+do not enter that default hash, though custom strategies can inspect them.
+
+Each column term exposes resolved logical/physical names plus its original reference
+spelling. Expression terms carry opaque SQL, not identifiers. Explicit names bypass
+implicit naming; physical index naming applies once and cannot remove requested quoting.
+
+Index column references now resolve actual mapped columns after binding. Logical lookup
+wins, with physical-name fallback only when no logical match exists. Physical column
+naming is not repeated, and unknown columns fail boot even for explicitly named indexes.
+A collection index whose reference previously matched a different physical column now
+selects the logical match. Entity and collection/join-table index lists share parsing
+for `ASC`/`DESC`, parenthesized expressions, nesting, and quoted commas. Malformed lists
+fail with declaration locations. Corrected expression parsing can change names for
+previously misparsed definitions.
+
+Repeated explicit `@Index` names on the same table now fail with both declaration
+locations, even for identical definitions or unique indexes represented as UKs. Generated
+or physical-name collisions between different definitions also fail instead of merging.
+For example, `(first, second)` and `(second, first)` still have the same default hash:
+give them distinct explicit names or supply a custom naming strategy. Equivalent unnamed
+index declarations are deduplicated before naming.
+
+Collection and join-table `@Index(unique=true)` now use the same dialect representation
+policy as entity tables. When represented as a UK, they use UK naming callbacks, default
+UK names, and UK export rules rather than index naming and export. This may change both
+schema object representation and generated names; different custom physical UK/index
+strategies can also change explicitly named objects. Review schema migration scripts.
+Explicit index `type`, `using`, expressions, ordering, and SQL options are retained as
+appropriate for the dialect-selected representation.
+
+[[column-reference-resolution]]
+=== Explicit column-reference resolution sequence
+
+Hibernate 9.0 defines the following resolution sequence for both `@Index.columnList`
+and `@UniqueConstraint.columnNames`, including collection and association join tables.
+Index ordering keywords (`ASC` or `DESC`) are removed before resolving the reference.
+
+. An unquoted `\{key}` or `\{element}` marker selects the collection role directly,
+  bypassing column lookup. These forms are valid only in collection/join-table declarations.
+. Otherwise, resolve the logical column name first.
+. If no logical column matches, resolve the existing physical column name.
+. If neither column lookup matches, an entity primary/secondary-table declaration may
+  resolve an attribute path relative to its declaring entity. Collection/join-table
+  declarations do not infer unprefixed attribute paths.
+
+The first match wins: logical names take precedence over physical names, and column
+names take precedence over entity attribute paths. Actual mapped columns are reused;
+physical naming is not invoked again. Unknown references fail at boot, even for explicitly
+named constraints or indexes. Applications relying on placeholder columns must correct
+those references.
+
+Entity paths such as `summary.text` must explicitly name enclosing embeddables; bare
+`text` does not search them. Collection roles use `\{element}` for the element/map value
+and `\{key}` for the map key, with optional embeddable paths such as
+`\{element}.address.city` or `\{key}.code`. The key marker does not select an owner FK
+or list index. Owner FK columns remain addressable by column name.
+
+Each attribute/role reference must identify one actual column on the declaring table.
+A whole entity-valued role may select its single local FK column, but paths into the
+associated entity are rejected. Multi-column values, formulas, inverse associations
+without local columns, and references to other tables are rejected.
+
+Quote the entire identifier to reference a literal marker-shaped column instead of a role:
+
+[source,java]
+----
+@Index(columnList = "`{element}.city`")
+@UniqueConstraint(columnNames = "`{element}.city`")
+----
+
+Parenthesized index expressions remain SQL expressions, not attribute/role references.
+Use physical column names inside those expressions.
+
+Source term spelling remains the default index-hash input, so switching from a column
+reference to an attribute or role path can change an implicitly generated index name.
+Unique-key hashing continues to use resolved column dependencies, not path spellings.
+Review schema migration scripts when changing reference forms.
+
+Collection association `@JoinTable` declarations containing only indexes or unique
+constraints are now retained even when their table name and join columns are implicit.
+These declarations were previously ignored, so their constraints/indexes now participate
+in validation and schema generation.

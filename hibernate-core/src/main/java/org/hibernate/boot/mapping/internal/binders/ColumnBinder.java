@@ -4,10 +4,16 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+
 import java.util.function.Supplier;
 
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.boot.mapping.internal.context.BindingHelper;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -19,6 +25,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -37,55 +44,27 @@ import static org.hibernate.internal.util.NullnessHelper.nullif;
 public class ColumnBinder {
 	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "DTYPE";
 
-	public static Column bindColumn(
-			ColumnSource columnSource,
-			Supplier<String> defaultNameSupplier) {
-		return bindColumn(
-				columnSource,
-				defaultNameSupplier,
-				false,
-				true,
-				255,
-				0,
-				0
-		);
+	/// Preserve existing roles which do not invoke physical naming, with explicit finalization services.
+	public static Column bindUntransformedColumn(ColumnSource source, Supplier<String> defaultName,
+			boolean unique, boolean nullable, int length, int precision, int scale,
+			org.hibernate.boot.model.relational.Database database) {
+		return bindColumn( source, ColumnNameHelper.physicalName(
+				database.toIdentifier( columnName( source, defaultName ) ), database ),
+				unique, nullable, length, precision, scale );
 	}
 
-	public static Column bindColumn(
-			ColumnSource columnSource,
-			Supplier<String> defaultNameSupplier,
-			boolean uniqueByDefault,
-			boolean nullableByDefault) {
-		return bindColumn(
-				columnSource,
-				defaultNameSupplier,
-				uniqueByDefault,
-				nullableByDefault,
-				255,
-				0,
-				0
-		);
-	}
-
-	public static Column bindColumn(
-			ColumnSource columnSource,
-			Supplier<String> defaultNameSupplier,
-			boolean uniqueByDefault,
-			boolean nullableByDefault,
-			int lengthByDefault,
-			int precisionByDefault,
-			int scaleByDefault) {
-		return bindColumn(
-				columnSource,
-				defaultNameSupplier,
-				uniqueByDefault,
-				nullableByDefault,
-				lengthByDefault,
-				precisionByDefault,
-				scaleByDefault,
-				null,
-				null
-		);
+	/// Resolve one logical name, materialize its physical column, and retain the
+	/// logical binding without invoking implicit naming again during registration.
+	public static Column bindColumnWithNameBinding(
+			org.hibernate.mapping.ColumnContainer table,
+			ColumnSource source, Supplier<String> implicitName,
+			boolean unique, boolean nullable, int length, int precision, int scale,
+			BindingOptions options, BindingState state) {
+		final LogicalName logicalName = logicalColumnName( source, implicitName );
+		final Column column = bindColumn( source, () -> logicalName.toString(),
+				unique, nullable, length, precision, scale, options, state );
+		registerColumnNameBinding( table, logicalName, column, options, state );
+		return column;
 	}
 
 	public static Column bindColumn(
@@ -118,14 +97,28 @@ public class ColumnBinder {
 			int scaleByDefault,
 			BindingOptions bindingOptions,
 			BindingState bindingState) {
-		final boolean explicitName = columnSource != null && columnSource.nonEmptyName() != null;
-		final Column result = new Column();
-		result.setExplicit( explicitName );
-		result.setName( columnName( columnSource, defaultNameSupplier, bindingOptions, bindingState ) );
+		final var column = bindColumnMetadata( columnSource, columnName( columnSource, defaultNameSupplier, bindingOptions, bindingState ),
+				uniqueByDefault, nullableByDefault, lengthByDefault, precisionByDefault, scaleByDefault );
+		column.setSqlType( columnDefinition( columnSource, bindingOptions, bindingState ) );
+		return column;
+	}
+
+	public static Column bindColumn(ColumnSource columnSource, PhysicalName name,
+			boolean uniqueByDefault, boolean nullableByDefault,
+			int lengthByDefault, int precisionByDefault, int scaleByDefault) {
+		final var result = bindColumnMetadata( columnSource, name, uniqueByDefault, nullableByDefault,
+				lengthByDefault, precisionByDefault, scaleByDefault );
+		result.setSqlType( columnSource == null ? null : StringHelper.nullIfEmpty( columnSource.columnDefinition() ) );
+		return result;
+	}
+
+	private static Column bindColumnMetadata(ColumnSource columnSource, PhysicalName name,
+			boolean uniqueByDefault, boolean nullableByDefault,
+			int lengthByDefault, int precisionByDefault, int scaleByDefault) {
+		final Column result = new Column( name );
 
 		result.setUnique( columnSource == null ? uniqueByDefault : columnSource.unique( uniqueByDefault ) );
 		result.setNullable( columnSource == null ? nullableByDefault : columnSource.nullable( nullableByDefault ) );
-		result.setSqlType( columnDefinition( columnSource, bindingOptions, bindingState ) );
 		result.setLength( columnSource == null ? lengthByDefault : columnSource.length( lengthByDefault ) );
 		final int precision = columnSource == null ? precisionByDefault : columnSource.precision( precisionByDefault );
 		result.setPrecision( precision > 0 ? precision : null );
@@ -148,7 +141,7 @@ public class ColumnBinder {
 		return nullif( columnSource.nonEmptyName(), defaultNameSupplier );
 	}
 
-	private static String columnName(
+	private static PhysicalName columnName(
 			ColumnSource columnSource,
 			Supplier<String> defaultNameSupplier,
 			BindingOptions bindingOptions,
@@ -162,21 +155,18 @@ public class ColumnBinder {
 		);
 	}
 
-	public static String finalizeColumnName(
+	public static PhysicalName finalizeColumnName(
 			String logicalName,
 			BindingOptions bindingOptions,
 			BindingState bindingState) {
 		return finalizeColumnName( logicalName, false, bindingOptions, bindingState );
 	}
 
-	private static String finalizeColumnName(
+	public static PhysicalName finalizeColumnName(
 			String logicalName,
 			boolean explicit,
 			BindingOptions bindingOptions,
 			BindingState bindingState) {
-		if ( bindingOptions == null || bindingState == null ) {
-			return logicalName;
-		}
 		final var database = bindingState.getDatabase();
 		final Identifier identifier = BindingHelper.toIdentifier(
 				logicalName,
@@ -185,37 +175,50 @@ public class ColumnBinder {
 				database.getJdbcEnvironment(),
 				explicit
 		);
-		return bindingState.getMetadataBuildingContext()
-				.getBuildingPlan()
-				.getPhysicalNamingStrategy()
-				.toPhysicalColumnName( identifier, database.getJdbcEnvironment() )
-				.render( database.getDialect() );
+		return PhysicalNamingStrategyHelper.resolve(
+				PhysicalNamingStrategyHelper.logicalName( identifier ), database.getJdbcEnvironment(),
+				bindingState.getMetadataBuildingContext().getBuildingPlan().getPhysicalNamingStrategy()::toPhysicalColumnName,
+				"column", false );
+	}
+
+	public static LogicalName logicalColumnName(ColumnSource source, Supplier<String> defaultName) {
+		final var identifier = Identifier.toIdentifier( columnName( source, defaultName ), false, false );
+		return new LogicalName( identifier.getText(), identifier.isQuoted(), source != null && source.nonEmptyName() != null );
 	}
 
 	public static void registerColumnNameBinding(
-			Table table,
-			String logicalName,
+			ColumnContainer table,
+			LogicalName logicalName,
 			Column column,
 			BindingOptions bindingOptions,
 			BindingState bindingState) {
 		if ( table == null || bindingOptions == null || bindingState == null ) {
 			return;
 		}
-		final Identifier logicalIdentifier = BindingHelper.toIdentifier(
-				logicalName,
-				QuotedIdentifierTarget.COLUMN_NAME,
-				bindingOptions,
-				bindingState.getDatabase().getJdbcEnvironment(),
-				column.isExplicit()
-		);
+		registerColumnNameBinding( table, logicalName, column, bindingState );
+	}
+
+	public static void registerColumnNameBinding(
+			ColumnContainer table,
+			LogicalName logicalName,
+			Column column,
+			BindingState bindingState) {
+		if ( table == null || bindingState == null ) {
+			return;
+		}
+		final var logicalIdentifier = logicalName;
 		bindingState.getRelationalModelCorrespondences()
 				.columnNames()
 				.register( table, logicalIdentifier, column );
+		if ( !(table instanceof Table relationalTable) ) {
+			return;
+		}
 		bindingState.getMetadataBuildingContext()
 				.getMetadataCollector()
 				.addColumnNameBinding(
-						table,
-						logicalIdentifier,
+						relationalTable,
+						logicalIdentifier == null ? null : new Identifier(
+								logicalIdentifier.getText(), logicalIdentifier.isQuoted(), logicalIdentifier.isExplicit() ),
 						column
 				);
 	}
@@ -272,7 +275,8 @@ public class ColumnBinder {
 			BasicValue value,
 			DiscriminatorColumn columnAnn,
 			BindingOptions bindingOptions,
-			BindingState bindingState) {
+			BindingState bindingState,
+			Supplier<String> implicitName) {
 		final ColumnSource columnSource = ColumnSource.from( columnAnn );
 		final DiscriminatorType discriminatorType;
 		if ( formulaAnn != null ) {
@@ -284,13 +288,13 @@ public class ColumnBinder {
 					: formulaAnn.discriminatorType();
 		}
 		else {
-			final Column column = new Column();
+			final LogicalName logicalName = logicalColumnName( columnSource, implicitName );
+			final Column column = new Column( finalizeColumnName(
+					logicalName.toString(), logicalName.isExplicit(), bindingOptions, bindingState ) );
+			registerColumnNameBinding( value.getColumnContainer(), logicalName, column, bindingOptions, bindingState );
 			value.addColumn( column, true, false );
 			discriminatorType = columnAnn == null ? DiscriminatorType.STRING : columnAnn.discriminatorType();
 
-			// JPA specifies DTYPE as the implicit discriminator column name;
-			// see HHH-20613 before routing this through ImplicitNamingStrategy.
-			column.setName( columnName( columnSource, () -> DEFAULT_DISCRIMINATOR_COLUMN_NAME ) );
 			column.setLength( discriminatorType == DiscriminatorType.CHAR ? 1 : columnSource == null ? 31 : columnSource.length( 31 ) );
 			final String columnDefinition = columnSource == null ? null : columnSource.columnDefinition();
 			column.setSqlType( StringHelper.isEmpty( columnDefinition )
@@ -303,7 +307,7 @@ public class ColumnBinder {
 					) );
 			applyOptions( column, columnSource );
 			applyComment( column, columnSource );
-			value.getTable().addColumn( column );
+			value.getColumnContainer().addColumn( column );
 		}
 		return discriminatorType;
 	}

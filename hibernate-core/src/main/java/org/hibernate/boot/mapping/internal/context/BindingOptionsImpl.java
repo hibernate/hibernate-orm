@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.mapping.internal.context;
 
-import java.lang.annotation.Annotation;
 import java.util.EnumSet;
 
 import org.hibernate.boot.model.naming.Identifier;
@@ -15,7 +14,6 @@ import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 import jakarta.persistence.FetchType;
 
@@ -86,38 +84,22 @@ public class BindingOptionsImpl implements BindingOptions {
 			}
 		}
 
-		final JdbcEnvironment jdbcEnvironment = metadataBuildingContext.getMetadataCollector()
-				.getDatabase()
-				.getJdbcEnvironment();
 		final EffectiveMappingDefaults effectiveDefaults = metadataBuildingContext.getEffectiveDefaults();
 		final PersistenceUnitMetadata persistenceUnitMetadata = metadataBuildingContext.getMetadataCollector()
 				.getPersistenceUnitMetadata();
 
-		defaultCatalogName = toIdentifier(
+		defaultCatalogName = Identifier.toIdentifier(
 				coalesce( effectiveDefaults.getDefaultCatalogName(), persistenceUnitMetadata.getDefaultCatalog() ),
-				QuotedIdentifierTarget.CATALOG_NAME,
-				globallyQuotedIdentifierTargets,
-				jdbcEnvironment
+				false, false, false
 		);
-		defaultSchemaName = toIdentifier(
+		defaultSchemaName = Identifier.toIdentifier(
 				coalesce( effectiveDefaults.getDefaultSchemaName(), persistenceUnitMetadata.getDefaultSchema() ),
-				QuotedIdentifierTarget.SCHEMA_NAME,
-				globallyQuotedIdentifierTargets,
-				jdbcEnvironment
+				false, false, false
 		);
 		this.createImplicitDiscriminatorsForJoinedInheritance = createImplicitDiscriminatorsForJoinedInheritance;
 		this.ignoreExplicitDiscriminatorsForJoinedInheritance = ignoreExplicitDiscriminatorsForJoinedInheritance;
 		this.shouldImplicitlyForceDiscriminatorInSelect = shouldImplicitlyForceDiscriminatorInSelect;
 		this.defaultToOneFetchType = defaultToOneFetchType;
-	}
-
-	public static <A extends Annotation> Identifier toIdentifier(
-			String name,
-			QuotedIdentifierTarget target,
-			EnumSet<QuotedIdentifierTarget> globallyQuotedIdentifierTargets,
-			JdbcEnvironment jdbcEnvironment) {
-		final boolean globallyQuoted = globallyQuotedIdentifierTargets.contains( target );
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name, globallyQuoted );
 	}
 
 	public BindingOptionsImpl(Identifier defaultCatalogName, Identifier defaultSchemaName) {

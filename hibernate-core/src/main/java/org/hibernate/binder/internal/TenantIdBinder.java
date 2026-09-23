@@ -73,7 +73,7 @@ public class TenantIdBinder {
 		}
 		persistentClass.addFilter(
 				FILTER_NAME,
-				columnNameOrFormula( property )
+				columnNameOrFormula( property, collector.getDatabase().getDialect() )
 						+ " = :"
 						+ PARAMETER_NAME,
 				true,
@@ -108,9 +108,10 @@ public class TenantIdBinder {
 			MetadataBuildingContext buildingContext,
 			Property property) {
 		if ( rowLevelSecurity.supportsRowLevelSecurity() ) {
-			final var table = property.getValue().getTable();
+			final var container = property.getValue().getColumnContainer();
 			if ( property.getSelectables().get( 0 ) instanceof Column column
-					&& table.isPhysicalTable() && !table.isView() ) {
+					&& container instanceof org.hibernate.mapping.PhysicalTable table
+					&& table.isPhysicalTable() ) {
 				RowLevelSecurityDdlMaterializer.materialize(
 						rowLevelSecurity,
 						hasTenantCredentialsMapper( buildingContext )
@@ -132,7 +133,7 @@ public class TenantIdBinder {
 			|| getTenantCredentialsMapper( settings, buildingContext.getStandardServiceRegistry() ) != null;
 	}
 
-	private String columnNameOrFormula(Property property) {
+	private String columnNameOrFormula(Property property, org.hibernate.dialect.Dialect dialect) {
 		if ( property.getColumnSpan() != 1 ) {
 			throw new MappingException( "@TenantId attribute must be mapped to a single column or formula" );
 		}
@@ -141,7 +142,7 @@ public class TenantIdBinder {
 			return formula.getFormula();
 		}
 		else if ( selectable instanceof Column column ) {
-			return column.getName();
+			return column.getQuotedName( dialect );
 		}
 		else {
 			throw new AssertionFailure( "@TenantId attribute must be mapped to a column or formula" );

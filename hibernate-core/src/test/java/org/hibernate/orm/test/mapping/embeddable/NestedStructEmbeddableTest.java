@@ -86,8 +86,8 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 			AdditionalMappingContributorContext contributorContext) {
 		final Namespace namespace = new Namespace(
 				PhysicalNamingStrategyStandardImpl.INSTANCE,
-				null,
-				new Namespace.Name( null, null )
+				contributions.getDatabase().getJdbcEnvironment(),
+				new Namespace.LogicalNamespaceName( null, null )
 		);
 
 		//---------------------------------------------------------

@@ -66,7 +66,7 @@ class MixedTypeEmbeddableGeneratorsTest {
 			session.persist( event );
 		} );
 
-		assertEquals( "insert into Event (created,updated,name,id) values (%s,?,?,?)"
+		assertEquals( "insert into Event (history_created,history_updated,name,id) values (%s,?,?,?)"
 						.formatted( getDialect( scope ).getCurrentTemporalSupport().currentTimestamp() ),
 				statementInspector.getSqlQueries().get( 0 ) );
 
@@ -86,11 +86,11 @@ class MixedTypeEmbeddableGeneratorsTest {
 		} );
 
 		if ( getDialect( scope ) instanceof SpannerDialect ) {
-			assertEquals( "update Event e1_0 set e1_0.updated=?,e1_0.name=? where e1_0.id=?",
+			assertEquals( "update Event e1_0 set e1_0.history_updated=?,e1_0.name=? where e1_0.id=?",
 					statementInspector.getSqlQueries().get( 1 ) );
 		}
 		else {
-			assertEquals( "update Event set updated=?,name=? where id=?",
+			assertEquals( "update Event set history_updated=?,name=? where id=?",
 					statementInspector.getSqlQueries().get( 1 ) );
 		}
 

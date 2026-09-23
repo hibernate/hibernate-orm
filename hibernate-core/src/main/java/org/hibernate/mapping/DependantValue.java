@@ -23,7 +23,7 @@ public class DependantValue extends SimpleValue implements SortableValue {
 	private boolean updateable;
 	private boolean sorted;
 
-	public DependantValue(MetadataBuildingContext buildingContext, Table table, KeyValue prototype) {
+	public DependantValue(MetadataBuildingContext buildingContext, ColumnContainer table, KeyValue prototype) {
 		super( buildingContext, table );
 		this.wrappedValue = prototype;
 	}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.mapping;
 
+import org.hibernate.testing.util.MappingTableHelper;
+
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
@@ -23,6 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Gail Badner
  */
 public class ColumnLastIndexNotLetterAliasTest {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 	// Arbitrarily choose PostgreSQL
 	private static final Dialect DIALECT = new PostgreSQLDialect();
 
@@ -36,7 +42,7 @@ public class ColumnLastIndexNotLetterAliasTest {
 	}
 
 	private void test(String columnName) {
-		final Column column = new Column( columnName );
+		final Column column = new Column( MappingTableHelper.columnName( columnName, COLUMN_NAMES ) );
 		final String alias = column.getAlias( DIALECT );
 		assertEquals( alias.toLowerCase( Locale.ROOT ), alias );
 	}

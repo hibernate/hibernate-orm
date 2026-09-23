@@ -26,7 +26,7 @@ public class MappedSuperclass implements IdentifiableTypeClass, Serializable {
 	private final PersistentClass superPersistentClass;
 	private final List<IdentifiableTypeClass> subTypes;
 	private final List<Property> declaredProperties;
-	private final Table implicitTable;
+	private final ColumnContainer implicitTable;
 	private ClassDetails classDetails;
 	private String className;
 	private transient Class<?> mappedClass;
@@ -37,7 +37,7 @@ public class MappedSuperclass implements IdentifiableTypeClass, Serializable {
 	public MappedSuperclass(
 			MappedSuperclass superMappedSuperclass,
 			PersistentClass superPersistentClass,
-			Table implicitTable) {
+			ColumnContainer implicitTable) {
 		this.superMappedSuperclass = superMappedSuperclass;
 		this.superPersistentClass = superPersistentClass;
 		this.implicitTable = implicitTable;
@@ -274,7 +274,7 @@ public class MappedSuperclass implements IdentifiableTypeClass, Serializable {
 	}
 
 	@Override
-	public Table getImplicitTable() {
+	public ColumnContainer getImplicitTable() {
 		return implicitTable;
 	}
 }

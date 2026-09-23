@@ -31,14 +31,14 @@ public class GeneratorSettingsImpl implements GeneratorSettings {
 	public GeneratorSettingsImpl(Metadata domainModel) {
 		final Database database = domainModel.getDatabase();
 		final Namespace defaultNamespace = database.getDefaultNamespace();
-		final Namespace.Name defaultNamespaceName = defaultNamespace.getName();
+		final var defaultNamespaceName = defaultNamespace.getPhysicalName();
 
 		defaultCatalog = defaultNamespaceName.catalog() == null
 				? ""
-				: defaultNamespaceName.catalog().render( database.getDialect() );
+				: database.getDialect().getIdentifierSupport().render( defaultNamespaceName.catalog() );
 		defaultSchema = defaultNamespaceName.schema() == null
 				? ""
-				: defaultNamespaceName.schema().render( database.getDialect() );
+				: database.getDialect().getIdentifierSupport().render( defaultNamespaceName.schema() );
 
 		sqlStringGenerationContext = fromExplicit(
 				database.getJdbcEnvironment(),

@@ -342,7 +342,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						throw new IllegalAttributeType( "An IdClass cannot define <any/> attributes : " + attributeName );
 					}
 				},
-				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
+				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getColumnContainer().requireTable(), creationProcess ),
 				attributeMappings::add,
 				() -> {
 					this.attributeMappings = attributeMappings.build();

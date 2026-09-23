@@ -12,7 +12,6 @@ import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetai
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -28,7 +27,6 @@ import org.hibernate.metamodel.mapping.internal.SoftDeleteMappingImpl;
 
 import java.time.Instant;
 
-import static org.hibernate.internal.util.StringHelper.coalesce;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
@@ -43,18 +41,20 @@ public class SoftDeleteHelper {
 	 * @param softDeleteConfig The SoftDelete annotation
 	 * @param target The thing which is to be soft-deleted
 	 * @param table The table to which the soft-delete should be applied
+	 * @param column The named indicator column
 	 * @param context The processing context for access to needed info and services
 	 */
 	public static void bindSoftDeleteIndicator(
 			SoftDelete softDeleteConfig,
 			SoftDeletable target,
 			Table table,
+			Column column,
 			MetadataBuildingContext context) {
 		assert softDeleteConfig != null;
 		final BasicValue softDeleteIndicatorValue = createSoftDeleteIndicatorValue( softDeleteConfig, table, context );
 		assignMappingRole( target, softDeleteIndicatorValue );
 		final var softDeleteIndicatorColumn =
-				createSoftDeleteIndicatorColumn( softDeleteConfig, softDeleteIndicatorValue, context );
+				createSoftDeleteIndicatorColumn( softDeleteConfig, softDeleteIndicatorValue, column );
 		applyResolution( softDeleteConfig, softDeleteIndicatorColumn, context );
 		table.addColumn( softDeleteIndicatorColumn );
 		target.enableSoftDelete( softDeleteIndicatorColumn, softDeleteConfig.strategy() );
@@ -120,13 +120,11 @@ public class SoftDeleteHelper {
 	private static Column createSoftDeleteIndicatorColumn(
 			SoftDelete softDeleteConfig,
 			BasicValue softDeleteIndicatorValue,
-			MetadataBuildingContext context) {
-		final var softDeleteColumn = new Column();
+			Column softDeleteColumn) {
 
 		softDeleteColumn.setValue( softDeleteIndicatorValue );
 		softDeleteIndicatorValue.addColumn( softDeleteColumn );
 
-		applyColumnName( softDeleteColumn, softDeleteConfig, context );
 
 		softDeleteColumn.setOptions( softDeleteConfig.options() );
 		if ( isBlank( softDeleteConfig.comment() ) ) {
@@ -147,24 +145,6 @@ public class SoftDeleteHelper {
 		}
 
 		return softDeleteColumn;
-	}
-
-	private static void applyColumnName(
-			Column softDeleteColumn,
-			SoftDelete softDeleteConfig,
-			MetadataBuildingContext context) {
-		final var database = context.getMetadataCollector().getDatabase();
-		final var namingStrategy = context.getBuildingPlan().getPhysicalNamingStrategy();
-		// NOTE: the argument order is strange here - the fallback value comes first
-		final String logicalColumnName = coalesce(
-				softDeleteConfig.strategy().getDefaultColumnName(),
-				softDeleteConfig.columnName()
-		);
-		final Identifier physicalColumnName = namingStrategy.toPhysicalColumnName(
-				database.toIdentifier( logicalColumnName ),
-				database.getJdbcEnvironment()
-		);
-		softDeleteColumn.setName( physicalColumnName.render( database.getDialect() ) );
 	}
 
 	public static SoftDeleteMappingImpl resolveSoftDeleteMapping(

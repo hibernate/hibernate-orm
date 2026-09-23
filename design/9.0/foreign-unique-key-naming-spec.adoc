@@ -1,0 +1,688 @@
+= Foreign And Unique Key Naming
+:toc2:
+:sectanchors:
+
+Status: FK contract migration and HHH-20916 are implemented and verified.
+The complete UK slice below consolidates naming, column resolution (HHH-20917),
+duplicate handling, PK absorption, and name emission. Its scope and column-resolution
+policy and consolidated working specification are approved, implemented, and verified. Temporal naming and aggregate UK behavior are explicitly deferred
+as described below. Completed index/reference work and outstanding explicit PK declarations are
+tracked in link:constraint-index-naming-proposal.adoc[the constraint/index proposal].
+
+HHH-20918 duplicate explicit `@UniqueConstraint` name rejection is implemented and verified.
+The HHH-20919 temporal membership correction below is a working specification awaiting
+approval; it is not part of the implementation and validation reported above.
+
+Approved compatibility decisions: use known logical table identities instead of
+colliding reverse lookups; represent inline-view dependencies without expanding callback
+or export participation; use normal UK naming for formerly bypassed unique columns;
+and preserve the existing last-eligible-declaration selection among named UKs covering a PK.
+
+== Consolidated Unique-Key Working Specification
+
+=== Goal And Scope
+
+Complete unique-key handling as one slice, rather than migrate the callback while
+retaining placeholder columns or inconsistent resolution. Include table declarations,
+column/join-column uniqueness, association-target uniqueness, nullable collection-set
+keys, and unique indexes which the existing representation policy materializes as UKs.
+Keep HHH-20916 boot-time unique-column finalization in that same lifecycle.
+
+The alternative of replacing only the callback would leave reference resolution and
+exporters capable of losing the strategy's decision. The combined change is larger,
+but permits end-to-end acceptance from annotation reference to emitted constraint.
+
+General index naming, formula parsing, named SQL types, explicit `@PrimaryKey`, new
+collision algorithms, and dialect-aware identifier length remain separate. A unique
+index represented as an index continues through the existing index path. Supporting UK
+contributions from audit/generator code does not add new naming callbacks for their tables.
+
+=== Resolution And Candidate Lifecycle
+
+. Collect declarations without inventing columns or obtaining names as temporary map keys.
+  Retain source order, explicit constraint name, selected table identity, column references,
+  options, per-column ordering, and null-distinctness metadata. Declaration explicitness
+  and name explicitness are separate facts: an unnamed `@UniqueConstraint` is still an
+  explicitly declared constraint.
+. Resolve membership after the table's mapped columns, overrides, inherited bindings,
+  and additional contributions are available. Use the approved logical-first lookup,
+  then physical fallback only when no logical match exists. Entity primary/secondary-table
+  declarations additionally try the explicitly supplied attribute path after both column
+  lookups fail, using the shared single-column resolver described in
+  link:constraint-index-naming-proposal.adoc#completed-index-and-column-references[the completed index and reference contracts]. Retain selected logical
+  aliases and actual mapped columns. Missing references fail during boot, including
+  when the constraint name is explicit; do not invoke physical column naming for lookup.
+. Determine surviving UKs and PK absorption before invoking implicit UK naming.
+  Keep an internal candidate identity independent of generated names. Preserve source
+  order, but reject duplicate explicit `@UniqueConstraint` names before this step
+  (HHH-20918). Other contributor merging rules are unchanged. Explicitly declared UKs are not
+  discarded merely because another UK has the same columns; redundant automatically
+  inferred UKs do not introduce additional naming decisions.
+. For a UK covering the PK, retain its ordering effect consistently in both the sole-UK
+  and multiple-UK cases. Preserve the existing last-eligible-declaration selection.
+  Only the selected explicitly named absorbed declaration supplies the PK export name:
+  finalize it through the UK physical hook, never through the PK hook. Absorbed unnamed
+  UKs do not invoke implicit UK naming or cause generated PK names to appear in DDL.
+. Name each surviving UK once, register it under its final name, and attach that result
+  to any corresponding unique columns. Completed metadata and schema exporters must
+  not perform candidate cleanup or replay naming. Restoration retains finalized names.
+
+The original compatibility requirement below is superseded for explicitly named
+`@UniqueConstraint` declarations by HHH-20918. Other contributor policies remain unchanged.
+Originally: preserve previously accepted duplicate declarations rather than introduce blanket
+conflicting-name errors. Characterize same-name merging, options/order retention, and
+custom-strategy name collisions before replacing name-keyed registration. If retaining
+that behavior conflicts with correct membership or exactly-once naming, present the
+concrete case before changing the policy; do not silently merge unrelated constraints.
+
+=== Candidate Identity Checkpoint: Confirmed Name Collisions
+
+Six `UniqueKeyColumnResolutionTest` characterization tests pass, including two new
+collision cases. Two explicitly declared UKs on different columns become one composite
+UK when either their explicit names match or a custom implicit strategy returns the
+same name for both. `getOrCreateUniqueKey(name)` reuses the first object and materialization
+appends the second column. Thus independent uniqueness on `first` and `second` becomes
+uniqueness only on `(first, second)`. No production behavior has changed yet.
+
+The specification requires preserving existing declaration merging but also prohibits
+silently merging unrelated constraints. Original approved distinction (superseded for duplicate `@UniqueConstraint` declarations
+by HHH-20918 below), following confirmation in local `main` source:
+retain repeated explicit-name declaration merging for compatibility, but reject final-name
+collisions between independent candidates with different membership when the shared name
+arises through implicit or physical naming. Report the table, final name, and conflicting
+column sets. Do not add suffixes or silently weaken the constraints. Equivalent duplicate
+candidates continue through the approved deduplication rules.
+
+On local `main`, `IndexBinder` obtains the name (the built-in strategy preserves an
+explicit name), calls `Table.getOrCreateUniqueKey(name)`, and appends each declaration's
+columns. Identical explicit names therefore merge column membership there as well.
+This is source verification, not a new test run on `main`.
+
+Original compatibility rule (superseded by HHH-20918 below): the same explicit
+logical name on the same table may identify one merged candidate. Distinct explicit
+logical names that a physical strategy maps to the same final name are a strategy
+collision, not repeated explicit-name declarations. Likewise a custom implicit result
+marked `LogicalName.isExplicit()` does not turn an unnamed declaration into an explicit
+source declaration. Preserve the source name and `nameExplicit` independently from
+strategy-result provenance.
+
+==== Explicit-Name Merging Follow-Up (HHH-20918)
+
+https://hibernate.atlassian.net/browse/HHH-20918[HHH-20918]: Steve has requested
+replacing explicit-name merging with a mapping exception identifying the name and
+where the annotations occur. This supersedes the compatibility direction above;
+the revised specification is approved and implemented; validation results are recorded below.
+
+Approved specification:
+
+* Reject two distinct explicitly named `@UniqueConstraint` declarations with the same
+  logical constraint name on the same mapped table. Use existing logical-name equality,
+  including its quoting rules. Validate before equivalent-key deduplication or PK
+  absorption, even when both declarations specify identical columns.
+* Raise `AnnotationException` (a `MappingException`) identifying the duplicate name,
+  owning table, and both declaration locations. Identify the declaring class, member
+  where applicable, containing annotation (`@Table`, `@SecondaryTable`, `@JoinTable`,
+  or `@CollectionTable`), and position in its `uniqueConstraints` array. Do not promise
+  source-file line numbers, which reflection-backed annotation metadata does not supply.
+* Retain source declaration locations through deferred resolution and materialization.
+  Current generic source-role strings such as `table-unique-constraint` are insufficient.
+  Distinguish separate declarations from repeated internal processing of one declaration.
+* Keep unnamed constraints, distinct names, and names reused on different tables
+  subject to their existing rules. This is not a new schema-wide name validation pass.
+  Preserve separate physical/implicit strategy-collision validation.
+* Do not extend this change to general index collision handling. Any overlap with
+  unique indexes represented internally as UKs must be identified during implementation.
+* Replace the explicit-name merging regression with rejection assertions; cover identical
+  and differing column sets, class-level and member-level annotation locations, secondary
+  tables, and rejection before PK absorption. Verify controls for unnamed constraints
+  and separate tables. Add a migration note explaining that a composite UK must be
+  expressed with one declaration containing all intended columns.
+
+Implemented and verified on this branch. `ResolvedUniqueKey` retains a dedicated
+declaration location, and finalization checks names per table before resolving and
+deduplicating candidates. Repeated visits to the same declaration location do not
+constitute separate declarations. Unique indexes retain their existing policy; they
+do not acquire `@UniqueConstraint` declaration provenance.
+
+Validation: the naming-strategy and annotation unique-constraint suites passed with
+356 tests, zero failures/errors, and zero skips. The 11 new
+`DuplicateUniqueConstraintTest` cases cover identical columns, PK absorption, secondary
+tables, collection/join members, two classes sharing a table, logical-name case/quoting,
+and allowed unnamed/distinct-name/separate-table cases. The existing different-column
+merging test now asserts rejection and both declaration positions. Migration guidance
+is updated. This validation does not constitute a new full-core run or a backport.
+
+The annotation implementation already groups by name in the 2008 annotation import
+(`7337743c93574823424ed6c399cfcf6bd75614f8`). Older hbm.xml binding uses the same
+helper to group individual columns by their `unique-key` attribute. That explains
+the shared mechanism but does not establish a deliberate annotation-level policy.
+
+=== Aggregate Collection Membership Checkpoint
+
+Tracked by https://hibernate.atlassian.net/browse/HHH-20920[HHH-20920]. Source
+inspection finds the same member-column selection in `Set.createPrimaryKey()` on
+local `main` and `8.0`; reproducer execution on those branches remains outstanding.
+The nonnullable-element path creates a PK, so investigation must cover inferred
+PKs as well as UKs, including flattened components containing nested aggregates.
+
+Proposed implementation/backport approach: establish branch-portable regression
+tests first, isolate actual table-column selection and key eligibility from naming,
+then adapt the correction to 9.0's `CollectionKeyMappingMaterializer` and the older
+branches' `Set.createPrimaryKey()`. Determine aggregate SQL-type/dialect eligibility
+before substituting the aggregate column: correcting membership alone does not prove
+the resulting constraint is supported. Avoid changing general component selectable
+semantics merely to repair set-key inference. The 9.0 follow-through can remove the
+temporary inferred-member exception and verify naming inputs separately. This is
+a proposal, not an approved implementation or a completed backport.
+
+The first full-core run exposes inferred UKs on aggregate set collections whose stored
+members are no longer columns of the collection table. For example,
+`AnnotationCoverageBindingTests` maps JSON elements into `publisher_info` on
+`plural_json_publishers`, while a queued set UK still includes component member `name`.
+The new actual-column validation rejects that stale membership. JSON, XML, and struct
+fixtures exhibit this condition.
+
+Correcting it to the aggregate container changes membership and possibly the default
+name or eligibility under existing LOB/type checks. Steve deferred that behavior decision for separate investigation. Preserve the existing
+inferred aggregate-member UKs in this slice, retaining their source declarations without
+registering them as owner-table columns. This explicit compatibility exception applies
+only to inferred mapped aggregate members, not unresolved annotation references. Do not
+claim corrected aggregate membership or aggregate DDL acceptance is complete.
+
+=== Deferred Temporal Naming Decision
+
+Steve requested returning later to whether the default UK hash should include a temporal
+period-start column previously appended after name generation. Until that decision,
+actual UK membership retains the period-start column, but naming inputs retain their
+previous dependencies. This is an explicit temporary exception to complete-column naming
+inputs for temporal keys, not approval to rename them. Extend temporal acceptance and
+migration guidance when that decision is made.
+
+==== Temporal Membership Correction (HHH-20919)
+
+https://hibernate.atlassian.net/browse/HHH-20919[HHH-20919] addresses which UK receives
+the period-start column, independently of the deferred naming-input decision.
+Steve agreed with the existing `Collection.adjustTemporalPrimaryKey()` TODO:
+only the UK synthesized for set membership should be extended, not user-defined UKs.
+
+On this branch, `org.hibernate.mapping.Collection.adjustTemporalPrimaryKey()` is
+an unused private method; its TODO is historical evidence, not the active call site.
+The active equivalent behavior lives in
+`CollectionKeyMappingMaterializer.adjustTemporalPrimaryKey()` (called by
+`materializePrimaryKeyIfNeeded()`) and
+`StateManagementBindingPhase.applySingleTableTemporalCollectionKey()` (called by
+`bindTemporalCollection()`). These register table-wide additions for pending UKs
+and extend already materialized UKs. The correction must target these active paths;
+the unused mapping method should be removed as related cleanup. On the inspected
+`main` revision, `Collection.createAllKeys()` still calls the mapping method.
+
+Working specification (awaiting approval):
+
+* Preserve the existing temporal eligibility checks and PK extension behavior.
+* When no PK exists, extend only the specific UK candidate synthesized for that
+  collection's set membership. Retain its identity or explicit internal provenance;
+  do not infer eligibility from its name, column count, or merely being unnamed.
+* Preserve every unrelated UK's declared membership, including named and unnamed
+  annotation constraints and column-level uniqueness. If set-key creation is skipped
+  because a user constraint already exists, there is no synthesized UK to extend.
+* Apply the rule consistently to both collection-key materialization and later
+  state-management binding. Replace table-wide additional-column registration with
+  candidate-specific association; make repeated adjustment idempotent.
+* Revisit the split adjustment paths as part of HHH-20919. In ordinary annotation
+  boot, collection-key materialization runs before collection temporal columns are
+  bound, so its temporal adjustment does nothing; later state-management binding
+  performs the adjustment after creating those columns. Investigate consolidating
+  responsibility at that later boundary, verifying other callers and binding orders
+  before removing the earlier hook.
+* Preserve the existing naming dependencies for the synthesized UK for now. Whether
+  its hash should include period-start remains a separate, deferred decision.
+* Do not change aggregate UK eligibility or membership in this fix.
+
+Regression coverage must demonstrate that named and unnamed user UKs retain their
+columns, a synthesized nullable-element set UK receives period-start exactly once,
+and the existing PK case still receives it. Cover temporal binding order variations
+and a non-temporal control. Verify both mapping metadata and supported exported DDL.
+
+Backport candidate: isolate the membership correction and regression tests from the
+9.0 naming migration. Older branches can retain the actual synthesized UK instead
+of a pending candidate. Confirm affected branches independently before claiming
+backport coverage. No backport has been performed. Document that corrected user UKs
+may enforce stronger uniqueness than the accidentally widened constraints, requiring
+review of existing data and schema changes.
+
+=== Naming Contract
+
+Use `UniqueKeyNamingInput(NamedTableNamingInput table, List<NamingNamePair> columns)`
+and `LogicalName determineUniqueKeyName(UniqueKeyNamingInput, ImplicitNamingContext)`.
+Both callback arguments and result are non-null; the immutable column list is nonempty,
+contains no null elements, and preserves resolved declaration order. Inputs expose both
+naming stages without mutable mapping objects or precomputed fallback names.
+
+Explicit constraint names bypass the implicit callback. The interface default owns the
+existing `UK` hash recipe: logical table identity, physical column spellings, canonical
+sorting on a copy, configured charset, padded MD5, and base-35 encoding. Correct retained
+table identities replace ambiguous reverse lookup. Report any additional physical-only
+fallback affecting default names before changing it. No new facts enter the default hash.
+
+All results pass once through `toPhysicalUniqueKeyName`. Null implicit/physical results
+are mapping errors; either explicitness flag from a custom implicit result is retained.
+Physical naming cannot remove requested quoting. Remove the old UK source interface and
+migrate implementations/tests; retain the legacy helper bridge only for indexes.
+
+=== Export And Compatibility
+
+Create-table and alter-table paths use finalized UK names wherever the dialect supports
+the named construct. For single-column uniqueness, emit a named table constraint instead
+of an anonymous inline clause when supported; do not emit both. Preserve nullable-key
+suppression, null-distinctness, ordering, options, and constraint-versus-index representation.
+An index used to implement a UK still uses its finalized UK name without an index callback.
+
+Document three observable corrections separately in the migration guide: actual-column
+resolution and missing-column rejection (HHH-20917); logical-first precedence for
+collection/join-table references; and named UK emission plus sole-UK absorption repair.
+Default hashes remain unchanged for unaffected mappings. Existing database objects are
+not automatically renamed, and implicit PK DDL remains unnamed.
+
+=== Acceptance And Completion
+
+Extend the existing strategy matrix and focused tests. Cover explicit/implicit names,
+custom/null results, both naming stages, quote preservation, callback counts, and exact
+independently expected defaults. Convert the placeholder characterization tests to assert
+actual column identity, no physical-column replay, and missing-reference errors.
+
+Include primary/secondary/join/collection tables, inherited columns, composite order,
+logical/physical spelling collisions, quoted references, and selected aliases. Verify
+inferred duplicates versus explicit declarations, sole/multiple UK absorption, reversed
+declaration order, unique-index representation, nullable sets, and additional contributors.
+Assert no naming for discarded inferred candidates, no export-time mutation, and no
+callback replay on repeated export or metadata restoration.
+
+Render representative create/alter DDL for named single/composite UKs, nullable suppression,
+and index-backed uniqueness; run relevant schema integration tests as well. State which
+checks render SQL and which execute it. Completion requires focused naming/schema suites,
+the full core suite, migration guidance, and removal of obsolete UK SPI callers. Any new
+failure or required behavior deviation must be resolved or explicitly reported.
+
+== Completed Work
+
+=== Foreign-Key Contract
+
+The FK callback now takes `ForeignKeyNamingInput` plus `ImplicitNamingContext` and returns
+`LogicalName`. Its interface default preserves the existing FK hash inputs and charset
+handling. `ImplicitForeignKeyNameSource` and `ForeignKeyNameSource` are removed; UK/index
+Identifier-based contracts remain for their subsequent slices.
+
+The collector retains binding's `RelationalModelCorrespondences` through second-pass
+FK finalization. Table names are keyed by table identity instead of unqualified physical
+spelling; entity-owned FK binding also retains the selected table aliases. Column
+correspondences retain declaration identities and selected named references alongside
+local/target pairs. PK references expose resolved PK columns instead of an empty target list.
+
+Aggregate-member join columns retain their declaration identity without being registered
+as owner-table columns. Audit-created columns retain their source names, and copied audit
+columns retain their original declarations. Audit helper tables without an explicit name
+binding retain the logical names supplied at table creation. With a transforming physical
+strategy this last case can change FK hashes formerly based on a physical-table fallback;
+the migration guide calls out that correction. Explicitly registered aliases retain their
+existing selection. No dependency is synthesized by relabeling a physical spelling at
+callback time.
+
+Explicit constraint names bypass the input and implicit callback. Null results fail;
+each successfully finalized FK is marked to prevent physical naming replay on a repeated
+second pass. Restored metadata already contains final names. Existing inline-view callback
+and export boundaries remain unchanged.
+
+The requested FK migration does not implement the remaining UK input contract, UK
+absorption changes, or named UK emission changes.
+
+=== Unique-Column Finalization: HHH-20916
+
+`UniqueKeyMappingMaterializer.finishColumnUniqueKeys()` completes column uniqueness
+at the end of metadata building, after second passes and generator contributions.
+It uses the existing UK implicit and physical callbacks when no name has been assigned,
+reuses already finalized names, and registers the single-column UK before schema export.
+Single-column PK uniqueness remains excluded as before.
+
+`ColumnDefinitions` no longer generates a fallback name or creates UK mapping objects.
+An unfinalized unique-column name is reported as a schema-management error. The migration
+guide documents the affected mappings, new normal UK names, custom strategy participation,
+and absence of automatic renaming of existing database constraints.
+
+The removed exporter fallback called the MD5 compression routine without padding.
+Short inputs could all produce `UK_4m8ew8qnw0dba3qkvcgi2et0`. Basic
+`@Column(unique=true)`, owning one-to-one join-column uniqueness (without requiring
+`unique=true` or a bidirectional association), and non-ID Changelog changeset uniqueness
+now use the normal padded `UK` recipe and physical UK hook. Already strategy-routed
+names keep their default recipe. No historical-recipe selector is added.
+
+HHH-20916 does not change dialect-specific name emission or UK absorption.
+The migration guide documents this correction and the FK logical-dependency corrections;
+existing database constraints are not automatically renamed.
+
+== Shared Contract And Planned UK Behavior
+
+* Nonempty explicit FK/UK names bypass implicit naming and enter physical naming with
+  explicit provenance. Built-in generated names have implicit provenance; custom
+  implicit results retain their supplied explicitness flag.
+* Default FK/UK names retain their existing spelling, quoting, prefixes, dependency
+  stages, sorting, serialization, charset behavior, and digest encoding for already
+  strategy-routed mappings. Previously bypassed UK cases use the normal UK recipe;
+  incorrect logical-table dependencies are corrected as specified below.
+* Custom implicit strategies receive both logical and physical dependency names.
+  Composite FK inputs preserve local-to-target column correspondence.
+* Each surviving naming decision has one physical transformation. Null implicit or
+  physical FK/UK results produce a mapping error identifying the constraint role.
+  Physical strategies cannot remove quoting requested by the logical name.
+* Planned UK behavior: schema creation honors finalized UK names wherever the dialect supports named
+  uniqueness. Existing dialect suppression and constraint/index representation choices
+  remain in force. A nullable uniqueness rule must not gain stronger semantics merely
+  to make its name visible.
+* PKs retain their mandatory logical and physical naming results. Exporters continue
+  to omit generated PK names under the existing export policy. Explicitly named
+  UK-to-PK absorption continues to supply the emitted PK name; this slice does not
+  enable general emission of generated PK names.
+
+== Input Contracts
+
+New records belong to `org.hibernate.boot.model.naming.spi` and follow the existing
+SPI annotations and Markdown Javadoc conventions. Every component must document its
+meaning, nullability, ordering, and naming stage. FK contracts are now implemented;
+the UK signature below is also implemented.
+
+[source,java]
+----
+record ForeignKeyColumnNamingInput(
+        NamingNamePair localColumn,
+        NamingNamePair referencedColumn) {}
+
+record ForeignKeyNamingInput(
+        TableNamingInput table,
+        TableNamingInput referencedTable,
+        boolean referencesPrimaryKey,
+        List<ForeignKeyColumnNamingInput> columns) {}
+
+record UniqueKeyNamingInput(
+        NamedTableNamingInput table,
+        List<NamingNamePair> columns) {}
+
+LogicalName determineForeignKeyName(
+        ForeignKeyNamingInput input, ImplicitNamingContext context);
+
+LogicalName determineUniqueKeyName(
+        UniqueKeyNamingInput input, ImplicitNamingContext context);
+----
+
+Annotate both callbacks, their parameters, and applicable implementations with Jakarta
+`@Nonnull`, consistently with the completed naming contracts.
+All components and list elements are non-null. Lists are immutable defensive copies
+and nonempty. Each FK entry describes one actual local/target pair; even a PK reference
+includes its resolved target columns. `referencesPrimaryKey` describes the referenced
+key, not whether the declaration omitted `referencedColumnName`.
+
+FK table dependencies use the existing `TableNamingInput` hierarchy. A
+`NamedTableNamingInput` exposes logical and physical names; an `InlineViewNamingInput`
+exposes its logical identity with no physical table name or query text. Either side of
+an FK may use the inline-view form. This does not make that FK exportable as a database
+constraint. UK table inputs remain `NamedTableNamingInput` in this specification.
+
+Dependencies retain the selected logical declaration or reference alias and, where a
+physical name exists, its finalized physical name. Never reconstruct a logical name by relabeling physical text, or select
+an arbitrary alias from a map. A missing dependency must be resolved before invoking
+the callback or reported as an unsupported mapping contribution with useful context.
+
+The order is settled mapping correspondence at naming time. It is not a promise about
+later dialect column-layout ordering. `MetadataImpl.orderColumns` may reorder PK and
+corresponding FK columns later; that must not cause naming to run again.
+
+There is no precomputed fallback name, explicit-name component, mutable mapping object,
+annotation instance, or boot context in these inputs. Explicit bypass happens before
+constructing an implicit request.
+
+== Supplied Defaults And Compatibility
+
+Provide the algorithms as overridable `ImplicitNamingStrategy` interface defaults.
+Standard and JPA strategies inherit them unless an existing behavior requires otherwise.
+
+The default FK recipe continues to use its current local/referenced table spellings and
+physical local column spellings. The default UK recipe continues to use its current table
+spelling and physical column spellings. FK table dependencies now use retained logical
+identities. For the remaining UK migration, characterize physical-table fallback paths
+before replacing them.
+The approved exporter-fallback migration uses the normal UK recipe, including its
+`UK` prefix and configured schema charset. Other uncharacterized fallback changes must
+still be reported before implementation rather than silently renaming constraints.
+
+Preserve the `FK` and `UK` prefixes, canonical column sorting on a copy, quote markers,
+configured schema charset (including its existing platform-default fallback), MD5,
+and base-35 encoding. Target columns and mapping order are available to custom strategies
+but are not added to the default hash. No collision algorithm or name truncation is added.
+
+`ImplicitForeignKeyNameSource` is removed. `ImplicitUniqueKeyNameSource` is also removed; its callers and supplied implementations
+now use the typed UK callback. Custom strategies
+must migrate to the new contracts; a compatibility adapter is not required.
+Index contract migration is a subsequent slice.
+
+== UK Materialization And Shared Finalization Rules
+
+Retain explicit logical names separately from rendered physical names until finalization.
+Do not infer explicitness from a populated mapping name: a generated name can populate
+the same field. Adapt `ConstraintNamingHelper` to consume `LogicalName` results while
+keeping FK/UK physical results mandatory. FK and UK paths use `resolveLogical`; retain
+the legacy `resolve` bridge only for indexes; do not attempt overloads distinguished only
+by `Supplier<Identifier>` versus `Supplier<LogicalName>`.
+
+Resolve constraint membership, target correspondence, duplicate suppression, and final
+relational role before issuing the naming request. UK collections currently use names
+as map keys during materialization; moving their naming later must also provide an
+internal identity independent of the eventual exported name. Do not invoke a strategy
+early simply to obtain a temporary map key.
+
+An absorbed UK is not a surviving implicit UK naming decision. Preserve its
+column-ordering effect. If explicitly named, transform that explicit name through the
+UK physical hook once and retain it as the absorbed declaration's export name. Do not
+pass that physical result through the PK hook. The PK's own mandatory generated name
+and the absorbed declaration's export name serve different purposes.
+The direct `@PrimaryKey` precedence rule belongs to the separate explicit-PK follow-up.
+
+Unify single-UK and multiple-UK absorption before schema export: both must retain the
+absorbed declaration's ordering and explicit name. Repeated export must neither mutate
+the constraint set nor select a different name. Preserve existing duplicate-declaration
+semantics; this slice does not authorize rejecting previously accepted mappings merely
+to simplify finalization.
+
+For multiple explicitly named UKs covering the PK, preserve the existing selection
+behavior for this slice, after characterizing which declaration supplies the name and
+ordering. Do not add a conflicting-name error or invent a new precedence rule. If that
+behavior proves ambiguous, report the concrete case before proposing a change.
+
+Collection-set PK creation already uses the unified PK contract. Preserve that separation:
+non-nullable sets use PK naming; nullable sets which materialize a real UK use UK naming.
+Do not reintroduce a UK callback for a PK bookkeeping label.
+
+The current FK compilation pass names retained FKs without filtering on creation-enabled
+or physical-constraint flags; the exporter applies those filters separately. Preserve
+that boundary for retained FKs between named tables, including disabled FKs. Absence of
+DDL does not itself mean absence of a mapping name or naming callback.
+
+Preserve existing callback and export boundaries for inline-view FKs. An FK targeting
+an inline view currently participates in naming, using the view's logical identity;
+an FK owned by an inline view currently remains unnamed. Representing an inline view
+in an input does not require naming previously skipped mapping objects or exporting
+an impossible database constraint. Reuse and metadata restoration retain finalized
+names without replaying either strategy.
+
+== UK Schema Tooling
+
+Use finalized UK names consistently in create-table and alter-table paths wherever
+the dialect supports the corresponding named construct. In particular, explicitness
+alone must no longer decide whether a finalized UK name is rendered. Where a dialect
+supports a named table constraint, single-column uniqueness should use that form if
+the anonymous inline clause would discard the finalized name.
+
+Preserve dialect-specific nullable-uniqueness and unique-index representation semantics.
+Do not apply the index physical hook to a finalized UK merely because its dialect
+representation uses an index. Preserve the HHH-20916 boundary: supported contributions
+finalize naming before export; schema tooling does not invoke a strategy. Previously bypassed basic-column, one-to-one, and Changelog
+uniqueness uses the normal UK implicit callback and the UK physical hook. Do not retain
+the defective `UK_` recipe or add historical-recipe dispatch to the input.
+
+Extend the migration guide when UK emission changes are implemented. Distinguish new
+emission behavior from preserved default hashes and from the already documented
+HHH-20916 and FK dependency corrections. Existing database constraints are not
+automatically renamed.
+
+== UK Acceptance
+
+Extend the existing naming strategy suite with independent expected names and DDL
+assertions. Preserve the completed FK and HHH-20916 regressions while adding the
+remaining UK acceptance coverage:
+
+* Explicit/implicit FK and UK names, quoted names, custom logical results, physical
+  transformations, null-result errors, and callback counts.
+* Single/composite FK pairs, PK and alternate-key references, derived identifiers,
+  selected aliases, secondary tables, joined inheritance, and collection tables.
+* Inline-view FK dependencies on either side, with no fabricated physical table name,
+  preserved callback participation, and unchanged export suppression.
+* Competing explicitly named UKs covering a PK, preserving the characterized selection
+  of the absorbed name and ordering.
+* Column uniqueness, table UKs, nullable-set UKs, duplicate UKs, and explicitly named
+  UK-to-PK absorption. Discarded candidates must not produce implicit requests.
+* Unchanged unnamed PK output across entity, dependent, identifier/indexed/set collection
+  mappings; a PK must retain its columns and enforcement.
+* Exact existing FK/UK default names for unaffected mappings under identity and prefixing
+  physical strategies, quoted dependencies, and configured charset behavior.
+* Previously bypassed basic-column, one-to-one, and Changelog UKs receive normal naming
+  before export, exactly one physical transformation, and no export-time naming replay.
+  Assert distinct names for the previously colliding fixtures and independently expected
+  normal UK hashes, as the current HHH-20916 regressions already do.
+* Named UK create/alter DDL and representative dialect nullable-uniqueness behavior;
+  distinguish SQL rendering checks from actual database execution.
+* Stable dependency selection under reversed mapping registration order, additional
+  mapping contributions, and metadata restoration without naming replay.
+
+The consolidated UK working specification is approved for implementation.
+The decisions already approved are recorded above. Before implementation changes
+an existing fallback path or disabled-constraint callback boundary, present the concrete
+case and required deviation. Do not treat these characterization requirements as
+permission to change default names.
+
+== Baseline Lifecycle Findings
+
+These findings describe the pre-migration behavior. The implementation now resolves and
+finalizes UK candidates before export, repairs sole-UK absorption, and emits finalized UK
+names. They remain here to explain the acceptance requirements.
+
+`Table.uniqueKeys` is a `LinkedHashMap`. Both `checkPrimaryKeyUniqueKey()` and the
+multiple-UK cleanup path assign `orderingUniqueKey` while visiting matching declarations;
+the last eligible match wins. `TableBinder.applyUniqueConstraints()` visits annotation
+entries in declaration order. Preserve that order through candidate collection and
+finalization; duplicate registration under an existing name does not acquire a new position.
+
+`Table.cleanseUniqueKeyMap()` still removes a sole UK matching the PK without retaining
+`orderingUniqueKey`. Correcting this requires a regression with exactly one UK and repeated
+export. The characterization test intentionally retains this unresolved behavior.
+
+UK materialization still obtains a name before registering the UK and adding columns.
+HHH-20916 moves remaining unique-column object creation before export, but does not solve
+candidate identity, deduplication, or naming of candidates subsequently absorbed into a PK.
+`ResolvedUniqueKey` retains physical columns; the new input needs selected logical
+column declarations/references as well. Do not recover them from ambiguous reverse maps.
+
+`CreateTableUniqueDelegate` still drops implicit names and may emit anonymous inline
+uniqueness. Honoring finalized names needs coordinated delegate changes without duplicate
+constraints or changes to nullable-uniqueness semantics.
+
+== UniqueConstraint Column Resolution Investigation
+
+Status: investigated; Steve approved moving forward with the recommended resolution
+policy. No production behavior has changed in this investigation.
+
+The placeholder-column defect is tracked by
+https://hibernate.atlassian.net/browse/HHH-20917[HHH-20917]. Source inspection also
+confirms placeholder creation and repeated physical naming in local `main` and `8.0`
+through `IndexBinder`; reproducer tests have not been run on those branches. Their
+collection/join tables use that same path, so the separate physical-first lookup
+inconsistency described below is specific to the 9.0 pipeline.
+
+Entity primary, secondary, and denormalized tables share
+`TableBinder.applyUniqueConstraints()`. It runs during table creation, before all mapped
+columns are available. Each annotation column string passes through `toPhysicalColumnName`
+and becomes a new placeholder `Column`. The later UK materializer stores that placeholder;
+it does not resolve the reference to the actual mapped column. Empty names are rejected,
+but a nonempty nonexistent column can survive metadata building.
+
+Collection/join-table declarations use `TableKeyBinder.applyUniqueConstraints()` after
+key binding. Its resolver first tries a physical column lookup, then the logical column
+correspondence. It returns an actual column without replaying physical naming, but its
+physical-first precedence can choose a different column from the named logical reference.
+The resolver is shared with collection index handling; changing it indiscriminately
+would expand this slice into index behavior.
+
+`UniqueKeyColumnResolutionTest` establishes four current behaviors with a physical
+strategy that prefixes columns with `p_`:
+
+* Entity `columnNames="code"` and `@Column(name="code")` produce the expected `p_code`,
+  but physical naming receives `code` twice and the UK retains a different column instance.
+* Entity `columnNames="p_code"` produces a placeholder `p_p_code`, with no matching
+  mapped column when the actual declaration is `code`.
+* Entity `columnNames="missing"` survives metadata building with an unresolved
+  `p_missing` placeholder.
+* On a collection table with logical columns `code` and `p_code`, the reference
+  `p_code` selects physical `p_code` (logical `code`), instead of physical `p_p_code`
+  (logical `p_code`). It does reuse the actual column and does not replay naming.
+
+All four characterization tests pass. They describe current behavior, not desired
+acceptance criteria, and do not execute DDL. Existing `UniqueConstraintValidationTest`
+also currently accepts a nonexistent column; update it to reject that mapping under
+the approved strict-resolution policy.
+
+=== Approved Resolution Policy
+
+Retain source column references until the owning table's mapped columns and logical
+correspondences are settled. Resolve each reference on that table, preserving declaration
+order, quoting, and the selected logical alias. Reuse the actual mapped column and its
+finalized physical name; never invoke physical column naming to resolve a reference.
+Use the same UK-specific resolution policy for entity, secondary, collection, and join
+tables, including inherited-column lookup for denormalized tables.
+
+Approved precedence: resolve a logical name first. If there is no logical match,
+allow an existing physical-name match for compatibility with collection-table mappings.
+For that fallback, retain the actual column's selected logical declaration rather than
+labeling the physical input text as a logical name. A spelling matching logical column B
+and physical column A therefore selects B. This intentionally changes the collection
+collision case above and must be documented. Entity physical-only references gain
+resolution to an existing column instead of being transformed again.
+
+Steve subsequently approved attribute-path fallback for entity primary/secondary-table
+`@UniqueConstraint` declarations after both column-name lookups fail. Resolve explicit
+nested paths without leaf-name guessing; require one actual local column and reject
+multi-column attributes, formulas, inverse associations, and wrong-table references.
+The resolver is shared with indexes. Collection/join-table declarations use the approved
+`{key}` and `{element}` syntax in link:constraint-index-naming-proposal.adoc#completed-index-and-column-references[the completed index and reference contracts].
+UK naming retains the resolved column dependencies, not the attribute spelling.
+
+An unresolved reference should fail during boot with the owning table, constraint, and
+column reference identified. A physical match without a recoverable logical declaration
+must also report the missing dependency rather than manufacture provenance. Explicit UK
+names bypass implicit naming, but must still undergo column-reference validation.
+
+The approved resolution policy covers lookup precedence, physical-name fallback, and
+strict missing-column validation. The consolidated UK lifecycle and emission specification was subsequently approved. Acceptance should
+extend the characterization fixtures to assert the corrected behavior and cover quoted
+references, selected aliases, secondary/join tables, composite declaration order, and
+inherited columns. The UK change must not silently change index lookup behavior.
+
+== Verification
+
+The final full core run passed: 17,976 tests, 1,525 skipped, zero failures and errors.
+The affected follow-up run also passed 712 tests, with 6 skipped and no failures or errors.
+See link:naming-strategy-verification.adoc[the verification notes] for completed coverage.
+The current tests assert corrected FK dependencies, typed UK inputs, actual-column
+resolution, normal UK hashes, explicit-name merging, strategy-collision rejection, named
+UK DDL, absorption, and archive restoration without replay. The aggregate compatibility
+exception and temporal mappings pass the full suite; their deferred behavior questions
+are not presented as resolved. Schema rendering assertions do not establish database execution coverage.
+
+Index requests, check constraints, named SQL types, generator objects, and explicit PK
+declarations remain outside this slice. Audit FK dependency retention is implemented;
+dedicated audit/history naming callbacks remain separate work.

@@ -18,11 +18,11 @@ public class DependantBasicValue extends BasicValue {
 
 	public DependantBasicValue(
 			MetadataBuildingContext buildingContext,
-			Table table,
+			ColumnContainer columnContainer,
 			BasicValue referencedValue,
 			boolean nullable,
 			boolean updateable) {
-		super( buildingContext, table );
+		super( buildingContext, columnContainer );
 		this.referencedValue = referencedValue;
 		this.nullable = nullable;
 		this.updateable = updateable;

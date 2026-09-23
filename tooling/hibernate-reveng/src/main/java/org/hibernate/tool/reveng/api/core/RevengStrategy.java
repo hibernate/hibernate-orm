@@ -66,9 +66,9 @@ public interface RevengStrategy {
 	/**
 	 * Gets the user defined foreign keys.
 	 * @param referencedTable the table to get the foreign keys for
-	 * @return a list of ForeignKey's
+	 * @return immutable source definitions to resolve against discovered tables
 	 */
-	public List<ForeignKey> getForeignKeys(TableIdentifier referencedTable);
+	public List<ForeignKeyDefinition> getForeignKeys(TableIdentifier referencedTable);
 
 	/**
 	 * @param identifier the table to look up for

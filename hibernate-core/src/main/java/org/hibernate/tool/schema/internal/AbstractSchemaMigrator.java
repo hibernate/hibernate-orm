@@ -4,11 +4,19 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.StreamSupport;
+
+import org.hibernate.relational.naming.spi.LogicalName;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
@@ -150,7 +158,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Set<String> exportIdentifiers,
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
-			Set<Identifier> exportedCatalogs,
+			Set<LogicalName> exportedCatalogs,
 			Namespace namespace,
 			SqlStringGenerationContext sqlGenerationContext,
 			GenerationTarget[] targets);
@@ -216,7 +224,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 		final Map<Namespace, NameSpaceTablesInformation> tablesInformation = new HashMap<>();
-		final Set<Identifier> exportedCatalogs = new HashSet<>();
+		final Set<LogicalName> exportedCatalogs = new HashSet<>();
 		for ( var namespace : database.getNamespaces() ) {
 			final var nameSpaceTablesInformation = performTablesMigration(
 					metadata,
@@ -250,7 +258,10 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		for ( var namespace : database.getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				final var nameSpaceTablesInformation = tablesInformation.get( namespace );
-				for ( var table : namespace.getTables() ) {
+				for ( var candidate : namespace.getTables() ) {
+					if ( !( candidate instanceof NamedTable table ) ) {
+						continue;
+					}
 					if ( schemaFilter.includeTable( table ) && contributableInclusionFilter.matches( table ) ) {
 						final var tableInformation = nameSpaceTablesInformation.getTableInformation( table );
 						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
@@ -306,7 +317,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		applySqlStrings(
 				false,
 				dialect.getTableExporter()
-						.getSqlCreateStrings( table, metadata, sqlGenerationContext ),
+						.getSqlCreateStrings( (NamedTable) table, metadata, sqlGenerationContext ),
 				formatter,
 				options,
 				targets
@@ -322,10 +333,13 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			ExecutionOptions options,
 			SqlStringGenerationContext sqlGenerationContext,
 			GenerationTarget... targets) {
+		if ( !(table instanceof PhysicalTable physicalTable) ) {
+			return;
+		}
 		applySqlStrings(
 				false,
 				dialect.getTableMigrator()
-						.getSqlAlterStrings( table, metadata, tableInformation, sqlGenerationContext ),
+						.getSqlAlterStrings( physicalTable, metadata, tableInformation, sqlGenerationContext ),
 				formatter,
 				options,
 				targets
@@ -341,8 +355,11 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			ExecutionOptions options,
 			SqlStringGenerationContext sqlGenerationContext,
 			GenerationTarget... targets) {
+		if ( !(table instanceof PhysicalTable physicalTable) ) {
+			return;
+		}
 		final var exporter = dialect.getIndexExporter();
-		for ( var index : table.getIndexes().values() ) {
+		for ( var index : physicalTable.getIndexes().values() ) {
 			if ( !isEmpty( index.getName() ) ) {
 				final var existingIndex =
 						tableInformation != null
@@ -516,7 +533,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Formatter formatter,
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
-			Set<Identifier> exportedCatalogs, Namespace namespace,
+			Set<LogicalName> exportedCatalogs, Namespace namespace,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
@@ -525,8 +542,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			final var physicalName = namespace.getPhysicalName();
 
 			if ( tryToCreateCatalogs ) {
-				final Identifier catalogLogicalName = logicalName.catalog();
-				final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
+				final LogicalName catalogLogicalName = logicalName.catalog();
+				final Identifier catalogPhysicalName = context.catalogWithDefault( physicalIdentifier( physicalName.catalog() ) );
 				if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName )
 						&& !existingDatabase.catalogExists( catalogPhysicalName ) ) {
 					applySqlStrings(
@@ -541,7 +558,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 
 			if ( tryToCreateSchemas ) {
-				final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
+				final Identifier schemaPhysicalName = context.schemaWithDefault( physicalIdentifier( physicalName.schema() ) );
 				if ( schemaPhysicalName != null && !existingDatabase.schemaExists( physicalName ) ) {
 					applySqlStrings(
 							false,

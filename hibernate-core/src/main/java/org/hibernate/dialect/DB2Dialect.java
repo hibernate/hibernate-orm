@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -103,7 +105,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -359,7 +360,7 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return this.db2TableExporter;
 	}
 

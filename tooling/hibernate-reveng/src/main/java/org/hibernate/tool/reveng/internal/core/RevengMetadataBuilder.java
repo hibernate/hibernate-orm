@@ -106,7 +106,9 @@ public class RevengMetadataBuilder {
 						serviceRegistry.getService(JdbcServices.class).getDialect(),
 						properties );
 		DatabaseReader reader = DatabaseReader.create(properties,revengStrategy,mdd, serviceRegistry);
-		RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector(metadataBuildingContext);
+		RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector( metadataBuildingContext,
+				properties.getProperty( org.hibernate.cfg.AvailableSettings.DEFAULT_CATALOG ),
+				properties.getProperty( org.hibernate.cfg.AvailableSettings.DEFAULT_SCHEMA ) );
 		reader.readDatabaseSchema(revengMetadataCollector);
 		return revengMetadataCollector;
 	}

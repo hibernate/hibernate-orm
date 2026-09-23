@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot;
 
+import org.hibernate.boot.model.relational.PhysicalNamespaceName;
+
 import org.hibernate.Internal;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.model.relational.Namespace;
@@ -246,7 +248,7 @@ public interface BootLogging extends BasicLogger {
 
 	@LogMessage(level = TRACE)
 	@Message(id = 160181, value = "Created database namespace [logicalName=%s, physicalName=%s]")
-	void createdDatabaseNamespace(Namespace.Name logicalName, Namespace.Name physicalName);
+	void createdDatabaseNamespace(Namespace.LogicalNamespaceName logicalName, PhysicalNamespaceName physicalName);
 
 	@LogMessage(level = DEBUG)
 	@Message(id = 160182, value = "Could load component class [%s]")

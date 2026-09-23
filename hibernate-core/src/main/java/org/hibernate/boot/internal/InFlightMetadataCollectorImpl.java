@@ -4,6 +4,14 @@
  */
 package org.hibernate.boot.internal;
 
+import org.hibernate.relational.naming.spi.PhysicalName;
+
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.identifier;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.MapsId;
 import org.hibernate.AnnotationException;
@@ -874,37 +882,42 @@ public class InFlightMetadataCollectorImpl
 			String subselectFragment,
 			boolean isAbstract,
 			MetadataBuildingContext buildingContext,
-			boolean isExplicit) {
+			boolean isExplicit,
+			String viewQuery) {
 		final var database = getDatabase();
 		final var namespace = locateNamespace( schemaName, catalogName, database, isExplicit );
-		// annotation binding depends on the "table name" for @Subselect bindings
-		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
-		final Identifier logicalName = name == null ? null : database.toIdentifier( name, isExplicit );
+		final var logicalName = name == null ? null : database.toLogicalName( name, isExplicit );
 		if ( subselectFragment != null ) {
-			return new Table( buildingContext.getCurrentContributorName(),
-					namespace, logicalName, subselectFragment, isAbstract );
+			return new org.hibernate.mapping.InlineView( buildingContext.getCurrentContributorName(),
+					logicalName, subselectFragment, namespace );
 		}
 		else {
 			final var existing = namespace.locateTable( logicalName );
 			if ( existing != null ) {
+				if ( existing.isView() != (viewQuery != null) ) {
+					throw new MappingException( "Conflicting table and view mappings for " + logicalName );
+				}
 				if ( !isAbstract ) {
 					existing.setAbstract( false );
 				}
 				return existing;
 			}
 			else {
-				return namespace.createTable(
+				final var created = namespace.createTable(
 						logicalName,
 						physicalName ->
-								new Table( buildingContext.getCurrentContributorName(),
-										namespace, physicalName, isAbstract )
+								viewQuery == null
+										? new PhysicalTable( buildingContext.getCurrentContributorName(), namespace, physicalName, isAbstract )
+										: new org.hibernate.mapping.DatabaseView( buildingContext.getCurrentContributorName(), namespace, physicalName, viewQuery )
 				);
+				getRelationalModelCorrespondences().registerTableCreationName( created, logicalName );
+				return created;
 			}
 		}
 	}
 
 	private static Namespace locateNamespace(String schemaName, String catalogName, Database database) {
-		return database.locateNamespace( database.toIdentifier( catalogName ), database.toIdentifier( schemaName ) );
+		return database.locateNamespace( database.toLogicalName( catalogName, false ), database.toLogicalName( schemaName, false ) );
 	}
 
 	private static Namespace locateNamespace(
@@ -913,55 +926,38 @@ public class InFlightMetadataCollectorImpl
 			Database database,
 			boolean isExplicit) {
 		return database.locateNamespace(
-				database.toIdentifier( catalogName, isExplicit ),
-				database.toIdentifier( schemaName, isExplicit )
+				database.toLogicalName( catalogName, isExplicit ),
+				database.toLogicalName( schemaName, isExplicit )
 		);
 	}
 
 	@Override
-	public Table addDenormalizedTable(
+	public DenormalizedTable addDenormalizedTable(
 			String schemaName,
 			String catalogName,
 			String name,
 			boolean isAbstract,
-			String subselectFragment,
-			Table includedTable,
+			PhysicalTable includedTable,
 			MetadataBuildingContext buildingContext) throws DuplicateMappingException {
 		final var database = getDatabase();
 		final var namespace = locateNamespace( schemaName, catalogName, database );
-		// annotation binding depends on the "table name" for @Subselect bindings
-		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
-		final Identifier logicalName = name != null ? database.toIdentifier( name ) : null;
-		if ( subselectFragment != null ) {
+		final var logicalName = name != null ? database.toLogicalName( name, false ) : null;
+
+		if ( namespace.locateTable( logicalName ) != null ) {
+			assert logicalName != null;
+			throw new DuplicateMappingException( DuplicateMappingException.Type.TABLE, logicalName.toString() );
+		}
+		else {
 			return namespace.createDenormalizedTable(
 					logicalName,
-					physicalName -> new DenormalizedTable(
+					physicalTableName -> new DenormalizedTable(
 							buildingContext.getCurrentContributorName(),
 							namespace,
-							logicalName,
-							subselectFragment,
+							physicalTableName,
 							isAbstract,
 							includedTable
 					)
 			);
-		}
-		else {
-			if ( namespace.locateTable( logicalName ) != null ) {
-				assert logicalName != null;
-				throw new DuplicateMappingException( DuplicateMappingException.Type.TABLE, logicalName.toString() );
-			}
-			else {
-				return namespace.createDenormalizedTable(
-						logicalName,
-						physicalTableName -> new DenormalizedTable(
-								buildingContext.getCurrentContributorName(),
-								namespace,
-								physicalTableName,
-								isAbstract,
-								includedTable
-						)
-				);
-			}
 		}
 	}
 
@@ -1003,19 +999,36 @@ public class InFlightMetadataCollectorImpl
 	}
 
 
-	private final Map<Identifier,Identifier> logicalToPhysicalTableNameMap = new HashMap<>();
-	private final Map<Identifier,Identifier> physicalToLogicalTableNameMap = new HashMap<>();
+	private org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences relationalModelCorrespondences;
+
+	@Override
+	public org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences getRelationalModelCorrespondences() {
+		if ( relationalModelCorrespondences == null ) {
+			relationalModelCorrespondences = new org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences( getDatabase() );
+		}
+		return relationalModelCorrespondences;
+	}
+
+	private final Map<org.hibernate.relational.naming.spi.LogicalName,PhysicalName> logicalToPhysicalTableNameMap = new HashMap<>();
+	private final Map<PhysicalName,org.hibernate.relational.naming.spi.LogicalName> physicalToLogicalTableNameMap = new HashMap<>();
 
 	@Override
 	public void addTableNameBinding(Identifier logicalName, Table table) {
-		logicalToPhysicalTableNameMap.put( logicalName, table.getNameIdentifier() );
-		physicalToLogicalTableNameMap.put( table.getNameIdentifier(), logicalName );
+		getRelationalModelCorrespondences().registerTableName( table,
+				org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName( logicalName ) );
+		if ( table instanceof NamedTable namedTable ) {
+			final var name = org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName( logicalName );
+			logicalToPhysicalTableNameMap.put( name, namedTable.getPhysicalName().objectName() );
+			physicalToLogicalTableNameMap.put( namedTable.getPhysicalName().objectName(), name );
+		}
 	}
 
 	@Override
 	public void addTableNameBinding(String schema, String catalog, String logicalName, String realTableName, Table denormalizedSuperTable) {
-		final Identifier logicalNameIdentifier = getDatabase().toIdentifier( logicalName );
-		final Identifier physicalNameIdentifier = getDatabase().toIdentifier( realTableName );
+		final var logicalNameIdentifier = getDatabase().toLogicalName( logicalName );
+		final var identifier = getDatabase().toIdentifier( realTableName );
+		final var physicalNameIdentifier = getDatabase().getJdbcEnvironment().getIdentifierHelper()
+				.getPhysicalNameFactory().create( identifier.getText(), identifier.isQuoted() );
 
 		logicalToPhysicalTableNameMap.put( logicalNameIdentifier, physicalNameIdentifier );
 		physicalToLogicalTableNameMap.put( physicalNameIdentifier, logicalNameIdentifier );
@@ -1023,17 +1036,20 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public String getLogicalTableName(Table ownerTable) {
-		final Identifier logicalName = physicalToLogicalTableNameMap.get( ownerTable.getNameIdentifier() );
+		if ( ownerTable instanceof org.hibernate.mapping.InlineView view ) {
+			return view.getLogicalName().toString();
+		}
+		final var logicalName = physicalToLogicalTableNameMap.get( ((NamedTable) ownerTable).getPhysicalName().objectName() );
 		if ( logicalName == null ) {
 			throw new MappingException( "Unable to find physical table: " + ownerTable.getName() );
 		}
-		return logicalName.render();
+		return logicalName.toString();
 	}
 
 	@Override
 	public String getPhysicalTableName(Identifier logicalName) {
-		final Identifier physicalName = logicalToPhysicalTableNameMap.get( logicalName );
-		return physicalName == null ? null : physicalName.render();
+		final var physicalName = logicalToPhysicalTableNameMap.get( org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName( logicalName ) );
+		return physicalName == null ? null : physicalName.toString();
 	}
 
 	@Override
@@ -1048,60 +1064,43 @@ public class InFlightMetadataCollectorImpl
 	 */
 	private class TableColumnNameBinding implements Serializable {
 		private final String tableName;
-		private final Map<Identifier, String> logicalToPhysical = new HashMap<>();
-		private final Map<String, Identifier> physicalToLogical = new HashMap<>();
+		private final Map<Identifier, Column> logicalToPhysical = new HashMap<>();
 
 		private TableColumnNameBinding(String tableName) {
 			this.tableName = tableName;
 		}
 
 		public void addBinding(Identifier logicalName, Column physicalColumn) {
-			final String physicalNameString = physicalColumn.getQuotedName( getDialect() );
-			bindLogicalToPhysical( logicalName, physicalNameString );
-			bindPhysicalToLogical( logicalName, physicalNameString );
-		}
-
-		private void bindLogicalToPhysical(Identifier logicalName, String physicalName) throws DuplicateMappingException {
-			final String existingPhysicalNameMapping = logicalToPhysical.put( logicalName, physicalName );
-			if ( existingPhysicalNameMapping != null ) {
-				final boolean areSame = logicalName.isQuoted()
-						? physicalName.equals( existingPhysicalNameMapping )
-						: physicalName.equalsIgnoreCase( existingPhysicalNameMapping );
-				if ( !areSame ) {
+			final String physicalName = physicalColumn.getQuotedName( getDialect() );
+			final Column existing = logicalToPhysical.get( logicalName );
+			if ( existing != null ) {
+				final String existingName = existing.getQuotedName( getDialect() );
+				final boolean same = logicalName.isQuoted()
+						? physicalName.equals( existingName ) : physicalName.equalsIgnoreCase( existingName );
+				if ( !same ) {
 					throw new DuplicateMappingException(
-							String.format(
-									Locale.ENGLISH,
-									"Table [%s] contains logical column name [%s] referring to multiple physical " +
-											"column names: [%s], [%s]",
-									tableName,
-									logicalName,
-									existingPhysicalNameMapping,
-									physicalName
-							),
-							DuplicateMappingException.Type.COLUMN_BINDING,
-							tableName + "." + logicalName
-					);
+							"Table [" + tableName + "] contains logical column name [" + logicalName
+									+ "] referring to multiple physical column names: [" + existingName + "], [" + physicalName + "]",
+							DuplicateMappingException.Type.COLUMN_BINDING, tableName + "." + logicalName );
 				}
 			}
+			final Identifier existingLogical = findLogicalName( physicalName );
+			if ( existingLogical != null && !existingLogical.equals( logicalName ) ) {
+				throw new DuplicateMappingException(
+						"Table [" + tableName + "] contains physical column name [" + physicalName
+								+ "] referred to by multiple logical column names: [" + logicalName + "], [" + existingLogical + "]",
+						DuplicateMappingException.Type.COLUMN_BINDING, tableName + "." + physicalName );
+			}
+			logicalToPhysical.put( logicalName, physicalColumn );
 		}
 
-		private void bindPhysicalToLogical(Identifier logicalName, String physicalName) throws DuplicateMappingException {
-			final Identifier existingLogicalName = physicalToLogical.put( physicalName, logicalName );
-			if ( existingLogicalName != null && ! existingLogicalName.equals( logicalName ) ) {
-				throw new DuplicateMappingException(
-						String.format(
-								Locale.ENGLISH,
-								"Table [%s] contains physical column name [%s] referred to by multiple logical " +
-										"column names: [%s], [%s]",
-								tableName,
-								physicalName,
-								logicalName,
-								existingLogicalName
-						),
-						DuplicateMappingException.Type.COLUMN_BINDING,
-						tableName + "." + physicalName
-				);
+		private Identifier findLogicalName(String physicalName) {
+			for ( var entry : logicalToPhysical.entrySet() ) {
+				if ( entry.getValue().getQuotedName( getDialect() ).equals( physicalName ) ) {
+					return entry.getKey();
+				}
 			}
+			return null;
 		}
 	}
 
@@ -1114,6 +1113,8 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public void addColumnNameBinding(Table table, Identifier logicalName, Column column) throws DuplicateMappingException {
+		getRelationalModelCorrespondences().columnNames().register( table,
+				org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName( logicalName ), column );
 		TableColumnNameBinding binding;
 
 		if ( columnNameBindingByTableMap == null ) {
@@ -1156,9 +1157,9 @@ public class InFlightMetadataCollectorImpl
 		while ( currentTable != null ) {
 			final TableColumnNameBinding binding = columnNameBindingByTableMap.get( currentTable );
 			if ( binding != null ) {
-				final String physicalName = binding.logicalToPhysical.get( logicalName );
-				if ( physicalName != null ) {
-					return physicalName;
+				final Column physicalColumn = binding.logicalToPhysical.get( logicalName );
+				if ( physicalColumn != null ) {
+					return physicalColumn.getQuotedName( getDialect() );
 				}
 			}
 			currentTable =
@@ -1186,7 +1187,7 @@ public class InFlightMetadataCollectorImpl
 		while ( currentTable != null ) {
 			final TableColumnNameBinding binding = columnNameBindingByTableMap.get( currentTable );
 			if ( binding != null ) {
-				logicalName = binding.physicalToLogical.get( physicalNameString );
+				logicalName = binding.findLogicalName( physicalNameString );
 				if ( logicalName != null ) {
 					break;
 				}
@@ -1203,7 +1204,7 @@ public class InFlightMetadataCollectorImpl
 					+ physicalNameString + "' in table '" + table.getName() + "'" );
 		}
 
-		return logicalName.render();
+		return logicalName.toString();
 	}
 
 	@Override
@@ -1564,10 +1565,7 @@ public class InFlightMetadataCollectorImpl
 				if ( foreignKey.getReferencedTable() == null ) {
 					foreignKey.setReferencedTable( referencedClass.getTable() );
 				}
-				final Identifier nameIdentifier =
-						getMappingResolutionOptions().getImplicitNamingStrategy()
-								.determineForeignKeyName( new ForeignKeyNameSource( foreignKey, table, buildingContext ) );
-				foreignKey.setName( nameIdentifier.render( dialect ) );
+				org.hibernate.boot.model.naming.internal.ForeignKeyNaming.finish( foreignKey, buildingContext );
 				foreignKey.alignColumns();
 			}
 		}
@@ -1652,6 +1650,9 @@ public class InFlightMetadataCollectorImpl
 	public MetadataImpl buildMetadataInstance(MetadataBuildingContext buildingContext) {
 		processSecondPasses( buildingContext );
 		processGeneratorContributions();
+		org.hibernate.boot.mapping.internal.materialize.IndexMappingMaterializer.finishIndexes( buildingContext );
+		org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer.finishColumnUniqueKeys(
+				collectTableMappings(), buildingContext );
 
 		try {
 			return new MetadataImpl(

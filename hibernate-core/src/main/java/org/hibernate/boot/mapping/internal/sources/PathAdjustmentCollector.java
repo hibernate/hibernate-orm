@@ -148,6 +148,9 @@ class PathAdjustmentCollector {
 	}
 
 	private static String relativePath(String memberPrefix, String path) {
+		if ( path != null && path.equals( memberPrefix.substring( 0, memberPrefix.length() - 1 ) ) ) {
+			return "";
+		}
 		return path != null && path.startsWith( memberPrefix )
 				? path.substring( memberPrefix.length() )
 				: null;

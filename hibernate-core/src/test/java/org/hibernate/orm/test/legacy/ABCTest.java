@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.legacy;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -73,8 +75,8 @@ public class ABCTest {
 		Table table = scope.getMetadataImplementor()
 				.getDatabase()
 				.getDefaultNamespace()
-				.locateTable( Identifier.toIdentifier( "TA" ) );
-		Iterator<Index> indexItr = table.getIndexes().values().iterator();
+				.locateTable( logicalName( Identifier.toIdentifier( "TA" ) ) );
+		Iterator<Index> indexItr = ((org.hibernate.mapping.PhysicalTable) table).getIndexes().values().iterator();
 		boolean found = false;
 		while ( indexItr.hasNext() ) {
 			final Index index = indexItr.next();

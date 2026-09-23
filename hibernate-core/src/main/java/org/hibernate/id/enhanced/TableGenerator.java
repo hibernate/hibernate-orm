@@ -4,6 +4,16 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.relational.naming.internal.QualifiedPhysicalNameSnapshot;
+
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -194,7 +204,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	private Table table;
 
 	private QualifiedName qualifiedTableName;
-	private QualifiedName physicalTableName;
+	private transient QualifiedPhysicalName physicalTableName;
+	private QualifiedPhysicalNameSnapshot physicalTableNameSnapshot;
 
 	private String segmentColumnName;
 	private String segmentValue;
@@ -337,7 +348,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 						.getSetting( TABLE_GENERATOR_STORE_LAST_USED, BOOLEAN, true );
 		identifierType = creationContext.getType();
 
-		table = creationContext.getValue().getTable();
+		table = creationContext.getValue().getColumnContainer().requireTable();
 
 		final var jdbcEnvironment = creationContext.getDatabase().getJdbcEnvironment();
 
@@ -389,8 +400,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			JdbcEnvironment jdbcEnvironment,
 			ServiceRegistry serviceRegistry) {
 		final var identifierHelper = jdbcEnvironment.getIdentifierHelper();
-		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, params ) );
-		final Identifier schema = identifierHelper.toIdentifier( getString( SCHEMA, params ) );
+		final Identifier catalog = Identifier.toIdentifier( getString( CATALOG, params ), false, false, true );
+		final Identifier schema = Identifier.toIdentifier( getString( SCHEMA, params ), false, false, true );
 		final String tableName = getString( TABLE_PARAM, params );
 		return tableName( params, serviceRegistry, tableName, catalog, schema, identifierHelper );
 	}
@@ -405,7 +416,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			return explicitTableName.contains(".")
 					? QualifiedNameParser.INSTANCE.parse( explicitTableName )
 					: new QualifiedNameParser.NameParts( catalog, schema,
-							identifierHelper.toIdentifier( explicitTableName ) );
+							Identifier.toIdentifier( explicitTableName, false, false, true ) );
 		}
 		else {
 			return getNamingStrategy( params, serviceRegistry )
@@ -698,13 +709,14 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	@Override
 	public void registerExportables(Database database) {
 		final var namespace = database.locateNamespace(
-				qualifiedTableName.getCatalogName(),
-				qualifiedTableName.getSchemaName()
+				logicalName( qualifiedTableName.getCatalogName() ),
+				logicalName( qualifiedTableName.getSchemaName() )
 		);
-		final var existingTable = namespace.locateTable( qualifiedTableName.getObjectName() );
-		final var table = existingTable == null ? createTable( database, namespace ) : existingTable;
+		final var existingTable = namespace.locateTable( logicalName( qualifiedTableName.getObjectName() ) );
+		final var table = existingTable == null ? createTable( database, namespace ) : (PhysicalTable) existingTable;
 		// allow physical naming strategies a chance to kick in
-		physicalTableName = table.getQualifiedTableName();
+		physicalTableName = ((NamedTable) table).getPhysicalName();
+		physicalTableNameSnapshot = QualifiedPhysicalNameSnapshot.from( physicalTableName );
 		registerExportCommands(
 				table,
 				this.table,
@@ -719,9 +731,9 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	private static void registerExportCommands(
-			Table generatorTable,
+			PhysicalTable generatorTable,
 			Table entityTable,
-			QualifiedName physicalTableName,
+			QualifiedPhysicalName physicalTableName,
 			String segmentColumnName,
 			String segmentValue,
 			String valueColumnName,
@@ -729,15 +741,16 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			boolean storeLastUsedValue,
 			Optimizer optimizer) {
 		final var optimizerState = new OptimizerResetState( optimizer );
+		final var nameSnapshot = QualifiedPhysicalNameSnapshot.from( physicalTableName );
 		generatorTable.addInitCommand( context -> {
 			final int value = storeLastUsedValue ? initialValue - 1 : initialValue;
-			return new InitCommand( "insert into " + context.format( physicalTableName )
+			return new InitCommand( "insert into " + context.format( nameSnapshot.restore( context.getPhysicalNameFactory() ) )
 					+ "(" + segmentColumnName + ", " + valueColumnName + ")"
 					+ " values ('" + segmentValue + "'," + value + ")" );
 		} );
 		generatorTable.addResyncCommand( (context, isolator) -> {
-			final String sequenceTableName = context.format( physicalTableName );
-			final String tableName = context.format( entityTable.getQualifiedTableName() );
+			final String sequenceTableName = context.format( nameSnapshot.restore( context.getPhysicalNameFactory() ) );
+			final String tableName = entityTable.getTableExpression( context );
 			final String primaryKeyColumnName = entityTable.getPrimaryKey().getColumn( 0 ).getName();
 			final int adjustment = optimizerState.adjustment() - 1;
 			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
@@ -761,17 +774,17 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		generatorTable.addResetCommand( context -> {
 			optimizerState.reset();
 			return new InitCommand(
-					"update " + context.format( physicalTableName )
+					"update " + context.format( nameSnapshot.restore( context.getPhysicalNameFactory() ) )
 					+ " set " + valueColumnName + " = " + initialValue
 					+ " where " + segmentColumnName + " = '" + segmentValue + "'"
 			);
 		} );
 	}
 
-	private Table createTable(Database database, Namespace namespace) {
+	private PhysicalTable createTable(Database database, Namespace namespace) {
 		final var table =
-				namespace.createTable( qualifiedTableName.getObjectName(),
-						identifier -> new Table( contributor, namespace, identifier, false ) );
+				(PhysicalTable) namespace.createTable( logicalName( qualifiedTableName.getObjectName() ),
+						identifier -> new PhysicalTable( contributor, namespace, identifier, false ) );
 		if ( isNotBlank( options ) ) {
 			table.setOptions( options );
 		}
@@ -809,6 +822,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
+		physicalTableName = physicalTableNameSnapshot.restore( context.getPhysicalNameFactory() );
 		selectQuery = buildSelectQuery( context );
 		updateQuery = buildUpdateQuery( context );
 		insertQuery = buildInsertQuery( context );

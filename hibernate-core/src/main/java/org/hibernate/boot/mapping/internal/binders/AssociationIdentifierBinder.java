@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,6 +74,10 @@ class AssociationIdentifierBinder {
 			return false;
 		}
 
+		if ( !strict && JoinColumnNaming.hasDerivedIdentifier( associationIdentifierBinding.targetTypeBinder() ) ) {
+			return false;
+		}
+
 		final IdentifierBinding targetIdentifierBinding = bindingState.getIdentifierBinding(
 				associationIdentifierBinding.targetTypeBinder().getManagedType().getHierarchy().getRoot()
 		);
@@ -136,15 +142,30 @@ class AssociationIdentifierBinder {
 		for ( int i = 0; i < columnCount; i++ ) {
 			final JoinColumn joinColumn = orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i );
 			final String targetColumnName = targetColumns.columns().get( i ).getName();
+			final var implicitName = JoinColumnNaming.toOne(
+					associationIdentifierBinding.ownerBinding(), associationIdentifierBinding.targetTypeBinder().getTypeBinding(),
+					associationIdentifierBinding.property().getName(), targetIdentifierBinding.rootClass().getTable(),
+					targetColumns.columns(), orderedJoinColumns.stream().map( JoinColumn::referencedColumnName ).toList(), i, bindingState );
 			final Column column = ColumnBinder.bindColumn(
 					org.hibernate.boot.mapping.internal.sources.ColumnSource.from( joinColumn ),
-					() -> associationIdentifierBinding.property().getName() + "_" + targetColumnName,
+					implicitName,
 					false,
 					false,
 					bindingOptions,
 					bindingState
 			);
 			associationIdentifierBinding.ownerBinding().getTable().addColumn( column );
+			ColumnBinder.registerColumnNameBinding(
+					associationIdentifierBinding.ownerBinding().getTable(),
+					ColumnBinder.logicalColumnName(
+							org.hibernate.boot.mapping.internal.sources.ColumnSource.from( joinColumn ),
+							implicitName
+					),
+					column,
+					bindingOptions,
+					bindingState
+			);
+
 				associationIdentifierBinding.value().addColumn( column, true, false );
 				if ( associationIdentifierBinding.identifierMapperValue().get() != null ) {
 					addIdentifierColumn( associationIdentifierBinding.identifierMapperValue().get(), i, column, false );
@@ -357,7 +378,7 @@ class AssociationIdentifierBinder {
 			final List<String> referencedColumnNames = referencedColumnNames( joinColumns );
 			final List<Column> targetColumns = new ArrayList<>( referencedColumnNames.size() );
 			for ( String referencedColumnName : referencedColumnNames ) {
-				targetColumns.add( new Column( referencedColumnName ) );
+				targetColumns.add( new Column( ColumnNameHelper.physicalName( referencedColumnName, bindingState.getDatabase() ) ) );
 			}
 			return TargetColumns.nonPrimaryKey( targetColumns, referencedColumnNames );
 		}
@@ -382,7 +403,7 @@ class AssociationIdentifierBinder {
 			}
 			for ( Column targetIdentifierColumn : targetIdentifierColumns ) {
 				if ( bindingState.getRelationalModelCorrespondences().columnNames()
-						.matches( targetIdentifierColumn, bindingState.getDatabase().toIdentifier( joinColumn.referencedColumnName() ) ) ) {
+						.matches( targetIdentifierColumn, bindingState.getDatabase().toLogicalName( joinColumn.referencedColumnName() ) ) ) {
 					return true;
 				}
 			}
@@ -448,7 +469,7 @@ class AssociationIdentifierBinder {
 			String ownerClassName,
 			String propertyName) {
 		for ( JoinColumn joinColumn : joinColumns ) {
-			if ( bindingState.getRelationalModelCorrespondences().columnNames().matches( targetColumn, database.toIdentifier( joinColumn.referencedColumnName() ) ) ) {
+			if ( bindingState.getRelationalModelCorrespondences().columnNames().matches( targetColumn, database.toLogicalName( joinColumn.referencedColumnName() ) ) ) {
 				return joinColumn;
 			}
 		}

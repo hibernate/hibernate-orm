@@ -4,8 +4,9 @@
  */
 package org.hibernate.tool.reveng.jdbc2cfg.ForeignKeys;
 
+import org.hibernate.tool.reveng.test.utils.PhysicalNameHelper;
+
 import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
@@ -35,6 +36,10 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * @author koen
  */
 public class TestCase {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 
 	private Metadata metadata = null;
 	private RevengStrategy reverseEngineeringStrategy = null;
@@ -103,8 +108,7 @@ public class TestCase {
 		assertEquals(1, fk.getColumnSpan() );
 		assertSame(
 				fk.getColumn(0),
-				child.getColumn(
-						new Column(JdbcUtil.toIdentifier(this, "MASTERREF"))));
+				child.getColumn( PhysicalNameHelper.columnName( JdbcUtil.toIdentifier(this, "MASTERREF"), COLUMN_NAMES ) ));
 	}
 
 	@Test

@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import java.sql.SQLException;
 
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
@@ -47,7 +51,6 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.pagination.SQLServer2005LimitHandler;
@@ -102,7 +105,6 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.Table;
 import org.hibernate.dialect.sql.ast.spi.FetchClauseSupport;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
@@ -1227,7 +1229,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect implement
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return this.sqlServerTableExporter;
 	}
 
@@ -1246,7 +1248,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect implement
 		}
 
 		@Override
-		protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata, SqlStringGenerationContext context) {
+		protected String getFormattedSequenceName(QualifiedPhysicalName name, Metadata metadata, SqlStringGenerationContext context) {
 			// SQL Server does not allow the catalog in the sequence name.
 			// See https://docs.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver15&viewFallbackFrom=sql-server-ver12
 			// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.

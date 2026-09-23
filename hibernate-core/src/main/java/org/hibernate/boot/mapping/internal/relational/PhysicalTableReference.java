@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.PhysicalName;
 
 /// Persistent table reference with a concrete physical table name.
 ///
@@ -15,5 +15,5 @@ import org.hibernate.boot.model.naming.Identifier;
 /// @author Steve Ebersole
 public interface PhysicalTableReference extends PersistentTableReference {
 	/// The physical table name used by the database model.
-	Identifier getPhysicalTableName();
+	PhysicalName getPhysicalTableName();
 }

@@ -4,13 +4,18 @@
  */
 package org.hibernate.orm.test.annotations.namingstrategy;
 
-import org.hibernate.boot.model.naming.Identifier;
+import jakarta.annotation.Nonnull;
+
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 public class DummyNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 	@Override
-	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier( "T" + logicalName.getText() );
+	@Nonnull
+	public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
+		return jdbcEnvironment.getPhysicalNameFactory().create( "T" + logicalName.getText(), logicalName.isQuoted() );
 	}
 }

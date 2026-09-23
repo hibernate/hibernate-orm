@@ -4,6 +4,8 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
 import java.sql.SQLException;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
@@ -97,7 +99,6 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
@@ -1145,7 +1146,7 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return gaussDBTableExporter;
 	}
 

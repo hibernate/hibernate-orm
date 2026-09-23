@@ -4,11 +4,12 @@
  */
 package org.hibernate.dialect.schema.spi;
 
+import org.hibernate.mapping.PhysicalTable;
+
 import org.hibernate.SPI;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -27,7 +28,7 @@ import static org.hibernate.SPI.Role.USE;
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface TableMigrator {
 	String[] getSqlAlterStrings(
-			Table table,
+			PhysicalTable table,
 			Metadata metadata,
 			TableInformation tableInfo,
 			SqlStringGenerationContext context);

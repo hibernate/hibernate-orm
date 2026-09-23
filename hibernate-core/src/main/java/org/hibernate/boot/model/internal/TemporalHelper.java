@@ -4,6 +4,12 @@
  */
 package org.hibernate.boot.model.internal;
 
+import org.hibernate.boot.model.naming.internal.ImplicitNamingSourceHelper;
+
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +66,10 @@ public class TemporalHelper {
 			Temporal.HistoryPartitioning historyPartitioning,
 			MetadataBuildingContext context,
 			BindingState bindingState) {
+		if ( !(table instanceof PhysicalTable) ) {
+			return;
+		}
+
 		final var collector = context.getMetadataCollector();
 		final boolean partitioned = historyPartitioning != null;
 		final String currentPartitionName =
@@ -183,7 +193,7 @@ public class TemporalHelper {
 								+ "_history";
 		final boolean explicitHistoryName =
 				hasExplicitHistoryTableName
-						|| table.getNameIdentifier().isExplicit();
+						|| ImplicitNamingSourceHelper.tableName( table ).isExplicit();
 		final var historyTable = collector.addTable(
 				table.getSchema(),
 				table.getCatalog(),
@@ -193,7 +203,7 @@ public class TemporalHelper {
 				context,
 				explicitHistoryName
 		);
-		collector.addTableNameBinding( table.getNameIdentifier(), historyTable );
+		collector.addTableNameBinding( ImplicitNamingSourceHelper.tableName( table ), historyTable );
 		copyTableColumns( table, historyTable );
 		return historyTable;
 	}
@@ -301,8 +311,8 @@ public class TemporalHelper {
 				strategy,
 				dialect
 		);
-		table.setExtraDeclarations( temporalTableSupport.getExtraTemporalTableDeclarations( request ) );
-		table.setOptions( appendOption( table.getOptions(),
+		((PhysicalTable) table).setExtraDeclarations( temporalTableSupport.getExtraTemporalTableDeclarations( request ) );
+		((PhysicalTable) table).setOptions( appendOption( ((PhysicalTable) table).getOptions(),
 				temporalTableSupport.getTemporalTableOptions( request ) ) );
 	}
 
@@ -380,12 +390,11 @@ public class TemporalHelper {
 			BindingState bindingState) {
 		final var database = context.getMetadataCollector().getDatabase();
 		final var basicValue = BasicValue.unregistered( context, table );
-		final var column = new Column();
+		final var column = new Column( setTemporalColumnName( columnName, context.getMetadataCollector().getDatabase(),
+				context.getBuildingPlan().getPhysicalNamingStrategy() ) );
 		column.setNullable( nullable );
 		column.setValue( basicValue );
 		basicValue.addColumn( column );
-		setTemporalColumnName( columnName, column, database,
-				context.getBuildingPlan().getPhysicalNamingStrategy() );
 		bindingState.addStateManagementFinalizer(
 				new TemporalColumnFinalizer( column, basicValue, temporalPrecision, database, context )
 		);
@@ -444,17 +453,13 @@ public class TemporalHelper {
 		}
 	}
 
-	private static void setTemporalColumnName(
+	private static org.hibernate.relational.naming.spi.PhysicalName setTemporalColumnName(
 			String name,
-			Column column,
 			Database database,
 			PhysicalNamingStrategy physicalNamingStrategy) {
-		final Identifier physicalColumnName =
-				physicalNamingStrategy.toPhysicalColumnName(
-						database.toIdentifier( name ),
-						database.getJdbcEnvironment()
-				);
-		column.setName( physicalColumnName.render( database.getDialect() ) );
+		return PhysicalNamingStrategyHelper.resolve(
+				PhysicalNamingStrategyHelper.logicalName( database.toIdentifier( name ) ),
+				database.getJdbcEnvironment(), physicalNamingStrategy::toPhysicalColumnName, "column", false );
 	}
 
 	private static void addTemporalCheckConstraint(
@@ -467,7 +472,7 @@ public class TemporalHelper {
 				.createTemporalTableCheckConstraint( context.getTemporalTableStrategy() ) ) {
 			final String rowStartName = rowStartColumn.getQuotedName( dialect );
 			final String rowEndName = rowEndColumn.getQuotedName( dialect );
-			table.addCheck( new CheckConstraint( rowEndName + " is null or " + rowEndName + " > " + rowStartName ) );
+			((PhysicalTable) table).addCheck( new CheckConstraint( rowEndName + " is null or " + rowEndName + " > " + rowStartName ) );
 		}
 	}
 

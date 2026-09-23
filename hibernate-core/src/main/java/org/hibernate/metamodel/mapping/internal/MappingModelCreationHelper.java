@@ -592,7 +592,7 @@ public class MappingModelCreationHelper {
 				);
 				final String mapKeyTableExpression =
 						bootValueMapping instanceof Map map && map.getMapKeyPropertyName() != null
-								? getTableIdentifierExpression( map.getIndex().getTable(), creationProcess )
+								? getTableIdentifierExpression( map.getIndex().getColumnContainer().requireTable(), creationProcess )
 								: tableExpression;
 				indexDescriptor = interpretMapKey(
 						bootValueMapping,
@@ -873,7 +873,7 @@ public class MappingModelCreationHelper {
 			return true;
 		}
 
-		final String tableName = getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess );
+		final String tableName = getTableIdentifierExpression( bootValueMapping.getColumnContainer().requireTable(), creationProcess );
 
 		attributeMapping.setIdentifyingColumnsTableExpression( tableName );
 
@@ -950,7 +950,7 @@ public class MappingModelCreationHelper {
 		final var simpleFkTarget = fkTarget.asBasicValuedModelPart();
 		if ( simpleFkTarget != null ) {
 			final var columnIterator = bootValueMapping.getSelectables().iterator();
-			final var table = bootValueMapping.getTable();
+			final var table = bootValueMapping.getColumnContainer().requireTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
 			final PropertyAccess declaringKeyPropertyAccess = getDeclaringKeyPropertyAccess(
 					attributeMapping,
@@ -1154,7 +1154,7 @@ public class MappingModelCreationHelper {
 			keyTableExpression =
 					keyTableExpression != null
 							? keyTableExpression
-							: getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess );
+							: getTableIdentifierExpression( bootValueMapping.getColumnContainer().requireTable(), creationProcess );
 			keySelectableMappings = SelectableMappingsImpl.from(
 					keyTableExpression,
 					bootValueMapping,
@@ -1444,7 +1444,7 @@ public class MappingModelCreationHelper {
 			for ( int i = 0; i < targetSelectables.size(); i++ ) {
 				if ( !used[i]
 						&& targetSelectables.get( i ) instanceof Column targetColumn
-						&& sourceColumn.getNameIdentifier( database ).matches( targetColumn.getNameIdentifier( database ) ) ) {
+						&& sourceColumn.getPhysicalName().equals( targetColumn.getPhysicalName() ) ) {
 					return i;
 				}
 			}
@@ -1471,8 +1471,8 @@ public class MappingModelCreationHelper {
 			Database database) {
 		for ( int i = 0; i < targetSelectables.size(); i++ ) {
 			if ( targetSelectables.get( i ) instanceof Column targetColumn
-					&& referencedColumn.getNameIdentifier( database )
-							.matches( targetColumn.getNameIdentifier( database ) ) ) {
+					&& referencedColumn.getPhysicalName()
+							.equals( targetColumn.getPhysicalName() ) ) {
 				return i;
 			}
 		}
@@ -1536,10 +1536,7 @@ public class MappingModelCreationHelper {
 	}
 
 	public static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
-		return table.getSubselect() != null
-				? "( " + table.getSubselect() + " )"
-				: creationProcess.getCreationContext().getSqlStringGenerationContext()
-						.format( table.getQualifiedTableName() );
+		return table.getTableExpression( creationProcess.getCreationContext().getSqlStringGenerationContext() );
 	}
 
 	public static String getTableIdentifierExpression(Table table, SessionFactoryImplementor sessionFactory) {
@@ -1551,7 +1548,7 @@ public class MappingModelCreationHelper {
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		return table.getSubselect() != null
 				? "( " + table.getSubselect() + " )"
-				: sqlStringGenerationContext.format( table.getQualifiedTableName() );
+				: table.getTableExpression( sqlStringGenerationContext );
 	}
 
 	private static CollectionPart interpretMapKey(

@@ -16,7 +16,7 @@ import jakarta.persistence.SecondaryTable;
 import org.hibernate.MappingException;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
 import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
@@ -67,7 +67,7 @@ class AssociationTargetBinder {
 	}
 
 	private Property resolveReferencedProperty(AssociationTargetBinding associationTargetBinding) {
-		final List<Identifier> referencedColumnNames = referencedColumnNames( associationTargetBinding );
+		final List<LogicalName> referencedColumnNames = referencedColumnNames( associationTargetBinding );
 		final PersistentClass targetBinding = associationTargetBinding.targetTypeBinder().getTypeBinding();
 		for ( Property property : referenceableProperties( targetBinding ) ) {
 			if ( property.getValue() instanceof SimpleValue simpleValue
@@ -116,7 +116,7 @@ class AssociationTargetBinder {
 	private Property resolveSecondaryTableKeyProperty(
 			AssociationTargetBinding associationTargetBinding,
 			PersistentClass targetBinding,
-			List<Identifier> referencedColumnNames) {
+			List<LogicalName> referencedColumnNames) {
 		final Property identifierProperty = targetBinding.getIdentifierProperty();
 		if ( identifierProperty == null ) {
 			return null;
@@ -139,7 +139,7 @@ class AssociationTargetBinder {
 
 	private boolean sourceSecondaryTableKeyMatches(
 			AssociationTargetBinding associationTargetBinding,
-			List<Identifier> referencedColumnNames) {
+			List<LogicalName> referencedColumnNames) {
 		final SecondaryTable[] secondaryTables = associationTargetBinding.targetTypeBinder()
 				.getManagedType()
 				.getClassDetails()
@@ -157,13 +157,13 @@ class AssociationTargetBinder {
 
 	private boolean primaryKeyJoinColumnsMatch(
 			PrimaryKeyJoinColumn[] primaryKeyJoinColumns,
-			List<Identifier> referencedColumnNames) {
+			List<LogicalName> referencedColumnNames) {
 		if ( primaryKeyJoinColumns.length != referencedColumnNames.size() ) {
 			return false;
 		}
 		final Database database = entityBinder.getBindingState().getDatabase();
 		for ( int i = 0; i < primaryKeyJoinColumns.length; i++ ) {
-			if ( !database.toIdentifier( primaryKeyJoinColumns[i].name() ).matches( referencedColumnNames.get( i ) ) ) {
+			if ( !database.toLogicalName( primaryKeyJoinColumns[i].name() ).equals( referencedColumnNames.get( i ) ) ) {
 				return false;
 			}
 		}
@@ -172,10 +172,10 @@ class AssociationTargetBinder {
 
 	private List<Property> resolveReferencedProperties(
 			PersistentClass targetBinding,
-			List<Identifier> referencedColumnNames,
+			List<LogicalName> referencedColumnNames,
 			AssociationTargetBinding associationTargetBinding) {
 		final LinkedHashSet<Property> result = new LinkedHashSet<>();
-		for ( Identifier referencedColumnName : referencedColumnNames ) {
+		for ( LogicalName referencedColumnName : referencedColumnNames ) {
 			final Property property = findPropertyContainingColumn( targetBinding, referencedColumnName );
 			if ( property == null ) {
 				return List.of();
@@ -200,7 +200,7 @@ class AssociationTargetBinder {
 	private List<Property> coalesceComponentProperties(
 			PersistentClass targetBinding,
 			List<Property> properties,
-			List<Identifier> referencedColumnNames) {
+			List<LogicalName> referencedColumnNames) {
 		final ArrayList<Property> result = new ArrayList<>( properties.size() );
 		final Map<Property, Property> partialComponents = new LinkedHashMap<>();
 		for ( Property property : properties ) {
@@ -282,7 +282,7 @@ class AssociationTargetBinder {
 	private Property findCompleteComponentProperty(
 			PersistentClass targetBinding,
 			Property property,
-			List<Identifier> referencedColumnNames) {
+			List<LogicalName> referencedColumnNames) {
 		for ( Property referenceableProperty : referenceableProperties( targetBinding ) ) {
 			final Property match = findCompleteComponentProperty(
 					referenceableProperty,
@@ -299,7 +299,7 @@ class AssociationTargetBinder {
 	private Property findCompleteComponentProperty(
 			Property componentProperty,
 			Property property,
-			List<Identifier> referencedColumnNames) {
+			List<LogicalName> referencedColumnNames) {
 		if ( !( componentProperty.getValue() instanceof Component component ) ) {
 			return null;
 		}
@@ -318,9 +318,9 @@ class AssociationTargetBinder {
 
 	private boolean referencedColumnNamesContainInOrder(
 			List<Column> columns,
-			List<Identifier> referencedColumnNames) {
+			List<LogicalName> referencedColumnNames) {
 		int columnIndex = 0;
-		for ( Identifier referencedColumnName : referencedColumnNames ) {
+		for ( LogicalName referencedColumnName : referencedColumnNames ) {
 			if ( entityBinder.getBindingState().getRelationalModelCorrespondences().columnNames()
 					.matches( columns.get( columnIndex ), referencedColumnName ) ) {
 				columnIndex++;
@@ -332,7 +332,7 @@ class AssociationTargetBinder {
 		return false;
 	}
 
-	private Property findPropertyContainingColumn(PersistentClass targetBinding, Identifier referencedColumnName) {
+	private Property findPropertyContainingColumn(PersistentClass targetBinding, LogicalName referencedColumnName) {
 		for ( Property property : referenceableProperties( targetBinding ) ) {
 			final Property match = findPropertyContainingColumn( property, referencedColumnName );
 			if ( match != null ) {
@@ -342,7 +342,7 @@ class AssociationTargetBinder {
 		return null;
 	}
 
-	private Property findPropertyContainingColumn(Property property, Identifier referencedColumnName) {
+	private Property findPropertyContainingColumn(Property property, LogicalName referencedColumnName) {
 		if ( property.getValue() instanceof Component component ) {
 			for ( Property subProperty : component.getProperties() ) {
 				final Property match = findPropertyContainingColumn( subProperty, referencedColumnName );
@@ -357,7 +357,7 @@ class AssociationTargetBinder {
 		return null;
 	}
 
-	private boolean containsColumn(Value value, Identifier referencedColumnName) {
+	private boolean containsColumn(Value value, LogicalName referencedColumnName) {
 		for ( Column column : value.getColumns() ) {
 			if ( entityBinder.getBindingState().getRelationalModelCorrespondences().columnNames()
 					.matches( column, referencedColumnName ) ) {
@@ -405,8 +405,8 @@ class AssociationTargetBinder {
 		return entityBinder.getBindingState().getMetadataBuildingContext();
 	}
 
-	private List<Identifier> referencedColumnNames(AssociationTargetBinding associationTargetBinding) {
-		final List<Identifier> result = new ArrayList<>( associationTargetBinding.referencedColumnNames().size() );
+	private List<LogicalName> referencedColumnNames(AssociationTargetBinding associationTargetBinding) {
+		final List<LogicalName> result = new ArrayList<>( associationTargetBinding.referencedColumnNames().size() );
 		final Database database = entityBinder.getBindingState().getDatabase();
 		for ( String referencedColumnName : associationTargetBinding.referencedColumnNames() ) {
 			if ( StringHelper.isEmpty( referencedColumnName ) ) {
@@ -415,12 +415,12 @@ class AssociationTargetBinder {
 								+ associationTargetBinding.role()
 				);
 			}
-			result.add( database.toIdentifier( referencedColumnName ) );
+			result.add( database.toLogicalName( referencedColumnName ) );
 		}
 		return result;
 	}
 
-	private boolean columnNamesMatch(List<Column> columns, List<Identifier> referencedColumnNames) {
+	private boolean columnNamesMatch(List<Column> columns, List<LogicalName> referencedColumnNames) {
 		if ( columns.size() != referencedColumnNames.size() ) {
 			return false;
 		}

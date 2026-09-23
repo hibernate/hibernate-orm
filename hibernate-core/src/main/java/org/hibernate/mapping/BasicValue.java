@@ -100,7 +100,7 @@ public class BasicValue extends SimpleValue {
 	 * bootstrap paths should apply an explicit {@link Resolution} when the
 	 * value's type has been resolved.
 	 */
-	public BasicValue(MetadataBuildingContext buildingContext, Table table) {
+	public BasicValue(MetadataBuildingContext buildingContext, ColumnContainer table) {
 		super( buildingContext, table );
 	}
 
@@ -108,7 +108,7 @@ public class BasicValue extends SimpleValue {
 		return new BasicValue( buildingContext );
 	}
 
-	public static BasicValue unregistered(MetadataBuildingContext buildingContext, Table table) {
+	public static BasicValue unregistered(MetadataBuildingContext buildingContext, ColumnContainer table) {
 		return new BasicValue( buildingContext, table );
 	}
 
@@ -128,7 +128,7 @@ public class BasicValue extends SimpleValue {
 	 * The resolution is immediately finalized against the current selectable
 	 * state.
 	 */
-	public BasicValue(MetadataBuildingContext buildingContext, Table table, Resolution<?> resolution) {
+	public BasicValue(MetadataBuildingContext buildingContext, ColumnContainer table, Resolution<?> resolution) {
 		this( buildingContext, table );
 		applyResolution( resolution, MappingResolutionState.from( buildingContext ) );
 	}
@@ -291,7 +291,7 @@ public class BasicValue extends SimpleValue {
 
 //		final Selectable column = getColumn();
 //		if ( column == incomingColumn || column.getText().equals( incomingColumn.getText() ) ) {
-//			LOG.debugf( "Skipping column re-registration: %s.%s", getTable().getName(), column.getText() );
+//			LOG.debugf( "Skipping column re-registration: %s.%s", getColumnContainer(), column.getText() );
 //		}
 //		else {
 //			throw new IllegalStateException(
@@ -386,7 +386,7 @@ public class BasicValue extends SimpleValue {
 				.getExtraCreateTableInfo(
 						resolution.getRelationalJavaType(),
 						getColumn().getText(),
-						getTable().getName(),
+						getColumnContainer().requireTable().getName(),
 						database
 				);
 	}

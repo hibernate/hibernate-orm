@@ -14,8 +14,10 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 /// These helpers centralize the interaction between [BindingOptionsImpl], the
 /// JDBC identifier helper, and Hibernate's object-name normalizer.  They are used
 /// by table, column, and discriminator binders whenever source text needs to be
-/// converted into a boot-time identifier or SQL fragment with consistent global
-/// quoting rules.
+/// converted into logical identifiers or SQL fragments. Names processed by the
+/// physical naming strategy retain source quoting here; global and automatic
+/// quoting are applied afterward. Other identifiers and SQL fragments retain
+/// their existing quoting path.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -34,6 +36,11 @@ public class BindingHelper {
 			BindingOptions options,
 			JdbcEnvironment jdbcEnvironment,
 			boolean explicit) {
+		if ( target == QuotedIdentifierTarget.TABLE_NAME || target == QuotedIdentifierTarget.COLUMN_NAME
+				|| target == QuotedIdentifierTarget.CATALOG_NAME || target == QuotedIdentifierTarget.SCHEMA_NAME
+				|| target == QuotedIdentifierTarget.SEQUENCE_NAME || target == QuotedIdentifierTarget.TYPE_NAME ) {
+			return Identifier.toIdentifier( name, false, false, explicit );
+		}
 		final boolean globallyQuoted = options.getGloballyQuotedIdentifierTargets().contains( target );
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name, globallyQuoted, explicit );
 	}

@@ -4,16 +4,20 @@
  */
 package org.hibernate.orm.test.associations;
 
+import jakarta.annotation.Nonnull;
+
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -142,23 +146,26 @@ public class ExplicitIdentifierTest {
 	public static class CustomPhysicalNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 
 		@Override
-		public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return logicalName.isExplicit() ? logicalName
-					: jdbcEnvironment.getIdentifierHelper().toIdentifier( "TABLE_" + logicalName,
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
+			return logicalName.isExplicit() ? jdbcEnvironment.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() )
+					: jdbcEnvironment.getPhysicalNameFactory().create( "TABLE_" + logicalName,
 							logicalName.isQuoted() );
 		}
 
 		@Override
-		public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return logicalName.isExplicit() ? logicalName
-					: jdbcEnvironment.getIdentifierHelper().toIdentifier( "SEQUENCE_" + logicalName,
+		@Nonnull
+		public PhysicalName toPhysicalSequenceName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
+			return logicalName.isExplicit() ? jdbcEnvironment.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() )
+					: jdbcEnvironment.getPhysicalNameFactory().create( "SEQUENCE_" + logicalName,
 							logicalName.isQuoted() );
 		}
 
 		@Override
-		public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return logicalName.isExplicit() ? logicalName
-					: jdbcEnvironment.getIdentifierHelper().toIdentifier( "COLUMN_" + logicalName,
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
+			return logicalName.isExplicit() ? jdbcEnvironment.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() )
+					: jdbcEnvironment.getPhysicalNameFactory().create( "COLUMN_" + logicalName,
 							logicalName.isQuoted() );
 		}
 	}

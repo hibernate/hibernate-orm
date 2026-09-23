@@ -4,29 +4,32 @@
  */
 package org.hibernate.dialect.rowsecurity.internal;
 
+import org.hibernate.relational.naming.spi.PhysicalName;
+
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.QualifiedNameImpl;
-import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurityDdlRequest;
 import org.hibernate.dialect.rowsecurity.spi.TenantIdentifierSource;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.PhysicalTable;
 
 /**
  * @author Steve Ebersole
  */
 final class RowLevelSecurityDdlRequestAdapter implements RowLevelSecurityDdlRequest {
 	private final TenantIdentifierSource tenantIdentifierSource;
-	private final Table table;
+	private final PhysicalTable table;
 	private final Column tenantColumn;
 	private final Metadata metadata;
 	private final SqlStringGenerationContext context;
 
 	RowLevelSecurityDdlRequestAdapter(
 			TenantIdentifierSource tenantIdentifierSource,
-			Table table,
+			PhysicalTable table,
 			Column tenantColumn,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
@@ -49,11 +52,11 @@ final class RowLevelSecurityDdlRequestAdapter implements RowLevelSecurityDdlRequ
 
 	@Override
 	public String qualifiedTableName(String defaultSchema) {
-		final var name = table.getQualifiedTableName();
-		return context.format( new QualifiedTableName(
+		final var name = table.getPhysicalName();
+		return context.format( new QualifiedPhysicalName(
 				name.getCatalogName(),
 				schema( name.getSchemaName(), defaultSchema ),
-				name.getTableName()
+				name.objectName()
 		) );
 	}
 
@@ -62,19 +65,23 @@ final class RowLevelSecurityDdlRequestAdapter implements RowLevelSecurityDdlRequ
 		if ( objectName == null || objectName.isBlank() ) {
 			throw new IllegalArgumentException( "Sibling object name must not be blank" );
 		}
-		return context.format( new QualifiedNameImpl(
+		return context.format( new QualifiedPhysicalName(
 				null,
-				schema( table.getQualifiedTableName().getSchemaName(), defaultSchema ),
-				context.toIdentifier( objectName )
+				schema( table.getPhysicalName().getSchemaName(), defaultSchema ),
+				physical( context.toIdentifier( objectName ) )
 		) );
 	}
 
-	private Identifier schema(Identifier mappedSchema, String fallbackSchema) {
+	private PhysicalName schema(PhysicalName mappedSchema, String fallbackSchema) {
 		if ( mappedSchema != null ) {
 			return mappedSchema;
 		}
 		final Identifier configuredSchema = context.getDefaultSchema();
-		return configuredSchema != null ? configuredSchema : context.toIdentifier( fallbackSchema );
+		return physical( configuredSchema != null ? configuredSchema : context.toIdentifier( fallbackSchema ) );
+	}
+
+	private PhysicalName physical(Identifier identifier) {
+		return identifier == null ? null : context.getPhysicalNameFactory().create( identifier.getText(), identifier.isQuoted() );
 	}
 
 	@Override

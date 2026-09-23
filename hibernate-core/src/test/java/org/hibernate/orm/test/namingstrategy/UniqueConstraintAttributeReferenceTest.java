@@ -1,0 +1,142 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.namingstrategy;
+
+import java.util.function.Consumer;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.Table;
+
+import org.hibernate.AnnotationException;
+import org.hibernate.annotations.Formula;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.mapping.PhysicalTable;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+/// Unique constraints share index attribute fallback and single-column validation.
+///
+/// @author Steve Ebersole
+@BaseUnitTest
+class UniqueConstraintAttributeReferenceTest {
+	@Test
+	void basicNestedInheritedAndAssociationAttributes() {
+		final var physical = new IndexColumnResolutionTest.Prefix();
+		inspect( physical, metadata -> {
+			final var entity = metadata.getEntityBinding( Named.class.getName() );
+			final var table = (PhysicalTable) entity.getTable();
+			final var key = table.getUniqueKeys().get( "attributes_uk" );
+			assertThat( key.getColumns() ).extracting( org.hibernate.mapping.Selectable::getText )
+					.containsExactly( "p_renamed", "p_address_city", "p_inherited_column", "p_target_fk" );
+			for ( var selectable : key.getColumns() ) {
+				assertThat( selectable ).isSameAs( table.getColumn( selectable ) );
+			}
+			assertThat( physical.columns ).filteredOn( "renamed"::equals ).hasSize( 1 );
+			assertThat( physical.columns ).filteredOn( "target_fk"::equals ).hasSize( 1 );
+		}, Named.class, Target.class );
+	}
+
+	@Test
+	void logicalAndPhysicalColumnsWinOverAttributes() {
+		inspect( new IndexColumnResolutionTest.Prefix(), metadata -> {
+			final var table = (PhysicalTable) metadata.getEntityBinding( Precedence.class.getName() ).getTable();
+			assertThat( table.getUniqueKeys().get( "precedence_uk" ).getColumns() )
+					.extracting( org.hibernate.mapping.Selectable::getText ).containsExactly( "p_code", "p_other" );
+		}, Precedence.class );
+	}
+
+	@Test
+	void secondaryTableAttribute() {
+		inspect( new IndexColumnResolutionTest.Prefix(), metadata -> {
+			final var table = (PhysicalTable) metadata.getEntityBinding( Secondary.class.getName() ).getJoins().get( 0 ).getTable();
+			assertThat( table.getUniqueKeys().get( "secondary_uk" ).getColumns() )
+					.extracting( org.hibernate.mapping.Selectable::getText ).containsExactly( "p_details_text" );
+		}, Secondary.class );
+	}
+
+	@Test void noLeafGuessing() { rejected( "unknown column 'city'", Leaf.class ); }
+	@Test void noCompositeExpansion() { rejected( "exactly one column (found 2)", Composite.class ); }
+	@Test void noCompositeAssociationExpansion() { rejected( "exactly one column (found 2)", CompositeAssociation.class, CompositeTarget.class ); }
+	@Test void noFormulaExpansion() { rejected( "contains a formula", FormulaEntity.class ); }
+	@Test void noOtherTableColumn() { rejected( "actual column on the declaring table", WrongTable.class ); }
+	@Test void noAssociationTraversal() { rejected( "only supported through embeddables", Traversal.class, Target.class ); }
+	@Test void noInverseAssociation() { rejected( "inverse association", Inverse.class, Owner.class ); }
+
+	private void rejected(String reason, Class<?>... types) {
+		assertThatThrownBy( () -> inspect( new IndexColumnResolutionTest.Prefix(), metadata -> {}, types ) )
+				.isInstanceOf( AnnotationException.class ).hasMessageContaining( reason ).hasMessageContaining( "@Table.uniqueConstraints[0]" );
+	}
+
+	private void inspect(IndexColumnResolutionTest.Prefix physical, Consumer<Metadata> assertion, Class<?>... types) {
+		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
+			final var sources = new MappingSources();
+			for ( var type : types ) { sources.addManagedClass( type ); }
+			assertion.accept( MetadataBuildingTestHelper.buildMetadataWithNaming(
+					registry, sources, new StandardImplicitNamingStrategy(), physical ) );
+		}
+	}
+
+	@MappedSuperclass
+	static class Base { @Id long id; @Column(name = "inherited_column") String inherited; }
+	@Embeddable
+	static class Address { String city; String street; }
+	@Entity
+	static class Target { @Id long id; String name; }
+	@Entity @Table(uniqueConstraints = @UniqueConstraint(name = "attributes_uk",
+			columnNames = {"name", "address.city", "inherited", "target"}))
+	static class Named extends Base {
+		@Column(name = "renamed") String name;
+		@Embedded Address address;
+		@ManyToOne @JoinColumn(name = "target_fk") Target target;
+	}
+	@Entity @Table(uniqueConstraints = @UniqueConstraint(name = "precedence_uk", columnNames = {"code", "p_other"}))
+	static class Precedence {
+		@Id long id;
+		@Column(name = "code") String first;
+		@Column(name = "other") String second;
+		@Column(name = "unselected_one") String code;
+		@Column(name = "unselected_two") String p_other;
+	}
+	@Entity @SecondaryTable(name = "details", uniqueConstraints = @UniqueConstraint(name = "secondary_uk", columnNames = "description"))
+	static class Secondary { @Id long id; @Column(name = "details_text", table = "details") String description; }
+	@Entity @Table(uniqueConstraints = @UniqueConstraint(columnNames = "city"))
+	static class Leaf { @Id long id; @Embedded Address address; }
+	@Entity @Table(uniqueConstraints = @UniqueConstraint(columnNames = "address"))
+	static class Composite { @Id long id; @Embedded Address address; }
+	@Embeddable
+	static class CompositeId implements java.io.Serializable { long first; long second; }
+	@Entity
+	static class CompositeTarget { @EmbeddedId CompositeId id; }
+	@Entity @Table(uniqueConstraints = @UniqueConstraint(columnNames = "target"))
+	static class CompositeAssociation { @Id long id; @ManyToOne CompositeTarget target; }
+	@Entity @Table(uniqueConstraints = @UniqueConstraint(columnNames = "computed"))
+	static class FormulaEntity { @Id long id; @Formula("1 + 1") int computed; }
+	@Entity @SecondaryTable(name = "details") @Table(uniqueConstraints = @UniqueConstraint(columnNames = "description"))
+	static class WrongTable { @Id long id; @Column(name = "details_text", table = "details") String description; }
+	@Entity @Table(uniqueConstraints = @UniqueConstraint(columnNames = "target.name"))
+	static class Traversal { @Id long id; @ManyToOne @JoinColumn(name = "target_fk") Target target; }
+	@Entity @Table(uniqueConstraints = @UniqueConstraint(columnNames = "owner"))
+	static class Inverse { @Id long id; @OneToOne(mappedBy = "inverse") Owner owner; }
+	@Entity
+	static class Owner { @Id long id; @OneToOne @JoinColumn(name = "inverse_fk") Inverse inverse; }
+}

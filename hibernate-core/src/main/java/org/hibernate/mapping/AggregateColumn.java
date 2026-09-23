@@ -31,13 +31,13 @@ public final class AggregateColumn extends Column {
 	private final Component component;
 
 	public AggregateColumn(Column column, Component component) {
+		super( column.getPhysicalName() );
 		setLength( column.getLength() );
 		setPrecision( column.getPrecision() );
 		setScale( column.getScale() );
 		setArrayLength( column.getArrayLength() );
 		setValue( column.getValue() );
 		setTypeIndex( column.getTypeIndex() );
-		setName( column.getQuotedName() );
 		setNullable( column.isNullable() );
 		setUnique( column.isUnique() );
 		setUniqueKeyName( column.getUniqueKeyName() );
@@ -83,7 +83,7 @@ public final class AggregateColumn extends Column {
 		final String simpleAggregateName = aggregateColumn.getQuotedName();
 		return parent == null
 				? new SelectablePath( simpleAggregateName )
-				: getSelectablePath( parent.getComponent() ).append( simpleAggregateName );
+				: getSelectablePath( parent.getComponent() ).append( aggregateColumn.getName() );
 	}
 
 	public String getAggregateReadExpressionTemplate(

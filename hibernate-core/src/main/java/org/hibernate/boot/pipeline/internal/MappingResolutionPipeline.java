@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.pipeline.internal;
 
+import org.hibernate.mapping.NamedTable;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -534,6 +538,14 @@ public class MappingResolutionPipeline {
 			buildingPlan.applySharedCacheMode( mappingCustomizations.sharedCacheMode() );
 		}
 
+		final var namingStrategy = buildingPlan.getImplicitNamingStrategy();
+		if ( namingStrategy instanceof org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl
+				|| namingStrategy instanceof org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+				|| namingStrategy instanceof org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl ) {
+			org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER
+					.deprecatedImplicitNamingStrategy( namingStrategy.getClass().getName() );
+		}
+
 		final var metadataCollector = new InFlightMetadataCollectorImpl(
 				bootstrapContext,
 				buildingPlan,
@@ -709,10 +721,17 @@ public class MappingResolutionPipeline {
 		@Override
 		public void contributeTable(Table table) {
 			final InFlightMetadataCollector metadataCollector = metadataBuildingContext.getMetadataCollector();
+			if ( !(table instanceof NamedTable namedTable) ) {
+				throw new IllegalArgumentException( "Contributed database objects must have a physical name" );
+			}
+			final var name = namedTable.getPhysicalName();
 			metadataCollector.getDatabase()
-					.locateNamespace( table.getCatalogIdentifier(), table.getSchemaIdentifier() )
-					.registerTable( table.getNameIdentifier(), table );
-			metadataCollector.addTableNameBinding( table.getNameIdentifier(), table );
+					.locatePhysicalNamespace( name.catalogName(), name.schemaName() )
+					.registerTable( new org.hibernate.relational.naming.spi.LogicalName(
+							name.objectName().getText(), name.objectName().isQuoted(), true ), table );
+			metadataCollector.addTableNameBinding(
+					org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( name.objectName() ), table );
+
 		}
 
 		@Override
@@ -720,8 +739,8 @@ public class MappingResolutionPipeline {
 			final var sequenceName = sequence.getName();
 			metadataBuildingContext.getMetadataCollector()
 					.getDatabase()
-					.locateNamespace( sequenceName.getCatalogName(), sequenceName.getSchemaName() )
-					.registerSequence( sequenceName.getSequenceName(), sequence );
+					.locateNamespace( logicalName( org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( sequenceName.getCatalogName() ) ), logicalName( org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( sequenceName.getSchemaName() ) ) )
+					.registerSequence( logicalName( org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( sequenceName.getObjectName() ) ), sequence );
 		}
 
 		@Override

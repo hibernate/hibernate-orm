@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.id.enhanced;
 
+import org.hibernate.testing.util.MappingTableHelper;
+
 import java.util.Properties;
 
 import org.hibernate.boot.model.relational.Database;
@@ -36,7 +38,6 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -437,7 +438,9 @@ public class SequenceStyleConfigUnitTest {
 
 		public TestGeneratorCreationContext(Type type, MetadataBuildingContext buildingContext, ServiceRegistry serviceRegistry) {
 			this.type = type;
-			this.value = new BasicValue( buildingContext, new Table() );
+			this.value = new BasicValue( buildingContext, MappingTableHelper.table( "orm", "generator_owner",
+					buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment()
+							.getIdentifierHelper().getPhysicalNameFactory() ) );
 			this.metadata = buildingContext.getMetadataCollector();
 			this.serviceRegistry = serviceRegistry;
 		}

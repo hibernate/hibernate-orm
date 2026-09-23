@@ -9,7 +9,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ComponentShapeState;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
 
 import org.junit.jupiter.api.Test;
 
@@ -78,7 +77,7 @@ class ComponentShapeTests {
 	private static Component component() {
 		final MetadataBuildingContext context = mock( MetadataBuildingContext.class );
 		when( context.getMetadataCollector() ).thenReturn( mock( InFlightMetadataCollector.class ) );
-		return new Component( context, new Table( "component_shape" ), null );
+		return new Component( context, new org.hibernate.mapping.MappedSuperclassColumnContainer( "component_shape" ), null );
 	}
 
 	private static Property property(String name) {

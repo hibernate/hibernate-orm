@@ -71,9 +71,9 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T>, Sqm
 
 	private NavigableRole resolveNavigableRole(Any bootAnyMapping) {
 		final var buffer = new StringBuilder();
-		final var table = bootAnyMapping.getTable();
-		if ( table != null ) {
-			buffer.append( table.getName() );
+		final var container = bootAnyMapping.getColumnContainer();
+		if ( container != null ) {
+			buffer.append( container.requireTable().getName() );
 		}
 
 		buffer.append( "(" );

@@ -383,7 +383,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final var propertyClosure = persistentClass.getPropertyClosure();
 		for ( int i = 0; i < propertyClosure.size(); i++ ) {
 			final String tableName =
-					propertyClosure.get(i).getValue().getTable()
+					propertyClosure.get(i).getValue().getColumnContainer().requireTable()
 							.getQualifiedName( sqlStringGenerationContext );
 			naturalOrderPropertyTableNumbers[i] = getTableId( tableName, naturalOrderTableNames );
 		}
@@ -397,7 +397,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final ArrayList<String> columns = new ArrayList<>();
 
 		for ( var property : persistentClass.getSubclassPropertyClosure() ) {
-			final String tableName = property.getValue().getTable().
+			final String tableName = property.getValue().getColumnContainer().requireTable().
 					getQualifiedName( sqlStringGenerationContext );
 			final Integer tableNumber = getTableId( tableName, subclassTableNameClosure );
 			final Integer naturalTableNumber = getTableId( tableName, naturalOrderSubclassTableNameClosure );

@@ -4,8 +4,9 @@
  */
 package org.example.orm.dialect;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.spi.StandardSequenceExporter;
@@ -21,9 +22,9 @@ public final class ExampleSequenceExporter extends StandardSequenceExporter {
 
 	@Override
 	protected String getFormattedSequenceName(
-			QualifiedSequenceName name,
+			QualifiedPhysicalName name,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
-		return "fixture_" + name.getSequenceName().getText();
+		return "fixture_" + name.getObjectName().getText();
 	}
 }

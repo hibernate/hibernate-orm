@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.context;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.identifier;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -13,6 +15,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.relational.naming.spi.LogicalName;
+
 import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.internal.FilterDefBinder;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -76,6 +80,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -118,7 +123,7 @@ public class BindingStateImpl implements BindingState {
 	private final Database database;
 	private final JdbcServices jdbcServices;
 
-	private final Map<String, TableReference> tableMap = new HashMap<>();
+	private final Map<LogicalName, TableReference> tableMap = new HashMap<>();
 	private final Map<TableOwner, TableReference> tableByOwnerMap = new HashMap<>();
 	private final Map<org.hibernate.mapping.Table, TableReference> tableByBindingMap = new IdentityHashMap<>();
 	private final Map<org.hibernate.mapping.Table, SecondaryTable> secondaryTableByBinding = new HashMap<>();
@@ -127,6 +132,32 @@ public class BindingStateImpl implements BindingState {
 	private final java.util.List<PropertyMapKeyBinding> propertyMapKeyBindings = new java.util.ArrayList<>();
 	private final java.util.List<AssociationIdentifierBinding> associationIdentifierBindings = new java.util.ArrayList<>();
 	private final java.util.List<AssociationTargetBinding> associationTargetBindings = new java.util.ArrayList<>();
+	private final java.util.List<Runnable> deferredJoinColumns = new java.util.ArrayList<>();
+	private final java.util.Set<DerivedIdentifierBinding> completedDerivedIdentifiers =
+			java.util.Collections.newSetFromMap( new java.util.IdentityHashMap<>() );
+
+	@Override
+	public void addDeferredJoinColumnBinding(Runnable binding) {
+		deferredJoinColumns.add( binding );
+	}
+
+	@Override
+	public void bindDeferredJoinColumns() {
+		final var pending = java.util.List.copyOf( deferredJoinColumns );
+		deferredJoinColumns.clear();
+		pending.forEach( Runnable::run );
+	}
+
+	@Override
+	public boolean isDerivedIdentifierBound(DerivedIdentifierBinding binding) {
+		return completedDerivedIdentifiers.contains( binding );
+	}
+
+	@Override
+	public void markDerivedIdentifierBound(DerivedIdentifierBinding binding) {
+		completedDerivedIdentifiers.add( binding );
+	}
+
 	private final java.util.List<DerivedIdentifierBinding> derivedIdentifierBindings = new java.util.ArrayList<>();
 	private final java.util.List<InversePluralAssociationBinding> inversePluralAssociationBindings = new java.util.ArrayList<>();
 	private final java.util.List<InverseToOneAssociationBinding> inverseToOneAssociationBindings = new java.util.ArrayList<>();
@@ -184,7 +215,7 @@ public class BindingStateImpl implements BindingState {
 		this.metadataCollector = metadataCollector;
 		this.globalRegistrations = globalRegistrations;
 		this.database = metadataCollector.getDatabase();
-		this.relationalModelCorrespondences = new RelationalModelCorrespondences( database );
+		this.relationalModelCorrespondences = metadataBuildingContext.getMetadataCollector().getRelationalModelCorrespondences();
 		this.jdbcServices = metadataBuildingContext.getJdbcServices();
 	}
 
@@ -226,7 +257,8 @@ public class BindingStateImpl implements BindingState {
 			String name,
 			String subselect,
 			boolean isAbstract,
-			boolean isExplicit) {
+			boolean isExplicit,
+			String viewQuery) {
 		return metadataCollector.getOrCreateTable(
 				schema,
 				catalog,
@@ -234,7 +266,8 @@ public class BindingStateImpl implements BindingState {
 				subselect,
 				isAbstract,
 				metadataBuildingContext,
-				isExplicit
+				isExplicit,
+				viewQuery
 		);
 	}
 
@@ -244,14 +277,12 @@ public class BindingStateImpl implements BindingState {
 			String catalog,
 			String name,
 			boolean isAbstract,
-			String subselect,
-			Table includedTable) {
+			PhysicalTable includedTable) {
 		return metadataCollector.createDenormalizedTable(
 				schema,
 				catalog,
 				name,
 				isAbstract,
-				subselect,
 				includedTable,
 				metadataBuildingContext
 		);
@@ -573,13 +604,13 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void forEachTable(KeyedConsumer<String,TableReference> consumer) {
+	public void forEachTable(KeyedConsumer<LogicalName,TableReference> consumer) {
 		//noinspection unchecked
-		tableMap.forEach( (BiConsumer<? super String, ? super TableReference>) consumer );
+		tableMap.forEach( (BiConsumer<? super LogicalName, ? super TableReference>) consumer );
 	}
 
 	@Override
-	public <T extends TableReference> T getTableByName(String name) {
+	public <T extends TableReference> T getTableByName(LogicalName name) {
 		//noinspection unchecked
 		return (T) tableMap.get( name );
 	}
@@ -598,7 +629,7 @@ public class BindingStateImpl implements BindingState {
 
 	@Override
 	public void addTable(TableOwner owner, TableReference table) {
-		tableMap.put( table.logicalName().getCanonicalName(), table );
+		tableMap.put( table.logicalName(), table );
 		addTableBinding( table );
 		tableByOwnerMap.put( owner, table );
 	}
@@ -610,7 +641,7 @@ public class BindingStateImpl implements BindingState {
 
 	@Override
 	public void addSecondaryTable(SecondaryTable table) {
-		tableMap.put( table.logicalName().getCanonicalName(), table );
+		tableMap.put( table.logicalName(), table );
 		addTableBinding( table );
 		secondaryTableByBinding.put( table.binding(), table );
 	}
@@ -871,9 +902,9 @@ public class BindingStateImpl implements BindingState {
 				.getDatabase()
 				.getDefaultNamespace();
 		if ( defaultNamespace != null ) {
-			final Identifier defaultSchemaName = defaultNamespace.getName().getSchema();
+			final var defaultSchemaName = defaultNamespace.getName().schema();
 			if ( defaultSchemaName != null ) {
-				return defaultSchemaName.getCanonicalName();
+				return identifier( defaultSchemaName ).getCanonicalName();
 			}
 		}
 		return null;
@@ -888,9 +919,9 @@ public class BindingStateImpl implements BindingState {
 				.getDatabase()
 				.getDefaultNamespace();
 		if ( defaultNamespace != null ) {
-			final Identifier defaultCatalogName = defaultNamespace.getName().getCatalog();
+			final var defaultCatalogName = defaultNamespace.getName().catalog();
 			if ( defaultCatalogName != null ) {
-				return defaultCatalogName.getCanonicalName();
+				return identifier( defaultCatalogName ).getCanonicalName();
 			}
 		}
 		return null;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.naming;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Set;
 
 import jakarta.persistence.ElementCollection;
@@ -12,7 +14,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -33,9 +37,10 @@ public class PhysicalNamingTest {
 	public static class NamingStrategy
 			extends CamelCaseToUnderscoresNamingStrategy {
 		@Override
-		protected Identifier unquotedIdentifier(Identifier name) {
-			Identifier identifier = super.unquotedIdentifier( name );
-			return new Identifier( identifier.getText() + "_",
+		@Nonnull
+		protected PhysicalName unquotedIdentifier(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
+			PhysicalName identifier = super.unquotedIdentifier( name, context );
+			return context.getPhysicalNameFactory().create( identifier.getText() + "_",
 					identifier.isQuoted() );
 		}
 	}

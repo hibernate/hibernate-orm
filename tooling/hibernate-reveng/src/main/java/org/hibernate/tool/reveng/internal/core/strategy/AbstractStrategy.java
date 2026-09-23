@@ -7,6 +7,7 @@ package org.hibernate.tool.reveng.internal.core.strategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.tool.reveng.api.core.ForeignKeyDefinition;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
@@ -159,7 +160,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 
 	}
 
-	public List<ForeignKey> getForeignKeys(TableIdentifier referencedTable) {
+	public List<ForeignKeyDefinition> getForeignKeys(TableIdentifier referencedTable) {
 		return Collections.emptyList();
 	}
 
@@ -225,7 +226,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 		}
 		if(isManyToManyTable(foreignKeyTable)) {
 			// if the reference column is the first one then we are inverse.
-			Column column = foreignKeyTable.getColumn(0);
+			Column column = foreignKeyTable.getColumn(1);
 			Column fkColumn = (Column) referencedColumns.get(0);
 			return fkColumn.equals(column);
 		}

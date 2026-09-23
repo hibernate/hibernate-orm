@@ -17,7 +17,7 @@ import org.hibernate.boot.serial.internal.BasicValueRestorationRecipe;
 import org.hibernate.boot.serial.internal.SourceJavaType;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -307,8 +307,8 @@ public class BasicValueResolutionDetails {
 		this.explicitMutabilityPlan = explicitMutabilityPlan;
 	}
 
-	public Table getTable() {
-		return value.getTable();
+	public ColumnContainer getColumnContainer() {
+		return value.getColumnContainer();
 	}
 
 	public Selectable getColumn() {

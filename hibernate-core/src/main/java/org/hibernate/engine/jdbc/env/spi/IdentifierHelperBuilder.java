@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.hibernate.engine.jdbc.env.internal.NormalizingIdentifierHelperImpl;
+import org.hibernate.engine.jdbc.env.internal.CaseBasedIdentifierComparisonPolicy;
+import org.hibernate.relational.naming.spi.IdentifierComparisonPolicy;
 import org.jboss.logging.Logger;
 
 
@@ -37,6 +39,7 @@ public class IdentifierHelperBuilder {
 	private boolean autoQuoteDollar = false;
 	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+	private IdentifierComparisonPolicy comparisonPolicy;
 
 	public static IdentifierHelperBuilder from(JdbcEnvironment jdbcEnvironment) {
 		return new IdentifierHelperBuilder( jdbcEnvironment );
@@ -122,6 +125,15 @@ public class IdentifierHelperBuilder {
 		applyReservedWords( words );
 	}
 
+	/**
+	 * Supply immutable database comparison and metadata conversion rules when
+	 * the configured storage-case strategies are insufficient. A null policy
+	 * restores the default derived from the final case strategies at build time.
+	 */
+	public void setComparisonPolicy(IdentifierComparisonPolicy comparisonPolicy) {
+		this.comparisonPolicy = comparisonPolicy;
+	}
+
 	public IdentifierHelper build() {
 		if ( unquotedCaseStrategy == quotedCaseStrategy ) {
 			LOG.debugf(
@@ -141,8 +153,10 @@ public class IdentifierHelperBuilder {
 				autoQuoteInitialUnderscore,
 				autoQuoteDollar,
 				reservedWords,
-				unquotedCaseStrategy,
-				quotedCaseStrategy
+				comparisonPolicy != null ? comparisonPolicy : new CaseBasedIdentifierComparisonPolicy(
+						unquotedCaseStrategy == null ? IdentifierCaseStrategy.UPPER : unquotedCaseStrategy,
+						quotedCaseStrategy == null ? IdentifierCaseStrategy.MIXED : quotedCaseStrategy
+				)
 		);
 	}
 }

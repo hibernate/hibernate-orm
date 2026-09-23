@@ -60,7 +60,7 @@ public class SecondaryTableTests {
 					final Property joinProperty = join.getProperties().get( 0 );
 					final BasicValue value = (BasicValue) joinProperty.getValue();
 					assertThat( ( (org.hibernate.mapping.Column) value.getColumn() ).getName() ).isEqualTo( "permanent_record" );
-					assertThat( value.getTable() ).isSameAs( join.getTable() );
+					assertThat( value.getColumnContainer() ).isSameAs( join.getTable() );
 				},
 				scope.getRegistry(),
 				Employee.class

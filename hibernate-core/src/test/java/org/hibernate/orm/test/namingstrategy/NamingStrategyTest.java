@@ -54,8 +54,8 @@ public class NamingStrategyTest extends BaseSessionFactoryFunctionalTest {
 	public void testDatabaseTableNames() {
 		PersistentClass classMapping = getMetadata().getEntityBinding( Item.class.getName() );
 		Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getSelectables().get( 0 );
-		assertEquals( "TAB_ITEMS_SEC", secTabColumn.getValue().getTable().getName() );
+		assertEquals( "TAB_ITEMS_SEC", secTabColumn.getValue().getColumnContainer().requireTable().getName() );
 		Column tabColumn = (Column) classMapping.getProperty( "price" ).getSelectables().get( 0 );
-		assertEquals( "TAB_ITEMS", tabColumn.getValue().getTable().getName() );
+		assertEquals( "TAB_ITEMS", tabColumn.getValue().getColumnContainer().requireTable().getName() );
 	}
 }

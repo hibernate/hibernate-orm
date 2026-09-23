@@ -4,72 +4,115 @@
  */
 package org.hibernate.boot.model.naming;
 
-import org.hibernate.Incubating;
-import org.hibernate.SPI;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
-/**
- * A set of rules for determining the physical names of objects in a relational
- * database schema from the logical names specified by the object/relational
- * mappings.
- * <ul>
- *     <li>A <em>physical name</em> is a name used to interact with the database,
- *     and will always be used in generated SQL, both DML and DDL.
- *     <li>A <em>logical name</em> is a name used to within annotations of Java
- *     code and XML mapping documents.
- * </ul>
- * <p>
- * Logical names provide an additional level of indirection between the mappings
- * and the database schema, and a {@code PhysicalNamingStrategy} even allows the
- * use of more "natural" naming within the mappings in cases where the relational
- * schema features especially inelegant legacy naming conventions. For example,
- * it could shield the mappings from old-fashioned practices like prefixing table
- * names with {@code TBL_}.
- * <p>
- * Note, however, that handwritten native SQL must be written in terms of physical
- * names, so the abstraction here is in some sense "incomplete".
- * <p>
- * A {@code PhysicalNamingStrategy} may be selected using the configuration property
- * {@value org.hibernate.cfg.MappingSettings#PHYSICAL_NAMING_STRATEGY}.
- *
- * @see ImplicitNamingStrategy
- * @see org.hibernate.cfg.Configuration#setPhysicalNamingStrategy(PhysicalNamingStrategy)
- * @see org.hibernate.cfg.MappingSettings#PHYSICAL_NAMING_STRATEGY
- *
- * @author Steve Ebersole
- */
-@Incubating(since = "6.0")
+import org.hibernate.SPI;
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
+/// Transforms explicit and implicit logical names into physical database names.
+///
+/// Construct results using [PhysicalName.Factory#create(String, boolean)] on the
+/// factory supplied by [PhysicalNamingContext#getPhysicalNameFactory()].
+/// Pass the name's text without quote delimiters and specify quoting separately.
+///
+/// A strategy may add quoting, but may not remove quoting requested by the logical name;
+/// Hibernate enforces this when finalizing a non-null result.
+/// Hibernate may apply configured global and automatic quoting after the transformation.
+///
+/// Catalog and schema names are optional: their callbacks accept and may return null.
+/// All other callbacks require non-null inputs and results.
+/// The naming context is always non-null.
+///
+/// @author Steve Ebersole
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 public interface PhysicalNamingStrategy {
-	/**
-	 * Determine the physical catalog name from the given logical name
-	 */
-	Identifier toPhysicalCatalogName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
+	/// Transform the logical catalog name into a physical name.
+	/// A strategy may supply a default when the logical name is absent.
+	/// A null result supplies no catalog qualifier; SQL generation may still apply
+	/// a configured default.
+	///
+	/// @param logicalName The logical catalog name, or null if absent
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical catalog name, or null to supply no catalog qualifier
+	@Nullable
+	PhysicalName toPhysicalCatalogName(@Nullable LogicalName logicalName, @Nonnull PhysicalNamingContext context);
 
-	/**
-	 * Determine the physical schema name from the given logical name
-	 */
-	Identifier toPhysicalSchemaName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
+	/// Transform the logical schema name into a physical name.
+	/// A strategy may supply a default when the logical name is absent.
+	/// A null result supplies no schema qualifier; SQL generation may still apply
+	/// a configured default.
+	///
+	/// @param logicalName The logical schema name, or null if absent
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical schema name, or null to supply no schema qualifier
+	@Nullable
+	PhysicalName toPhysicalSchemaName(@Nullable LogicalName logicalName, @Nonnull PhysicalNamingContext context);
 
-	/**
-	 * Determine the physical table name from the given logical name
-	 */
-	Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
+	/// Transform the logical table name into a physical name.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical table name; never null
+	@Nonnull
+	PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
 
-	/**
-	 * Determine the physical sequence name from the given logical name
-	 */
-	Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
+	/// Transform the logical sequence name into a physical name.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical sequence name; never null
+	@Nonnull
+	PhysicalName toPhysicalSequenceName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
 
-	/**
-	 * Determine the physical column name from the given logical name
-	 */
-	Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
+	/// Transform the logical column name into a physical name.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical column name; never null
+	@Nonnull
+	PhysicalName toPhysicalColumnName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
 
-	/**
-	 * Determine the physical UDT type name from the given logical name
-	 */
-	default Identifier toPhysicalTypeName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return toPhysicalTableName( logicalName, jdbcEnvironment );
-	}
+	/// Transform the logical named SQL type name into a physical name.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical named SQL type name; never null
+	@Nonnull
+	PhysicalName toPhysicalTypeName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
+
+	/// Transform the logical primary-key constraint name into a physical name.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical primary-key constraint name; never null
+	@Nonnull
+	PhysicalName toPhysicalPrimaryKeyName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
+
+	/// Transform the logical foreign-key constraint name into a physical name.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical foreign-key constraint name; never null
+	@Nonnull
+	PhysicalName toPhysicalForeignKeyName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
+
+	/// Transform the logical unique-key constraint name into a physical name.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical unique-key constraint name; never null
+	@Nonnull
+	PhysicalName toPhysicalUniqueKeyName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
+
+	/// Transform the logical index name into a physical name.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical index name; never null
+	@Nonnull
+	PhysicalName toPhysicalIndexName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
+
 }

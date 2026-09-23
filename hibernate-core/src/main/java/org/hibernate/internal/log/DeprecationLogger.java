@@ -277,4 +277,11 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "Hibernate-envers is considered deprecated in favor of @Temporal and @Audited in hibernate-core."
 	)
 	void envers();
+
+	@LogMessage(level = WARN)
+	@Message(id = 90000046,
+			value = "Implicit naming strategy '%s' is deprecated for removal. Use StandardImplicitNamingStrategy, "
+					+ "ImplicitNamingStrategyJpaCompliantImpl, or a custom ImplicitNamingStrategy; "
+					+ "verify mapping names before switching strategies.")
+	void deprecatedImplicitNamingStrategy(String strategyClass);
 }

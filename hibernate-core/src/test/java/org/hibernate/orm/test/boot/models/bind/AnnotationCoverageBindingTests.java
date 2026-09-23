@@ -215,7 +215,7 @@ public class AnnotationCoverageBindingTests {
 							.getCollectionBinding( CoverageEntity.class.getName() + ".codes" );
 
 					assertThat( entityBinding.getTable().getRowId() ).isEqualTo( "ROWID" );
-					assertThat( entityBinding.getTable().getChecks() )
+					assertThat( ((org.hibernate.mapping.PhysicalTable) entityBinding.getTable()).getChecks() )
 							.extracting( org.hibernate.mapping.CheckConstraint::getName )
 							.containsExactly( "ck_coverage_table" );
 					assertThat( tenant.isPartitionKey() ).isTrue();
@@ -230,7 +230,7 @@ public class AnnotationCoverageBindingTests {
 					assertThat( statusConverter.toRelationalValue( CoverageStatus.ACTIVE ) )
 							.isEqualTo( "A" );
 					assertThat( details.getParentProperty() ).isEqualTo( "owner" );
-					assertThat( codes.getCollectionTable().getChecks() )
+					assertThat( ((org.hibernate.mapping.PhysicalTable) codes.getCollectionTable()).getChecks() )
 							.extracting( org.hibernate.mapping.CheckConstraint::getConstraint )
 							.containsExactly( "code is not null" );
 					assertThat( ( (org.hibernate.mapping.Column) ( (BasicValue) codes.getElement() ).getColumn() )
@@ -1277,7 +1277,7 @@ public class AnnotationCoverageBindingTests {
 							.getColumn() ).getFormula() )
 							.isEqualTo( "override_any_target_type" );
 					assertThat( entityBinding.getWhere() ).isEqualTo( "override_visible = true" );
-					assertThat( entityBinding.getTable().getChecks() )
+					assertThat( ((org.hibernate.mapping.PhysicalTable) entityBinding.getTable()).getChecks() )
 							.singleElement()
 							.satisfies( (check) -> {
 								assertThat( check.getName() ).isEqualTo( "ck_dialect_override" );
@@ -1356,7 +1356,7 @@ public class AnnotationCoverageBindingTests {
 					assertThat( notes.isLazy() ).isTrue();
 					assertThat( notes.isLob() ).isTrue();
 					assertThat( ( (BasicValue) notes.getValue() ).isLob() ).isTrue();
-					assertThat( notes.getValue().getTable() ).isSameAs( secondaryTable.getTable() );
+					assertThat( notes.getValue().getColumnContainer() ).isSameAs( secondaryTable.getTable() );
 					assertThat( column( notes ).getName() ).isEqualTo( "notes" );
 
 					assertThat( GeneratorSettingsImpl.createIdentifierGenerator(

@@ -4,15 +4,17 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnNamingInput;
+
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+
 import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.OnDelete;
-import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.naming.spi.CollectionElementColumnNamingInput;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
-import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
-import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
 import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
@@ -39,6 +41,7 @@ import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.usertype.CompositeUserType;
@@ -180,7 +183,7 @@ class ElementCollectionAttributeBinder {
 				)
 				: collectionValueIntent.source();
 		final CollectionTable collectionTable = source.collectionTable();
-		final Table table = registerCollectionBindings ? bindCollectionTable( source ) : createDeclarationOnlyTable();
+		final ColumnContainer table = registerCollectionBindings ? bindCollectionTable( source ) : createDeclarationOnlyTable();
 		final Collection collection = createCollection( source );
 		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setCollectionTable( table );
@@ -265,15 +268,17 @@ class ElementCollectionAttributeBinder {
 					),
 					resolveOnDeleteAction(),
 					uniqueConstraints( source ),
-					indexes( source )
+					indexes( source ),
+					source.member().getDeclaringType().getName() + "." + source.member().getName()
+							+ (source.joinTable() == null ? " @CollectionTable" : " @JoinTable")
 			) );
 			bindingState.addCollectionBinding( collection );
 		}
 		return collection;
 	}
 
-	private Table createDeclarationOnlyTable() {
-		return new Table( "orm", ownerBinding.getEntityName() + "." + collectionRolePath + "#mapped-superclass" );
+	private ColumnContainer createDeclarationOnlyTable() {
+		return new org.hibernate.mapping.MappedSuperclassColumnContainer( ownerBinding.getEntityName() + "." + collectionRolePath + "#mapped-superclass" );
 	}
 
 	private Collection createCollection(CollectionSource source) {
@@ -322,7 +327,7 @@ class ElementCollectionAttributeBinder {
 					.binding();
 		}
 
-	private Value bindElementValue(CollectionSource source, Collection collection, Table table) {
+	private Value bindElementValue(CollectionSource source, Collection collection, ColumnContainer table) {
 		final ComponentElement componentElement = resolveComponentElement( source );
 		if ( componentElement != null ) {
 			return bindEmbeddableElementValue( source, collection, table, componentElement );
@@ -333,7 +338,7 @@ class ElementCollectionAttributeBinder {
 	private Component bindEmbeddableElementValue(
 			CollectionSource collectionSource,
 			Collection collection,
-			Table table,
+			ColumnContainer table,
 			ComponentElement componentElement) {
 		final org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent embeddedValueIntent =
 				collectionValueIntent == null
@@ -384,7 +389,9 @@ class ElementCollectionAttributeBinder {
 				component,
 				table,
 				contribution,
-				"element_DTYPE",
+				ownerBinding,
+				collectionRolePath,
+				EmbeddableDiscriminatorColumnNamingInput.Kind.COLLECTION_ELEMENT,
 				bindingState,
 				bindingOptions,
 				bindingContext
@@ -470,7 +477,7 @@ class ElementCollectionAttributeBinder {
 		);
 	}
 
-	private BasicValue bindBasicElementValue(CollectionSource source, Table table) {
+	private BasicValue bindBasicElementValue(CollectionSource source, ColumnContainer table) {
 		final BasicValue element = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		element.setTable( table );
 		final BasicValueIntent valueIntent = collectionValueIntent != null
@@ -493,9 +500,9 @@ class ElementCollectionAttributeBinder {
 			) );
 
 		final jakarta.persistence.Column column = source.elementColumn();
-		final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumn(
+		final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumnWithNameBinding( table,
 				ColumnSource.from( column ),
-				() -> implicitElementColumnName( source )
+				() -> implicitElementColumnName( source ), false, true, 255, 0, 0, bindingOptions, bindingState
 		);
 		final Property property = new Property();
 		property.setName( source.member().resolveAttributeName() );
@@ -503,33 +510,17 @@ class ElementCollectionAttributeBinder {
 		applyChecks( valueIntent, elementColumn );
 		table.addColumn( elementColumn );
 		element.addColumn( elementColumn );
-		if ( elementColumn.isUnique() ) {
+		if ( elementColumn.isUnique() && table instanceof Table relationalTable ) {
 			UniqueKeyMappingMaterializer.materializeUniqueKey(
-					ResolvedUniqueKey.from( elementColumn, table, bindingState.getMetadataBuildingContext() )
+					ResolvedUniqueKey.from( elementColumn, relationalTable, bindingState.getMetadataBuildingContext() )
 			);
 		}
 		return element;
 	}
 
 		private String implicitElementColumnName(CollectionSource source) {
-			return bindingContext.getImplicitNamingStrategy()
-					.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
-						@Override
-						public AttributePath getAttributePath() {
-							return AttributePath.parse( source.member().resolveAttributeName() );
-						}
-
-						@Override
-						public boolean isCollectionElement() {
-							return false;
-						}
-
-						@Override
-						public ImplicitNamingContext getNamingContext() {
-							return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
-						}
-					} )
-					.getText();
+			return ImplicitNamingHelper.columnName( bindingContext.getImplicitNamingStrategy()
+					.determineCollectionElementColumnName( new CollectionElementColumnNamingInput( source.member().resolveAttributeName() ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "CollectionElementColumn" );
 		}
 
 	private EntityTypeMetadataImpl resolveOwnerEntityType() {

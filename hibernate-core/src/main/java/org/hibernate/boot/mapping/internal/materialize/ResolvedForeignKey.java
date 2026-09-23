@@ -55,7 +55,7 @@ public record ResolvedForeignKey(
 			@Nonnull SelectableOrderResolution selectableOrder,
 			@Nullable Table referencedTable) {
 		return new ResolvedForeignKey(
-				value.getTable(),
+				value.getColumnContainer().requireTable(),
 				value.getForeignKeyName(),
 				referencedEntityName,
 				value.getForeignKeyDefinition(),

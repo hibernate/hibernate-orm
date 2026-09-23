@@ -8,7 +8,7 @@ import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.model.AggregateMemberContainer;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 
 /**
  * Binder-side target for component member materialization.
@@ -24,18 +24,24 @@ import org.hibernate.mapping.Table;
  */
 public record ComponentMemberTarget(
 		Kind kind,
-		Table table,
+		ColumnContainer table,
 		AggregateMemberContainer aggregateMemberContainer) {
 	public enum Kind {
 		TABLE,
 		AGGREGATE_MEMBER
 	}
 
-	public static ComponentMemberTarget forSource(ComponentSource source, Table table) {
+	public static ComponentMemberTarget forSource(ComponentSource source, ColumnContainer table) {
 		final AggregateMappingIntent intent = source.aggregateMappingIntent();
 		return intent.isAggregate()
 				? new ComponentMemberTarget( Kind.AGGREGATE_MEMBER, table, AggregateMemberContainer.from( intent ) )
 				: new ComponentMemberTarget( Kind.TABLE, table, null );
+	}
+
+	/// A flattened component shares its enclosing storage; an aggregate creates
+	/// a separate container for its own members.
+	public ComponentMemberTarget forNestedSource(ComponentSource source) {
+		return source.aggregateMappingIntent().isAggregate() ? forSource( source, table ) : this;
 	}
 
 	public boolean isAggregateMemberTarget() {

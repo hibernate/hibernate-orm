@@ -36,7 +36,7 @@ public abstract sealed class ToOne
 	private boolean referenceToPrimaryKey = true;
 	private ForeignKeyColumnMappings foreignKeyColumnMappings;
 
-	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
+	protected ToOne(MetadataBuildingContext buildingContext, ColumnContainer table) {
 		super( buildingContext, table );
 	}
 

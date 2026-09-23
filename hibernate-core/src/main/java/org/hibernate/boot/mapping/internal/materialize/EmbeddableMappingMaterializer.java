@@ -19,7 +19,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -66,7 +66,7 @@ public class EmbeddableMappingMaterializer {
 	public Component createEmbeddedAttributeComponent(
 			ComponentSource source,
 			PersistentClass ownerBinding,
-			Table table,
+			ColumnContainer table,
 			String ownerClassName,
 			String attributeName) {
 		final Component component = new Component( state.getMetadataBuildingContext(), table, ownerBinding );
@@ -81,7 +81,7 @@ public class EmbeddableMappingMaterializer {
 	public Component createNestedComponent(
 			ComponentSource source,
 			Component parent,
-			Table table,
+			ColumnContainer table,
 			String ownerClassName,
 			String attributeName) {
 		final Component component = new Component( state.getMetadataBuildingContext(), parent );
@@ -102,7 +102,7 @@ public class EmbeddableMappingMaterializer {
 		}
 	}
 
-	public Component createCollectionElementComponent(ComponentSource source, Collection collection, Table table) {
+	public Component createCollectionElementComponent(ComponentSource source, Collection collection, ColumnContainer table) {
 		final Component component = new Component( state.getMetadataBuildingContext(), collection );
 		component.setMappingRole( MappingRole.collection( collection.getRole() ).append( MappingRole.PartKind.ELEMENT ) );
 		component.setFlattened( true );
@@ -113,7 +113,7 @@ public class EmbeddableMappingMaterializer {
 		return component;
 	}
 
-	public Component createMapKeyComponent(ComponentSource source, Collection collection, Table table) {
+	public Component createMapKeyComponent(ComponentSource source, Collection collection, ColumnContainer table) {
 		final Component component = new Component( state.getMetadataBuildingContext(), collection );
 		component.setMappingRole( MappingRole.collection( collection.getRole() ).append( MappingRole.PartKind.INDEX ) );
 		component.setFlattened( true );

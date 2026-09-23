@@ -6,6 +6,7 @@ package org.hibernate.boot.model.relational;
 
 import java.util.Set;
 
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.boot.model.naming.Identifier;
 
 import static org.hibernate.internal.util.StringHelper.replace;
@@ -29,7 +30,7 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	private final String[] createStrings;
 	private final String[] dropStrings;
 
-	private static String extractName(Identifier identifier) {
+	private static String extractName(PhysicalName identifier) {
 		return identifier == null ? null : identifier.getText();
 	}
 

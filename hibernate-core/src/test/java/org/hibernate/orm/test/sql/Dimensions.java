@@ -13,8 +13,10 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class Dimensions {
 
+	@jakarta.persistence.Column(name = "length")
 	private int length;
 
+	@jakarta.persistence.Column(name = "width")
 	private int width;
 
 	//Getters and setters are omitted for brevity

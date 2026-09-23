@@ -4,17 +4,19 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.model.naming.spi.MapKeyJoinColumnNamingInput;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+import org.hibernate.boot.mapping.internal.context.BindingOptionsImpl;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKeyCompositeType;
-import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
-import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
+import org.hibernate.boot.model.naming.spi.ListIndexColumnNamingInput;
+import org.hibernate.boot.model.naming.spi.MapKeyColumnNamingInput;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
-import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
-import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
@@ -38,7 +40,7 @@ import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -64,7 +66,7 @@ class CollectionIndexBinder {
 	static void bindListIndex(
 			CollectionSource source,
 			IndexedCollection collection,
-			Table table,
+			ColumnContainer table,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -85,11 +87,11 @@ class CollectionIndexBinder {
 					bindingState.getMetadataBuildingContext()
 			) );
 
-		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
+		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumnWithNameBinding( table,
 				ColumnSource.from( source.orderColumn() ),
 				() -> implicitListIndexColumnName( source, bindingState ),
 				false,
-				true
+				true, 255, 0, 0, bindingOptions, bindingState
 		);
 		indexColumn.addCheckConstraint( new CheckConstraint(
 				null,
@@ -124,21 +126,10 @@ class CollectionIndexBinder {
 	}
 
 	private static String implicitListIndexColumnName(CollectionSource source, BindingState bindingState) {
-		return bindingState.getMetadataBuildingContext()
+		return ImplicitNamingHelper.columnName( bindingState.getMetadataBuildingContext()
 				.getBuildingPlan()
 				.getImplicitNamingStrategy()
-				.determineListIndexColumnName( new ImplicitIndexColumnNameSource() {
-					@Override
-					public AttributePath getPluralAttributePath() {
-						return AttributePath.parse( source.member().resolveAttributeName() );
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
-					}
-				} )
-				.getText();
+				.determineListIndexColumnName( new ListIndexColumnNamingInput( source.member().resolveAttributeName() ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "ListIndexColumn" );
 	}
 
 	static void bindMapKey(
@@ -146,7 +137,7 @@ class CollectionIndexBinder {
 			PersistentClass ownerBinding,
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -171,7 +162,7 @@ class CollectionIndexBinder {
 			PersistentClass ownerBinding,
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -197,7 +188,7 @@ class CollectionIndexBinder {
 			PersistentClass ownerBinding,
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -223,7 +214,7 @@ class CollectionIndexBinder {
 			PersistentClass ownerBinding,
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -355,7 +346,7 @@ class CollectionIndexBinder {
 			PersistentClass ownerBinding,
 			CollectionSource collectionSource,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			ComponentMapKey componentMapKey,
 			@Nullable EmbeddedValueIntent embeddedValueIntent,
 			ModelBinders modelBinders,
@@ -574,7 +565,7 @@ class CollectionIndexBinder {
 		if ( targetPropertyValue instanceof BasicValue basicValue ) {
 			final DependantBasicValue index = new DependantBasicValue(
 					bindingState.getMetadataBuildingContext(),
-					basicValue.getTable(),
+					basicValue.getColumnContainer(),
 					basicValue,
 						false,
 						false
@@ -591,7 +582,7 @@ class CollectionIndexBinder {
 		if ( targetPropertyValue instanceof ManyToOne manyToOne ) {
 			final ManyToOne index = new ManyToOne(
 					bindingState.getMetadataBuildingContext(),
-					manyToOne.getTable()
+					manyToOne.getColumnContainer()
 			);
 			index.setReferencedEntityName( manyToOne.getReferencedEntityName() );
 			index.setReferenceToPrimaryKey( manyToOne.isReferenceToPrimaryKey() );
@@ -650,8 +641,8 @@ class CollectionIndexBinder {
 		return resolution;
 	}
 
-	private static Column copyColumn(Table table, Column source, boolean unique) {
-		final Column result = new Column( source.getName() );
+	private static Column copyColumn(ColumnContainer table, Column source, boolean unique) {
+		final Column result = new Column( source.getPhysicalName() );
 		result.setLength( source.getLength() );
 		result.setPrecision( source.getPrecision() );
 		result.setScale( source.getScale() );
@@ -670,7 +661,7 @@ class CollectionIndexBinder {
 			CollectionSource source,
 			@Nullable TypeDetails indexType,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext,
@@ -696,11 +687,11 @@ class CollectionIndexBinder {
 					bindingState.getMetadataBuildingContext()
 			) );
 
-		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
+		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumnWithNameBinding( table,
 				ColumnSource.from( source.mapKeyColumn() ),
 				() -> implicitMapKeyColumnName( source, bindingState ),
 				false,
-				false
+				false, 255, 0, 0, bindingOptions, bindingState
 		);
 		if ( nullableBasicMapKey ) {
 			indexColumn.setNullable( true );
@@ -715,28 +706,17 @@ class CollectionIndexBinder {
 	}
 
 	private static String implicitMapKeyColumnName(CollectionSource source, BindingState bindingState) {
-		return bindingState.getMetadataBuildingContext()
+		return ImplicitNamingHelper.columnName( bindingState.getMetadataBuildingContext()
 				.getBuildingPlan()
 				.getImplicitNamingStrategy()
-				.determineMapKeyColumnName( new ImplicitMapKeyColumnNameSource() {
-					@Override
-					public AttributePath getPluralAttributePath() {
-						return AttributePath.parse( source.member().resolveAttributeName() );
-					}
-
-					@Override
-					public ImplicitNamingContext getNamingContext() {
-						return ImplicitNamingContextImpl.from( bindingState.getMetadataBuildingContext() );
-					}
-				} )
-				.getText();
+				.determineMapKeyColumnName( new MapKeyColumnNamingInput( source.member().resolveAttributeName() ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "MapKeyColumn" );
 	}
 
 	private static void bindEntityMapKey(
 			CollectionSource source,
 			@Nullable TypeDetails indexType,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			BindingState bindingState) {
 		bindEntityMapKey( source, indexType, collection, table, bindingState, false );
 	}
@@ -744,7 +724,7 @@ class CollectionIndexBinder {
 	private static void bindEntityMapKey(
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			BindingState bindingState) {
 		bindEntityMapKey( source, null, collection, table, bindingState, false );
 	}
@@ -752,7 +732,7 @@ class CollectionIndexBinder {
 	static void bindNullableEntityMapKey(
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			BindingState bindingState) {
 		bindEntityMapKey( source, null, collection, table, bindingState, true );
 	}
@@ -761,7 +741,7 @@ class CollectionIndexBinder {
 			CollectionSource source,
 			@Nullable TypeDetails indexType,
 			org.hibernate.mapping.Map collection,
-			Table table,
+			ColumnContainer table,
 			BindingState bindingState,
 			boolean nullableMapKey) {
 		final EntityTypeBinder targetTypeBinder = resolveEntityMapKeyBinder( source, indexType, bindingState );
@@ -786,67 +766,85 @@ class CollectionIndexBinder {
 
 		final ManyToOne index = new ManyToOne( bindingState.getMetadataBuildingContext(), table );
 		index.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
-		final boolean referenceToPrimaryKey = referencesPrimaryKey(
-				source.mapKeyJoinColumns(),
-				entityIdentifierBinding.columns()
-		);
-		index.setReferenceToPrimaryKey( referenceToPrimaryKey );
-		index.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		index.setTypeUsingReflection(
-				collection.getOwner().getClassName(),
-				source.member().resolveAttributeName(),
-				bindingState.getClassLoaderService()
-		);
-
-		final List<MapKeyJoinColumn> orderedJoinColumns = referenceToPrimaryKey
-				? orderMapKeyJoinColumns(
-						source.mapKeyJoinColumns(),
-						entityIdentifierBinding.columns(),
-						collection.getRole()
-				)
-				: source.mapKeyJoinColumns();
-		final int columnCount = referenceToPrimaryKey ? entityIdentifierBinding.columns().size() : source.mapKeyJoinColumns().size();
-		for ( int i = 0; i < columnCount; i++ ) {
-			final MapKeyJoinColumn mapKeyJoinColumn = orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i );
-			final Column targetColumn = referenceToPrimaryKey ? entityIdentifierBinding.columns().get( i ) : null;
-			final String targetColumnName = referenceToPrimaryKey
-					? targetColumn.getName()
-					: mapKeyJoinColumn.referencedColumnName();
-			final Column column = ColumnBinder.bindColumn(
-					ColumnSource.from( mapKeyJoinColumn ),
-					() -> implicitMapKeyJoinColumnName( source, referenceToPrimaryKey, columnCount, targetColumnName ),
-					false,
-					false
-			);
-			if ( nullableMapKey ) {
-				column.setNullable( true );
-			}
-			if ( targetColumn != null ) {
-				applyReferencedColumnMetadata( column, targetColumn );
-			}
-			table.addColumn( column );
-			index.addColumn(
-					column,
-					mapKeyJoinColumn == null || mapKeyJoinColumn.insertable(),
-					mapKeyJoinColumn == null || mapKeyJoinColumn.updatable()
-			);
-		}
 		collection.setIndex( index );
-		if ( !referenceToPrimaryKey ) {
-			bindingState.addAssociationTargetBinding( new AssociationTargetBinding(
+		index.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
+		final Runnable completion = () -> {
+			final boolean referenceToPrimaryKey = referencesPrimaryKey(
+					source.mapKeyJoinColumns(),
+					entityIdentifierBinding.columns(), bindingState
+			);
+			index.setReferenceToPrimaryKey( referenceToPrimaryKey );
+			index.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
+			index.setTypeUsingReflection(
+					collection.getOwner().getClassName(),
+					source.member().resolveAttributeName(),
+					bindingState.getClassLoaderService()
+			);
+
+			final List<MapKeyJoinColumn> orderedJoinColumns = referenceToPrimaryKey
+					? orderMapKeyJoinColumns(
+							source.mapKeyJoinColumns(),
+							entityIdentifierBinding.columns(),
+							collection.getRole(), bindingState
+					)
+					: source.mapKeyJoinColumns();
+			final int columnCount = referenceToPrimaryKey ? entityIdentifierBinding.columns().size() : source.mapKeyJoinColumns().size();
+			for ( int i = 0; i < columnCount; i++ ) {
+				final MapKeyJoinColumn mapKeyJoinColumn = orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i );
+				final Column targetColumn = referenceToPrimaryKey ? entityIdentifierBinding.columns().get( i ) : null;
+				final String targetColumnName = referenceToPrimaryKey
+						? targetColumn.getName()
+						: mapKeyJoinColumn.referencedColumnName();
+
+				final int position = i;
+				final var implicitName = ImplicitNamingHelper.once(
+						() -> bindingState.getMetadataBuildingContext().getBuildingPlan().getImplicitNamingStrategy()
+								.determineMapKeyJoinColumnName(
+										new MapKeyJoinColumnNamingInput(
+												JoinColumnNaming.entity( collection.getOwner() ), JoinColumnNaming.entity( targetTypeBinder.getTypeBinding() ),
+												source.member().resolveAttributeName(),
+												JoinColumnNaming.reference( targetTypeBinder.getTypeBinding(), targetTypeBinder.getTypeBinding().getTable(), entityIdentifierBinding.columns(),
+														orderedJoinColumns.stream().map( MapKeyJoinColumn::referencedColumnName ).toList(), position, bindingState ), referenceToPrimaryKey ),
+										JoinColumnNaming.context( bindingState ) ), "map-key join column" );
+				final Column column = ColumnBinder.bindColumnWithNameBinding(
+						table, ColumnSource.from( mapKeyJoinColumn ), implicitName, false, false, 255, 0, 0,
+						new BindingOptionsImpl( bindingState.getMetadataBuildingContext() ), bindingState );
+				if ( nullableMapKey ) {
+					column.setNullable( true );
+				}
+				if ( targetColumn != null ) {
+					applyReferencedColumnMetadata( column, targetColumn );
+				}
+				table.addColumn( column );
+				index.addColumn(
+						column,
+						mapKeyJoinColumn == null || mapKeyJoinColumn.insertable(),
+						mapKeyJoinColumn == null || mapKeyJoinColumn.updatable()
+				);
+			}
+			if ( !referenceToPrimaryKey ) {
+				bindingState.addAssociationTargetBinding( new AssociationTargetBinding(
+						collection.getOwner(),
+						index,
+						targetTypeBinder,
+						referencedColumnNames( source.mapKeyJoinColumns() ),
+						collection.getRole()
+				) );
+			}
+			bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 					collection.getOwner(),
 					index,
-					targetTypeBinder,
-					referencedColumnNames( source.mapKeyJoinColumns() ),
-					collection.getRole()
+					source.mapKeyForeignKeySource(),
+					referenceToPrimaryKey ? List.of() : referencedColumnNames( source.mapKeyJoinColumns() )
 			) );
+		};
+		if ( JoinColumnNaming.requiresDeferred( targetTypeBinder, source.mapKeyJoinColumns().stream().map( MapKeyJoinColumn::name ).toList(),
+				source.mapKeyJoinColumns().stream().map( MapKeyJoinColumn::referencedColumnName ).toList(), bindingState ) ) {
+			bindingState.addDeferredJoinColumnBinding( completion );
 		}
-		bindingState.addForeignKeyBinding( new ForeignKeyBinding(
-				collection.getOwner(),
-				index,
-				source.mapKeyForeignKeySource(),
-				referenceToPrimaryKey ? List.of() : referencedColumnNames( source.mapKeyJoinColumns() )
-		) );
+		else {
+			completion.run();
+		}
 	}
 
 	private static EntityTypeBinder resolveEntityMapKeyBinder(
@@ -884,22 +882,7 @@ class CollectionIndexBinder {
 		column.setArrayLength( targetColumn.getArrayLength() );
 	}
 
-	private static String implicitMapKeyJoinColumnName(
-			CollectionSource source,
-			boolean referenceToPrimaryKey,
-			int columnCount,
-			String targetColumnName) {
-		// Legacy treats @MapKeyJoinColumn defaults as an explicit logical
-		// property name plus "_KEY" suffix.  Routing through
-		// determineJoinColumnName changes defaults such as "labels_KEY" to
-		// "LabelKey_id" or "parents_KEY_id".
-		if ( referenceToPrimaryKey && columnCount == 1 ) {
-			return source.member().resolveAttributeName() + "_KEY";
-		}
-		return source.member().resolveAttributeName() + "_KEY_" + targetColumnName;
-	}
-
-	private static boolean referencesPrimaryKey(List<MapKeyJoinColumn> joinColumns, List<Column> targetColumns) {
+	private static boolean referencesPrimaryKey(List<MapKeyJoinColumn> joinColumns, List<Column> targetColumns, BindingState state) {
 		if ( joinColumns.isEmpty()
 				|| joinColumns.stream().noneMatch( (joinColumn) -> !joinColumn.referencedColumnName().isEmpty() ) ) {
 			return true;
@@ -909,7 +892,7 @@ class CollectionIndexBinder {
 		}
 		final ArrayList<Column> unmatchedTargetColumns = new ArrayList<>( targetColumns );
 		for ( MapKeyJoinColumn joinColumn : joinColumns ) {
-			final Column targetColumn = findTargetColumn( unmatchedTargetColumns, joinColumn.referencedColumnName() );
+			final Column targetColumn = findTargetColumn( unmatchedTargetColumns, joinColumn.referencedColumnName(), state );
 			if ( targetColumn == null ) {
 				return false;
 			}
@@ -918,9 +901,9 @@ class CollectionIndexBinder {
 		return unmatchedTargetColumns.isEmpty();
 	}
 
-	private static Column findTargetColumn(List<Column> targetColumns, String columnName) {
+	private static Column findTargetColumn(List<Column> targetColumns, String columnName, BindingState state) {
 		for ( Column targetColumn : targetColumns ) {
-			if ( targetColumn.getName().equals( columnName ) ) {
+			if ( state.getRelationalModelCorrespondences().columnNames().matches( targetColumn, state.getDatabase().toLogicalName( columnName ) ) ) {
 				return targetColumn;
 			}
 		}
@@ -938,7 +921,7 @@ class CollectionIndexBinder {
 	private static List<MapKeyJoinColumn> orderMapKeyJoinColumns(
 			List<MapKeyJoinColumn> joinColumns,
 			List<Column> targetColumns,
-			String role) {
+			String role, BindingState state) {
 		if ( joinColumns.isEmpty() || joinColumns.stream().noneMatch( (joinColumn) -> !joinColumn.referencedColumnName().isEmpty() ) ) {
 			return joinColumns;
 		}
@@ -946,7 +929,7 @@ class CollectionIndexBinder {
 		final ArrayList<MapKeyJoinColumn> orderedJoinColumns = new ArrayList<>( targetColumns.size() );
 		final ArrayList<MapKeyJoinColumn> unmatchedJoinColumns = new ArrayList<>( joinColumns );
 		for ( Column targetColumn : targetColumns ) {
-			final MapKeyJoinColumn joinColumn = findMapKeyJoinColumn( targetColumn, unmatchedJoinColumns, role );
+			final MapKeyJoinColumn joinColumn = findMapKeyJoinColumn( targetColumn, unmatchedJoinColumns, role, state );
 			orderedJoinColumns.add( joinColumn );
 			unmatchedJoinColumns.remove( joinColumn );
 		}
@@ -956,9 +939,9 @@ class CollectionIndexBinder {
 	private static MapKeyJoinColumn findMapKeyJoinColumn(
 			Column targetColumn,
 			List<MapKeyJoinColumn> joinColumns,
-			String role) {
+			String role, BindingState state) {
 		for ( MapKeyJoinColumn joinColumn : joinColumns ) {
-			if ( targetColumn.getName().equals( joinColumn.referencedColumnName() ) ) {
+			if ( state.getRelationalModelCorrespondences().columnNames().matches( targetColumn, state.getDatabase().toLogicalName( joinColumn.referencedColumnName() ) ) ) {
 				return joinColumn;
 			}
 		}

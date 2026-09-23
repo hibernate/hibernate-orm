@@ -24,8 +24,10 @@
     <embeddable class="Child" name="Child" access="PROPERTY" metadata-complete="true">
         <attributes>
             <basic name="name" fetch="EAGER" optional="false" optimistic-lock="true">
+                <column name="name"/>
             </basic>
             <basic name="bio" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="bio"/>
             </basic>
             <basic name="bioLength" fetch="EAGER" optional="true" optimistic-lock="true">
                 <formula>{fn length(bio)}</formula>

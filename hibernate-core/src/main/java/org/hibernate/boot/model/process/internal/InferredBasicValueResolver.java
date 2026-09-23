@@ -19,7 +19,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicPluralType;
@@ -61,7 +61,7 @@ public class InferredBasicValueResolver {
 			Supplier<JavaType<T>> reflectedJtdResolver,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators stdIndicators,
-			Table table,
+			ColumnContainer columnContainer,
 			Selectable selectable,
 			String ownerName,
 			String propertyName,
@@ -202,7 +202,7 @@ public class InferredBasicValueResolver {
 						"Could not determine JavaType nor JdbcType to use" +
 								" for BasicValue: owner = " + ownerName +
 								"; property = " + propertyName +
-								"; table = " + table.getName() +
+								"; column container = " + columnContainer +
 								"; column = " + selectable.getText()
 				);
 			}
@@ -212,7 +212,7 @@ public class InferredBasicValueResolver {
 			throw new MappingException(
 					"Could not determine JavaType nor JdbcType to use" +
 							" for " + resolvedJavaType +
-							"; table = " + table.getName() +
+							"; column container = " + columnContainer +
 							"; column = " + selectable.getText()
 			);
 		}

@@ -23,7 +23,7 @@ public final class ManyToOne extends ToOne {
 
 	private transient ManyToOneType resolvedType;
 
-	public ManyToOne(MetadataBuildingContext buildingContext, Table table) {
+	public ManyToOne(MetadataBuildingContext buildingContext, ColumnContainer table) {
 		super( buildingContext, table );
 		this.typeConfiguration = buildingContext.getTypeConfiguration();
 	}

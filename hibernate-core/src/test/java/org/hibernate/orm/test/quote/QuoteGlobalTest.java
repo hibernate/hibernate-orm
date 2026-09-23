@@ -62,8 +62,8 @@ public class QuoteGlobalTest {
 			}
 		}
 		else {
-			Index uniqueIndex = scope.getMetadataImplementor().getEntityBinding( Person.class.getName() )
-					.getTable().getIndexes().values().stream().filter( Index::isUnique ).findAny().orElse(  null );
+			Index uniqueIndex = ((org.hibernate.mapping.PhysicalTable) scope.getMetadataImplementor().getEntityBinding( Person.class.getName() )
+					.getTable()).getIndexes().values().stream().filter( Index::isUnique ).findAny().orElse(  null );
 			assertNotNull(  uniqueIndex );
 			List<Selectable> selectables = uniqueIndex.getSelectables();
 			assertEquals( 1, selectables.size() );

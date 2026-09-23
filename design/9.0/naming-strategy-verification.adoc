@@ -1,0 +1,347 @@
+= Naming Strategy Verification and Retention
+:toc2:
+:sectanchors:
+
+Status: Steve approved retaining JPA, moving component-path safety into Standard, and
+deprecating the other three strategies with runtime warnings. That work is implemented
+and validated. This document retains the test contract and outstanding coverage work.
+All five registrations remain available; Standard remains the default.
+
+Latest full core validation: 18,039 tests, 1,525 skipped,
+0 failures and 0 errors.
+This run includes entity attribute fallback, explicit collection role references,
+join-table declaration detection, the index contract/resolution migration, the FK and UK contract migrations, HHH-20916 unique-column
+finalization, HHH-20917 reference resolution, UK absorption and name emission, and
+null-only PK result validation. Slice-local counts below describe historical runs;
+they are not cumulative totals.
+
+See link:implicit-naming-strategy-proposal.adoc[the replacement contract] and
+link:naming-strategy-redesign.adoc[the broader naming redesign].
+
+== Unified PK Naming Validation
+
+The completed PK contract is summarized in
+link:constraint-index-naming-proposal.adoc[the constraint/index proposal]. Coverage includes
+all seven ordinary PK creation sites, table dependency pairs, callback counts,
+quoted/truncated names, unchanged unnamed-PK DDL, multiple-UK absorption, inline views,
+and metadata restoration. The eight focused PK tests reject null results and accept either
+explicitness flag from custom implicit strategies. The full core run above includes them.
+
+== FK And Unique-Column Validation
+
+`ImplicitForeignKeyNamingTest` covers composite PK and alternate-key correspondences,
+logical/physical table and column pairs, explicit-name bypass, immutable inputs, null
+rejection, additive quoting, independent expected hashes, and archive restoration without
+callback replay. The full suite also covers aggregate and audit dependency retention.
+
+`ConstraintNamingCharacterizationTest` checks corrected logical table identity for
+schema-distinct tables sharing a physical spelling, inline-view participation/export
+boundaries, and existing absorbed-UK selection. Its HHH-20916 regressions assert normal UK
+hashes for basic-column, owning one-to-one, and Changelog uniqueness, distinct keys for
+two unique columns, and exactly-once custom callbacks before repeated export.
+
+The sole-UK absorption inconsistency is corrected. Typed UK inputs, actual-column
+resolution, logical-first lookup, duplicate explicit-name rejection (HHH-20918), strategy collisions, named
+UK DDL, and archive restoration now have regression coverage. Temporal naming and
+aggregate UK behavior remain explicitly deferred in
+link:foreign-unique-key-naming-spec.adoc[the FK/UK working specification]. Rendering
+assertions do not claim execution coverage across dialects.
+
+== Index And Column-Reference Validation
+
+The link:constraint-index-naming-proposal.adoc#completed-index-and-column-references[completed contracts]
+cover typed index naming, actual-column resolution, explicit collection roles, and shared
+entity attribute fallback for indexes and UKs. Eight initial characterization tests
+established the former placeholder, parsing, representation, and collision behavior;
+`IndexColumnResolutionTest` now asserts the corrections.
+
+`ImplicitIndexNamingTest` verifies typed terms, type/using, null rejection, original
+source spelling, quoting, parsing, collisions, and export/archive stability.
+`IndexAttributeReferenceTest` and `UniqueConstraintAttributeReferenceTest` each contain
+ten cases for precedence, basic/inherited/embedded attributes, local associations,
+secondary tables, and unsupported-reference errors. `CollectionRoleColumnReferenceTest`
+adds fourteen cases for map keys/values, quoted role escapes, local join-table FKs,
+association boundaries, and detection of index/constraint-only join-table declarations.
+Older fixtures now exercise actual attribute resolution and qualified embedded paths.
+
+All 400 naming-strategy tests passed. The final full-core run passed: 18,039 tests,
+1,525 skipped, zero failures or errors in the configured H2 environment. It includes
+all attribute and collection-role work; no cross-dialect execution is claimed.
+
+User Guide, Introduction, and migration-guide sections document these contracts.
+Introduction and migration-guide rendering passed. The User Guide produced the new
+section correctly, but its render task fails on four existing missing converter/hbm
+example includes in `chapters/domain/basic_types.adoc`.
+
+== Purpose and Test Contract
+
+Exercise common mapping fixtures against every currently selectable implicit strategy.
+Verify actual boot-model names, rather than calling the same strategy to manufacture
+expected results. Separate characterization of existing behavior from Jakarta Persistence
+conformance. Historical behavior passing a test does not make it desirable or normative.
+
+`ImplicitNamingStrategyMatrixTest` runs five strategies against identity and transforming
+physical naming: `StandardImplicitNamingStrategy`, `ImplicitNamingStrategyJpaCompliantImpl`,
+`ImplicitNamingStrategyLegacyJpaImpl`, `ImplicitNamingStrategyLegacyHbmImpl`, and
+`ImplicitNamingStrategyComponentPathImpl`. Thus there are five implementations to evaluate,
+not just the historical four. The `default` registration currently selects Standard.
+
+The physical transformation prefixes table and column names with `p_`. Constraint tests
+instead prefix each physical constraint/index role independently. This deliberately exposes
+physical dependency names being incorporated into newly generated logical names.
+Expectations are declared in the tests, independently of strategy helper methods.
+Explicit names, quoting, composite correspondence, and names shared by inverse mappings
+are checked as well as implicit spelling.
+
+The suite builds metadata and inspects names; it does not execute generated DDL or SQL.
+The repeated-embeddable case additionally validates metadata: Standard and component-path must succeed,
+while the other strategies must reject the duplicate writable `zip` columns.
+That rejection characterizes a mapping requiring overrides, not a defect in JPA naming.
+
+== Mapping Coverage
+
+[cols="1,3",options="header"]
+|===
+|Fixture group |Assertions
+|Independent columns
+|Identifier, basic, explicit column, embedded property, formula exclusion, basic element
+collection, list order column, basic map key, explicit element/order columns.
+|Association and collection tables
+|Explicit primary tables distinct from entity aliases, implicit many-to-many table,
+collection table and owner key, to-one and association target keys, version column,
+quoted explicit join column.
+|Secondary tables and entity map keys
+|Secondary-table name and primary-key join, to-one join-table target key, entity-valued map key.
+|Non-primary-key and inline-view targets
+|Referenced business column resolved after member binding; join to a subselect entity.
+|Hibernate column roles
+|Any discriminator/key and temporal timezone companion.
+|Joined inheritance
+|Subclass table, inherited primary-key join, subclass basic column.
+|Derived identity
+|Explicit MapsId rename, quoted MapsId rename, subsequent association to the renamed identifier.
+|Constraints and indexes
+|Explicit and generated foreign keys, unique keys and indexes, quoted index,
+primary-key name, physical role participation and explicit/implicit provenance.
+|Composite identifiers
+|Explicit embedded-id column names and reversed referenced-column declarations with
+explicit local names; resolved ordering and single physical transformation.
+|Repeated nested embeddables
+|Two occurrences of the same nested embeddable; distinct full-path names and successful
+validation under Standard and component-path, duplicate-column rejection under the other strategies.
+|Relationship variants
+|Bidirectional many-to-one/one-to-many, inverse key reuse, unidirectional one-to-many
+foreign key, owning and inverse one-to-one mappings.
+|Single-table inheritance and tenancy
+|Default discriminator, tenant attribute column, shared subclass table.
+|===
+
+Existing role-contract tests supplement this matrix: they verify callback counts,
+explicit-name bypass, immutable dependency snapshots, composite implicit references,
+additive quoting, and deferred derived-identifier dependencies with custom strategies.
+They are not replaced by the matrix.
+
+== Observed Differences
+
+For explicit primary tables `owner_table` and `target_table`, entity alias `OwnerAlias`,
+and attributes `targets` and `tags`:
+
+[cols="1,2,2",options="header"]
+|===
+|Strategy |Association table with prefixing physical naming |Collection table with prefixing physical naming
+|Standard |`p_owner_table_target_table` |`p_OwnerAlias_tags`
+|JPA |`p_p_owner_table_p_target_table` |`p_OwnerAlias_tags`
+|Legacy JPA |`p_p_owner_table_p_target_table` |`p_p_owner_table_tags`
+|Legacy HBM |`p_p_owner_table_targets` |Uses Hibernate entity name, ignoring the JPA alias
+|Component path |`p_p_owner_table_p_target_table` |`p_OwnerAlias_tags`
+|===
+
+Component-path currently inherits the JPA variant's association-table composition.
+Standard now shares its attribute-path expansion: `home.location.zip` and
+`work.location.zip` become `home_location_zip` and `work_location_zip` instead of
+both becoming `zip`.
+
+Legacy HBM also omits the referenced-column suffix from ordinary to-one and
+association target keys. Legacy JPA uses the mapped table as an owner-key prefix
+in cases where the modern variants use the entity name. These are historical
+compatibility choices, not additional mapping capabilities.
+
+== Entity Discriminator Naming
+
+The single-table discriminator now defaults to logical `DTYPE` under all five supplied
+strategies and becomes `p_DTYPE` under the matrix's prefix physical strategy.
+`ImplicitDiscriminatorColumnNamingTest` covers the dedicated callback, annotation and
+XML defaults as supplied names, custom quoted names at runtime, physical transformation,
+joined-inheritance settings, suppression, formulas, and invalid callback results.
+Embeddable discriminator naming has a separate callback.
+`ImplicitEmbeddableDiscriminatorNamingTest` reuses the shared five-strategy/two-physical-policy
+matrix for direct, nested, collection-element, and nested collection-element defaults.
+Its focused tests cover source precedence, input facts, XML, quoting, explicit bypass,
+invalid results, logical-name index resolution, and runtime subtype loading.
+Any discriminator naming remains a separate role.
+
+== JPA Conformance Boundary
+
+The project currently uses Jakarta Persistence API `4.0.0-M7`. The published
+https://jakartaee.github.io/persistence/latest-nightly/api/jakarta.persistence/jakarta/persistence/JoinColumn.html[4.0 development JoinColumn documentation]
+defines default single join names using the relationship (or entity) name and referenced
+primary-key column. Such rules must be tested with independently declared expected names.
+The moving development documentation is a reference, not a pinned conformance certificate.
+
+Identity-physical cases avoid ambiguity introduced by Hibernate's physical naming extension.
+Prefixing cases deliberately characterize that extension and expose the dependency stage
+used. Do not infer a JPA requirement for every prefixing result, or change all callbacks
+to physical dependency composition just to match one table rule.
+
+The JPA implementation overrides association-table composition and the attribute-path
+hook to preserve terminal attribute names. A complete rule-by-rule conformance audit remains necessary,
+including alternate relationship ownership, embedded relationship paths, and explicit target
+column names. The matrix is a regression foundation for that audit, not a claim that the
+entire naming implementation is already conformant.
+
+== Further Coverage
+
+The matrix is broad but not exhaustive. Add strategy-matrix cases alongside the remaining
+callback migrations, especially implicit composite joins and composite MapsId across all
+variants, IdClass, embeddable associations/overrides, table-per-class, XML mappings supported
+in 9.0, audit/history columns, and schema/catalog quoting.
+Generator storage names remain a separate `ImplicitDatabaseObjectNamingStrategy` concern.
+Named SQL types remain deferred and mutation temporary tables remain internal.
+
+Also retain focused callback tests: identical final spelling alone cannot prove that a
+callback was invoked, skipped for an explicit declaration, or invoked exactly once.
+Database execution and a dialect matrix are separate from these boot-name assertions.
+
+== Approved Strategy Consolidation
+
+The implemented retention decision is:
+
+* Retain `ImplicitNamingStrategyJpaCompliantImpl`, preserving terminal attribute names
+  and its existing association-table naming behavior.
+* Make Standard use the full component-safe attribute path, including normalization
+  of synthetic identifier-mapper and collection path segments. Repeated nested
+  embeddables now receive distinct default names. Full paths reduce collisions;
+  they do not guarantee uniqueness against arbitrary explicit names or underscores.
+* Deprecate legacy-HBM, legacy-JPA, and component-path for removal, since 9.0.
+  Keep their current behavior and selector aliases during the deprecation period.
+* Emit `HHH90000046` through `DeprecationLogger` once per mapping resolution using
+  a deprecated strategy, including subclasses, after programmatic overrides are
+  applied. Accepting an unused deprecated configuration must not produce a warning.
+* Keep Standard as the default. Its newly qualified embeddable names are an
+  intentional schema-name change; users must review mappings before switching.
+  Component-path and Standard still differ in association-table composition, so
+  this is not a promise of identical schemas after replacing the former.
+
+Acceptance: the shared matrix must now validate repeated embeddables under both
+Standard and component-path, and preserve terminal-name behavior for JPA and both
+legacy strategies. Warning tests cover aliases, class names, class objects,
+instances, programmatic supply, subclasses, and effective supported overrides.
+
+== Consolidation Validation
+
+The full core suite passes after the approved consolidation: 17,832 tests, 1,525 skipped, zero failures or errors.
+The matrix covers both supported strategies and all three deprecated variants.
+Deprecation tests verify effective-strategy selection and one warning per resolution.
+Existing fixtures with native SQL, shared columns, and explicit referenced-column
+names now declare their intended column names; default-naming assertions expect full paths.
+
+== Aggregate Container Naming
+
+`AggregateColumnNamingTest` covers terminal defaults across all five supplied strategies,
+custom implicit and physical naming, additive quoting, callback input scope and role,
+explicit bypass, effective container overrides, invalid results, plural storage,
+collection elements, and map keys. It verifies that identical nested member names stay
+isolated in separate aggregate containers. JSON runtime cases exercise H2; XML/STRUCT
+cases use PostgreSQL dialect metadata without PostgreSQL database execution.
+
+Two expected-failure reproductions remain: the JDBC binding defect tracked by
+https://hibernate.atlassian.net/browse/HHH-20913[HHH-20913], and aggregate type restoration
+from metadata archives. Both predate this naming migration. The build executes them in
+expected-failure validation mode; their successful validation confirms the bugs remain
+reproducible and does not count as passing runtime/archive acceptance.
+
+Final commit-cleanup validation: the complete core suite passed with 17,895 tests,
+1,525 skipped, and zero unexpected failures or errors. This includes all 22
+aggregate naming cases and execution of both expected-failure reproductions.
+
+== Collection-Identifier and Soft-Delete Naming
+
+`CollectionIdSoftDeleteNamingTest` covers the five supplied implicit strategies with
+identity and prefixing physical strategies. Expected defaults are independently
+asserted as `id`, `active`, and `deleted` (including `TIMESTAMP`).
+
+Focused tests verify owner-relative direct and embedded collection paths, settled
+table dependencies, custom implicit names, explicit bypass, provenance, additive
+quoting, invalid callback results, and record invariants. Logical index references
+on collection identifiers and soft-delete indicators resolve to the final columns.
+Basic, embeddable, and association identifier bags are covered, together with normalized
+mapping XML. Existing collection and soft-delete tests retain coverage of annotation
+precedence, inheritance, converters, metadata options, and invalid mappings.
+
+The H2 runtime case combines an identifier bag with soft deletion and a collection
+inside an embeddable, using quoted transformed column and table names. It exercises
+insert/load, collection-element removal, and entity deletion/filtering. Generator
+configuration and runtime soft-delete column expressions now retain physical quoting.
+
+Metadata archive tests check restored names and quoting for identifiers and both
+soft-delete targets without replaying naming callbacks. This is independent of the
+previously documented aggregate archive failure. Explicit/implicit provenance is
+verified at the callback boundary: completed metadata archives do not retain the
+binding-time logical correspondence map.
+
+Focused naming, collection-id, and soft-delete regressions: 152 tests, no failures
+or skips, including 19 new naming tests. Complete core suite: 17,914 tests,
+1,525 skipped, no failures or errors. Runtime validation used the configured H2
+environment; no cross-dialect execution is claimed.
+
+== Time-Zone Companion Naming
+
+`TimeZoneColumnNamingTest` has 20 cases covering all five supplied implicit strategies
+with identity and transforming physical naming; preserved absent/empty declaration
+defaults; explicit names and overrides; settled dependency pairs; provenance and callback counts; secondary
+tables; inherited attributes with independent concrete entity uses; quoted logical names;
+physical-only quoting; and once-only column naming patterns. Temporal-only overrides
+retain the original source-derived companion default; empty overrides retain synthetic-path naming.
+Default calculations now live in the strategy. Custom callbacks avoid unused source
+naming, while supplied defaults reuse resolved temporal names and honor custom basic
+column naming. Embeddable discriminator tests assert effective declaration origin.
+
+Storage-selection checks exercise global `COLUMN` and both `AUTO` capability branches,
+retaining the characterized native `AUTO` annotation rejection and existing one-column
+nested/collection behavior. The non-native capability test uses an H2 dialect stub and
+is not a separate database execution claim.
+
+Quoted transformed names work through H2 persistence/loading for `OffsetDateTime`,
+`OffsetTime`, and `ZonedDateTime`. Metadata archives preserve finalized names and quoting
+without replaying callbacks. Binding-time provenance is verified separately.
+
+The strategy-owned default calculation refinement passes 38 focused tests: 20 time-zone
+and 18 embeddable discriminator cases, with no skips, failures, or errors. Complete
+core verification passed: 17,934 tests, 1,525 skipped, no failures or errors. Runtime
+verification used H2.
+
+== Shared Interface Defaults
+
+After moving entity discriminator, embeddable discriminator, collection identifier,
+soft-delete, and time-zone companion algorithms to `ImplicitNamingStrategy` default
+methods, all 66 focused naming tests passed with no skips, failures, or errors.
+The unchanged algorithms are inherited by supplied strategies; existing tests exercise
+custom overrides and time-zone delegation to custom basic-column naming.
+
+== Required Physical PK Names
+
+The PK matrix asserts generated logical names and stored physical names independently
+of DDL emission. The standard physical strategy preserves the name for every PK; the
+existing exporter policy still omits implicit PK names from DDL. Custom physical
+strategy coverage remains in place. Null results from implicit or physical PK naming are rejected with mapping errors;
+custom implicit results may carry either explicitness flag.
+
+This replaces the earlier nullable-physical-PK and standard-suppression expectations.
+Full core validation of the revised contract passed: 17,965 tests, 1,525 skipped, zero failures or errors.
+
+== Unique-Key Migration Validation
+
+The affected naming, temporal/state-management, and schema follow-up run passed
+712 tests, with 6 skipped and no failures or errors. This corrected the archive test
+configuration and retained temporal naming compatibility. Final full-core verification, including the aggregate compatibility exception, passed:
+17,976 tests, 1,525 skipped, zero failures and zero errors.

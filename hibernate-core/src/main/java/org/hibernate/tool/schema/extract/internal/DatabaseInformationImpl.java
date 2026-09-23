@@ -4,6 +4,10 @@
  */
 package org.hibernate.tool.schema.extract.internal;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier;
+
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +15,7 @@ import java.util.Map;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.PhysicalNamespaceName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -87,9 +92,9 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public boolean schemaExists(Namespace.Name namespace) {
-		return extractor.schemaExists( context.catalogWithDefault( namespace.catalog() ),
-				context.schemaWithDefault( namespace.schema() ) );
+	public boolean schemaExists(PhysicalNamespaceName namespace) {
+		return extractor.schemaExists( context.catalogWithDefault( physicalIdentifier( namespace.catalog() ) ),
+				context.schemaWithDefault( physicalIdentifier( namespace.schema() ) ) );
 	}
 
 	@Override
@@ -121,8 +126,8 @@ public class DatabaseInformationImpl
 
 	@Override
 	public NameSpaceTablesInformation getTablesInformation(Namespace namespace) {
-		return extractor.getTables( context.catalogWithDefault( namespace.getPhysicalName().catalog() ),
-				context.schemaWithDefault( namespace.getPhysicalName().schema() ) );
+		return extractor.getTables( context.catalogWithDefault( physicalIdentifier( namespace.getPhysicalName().catalog() ) ),
+				context.schemaWithDefault( physicalIdentifier( namespace.getPhysicalName().schema() ) ) );
 	}
 
 	@Override
@@ -136,6 +141,12 @@ public class DatabaseInformationImpl
 	@Override
 	public SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName) {
 		return getSequenceInformation( new QualifiedSequenceName( schemaName, sequenceName ) );
+	}
+
+	@Override
+	public SequenceInformation getSequenceInformation(QualifiedPhysicalName name) {
+		return getSequenceInformation( new QualifiedSequenceName( physicalIdentifier( name.catalogName() ),
+				physicalIdentifier( name.schemaName() ), physicalIdentifier( name.objectName() ) ) );
 	}
 
 	@Override

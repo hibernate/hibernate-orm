@@ -147,9 +147,9 @@ public class JoinTableOptimizationTest {
 					s.createQuery( String.class, "select p.text from Document d join d.pages p on p.text is not null" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
-							"select p1_0.text " +
+							"select p1_0.pages_text " +
 									"from Document d1_0 " +
-									"join document_pages p1_0 on d1_0.id=p1_0.Document_id and p1_0.text is not null",
+									"join document_pages p1_0 on d1_0.id=p1_0.Document_id and p1_0.pages_text is not null",
 							statementInspector.getSqlQueries().get( 0 ),
 							"Join condition was wrongly removed"
 					);

@@ -5,6 +5,8 @@
 package org.hibernate.orm.test.naming;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -39,7 +41,7 @@ public class AcmeCorpPhysicalNamingStrategyTest {
 	public void testTableNaming() {
 		{
 			Identifier in = Identifier.toIdentifier( "accountNumber" );
-			Identifier out = strategy.toPhysicalTableName( in, serviceRegistry.getService( JdbcEnvironment.class ) );
+			PhysicalName out = strategy.toPhysicalTableName( PhysicalNamingStrategyHelper.logicalName( in ), PhysicalNamingStrategyHelper.context( serviceRegistry.getService( JdbcEnvironment.class ) ) );
 			assertThat( out.getText() ).isEqualTo( "acct_num" );
 		}
 	}

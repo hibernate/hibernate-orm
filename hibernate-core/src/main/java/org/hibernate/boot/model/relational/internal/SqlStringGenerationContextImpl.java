@@ -4,11 +4,15 @@
  */
 package org.hibernate.boot.model.relational.internal;
 
+
+import org.hibernate.boot.model.relational.PhysicalNamespaceName;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier;
+
 import java.util.Map;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -20,6 +24,8 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 
 public class SqlStringGenerationContextImpl
 		implements SqlStringGenerationContext {
@@ -91,20 +97,20 @@ public class SqlStringGenerationContextImpl
 		);
 	}
 
-	private static Identifier actualDefaultSchema(String defaultSchema, NameQualifierSupport nameQualifierSupport, IdentifierHelper identifierHelper, Namespace.Name implicitNamespaceName) {
+	private static Identifier actualDefaultSchema(String defaultSchema, NameQualifierSupport nameQualifierSupport, IdentifierHelper identifierHelper, PhysicalNamespaceName implicitNamespaceName) {
 		if ( nameQualifierSupport.supportsSchemas() ) {
 			Identifier actualDefaultSchema = identifierHelper.toIdentifier( defaultSchema );
-			return actualDefaultSchema == null ? implicitNamespaceName.schema() : actualDefaultSchema;
+			return actualDefaultSchema == null ? physicalIdentifier( implicitNamespaceName.schema() ) : actualDefaultSchema;
 		}
 		else {
 			return null;
 		}
 	}
 
-	private static Identifier actualDefaultCatalog(String defaultCatalog, NameQualifierSupport nameQualifierSupport, IdentifierHelper identifierHelper, Namespace.Name implicitNamespaceName) {
+	private static Identifier actualDefaultCatalog(String defaultCatalog, NameQualifierSupport nameQualifierSupport, IdentifierHelper identifierHelper, PhysicalNamespaceName implicitNamespaceName) {
 		if ( nameQualifierSupport.supportsCatalogs() ) {
 			final Identifier actualDefaultCatalog = identifierHelper.toIdentifier( defaultCatalog );
-			return actualDefaultCatalog == null ? implicitNamespaceName.catalog() : actualDefaultCatalog;
+			return actualDefaultCatalog == null ? physicalIdentifier( implicitNamespaceName.catalog() ) : actualDefaultCatalog;
 		}
 		else {
 			return null;
@@ -143,6 +149,11 @@ public class SqlStringGenerationContextImpl
 		dialect = jdbcEnvironment.getDialect();
 		identifierHelper = jdbcEnvironment.getIdentifierHelper();
 		qualifiedObjectNameFormatter = jdbcEnvironment.getQualifiedObjectNameFormatter();
+	}
+
+	@Override
+	public PhysicalName.Factory getPhysicalNameFactory() {
+		return identifierHelper.getPhysicalNameFactory();
 	}
 
 	@Override
@@ -199,6 +210,26 @@ public class SqlStringGenerationContextImpl
 		else {
 			return qualifiedName;
 		}
+	}
+
+	@Override
+	public String format(QualifiedPhysicalName name) {
+		return qualifiedObjectNameFormatter.format( physicalNameWithDefaults( name, false ), dialect );
+	}
+
+	@Override
+	public String formatWithoutCatalog(QualifiedPhysicalName name) {
+		return qualifiedObjectNameFormatter.format( physicalNameWithDefaults( name, true ), dialect );
+	}
+
+	private QualifiedPhysicalName physicalNameWithDefaults(QualifiedPhysicalName name, boolean omitCatalog) {
+		final var factory = identifierHelper.getPhysicalNameFactory();
+		return new QualifiedPhysicalName(
+				omitCatalog ? null : name.catalogName() != null ? name.catalogName()
+						: defaultCatalog == null ? null : factory.create( defaultCatalog.getText(), defaultCatalog.isQuoted() ),
+				name.schemaName() != null ? name.schemaName()
+						: defaultSchema == null ? null : factory.create( defaultSchema.getText(), defaultSchema.isQuoted() ),
+				name.objectName() );
 	}
 
 	@Override

@@ -4,13 +4,16 @@
  */
 package org.hibernate.dialect.schema.internal;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
@@ -43,18 +46,16 @@ public class StandardTableMigrator implements TableMigrator {
 
 	@Override
 	public String[] getSqlAlterStrings(
-			Table table,
+			PhysicalTable table,
 			Metadata metadata,
 			TableInformation tableInfo,
 			SqlStringGenerationContext context) {
-		return table.isView()
-				? EMPTY_STRING_ARRAY
-				: sqlAlterStrings( table, dialect, metadata, tableInfo, context ).toArray( EMPTY_STRING_ARRAY );
+		return sqlAlterStrings( table, dialect, metadata, tableInfo, context ).toArray( EMPTY_STRING_ARRAY );
 	}
 
 	@Internal
 	public static List<String> sqlAlterStrings(
-			Table table,
+			PhysicalTable table,
 			Dialect dialect,
 			Metadata metadata,
 			TableInformation tableInformation,
@@ -99,11 +100,7 @@ public class StandardTableMigrator implements TableMigrator {
 		return results;
 	}
 
-	private static String getTableName(Table table, SqlStringGenerationContext context) {
-		return context.format( new QualifiedTableName(
-				toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				table.getNameIdentifier()
-		) );
+	private static String getTableName(PhysicalTable table, SqlStringGenerationContext context) {
+		return context.format( ((NamedTable) table).getPhysicalName() );
 	}
 }

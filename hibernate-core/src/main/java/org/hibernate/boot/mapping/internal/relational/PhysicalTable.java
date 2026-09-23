@@ -4,14 +4,13 @@
  */
 package org.hibernate.boot.mapping.internal.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.mapping.Table;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 
 /// Table reference for a physical table in the relational database.
 ///
-/// The binder keeps logical names and physical names together because source
-/// annotations, implicit naming, physical naming, and `org.hibernate.mapping`
-/// lookup often need to ask slightly different questions about the same table.
+/// The reference retains logical source names for binding lookup. Physical names
+/// are owned by the mapping table and are accessed through that shared binding.
 /// The [#binding()] is the mapping-model table shell created during table
 /// binding; identifier-derived keys and foreign keys are completed by later
 /// phases.
@@ -23,42 +22,39 @@ import org.hibernate.mapping.Table;
 /// @since 9.0
 /// @author Steve Ebersole
 public record PhysicalTable(
-		Identifier logicalName,
-		Identifier logicalCatalogName,
-		Identifier logicalSchemaName,
-		Identifier physicalTableName,
-		Identifier physicalCatalogName,
-		Identifier physicalSchemaName,
-		Table binding) implements PhysicalTableReference {
+		LogicalName logicalName,
+		LogicalName logicalCatalogName,
+		LogicalName logicalSchemaName,
+		org.hibernate.mapping.PhysicalTable binding) implements PhysicalTableReference {
 
 	@Override
-	public Identifier logicalName() {
+	public LogicalName logicalName() {
 		return logicalName;
 	}
 
 	@Override
-	public Identifier getLogicalSchemaName() {
+	public LogicalName getLogicalSchemaName() {
 		return logicalSchemaName;
 	}
 
 	@Override
-	public Identifier getLogicalCatalogName() {
+	public LogicalName getLogicalCatalogName() {
 		return logicalCatalogName;
 	}
 
 	@Override
-	public Identifier getPhysicalTableName() {
-		return physicalTableName;
+	public PhysicalName getPhysicalTableName() {
+		return binding.getPhysicalName().objectName();
 	}
 
 	@Override
-	public Identifier getPhysicalSchemaName() {
-		return physicalSchemaName;
+	public PhysicalName getPhysicalSchemaName() {
+		return binding.getPhysicalName().schemaName();
 	}
 
 	@Override
-	public Identifier getPhysicalCatalogName() {
-		return physicalCatalogName;
+	public PhysicalName getPhysicalCatalogName() {
+		return binding.getPhysicalName().catalogName();
 	}
 
 	@Override
@@ -67,7 +63,7 @@ public record PhysicalTable(
 	}
 
 	@Override
-	public Table binding() {
+	public org.hibernate.mapping.PhysicalTable binding() {
 		return binding;
 	}
 }

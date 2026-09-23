@@ -29,7 +29,7 @@ public class PrimaryKey extends Constraint {
 	public void addColumn(Column column) {
 		// force primary key columns to not-null
 		for ( var next : getTable().getColumns() ) {
-			if ( next.getCanonicalName().equals( column.getCanonicalName() ) ) {
+			if ( next.getPhysicalName().equals( column.getPhysicalName() ) ) {
 				next.setNullable( false );
 			}
 		}
@@ -38,7 +38,7 @@ public class PrimaryKey extends Constraint {
 
 	@Override
 	public String getExportIdentifier() {
-		return qualify( getTable().getExportIdentifier(), "PK-" + getName() );
+		return qualify( getTableExportIdentifier(), "PK-" + getName() );
 	}
 
 	public void setOrderingUniqueKey(UniqueKey uniqueKey) {

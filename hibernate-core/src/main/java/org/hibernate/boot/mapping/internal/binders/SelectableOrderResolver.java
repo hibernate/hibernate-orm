@@ -10,16 +10,16 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.mapping.internal.relational.ColumnNameCorrespondence;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 
 /// Resolves local and referenced columns into ordered correspondence entries.
 ///
-/// Explicit referenced names are matched using [Identifier#matches(Identifier)]
-/// so quoted identifiers remain strict while unquoted identifiers retain their
-/// dialect-aware case-insensitive matching behavior.
+/// Explicit referenced names use logical-name equality: quoted names match
+/// exactly and unquoted names use locale-independent case-folded keys. Physical
+/// column identity is resolved separately through the column correspondence.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -65,11 +65,16 @@ class SelectableOrderResolver {
 			final String referencedColumnName = referencedColumnNames.get( i );
 			final Column referencedColumn = findTargetColumn(
 					targetColumns,
-					database.toIdentifier( referencedColumnName ),
+					database.toLogicalName( referencedColumnName ),
 					database,
 					sourceRole,
 				columnNames
 			);
+			if ( columnNames != null ) {
+				columnNames.registerReferenceName( localColumns.get( i ), referencedColumn,
+						columnNames.selectReferenceName( referencedColumn.getValue() == null ? null : referencedColumn.getValue().getColumnContainer(),
+								referencedColumn, database.toLogicalName( referencedColumnName ) ) );
+			}
 			correspondences.add( new SelectableCorrespondence(
 					localColumns.get( i ),
 					referencedColumn,
@@ -105,12 +110,17 @@ class SelectableOrderResolver {
 			final String referencedColumnName = referencedColumnNames.get( i );
 			final Column referencedColumn = findTargetColumnOrNull(
 					targetColumns,
-					database.toIdentifier( referencedColumnName ),
+					database.toLogicalName( referencedColumnName ),
 					database,
 				columnNames
 			);
 			if ( referencedColumn == null ) {
 				return null;
+			}
+			if ( columnNames != null ) {
+				columnNames.registerReferenceName( localColumns.get( i ), referencedColumn,
+						columnNames.selectReferenceName( referencedColumn.getValue() == null ? null : referencedColumn.getValue().getColumnContainer(),
+								referencedColumn, database.toLogicalName( referencedColumnName ) ) );
 			}
 			correspondences.add( new SelectableCorrespondence(
 					localColumns.get( i ),
@@ -135,7 +145,7 @@ class SelectableOrderResolver {
 
 	private static Column findTargetColumn(
 			List<Column> targetColumns,
-			Identifier referencedColumnName,
+			LogicalName referencedColumnName,
 			Database database,
 			String sourceRole,
 			ColumnNameCorrespondence columnNames) {
@@ -151,7 +161,7 @@ class SelectableOrderResolver {
 
 	private static Column findTargetColumnOrNull(
 			List<Column> targetColumns,
-			Identifier referencedColumnName,
+			LogicalName referencedColumnName,
 			Database database,
 			ColumnNameCorrespondence columnNames) {
 		for ( Column targetColumn : targetColumns ) {

@@ -294,7 +294,7 @@ class AuditElementCollectionTest {
 		// Verify DEL audit rows store the full embeddable (name + score)
 		scope.inSession( session -> {
 			var delRows = session.createNativeQuery(
-					"select name_col as name, score from EmbeddableSetEntity_components_AUD"
+					"select name_col as name, components_score as score from EmbeddableSetEntity_components_AUD"
 					+ " where REVTYPE = 2", Tuple.class
 			).getResultList();
 			assertThat( delRows ).hasSize( 1 );

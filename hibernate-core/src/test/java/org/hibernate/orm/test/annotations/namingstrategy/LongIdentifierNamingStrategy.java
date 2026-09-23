@@ -4,28 +4,38 @@
  */
 package org.hibernate.orm.test.annotations.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+import org.hibernate.relational.naming.spi.LogicalName;
+
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
-import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
+import org.hibernate.boot.model.naming.spi.ForeignKeyNamingInput;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
+import org.hibernate.boot.model.naming.spi.IndexNamingInput;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.naming.spi.UniqueKeyNamingInput;
 
 public class LongIdentifierNamingStrategy
 		extends ImplicitNamingStrategyJpaCompliantImpl {
 
 	@Override
-	public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
-		return limitIdentifierName(super.determineForeignKeyName( source ));
+	@Nonnull
+	public LogicalName determineForeignKeyName(@Nonnull ForeignKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+		final var name = super.determineForeignKeyName( input, context );
+		return context.implicitName( name.getText().substring( 0, Math.min( 30, name.getText().length() ) ), name.isQuoted() );
 	}
 
 	@Override
-	public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
-		return limitIdentifierName(super.determineUniqueKeyName( source ));
+	@Nonnull
+	public LogicalName determineUniqueKeyName(@Nonnull UniqueKeyNamingInput input, @Nonnull ImplicitNamingContext context) {
+		final var name = super.determineUniqueKeyName( input, context );
+		return context.implicitName( name.getText().substring( 0, Math.min( 30, name.getText().length() ) ), name.isQuoted() );
 	}
 
 	@Override
-	public Identifier determineIndexName(ImplicitIndexNameSource source) {
-		return limitIdentifierName(super.determineIndexName( source ));
+	@Nonnull
+	public LogicalName determineIndexName(@Nonnull IndexNamingInput input, @Nonnull ImplicitNamingContext context) {
+		final var name = super.determineIndexName( input, context );
+		return context.implicitName( name.getText().substring( 0, Math.min( 30, name.getText().length() ) ), name.isQuoted() );
 	}
 
 	public Identifier limitIdentifierName(Identifier identifier) {

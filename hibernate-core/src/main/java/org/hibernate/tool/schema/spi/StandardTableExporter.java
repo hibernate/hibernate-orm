@@ -4,14 +4,18 @@
  */
 package org.hibernate.tool.schema.spi;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.SPI;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.constraint.spi.CheckConstraintPlacement;
@@ -29,14 +33,12 @@ import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.addAll;
 import static java.util.Comparator.comparing;
-import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -46,12 +48,12 @@ import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.appendColumn;
 
-/// Standard exporter for relational [Table] definitions.
+/// Standard exporter for named relational [NamedTable] definitions.
 ///
 /// Extend this class only when the database needs to suppress an aggregate
 /// column check or reposition a primary-key constraint name. Override the
-/// complete [#getSqlCreateStrings(Table, Metadata, SqlStringGenerationContext)]
-/// or [#getSqlDropStrings(Table, Metadata, SqlStringGenerationContext)]
+/// complete [#getSqlCreateStrings(NamedTable, Metadata, SqlStringGenerationContext)]
+/// or [#getSqlDropStrings(NamedTable, Metadata, SqlStringGenerationContext)]
 /// operation when the database uses a different table-DDL algorithm.
 ///
 /// Retain the supplied Dialect for the lifetime of this exporter and supply the
@@ -62,7 +64,7 @@ import static org.hibernate.tool.schema.internal.ColumnDefinitions.appendColumn;
 /// @since 8.0
 /// @author Steve Ebersole
 @SPI({ USE, IMPLEMENT, SUPPLY })
-public class StandardTableExporter implements Exporter<Table> {
+public class StandardTableExporter implements Exporter<NamedTable> {
 
 	private final Dialect dialect;
 
@@ -84,7 +86,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	@Override
 	public String[] getSqlCreateStrings(
-			Table table,
+			NamedTable table,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
 		final var tableName = getTableName( table );
@@ -92,12 +94,14 @@ public class StandardTableExporter implements Exporter<Table> {
 			final String formattedTableName = context.format( tableName );
 			final String ddl = table.isView()
 					? appendCreateView( table, formattedTableName )
-					: appendCreateTable( table, formattedTableName, metadata, context );
+					: appendCreateTable( (PhysicalTable) table, formattedTableName, metadata, context );
 
 			final List<String> sqlStrings = new ArrayList<>();
 			sqlStrings.add( ddl );
 			applyComments( table, formattedTableName, sqlStrings );
-			applyInitCommands( table, sqlStrings, context );
+			if ( table instanceof PhysicalTable physicalTable ) {
+				applyInitCommands( physicalTable, sqlStrings, context );
+			}
 			return sqlStrings.toArray( EMPTY_STRINGS );
 		}
 		catch (Exception e) {
@@ -106,14 +110,14 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 	}
 
-	private static void appendOptions(Table table, StringBuilder createTable) {
+	private static void appendOptions(NamedTable table, StringBuilder createTable) {
 		final String options = table.getOptions();
 		if ( isNotBlank( options ) ) {
 			createTable.append( " " ).append( options );
 		}
 	}
 
-	private String appendCreateTable(Table table, String tableName, Metadata metadata, SqlStringGenerationContext context) {
+	private String appendCreateTable(PhysicalTable table, String tableName, Metadata metadata, SqlStringGenerationContext context) {
 		final var createTable = new StringBuilder();
 		final var extra = new StringBuilder();
 
@@ -174,7 +178,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		return createTable.toString();
 	}
 
-	private String appendCreateView(Table table, String viewName) {
+	private String appendCreateView(NamedTable table, String viewName) {
 		final var createTable = new StringBuilder();
 
 		final String viewQuery = table.getViewQuery();
@@ -205,7 +209,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		return createTable.toString();
 	}
 
-	private void applyComments(Table table, String formattedTableName, List<String> sqlStrings) {
+	private void applyComments(NamedTable table, String formattedTableName, List<String> sqlStrings) {
 		final var support = dialect.getSchemaCommentSupport();
 		final String comment = table.getComment();
 		if ( comment != null && support.placement( CommentTarget.TABLE ) == CommentPlacement.STATEMENT ) {
@@ -225,7 +229,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 	}
 
-	private void applyInitCommands(Table table, List<String> sqlStrings, SqlStringGenerationContext context) {
+	private void applyInitCommands(PhysicalTable table, List<String> sqlStrings, SqlStringGenerationContext context) {
 		for ( var initCommand : table.getInitCommands( context ) ) {
 			addAll( sqlStrings, initCommand.initCommands() );
 		}
@@ -235,7 +239,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		buf.append( dialect.getTableCreationSupport().tableCreationOptions() );
 	}
 
-	protected void applyTableCheck(Table table, StringBuilder buf, Metadata metadata) {
+	protected void applyTableCheck(PhysicalTable table, StringBuilder buf, Metadata metadata) {
 		final var support = dialect.getCheckConstraintSupport();
 		if ( support.supports( CheckConstraintPlacement.TABLE ) ) {
 			for ( var column : table.getColumns() ) {
@@ -439,7 +443,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 	}
 
-	private String tableCreateString(Table table) {
+	private String tableCreateString(PhysicalTable table) {
 		final String createTableString = dialect.getTableCreationSupport().createTableCommand(
 				table.hasPrimaryKey() ? TableCreationKind.STANDARD : TableCreationKind.MULTISET
 		);
@@ -475,7 +479,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
+	public String[] getSqlDropStrings(NamedTable table, Metadata metadata, SqlStringGenerationContext context) {
 		final var dropTable = new StringBuilder();
 		if ( table.getViewQuery() == null ) {
 			dropTable.append( "drop table " );
@@ -495,11 +499,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		return new String[] { dropTable.toString() };
 	}
 
-	private static QualifiedName getTableName(Table table) {
-		return new QualifiedNameParser.NameParts(
-				toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				table.getNameIdentifier()
-		);
+	private static QualifiedPhysicalName getTableName(NamedTable table) {
+		return table.getPhysicalName();
 	}
 }

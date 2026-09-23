@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.internal.ImplicitNamingHelper;
+import org.hibernate.boot.model.naming.spi.CollectionIdColumnNamingInput;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.internal.GeneratorBinder;
@@ -21,7 +23,7 @@ import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.IdentifierCollection;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ColumnContainer;
 
 import jakarta.annotation.Nullable;
 
@@ -34,7 +36,7 @@ class CollectionIdBinder {
 			CollectionSource source,
 			@Nullable CollectionIdMetadataImpl collectionIdMetadata,
 			IdentifierCollection collection,
-			Table table,
+			ColumnContainer table,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -57,18 +59,24 @@ class CollectionIdBinder {
 				bindingState,
 				bindingContext
 		);
-			bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution(
-					resolutionInput,
-					bindingState.getMetadataBuildingContext().getServiceComponents(),
-					bindingState.getMappingResolutionState(),
-					bindingState.getMetadataBuildingContext()
-			) );
+		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution(
+				resolutionInput,
+				bindingState.getMetadataBuildingContext().getServiceComponents(),
+				bindingState.getMappingResolutionState(),
+				bindingState.getMetadataBuildingContext()
+		) );
 
-		final org.hibernate.mapping.Column idColumn = ColumnBinder.bindColumn(
+		final org.hibernate.mapping.Column idColumn = ColumnBinder.bindColumnWithNameBinding(
+				table,
 				ColumnSource.from( collectionId.column() ),
-				() -> IdentifierCollection.DEFAULT_IDENTIFIER_COLUMN_NAME,
+				ImplicitNamingHelper.once( () -> bindingContext.getImplicitNamingStrategy().determineCollectionIdColumnName(
+						new CollectionIdColumnNamingInput(
+								JoinColumnNaming.entity( collection.getOwner() ),
+								collection.getRole().substring( collection.getOwnerEntityName().length() + 1 ),
+								JoinColumnNaming.table( collection.getCollectionTable(), collection.getOwner(), bindingState ) ),
+						JoinColumnNaming.context( bindingState ) ), "collection identifier column" ),
 				false,
-				false
+				false, 255, 0, 0, bindingOptions, bindingState
 		);
 		table.addColumn( idColumn );
 		id.addColumn( idColumn );

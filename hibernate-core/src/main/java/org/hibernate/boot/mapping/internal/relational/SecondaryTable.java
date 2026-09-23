@@ -4,18 +4,20 @@
  */
 package org.hibernate.boot.mapping.internal.relational;
 
+import org.hibernate.mapping.PhysicalTable;
+
 import java.util.List;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
-import org.hibernate.mapping.Table;
 
 import jakarta.persistence.JoinColumn;
 
 /// Table reference for a JPA secondary table bound to an entity.
 ///
-/// The record keeps both the source-level logical identifiers and the physical
-/// identifiers chosen during table binding.  The associated `org.hibernate.mapping.Table`
+/// The record keeps source-level logical names and delegates physical names to
+/// the associated mapping table. That `PhysicalTable`
 /// is created before its key can be completed; [#foreignKeySource] is retained so
 /// the table-key and foreign-key phases can later apply the `@SecondaryTable`
 /// key metadata.
@@ -25,45 +27,46 @@ import jakarta.persistence.JoinColumn;
 /// @since 9.0
 /// @author Steve Ebersole
 public record SecondaryTable(
-		Identifier logicalName,
-		Identifier logicalCatalogName,
-		Identifier logicalSchemaName,
-		Identifier physicalName,
-		Identifier physicalCatalogName,
-		Identifier physicalSchemaName,
-			boolean optional,
-			boolean owned,
-			List<JoinColumn> primaryKeyJoinColumns,
-			ForeignKeySource foreignKeySource,
-			Table binding) implements PhysicalTableReference {
+		LogicalName logicalName,
+		LogicalName logicalCatalogName,
+		LogicalName logicalSchemaName,
+		boolean optional,
+		boolean owned,
+		List<JoinColumn> primaryKeyJoinColumns,
+		ForeignKeySource foreignKeySource,
+		PhysicalTable binding) implements PhysicalTableReference {
+	public PhysicalName physicalName() {
+		return binding.getPhysicalName().objectName();
+	}
+
 	@Override
-	public Identifier logicalName() {
+	public LogicalName logicalName() {
 		return logicalName;
 	}
 
 	@Override
-	public Identifier getLogicalSchemaName() {
+	public LogicalName getLogicalSchemaName() {
 		return logicalSchemaName;
 	}
 
 	@Override
-	public Identifier getLogicalCatalogName() {
+	public LogicalName getLogicalCatalogName() {
 		return logicalCatalogName;
 	}
 
 	@Override
-	public Identifier getPhysicalTableName() {
-		return physicalName;
+	public PhysicalName getPhysicalTableName() {
+		return binding.getPhysicalName().objectName();
 	}
 
 	@Override
-	public Identifier getPhysicalSchemaName() {
-		return physicalSchemaName;
+	public PhysicalName getPhysicalSchemaName() {
+		return binding.getPhysicalName().schemaName();
 	}
 
 	@Override
-	public Identifier getPhysicalCatalogName() {
-		return physicalCatalogName;
+	public PhysicalName getPhysicalCatalogName() {
+		return binding.getPhysicalName().catalogName();
 	}
 
 	@Override
@@ -72,7 +75,7 @@ public record SecondaryTable(
 	}
 
 	@Override
-	public Table binding() {
+	public PhysicalTable binding() {
 		return binding;
 	}
 }

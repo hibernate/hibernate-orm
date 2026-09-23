@@ -51,7 +51,7 @@ public class CommentsTest {
 			org.hibernate.mapping.Table table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
 					.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(TABLE_NAME))
 					.findFirst().orElse(null);
-			assertThat(table.getComment(), is(TABLE_COMMENT));
+			assertThat(((org.hibernate.mapping.NamedTable) table).getComment(), is(TABLE_COMMENT));
 			assertThat(table.getColumns().size(), is(6));
 			for (org.hibernate.mapping.Column col : table.getColumns()) {
 				assertThat(col.getComment(), is("I am " + col.getName()));
@@ -59,7 +59,7 @@ public class CommentsTest {
 			table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
 					.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(SEC_TABLE_NAME))
 					.findFirst().orElse(null);
-			assertThat(table.getComment(), is(SEC_TABLE_COMMENT));
+			assertThat(((org.hibernate.mapping.NamedTable) table).getComment(), is(SEC_TABLE_COMMENT));
 			assertThat(table.getColumns().size(), is(2));
 			long count = table.getColumns().stream().filter(col -> "This is a date".equalsIgnoreCase(col.getComment())).count();
 			assertThat(count, is(1L));
@@ -79,8 +79,8 @@ public class CommentsTest {
 		@Column(comment = "I am id")
 		private Long id;
 
-		@AttributeOverride(name = "firstName", column = @Column(comment = "I am firstName"))
-		@AttributeOverride(name = "lastName", column = @Column(comment = "I am lastName"))
+		@AttributeOverride(name = "firstName", column = @Column(comment = "I am name_firstName"))
+		@AttributeOverride(name = "lastName", column = @Column(comment = "I am name_lastName"))
 		private Name name;
 
 		private Money money;
@@ -102,9 +102,9 @@ public class CommentsTest {
 
 	@Embeddable
 	public static class Money {
-		@Column(comment = "I am amount")
+		@Column(comment = "I am money_amount")
 		private BigDecimal amount;
-		@Column(comment = "I am currency")
+		@Column(comment = "I am money_currency")
 		private Currency currency;
 	}
 

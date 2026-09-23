@@ -28,7 +28,7 @@ import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
-import org.hibernate.mapping.Table;
+import org.hibernate.tool.reveng.api.core.ForeignKeyDefinition;
 import org.hibernate.tool.reveng.api.core.AssociationInfo;
 import org.hibernate.tool.reveng.api.core.RevengStrategy;
 import org.hibernate.tool.reveng.api.core.RevengStrategy.SchemaSelection;
@@ -77,7 +77,7 @@ public class OverrideRepository  {
 
 	final private List<TableFilter> tableFilters;
 
-	final private Map<TableIdentifier, List<ForeignKey>> foreignKeys; // key: TableIdentifier element: List of foreignkeys that references the Table
+	final private Map<TableIdentifier, List<ForeignKeyDefinition>> foreignKeys; // key: TableIdentifier element: List of foreignkeys that references the Table
 
 	final private Map<TableColumnKey, String> typeForColumn;
 
@@ -417,8 +417,8 @@ public class OverrideRepository  {
 				}
 			}
 
-			public List<ForeignKey> getForeignKeys(TableIdentifier referencedTable) {
-				List<ForeignKey> list = foreignKeys.get(referencedTable);
+			public List<ForeignKeyDefinition> getForeignKeys(TableIdentifier referencedTable) {
+				List<ForeignKeyDefinition> list = foreignKeys.get(referencedTable);
 				if(list==null) {
 					return super.getForeignKeys(referencedTable);
 				}
@@ -625,15 +625,15 @@ public class OverrideRepository  {
 		return getReverseEngineeringStrategy(null);
 	}
 
-	public void addTable(Table table, String wantedClassName) {
-		for (ForeignKey fk : table.getForeignKeyCollection()) {
-			TableIdentifier identifier = TableIdentifier.create(fk.getReferencedTable());
-			List<ForeignKey> existing = foreignKeys.computeIfAbsent( identifier, k -> new ArrayList<>() );
+	void addTable(OverrideTable table, String wantedClassName) {
+		for (ForeignKeyDefinition fk : table.foreignKeys) {
+			TableIdentifier identifier = OverrideTable.lookupKey( fk.referencedTable() );
+			List<ForeignKeyDefinition> existing = foreignKeys.computeIfAbsent( identifier, k -> new ArrayList<>() );
 			existing.add( fk );
 		}
 
 		if(StringHelper.isNotEmpty(wantedClassName)) {
-			TableIdentifier tableIdentifier = TableIdentifier.create(table);
+			TableIdentifier tableIdentifier = table.lookupKey();
 			String className = wantedClassName;
 	/* If wantedClassName specifies a package, it is given by
 		<hibernate-reverse-engineering><table class="xxx"> config so do no more. */
@@ -703,16 +703,14 @@ public class OverrideRepository  {
 		}
 	}
 
-	public void addTableIdentifierStrategy(Table table, String identifierClass, Properties params) {
+	public void addTableIdentifierStrategy(TableIdentifier tid, String identifierClass, Properties params) {
 		if(identifierClass!=null) {
-			final TableIdentifier tid = TableIdentifier.create(table);
 			identifierStrategyForTable.put(tid, identifierClass);
 			identifierPropertiesForTable.put(tid, params);
 		}
 	}
 
-	public void addPrimaryKeyNamesForTable(Table table, List<String> boundColumnNames, String propertyName, String compositeIdName) {
-		TableIdentifier tableIdentifier = TableIdentifier.create(table);
+	public void addPrimaryKeyNamesForTable(TableIdentifier tableIdentifier, List<String> boundColumnNames, String propertyName, String compositeIdName) {
 		if(boundColumnNames!=null && !boundColumnNames.isEmpty()) {
 			primaryKeyColumnsForTable.put(tableIdentifier, boundColumnNames);
 		}
@@ -763,9 +761,9 @@ public class OverrideRepository  {
 
 	}
 
-	public void addMetaAttributeInfo(Table table, MultiValuedMap<String, SimpleMetaAttribute> map) {
+	public void addMetaAttributeInfo(TableIdentifier table, MultiValuedMap<String, SimpleMetaAttribute> map) {
 		if(map!=null && !map.isEmpty()) {
-			tableMetaAttributes.put(TableIdentifier.create(table), map);
+			tableMetaAttributes.put(table, map);
 		}
 
 	}

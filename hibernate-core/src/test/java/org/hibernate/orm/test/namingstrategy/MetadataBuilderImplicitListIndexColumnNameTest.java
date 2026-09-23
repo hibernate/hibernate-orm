@@ -4,12 +4,15 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
+import org.hibernate.boot.model.naming.spi.ListIndexColumnNamingInput;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -60,8 +63,9 @@ public class MetadataBuilderImplicitListIndexColumnNameTest {
 	public static class CustomImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl
 	{
 		@Override
-		public Identifier determineListIndexColumnName(ImplicitIndexColumnNameSource source) {
-			return Identifier.toIdentifier( EXPECTED_INDEX_COLUMN_NAME );
+		@Nonnull
+		public LogicalName determineListIndexColumnName(@Nonnull ListIndexColumnNamingInput source, @Nonnull ImplicitNamingContext context) {
+			return context.implicitName( EXPECTED_INDEX_COLUMN_NAME );
 		}
 	}
 

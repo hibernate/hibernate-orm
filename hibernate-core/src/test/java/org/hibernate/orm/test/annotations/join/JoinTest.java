@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.join;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -68,8 +70,7 @@ public class JoinTest {
 	public void testDefaultValue(SessionFactoryScope scope) {
 		Join join = scope.getMetadataImplementor().getEntityBinding( Life.class.getName() ).getJoinClosure().get( 0 );
 		assertThat( join.getTable().getName() ).isEqualTo( "ExtendedLife" );
-		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
-		owner.setName( "LIFE_ID" );
+		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column( ColumnNameHelper.physicalName( "LIFE_ID", scope.getMetadataImplementor().getDatabase() ) );
 		assertThat( join.getTable().getPrimaryKey().containsColumn( owner ) ).isTrue();
 		scope.inTransaction(
 				session -> {
@@ -92,8 +93,7 @@ public class JoinTest {
 	public void testCompositePK(SessionFactoryScope scope) {
 		Join join = scope.getMetadataImplementor().getEntityBinding( Dog.class.getName() ).getJoinClosure().get( 0 );
 		assertThat( join.getTable().getName() ).isEqualTo( "DogThoroughbred" );
-		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
-		owner.setName( "OWNER_NAME" );
+		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column( ColumnNameHelper.physicalName( "OWNER_NAME", scope.getMetadataImplementor().getDatabase() ) );
 		assertThat( join.getTable().getPrimaryKey().containsColumn( owner ) ).isTrue();
 
 		scope.inTransaction(

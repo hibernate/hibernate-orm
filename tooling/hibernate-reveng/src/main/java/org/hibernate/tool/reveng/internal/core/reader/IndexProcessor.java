@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.reveng.internal.core.reader;
 
+import org.hibernate.mapping.PhysicalTable;
+
 import org.hibernate.JDBCException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
@@ -29,7 +31,7 @@ public class IndexProcessor {
 			RevengDialect metaDataDialect,
 			String  defaultSchema,
 			String defaultCatalog,
-			Table table) {
+			PhysicalTable table, org.hibernate.tool.reveng.internal.core.RevengMetadataCollector revengMetadataCollector) {
 
 		Map<String, Index> indexes = new HashMap<>(); // indexname (String) -> Index
 		Map<String, UniqueKey> uniquekeys = new HashMap<>(); // name (String) -> UniqueKey
@@ -60,7 +62,7 @@ public class IndexProcessor {
 						if(indexes.containsKey(indexName) ) {
 							throw new RuntimeException("UniqueKey exists also as Index! ");
 						}
-						Column column = getColumn(metaDataDialect, table, columnName);
+						Column column = getColumn(metaDataDialect, table, columnName, revengMetadataCollector);
 						key.addColumn(column);
 
 						if ( key.getColumnSpan() == 1 ) {
@@ -83,7 +85,7 @@ public class IndexProcessor {
 						if(uniquekeys.containsKey(indexName) ) {
 							throw new RuntimeException("Index exists also as Unique! ");
 						}
-						Column column = getColumn(metaDataDialect, table, columnName);
+						Column column = getColumn(metaDataDialect, table, columnName, revengMetadataCollector);
 						index.addColumn(column);
 					}
 
@@ -136,27 +138,9 @@ public class IndexProcessor {
 		return schema==null?defaultSchema:schema;
 	}
 
-	private static Column getColumn(RevengDialect metaDataDialect, Table table, String columnName) {
-		Column column = new Column();
-		column.setName(quote(columnName, metaDataDialect));
-		Column existing = table.getColumn(column);
-		if(existing!=null) {
-			column = existing;
-		}
-		return column;
-	}
-
-	private static String quote(String columnName, RevengDialect metaDataDialect) {
-		if(columnName==null) return columnName;
-		if(metaDataDialect.needQuote(columnName)) {
-			if(columnName.length()>1 && columnName.charAt(0)=='`' && columnName.charAt(columnName.length()-1)=='`') {
-				return columnName; // avoid double quoting
-			}
-			return "`" + columnName + "`";
-		}
-		else {
-			return columnName;
-		}
+	private static Column getColumn(RevengDialect metaDataDialect, Table table, String columnName, org.hibernate.tool.reveng.internal.core.RevengMetadataCollector collector) {
+		final var existing = collector.findObservedColumn( table, columnName );
+		return existing == null ? new Column( collector.observedColumnName( columnName, metaDataDialect.needQuote( columnName ) ) ) : existing;
 	}
 
 }

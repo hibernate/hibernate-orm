@@ -6,7 +6,6 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +14,6 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
 
 import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -29,19 +27,19 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  */
 public class Index implements Exportable, Serializable {
 	private Identifier name;
-	private Table table;
+	private PhysicalTable table;
 	private boolean unique;
 	private String type = "";
 	private String using = "";
 	private String options = "";
 	private final java.util.List<Selectable> selectables = new ArrayList<>();
-	private final java.util.Map<Selectable, String> selectableOrderMap = new HashMap<>();
+	private final SelectableOrderings<Selectable> selectableOrderMap = new SelectableOrderings<>();
 
-	public Table getTable() {
+	public PhysicalTable getTable() {
 		return table;
 	}
 
-	public void setTable(Table table) {
+	public void setTable(PhysicalTable table) {
 		this.table = table;
 	}
 
@@ -86,7 +84,11 @@ public class Index implements Exportable, Serializable {
 	}
 
 	public Map<Selectable, String> getSelectableOrderMap() {
-		return unmodifiableMap( selectableOrderMap );
+		return selectableOrderMap.asMap();
+	}
+
+	void visitOrderingSelectables(java.util.function.Consumer<Selectable> consumer) {
+		selectableOrderMap.visit( consumer );
 	}
 
 	public void addColumn(Selectable selectable) {

@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.namingstrategy;
 
+import jakarta.annotation.Nonnull;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
@@ -13,6 +15,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.Environment;
@@ -51,10 +57,10 @@ public class LongKeyNamingStrategyTest {
 
 	@Test
 	public void testWithCustomNamingStrategy() {
-		Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithImplicitNaming(
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithPhysicalNaming(
 				serviceRegistry,
 				new MappingSources().addManagedClasses( Address.class, Person.class ),
-				new LongIdentifierNamingStrategy()
+				new LongPhysicalNamingStrategy()
 		);
 
 		var foreignKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getForeignKeyCollection()
@@ -66,11 +72,11 @@ public class LongKeyNamingStrategyTest {
 		if ( !uniqueKeys.isEmpty() ) {
 			var uniqueKey = uniqueKeys.iterator().next();
 			assertThat( uniqueKey.getName() ).isEqualTo( "UK_way_longer_than_the_30_char" );
-			index = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values().iterator()
+			index = ((org.hibernate.mapping.PhysicalTable) metadata.getEntityBinding( Address.class.getName() ).getTable()).getIndexes().values().iterator()
 					.next();
 		}
 		else {
-			var indexes = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values();
+			var indexes = ((org.hibernate.mapping.PhysicalTable) metadata.getEntityBinding( Address.class.getName() ).getTable()).getIndexes().values();
 			assertThat( indexes.size() ).isEqualTo( 2 );
 
 			org.hibernate.mapping.Index uniqueIndex = null;
@@ -87,6 +93,43 @@ public class LongKeyNamingStrategyTest {
 		}
 		assertThat( index ).isNotNull();
 		assertThat( index.getName() ).isEqualTo( "IDX_way_longer_than_the_30_cha" );
+	}
+
+	/// Limits constraint and index spelling after explicit or implicit naming.
+	///
+	/// @author Steve Ebersole
+	public static class LongPhysicalNamingStrategy
+			extends PhysicalNamingStrategyStandardImpl {
+		@Override
+		@Nonnull
+		public PhysicalName toPhysicalForeignKeyName(
+				@Nonnull LogicalName name,
+				@Nonnull PhysicalNamingContext context) {
+			return limit( name, context );
+		}
+
+		@Override
+		@Nonnull
+		public PhysicalName toPhysicalUniqueKeyName(
+				@Nonnull LogicalName name,
+				@Nonnull PhysicalNamingContext context) {
+			return limit( name, context );
+		}
+
+		@Override
+		@Nonnull
+		public PhysicalName toPhysicalIndexName(
+				@Nonnull LogicalName name,
+				@Nonnull PhysicalNamingContext context) {
+			return limit( name, context );
+		}
+
+		private PhysicalName limit(
+				LogicalName name,
+				PhysicalNamingContext context) {
+			return context.getPhysicalNameFactory().create(
+					name.getText().substring( 0, Math.min( 30, name.getText().length() ) ), name.isQuoted() );
+		}
 	}
 
 	@Entity(name = "Address")

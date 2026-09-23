@@ -4,12 +4,16 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
-import org.hibernate.boot.model.naming.Identifier;
+import jakarta.annotation.Nonnull;
+
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
@@ -79,8 +83,9 @@ class CompositeReferenceNamingTest {
 
 	public static class PrefixNaming extends PhysicalNamingStrategyStandardImpl {
 		@Override
-		public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment environment) {
-			return name == null ? null : Identifier.toIdentifier( "p_" + name.getText(), name.isQuoted() );
+		@Nonnull
+		public PhysicalName toPhysicalColumnName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext environment) {
+			return name == null ? null : environment.getPhysicalNameFactory().create( "p_" + name.getText(), name.isQuoted() );
 		}
 	}
 

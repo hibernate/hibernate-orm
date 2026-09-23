@@ -116,7 +116,7 @@ public class GeneratorParameters {
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name,
 		//      instead of splitting it up into schema/catalog/table names
-		parameterCollector.accept( TABLE, identifierValue.getTable().getQuotedName( dialect ) );
+		parameterCollector.accept( TABLE, identifierValue.getColumnContainer().requireTable().getQuotedName( dialect ) );
 		final String catalog = catalog( context );
 		if ( org.hibernate.internal.util.StringHelper.isNotEmpty( catalog ) ) {
 			parameterCollector.accept( CATALOG, catalog );
@@ -140,16 +140,16 @@ public class GeneratorParameters {
 			// so use the JPA entity name which is short
 			parameterCollector.accept(
 					IMPLICIT_NAME_BASE,
-					identifierValue.getTable().isSubselect()
+					identifierValue.getColumnContainer().requireTable().isSubselect()
 							? rootClass.getJpaEntityName()
-							: identifierValue.getTable().getName()
+							: identifierValue.getColumnContainer().requireTable().getName()
 			);
 
 			parameterCollector.accept( TABLES, identityTablesString( dialect, rootClass ) );
 		}
 		else {
-			parameterCollector.accept( TABLES, identifierValue.getTable().getQuotedName( dialect ) );
-			parameterCollector.accept( IMPLICIT_NAME_BASE, identifierValue.getTable().getQuotedName( dialect ) );
+			parameterCollector.accept( TABLES, identifierValue.getColumnContainer().requireTable().getQuotedName( dialect ) );
+			parameterCollector.accept( IMPLICIT_NAME_BASE, identifierValue.getColumnContainer().requireTable().getQuotedName( dialect ) );
 		}
 
 		parameterCollector.accept( CONTRIBUTOR_NAME, context.getContributorName() );
@@ -163,13 +163,13 @@ public class GeneratorParameters {
 
 	private static String catalog(GeneratorCreationContext context) {
 		final var identifierValue = context.getValue();
-		final String tableCatalog = identifierValue.getTable().getCatalog();
+		final String tableCatalog = identifierValue.getColumnContainer().requireTable().getCatalog();
 		return isImplicitNamespaceCatalog( context, tableCatalog ) ? defaultCatalog( context ) : tableCatalog;
 	}
 
 	private static String schema(GeneratorCreationContext context) {
 		final var identifierValue = context.getValue();
-		final String tableSchema = identifierValue.getTable().getSchema();
+		final String tableSchema = identifierValue.getColumnContainer().requireTable().getSchema();
 		return isImplicitNamespaceSchema( context, tableSchema ) ? defaultSchema( context ) : tableSchema;
 	}
 

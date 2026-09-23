@@ -4,10 +4,11 @@
  */
 package org.hibernate.tool.reveng.jdbc2cfg.OverrideBinder;
 
+import org.hibernate.tool.reveng.test.utils.PhysicalNameHelper;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
@@ -48,6 +49,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author koen
  */
 public class TestCase {
+	private static final org.hibernate.relational.naming.spi.PhysicalName.Factory COLUMN_NAMES =
+			new org.hibernate.relational.naming.spi.PhysicalName.Factory(
+					(text, quoted) -> quoted ? text : text.toUpperCase( java.util.Locale.ROOT ) );
+
 
 	private static final String OVERRIDE_TEST_REVENG_XML = "org/hibernate/tool/reveng/jdbc2cfg/OverrideBinder/overridetest.reveng.xml";
 	private static final String TEST_REVENG_XML = "org/hibernate/tool/reveng/jdbc2cfg/OverrideBinder/test.reveng.xml";
@@ -398,8 +403,8 @@ public class TestCase {
 		Table table = HibernateUtil.getTable(metadata, JdbcUtil.toIdentifier(this, "EXCOLUMNS"));
 		assertNotNull(table);
 
-		assertNotNull(table.getColumn(new Column("name")));
-		assertNull(table.getColumn(new Column("excolumn")));
+		assertNotNull(table.getColumn( PhysicalNameHelper.columnName( "name", COLUMN_NAMES ) ));
+		assertNull(table.getColumn( PhysicalNameHelper.columnName( "excolumn", COLUMN_NAMES ) ));
 
 	}
 

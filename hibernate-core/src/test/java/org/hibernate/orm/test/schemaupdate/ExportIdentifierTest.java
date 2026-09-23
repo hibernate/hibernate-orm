@@ -4,6 +4,11 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
+import org.hibernate.mapping.PhysicalTable;
+
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
@@ -14,7 +19,6 @@ import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -45,17 +49,17 @@ public class ExportIdentifierTest {
 		final var database = new Database( options );
 
 		database.locateNamespace( null, null );
-		database.locateNamespace( Identifier.toIdentifier( "catalog1" ), null );
-		database.locateNamespace( Identifier.toIdentifier( "catalog2" ), null );
-		database.locateNamespace( null, Identifier.toIdentifier( "schema1" ) );
-		database.locateNamespace( null, Identifier.toIdentifier( "schema2" ) );
+		database.locateNamespace( logicalName( Identifier.toIdentifier( "catalog1" ) ), null );
+		database.locateNamespace( logicalName( Identifier.toIdentifier( "catalog2" ) ), null );
+		database.locateNamespace( null, logicalName( Identifier.toIdentifier( "schema1" ) ) );
+		database.locateNamespace( null, logicalName( Identifier.toIdentifier( "schema2" ) ) );
 		database.locateNamespace(
-				Identifier.toIdentifier( "catalog_both_1" ),
-				Identifier.toIdentifier( "schema_both_1" )
+				logicalName( Identifier.toIdentifier( "catalog_both_1" ) ),
+				logicalName( Identifier.toIdentifier( "schema_both_1" ) )
 		);
 		database.locateNamespace(
-				Identifier.toIdentifier( "catalog_both_2" ),
-				Identifier.toIdentifier( "schema_both_2" )
+				logicalName( Identifier.toIdentifier( "catalog_both_2" ) ),
+				logicalName( Identifier.toIdentifier( "schema_both_2" ) )
 		);
 
 		final List<String> exportIdentifierList = new ArrayList<>();
@@ -66,7 +70,7 @@ public class ExportIdentifierTest {
 		addNamedAuxiliaryDatabaseObjects(
 				"aNamedAuxiliaryDatabaseObject", database.getNamespaces(), exportIdentifierList, exportIdentifierSet
 		);
-		addSequences( "aSequence", database.getNamespaces(), exportIdentifierList, exportIdentifierSet );
+		addSequences( "aSequence", database, exportIdentifierList, exportIdentifierSet );
 
 		assertEquals( exportIdentifierList.size(), exportIdentifierSet.size() );
 	}
@@ -77,7 +81,8 @@ public class ExportIdentifierTest {
 			List<String> exportIdentifierList,
 			Set<String> exportIdentifierSet) {
 		for ( Namespace namespace : namespaces ) {
-			final Table table = new Table( "orm", namespace, Identifier.toIdentifier( name ), false );
+			final var table = (PhysicalTable) namespace.createTable( new org.hibernate.relational.naming.spi.LogicalName( name, false, true ),
+					physical -> new PhysicalTable( "orm", namespace, physical, false ) );
 			addExportIdentifier( table, exportIdentifierList, exportIdentifierSet );
 
 			final ForeignKey foreignKey = new ForeignKey( table );
@@ -86,7 +91,7 @@ public class ExportIdentifierTest {
 
 			final Index index = new Index();
 			index.setName( name );
-			index.setTable( table );
+			index.setTable( (org.hibernate.mapping.PhysicalTable) table );
 			addExportIdentifier( index, exportIdentifierList, exportIdentifierSet );
 
 			final PrimaryKey primaryKey = new PrimaryKey( table );
@@ -101,17 +106,17 @@ public class ExportIdentifierTest {
 
 	private void addSequences(
 			String name,
-			Iterable<Namespace> namespaces,
+			Database database,
 			List<String> exportIdentifierList,
 			Set<String> exportIdentifierSet) {
 
-		for ( Namespace namespace : namespaces ) {
+		for ( Namespace namespace : database.getNamespaces() ) {
 			addExportIdentifier(
 					new Sequence(
 							"orm",
-							namespace.getName().catalog(),
-							namespace.getName().schema(),
-							Identifier.toIdentifier( name )
+							namespace.getPhysicalName().catalog(),
+							namespace.getPhysicalName().schema(),
+							database.getJdbcEnvironment().getIdentifierHelper().getPhysicalNameFactory().create( name, false )
 					),
 					exportIdentifierList,
 					exportIdentifierSet

@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
 
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
@@ -154,7 +156,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -2496,7 +2497,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// [StandardTableExporter] when only its focused table-DDL template hooks are
 	/// needed.
 	@SPI({ USE, IMPLEMENT, SUPPLY })
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return tableExporter;
 	}
 

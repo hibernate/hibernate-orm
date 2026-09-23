@@ -221,7 +221,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 						throw new IllegalAttributeType( "A \"virtual id\" cannot define <any/> attributes : " + attributeName );
 					}
 				},
-				(column, jdbcEnvironment) -> MappingModelCreationHelper.getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
+				(column, jdbcEnvironment) -> MappingModelCreationHelper.getTableIdentifierExpression( column.getValue().getColumnContainer().requireTable(), creationProcess ),
 				attributeMappings::add,
 				() -> {
 					this.attributeMappings = attributeMappings.build();

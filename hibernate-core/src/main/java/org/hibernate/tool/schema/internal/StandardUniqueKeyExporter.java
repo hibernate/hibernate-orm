@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.mapping.PhysicalTable;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -26,12 +28,18 @@ public class StandardUniqueKeyExporter implements Exporter<UniqueKey> {
 
 	@Override
 	public String[] getSqlCreateStrings(UniqueKey constraint, Metadata metadata, SqlStringGenerationContext context) {
+		if ( !(constraint.getTable() instanceof PhysicalTable) ) {
+			return new String[0];
+		}
 		return new String[] { dialect.getUniqueDelegate()
 				.getAlterTableToAddUniqueKeyCommand( constraint, metadata, context ) };
 	}
 
 	@Override
 	public String[] getSqlDropStrings(UniqueKey constraint, Metadata metadata, SqlStringGenerationContext context) {
+		if ( !(constraint.getTable() instanceof PhysicalTable) ) {
+			return new String[0];
+		}
 		return new String[] { dialect.getUniqueDelegate()
 				.getAlterTableToDropUniqueKeyCommand( constraint, metadata, context ) };
 	}

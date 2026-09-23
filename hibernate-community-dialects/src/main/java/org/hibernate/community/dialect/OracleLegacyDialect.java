@@ -4,6 +4,8 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -114,7 +116,6 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupports;
@@ -1189,7 +1190,7 @@ public class OracleLegacyDialect extends Dialect implements CurrentTemporalSuppo
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
+	public Exporter<NamedTable> getTableExporter() {
 		return oracleTableExporter;
 	}
 

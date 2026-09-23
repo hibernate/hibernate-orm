@@ -91,6 +91,7 @@ public class TenantIdMappingMaterializer {
 			typeBinding.addProperty( property );
 
 			new BasicValueMappingMaterializer().materializeTenantIdBasicValue(
+					typeBinding,
 					memberDetails,
 					resolvedType,
 					valueIntent,
@@ -104,7 +105,7 @@ public class TenantIdMappingMaterializer {
 
 		typeBinding.addFilter(
 				FILTER_NAME,
-				columnNameOrFormula( property ) + " = :" + PARAMETER_NAME,
+				columnNameOrFormula( property, bindingState.getDatabase().getDialect() ) + " = :" + PARAMETER_NAME,
 				true,
 				emptyMap(),
 				emptyMap()
@@ -168,9 +169,10 @@ public class TenantIdMappingMaterializer {
 			MetadataBuildingContext buildingContext,
 			Property property) {
 		if ( rowLevelSecurity.supportsRowLevelSecurity() ) {
-			final var table = property.getValue().getTable();
+			final var container = property.getValue().getColumnContainer();
 			if ( property.getSelectables().get( 0 ) instanceof Column column
-					&& table.isPhysicalTable() && !table.isView() ) {
+					&& container instanceof org.hibernate.mapping.PhysicalTable table
+					&& table.isPhysicalTable() ) {
 				RowLevelSecurityDdlMaterializer.materialize(
 						rowLevelSecurity,
 						hasTenantCredentialsMapper( buildingContext )
@@ -192,7 +194,7 @@ public class TenantIdMappingMaterializer {
 				|| getTenantCredentialsMapper( settings, buildingContext.getStandardServiceRegistry() ) != null;
 	}
 
-	private static String columnNameOrFormula(Property property) {
+	private static String columnNameOrFormula(Property property, org.hibernate.dialect.Dialect dialect) {
 		if ( property.getColumnSpan() != 1 ) {
 			throw new MappingException( "@TenantId attribute must be mapped to a single column or formula" );
 		}
@@ -201,7 +203,7 @@ public class TenantIdMappingMaterializer {
 			return formula.getFormula();
 		}
 		else if ( selectable instanceof Column column ) {
-			return column.getName();
+			return column.getQuotedName( dialect );
 		}
 		else {
 			throw new AssertionFailure( "@TenantId attribute must be mapped to a column or formula" );

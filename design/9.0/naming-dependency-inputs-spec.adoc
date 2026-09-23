@@ -1,0 +1,240 @@
+= Naming Dependency Inputs: Working Specification
+:toc2:
+:sectanchors:
+
+Status: implementation authorized as part of the naming-strategy proposal.
+Table, PK, FK, UK, index, and role-specific join-column inputs are implemented, including selected
+column declarations, composite correspondence, and deferral for late member/derived-ID
+dependencies in to-one, association-table target, and entity map-key naming. The broader
+cross-role readiness and naming-cycle audit remains open; do not treat every guarantee
+in this specification as completed.
+Steve confirmed the explicit inline-view case without a physical table name and
+clarified that the implicit naming strategy may change substantially.
+
+Steve accepted the direction of exposing both logical and physical dependency
+names where possible, with settled dependencies and no provisional callback replay.
+This document specifies that part of the naming redesign. Implementation status
+and selected defaults are tracked in link:implicit-naming-strategy-proposal.adoc[the
+replacement proposal].
+
+== Scope
+
+Define inputs and readiness guarantees for implicit naming decisions that depend
+on other mapped tables or columns. Preserve the approved explicit-name bypass,
+`LogicalName` provenance/equality, `PhysicalName` comparison policy, and additive
+physical quoting. No older strategy compatibility is required. Do not introduce
+a global physical-naming phase, hbm.xml support, or Quarkus preparation changes.
+
+Generator naming remains on `ImplicitDatabaseObjectNamingStrategy` for now, with
+generator storage-column defaults to be added to that contract. Auxiliary-object
+coverage remains in the parent design. These input contracts must not be advertised
+for a role until its dependencies are specified.
+
+The existing `ImplicitNamingStrategy` method set is not a constraint. Providing
+these inputs may require substantial changes to its callbacks, requests, or
+invocation lifecycle. This specification defines dependency semantics, not an
+accessor-only enhancement or an adapter to preserve the old SPI.
+
+== Coverage Beyond Existing Strategy Calls
+
+The link:implicit-naming-inventory.adoc[initial source inventory and role proposal]
+records existing callback coverage, direct binder-generated names, and remaining
+coverage boundaries. It is input to the replacement specification, not approval
+of its callback shape or default algorithms.
+
+Inventory every place that infers a logical database-object name, including direct
+concatenation, default literals, copied dependency spellings, and generated names
+passed onward as if explicitly supplied. Searching existing strategy invocations
+is insufficient. Determine the semantic naming role first, then design the request
+and the strategy contract needed to support it.
+
+Completed reviews cover discriminator and tenant defaults, primary-key joins,
+derived-identifier naming, and collection-index names formerly generated before
+the strategy was called. FK finalization now retains table identities, selected column
+references, and aggregate/audit declarations. Index inputs now use settled mapped columns and opaque expression terms as specified in
+link:constraint-index-naming-proposal.adoc#completed-index-and-column-references[the completed index and reference contracts]. Remaining reviews include deferred temporal/aggregate UK dependencies, and
+audit/history roles, plus cross-role readiness and selected-alias guarantees.
+Generator and auxiliary-object naming must also be reconciled with the full
+coverage inventory rather than silently excluded because the current interface
+has no callback.
+
+The baseline is that each implicit database-object naming decision is represented
+by the redesigned strategy. A provider must be able to customize it even where the
+current implementation infers the name inside a binder. Any deliberate exception
+must identify the role and explain why it is outside the strategy's scope.
+
+Distinguish naming a new object from resolving a reference, registering another
+alias for the same object, copying an already finalized representation, or restoring
+an archive. Those operations must not introduce extra naming decisions or callback
+replay. SQL expressions and query aliases are not implicitly database-object names.
+
+For each path, record the source/default precedence, explicit/implicit origin,
+logical and physical dependencies, readiness point, quoting, callback count, and
+observable output. Use this inventory to shape the replacement SPI; do not force
+newly discovered roles into an ill-fitting existing callback.
+
+
+== Implemented Input Contracts
+
+The immutable `NamingNamePair` is implemented in `org.hibernate.boot.model.naming.spi`,
+with required `LogicalName logicalName()` and `PhysicalName physicalName()` accessors.
+The public contract is marked `@SPI(USE)`. It represents two names for the same object,
+not two independently selected strings. It exposes no mapping model, factory,
+comparison-policy override, service registry, or mutation operation.
+
+For table dependencies, distinguish two immutable input variants:
+
+* `NamedTableNamingInput`: a required `NamingNamePair names()`.
+* `InlineViewNamingInput`: a required `LogicalName logicalName()`; no physical-name
+  accessor and no SQL-expression text exposed to naming providers.
+
+Both implement a sealed `TableNamingInput` contract exposing `logicalName()`;
+the named variant delegates that accessor to its pair. These naming contracts are
+separate from the mapping `TableReference` hierarchy.
+The pair describes the individual object name. Qualification belongs to an
+explicit role-specific input if required; do not concatenate catalog/schema into
+its identifier text.
+
+Role-specific requests supply these inputs for the appropriate table dependencies
+and ordered `NamingNamePair` column dependencies. This specification does not yet
+choose the replacement callbacks or a common request-dispatch interface. A role
+which supports inline views must state how its default algorithm uses that variant.
+
+All required names and dependency entries reject null. An unresolved physical
+name is a scheduling condition, not an input variant or an optional field. A
+physical name must come from the boot system's normal naming/finalization services.
+
+== Name Selection And Provenance
+
+Select the logical name from the binding relationship being represented:
+
+. An explicit logical reference selects its registered alias and paired column.
+. Without an explicit referenced-column name, use the logical declaration that
+  produced the selected target column in that binding, including its provenance.
+. Multiple aliases for one physical column remain distinct valid dependencies.
+  Do not pick a logical alias through a reverse map or registration order.
+
+A reference does not change the selected alias's explicit/implicit provenance.
+Each pair retains the original quoting of both values; neither is reconstructed
+from rendered text. Composite association inputs preserve the selected pairing
+and referenced-column ordering, rather than sorting the logical and physical
+names independently.
+
+An inline view has no physical table name, but its mapped columns do have physical
+names. Column pairs remain available when their mapping has resolved. Do not
+manufacture a physical table name to make a generic algorithm work.
+
+Already-physical additional mapping contributions without logical aliases remain
+an explicit integration boundary. These inputs require a declared logical alias;
+copying physical spelling into a fabricated logical name is not a fallback.
+
+== Readiness And Invocation
+
+A dependency name is settled when the mapping decisions that can determine or
+replace it have completed. Merely having a materialized `Column` is insufficient.
+
+Before invoking implicit naming for a dependent object:
+
+. Resolve the target mapping and any explicit logical references.
+. Complete relevant target naming, including derived-identifier overrides.
+. Select the logical aliases and corresponding finalized physical names.
+. Construct immutable input snapshots and invoke the provider once for that
+  naming decision in the boot run.
+. Record its implicit logical result and apply the applicable physical naming
+  operation once for the new object.
+
+Explicitly named objects bypass implicit naming; their physical naming may proceed
+without the dependencies needed only for an implicit algorithm. Association target
+validation still occurs normally. Sharing/reusing an object and archive restoration
+do not invoke its naming decision again. Snapshot construction performs no naming.
+
+The pipeline may defer unresolved decisions and retry readiness checks. It must
+not retry provider execution to discover dependencies or obtain a fixed point.
+Provider exceptions fail that decision rather than causing speculative replay.
+
+Cycles in the entity relationship graph do not imply naming cycles. Independently
+named identifiers can support bidirectional/self associations. Resolve dependencies
+with known names first. If a remaining cycle actually requires each object's final
+physical name to name another, do not invent a provisional name: report the naming
+roles and unresolved dependency chain. Missing targets and missing aliases need
+separate diagnostics. An explicit name may break a naming cycle, but must not be
+required merely because entities refer to one another.
+
+== Feasibility And Required Binding Work
+
+The current implementation provides the underlying data but not all readiness
+and alias guarantees:
+
+* `TableBinder` already receives physical table mappings, and binding-state
+  `TableReference` retains logical table names.
+* `ColumnNameCorrespondence` stores forward logical aliases, while its reverse
+  map retains just one alias per physical key. Carry the selected forward binding
+  into requests rather than relying on that reverse map.
+* `AssociationTargetBinder` resolves non-primary-key targets after member binding.
+  Dependent naming must wait for that resolution where physical target columns
+  are part of its request.
+* `DerivedIdentifierBinder` traverses target derived identifiers and can rename
+  previously constructed identifier columns. Its recursion guard prevents endless
+  recursion; it does not establish that every cyclic naming dependency is settled.
+* `BindingCoordinator` retries association-identifier binding while it makes
+  progress. This supports deferral structurally, but is not yet a proof of the
+  proposed single-invocation naming guarantees.
+
+Implementation must separate dependency discovery from name materialization in
+affected paths. Use explicit readiness state scoped to the boot run; do not infer
+readiness from a non-null physical name. Once a name is published to downstream
+naming decisions, those decisions must not observe a later replacement. Earlier
+construction may still exist internally, but it is not a publishable final input.
+
+This is feasible for materialized named dependencies and acyclic deferred chains.
+Support for all currently valid derived/cyclic cases remains an acceptance gate.
+Do not claim universal feasibility from the existing traversal/retry mechanisms.
+
+== Defaults And Compatibility
+
+Both names are available so algorithms can choose the stage required by their
+mapping role. This specification does not mandate logical-only or physical-only
+defaults. JPA-based default algorithms and their interaction with the physical
+strategy must be specified separately in the parent design.
+
+Using physical dependencies to construct a new logical name can legitimately
+repeat a prefix after physical naming of the new object. That differs from
+reapplying physical naming to the same object. Tests must distinguish the two.
+
+The column-storage slice preserved existing derived-name algorithms. This redesign
+may intentionally replace them, but before changing those algorithms their
+specification must record the selected output for the characterized cases.
+The new input contracts alone do not authorize changing generated SQL names.
+
+== Tests And Acceptance
+
+* Account for each discovered logical-name inference path, including paths with
+  no current strategy invocation. Demonstrate custom-provider participation for
+  each supported implicit naming role, and document intentional exclusions.
+
+* Named-table inputs retain both values and their distinct quoting/provenance.
+* Ordinary primary-key joins, non-primary-key joins, secondary tables, joined
+  inheritance, association tables, and collection tables exercise actual callbacks.
+* Reverse entity registration order without changing callback inputs or output.
+* Use multiple logical aliases registered in different orders and verify the alias
+  selected by the mapping reference is retained.
+* Reverse composite source-column order and verify target pairing survives sorting.
+* Exercise derived-identifier chains with nonidentity physical naming; consumers
+  see final dependency names and no provisional provider calls occur.
+* Exercise bidirectional/self references with independent identifier names, plus
+  actual unresolved naming cycles and a case broken by an explicit name.
+* Exercise inline-view table inputs with physical mapped column names.
+* Count calls separately for implicit decisions, physical transformation of each
+  new object, sharing, copying, and restoration.
+* Verify an explicit name bypasses implicit naming even when the corresponding
+  unnamed object's default would require unresolved dependencies.
+* Verify missing aliases fail clearly instead of becoming physical-as-logical input.
+
+Approval of these input contracts is separate from choosing default algorithms.
+Integration into the redesigned strategy requires defined callback roles and
+coverage; changes to default output require their own specified examples. The
+coverage inventory may substantially reshape the strategy contract.
+
+If existing valid mappings expose
+an unsupported dependency pattern, revise the specification with that example
+before narrowing support or introducing replay.

@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
+import org.hibernate.mapping.NamedTable;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.mapping.Table;
@@ -27,7 +29,7 @@ public class NameSpaceIndexesInformation {
 	}
 
 	public @Nullable List<IndexInformation> getIndexesInformation(Table table) {
-		return indexes.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
+		return indexes.get( identifierHelper.toMetaDataObjectName( org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.physicalIdentifier( ((NamedTable) table).getPhysicalName().objectName() ) ) );
 	}
 
 	public @Nullable List<IndexInformation> getIndexesInformation(String tableName) {

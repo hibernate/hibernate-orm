@@ -21,6 +21,7 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.PhysicalTable;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
@@ -60,8 +61,9 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 			String subselect,
 			boolean isAbstract,
 			org.hibernate.boot.spi.MetadataBuildingContext buildingContext,
-			boolean isExplicit) {
-		return metadataCollector.addTable( schema, catalog, name, subselect, isAbstract, buildingContext, isExplicit );
+			boolean isExplicit,
+			String viewQuery) {
+		return metadataCollector.addTable( schema, catalog, name, subselect, isAbstract, buildingContext, isExplicit, viewQuery );
 	}
 
 	@Override
@@ -70,15 +72,13 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 			String catalog,
 			String name,
 			boolean isAbstract,
-			String subselect,
-			Table includedTable,
+			PhysicalTable includedTable,
 			org.hibernate.boot.spi.MetadataBuildingContext buildingContext) {
-		return (DenormalizedTable) metadataCollector.addDenormalizedTable(
+		return metadataCollector.addDenormalizedTable(
 				schema,
 				catalog,
 				name,
 				isAbstract,
-				subselect,
 				includedTable,
 				buildingContext
 		);

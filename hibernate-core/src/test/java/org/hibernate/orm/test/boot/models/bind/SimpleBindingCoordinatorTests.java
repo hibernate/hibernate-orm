@@ -4,6 +4,12 @@
  */
 package org.hibernate.orm.test.boot.models.bind;
 
+import org.hibernate.boot.model.naming.internal.ColumnNameHelper;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
+import org.hibernate.relational.naming.spi.LogicalName;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -63,22 +69,22 @@ public class SimpleBindingCoordinatorTests {
 
 					assertThat( bindingState.getTableCount() ).isEqualTo( 2 );
 
-					final PhysicalTable simpletonsTable = bindingState.getTableByName( "simpletons" );
-					assertThat( simpletonsTable.logicalName().render() ).isEqualTo( "simpletons" );
-					assertThat( simpletonsTable.logicalName().getCanonicalName() ).isEqualTo( "simpletons" );
-					assertThat( simpletonsTable.physicalTableName().render() ).isEqualTo( "SIMPLETONS" );
-					assertThat( simpletonsTable.physicalTableName().getCanonicalName() ).isEqualTo( "simpletons" );
-					assertThat( simpletonsTable.physicalCatalogName() ).isNull();
+					final PhysicalTable simpletonsTable = bindingState.getTableByName( new LogicalName( "simpletons", false, true ) );
+					assertThat( simpletonsTable.logicalName().toString() ).isEqualTo( "simpletons" );
+					assertThat( simpletonsTable.logicalName().getText() ).isEqualTo( "simpletons" );
+					assertThat( simpletonsTable.getPhysicalTableName().toString() ).isEqualTo( "SIMPLETONS" );
+					assertThat( simpletonsTable.getPhysicalTableName().isQuoted() ).isFalse();
+					assertThat( simpletonsTable.getPhysicalCatalogName() ).isNull();
 					assertThat( simpletonsTable.getPhysicalSchemaName() ).isNull();
 					assertThat( simpletonsTable.binding().getComment() ).isEqualTo( "Stupid is as stupid does" );
 
-					final SecondaryTable simpleStuffTable = bindingState.getTableByName( "simple_stuff" );
-					assertThat( simpleStuffTable.logicalName().render() ).isEqualTo( "simple_stuff" );
-					assertThat( simpleStuffTable.physicalName().render() ).isEqualTo( "SIMPLE_STUFF" );
-					assertThat( simpleStuffTable.logicalCatalogName().render() ).isEqualTo( "my_catalog" );
-					assertThat( simpleStuffTable.physicalCatalogName().render() ).isEqualTo( "MY_CATALOG" );
-					assertThat( simpleStuffTable.logicalSchemaName().render() ).isEqualTo( "my_schema" );
-					assertThat( simpleStuffTable.physicalSchemaName().render() ).isEqualTo( "MY_SCHEMA" );
+					final SecondaryTable simpleStuffTable = bindingState.getTableByName( new LogicalName( "simple_stuff", false, true ) );
+					assertThat( simpleStuffTable.logicalName().toString() ).isEqualTo( "simple_stuff" );
+					assertThat( simpleStuffTable.physicalName().toString() ).isEqualTo( "SIMPLE_STUFF" );
+					assertThat( simpleStuffTable.logicalCatalogName().toString() ).isEqualTo( "my_catalog" );
+					assertThat( simpleStuffTable.getPhysicalCatalogName().toString() ).isEqualTo( "MY_CATALOG" );
+					assertThat( simpleStuffTable.logicalSchemaName().toString() ).isEqualTo( "my_schema" );
+					assertThat( simpleStuffTable.getPhysicalSchemaName().toString() ).isEqualTo( "MY_SCHEMA" );
 					assertThat( simpleStuffTable.binding().getComment() ).isEqualTo( "Don't sweat it" );
 
 					final var database = metadataCollector.getDatabase();
@@ -106,39 +112,39 @@ public class SimpleBindingCoordinatorTests {
 							.doesNotContain( "ignored" );
 
 					final Property id = entityBinding.getProperty( "id" );
-					assertThat( id.getValue().getTable().getName() ).isEqualTo( "SIMPLETONS" );
+					assertThat( id.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "SIMPLETONS" );
 					final BasicValue idValue = (BasicValue) id.getValue();
-					assertThat( ( (Column) (idValue).getColumn() ).getCanonicalName() ).isEqualTo( "id" );
+					assertThat( ( (Column) (idValue).getColumn() ).getName().toLowerCase( java.util.Locale.ROOT ) ).isEqualTo( "id" );
 					assertThat( idValue.resolve().getDomainJavaType().getJavaType() ).isEqualTo( Integer.class );
 
 					final Property name = entityBinding.getProperty( "name" );
-					assertThat( id.getValue().getTable().getName() ).isEqualTo( "SIMPLETONS" );
+					assertThat( id.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "SIMPLETONS" );
 					final BasicValue nameValue = (BasicValue) name.getValue();
-					assertThat( ( (Column) (nameValue).getColumn() ).getCanonicalName() ).isEqualTo( "name" );
+					assertThat( ( (Column) (nameValue).getColumn() ).getName().toLowerCase( java.util.Locale.ROOT ) ).isEqualTo( "name" );
 					assertThat( nameValue.resolve().getDomainJavaType().getJavaType() ).isEqualTo( String.class );
 
 					final Property data = entityBinding.getProperty( "data" );
-					assertThat( data.getValue().getTable().getName() ).isEqualTo( "SIMPLE_STUFF" );
+					assertThat( data.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "SIMPLE_STUFF" );
 					final BasicValue dataValue = (BasicValue) data.getValue();
-					assertThat( ( (Column) (dataValue).getColumn() ).getCanonicalName() ).isEqualTo( "datum" );
+					assertThat( ( (Column) (dataValue).getColumn() ).getName().toLowerCase( java.util.Locale.ROOT ) ).isEqualTo( "datum" );
 					assertThat( dataValue.resolve().getDomainJavaType().getJavaType() ).isEqualTo( String.class );
 
 					final Property stuff = entityBinding.getProperty( "stuff" );
-					assertThat( stuff.getValue().getTable().getName() ).isEqualTo( "SIMPLETONS" );
+					assertThat( stuff.getValue().getColumnContainer().requireTable().getName() ).isEqualTo( "SIMPLETONS" );
 					final BasicValue stuffValue = (BasicValue) stuff.getValue();
 					assertThat( stuffValue.getEnumerationStyle() ).isEqualTo( EnumType.STRING );
-					assertThat( ( (Column) stuffValue.getColumn() ).getCanonicalName() ).isEqualTo( "stuff" );
+					assertThat( ( (Column) stuffValue.getColumn() ).getName().toLowerCase( java.util.Locale.ROOT ) ).isEqualTo( "stuff" );
 					assertThat( stuffValue.resolve().getDomainJavaType().getJavaType() ).isEqualTo( SimpleEntity.Stuff.class );
 					assertThat( stuffValue.resolve().getJdbcType().getJdbcTypeCode() ).isEqualTo( SqlTypes.VARCHAR );
 
 					final Property tenantKey = entityBinding.getProperty( "tenantKey" );
 					final BasicValue tenantKeyValue = (BasicValue) tenantKey.getValue();
-					assertThat( ( (Column) tenantKeyValue.getColumn() ).getCanonicalName() ).isEqualTo( "tenantkey" );
+					assertThat( ( (Column) tenantKeyValue.getColumn() ).getName().toLowerCase( java.util.Locale.ROOT ) ).isEqualTo( "tenantkey" );
 					assertThat( tenantKeyValue.resolve().getDomainJavaType().getJavaType() ).isEqualTo( String.class );
 
 					final Property version = entityBinding.getProperty( "version" );
 					final BasicValue versionValue = (BasicValue) version.getValue();
-					assertThat( ( (Column) versionValue.getColumn() ).getCanonicalName() ).isEqualTo( "version" );
+					assertThat( ( (Column) versionValue.getColumn() ).getName().toLowerCase( java.util.Locale.ROOT ) ).isEqualTo( "version" );
 					assertThat( versionValue.resolve().getDomainJavaType().getJavaType() ).isEqualTo( Integer.class );
 				},
 				scope.getRegistry(),
@@ -169,9 +175,9 @@ public class SimpleBindingCoordinatorTests {
 					final var table = context.getMetadataCollector()
 							.getDatabase()
 							.getDefaultNamespace()
-							.locateTable( Identifier.toIdentifier( "schema_export_entities" ) );
+							.locateTable( logicalName( Identifier.toIdentifier( "schema_export_entities" ) ) );
 					assertThat( table ).isNotNull();
-					assertThat( table.getColumn( Identifier.toIdentifier( "name" ) ) ).isNotNull();
+					assertThat( table.getColumn( ColumnNameHelper.physicalName( "name", context.getMetadataCollector().getDatabase() ) ) ).isNotNull();
 
 					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
 						sessionFactory.getSchemaManager().create( true );

@@ -4,10 +4,13 @@
  */
 package org.hibernate.tool.schema.spi;
 
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
+
+
+
 
 import org.hibernate.SPI;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.schema.spi.ConstraintDropMode;
@@ -54,7 +57,7 @@ public final class StandardIndexExporter implements Exporter<Index> {
 				.append( " " )
 				.append( indexName( index, context, metadata ) )
 				.append( " on " )
-				.append( context.format( index.getTable().getQualifiedTableName() ) );
+				.append( index.getTable().getTableExpression( context ) );
 		final String using = index.getUsing();
 		if ( isNotBlank( using ) ) {
 			createIndex.append( " using " ).append( using );
@@ -81,18 +84,19 @@ public final class StandardIndexExporter implements Exporter<Index> {
 
 	private String indexName(Index index, SqlStringGenerationContext context, Metadata metadata) {
 		if ( dialect.getIndexDdlSupport().nameQualification() == IndexNameQualification.QUALIFIED ) {
-			final var qualifiedTableName = index.getTable().getQualifiedTableName();
+			final var qualifiedTableName = index.getTable().getPhysicalName();
+			final var identifier = metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper()
+					.toIdentifier( index.getQuotedName( dialect ) );
 			return context.format(
-					new QualifiedNameImpl(
+					new QualifiedPhysicalName(
 							qualifiedTableName.getCatalogName(),
 							qualifiedTableName.getSchemaName(),
-							metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper()
-									.toIdentifier( index.getQuotedName( dialect ) )
+							context.getPhysicalNameFactory().create( identifier.getText(), identifier.isQuoted() )
 					)
 			);
 		}
 		else {
-			return index.getName();
+			return index.getQuotedName( dialect );
 		}
 	}
 
@@ -119,11 +123,11 @@ public final class StandardIndexExporter implements Exporter<Index> {
 			return NO_COMMANDS;
 		}
 		else {
-			final String tableName = context.format( index.getTable().getQualifiedTableName() );
+			final String tableName = index.getTable().getTableExpression( context );
 			final String indexNameForCreation = dialect.getIndexDdlSupport().nameQualification()
 					== IndexNameQualification.QUALIFIED
-					? qualify( tableName, index.getName() )
-					: index.getName();
+					? qualify( tableName, index.getQuotedName( dialect ) )
+					: index.getQuotedName( dialect );
 			return new String[] {"drop index " + indexNameForCreation};
 		}
 	}

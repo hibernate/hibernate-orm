@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.mapping.PhysicalTable;
+
 import org.hibernate.dialect.constraint.spi.CheckConstraintPlacement;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -75,8 +77,8 @@ final class EntityConstraintFinalizer {
 			first = appendNullableColumnChecks( property, check, first, dialect );
 		}
 		check.append( ")" );
-		if ( !first ) {
-			subclass.getTable().addCheck( new CheckConstraint( check.toString() ) );
+		if ( !first && subclass.getTable() instanceof PhysicalTable table ) {
+			table.addCheck( new CheckConstraint( check.toString() ) );
 		}
 	}
 

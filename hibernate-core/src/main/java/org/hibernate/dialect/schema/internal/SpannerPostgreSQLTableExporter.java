@@ -4,13 +4,16 @@
  */
 package org.hibernate.dialect.schema.internal;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import org.hibernate.mapping.NamedTable;
+
 import org.hibernate.dialect.Dialect;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.spi.StandardTableExporter;
 
@@ -25,10 +28,14 @@ public final class SpannerPostgreSQLTableExporter extends StandardTableExporter 
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
+	public String[] getSqlDropStrings(NamedTable table, Metadata metadata, SqlStringGenerationContext context) {
+		if ( !(table instanceof PhysicalTable physicalTable) ) {
+			return super.getSqlDropStrings( table, metadata, context );
+		}
+
 		// Spanner requires the indexes to be dropped before dropping the table
 		List<String> sqlDropIndexStrings = new ArrayList<>();
-		for ( Index index : table.getIndexes().values() ) {
+		for ( Index index : physicalTable.getIndexes().values() ) {
 			sqlDropIndexStrings.add( sqlDropIndexString(index.getName()) );
 		}
 		// Spanner requires all the unique indexes to be dropped before dropping the tables

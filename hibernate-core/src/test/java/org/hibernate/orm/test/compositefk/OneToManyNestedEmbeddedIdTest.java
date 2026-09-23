@@ -61,6 +61,7 @@ public class OneToManyNestedEmbeddedIdTest {
 	public static class ChildEntity {
 		@Id
 		@GeneratedValue
+		@jakarta.persistence.Column(name = "id")
 		private int id;
 
 		public int getId() {
@@ -74,6 +75,7 @@ public class OneToManyNestedEmbeddedIdTest {
 
 	@Embeddable
 	public static class ParentEntityId {
+		@jakarta.persistence.Column(name = "id")
 		private int id;
 
 		public ParentEntityId() {

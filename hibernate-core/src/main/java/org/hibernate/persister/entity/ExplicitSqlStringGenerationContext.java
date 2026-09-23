@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity;
 
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -14,6 +15,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 
 /**
  * SqlStringGenerationContext implementation with support for overriding the
@@ -54,6 +57,11 @@ public class ExplicitSqlStringGenerationContext implements SqlStringGenerationCo
 
 	private JdbcEnvironment getJdbcEnvironment() {
 		return jdbcServices.getJdbcEnvironment();
+	}
+
+	@Override
+	public PhysicalName.Factory getPhysicalNameFactory() {
+		return getJdbcEnvironment().getIdentifierHelper().getPhysicalNameFactory();
 	}
 
 	@Override
@@ -113,6 +121,26 @@ public class ExplicitSqlStringGenerationContext implements SqlStringGenerationCo
 		else {
 			return qualifiedName;
 		}
+	}
+
+	@Override
+	public String format(QualifiedPhysicalName name) {
+		return nameFormater().format( physicalNameWithDefaults( name, false ), getDialect() );
+	}
+
+	@Override
+	public String formatWithoutCatalog(QualifiedPhysicalName name) {
+		return nameFormater().format( physicalNameWithDefaults( name, true ), getDialect() );
+	}
+
+	private QualifiedPhysicalName physicalNameWithDefaults(QualifiedPhysicalName name, boolean omitCatalog) {
+		final var factory = getJdbcEnvironment().getIdentifierHelper().getPhysicalNameFactory();
+		return new QualifiedPhysicalName(
+				omitCatalog ? null : name.catalogName() != null ? name.catalogName()
+						: defaultCatalog == null ? null : factory.create( defaultCatalog.getText(), defaultCatalog.isQuoted() ),
+				name.schemaName() != null ? name.schemaName()
+						: defaultSchema == null ? null : factory.create( defaultSchema.getText(), defaultSchema.isQuoted() ),
+				name.objectName() );
 	}
 
 	@Override

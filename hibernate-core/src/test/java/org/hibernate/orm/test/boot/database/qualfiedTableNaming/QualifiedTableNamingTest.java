@@ -7,7 +7,8 @@ package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.relational.naming.spi.LogicalName;
+
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -50,9 +51,9 @@ public class QualifiedTableNamingTest {
 	public void testQualifiedNameSeparator(DomainModelScope modelScope, SessionFactoryScope factoryScope) throws Exception {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
-		Namespace.Name namespaceName = new Namespace.Name(
-				Identifier.toIdentifier( "DB1" ),
-				Identifier.toIdentifier( "PUBLIC" )
+		var namespaceName = new Namespace.LogicalNamespaceName(
+				new LogicalName( "DB1", false, true ),
+				new LogicalName( "PUBLIC", false, true )
 		);
 
 		String expectedName = null;
@@ -65,7 +66,7 @@ public class QualifiedTableNamingTest {
 			assertEquals( 1, namespace.getTables().size() );
 
 			final SqlStringGenerationContext generationContext = sessionFactory.getSqlStringGenerationContext();
-			expectedName = generationContext.format( namespace.getTables().iterator().next().getQualifiedTableName() );
+			expectedName = namespace.getTables().iterator().next().getTableExpression( generationContext );
 		}
 
 

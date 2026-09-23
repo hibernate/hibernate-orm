@@ -75,10 +75,7 @@ public record AggregateMappingIntent(
 	}
 
 	public ColumnSource aggregateColumnSource() {
-		if ( source.kind() == ComponentSource.Kind.MAP_KEY ) {
-			return ColumnSource.from( source.sourceMember().getDirectAnnotationUsage( jakarta.persistence.MapKeyColumn.class ) );
-		}
-		return ColumnSource.from( source.sourceMember().getDirectAnnotationUsage( jakarta.persistence.Column.class ) );
+		return source.aggregateColumnSource();
 	}
 
 	public static boolean isAggregateArray(MemberDetails member, TypeDetails memberType) {

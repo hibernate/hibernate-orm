@@ -37,6 +37,7 @@ import java.util.function.Supplier;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
+import static org.hibernate.boot.model.naming.Identifier.*;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
@@ -329,6 +330,11 @@ public abstract sealed class PersistentClass
 	@Override
 	public boolean contains(Property property) {
 		return properties.contains( property );
+	}
+
+	@Override
+	public Table getColumnContainer() {
+		return getTable();
 	}
 
 	public abstract Table getTable();
@@ -1146,8 +1152,10 @@ public abstract sealed class PersistentClass
 
 	public void assignCheckConstraintsToTable(Dialect dialect, TypeConfiguration types) {
 		for ( var checkConstraint : checkConstraints ) {
-			container( collectColumnNames( checkConstraint.getConstraint(), dialect, types ) )
-					.getTable().addCheck( checkConstraint );
+			if ( container( collectColumnNames( checkConstraint.getConstraint(), dialect, types ) )
+					.getColumnContainer() instanceof PhysicalTable table ) {
+				table.addCheck( checkConstraint );
+			}
 		}
 	}
 
@@ -1247,7 +1255,7 @@ public abstract sealed class PersistentClass
 	public Join findSecondaryTable(String name) {
 		for ( int i = 0; i < joins.size(); i++ ) {
 			final var join = joins.get( i );
-			if ( join.getTable().getNameIdentifier().matches( name ) ) {
+			if ( toIdentifier( join.getTable().getQuotedName() ).matches( name ) ) {
 				return join;
 			}
 		}

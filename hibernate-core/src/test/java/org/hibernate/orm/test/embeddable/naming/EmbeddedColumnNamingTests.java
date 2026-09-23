@@ -40,10 +40,10 @@ import static org.assertj.core.api.Assertions.fail;
 @Jira( "https://hibernate.atlassian.net/browse/HHH-4396" )
 public class EmbeddedColumnNamingTests {
 	/**
-	 * Without {@code @EmbeddedColumnNaming} we end up with a name clash
+	 * JPA naming without {@code @EmbeddedColumnNaming} produces a name clash
 	 */
 	@Test
-	@ServiceRegistry
+	@ServiceRegistry(settings = @org.hibernate.testing.orm.junit.Setting(name = "hibernate.implicit_naming_strategy", value = "jpa"))
 	@DomainModel(annotatedClasses = {Address.class,BadPerson.class})
 	void testNoNamingPattern(DomainModelScope domainModelScope) {
 		final PersistentClass entityBinding = domainModelScope.getEntityBinding( BadPerson.class );
@@ -97,11 +97,11 @@ public class EmbeddedColumnNamingTests {
 
 		final AttributeMapping workStreetMapping = workAddressType.findAttributeMapping( "street" );
 		assertThat( workStreetMapping.getJdbcTypeCount() ).isEqualTo( 1 );
-		assertThat( workStreetMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "street" );
+		assertThat( workStreetMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "workAddress_street" );
 
 		final AttributeMapping workCityMapping = workAddressType.findAttributeMapping( "city" );
 		assertThat( workCityMapping.getJdbcTypeCount() ).isEqualTo( 1 );
-		assertThat( workCityMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "city" );
+		assertThat( workCityMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "workAddress_city" );
 	}
 
 	/**

@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.onetoone;
 
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.util.Collection;
 import java.util.Optional;
 
@@ -48,7 +50,7 @@ public class OverrideOneToOneJoinColumnTest {
 			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, Person.class, State.class );
 
 			final Table personTable = metadata.getDatabase().getDefaultNamespace().locateTable(
-					Identifier.toIdentifier( "PERSON_TABLE" ) );
+					logicalName( Identifier.toIdentifier( "PERSON_TABLE" ) ) );
 			final Collection<ForeignKey> foreignKeys = personTable.getForeignKeyCollection();
 			assertThat( foreignKeys.size(), is( 1 ) );
 			final Optional<ForeignKey> foreignKey = foreignKeys.stream().findFirst();

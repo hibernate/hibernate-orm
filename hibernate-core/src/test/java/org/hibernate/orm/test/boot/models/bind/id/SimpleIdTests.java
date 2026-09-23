@@ -4,14 +4,18 @@
  */
 package org.hibernate.orm.test.boot.models.bind.id;
 
+import jakarta.annotation.Nonnull;
+
+import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.model.naming.spi.ImplicitNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
 import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.model.internal.DerivedIdentifierGeneratorDescriptor;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
+import org.hibernate.boot.model.naming.spi.IdentifierColumnNamingInput;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.mapping.internal.model.IdentifierExtractionKind;
 import org.hibernate.boot.mapping.internal.view.EntityView;
@@ -225,7 +229,7 @@ public class SimpleIdTests {
 					assertThat( naturalId.getValue() ).isInstanceOf( Component.class );
 					assertThat( ( (Component) naturalId.getValue() ).getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "key1", "key2" );
+							.containsExactly( "naturalId_key1", "naturalId_key2" );
 				},
 				scope.getRegistry(),
 				AggregatedIdEntity.class
@@ -1020,7 +1024,7 @@ public class SimpleIdTests {
 				.extracting( org.hibernate.mapping.Column::getName )
 				.containsExactly( "parent_id", "child_id" );
 		assertThat( identifier.getProperty( "parent" ).getValue() ).isInstanceOf( org.hibernate.mapping.BasicValue.class );
-		assertThat( parent.getTable() ).isSameAs( join.getTable() );
+		assertThat( parent.getColumnContainer() ).isSameAs( join.getTable() );
 		assertThat( join.getTable().getName() ).isEqualTo( "association_id_join_table" );
 		assertThat( join.getKey().getColumns() )
 				.extracting( org.hibernate.mapping.Column::getName )
@@ -1061,11 +1065,10 @@ public class SimpleIdTests {
 
 	public static class IdentifierImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
 		@Override
-		public Identifier determineIdentifierColumnName(ImplicitIdentifierColumnNameSource source) {
-			return toIdentifier(
-					"implicit_identifier_" + source.getIdentifierAttributePath().getProperty(),
-					source.getNamingContext()
-			);
+		@Nonnull
+		public LogicalName determineIdentifierColumnName(@Nonnull IdentifierColumnNamingInput source, @Nonnull ImplicitNamingContext context) {
+			return context.implicitName(
+					"implicit_identifier_" + AttributePath.parse( source.attributePath() ).getProperty() );
 		}
 	}
 

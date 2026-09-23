@@ -461,9 +461,8 @@ public final class ConstraintModelBuilder {
 	private boolean propertyContainsColumn(Property property, String tableName, Column column) {
 		for ( Selectable selectable : property.getSelectables() ) {
 			if ( selectable instanceof Column propertyColumn
-					&& tableNamesMatch( tableName, propertyColumn.getValue().getTable().getName() )
-					&& normalizeIdentifier( column.getCanonicalName() )
-							.equals( normalizeIdentifier( propertyColumn.getCanonicalName() ) ) ) {
+					&& tableNamesMatch( tableName, propertyColumn.getValue().getColumnContainer().requireTable().getName() )
+					&& column.getPhysicalName().equals( propertyColumn.getPhysicalName() ) ) {
 				return true;
 			}
 		}
@@ -494,7 +493,7 @@ public final class ConstraintModelBuilder {
 
 	private boolean columnMatches(String tableName, Column column, SelectableMapping selectable) {
 		return tableNamesMatch( tableName, selectable.getContainingTableExpression() )
-				&& normalizeIdentifier( column.getCanonicalName() )
+				&& normalizeIdentifier( column.getName() )
 						.equals( normalizeSelectableName( selectable ) );
 	}
 

@@ -4,7 +4,13 @@
  */
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.mapping.NamedTable;
+import org.hibernate.relational.naming.spi.PhysicalName;
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+
 import java.io.Serializable;
+
+import org.hibernate.boot.model.relational.internal.PhysicalNamespaceSnapshot;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,6 +22,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
+
+import org.hibernate.relational.naming.spi.LogicalName;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -45,33 +53,43 @@ public class Namespace implements Serializable {
 
 	private transient PhysicalNamingStrategy physicalNamingStrategy;
 	private transient JdbcEnvironment jdbcEnvironment;
-	private final Name name;
-	private final Name physicalName;
+	private final LogicalNamespaceName name;
+	private transient PhysicalNamespaceName physicalName;
+	private final PhysicalNamespaceSnapshot physicalNameSnapshot;
 
-	private final Map<Identifier, Table> tables = new TreeMap<>();
-	private final Map<Identifier, Sequence> sequences = new TreeMap<>();
+	private final Map<LogicalName, Table> tables = new TreeMap<>();
+	private final Map<LogicalName, Sequence> sequences = new TreeMap<>();
 	private final Map<Identifier, UserDefinedType> udts = new HashMap<>();
 
-	public Namespace(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment, Name name) {
+	public Namespace(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment, LogicalNamespaceName name) {
+		this( physicalNamingStrategy, jdbcEnvironment, name, physicalName( name, physicalNamingStrategy, jdbcEnvironment ) );
+	}
+
+	Namespace(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment,
+			LogicalNamespaceName name, PhysicalNamespaceName physicalName) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.name = name;
-		this.physicalName = physicalName( name, physicalNamingStrategy, jdbcEnvironment );
+		this.physicalName = physicalName;
+		physicalNameSnapshot = PhysicalNamespaceSnapshot.from( physicalName );
 		BOOT_LOGGER.createdDatabaseNamespace( name, physicalName );
 	}
 
-	private static Name physicalName(Name name, PhysicalNamingStrategy physicalNaming, JdbcEnvironment environment) {
-		return new Name(
-				physicalNaming.toPhysicalCatalogName( name.catalog(), environment ),
-				physicalNaming.toPhysicalSchemaName( name.schema(), environment )
+	private static PhysicalNamespaceName physicalName(LogicalNamespaceName name, PhysicalNamingStrategy physicalNaming, JdbcEnvironment environment) {
+		return new PhysicalNamespaceName(
+				PhysicalNamingStrategyHelper.resolve( name.catalog(), environment, physicalNaming::toPhysicalCatalogName, "catalog", true ),
+				PhysicalNamingStrategyHelper.resolve( name.schema(), environment, physicalNaming::toPhysicalSchemaName, "schema", true )
 		);
 	}
 
-	public Name getName() {
+	public LogicalNamespaceName getName() {
 		return name;
 	}
 
-	public Name getPhysicalName() {
+	public PhysicalNamespaceName getPhysicalName() {
+		if ( physicalName == null ) {
+			throw new IllegalStateException( "Namespace services must be reattached before accessing physical names" );
+		}
 		return physicalName;
 	}
 
@@ -88,11 +106,11 @@ public class Namespace implements Serializable {
 	 *         or null if there is no table with the specified
 	 *         table name.
 	 */
-	public Table locateTable(Identifier logicalTableName) {
+	public Table locateTable(LogicalName logicalTableName) {
 		return tables.get( logicalTableName );
 	}
 
-	public void registerTable(Identifier logicalName, Table table) {
+	public void registerTable(LogicalName logicalName, Table table) {
 		final Table previous = tables.put( logicalName, table );
 		if ( previous != null ) {
 			BOOT_LOGGER.replacingTableRegistration(
@@ -110,51 +128,51 @@ public class Namespace implements Serializable {
 	 *
 	 * @return the created table.
 	 */
-	public Table createTable(Identifier logicalTableName, Function<Identifier,Table> creator) {
+	public Table createTable(LogicalName logicalTableName, Function<PhysicalName,Table> creator) {
 		final Table existing = tables.get( logicalTableName );
 		if ( existing != null ) {
 			return existing;
 		}
 		else {
-			final Identifier physicalTableName =
-					physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
+			final var physicalTableName = PhysicalNamingStrategyHelper.resolve(
+					logicalTableName, jdbcEnvironment, physicalNamingStrategy::toPhysicalTableName, "table", false );
 			final Table table = creator.apply( physicalTableName );
 			tables.put( logicalTableName, table );
 			return table;
 		}
 	}
 
-	public DenormalizedTable createDenormalizedTable(Identifier logicalTableName, Function<Identifier,DenormalizedTable> creator) {
+	public DenormalizedTable createDenormalizedTable(LogicalName logicalTableName, Function<PhysicalName,DenormalizedTable> creator) {
 		final Table existing = tables.get( logicalTableName );
 		if ( existing != null ) {
 			return (DenormalizedTable) existing;
 		}
 		else {
-			final Identifier physicalTableName =
-					physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
+			final var physicalTableName = PhysicalNamingStrategyHelper.resolve(
+					logicalTableName, jdbcEnvironment, physicalNamingStrategy::toPhysicalTableName, "table", false );
 			final DenormalizedTable table = creator.apply( physicalTableName );
 			tables.put( logicalTableName, table );
 			return table;
 		}
 	}
 
-	public Sequence locateSequence(Identifier name) {
+	public Sequence locateSequence(LogicalName name) {
 		return sequences.get( name );
 	}
 
-	public void registerSequence(Identifier logicalName, Sequence sequence) {
+	public void registerSequence(LogicalName logicalName, Sequence sequence) {
 		if ( sequences.containsKey( logicalName ) ) {
 			throw new HibernateException( "Sequence was already registered with that name [" + logicalName.toString() + "]" );
 		}
 		sequences.put( logicalName, sequence );
 	}
 
-	public Sequence createSequence(Identifier logicalName, Function<Identifier,Sequence> creator) {
+	public Sequence createSequence(LogicalName logicalName, Function<PhysicalName,Sequence> creator) {
 		if ( sequences.containsKey( logicalName ) ) {
 			throw new HibernateException( "Sequence was already registered with that name [" + logicalName.toString() + "]" );
 		}
 
-		final Identifier physicalName = physicalNamingStrategy.toPhysicalSequenceName( logicalName, jdbcEnvironment );
+		final var physicalName = PhysicalNamingStrategyHelper.resolve( logicalName, jdbcEnvironment, physicalNamingStrategy::toPhysicalSequenceName, "sequence", false );
 		final Sequence sequence = creator.apply( physicalName );
 		sequences.put( logicalName, sequence );
 		return sequence;
@@ -271,7 +289,7 @@ public class Namespace implements Serializable {
 		}
 		else {
 			final Identifier physicalTableName =
-					physicalNamingStrategy.toPhysicalTypeName( logicalTypeName, jdbcEnvironment );
+					PhysicalNamingStrategyHelper.toPhysicalTypeName( physicalNamingStrategy, logicalTypeName, jdbcEnvironment );
 			final UserDefinedObjectType type = creator.apply( physicalTableName );
 			udts.put( logicalTypeName, type );
 			return type;
@@ -292,7 +310,7 @@ public class Namespace implements Serializable {
 		}
 		else {
 			final Identifier physicalTableName =
-					physicalNamingStrategy.toPhysicalTypeName( logicalTypeName, jdbcEnvironment );
+					PhysicalNamingStrategyHelper.toPhysicalTypeName( physicalNamingStrategy, logicalTypeName, jdbcEnvironment );
 			final UserDefinedArrayType type = creator.apply( physicalTableName );
 			udts.put( logicalTypeName, type );
 			return type;
@@ -327,6 +345,28 @@ public class Namespace implements Serializable {
 	void reattach(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
 		this.jdbcEnvironment = jdbcEnvironment;
+		final var factory = jdbcEnvironment.getIdentifierHelper().getPhysicalNameFactory();
+		physicalName = physicalNameSnapshot.restore( factory );
+		sequences.values().forEach( sequence -> sequence.reattach( factory ) );
+		tables.values().forEach( table -> {
+			if ( table instanceof NamedTable namedTable ) {
+				namedTable.reattachPhysicalName( factory );
+			}
+		} );
+	}
+
+	/** Logical catalog/schema key; physical qualifiers are kept separately. */
+	public record LogicalNamespaceName(LogicalName catalog, LogicalName schema)
+			implements Comparable<LogicalNamespaceName>, Serializable {
+		@Override
+		public int compareTo(LogicalNamespaceName that) {
+			final int catalogCheck = compare( catalog, that.catalog );
+			return catalogCheck != 0 ? catalogCheck : compare( schema, that.schema );
+		}
+
+		private static int compare(LogicalName first, LogicalName second) {
+			return first == null ? (second == null ? 0 : 1) : second == null ? -1 : first.compareTo( second );
+		}
 	}
 
 	public record Name(Identifier catalog, Identifier schema) implements Comparable<Name>, Serializable {

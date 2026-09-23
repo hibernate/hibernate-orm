@@ -4,6 +4,10 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.mapping.PhysicalTable;
+
+import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,6 +34,8 @@ import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.relational.naming.internal.QualifiedPhysicalNameSnapshot;
+import org.hibernate.relational.naming.spi.QualifiedPhysicalName;
 
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
 import static org.hibernate.id.IdentifierGeneratorHelper.bindLong;
@@ -53,7 +59,8 @@ public class TableStructure implements DatabaseStructure, Serializable {
 
 	private final String contributor;
 
-	private QualifiedName physicalTableName;
+	private transient QualifiedPhysicalName physicalTableName;
+	private QualifiedPhysicalNameSnapshot physicalNameSnapshot;
 	private String valueColumnNameText;
 
 	private String selectQuery;
@@ -99,7 +106,17 @@ public class TableStructure implements DatabaseStructure, Serializable {
 	}
 
 	@Override
-	public QualifiedName getPhysicalName() {
+	public QualifiedPhysicalName getPhysicalName() {
+		if ( physicalTableName == null && physicalNameSnapshot != null ) {
+			throw new IllegalStateException( "Generator structure has not been initialized after restoration" );
+		}
+		return physicalTableName;
+	}
+
+	private QualifiedPhysicalName physicalName(SqlStringGenerationContext context) {
+		if ( physicalTableName == null && physicalNameSnapshot != null ) {
+			physicalTableName = physicalNameSnapshot.restore( context.getPhysicalNameFactory() );
+		}
 		return physicalTableName;
 	}
 
@@ -285,22 +302,23 @@ public class TableStructure implements DatabaseStructure, Serializable {
 	@Override
 	public void registerExportables(Database database) {
 		final var namespace = database.locateNamespace(
-				logicalQualifiedTableName.getCatalogName(),
-				logicalQualifiedTableName.getSchemaName()
+				logicalName( logicalQualifiedTableName.getCatalogName() ),
+				logicalName( logicalQualifiedTableName.getSchemaName() )
 		);
 
 		final var objectName = logicalQualifiedTableName.getObjectName();
-		Table table = namespace.locateTable( objectName );
+		Table table = namespace.locateTable( logicalName( objectName ) );
 		final boolean tableCreated;
 		if ( table == null ) {
-			table = namespace.createTable( objectName,
-					identifier -> new Table( contributor, namespace, identifier, false ) );
+			table = namespace.createTable( logicalName( objectName ),
+					identifier -> new PhysicalTable( contributor, namespace, identifier, false ) );
 			tableCreated = true;
 		}
 		else {
 			tableCreated = false;
 		}
-		physicalTableName = table.getQualifiedTableName();
+		physicalTableName = ((PhysicalTable) table).getPhysicalName();
+		physicalNameSnapshot = QualifiedPhysicalNameSnapshot.from( physicalTableName );
 
 		valueColumnNameText = logicalValueColumnNameIdentifier.render( database.getDialect() );
 		if ( tableCreated ) {
@@ -312,9 +330,9 @@ public class TableStructure implements DatabaseStructure, Serializable {
 			final var valueColumn =
 					ExportableColumnHelper.column( database, table, valueColumnNameText, type, typeName );
 			table.addColumn( valueColumn );
-			table.setOptions( options );
-			table.addInitCommand( context -> new InitCommand(
-					"insert into " + context.format( physicalTableName )
+			((PhysicalTable) table).setOptions( options );
+			((PhysicalTable) table).addInitCommand( context -> new InitCommand(
+					"insert into " + context.format( physicalName( context ) )
 					+ " ( " + valueColumnNameText + " ) values ( " + initialValue + " )"
 			) );
 		}
@@ -323,7 +341,7 @@ public class TableStructure implements DatabaseStructure, Serializable {
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
 		final var dialect = context.getDialect();
-		final String formattedPhysicalTableName = context.format( physicalTableName );
+		final String formattedPhysicalTableName = context.format( physicalName( context ) );
 		final String lockingClause = dialect.getLockingSupport().getLockingClauseRenderer().render(
 				new LockingClauseRequest( PessimisticLockKind.UPDATE, Timeouts.WAIT_FOREVER, List.of() )
 		);
@@ -340,11 +358,11 @@ public class TableStructure implements DatabaseStructure, Serializable {
 	}
 
 	@Override
-	public void registerExtraExportables(Table table, Optimizer optimizer) {
+	public void registerExtraExportables(PhysicalTable table, Optimizer optimizer) {
 		final var optimizerState = new OptimizerResetState( optimizer );
 		table.addResyncCommand( (sqlContext, isolator) -> {
-			final String sequenceTableName = sqlContext.format( physicalTableName );
-			final String tableName = sqlContext.format( table.getQualifiedTableName() );
+			final String sequenceTableName = sqlContext.format( physicalName( sqlContext ) );
+			final String tableName = table.getTableExpression( sqlContext );
 			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
 			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
 			final long current = getCurrentTableValue( isolator, sequenceTableName, valueColumnNameText );
@@ -362,7 +380,7 @@ public class TableStructure implements DatabaseStructure, Serializable {
 		table.addResetCommand( sqlContext -> {
 			optimizerState.reset();
 			final String update =
-					"update " + sqlContext.format( physicalTableName )
+					"update " + sqlContext.format( physicalName( sqlContext ) )
 					+ " set " + valueColumnNameText + " = " + initialValue;
 			return new InitCommand( update );
 		} );

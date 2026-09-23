@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.schema.spi;
 
+import org.hibernate.mapping.PhysicalTable;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -13,7 +15,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Table;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
@@ -51,7 +52,7 @@ public interface TableCleaner {
 			SqlStringGenerationContext context);
 
 	List<String> getSqlTruncateStrings(
-			Collection<Table> tables,
+			Collection<PhysicalTable> tables,
 			Metadata metadata,
 			SqlStringGenerationContext context);
 }

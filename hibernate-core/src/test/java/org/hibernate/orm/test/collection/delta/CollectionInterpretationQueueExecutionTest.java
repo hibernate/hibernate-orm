@@ -4,6 +4,12 @@
  */
 package org.hibernate.orm.test.collection.delta;
 
+import jakarta.annotation.Nonnull;
+
+import org.hibernate.boot.model.naming.spi.PhysicalNamingContext;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,11 +29,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.FlushSettings;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -194,8 +198,9 @@ public class CollectionInterpretationQueueExecutionTest {
 		}
 
 		@Override
-		public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-			return Identifier.toIdentifier( prefix + logicalName.getText(), logicalName.isQuoted() );
+		@Nonnull
+		public PhysicalName toPhysicalTableName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext jdbcEnvironment) {
+			return jdbcEnvironment.getPhysicalNameFactory().create( prefix + logicalName.getText(), logicalName.isQuoted() );
 		}
 	}
 

@@ -101,7 +101,7 @@ public class ConstraintTest {
 					}
 				}
 
-				for ( Index index: table.getIndexes().values() ) {
+				for ( Index index: ((org.hibernate.mapping.PhysicalTable) table).getIndexes().values() ) {
 					if (index.isUnique()) {
 						assertThat( index.getName().length() ).isLessThanOrEqualTo( MAX_NAME_LENGTH );
 						foundCount++;

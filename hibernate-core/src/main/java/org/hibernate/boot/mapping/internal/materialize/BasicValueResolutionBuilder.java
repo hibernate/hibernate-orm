@@ -448,7 +448,7 @@ public final class BasicValueResolutionBuilder {
 				() -> determineReflectedJavaType( details, services, state ),
 				mutabilityPlanAccess( explicitMutabilityPlan ),
 				indicators,
-				details.getTable(),
+				details.getColumnContainer(),
 				details.getColumn(),
 				details.getOwnerName(),
 				details.getPropertyName(),

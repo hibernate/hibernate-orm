@@ -44,7 +44,7 @@ public class NaturalIdUniqueConstraintNameTest {
 			assertEquals( "UK_zipCode_city", uniqueKey.getName() );
 		}
 		else {
-			var uniqueIndexes = table.getIndexes().values().stream().filter( Index::isUnique ).toList();
+			var uniqueIndexes = ((org.hibernate.mapping.PhysicalTable) table).getIndexes().values().stream().filter( Index::isUnique ).toList();
 
 			// The unique key should not be duplicated for NaturalID + UniqueConstraint.
 			assertEquals( 1, uniqueIndexes.size() );
@@ -73,7 +73,7 @@ public class NaturalIdUniqueConstraintNameTest {
 			assertEquals( "city", uniqueKey.getColumns().get( 1 ).getName() );
 		}
 		else {
-			var uniqueIndexes = table.getIndexes().values().stream().filter( Index::isUnique ).toList();
+			var uniqueIndexes = ((org.hibernate.mapping.PhysicalTable) table).getIndexes().values().stream().filter( Index::isUnique ).toList();
 
 			// The unique key should not be duplicated for NaturalID + UniqueConstraint.
 			assertEquals( 1, uniqueIndexes.size() );

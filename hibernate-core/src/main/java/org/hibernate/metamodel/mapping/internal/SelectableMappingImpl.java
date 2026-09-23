@@ -153,7 +153,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 			selectablePath = parentPath == null
 					? null
-					: parentPath.append( column.getQuotedName( dialect ) );
+					: parentPath.append( column.getName() );
 		}
 		return new SelectableMappingImpl(
 				containingTableExpression,

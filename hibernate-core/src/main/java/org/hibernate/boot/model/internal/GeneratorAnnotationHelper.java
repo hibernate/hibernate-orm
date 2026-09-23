@@ -590,7 +590,7 @@ public class GeneratorAnnotationHelper {
 			Map<String, String> configuration,
 			SimpleValue idValue,
 			MetadataBuildingContext context) {
-		configuration.put( PersistentIdentifierGenerator.TABLE, idValue.getTable().getName() );
+		configuration.put( PersistentIdentifierGenerator.TABLE, idValue.getColumnContainer().requireTable().getName() );
 		if ( idValue.getColumnSpan() == 1 ) {
 			configuration.put( PersistentIdentifierGenerator.PK, idValue.getColumns().get(0).getName() );
 		}

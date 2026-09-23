@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.tree.spi.SqmCacheable;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
-
+import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.Objects;
 
@@ -62,12 +62,16 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 				matchExpression.getExpressible(),
 				pattern.getExpressible()
 		);
+		final JavaType<?> javaType = QueryHelper.highestPrecedenceType2(
+				matchExpression.getJavaTypeDescriptor(),
+				pattern.getJavaTypeDescriptor()
+		);
 
 		assertString( matchExpression );
 		assertString( pattern );
 
-		matchExpression.applyInferableType( expressibleType );
-		pattern.applyInferableType( expressibleType );
+		matchExpression.applyInferableType( expressibleType, javaType );
+		pattern.applyInferableType( expressibleType, javaType );
 
 		if ( escapeCharacter != null ) {
 			escapeCharacter.applyInferableType( nodeBuilder.getCharacterType() );

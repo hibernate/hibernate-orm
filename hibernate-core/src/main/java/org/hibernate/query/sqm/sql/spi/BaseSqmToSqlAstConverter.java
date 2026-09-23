@@ -395,6 +395,7 @@ import org.hibernate.type.BottomType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
@@ -8788,10 +8789,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitAsWrapperExpression(AsWrapperSqmExpression<?> sqmExpression) {
+		final BasicType<?> basicType;
+		final BasicType<?> nodeType = sqmExpression.getNodeType();
+		if ( nodeType == null ) {
+			assert sqmExpression.getJavaType().isEnum();
+			//noinspection unchecked,rawtypes
+			basicType = createEnumType( (Class<Enum>) sqmExpression.getJavaType() );
+		}
+		else {
+			basicType = nodeType;
+		}
 		return new AsWrappedExpression<>(
 				(Expression) visitWithRequiredResult( sqmExpression.getExpression() ),
-				sqmExpression.getNodeType()
+				basicType
 		);
+	}
+
+	private <E extends Enum<E>> BasicType<E> createEnumType(Class<E> enumClass) {
+		final var enumJavaType = new EnumJavaType<>( enumClass );
+		final var indicators = getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+		final var jdbcType =
+				// we don't know whether to map the enum as ORDINAL or STRING,
+				// so just accept the default from the TypeConfiguration, which
+				// is usually ORDINAL (the default according to JPA)
+				enumJavaType.getRecommendedJdbcType( indicators );
+		return getTypeConfiguration().getBasicTypeRegistry().resolve( enumJavaType, jdbcType );
 	}
 
 	@Override

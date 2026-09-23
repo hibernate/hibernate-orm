@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.spi.SqmExpressible;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Common support for SqmParameter impls
@@ -45,6 +46,23 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 			}
 			else {
 				internalApplyInferableType( type );
+			}
+		}
+	}
+
+	@Override
+	public void applyInferableType(@Nullable SqmBindableType<?> type, @Nullable JavaType<?> javaType) {
+		if ( type != null ) {
+			final SqmPathSource<?> pathSource;
+			if ( type instanceof PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute ) {
+				internalApplyInferableType( (SqmBindableType<?>) pluralPersistentAttribute.getElementType() );
+			}
+			else if ( type instanceof AnonymousTupleType<?> tupleType
+					&& (pathSource = tupleType.findSubPathSource( CollectionPart.Nature.ELEMENT.getName() ) ) != null ) {
+				internalApplyInferableType( pathSource.getExpressible() );
+			}
+			else {
+				internalApplyInferableType( type, javaType );
 			}
 		}
 	}

@@ -30,7 +30,6 @@ import javax.tools.ToolProvider;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.junit.jupiter.api.BeforeEach;
@@ -239,7 +238,7 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(enhancementContext.doDirtyCheckingInline(null));
 		assertTrue(enhancementContext.hasLazyLoadableAttributes(null));
 		assertTrue(enhancementContext.isLazyLoadable(null));
-		assertTrue(enhancementContext.doExtendedEnhancement(null));
+		assertFalse(enhancementContext.doExtendedEnhancement(null));
 		// verify log messages
 		assertEquals(2, logMessages.size());
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.CREATE_ENHANCEMENT_CONTEXT));
@@ -256,20 +255,6 @@ public class HibernateEnhancerMojoTest {
 		createEnhancerMethod.invoke(enhanceMojo);
 		enhancer = (Enhancer)enhancerField.get(enhanceMojo);
 		assertNotNull(enhancer);
-		Field byteByddyEnhancementContextField = EnhancerImpl.class.getDeclaredField("enhancementContext");
-		byteByddyEnhancementContextField.setAccessible(true);
-		Object byteByddyEnhancementContext = byteByddyEnhancementContextField.get(enhancer);
-		assertNotNull(byteByddyEnhancementContext);
-		Field enhancementContextField = byteByddyEnhancementContext.getClass().getDeclaredField("enhancementContext");
-		enhancementContextField.setAccessible(true);
-		EnhancementContext enhancementContext = (EnhancementContext)enhancementContextField.get(byteByddyEnhancementContext);
-		assertNotNull(enhancementContext);
-		ClassLoader classLoader = enhancementContext.getLoadingClassLoader();
-		assertNotNull(classLoader);
-		assertNotNull(classLoader);
-		URL fooResource = classLoader.getResource("bar/Foo.txt");
-		assertNotNull(fooResource);
-		assertEquals(fooTxtFile.toURI().toURL(), fooResource);
 		// verify log messages
 		assertEquals(3, logMessages.size());
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.CREATE_BYTECODE_ENHANCER));

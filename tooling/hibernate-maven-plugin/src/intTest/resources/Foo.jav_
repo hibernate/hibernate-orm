@@ -10,4 +10,8 @@ public class Foo {
         bar = b;
     }
 
+    public void writeFoo(String value) {
+        bar.foo = value;
+    }
+
 }

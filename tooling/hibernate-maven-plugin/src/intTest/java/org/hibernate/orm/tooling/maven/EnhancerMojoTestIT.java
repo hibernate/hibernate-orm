@@ -178,10 +178,32 @@ public class EnhancerMojoTestIT extends AbstractMavenTestIT {
 		// Both Bar and Baz are enhanced because they are entities
 		assertTrue( isEnhanced( "Bar" ));
 		assertTrue( isEnhanced( "Baz" ));
-		// Though Foo is not an entity, it is enhanced because of the setting of 'enableExtendedEnhancement'
-		assertTrue( isEnhanced( "Foo" ) );
+		// Client transformation must not add managed-enhancement metadata.
+		assertFalse( isEnhanced( "Foo" ) );
+		assertClientDirtyTracking();
 		// No association management is in place;
 		assertFalse(isAssociationManagementPresent());
+	}
+
+	@Test
+	public void testEnhancementEnableClientEnhancement() throws Exception {
+		preparePomXml( "<configuration><enableClientEnhancement>true</enableClientEnhancement></configuration>" );
+		executeCompileGoal();
+		executeEnhanceGoal();
+		assertFalse( isEnhanced( "Foo" ) );
+		assertClientDirtyTracking();
+	}
+
+	private void assertClientDirtyTracking() throws Exception {
+		final var loader = getTestClassLoader();
+		final var barType = loader.loadClass( "Bar" );
+		final var clientType = loader.loadClass( "Foo" );
+		final var bar = barType.getConstructor().newInstance();
+		final var client = clientType.getConstructor().newInstance();
+		clientType.getMethod( "setBar", barType ).invoke( client, bar );
+		clientType.getMethod( "writeFoo", String.class ).invoke( client, "Changed" );
+		final var dirty = (String[]) barType.getMethod( "$$_hibernate_getDirtyAttributes" ).invoke( bar );
+		assertTrue( java.util.Arrays.asList( dirty ).contains( "foo" ) );
 	}
 
 

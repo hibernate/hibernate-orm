@@ -24,6 +24,7 @@ import org.hibernate.jpa.AvailableHints;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -344,6 +345,33 @@ public class OracleFollowOnLockingTest {
 			// this should trigger follow-on locking - so 2 (initial query, locking)
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
 
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20923")
+	public void testPessimisticLockWithPaginationAndOrderByPreservesOrdering(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+
+		factoryScope.inTransaction( (session) -> {
+			sqlCollector.clear();
+
+			List<Product> products = session.createQuery( "select p from Product p order by p.id", Product.class )
+					.setHibernateLockMode( PESSIMISTIC_WRITE )
+					.setFirstResult( 0 )
+					.setMaxResults( 10 )
+					.getResultList();
+
+			assertThat( products ).hasSize( 10 );
+			// there should be no follow-on locking - so just 1
+			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+
+			var sql = sqlCollector.getSqlQueries().get( 0 ).toLowerCase();
+			// The locking wrapper wraps the query in a subquery for FOR UPDATE + pagination.
+			// The ORDER BY must be present on the outer query to preserve result ordering.
+			int lastCloseParen = sql.lastIndexOf( ')' );
+			var outerTail = sql.substring( lastCloseParen );
+			assertThat( outerTail ).contains( "order by" );
 		} );
 	}
 

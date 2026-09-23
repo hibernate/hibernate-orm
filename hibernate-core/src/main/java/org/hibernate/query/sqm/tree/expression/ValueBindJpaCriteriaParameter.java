@@ -24,12 +24,19 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	private final @Nullable T value;
 
 	public ValueBindJpaCriteriaParameter(@Nullable BindableType<? super T> type, @Nullable T value, NodeBuilder nodeBuilder) {
-		super( null, type, false, nodeBuilder );
+		super( null, type, null, false, nodeBuilder );
 		assert value == null || type == null
 			|| ( type instanceof SqmBindableType<? super T> bindable
 					// TODO: why does SqmExpressible.getJavaType() return an apparently-wrong type?
 					? bindable.getExpressibleJavaType().isInstance( value )
 					: type.getJavaType().isInstance( value ) );
+		final SqmBindableType<? super T> sqmBindableType = nodeBuilder.resolveExpressible( type );
+		setExpressibleType(
+				sqmBindableType,
+				sqmBindableType == null && value != null
+						? nodeBuilder.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( value.getClass() )
+						: null
+		);
 		this.value = value;
 	}
 

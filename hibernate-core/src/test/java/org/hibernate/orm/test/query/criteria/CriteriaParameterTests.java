@@ -18,10 +18,14 @@ import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
+import org.hibernate.testing.orm.domain.gambit.EnumValue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel( annotatedClasses = BasicEntity.class )
 @SessionFactory
@@ -163,5 +167,13 @@ public class CriteriaParameterTests {
 					query.list();
 				}
 		);
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17419")
+	public void testEnumParameter(SessionFactoryScope scope) {
+		final CriteriaBuilder criteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
+		final ParameterExpression<EnumValue> parameter = criteriaBuilder.parameter( EnumValue.class );
+		assertEquals( EnumValue.class, parameter.getJavaType() );
 	}
 }

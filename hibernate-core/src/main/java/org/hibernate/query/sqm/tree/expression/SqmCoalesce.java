@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
@@ -20,8 +21,10 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 
 /**
  * @author Steve Ebersole
@@ -74,8 +77,29 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 
 	public void value(SqmExpression<? extends T> expression) {
 		arguments.add( expression );
+		internalApplyInferableType(
+				highestPrecedenceType2( getNodeType(), expression.getNodeType() ),
+				highestPrecedenceType2( getJavaTypeDescriptor(), expression.getJavaTypeDescriptor() )
+		);
 	}
 
+	@Override
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType) {
+		super.internalApplyInferableType( newType );
+		for ( var argument : arguments ) {
+			argument.applyInferableType( newType );
+		}
+	}
+
+	@Override
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType, @Nullable JavaType<?> newJavaType) {
+		super.internalApplyInferableType( newType, newJavaType );
+		for ( var argument : arguments ) {
+			argument.applyInferableType( newType, newJavaType );
+		}
+	}
+
+	@Nonnull
 	public List<SqmExpression<? extends T>> getArguments() {
 		return arguments;
 	}

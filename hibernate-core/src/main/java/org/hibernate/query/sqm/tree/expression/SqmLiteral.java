@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -32,11 +33,17 @@ import static org.hibernate.internal.util.QuotingHelper.appendSingleQuoteEscaped
 public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	private final @Nullable T value;
 
-	public SqmLiteral(T value, @Nullable SqmBindableType<? super T> inherentType, NodeBuilder nodeBuilder) {
+	public SqmLiteral(@NonNull T value, @Nullable SqmBindableType<? super T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		assert value != null;
 		assert inherentType == null
 			|| inherentType.getExpressibleJavaType().isInstance( castNonNull( value ) );
+		setExpressibleType(
+				inherentType,
+				inherentType == null
+						? nodeBuilder.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( value.getClass() )
+						: null
+		);
 		this.value = value;
 	}
 
@@ -46,8 +53,9 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	}
 
 	// Constructor for SqmEnumLiteral
-	SqmLiteral(@Nullable SqmBindableType<T> inherentType, T value, NodeBuilder nodeBuilder) {
+	SqmLiteral(@Nullable SqmBindableType<T> inherentType, JavaType<T> javaType, @NonNull T value, @NonNull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
+		setExpressibleType( inherentType, javaType );
 		this.value = value;
 	}
 

@@ -12,7 +12,7 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
@@ -53,8 +53,8 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 				&& ( operator == ADD || operator == SUBTRACT ) ) {
 			return;
 		}
-		this.lhsOperand.applyInferableType( rhsExpressible );
-		this.rhsOperand.applyInferableType( lhsExpressible );
+		this.lhsOperand.applyInferableType( rhsExpressible, rhsOperand.getJavaTypeDescriptor() );
+		this.rhsOperand.applyInferableType( lhsExpressible, lhsOperand.getJavaTypeDescriptor() );
 	}
 
 	public SqmBinaryArithmetic(
@@ -129,6 +129,14 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		lhsOperand.applyInferableType( type );
 
 		super.internalApplyInferableType( type );
+	}
+
+	@Override
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType, @Nullable JavaType<?> newJavaType) {
+		rhsOperand.applyInferableType( newType, newJavaType );
+		lhsOperand.applyInferableType( newType, newJavaType );
+
+		super.internalApplyInferableType( newType, newJavaType );
 	}
 
 	@Override

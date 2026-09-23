@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.Objects.requireNonNull;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
@@ -56,9 +57,13 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 				leftHandExpression.getExpressible(),
 				rightHandExpression.getExpressible()
 		);
+		final JavaType<?> javaType = QueryHelper.highestPrecedenceType2(
+				leftHandExpression.getJavaTypeDescriptor(),
+				rightHandExpression.getJavaTypeDescriptor()
+		);
 
-		leftHandExpression.applyInferableType( expressibleType );
-		rightHandExpression.applyInferableType( expressibleType );
+		leftHandExpression.applyInferableType( expressibleType, javaType );
+		rightHandExpression.applyInferableType( expressibleType, javaType );
 	}
 
 	private SqmComparisonPredicate(SqmComparisonPredicate affirmativeForm) {

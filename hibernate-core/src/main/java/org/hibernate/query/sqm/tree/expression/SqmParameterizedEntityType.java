@@ -11,6 +11,7 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.type.descriptor.java.JavaType;
 
 
 /**
@@ -51,6 +52,12 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	public void internalApplyInferableType(@Nullable SqmBindableType<?> type) {
 		setExpressibleType( type );
 		discriminatorSource.applyInferableType( type );
+	}
+
+	@Override
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType, @Nullable JavaType<?> newJavaType) {
+		setExpressibleType( newType, newJavaType );
+		discriminatorSource.applyInferableType( newType, newJavaType );
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.Objects;
 
@@ -60,6 +61,10 @@ public class SqmLiteralEntityType<T>
 
 	@Override
 	public void internalApplyInferableType(@Nullable SqmBindableType<?> type) {
+	}
+
+	@Override
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType, @Nullable JavaType<?> newJavaType) {
 	}
 
 	@Override

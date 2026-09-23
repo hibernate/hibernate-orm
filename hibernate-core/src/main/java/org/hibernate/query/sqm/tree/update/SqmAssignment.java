@@ -20,7 +20,7 @@ public class SqmAssignment<T> implements SqmCacheable {
 	public SqmAssignment(SqmPath<T> targetPath, SqmExpression<? extends T> value) {
 		this.targetPath = targetPath;
 		this.value = value;
-		this.value.applyInferableType( targetPath.getNodeType() );
+		this.value.applyInferableType( targetPath.getNodeType(), targetPath.getJavaTypeDescriptor() );
 	}
 
 	public SqmAssignment<T> copy(SqmCopyContext context) {

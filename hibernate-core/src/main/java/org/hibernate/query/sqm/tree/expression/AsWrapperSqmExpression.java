@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -16,12 +16,19 @@ import java.util.Objects;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
+
 public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	private final SqmExpression<?> expression;
 
-	AsWrapperSqmExpression(SqmBindableType<T> type, SqmExpression<?> expression) {
-		super( type, expression.nodeBuilder() );
+	AsWrapperSqmExpression(@Nullable SqmBindableType<T> type, @Nonnull Class<T> clazz, @Nonnull SqmExpression<?> expression) {
+		super( null, expression.nodeBuilder() );
 		this.expression = expression;
+		setExpressibleType(
+				type,
+				type == null
+						? expression.nodeBuilder().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( clazz )
+						: null
+		);
 	}
 
 	@Override
@@ -34,7 +41,13 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 		hql.append( "wrap(" );
 		expression.appendHqlString( hql, context );
 		hql.append( " as " );
-		hql.append( getNodeType().getReturnedClassName() );
+		final BasicType<T> nodeType = getNodeType();
+		if ( nodeType == null ) {
+			hql.append( castNonNull( getJavaType() ).getCanonicalName() );
+		}
+		else {
+			hql.append( nodeType.getReturnedClassName() );
+		}
 		hql.append( ")" );
 	}
 
@@ -45,7 +58,7 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmExpression<T> copy(SqmCopyContext context) {
-		return new AsWrapperSqmExpression<>( getNodeType(), expression.copy( context ) );
+		return new AsWrapperSqmExpression<>( getNodeType(), (Class<T>) castNonNull( getJavaType() ), expression.copy( context ) );
 	}
 
 	public SqmExpression<?> getExpression() {
@@ -53,15 +66,16 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public @NonNull BasicType<T> getNodeType() {
-		return (BasicType<T>) castNonNull( super.getNodeType() );
+	public @Nullable BasicType<T> getNodeType() {
+		return (BasicType<T>) super.getNodeType();
 	}
 
 	@Override
 	public boolean equals(@Nullable Object object) {
 		return object instanceof AsWrapperSqmExpression<?> that
 			&& this.expression.equals( that.expression )
-			&& Objects.equals( this.getNodeType(), that.getNodeType() );
+			&& Objects.equals( this.getNodeType(), that.getNodeType() )
+			&& Objects.equals( this.getJavaTypeDescriptor(), that.getJavaTypeDescriptor() );
 	}
 
 	@Override
@@ -73,7 +87,8 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	public boolean isCompatible(Object object) {
 		return object instanceof AsWrapperSqmExpression<?> that
 			&& this.expression.isCompatible( that.expression )
-			&& Objects.equals( this.getNodeType(), that.getNodeType() );
+			&& Objects.equals( this.getNodeType(), that.getNodeType() )
+			&& Objects.equals( this.getJavaTypeDescriptor(), that.getJavaTypeDescriptor() );
 	}
 
 	@Override

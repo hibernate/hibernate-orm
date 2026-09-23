@@ -1729,7 +1729,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 						// a Collection-valued, multi-valued parameter
 						? new MultiValueParameterType<>( (Class<T>) Collection.class )
 						: basicType;
-		return new JpaCriteriaParameter<>( name, parameterType, notBasic, this );
+		return new JpaCriteriaParameter<>( name, parameterType, paramClass, notBasic, this );
 	}
 
 	@Override
@@ -1740,7 +1740,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass, @Nullable String name) {
 		final var parameterType = new MultiValueParameterType<>( (Class<List<T>>) (Class) List.class );
-		return new JpaCriteriaParameter<>( name, parameterType, true, this );
+		return new JpaCriteriaParameter<>( name, parameterType, parameterType.getJavaType(), true, this );
 	}
 
 	@Override

@@ -10,7 +10,6 @@ import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSearchedCase;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -20,6 +19,9 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 
 /**
  * @author Steve Ebersole
@@ -82,22 +84,22 @@ public class SqmCaseSearched<R>
 
 	public SqmCaseSearched<R> when(SqmPredicate predicate, SqmExpression<? extends R> result) {
 		whenFragments.add( new WhenFragment<>( predicate, result ) );
-		applyInferableResultType( result.getNodeType() );
+		applyInferableResultType( result.getNodeType(), result.getJavaTypeDescriptor() );
 		return this;
 	}
 
 	public SqmCaseSearched<R> otherwise(SqmExpression<? extends R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
-		applyInferableResultType( otherwiseExpression.getNodeType() );
+		applyInferableResultType( otherwiseExpression.getNodeType(), otherwiseExpression.getJavaTypeDescriptor() );
 		return this;
 	}
 
-	private void applyInferableResultType(@Nullable SqmBindableType<?> type) {
+	private void applyInferableResultType(@Nullable SqmBindableType<?> type, @Nullable JavaType<?> javaType) {
 		if ( type != null ) {
 			final SqmBindableType<?> oldType = getExpressible();
-			final SqmBindableType<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
+			final SqmBindableType<?> newType = highestPrecedenceType2( oldType, type );
 			if ( newType != null && newType != oldType ) {
-				internalApplyInferableType( newType );
+				internalApplyInferableType( newType, highestPrecedenceType2( getJavaTypeDescriptor(), javaType ) );
 			}
 		}
 	}
@@ -112,6 +114,19 @@ public class SqmCaseSearched<R>
 
 		if ( whenFragments != null ) {
 			whenFragments.forEach( whenFragment -> whenFragment.getResult().applyInferableType( newType ) );
+		}
+	}
+
+	@Override
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType, @Nullable JavaType<?> newJavaType) {
+		super.internalApplyInferableType( newType, newJavaType );
+
+		if ( otherwise != null ) {
+			otherwise.applyInferableType( newType, newJavaType );
+		}
+
+		if ( whenFragments != null ) {
+			whenFragments.forEach( whenFragment -> whenFragment.getResult().applyInferableType( newType, newJavaType ) );
 		}
 	}
 

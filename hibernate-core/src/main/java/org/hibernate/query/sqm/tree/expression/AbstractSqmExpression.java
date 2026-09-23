@@ -37,6 +37,10 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	public void applyInferableType(@Nullable SqmBindableType<?> type) {
 	}
 
+	@Override
+	public void applyInferableType(@Nullable SqmBindableType<?> type, @Nullable JavaType<?> clazz) {
+	}
+
 	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType) {
 //		SqmTreeCreationLogger.LOGGER.tracef(
 //				"Applying inferable type to SqmExpression [%s]: %s -> %s",
@@ -48,13 +52,30 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 		setExpressibleType( highestPrecedenceType2( newType, getExpressible() ) );
 	}
 
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType, @Nullable JavaType<?> newJavaType) {
+//		SqmTreeCreationLogger.LOGGER.tracef(
+//				"Applying inferable type to SqmExpression [%s]: %s -> %s",
+//				this,
+//				getJavaTypeIfKnown(),
+//				newType
+//		);
+
+		setExpressibleType(
+				highestPrecedenceType2( newType, getExpressible() ),
+				highestPrecedenceType2( newJavaType, getJavaTypeDescriptor() )
+		);
+	}
+
 	@Override
 	public <X> SqmExpression<X> as(Class<X> type) {
 		final BasicType<X> basicTypeForJavaType = nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type );
 		if ( basicTypeForJavaType == null ) {
-			throw new IllegalArgumentException( "Can't cast expression to unknown type: " + type.getCanonicalName() );
+			if ( !type.isEnum() ) {
+				throw new IllegalArgumentException(
+						"Can't cast expression to unknown type: " + type.getCanonicalName() );
+			}
 		}
-		return new AsWrapperSqmExpression<>( basicTypeForJavaType, this );
+		return new AsWrapperSqmExpression<>( basicTypeForJavaType, type, this );
 	}
 
 	@Override
@@ -116,6 +137,6 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	@Override
 	public @Nullable JavaType<T> getJavaTypeDescriptor() {
 		final SqmBindableType<T> nodeType = getNodeType();
-		return nodeType == null ? null : nodeType.getExpressibleJavaType();
+		return nodeType == null ? super.getJavaTypeDescriptor() : nodeType.getExpressibleJavaType();
 	}
 }

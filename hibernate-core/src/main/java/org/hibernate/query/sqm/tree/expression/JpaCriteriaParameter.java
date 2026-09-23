@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.Objects;
 
@@ -41,9 +42,25 @@ public class JpaCriteriaParameter<T>
 			@Nullable BindableType<? super T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
+		this( name, type, type == null ? null : (Class<T>) type.getJavaType(), allowsMultiValuedBinding, nodeBuilder );
+	}
+
+	public JpaCriteriaParameter(
+			@Nullable String name,
+			@Nullable BindableType<? super T> type,
+			@Nullable Class<T> javaType,
+			boolean allowsMultiValuedBinding,
+			NodeBuilder nodeBuilder) {
 		super( nodeBuilder.resolveExpressible( type ), nodeBuilder );
 		this.name = name;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
+		final SqmBindableType<? super T> sqmBindableType = nodeBuilder.resolveExpressible( type );
+		setExpressibleType(
+				sqmBindableType,
+				sqmBindableType == null && javaType != null
+						? nodeBuilder.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType )
+						: null
+		);
 	}
 
 	protected JpaCriteriaParameter(JpaCriteriaParameter<T> original) {
@@ -107,7 +124,8 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public SqmParameter<T> copy() {
-		return new JpaCriteriaParameter<>( getName(), getAnticipatedType(), allowMultiValuedBinding(), nodeBuilder() );
+		final JavaType<T> javaTypeDescriptor = getJavaTypeDescriptor();
+		return new JpaCriteriaParameter<>( getName(), getAnticipatedType(), javaTypeDescriptor == null ? null : javaTypeDescriptor.getJavaTypeClass(), allowMultiValuedBinding(), nodeBuilder() );
 	}
 
 	@Override

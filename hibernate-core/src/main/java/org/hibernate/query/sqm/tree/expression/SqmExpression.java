@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.Arrays.asList;
 
@@ -54,6 +55,17 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 */
 	@Internal
 	void applyInferableType(@Nullable SqmBindableType<?> type);
+
+	/**
+	 * Used to apply type information based on the expression's usage
+	 * within the query.
+	 *
+	 * @apiNote The SqmExpressible type parameter is dropped here because
+	 * the inference could technically cause a change in Java type (i.e.
+	 * an implicit cast)
+	 */
+	@Internal
+	void applyInferableType(@Nullable SqmBindableType<?> type, @Nullable JavaType<?> clazz);
 
 	@Override
 	default void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {

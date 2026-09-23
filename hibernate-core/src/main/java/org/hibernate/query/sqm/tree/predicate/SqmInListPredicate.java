@@ -13,7 +13,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCacheable;
@@ -23,6 +22,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.criteria.Expression;
 
+import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
@@ -145,7 +145,8 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	private static void implyListElementType(SqmExpression<?> expression, SqmExpression<?> testExpression, NodeBuilder nodeBuilder) {
 		assertComparable( testExpression, expression, nodeBuilder );
 		expression.applyInferableType(
-				QueryHelper.highestPrecedenceType2( testExpression.getExpressible(), expression.getExpressible() )
+				highestPrecedenceType2( testExpression.getExpressible(), expression.getExpressible() ),
+				highestPrecedenceType2( testExpression.getJavaTypeDescriptor(), expression.getJavaTypeDescriptor() )
 		);
 	}
 

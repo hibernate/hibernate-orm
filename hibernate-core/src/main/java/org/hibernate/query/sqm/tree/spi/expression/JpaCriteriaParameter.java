@@ -142,7 +142,7 @@ public class JpaCriteriaParameter<T>
 		}
 		else {
 			final var nodeType = getNodeType();
-			final var javaType = nodeType == null ? null : nodeType.getExpressibleJavaType();
+			final var javaType = nodeType == null ? getJavaTypeDescriptor() : nodeType.getExpressibleJavaType();
 			return javaType == null ? null : javaType.getJavaTypeClass();
 		}
 	}

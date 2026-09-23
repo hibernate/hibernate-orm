@@ -32,6 +32,20 @@ This release introduces support for Jakarta Persistence 4.0, including the follo
 
 See https://in.relation.to/2026/01/20/JPA-4-M1/[our blog] for discussion of the changes in version 4.0.
 
+[[scoped-entity-listeners]]
+=== Package- and module-level entity listeners
+
+`@EntityListeners` may now be declared on `package-info.java` or `module-info.java`, applying listeners to entities in that package or module without repeating the declaration on each entity.
+Module-level listeners run before package-level listeners, followed by listeners declared on the entity hierarchy.
+`@ExcludeDefaultListeners` does not suppress package- or module-level listeners.
+
+[[persistence-unit-lifecycle-callbacks]]
+=== Persistence unit lifecycle callbacks
+
+The new `@PostCreate` and `@PreClose` callbacks observe creation and closing of an `EntityManagerFactory`, `EntityManager`, or `EntityAgent`.
+Declare these methods on a class annotated `@EntityListener` and register the class with the persistence unit.
+Each callback returns `void` and accepts one parameter of the corresponding factory, manager, or agent type.
+
 [[stateless-lock-modes]]
 == Lock modes in stateless sessions
 
@@ -112,16 +126,16 @@ hibernate.flush.queue.type=legacy
 
 
 
-[[addjustable-settings]]
+[[adjustable-settings]]
 == AdjustableSettings
 
-`SessionFactory` now exposes the new `AvailableSettings` contract as a way to adjust a limited set of settings at runtime.
+`SessionFactory` now exposes the new `org.hibernate.settings.AdjustableSettings` contract as a way to adjust a limited set of settings at runtime.
 
 [source,java]
-.AvailableSettings example
+.AdjustableSettings example
 ----
 SessionFactory factory = ...;
-AvailableSettings adjuster = factory.getAvailableSettings();
+AdjustableSettings adjuster = factory.getAdjustableSettings();
 adjuster.setShowSql(true);
 ----
 
@@ -340,4 +354,53 @@ See https://github.com/jakartaee/data/issues/1293[jakartaee/data#1293].
 
 Annotations such as `@NamedQuery`, `@FilterDef`, `@FetchProfile`, and type registration annotations can now be placed on `module-info.java`, in addition to `package-info.java` and entity classes.
 
-Modules are registered via `MetadataSources#addModule(Module)`.
+Modules are registered via `MetadataSources#addModuleDescriptor(Module)`.
+
+[[hbm-xml-transformer]]
+== HBM XML transformation
+
+`HbmXmlTransformer` more faithfully preserves legacy `hbm.xml` mappings when converting them to Hibernate's extended `orm.xml` format.
+Improvements cover composite identifiers, inheritance, associations, collections, custom types, constraints, and stored procedure mappings.
+
+[[client-enhancement]]
+== Client enhancement
+
+Client enhancement rewrites direct access to entity fields from application classes so that those accesses participate in Hibernate's lazy loading and dirty tracking.
+Enable it with `enableClientEnhancement` in the Gradle, Maven, or Ant enhancement tooling; it is disabled by default.
+The target entity classes must also be enhanced.
+
+See the link:{migrationGuide}#client-enhancement[Migration Guide] for configuration compatibility and container integration details.
+
+[[sql-restriction-support]]
+== Expanded SQL restriction support
+
+`@SQLRestriction` now supports references to columns outside an entity's primary table, including inherited columns in joined inheritance mappings.
+It also supports `@ManyToOne` associations mapped through a `@JoinTable`.
+These improvements allow static SQL restrictions to be used with a wider range of entity and association mappings.
+
+[[spi-contracts]]
+== Explicit extension contracts
+
+The new `org.hibernate.SPI` annotation identifies supported contracts for integration providers and makes their intended use explicit:
+
+* `USE`: consume a contract.
+* `IMPLEMENT`: implement an interface, subclass a class, or override a method.
+* `SUPPLY`: provide an implementation, instance, or value to Hibernate.
+
+These roles are independent; none implies another.
+For non-incubating SPIs, compatibility expectations apply across maintenance releases of the same `X.Y` release family.
+
+[[dialect-stabilization]]
+=== Dialect stabilization
+
+The contracts used to implement and contribute dialects now have explicit SPI classifications, clarifying which types and methods providers may use, implement, or supply.
+This includes `Dialect` and the supporting contracts for database-specific behavior such as locking, pagination, and mutation handling.
+Providers should extend `Dialect` or another type explicitly classified for implementation; a built-in dialect being available for selection does not by itself make it a supported subclass base.
+Individual contracts marked `@Incubating` retain their incubating status.
+
+[[sql-ast-translator-stabilization]]
+=== SQL AST and translator stabilization
+
+The central SQL AST and translator SPIs are now out of incubation, including translator factories and typed requests, `JdbcParameterFactory`, and `JdbcOperations` builders.
+Their supported provider roles now carry the normal SPI compatibility expectations within an `X.Y` release family.
+Some specialized contracts remain incubating; see the link:{migrationGuide}#sql-ast-translator-stability[Migration Guide] for details.

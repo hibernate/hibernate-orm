@@ -353,6 +353,42 @@ The annotation processor now propagates security annotations from the `jakarta.a
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
+[[property-access-spi]]
+=== Property value access
+
+Hibernate now integrates Hibernate Accessor for property value access.
+`PropertyAccess` implementations must implement the new `getPropertyValueAccessor()` method, returning a `PropertyValueAccessor` for the mapped attribute.
+There is no default implementation of this method; custom implementations must be updated and recompiled.
+
+Use the appropriate `PropertyValueAccessor` factory for the access pattern, such as `standard()` for a reader/writer pair or `map()` for map-backed properties.
+The existing `getGetter()` and `getSetter()` methods remain part of the contract, but implementing those methods alone is no longer sufficient.
+Integrations must preserve their property's read, write, and insert-time access semantics through the new accessor.
+`PropertyValueAccessor` is currently incubating.
+
+[[dialect-provider-migration]]
+=== Custom dialect providers
+
+Dialect extension contracts have been reorganized and explicitly classified using `@SPI`.
+Custom dialects must update imports and overrides to the current contracts, including the focused `org.hibernate.dialect.lock.spi`, `org.hibernate.dialect.pagination.spi`, and `org.hibernate.dialect.mutation.spi` packages where applicable.
+Use supported strategy contracts and factories instead of implementations in internal packages.
+
+Extend `Dialect` or another type explicitly classified with `SPI.Role.IMPLEMENT`.
+A built-in dialect being available for selection does not by itself make it a supported subclass base.
+The `USE`, `IMPLEMENT`, and `SUPPLY` roles are independent, and compatibility expectations for non-incubating SPIs apply within one `X.Y` release family.
+
+See the link:{versionDocBase}/dialect-provider/index.html[Dialect Provider Guide] for supported extension points, migration examples, and provider validation tooling.
+
+[[custom-cascade-implementations]]
+=== Removal of custom cascade implementations
+
+Custom implementations of `CascadeStyle` and `CascadingAction` are no longer "supported".
+They were never well-supported anyway.
+These contracts, now in `org.hibernate.cascade.spi`, are internal strategies rather than extension points.
+The `CascadeStyles.registerCascadeStyle()` registration method has been removed, and the cascade coordinator rejects custom actions.
+
+Integrations must remove custom cascade registrations and use Hibernate's built-in cascade styles.
+There is no replacement extension contract for custom cascade styles or actions; application-specific propagation of persistence operations must be implemented explicitly.
+
 [[client-enhancement]]
 === Client enhancement
 
@@ -606,6 +642,36 @@ release family, instead of the API promise across a major version.
 == Changes in Behavior
 
 This section describes changes in behavior that applications should be aware of.
+
+[[query-persistence-correctness]]
+=== Query and persistence correctness fixes
+
+The following fixes change behavior applications may observe after upgrading:
+
+* Concurrent `StatelessSession.upsert()` and `upsertMultiple()` operations now handle insert races instead of potentially leaving one operation's changes unapplied.
+* On H2, Oracle, and SQL Server, HQL `insert ... on conflict (...) do nothing` with explicit conflict columns now uses `MERGE` emulation instead of silently dropping the conflict clause. Applications should no longer expect a unique constraint violation for the specified conflict.
+* With enhanced dirty tracking and `@DynamicUpdate`, changes to scalar attributes are now included in updates when nested embeddables are also dirty. Previously, some scalar changes could be silently omitted depending on attribute ordering.
+
+
+[[java-time-direct-jdbc]]
+=== Direct JDBC handling of `java.time` values
+
+The default value of `hibernate.type.java_time_use_direct_jdbc` is now `true`.
+Previously, Hibernate converted `java.time` values to legacy `java.sql` representations before passing them to JDBC.
+Hibernate now uses `java.time` values directly where the configured dialect reports support for the Java type.
+For unsupported types, Hibernate falls back to the legacy JDBC representation and logs the driver/database limitation.
+
+Applications should verify temporal value handling with their JDBC driver when upgrading, particularly where they rely on the previous conversion behavior.
+Set `hibernate.type.java_time_use_direct_jdbc=false` to retain the legacy behavior.
+
+[[lock-cascading]]
+=== Removal of lock cascading
+
+The legacy `lock` cascade style and the `CascadeStyles.LOCK` and `CascadingActions.LOCK` constants have been removed.
+Legacy `hbm.xml` mappings that specify `cascade="lock"`, either alone or in a comma-separated list, now fail with an unsupported cascade style error.
+
+Remove `lock` from these cascade declarations, omitting the declaration if no other cascade styles remain.
+Applications that need to lock associated entities should explicitly request the required lock on each entity instead of relying on lock cascading or use JPA "extended locking".
 
 [[collection-remove-create-callback-order]]
 === Collection remove/create callback order

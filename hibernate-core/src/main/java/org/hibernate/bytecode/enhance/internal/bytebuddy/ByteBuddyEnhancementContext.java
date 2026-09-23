@@ -4,74 +4,64 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
-import java.util.Map;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import jakarta.annotation.Nonnull;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 
 import jakarta.persistence.Embedded;
 import jakarta.persistence.metamodel.Type;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.scaffold.MethodGraph;
-import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.pool.TypePool;
 import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
 
-import static java.lang.Character.toUpperCase;
-import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.PersistentAttributeTransformer.collectPersistentFields;
 
 class ByteBuddyEnhancementContext {
 
-	private static final ElementMatcher.Junction<MethodDescription> IS_GETTER = isGetter();
-
-	private final EnhancementContext enhancementContext;
+	private final ByteBuddyEnhancementSession session;
+	private final EnhancementModel model;
+	private final EnhancementOptions options;
 	private final EnhancerImplConstants constants;
 
-	private final ConcurrentHashMap<TypeDescription, Map<String, MethodDescription>> getterByTypeMap = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, Object> locksMap = new ConcurrentHashMap<>();
-	private final Set<TypeDescription> compositeDiscovery = ConcurrentHashMap.newKeySet();
-
-	ByteBuddyEnhancementContext(final EnhancementContext enhancementContext, EnhancerImplConstants enhancerConstants) {
-		this.enhancementContext = Objects.requireNonNull( enhancementContext );
-		this.constants = enhancerConstants;
+	ByteBuddyEnhancementContext(ByteBuddyEnhancementSession session, EnhancementOptions options) {
+		this.session = session;
+		this.model = session.model;
+		this.options = Objects.requireNonNull(options);
+		this.constants = session.byteBuddyState.getEnhancerConstants();
 	}
 
 	public boolean isEntityClass(TypeDescription classDescriptor) {
-		return enhancementContext.isEntityClass( new UnloadedTypeDescription( classDescriptor ) );
+		return model.isEntityClass( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
 	public boolean isCompositeClass(TypeDescription classDescriptor) {
-		return enhancementContext.isCompositeClass( new UnloadedTypeDescription( classDescriptor ) );
+		return session.discoveredTypes.get(classDescriptor.getName()) == Type.PersistenceType.EMBEDDABLE
+				|| model.isCompositeClass( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
 	public boolean isMappedSuperclassClass(TypeDescription classDescriptor) {
-		return enhancementContext.isMappedSuperclassClass( new UnloadedTypeDescription( classDescriptor ) );
+		return model.isMappedSuperclassClass( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
 	public boolean doDirtyCheckingInline() {
-		return enhancementContext.doDirtyCheckingInline();
+		return options.doDirtyCheckingInline();
 	}
 
 	public boolean doExtendedEnhancement() {
-		return enhancementContext.doExtendedEnhancement();
+		return options.doExtendedEnhancement();
 	}
 
 	public boolean hasLazyLoadableAttributes(TypeDescription classDescriptor) {
-		return enhancementContext.hasLazyLoadableAttributes( new UnloadedTypeDescription( classDescriptor ) );
+		return options.doLazyInitialization() && model.hasLazyLoadableAttributes( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
 	public boolean isPersistentField(AnnotatedFieldDescription field) {
-		return enhancementContext.isPersistentField( field );
+		return model.isPersistentField( field );
 	}
 
 	public boolean isCompositeField(AnnotatedFieldDescription field) {
@@ -79,38 +69,64 @@ class ByteBuddyEnhancementContext {
 	}
 
 	public AnnotatedFieldDescription[] order(AnnotatedFieldDescription[] persistentFields) {
-		return (AnnotatedFieldDescription[]) enhancementContext.order( persistentFields );
+		return (AnnotatedFieldDescription[]) model.order( persistentFields );
 	}
 
 	public boolean isLazyLoadable(AnnotatedFieldDescription field) {
-		return enhancementContext.isLazyLoadable( field );
+		return options.doLazyInitialization() && model.isLazyLoadable( field );
 	}
 
 	public boolean isMappedCollection(AnnotatedFieldDescription field) {
-		return enhancementContext.isMappedCollection( field );
+		return model.isMappedCollection( field );
 	}
 
 	public boolean doBiDirectionalAssociationManagement() {
-		return enhancementContext.doBiDirectionalAssociationManagement();
+		return options.doBiDirectionalAssociationManagement();
 	}
 
 	public boolean isDiscoveredType(TypeDescription typeDescription) {
-		return enhancementContext.isDiscoveredType( new UnloadedTypeDescription( typeDescription ) );
+		return session.discoveredTypes.containsKey(typeDescription.getName());
 	}
 
 	public void registerDiscoveredType(TypeDescription typeDescription, Type.PersistenceType type) {
-		enhancementContext.registerDiscoveredType( new UnloadedTypeDescription( typeDescription ), type );
+		session.discoveredTypes.put(typeDescription.getName(), type);
 	}
 
 	public UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
-		return enhancementContext.getUnsupportedEnhancementStrategy();
+		return options.getUnsupportedEnhancementStrategy();
 	}
 
-	public void discoverCompositeTypes(TypeDescription managedCtClass, TypePool typePool) {
-		if ( compositeDiscovery.add( managedCtClass ) ) {
-			final var determinedPersistenceType = determinePersistenceType( managedCtClass );
+	public void discoverCompositeTypes(TypeDescription type, TypePool typePool) {
+		discoverCompositeTypes(type, typePool, false);
+	}
+
+	void discoverCompositeTypes(TypeDescription type, TypePool typePool, boolean scheduled) {
+		synchronized (session) {
+			discoverCompositeTypes(type, typePool, scheduled,
+					scheduled ? new java.util.HashSet<>() : session.completedDiscovery,
+					new java.util.HashSet<>());
+		}
+	}
+
+	private void discoverCompositeTypes(TypeDescription managedCtClass, TypePool typePool,
+			boolean scheduled, java.util.Set<String> visited, java.util.Set<String> scheduledVisits) {
+		final var determinedPersistenceType = determinePersistenceType( managedCtClass );
+		scheduled = scheduled && determinedPersistenceType != Type.PersistenceType.BASIC
+				&& (determinedPersistenceType != Type.PersistenceType.ENTITY
+						|| session.candidates.contains(managedCtClass.getName()));
+		// A type first reached through an excluded entity may later be reached
+		// through a scheduled embedding. Revisit its graph to propagate scheduling.
+		if ( (scheduled ? scheduledVisits : visited).add( managedCtClass.getName() ) ) {
 			registerDiscoveredType( managedCtClass, determinedPersistenceType );
 			if ( determinedPersistenceType != Type.PersistenceType.BASIC ) {
+				if ( scheduled ) {
+					session.candidates.add( managedCtClass.getName() );
+				}
+				for (var parent = managedCtClass.getSuperClass(); parent != null; parent = parent.getSuperClass()) {
+					if (isMappedSuperclassClass(parent.asErasure())) {
+						discoverCompositeTypes(parent.asErasure(), typePool, scheduled, visited, scheduledVisits);
+					}
+				}
 				final var enhancedFields =
 						collectPersistentFields( managedCtClass, this, typePool, constants )
 								.getEnhancedFields();
@@ -119,7 +135,7 @@ class ByteBuddyEnhancementContext {
 					if ( !type.isInterface() && enhancedField.hasAnnotation( Embedded.class ) ) {
 						registerDiscoveredType( type, Type.PersistenceType.EMBEDDABLE );
 					}
-					discoverCompositeTypes( type, typePool );
+					discoverCompositeTypes( type, typePool, scheduled, visited, scheduledVisits );
 				}
 			}
 		}
@@ -141,58 +157,7 @@ class ByteBuddyEnhancementContext {
 		}
 	}
 
-	Optional<MethodDescription> resolveGetter(FieldDescription fieldDescription) {
-		//There is a non-straightforward cache here, but we really need this to be able to
-		//efficiently handle enhancement of large models.
-		var getters = getGetters( fieldDescription.getDeclaringType().asErasure() );
-
-		final String capitalizedFieldName =
-				toUpperCase( fieldDescription.getName().charAt( 0 ) )
-				+ fieldDescription.getName().substring( 1 );
-
-		final var getCandidate = getters.get( "get" + capitalizedFieldName );
-		final var isCandidate = getters.get( "is" + capitalizedFieldName );
-
-		if ( getCandidate != null ) {
-			if ( isCandidate != null ) {
-				// if there are two candidates, the existing code considered there was no getter;
-				// not sure it's such a good idea, but throwing an exception apparently throws
-				// exception in cases where Hibernate does not usually produce a mapping error.
-				return Optional.empty();
-			}
-			else {
-				return Optional.of( getCandidate );
-			}
-		}
-		else {
-			return Optional.ofNullable( isCandidate );
-		}
-	}
-
-	private @Nonnull Map<String, MethodDescription> getGetters(TypeDescription erasure) {
-		//Always try to get with a simple "get" before doing a "computeIfAbsent" operation,
-		//otherwise large models might exhibit significant contention on the map.
-		var getters = getterByTypeMap.get( erasure );
-		if ( getters == null ) {
-			//poor man lock striping: as CHM#computeIfAbsent has too coarse lock granularity
-			//and has been shown to trigger significant, unnecessary contention.
-			final String lockKey = erasure.toString();
-			final Object candidateLock = new Object();
-			final Object existingLock = locksMap.putIfAbsent( lockKey, candidateLock );
-			final Object lock = existingLock == null ? candidateLock : existingLock;
-			synchronized (lock) {
-				getters = getterByTypeMap.get( erasure );
-				if ( getters == null ) {
-					getters = MethodGraph.Compiler.DEFAULT.compile( erasure )
-							.listNodes()
-							.asMethodList()
-							.filter( IS_GETTER )
-							.stream()
-							.collect( Collectors.toMap( MethodDescription::getActualName, Function.identity() ) );
-					getterByTypeMap.put( erasure, getters );
-				}
-			}
-		}
-		return getters;
+	Optional<MethodDescription> resolveGetter(FieldDescription field) {
+		return session.metadata.resolveGetter(field);
 	}
 }

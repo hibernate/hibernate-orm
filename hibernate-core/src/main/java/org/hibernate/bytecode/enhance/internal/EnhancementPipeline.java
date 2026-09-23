@@ -5,22 +5,39 @@
 package org.hibernate.bytecode.enhance.internal;
 
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
+import org.hibernate.bytecode.enhance.spi.EnhancementSession;
 
 /// Composes the independently enabled managed and client enhancement passes.
 /// The delegate's legacy extended-enhancement option must be disabled.
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-public final class EnhancementPipeline implements Enhancer {
+public final class EnhancementPipeline implements Enhancer, AutoCloseable {
 
 	private final Enhancer delegate;
+	private final EnhancementSession session;
 	private final boolean managed;
 	private final boolean client;
 
 	public EnhancementPipeline(Enhancer delegate, boolean managed, boolean client) {
+		this.session = null;
 		this.delegate = delegate;
 		this.managed = managed;
 		this.client = client;
+	}
+
+	public EnhancementPipeline(EnhancementSession session,
+			EnhancementOptions options, boolean managed, boolean client) {
+		this.session = session;
+		this.delegate = session.createEnhancer(options);
+		this.managed = managed;
+		this.client = client;
+	}
+
+	@Override
+	public void close() {
+		if (session != null) session.close();
 	}
 
 	/// A view for completing managed enhancement of the selected source set first.
@@ -30,6 +47,7 @@ public final class EnhancementPipeline implements Enhancer {
 
 	/// A view for rewriting clients after the selected managed classes are enhanced.
 	public Enhancer clientPass() {
+		if (session != null) session.invalidateMetadata();
 		return pass( true );
 	}
 

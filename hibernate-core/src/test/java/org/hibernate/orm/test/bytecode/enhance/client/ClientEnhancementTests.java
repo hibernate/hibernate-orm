@@ -15,8 +15,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
@@ -221,7 +220,7 @@ public class ClientEnhancementTests {
 	void supportsPreEnhancedTargetsWithoutSchedulingManagedEnhancement() throws Exception {
 		final var loader = new ModelLoader();
 		loader.definitions.put( Book.class.getName(), enhancer().enhance( Book.class.getName(), bytes( Book.class ) ) );
-		final var enhancer = new EnhancerImpl( new DefaultEnhancementContext() {
+		final var enhancer = EnhancementTestConfiguration.createEnhancer( new EnhancementTestConfiguration() {
 			@Override
 			public ClassLoader getLoadingClassLoader() {
 				return loader;
@@ -365,35 +364,43 @@ public class ClientEnhancementTests {
 	}
 
 	private static org.hibernate.bytecode.spi.BytecodeProvider provider(java.util.concurrent.atomic.AtomicInteger calls) {
-		return (org.hibernate.bytecode.spi.BytecodeProvider) Proxy.newProxyInstance( ClientEnhancementTests.class.getClassLoader(),
-				new Class<?>[] { org.hibernate.bytecode.spi.BytecodeProvider.class }, (proxy, method, args) -> {
-					if ( !method.getName().equals( "getEnhancer" ) ) {
-						throw new UnsupportedOperationException( method.getName() );
+		return (org.hibernate.bytecode.spi.BytecodeProvider) Proxy.newProxyInstance(ClientEnhancementTests.class.getClassLoader(),
+				new Class<?>[] {org.hibernate.bytecode.spi.BytecodeProvider.class}, (proxy, method, args) -> {
+					if (!method.getName().equals("createEnhancementSession")) {
+						throw new UnsupportedOperationException(method.getName());
 					}
-					final var context = (org.hibernate.bytecode.enhance.spi.EnhancementContext) args[0];
-					assertThat( context.doDirtyCheckingInline( null ) ).isFalse();
-					assertThat( context.doBiDirectionalAssociationManagement( null ) ).isFalse();
-					assertThat( context.hasLazyLoadableAttributes( null ) ).isFalse();
-					assertThat( context.isLazyLoadable( null ) ).isFalse();
-					return new Enhancer() {
+					return new org.hibernate.bytecode.enhance.spi.EnhancementSession() {
 						@Override
-						public byte[] enhance(String className, byte[] originalBytes) {
-							throw new AssertionError( "Client transformer called managed enhancement" );
+						public Enhancer createEnhancer(org.hibernate.bytecode.enhance.spi.EnhancementOptions options) {
+							assertThat(options.doDirtyCheckingInline()).isFalse();
+							assertThat(options.doBiDirectionalAssociationManagement()).isFalse();
+							assertThat(options.doLazyInitialization()).isFalse();
+							return new Enhancer() {
+								@Override
+								public byte[] enhance(String name, byte[] bytes) {
+									throw new AssertionError("Client transformer called managed enhancement");
+								}
+								@Override
+								public byte[] enhanceClient(String name, byte[] bytes) {
+									calls.incrementAndGet();
+									return bytes;
+								}
+								@Override
+								public void discoverTypes(String name, byte[] bytes) {}
+							};
 						}
 						@Override
-						public byte[] enhanceClient(String className, byte[] originalBytes) {
-							calls.incrementAndGet();
-							return originalBytes;
-						}
+						public void discoverTypes(String name, byte[] bytes) {}
 						@Override
-						public void discoverTypes(String className, byte[] originalBytes) {
-						}
+						public void invalidateMetadata() {}
+						@Override
+						public void close() {}
 					};
-				} );
+				});
 	}
 
 	private static Enhancer enhancer() {
-		return new EnhancerImpl( new DefaultEnhancementContext() {
+		return EnhancementTestConfiguration.createEnhancer( new EnhancementTestConfiguration() {
 			@Override
 			public boolean doBiDirectionalAssociationManagement() {
 				return false;

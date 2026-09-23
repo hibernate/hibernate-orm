@@ -13,7 +13,9 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 
 /// Abstraction for dealing with `<persistence-unit/>` information
@@ -147,5 +149,5 @@ public interface PersistenceUnitDescriptor {
 
 	boolean isClassTransformerRegistrationDisabled();
 
-	ClassTransformer pushClassTransformer(EnhancementContext enhancementContext);
+	ClassTransformer pushClassTransformer(EnhancementModel model, EnhancementOptions options, BytecodeProvider provider);
 }

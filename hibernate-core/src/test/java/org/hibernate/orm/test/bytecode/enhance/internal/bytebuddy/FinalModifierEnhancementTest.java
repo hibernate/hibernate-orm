@@ -25,8 +25,7 @@ import net.bytebuddy.dynamic.ClassFileLocator.Compound;
 import net.bytebuddy.dynamic.ClassFileLocator.ForClassLoader;
 import net.bytebuddy.pool.TypePool;
 
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.bytecode.spi.ByteCodeHelper;
@@ -102,7 +101,7 @@ public class FinalModifierEnhancementTest {
 	}
 
 	private static TypeDescription enhanceAndDescribe(Class<?> clazz) {
-		final Enhancer enhancer = new EnhancerImpl( new DefaultEnhancementContext(), new ByteBuddyState() );
+		final Enhancer enhancer = EnhancementTestConfiguration.createEnhancer( new EnhancementTestConfiguration(), new ByteBuddyState() );
 		final byte[] enhancedBytes = enhance( clazz, enhancer );
 
 		try (final var enhancedClassLocator = ClassFileLocator.Simple.of( clazz.getName(), enhancedBytes );

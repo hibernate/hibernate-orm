@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
@@ -64,8 +63,8 @@ public class BytecodeEnhancerRunner extends Suite {
 				classList.add( buildEnhancerClassLoader( klass ).loadClass( klass.getName() ) );
 			}
 			else if ( klass.isAnnotationPresent( CustomEnhancementContext.class ) ) {
-				for ( Class<? extends EnhancementContext> contextClass : klass.getAnnotation( CustomEnhancementContext.class ).value() ) {
-					EnhancementContext enhancementContextInstance = contextClass.getConstructor().newInstance();
+				for ( Class<? extends EnhancementTestConfiguration> contextClass : klass.getAnnotation( CustomEnhancementContext.class ).value() ) {
+					EnhancementTestConfiguration enhancementContextInstance = contextClass.getConstructor().newInstance();
 					classList.add( getEnhancerClassLoader( enhancementContextInstance, packageName ).loadClass( klass.getName() ) );
 				}
 			}
@@ -85,7 +84,7 @@ public class BytecodeEnhancerRunner extends Suite {
 
 	private static ClassLoader buildEnhancerClassLoader(Class<?> klass) {
 		final EnhancementOptions options = klass.getAnnotation( EnhancementOptions.class );
-		final EnhancementContext enhancerContext;
+		final EnhancementTestConfiguration enhancerContext;
 		if ( options == null ) {
 			enhancerContext = new EnhancerTestContext();
 		}
@@ -186,10 +185,10 @@ public class BytecodeEnhancerRunner extends Suite {
 	}
 
 	private static ClassLoader buildEnhancerClassLoader(
-			EnhancementContext enhancerContext,
+			EnhancementTestConfiguration enhancerContext,
 			List<EnhancementSelector> selectors) {
 		return new EnhancingClassLoader(
-				buildDefaultBytecodeProvider().getEnhancer( enhancerContext ),
+				enhancerContext.createEnhancer(buildDefaultBytecodeProvider()),
 				selectors
 		);
 	}
@@ -246,7 +245,7 @@ public class BytecodeEnhancerRunner extends Suite {
 		}
 	}
 
-	private static ClassLoader getEnhancerClassLoader(EnhancementContext context, String packageName) {
+	private static ClassLoader getEnhancerClassLoader(EnhancementTestConfiguration context, String packageName) {
 		return buildEnhancerClassLoader( context, Collections.singletonList( new PackageSelector( packageName ) ) );
 	}
 

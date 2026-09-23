@@ -9,12 +9,11 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Resource;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.DefaultEnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementEnvironment;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.internal.EnhancementPipeline;
-import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 
 import java.io.ByteArrayOutputStream;
@@ -182,57 +181,26 @@ public class EnhancementTask extends Task {
 
 		ClassLoader classLoader = toClassLoader( Collections.singletonList( new File( base ) ) );
 
-		EnhancementContext enhancementContext = new DefaultEnhancementContext() {
-			@Override
-			public ClassLoader getLoadingClassLoader() {
-				return classLoader;
-			}
-
-			@Override
-			public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
-				return enableAssociationManagement;
-			}
-
-			@Override
-			public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
-				return enableDirtyTracking;
-			}
-
-			@Override
-			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
-				return enableLazyInitialization;
-			}
-
-			@Override
-			public boolean isLazyLoadable(UnloadedField field) {
-				return enableLazyInitialization;
-			}
-
-			@Override
-			public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
-				return false;
-			}
-		};
-
-
+		final var options = EnhancementOptions.of(enableDirtyTracking, enableLazyInitialization, enableAssociationManagement);
 
 		if ( enableAssociationManagement ) {
 			DEPRECATION_LOGGER.deprecatedSettingForRemoval( "management of bidirectional association persistent attributes", "false" );
 		}
 
 		final BytecodeProvider bytecodeProvider = buildDefaultBytecodeProvider();
-		try {
-			final var pipeline = new EnhancementPipeline( bytecodeProvider.getEnhancer( enhancementContext ),
+		try (var pipeline = new EnhancementPipeline(bytecodeProvider.createEnhancementSession(
+				new DefaultEnhancementModel(), EnhancementEnvironment.forClassLoader(classLoader)), options,
 					enableLazyInitialization || enableDirtyTracking || enableAssociationManagement,
-					clientEnhancementEnabled() );
+					clientEnhancementEnabled() )) {
 			final var managedPass = pipeline.managedPass();
 			for ( File file : sourceSet ) {
 				discoverTypes( file, managedPass );
 				log( "Successfully discovered types for class [" + file + "]", Project.MSG_INFO );
 			}
 			final var passes = clientEnhancementEnabled()
-					? List.of( managedPass, pipeline.clientPass() ) : List.of( managedPass );
-			for ( var enhancer : passes ) {
+					? List.of( false, true ) : List.of( false );
+			for ( var clientPass : passes ) {
+				final var enhancer = clientPass ? pipeline.clientPass() : managedPass;
 				for ( File file : sourceSet ) {
 					byte[] enhancedBytecode = doEnhancement( file, enhancer );
 					if ( enhancedBytecode == null ) {

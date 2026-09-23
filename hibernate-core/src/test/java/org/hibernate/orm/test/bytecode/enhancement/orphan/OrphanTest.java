@@ -7,7 +7,7 @@ package org.hibernate.orm.test.bytecode.enhancement.orphan;
 import org.hibernate.DetachedObjectException;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementTestConfiguration;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @BytecodeEnhanced(runNotEnhancedAsWell = true)
 @CustomEnhancementContext({
 		EnhancerTestContext.class, // supports laziness and dirty-checking
-		DefaultEnhancementContext.class
+		EnhancementTestConfiguration.class
 })
 public class OrphanTest {
 

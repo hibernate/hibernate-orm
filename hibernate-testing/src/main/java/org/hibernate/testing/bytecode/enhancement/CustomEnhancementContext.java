@@ -4,7 +4,7 @@
  */
 package org.hibernate.testing.bytecode.enhancement;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -20,6 +20,6 @@ import java.lang.annotation.Target;
 @Inherited
 public @interface CustomEnhancementContext {
 
-	Class<? extends EnhancementContext>[] value();
+	Class<? extends EnhancementTestConfiguration>[] value();
 
 }

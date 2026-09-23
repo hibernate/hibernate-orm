@@ -5,12 +5,13 @@
 package org.hibernate.bytecode.internal.none;
 
 import jakarta.annotation.Nonnull;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.bytecode.enhance.spi.EnhancementEnvironment;
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementSession;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 
-import jakarta.annotation.Nullable;
+
 
 /**
  * This BytecodeProvider represents the "no-op" enhancer; mostly useful
@@ -30,7 +31,9 @@ public final class BytecodeProviderImpl implements BytecodeProvider {
 	}
 
 	@Override
-	public @Nullable Enhancer getEnhancer(@Nonnull EnhancementContext enhancementContext) {
-		return null;
+	public EnhancementSession createEnhancementSession(
+			EnhancementModel model,
+			EnhancementEnvironment environment) {
+		throw new UnsupportedOperationException("Bytecode enhancement is disabled");
 	}
 }

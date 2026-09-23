@@ -4,78 +4,134 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
-/**
- * Options for the {@linkplain Enhancer enhancement} process.
- *
- * @see EnhancementContext
- *
- * @author Steve Ebersole
- */
+/// Controls generated enhancement features and handling of unsupported classes.
+/// These choices are independent of the persistent attributes described by an
+/// [EnhancementModel] and the bytecode supplied by an [EnhancementEnvironment].
+///
+/// An [EnhancementSession] may create enhancers with different options over the
+/// same model. Options must remain stable for each enhancer's lifetime and support
+/// concurrent queries when that enhancer is used concurrently. Client enhancers
+/// use disabled managed-generation flags; client field-access rewriting is selected
+/// by calling [Enhancer#enhanceClient(String, byte[])].
+///
+/// @see EnhancementSession#createEnhancer(EnhancementOptions)
+/// @author Steve Ebersole
 public interface EnhancementOptions {
-	/**
-	 * Whether to enable support for inline dirtiness checking.
-	 */
+	/// Creates immutable settings for the three managed-generation features.
+	/// Extended enhancement remains disabled and the unsupported-class policy is
+	/// [UnsupportedEnhancementStrategy#SKIP]. Passing false for all three flags
+	/// supplies the managed-generation settings for a client enhancer.
+	///
+	/// @param dirtyTracking whether to generate inline dirty tracking
+	/// @param lazyInitialization whether to generate lazy-loading support for
+	///                           attributes permitted by the model
+	/// @param associationManagement whether to generate bidirectional association management
+	/// @return options exposing these flags through the no-argument feature methods
+	static EnhancementOptions of(boolean dirtyTracking, boolean lazyInitialization, boolean associationManagement) {
+		return new EnhancementOptions() {
+			@Override
+			public boolean doDirtyCheckingInline() {
+				return dirtyTracking;
+			}
+			@Override
+			public boolean doLazyInitialization() {
+				return lazyInitialization;
+			}
+			@Override
+			public boolean doBiDirectionalAssociationManagement() {
+				return associationManagement;
+			}
+		};
+	}
+
+	/// Whether to generate lazy-loading support. Attribute eligibility is separately
+	/// determined by [EnhancementModel#hasLazyLoadableAttributes(UnloadedClass)] and
+	/// [EnhancementModel#isLazyLoadable(UnloadedField)].
+	///
+	/// @return true by default
+	default boolean doLazyInitialization() {
+		return true;
+	}
+
+	/// Selects the policy for unsupported mappings, such as property-access
+	/// attributes whose accessor names do not match their underlying fields.
+	/// This policy does not convert arbitrary transformation errors into skips.
+	///
+	/// @return [UnsupportedEnhancementStrategy#SKIP] by default
+	default UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
+		return UnsupportedEnhancementStrategy.SKIP;
+	}
+
+	/// Whether to generate inline tracking of changes to persistent attributes.
+	/// The default delegates to the deprecated class-argument method with null.
+	///
+	/// @return true to generate dirty-tracking support
 	default boolean doDirtyCheckingInline() {
 		return doDirtyCheckingInline( null );
 	}
 
-	/**
-	 * Whether to enable support for extended enhancement.
-	 *
-	 * @deprecated Use the separate {@link Enhancer#enhanceClient} operation instead.
-	 */
+	/// Whether the managed pass should also rewrite client field accesses using
+	/// the legacy combined enhancement path. New integrations use the separate
+	/// [Enhancer#enhanceClient(String, byte[])] operation.
+	///
+	/// @return false by default
+	///
+	/// @deprecated Use the separate [Enhancer#enhanceClient] operation instead.
 	@Deprecated(forRemoval = true, since = "7.1")
 	default boolean doExtendedEnhancement() {
 		return doExtendedEnhancement( null );
 	}
 
-	/**
-	 * Whether to enable support for automatic management of bidirectional associations.
-	 *
-	 * @deprecated Will be removed without replacement. See HHH-19660
-	 */
+	/// Whether to generate automatic maintenance of the opposite side of a
+	/// bidirectional association. The default delegates to the deprecated
+	/// field-argument method with null.
+	///
+	/// @return false by default
+	///
+	/// @deprecated Will be removed without replacement. See HHH-19660
 	@Deprecated(forRemoval = true, since = "7.1")
 	default boolean doBiDirectionalAssociationManagement() {
 		return doBiDirectionalAssociationManagement( null );
 	}
 
-	/**
-	 * Should we in-line dirty checking for persistent attributes for this class?
-	 *
-	 * @param classDescriptor The descriptor of the class to check.
-	 *
-	 * @return {@code true} indicates that dirty checking should be in-lined within the entity; {@code false}
-	 *         indicates it should not.  In-lined is more easily serializable and probably more performant.
-	 *
-	 * @deprecated Use {@linkplain #doDirtyCheckingInline()} instead.
-	 */
+	/// Legacy class-argument form of [#doDirtyCheckingInline()]. The no-argument
+	/// default calls this method with null; enhancers do not use it to select
+	/// different generation settings for individual classes.
+	///
+	/// @param classDescriptor a class descriptor, possibly null; ignored by the default implementation
+	///
+	/// @return true by default
+	///
+	/// @deprecated Use [#doDirtyCheckingInline()] instead.
 	@Deprecated(forRemoval = true)
-	boolean doDirtyCheckingInline(UnloadedClass classDescriptor);
+	default boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
+		return true;
+	}
 
-	/**
-	 * Should we enhance field access to entities from this class?
-	 *
-	 * @param classDescriptor The descriptor of the class to check.
-	 *
-	 * @return {@code true} indicates that any direct access to fields of entities should be routed to the enhanced
-	 *         getter / setter  method.
-	 *
-	 * @deprecated Use {@linkplain #doExtendedEnhancement()} instead.
-	 */
+	/// Legacy class-argument form of [#doExtendedEnhancement()]. The no-argument
+	/// default calls this method with null.
+	///
+	/// @param classDescriptor a class descriptor, possibly null; ignored by the default implementation
+	///
+	/// @return false by default
+	///
+	/// @deprecated Use [#doExtendedEnhancement()] instead.
 	@Deprecated(forRemoval = true, since = "7.1")
-	boolean doExtendedEnhancement(UnloadedClass classDescriptor);
+	default boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
+		return false;
+	}
 
-	/**
-	 * Whether to enable support for automatic management of bidirectional associations for this field.
-	 *
-	 * @param field The field to check.
-	 *
-	 * @return {@code true} indicates that the field is enhanced so that for bidirectional persistent fields
-	 * the association is managed, i.e. the associations are automatically set; {@code false} indicates that
-	 * the management is handled by the user.
-	 *
-	 * @deprecated Use {@linkplain #doBiDirectionalAssociationManagement()} instead.
-	 */
+	/// Legacy field-argument form of [#doBiDirectionalAssociationManagement()].
+	/// The no-argument default calls this method with null; enhancers do not use it
+	/// to select different generation settings for individual associations.
+	///
+	/// @param field a field descriptor, possibly null; ignored by the default implementation
+	///
+	/// @return false by default
+	///
+	/// @deprecated Use [#doBiDirectionalAssociationManagement()] instead.
 	@Deprecated(forRemoval = true, since = "7.1")
-	boolean doBiDirectionalAssociationManagement(UnloadedField field);
+	default boolean doBiDirectionalAssociationManagement(UnloadedField field) {
+		return false;
+	}
 }

@@ -17,12 +17,11 @@ import org.gradle.api.internal.file.FileOperations;
 import org.gradle.api.logging.Logger;
 
 import org.gradle.api.logging.Logging;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.bytecode.enhance.spi.DefaultEnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementEnvironment;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 import org.hibernate.bytecode.enhance.internal.EnhancementPipeline;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
 
 import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
@@ -57,7 +56,7 @@ public class EnhancementHelper {
 		if ( enhancementDsl.getEnableExtendedEnhancement().isPresent() ) {
 			logger.warn("'enableExtendedEnhancement' is deprecated; use 'enableClientEnhancement', which takes precedence when both are set" );
 		}
-		final var pipeline = (EnhancementPipeline) generateEnhancer( classLoader, enhancementDsl );
+		try (var pipeline = (EnhancementPipeline) generateEnhancer( classLoader, enhancementDsl )) {
 		final Enhancer enhancer = pipeline.managedPass();
 
 		discoverTypes( classesDir, classesDir, enhancer, ormDsl.getFileOperations(), classesToEnhance );
@@ -65,6 +64,7 @@ public class EnhancementHelper {
 		if ( enhancementDsl.getEnableClientEnhancement().orElse( enhancementDsl.getEnableExtendedEnhancement() ).getOrElse( false ) ) {
 			doEnhancement( classesDir, classesDir, pipeline.clientPass(), ormDsl.getFileOperations(), classesToEnhance );
 		}
+	}
 	}
 
 	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, FileOperations fileOperations, List<String> classesToEnhance) {
@@ -151,40 +151,12 @@ public class EnhancementHelper {
 
 	public static Enhancer generateEnhancer(ClassLoader classLoader, EnhancementSpec enhancementDsl) {
 
-		final EnhancementContext enhancementContext = new DefaultEnhancementContext() {
-			@Override
-			public ClassLoader getLoadingClassLoader() {
-				return classLoader;
-			}
-
-			@Override
-			public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
-				return enhancementDsl.getEnableAssociationManagement().get();
-			}
-
-			@Override
-			public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
-				return enhancementDsl.getEnableDirtyTracking().get();
-			}
-
-			@Override
-			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
-				return enhancementDsl.getEnableLazyInitialization().get();
-			}
-
-			@Override
-			public boolean isLazyLoadable(UnloadedField field) {
-				return enhancementDsl.getEnableLazyInitialization().get();
-			}
-
-			@Override
-			public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
-				return false;
-			}
-		};
+		final var options = EnhancementOptions.of(enhancementDsl.getEnableDirtyTracking().get(),
+				enhancementDsl.getEnableLazyInitialization().get(), enhancementDsl.getEnableAssociationManagement().get());
 
 		//TODO allow the Gradle plugin to configure the bytecode enhancer?
-		return new EnhancementPipeline( buildDefaultBytecodeProvider().getEnhancer( enhancementContext ),
+		return new EnhancementPipeline( buildDefaultBytecodeProvider().createEnhancementSession(new DefaultEnhancementModel(),
+				EnhancementEnvironment.forClassLoader(classLoader)), options,
 				enhancementDsl.getEnableLazyInitialization().get() || enhancementDsl.getEnableDirtyTracking().get()
 						|| enhancementDsl.getEnableAssociationManagement().get(),
 				enhancementDsl.getEnableClientEnhancement().orElse( enhancementDsl.getEnableExtendedEnhancement() ).getOrElse( false ) );

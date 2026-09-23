@@ -30,6 +30,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.hibernate.bytecode.enhance.spi.DefaultEnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementEnvironment;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 
 /**
  * Maven mojo for performing build-time enhancement of entity objects.
@@ -115,12 +118,14 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 		if (enhancementIsNeeded()) {
 			assembleSourceSet();
 			createEnhancer();
+			try (var pipeline = enhancementPipeline) {
 			discoverTypes();
 			performEnhancement();
 			if ( clientEnhancementEnabled() ) {
 				enhancer = enhancementPipeline.clientPass();
 				performEnhancement();
 			}
+		}
 		}
 		getLog().debug(ENDING_EXECUTION_OF_ENHANCE_MOJO);
 	}
@@ -222,21 +227,16 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 				Enhancer.class.getClassLoader());
 	}
 
-	private EnhancementContext createEnhancementContext() throws MojoExecutionException {
-		getLog().debug(CREATE_ENHANCEMENT_CONTEXT) ;
-		return new EnhancementContext(
-				createClassLoader(),
-				enableAssociationManagement,
-				enableDirtyTracking,
-				enableLazyInitialization,
-				false);
+	private EnhancementOptions createEnhancementOptions() {
+		return EnhancementOptions.of(enableDirtyTracking, enableLazyInitialization, enableAssociationManagement);
 	}
 
 	private void createEnhancer() throws MojoExecutionException {
 		getLog().debug(CREATE_BYTECODE_ENHANCER) ;
 		enhancementPipeline = new EnhancementPipeline( BytecodeProviderInitiator
 				.buildDefaultBytecodeProvider()
-				.getEnhancer(createEnhancementContext()),
+				.createEnhancementSession(new DefaultEnhancementModel(), EnhancementEnvironment.forClassLoader(createClassLoader())),
+				createEnhancementOptions(),
 				enableLazyInitialization || enableDirtyTracking || enableAssociationManagement,
 				clientEnhancementEnabled() );
 		enhancer = enhancementPipeline.managedPass();

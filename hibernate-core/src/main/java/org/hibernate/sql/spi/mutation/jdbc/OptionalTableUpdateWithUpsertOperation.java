@@ -51,6 +51,13 @@ public final class OptionalTableUpdateWithUpsertOperation extends OptionalTableU
 	}
 
 	@Override
+	protected boolean isRetryUpdateAfterInsert() {
+		final var tableDetails = getTableDetails();
+		return !tableDetails.isOptional()
+			&& (tableDetails.getInsertDetails() == null || tableDetails.getInsertDetails().getCustomSql() == null);
+	}
+
+	@Override
 	protected JdbcMutationOperation createJdbcOptionalInsert(SharedSessionContractImplementor session) {
 		final var tableDetails = getTableDetails();
 		final var insertDetails = tableDetails.getInsertDetails();

@@ -1558,7 +1558,9 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 			OptionalTableUpdateOperationRequest request) {
 		final var optionalTableUpdate = request.update();
 		final var factory = request.sessionFactory();
-		return supportsMerge
+		// We now use insert ... on conflict do update for non-optional tables,
+		// which is better than using a separate update statement
+		return supportsMerge || !optionalTableUpdate.getMutatingTable().isOptional()
 				? new PostgreSQLSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ) )
 						.createMergeOperation( optionalTableUpdate )
 				: new OptionalTableUpdateWithUpsertOperation( optionalTableUpdate, request.versionedTarget() );

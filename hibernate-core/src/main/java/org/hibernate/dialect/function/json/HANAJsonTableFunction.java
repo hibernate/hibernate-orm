@@ -31,6 +31,7 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
@@ -293,10 +294,14 @@ public class HANAJsonTableFunction extends JsonTableFunction {
 							);
 							final Expression wrapperExpression = new JsonWrapperExpression( idColumns, tableQualifier, argument );
 							cteQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( wrapperExpression ) );
-							cteContainer.addCteStatement( new CteStatement(
+							final CteStatement cteStatement = new CteStatement(
 									new CteTable( tableName, cteColumns ),
-									new SelectStatement( cteQuery )
-							) );
+									new SelectStatement( cteQuery ),
+									// We need the CTE to be rendered as such, since we refer to the "table" name,
+									// so we add this hint to prevent inlining
+									CteMaterialization.NOT_MATERIALIZED
+							);
+							cteContainer.addCteStatement( cteStatement );
 							sqlArguments.set( 0, new TableColumnReferenceExpression( argument, tableName, idColumns ) );
 							return querySpec;
 						} );

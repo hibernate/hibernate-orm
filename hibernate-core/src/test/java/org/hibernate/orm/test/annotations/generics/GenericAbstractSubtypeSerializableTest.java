@@ -7,6 +7,8 @@ package org.hibernate.orm.test.annotations.generics;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -17,10 +19,13 @@ import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(annotatedClasses = {
+		GenericAbstractSubtypeSerializableTest.Containing.class,
 		GenericAbstractSubtypeSerializableTest.GenericEntity.class,
 		GenericAbstractSubtypeSerializableTest.StringEntity.class,
 })
@@ -49,6 +54,32 @@ public class GenericAbstractSubtypeSerializableTest {
 		} );
 	}
 
+	@Entity(name = "Containing")
+	public static final class Containing {
+
+		@Id
+		private Integer id;
+
+		@ManyToOne
+		private GenericEntity<String> genericProperty;
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public GenericEntity<String> getGenericProperty() {
+			return genericProperty;
+		}
+
+		public void setGenericProperty(GenericEntity<String> genericProperty) {
+			this.genericProperty = genericProperty;
+		}
+	}
+
 	@Entity(name = "GenericEntity")
 	public abstract static class GenericEntity<T extends Serializable> {
 		@Id
@@ -60,6 +91,9 @@ public class GenericAbstractSubtypeSerializableTest {
 		@Basic
 		@JdbcTypeCode(Types.VARBINARY)
 		private T[] arrayContent;
+
+		@OneToMany(mappedBy = "genericProperty")
+		private List<Containing> containingEntities = new ArrayList<>();
 
 		public Integer getId() {
 			return id;

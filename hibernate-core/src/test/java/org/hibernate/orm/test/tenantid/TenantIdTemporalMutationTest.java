@@ -15,6 +15,7 @@ import jakarta.persistence.Version;
 
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -25,7 +26,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -50,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 		@Setting(name = MULTI_TENANT_RLS_ENABLED, value = "false"),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE")
 })
+@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 11, versionMatchMode = VersionMatchMode.OLDER, reason = "See https://jira.mariadb.org/browse/MDEV-39230")
 class TenantIdTemporalMutationTest {
 	@AfterEach
 	void cleanup(SessionFactoryScope scope) {

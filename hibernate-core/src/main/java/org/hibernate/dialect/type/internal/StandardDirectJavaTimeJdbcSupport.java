@@ -46,6 +46,15 @@ public final class StandardDirectJavaTimeJdbcSupport implements DirectJavaTimeJd
 			Set.of(),
 			Set.of()
 	);
+	private static final DirectJavaTimeJdbcSupport LOCAL = new StandardDirectJavaTimeJdbcSupport(
+			Set.of(
+					LocalDate.class,
+					LocalTime.class,
+					LocalDateTime.class
+			),
+			Set.of(),
+			Set.of()
+	);
 	private static final DirectJavaTimeJdbcSupport ALL = new StandardDirectJavaTimeJdbcSupport(
 			RECOGNIZED_TYPES,
 			Set.of(),
@@ -71,6 +80,10 @@ public final class StandardDirectJavaTimeJdbcSupport implements DirectJavaTimeJd
 
 	public static DirectJavaTimeJdbcSupport jdbc42() {
 		return JDBC_42;
+	}
+
+	public static DirectJavaTimeJdbcSupport local() {
+		return LOCAL;
 	}
 
 	public static DirectJavaTimeJdbcSupport all() {

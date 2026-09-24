@@ -137,9 +137,6 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.SQLException;
 import java.sql.Types;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
@@ -207,8 +204,6 @@ import static org.hibernate.dialect.literal.spi.ZeroOffsetLiteralStyle.NUMERIC_O
 /// @since 8.0
 @SPI({ USE, IMPLEMENT })
 public class MySQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
-	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
-			DirectJavaTimeJdbcSupports.of( LocalDate.class, LocalTime.class, LocalDateTime.class );
 
 	private final org.hibernate.dialect.unique.spi.UniqueDelegate uniqueDelegate =
 			new org.hibernate.dialect.unique.spi.DelegatingUniqueDelegate(
@@ -226,7 +221,7 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
-		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
+		return DirectJavaTimeJdbcSupports.local();
 	}
 
 

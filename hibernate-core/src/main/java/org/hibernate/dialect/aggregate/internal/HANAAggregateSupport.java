@@ -36,11 +36,17 @@ import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.INSTANT;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.JSON_ARRAY;
+import static org.hibernate.type.SqlTypes.LOCAL_DATE;
+import static org.hibernate.type.SqlTypes.LOCAL_DATE_TIME;
+import static org.hibernate.type.SqlTypes.LOCAL_TIME;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.OFFSET_DATE_TIME;
+import static org.hibernate.type.SqlTypes.OFFSET_TIME;
 import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.SQLXML;
@@ -51,6 +57,7 @@ import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.XML_ARRAY;
+import static org.hibernate.type.SqlTypes.ZONED_DATE_TIME;
 
 public class HANAAggregateSupport extends AggregateSupportImpl {
 
@@ -103,6 +110,13 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					case TIME:
 					case TIMESTAMP:
 					case TIMESTAMP_UTC:
+					case INSTANT:
+					case LOCAL_DATE_TIME:
+					case LOCAL_DATE:
+					case LOCAL_TIME:
+					case OFFSET_DATE_TIME:
+					case OFFSET_TIME:
+					case ZONED_DATE_TIME:
 						return template.replace(
 								placeholder,
 								"cast(json_value(" + jsonParentPartExpression + columnExpression + "') as " + getCastTypeName( column, typeConfiguration ) + ")"
@@ -170,6 +184,13 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					case TIME:
 					case TIMESTAMP:
 					case TIMESTAMP_UTC:
+					case INSTANT:
+					case LOCAL_DATE_TIME:
+					case LOCAL_DATE:
+					case LOCAL_TIME:
+					case OFFSET_DATE_TIME:
+					case OFFSET_TIME:
+					case ZONED_DATE_TIME:
 						// Cast from clob to varchar first
 						return template.replace(
 								placeholder,
@@ -254,11 +275,16 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 				sqlAppender.appendSql( ")" );
 				break;
 			case TIMESTAMP:
+			case LOCAL_DATE_TIME:
+			case LOCAL_DATE:
 				sqlAppender.appendSql( "to_varchar(" );
 				renderFunction.run();
 				sqlAppender.appendSql( ",'YYYY-MM-DD\"T\"HH24:MI:SS.FF9')" );
 				break;
 			case TIMESTAMP_UTC:
+			case INSTANT:
+			case OFFSET_DATE_TIME:
+			case ZONED_DATE_TIME:
 				sqlAppender.appendSql( "to_varchar(" );
 				renderFunction.run();
 				sqlAppender.appendSql( ",'YYYY-MM-DD\"T\"HH24:MI:SS.FF9\"Z\"')" );

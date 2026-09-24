@@ -4,9 +4,8 @@
  */
 package org.hibernate;
 
+import org.hibernate.boot.internal.BootInfoLogging;
 import org.hibernate.internal.build.AllowSysOut;
-
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Information about the version of Hibernate.
@@ -38,7 +37,7 @@ public final class Version {
 	 * Logs the Hibernate version (using {@link #getVersionString()}) to the logging system.
 	 */
 	public static void logVersion() {
-		CORE_LOGGER.version( getVersionString() );
+		BootInfoLogging.logVersion( getVersionString() );
 	}
 
 	/**

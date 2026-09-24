@@ -979,7 +979,7 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public NamespaceSupport getNamespaceSupport() {
-		return NamespaceSupports.standard( true, true );
+		return NamespaceSupports.standard( false, false );
 	}
 
 

@@ -643,6 +643,18 @@ release family, instead of the API promise across a major version.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[bootstrap-info-logging]]
+=== Bootstrap information logging
+
+The following bootstrap messages now use the dedicated `org.hibernate.orm.info` logging category:
+
+* `HHH000001: Hibernate ORM core version ...`, previously logged under `org.hibernate.orm.core`.
+* `HHH10001005: Database info: ...`, previously logged under `org.hibernate.orm.connections.pooling`.
+
+Both messages retain their existing message IDs and `INFO` level.
+Update any logging configuration or filters targeting these messages to use `org.hibernate.orm.info`.
+This category allows applications and containers to suppress bootstrap information independently of other core and connection-pooling messages.
+
 [[query-persistence-correctness]]
 === Query and persistence correctness fixes
 

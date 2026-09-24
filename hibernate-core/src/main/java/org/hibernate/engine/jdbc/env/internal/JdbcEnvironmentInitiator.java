@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import org.hibernate.boot.internal.BootInfoLogging;
 import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolutionException;
 
 import jakarta.annotation.Nonnull;
@@ -71,7 +72,6 @@ import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_DB_VERSION;
 import static org.hibernate.context.spi.MultiTenancy.isMultiTenancyEnabled;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
-import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -174,7 +174,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	// For Hibernate Reactive: it needs to disable or customize the log
 	protected void logConnectionInfo(DatabaseConnectionInfo databaseConnectionInfo) {
 		// Standardized info logging
-		CONNECTION_INFO_LOGGER.logConnectionInfoDetails( databaseConnectionInfo.toInfoString() );
+		BootInfoLogging.logConnectionInfo(  databaseConnectionInfo );
 	}
 
 	private DatabaseConnectionInfo buildInfo(ServiceRegistryImplementor registry, JdbcEnvironment environment) {

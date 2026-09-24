@@ -42,10 +42,4 @@ public @interface SubSystemLogging {
 	 * Description of the information logged
 	 */
 	String description();
-
-	/**
-	 * Aside from test usage, is the associated logger always used
-	 * through the sub-system category name?
-	 */
-	boolean mixed() default false;
 }

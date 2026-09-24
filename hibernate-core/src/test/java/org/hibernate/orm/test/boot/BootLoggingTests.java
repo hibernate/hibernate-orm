@@ -4,11 +4,11 @@
  */
 package org.hibernate.orm.test.boot;
 
+import org.hibernate.boot.internal.BootInfoLogging;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @MessageKeyInspection(
 		messageKey = "HHH10001005",
-		logger = @Logger( loggerName = ConnectionInfoLogger.LOGGER_NAME )
+		logger = @Logger( loggerName = BootInfoLogging.CATEGORY_NAME )
 )
 public class BootLoggingTests {
 	@Test

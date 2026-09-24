@@ -28,8 +28,7 @@ import static org.jboss.logging.Logger.Level.INFO;
 @ValidIdRange(min = 80000001, max = 80001000)
 @SubSystemLogging(
 		name = HSMessageLogger.LOGGER_NAME,
-		description = "Base logging for Hibernate Spatial",
-		mixed = true
+		description = "Base logging for Hibernate Spatial"
 )
 public interface HSMessageLogger extends BasicLogger {
 

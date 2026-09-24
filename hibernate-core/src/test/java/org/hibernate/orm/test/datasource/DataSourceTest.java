@@ -6,6 +6,7 @@ package org.hibernate.orm.test.datasource;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.boot.internal.BootInfoLogging;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
@@ -13,7 +14,6 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.testing.logger.LogInspectionHelper;
 import org.hibernate.testing.logger.LogListener;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -34,9 +34,9 @@ public class DataSourceTest {
 	@Test
 	void test(EntityManagerFactoryScope scope) {
 		Listener listener = new Listener();
-		LogInspectionHelper.registerListener( listener, ConnectionInfoLogger.CONNECTION_INFO_LOGGER );
+		LogInspectionHelper.registerListener( listener, BootInfoLogging.CONNECTION_INFO_LOGGER );
 		scope.getEntityManagerFactory();
-		LogInspectionHelper.clearAllListeners( ConnectionInfoLogger.CONNECTION_INFO_LOGGER );
+		LogInspectionHelper.clearAllListeners( BootInfoLogging.CONNECTION_INFO_LOGGER );
 		Dialect dialect = scope.getDialect();
 		assertTrue( dialect instanceof OracleDialect
 					|| dialect instanceof DB2Dialect

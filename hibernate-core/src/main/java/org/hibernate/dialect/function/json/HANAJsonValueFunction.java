@@ -19,7 +19,13 @@ import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.INSTANT;
+import static org.hibernate.type.SqlTypes.LOCAL_DATE;
+import static org.hibernate.type.SqlTypes.LOCAL_DATE_TIME;
+import static org.hibernate.type.SqlTypes.LOCAL_TIME;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.OFFSET_DATE_TIME;
+import static org.hibernate.type.SqlTypes.OFFSET_TIME;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
@@ -28,6 +34,7 @@ import static org.hibernate.type.SqlTypes.TIME_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.ZONED_DATE_TIME;
 
 /**
  * HANA json_value function.
@@ -91,6 +98,13 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 			case TIMESTAMP_UTC:
 			case TIME:
 			case TIME_UTC:
+			case INSTANT:
+			case LOCAL_DATE_TIME:
+			case LOCAL_DATE:
+			case LOCAL_TIME:
+			case OFFSET_DATE_TIME:
+			case OFFSET_TIME:
+			case ZONED_DATE_TIME:
 				sqlAppender.append( "cast(trim(trailing 'Z' from " );
 				super.render( sqlAppender, arguments, returnType, walker );
 				sqlAppender.append( ") as " );
@@ -140,7 +154,9 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 
 	private static boolean requiresSpecialExtraction(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
-			case BOOLEAN, UUID, BINARY, VARBINARY, LONG32VARBINARY, BLOB, TIMESTAMP, TIMESTAMP_WITH_TIMEZONE, TIMESTAMP_UTC, TIME, TIME_UTC -> true;
+			case BOOLEAN, UUID, BINARY, VARBINARY, LONG32VARBINARY, BLOB, TIMESTAMP, TIMESTAMP_WITH_TIMEZONE,
+				TIMESTAMP_UTC, TIME, TIME_UTC, INSTANT, LOCAL_DATE_TIME, LOCAL_DATE, LOCAL_TIME, OFFSET_DATE_TIME,
+				OFFSET_TIME, ZONED_DATE_TIME -> true;
 			default -> false;
 		};
 	}

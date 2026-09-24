@@ -26,7 +26,8 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
-
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
@@ -164,6 +165,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Date;
@@ -224,8 +228,16 @@ import static org.hibernate.dialect.lob.spi.LobDataExtraction.extractString;
  * @author Jonathan Bregler
  */
 public class HANADialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
+			DirectJavaTimeJdbcSupports.of( LocalDate.class, LocalTime.class, LocalDateTime.class );
+
 	private SchemaDropSupport schemaDropSupport;
 
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

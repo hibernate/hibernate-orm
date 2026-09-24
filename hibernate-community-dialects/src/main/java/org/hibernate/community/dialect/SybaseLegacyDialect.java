@@ -31,6 +31,8 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.NationalizationSupport;
 import org.hibernate.dialect.jdbc.spi.SybaseDriverKind;
 import org.hibernate.dialect.jdbc.spi.JdbcMetadataOverrides;
@@ -176,6 +178,13 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect implements C
 
 	public SybaseDriverKind getDriverKind() {
 		return driverKind;
+	}
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return driverKind == SybaseDriverKind.JTDS
+				? DirectJavaTimeJdbcSupports.none()
+				: super.getDirectJavaTimeJdbcSupport();
 	}
 
 	@Override

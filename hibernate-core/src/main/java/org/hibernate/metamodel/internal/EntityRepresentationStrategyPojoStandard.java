@@ -5,8 +5,10 @@
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -127,11 +129,15 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		);
 
 		propertyAccessMap = buildPropertyAccessMap( propertyAccessorService, bootDescriptor, strategySelector );
-
+		final List<Property> propertyClosure = bootDescriptor.getPropertyClosure();
+		final var multiValuePropertyAccesses = new ArrayList<PropertyAccess>( propertyClosure.size() );
+		for ( Property property : propertyClosure ) {
+			multiValuePropertyAccesses.add( propertyAccessMap.get( property.getName() ) );
+		}
 		final var multiValueAccessors = PropertyAccessHelper.buildMultiValueAccessors(
 				propertyAccessorService.hibernateAccessorFactory(),
 				mappedJtd.getJavaTypeClass(),
-				propertyAccessMap.values()
+				multiValuePropertyAccesses
 		);
 		multiValueReader = multiValueAccessors.reader();
 		multiValueWriter = multiValueAccessors.writer();

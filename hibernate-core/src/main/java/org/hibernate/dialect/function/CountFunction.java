@@ -269,11 +269,14 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 						//     coalesce(nullif(coalesce(E2,SEP),''),concat(SEP,'2')) ))
 						// The concat function converts its arguments implicitly, so the
 						// "concat with empty string" trick of the operator form is not needed.
-						sqlAppender.appendSql( "concat(coalesce(nullif(coalesce(" );
+						sqlAppender.appendSql( concatOperator );
+						sqlAppender.appendSql( "(coalesce(nullif(coalesce(" );
 						renderCastedArgument( sqlAppender, translator, expressions.get( 0 ) );
 						sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
 						chrFunction.render( sqlAppender, chrArguments, returnType, translator );
-						sqlAppender.appendSql( "),''),concat(" );
+						sqlAppender.appendSql( "),'')," );
+						sqlAppender.appendSql( concatOperator );
+						sqlAppender.appendSql( '(' );
 						chrFunction.render( sqlAppender, chrArguments, returnType, translator );
 						sqlAppender.appendSql( ",'" );
 						sqlAppender.appendSql( 1 );
@@ -286,7 +289,9 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 							renderCastedArgument( sqlAppender, translator, expressions.get( i ) );
 							sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
 							chrFunction.render( sqlAppender, chrArguments, returnType, translator );
-							sqlAppender.appendSql( "),''),concat(" );
+							sqlAppender.appendSql( "),'')," );
+							sqlAppender.appendSql( concatOperator );
+							sqlAppender.appendSql( '(' );
 							chrFunction.render( sqlAppender, chrArguments, returnType, translator );
 							sqlAppender.appendSql( ",'" );
 							sqlAppender.appendSql( argumentNumber );

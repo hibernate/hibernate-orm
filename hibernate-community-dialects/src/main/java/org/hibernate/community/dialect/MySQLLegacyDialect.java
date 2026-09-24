@@ -125,9 +125,6 @@ import java.sql.SQLException;
 
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
 import java.sql.Types;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -167,8 +164,6 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * @author Gavin King
  */
 public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
-	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
-			DirectJavaTimeJdbcSupports.of( LocalDate.class, LocalTime.class, LocalDateTime.class );
 
 	private final UniqueDelegate uniqueDelegate = new org.hibernate.dialect.unique.spi.DelegatingUniqueDelegate(
 			org.hibernate.dialect.unique.spi.UniqueDelegates.alterTable( this ) ) {
@@ -186,7 +181,7 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
-		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
+		return DirectJavaTimeJdbcSupports.local();
 	}
 
 	@Override

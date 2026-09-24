@@ -105,6 +105,12 @@ public interface AgroalSettings {
 	String AGROAL_IDLE_VALIDATION = AGROAL_CONFIG_PREFIX + ".idleValidation";
 
 	/**
+	 * @deprecated Use {@linkplain #AGROAL_IDLE_VALIDATION} instead.
+	 */
+	@Deprecated(since="8.1", forRemoval = true)
+	String AGROAL_IDLE_VALIDATION_TIMEOUT = AGROAL_IDLE_VALIDATION;
+
+	/**
 	 * An SQL command to be executed when a connection is created.
 	 */
 	String AGROAL_INITIAL_SQL = AGROAL_CONFIG_PREFIX + ".initialSQL";

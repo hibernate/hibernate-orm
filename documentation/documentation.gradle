@@ -42,10 +42,6 @@ def jpaVersion = ormBuildDetails.jpaVersion
 
 defaultTasks 'buildDocs'
 
-migrationCompatibility {
-	bootstrapBaseline = true
-}
-
 configurations {
 	// hibernate-ant -> hibernate-reveng -> google-java-format -> guava
 	// guava publishes JRE/Android variants that Gradle's reportAggregation

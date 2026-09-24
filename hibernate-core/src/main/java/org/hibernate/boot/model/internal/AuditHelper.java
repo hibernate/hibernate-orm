@@ -73,7 +73,7 @@ public final class AuditHelper {
 			RootClass rootClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
-		bindAuditTable( auditTable, rootClass, context );
+		bindAuditTable( auditTable, null, rootClass, context );
 		bindSecondaryAuditTables( auditTable, rootClass, classDetails, context );
 		bindSubclassAuditTables( auditTable, rootClass, context );
 	}
@@ -82,11 +82,20 @@ public final class AuditHelper {
 			Audited.@Nullable Table auditTable,
 			Collection collection,
 			MetadataBuildingContext context) {
-		bindAuditTable( auditTable, (Stateful) collection, context );
+		bindAuditTable( auditTable, null, collection, context );
+	}
+
+	static void bindAuditTable(
+			Audited.@Nullable Table auditTable,
+			Audited.@Nullable CollectionTable collectionAuditTable,
+			Collection collection,
+			MetadataBuildingContext context) {
+		bindAuditTable( auditTable, collectionAuditTable, (Stateful) collection, context );
 	}
 
 	private static void bindAuditTable(
 			Audited.@Nullable Table auditTable,
+			Audited.@Nullable CollectionTable collectionAuditTable,
 			Stateful auditable,
 			MetadataBuildingContext context) {
 		final var collector = context.getMetadataCollector();
@@ -96,7 +105,17 @@ public final class AuditHelper {
 		final String auditCatalog;
 		final String csIdColumnName;
 		final String modTypeColumnName;
-		if ( auditTable != null ) {
+
+		// For collections, prefer @Audited.CollectionTable if present
+		if ( collectionAuditTable != null && !isBlank( collectionAuditTable.name() ) ) {
+			explicitAuditTableName = collectionAuditTable.name();
+			auditSchema = collectionAuditTable.schema();
+			auditCatalog = collectionAuditTable.catalog();
+			// CollectionTable doesn't have column name customization, use defaults
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
+		}
+		else if ( auditTable != null ) {
 			explicitAuditTableName = auditTable.name();
 			auditSchema = auditTable.schema();
 			auditCatalog = auditTable.catalog();

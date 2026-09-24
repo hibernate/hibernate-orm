@@ -2689,7 +2689,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( needsCteInlining() && !originalCteStatements.isEmpty() ) {
 			cteStatements = new ArrayList<>( originalCteStatements.size() );
 			for ( CteStatement cteStatement : originalCteStatements ) {
-				if ( cteStatement.isRecursive() ) {
+				if ( (getCteSupport().supportsWithClause() || cteStatement.isRecursive())
+						&& !cteStatement.isInlinable() ) {
 					cteStatements.add( cteStatement );
 				}
 			}

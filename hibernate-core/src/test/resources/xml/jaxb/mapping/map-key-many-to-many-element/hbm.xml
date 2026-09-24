@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping">
+
+    <class name="MapKeyElementEntity">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <map name="textItem" table="text_item">
+            <key column="category_id" not-null="true"/>
+            <map-key-many-to-many column="item_id" class="SimpleEntity"/>
+            <element type="string" column="text"/>
+        </map>
+    </class>
+
+    <class name="SimpleEntity" table="simple_entity_table">
+        <id name="id"/>
+        <property name="name"/>
+    </class>
+
+</hibernate-mapping>

@@ -106,6 +106,7 @@ public class NativeGeneratorTypeSequenceTest {
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		@NativeGenerator(sequenceForm = @SequenceGenerator())
 		public Integer id;
+		String name;
 	}
 
 	@Entity(name = "IncrSizeOneStartOne")
@@ -116,6 +117,7 @@ public class NativeGeneratorTypeSequenceTest {
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		@NativeGenerator(sequenceForm = @SequenceGenerator(initialValue = 1, allocationSize = 1))
 		public Integer id;
+		String name;
 	}
 
 	@Entity(name = "IncrSizeFiveStartTen")
@@ -126,6 +128,7 @@ public class NativeGeneratorTypeSequenceTest {
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		@NativeGenerator(sequenceForm = @SequenceGenerator(initialValue = 10, allocationSize = 5))
 		public Integer id;
+		String name;
 	}
 
 }

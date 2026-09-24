@@ -1,5 +1,9 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
+
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -129,6 +133,20 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
  */
 public class AltibaseDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
 	private SchemaDropSupport schemaDropSupport;
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		// Altibase JDBC does not support direct access to OffsetTime or OffsetDateTime.
+		return DirectJavaTimeJdbcSupports.local();
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		// Altibase JDBC truncates nanoseconds to microseconds when binding timestamps.
+		return TemporalValueSemantics.TRUNCATING;
+	}
 
 
 	@Override

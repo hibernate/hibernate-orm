@@ -16,8 +16,10 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -99,6 +101,7 @@ public class RefreshEntityWithLazyPropertyTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode (MySQL kernel) treats || as logical OR rather than String concatenation, and the @Formula expression is user SQL the dialect does not rewrite; A mode (PG kernel) supports || as concatenation.")
 	public void testRefreshOfLazyFormula(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Person p = session.find( Person.class, PERSON_ID );

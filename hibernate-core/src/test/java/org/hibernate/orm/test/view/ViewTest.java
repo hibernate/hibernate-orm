@@ -8,7 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -24,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner requires SQL SECURITY clause for views")
 public class ViewTest {
 
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode CREATE VIEW rejects the expression types text (upper(name)) and float8 (sum(quantity)); the @View query is user SQL the dialect cannot rewrite. A mode (PG kernel) allows these types.")
 	@Test void test(SessionFactoryScope scope) {
 		UUID id = scope.fromTransaction( s -> {
 			Table t = new Table();

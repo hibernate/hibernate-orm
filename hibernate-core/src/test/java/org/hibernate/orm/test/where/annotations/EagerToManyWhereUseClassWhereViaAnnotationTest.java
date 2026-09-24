@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.where.annotations;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -50,7 +51,14 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 	@Test
 	@JiraKey( value = "HHH-15936" )
+	// M mode (openGauss MySQL-compatible kernel) reports "Column reference ... is ambiguous" for
+	// every bare column of a user-provided restriction rendered in the ON clause of a left join
+	// during EAGER fetching (e.g. "description is not null" on the collections, even though the
+	// column exists on only one joined table), so the test cannot run there. A mode is unaffected.
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
+		// The Category flag column is named `inactive_flag` (rather than `inactive`) to avoid the
+		// bare `inactive` column clash that makes A mode report "inactive is ambiguous" for the
+		// @SQLRestriction when Category is EAGER-fetched across joins.
 		var product = new Product();
 		var flowers = new Category();
 		flowers.id = 1;
@@ -180,7 +188,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@SQLRestriction("inactive = 0")
+	@SQLRestriction("inactive_flag = 0")
 	public static class Category {
 		@Id
 		private int id;
@@ -189,6 +197,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 		private String description;
 
+		@Column(name = "inactive_flag")
 		private int inactive;
 	}
 }

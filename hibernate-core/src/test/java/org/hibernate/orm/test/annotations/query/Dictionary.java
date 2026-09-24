@@ -12,11 +12,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
+@Table(name = "DictionaryTbl")
 @DiscriminatorColumn(name = "disc")
 @DiscriminatorValue("Dic")
 @SqlResultSetMapping(
@@ -33,7 +35,7 @@ import jakarta.persistence.SqlResultSetMapping;
 		}
 )
 @NamedNativeQuery(name = "all.dictionaries",
-		query = "select id, name, editor, disc as type from Dictionary",
+		query = "select id, name, editor, disc as type from DictionaryTbl",
 		resultSetMapping = "dictionary")
 public class Dictionary {
 	private Integer id;

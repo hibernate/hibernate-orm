@@ -10,13 +10,18 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
@@ -29,9 +34,12 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+
+import java.util.List;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.model.internal.OptionalTableInsert;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.type.SqlTypes;
 
@@ -57,6 +65,35 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
+	public void visitStar(Star star) {
+		// GaussDB M mode (MySQL-compatible) optimizer bug: a correlated scalar subquery using
+		// count(*) in a comparison — e.g. HQL `size(collection) = N` renders as
+		// `where (select count(*) from child where child.fk = parent.id) = ?` — raises a FATAL
+		// "Failed on assertion in nlist.cpp function list_nth_cell line 671. list is NIL" and kills
+		// the connection. Rendering count(1) instead of count(*) avoids the bug and is semantically
+		// equivalent (counts all rows). A mode (openGauss PG kernel) keeps count(*).
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			appendSql( '1' );
+			return;
+		}
+		super.visitStar( star );
+	}
+
+	@Override
+	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
+		// GaussDB M mode rejects a numeric literal that starts with '.' (e.g. HQL `.001f` renders the
+		// raw ".001" -> "syntax error at or near \".\""). Prepend "0" -> "0.001". A mode (PG kernel)
+		// accepts it, so keep super.
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			final String literalValue = literal.getUnparsedLiteralValue();
+			if ( literalValue.charAt( 0 ) == '.' ) {
+				appendSql( "0" );
+			}
+		}
+		super.visitUnparsedNumericLiteral( literal );
+	}
+
+	@Override
 	protected String getArrayContainsFunction() {
 		return super.getArrayContainsFunction();
 	}
@@ -64,7 +101,9 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	@Override
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
 		renderIntoIntoAndTable( tableInsert );
-		appendSql( "default values" );
+		// Delegate to the dialect so M mode (MySQL-compatible) renders `() values ()`
+		// instead of `default values`, which M mode rejects. A mode keeps `default values`.
+		appendSql( getDialect().getNoColumnsInsertString() );
 	}
 
 	@Override
@@ -85,7 +124,13 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		if ( identificationVariable != null ) {
 			final Clause currentClause = getClauseStack().getCurrent();
 			if ( currentClause == Clause.INSERT ) {
-				// GaussDB requires the "as" keyword for inserts
+				if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+					// M mode (MySQL-compatible) rejects INSERT table aliases entirely
+					// (both `insert into t as a` and `insert into t a` are syntax errors),
+					// so emit nothing. A mode (Oracle-compatible) requires the "as" keyword.
+					return;
+				}
+				// GaussDB A mode requires the "as" keyword for inserts
 				appendSql( " as " );
 			}
 			else {
@@ -108,13 +153,212 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
+	protected void renderDeleteClause(DeleteStatement statement) {
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			// M mode (MySQL-compatible) rejects `delete from t alias` (PostgreSQL style);
+			// render MySQL-style `delete alias from t alias` instead. A mode keeps PG style.
+			appendSql( "delete" );
+			final var clauseStack = getClauseStack();
+			try {
+				clauseStack.push( Clause.DELETE );
+				renderTableReferenceIdentificationVariable( statement.getTargetTable() );
+				if ( statement.getFromClause().getRoots().isEmpty() ) {
+					appendSql( " from " );
+					renderDmlTargetTableExpression( statement.getTargetTable() );
+				}
+				else {
+					visitFromClause( statement.getFromClause() );
+				}
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+		else {
+			super.renderDeleteClause( statement );
+		}
+	}
+
+	@Override
+	protected void renderUpdateClause(UpdateStatement updateStatement) {
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode()
+				&& !updateStatement.getFromClause().getRoots().isEmpty() ) {
+			// M mode (MySQL-compatible) rejects PG-style `update t set ... from t1 join t2 ...`.
+			// Render MySQL-style `update t1 join t2 on ...` up front; renderFromClauseAfterUpdateSet
+			// is then a no-op. A mode (openGauss PG kernel) keeps the base `update t set ... from`.
+			appendSql( "update " );
+			renderFromClauseSpaces( updateStatement.getFromClause() );
+		}
+		else {
+			super.renderUpdateClause( updateStatement );
+		}
+	}
+
+	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			// M mode renders the FROM clause up front in renderUpdateClause (MySQL style),
+			// so there is nothing to append after SET. A mode keeps PG-style `... from t1 join t2`
+			// plus the row-matching predicate via renderFromClauseJoiningDmlTargetReference.
+			return;
+		}
 		renderFromClauseJoiningDmlTargetReference( statement );
 	}
 
 	@Override
 	protected void visitConflictClause(ConflictClause conflictClause) {
-		visitOnDuplicateKeyConflictClauseWithDoNothing( conflictClause );
+		// GaussDB uses MySQL-style `ON DUPLICATE KEY UPDATE` for both M mode (MySQL-compatible) and A mode
+		// (openGauss Oracle-compatible), because A mode does not support PostgreSQL's `ON CONFLICT` syntax.
+		// Emulate DO NOTHING via `ON DUPLICATE KEY UPDATE col=col` (MySQL-standard) &mdash; `UPDATE NOTHING`
+		// is not valid GaussDB/MySQL syntax and raises "syntax error at end of input".
+		visitOnDuplicateKeyConflictClause( conflictClause );
+	}
+
+	@Override
+	protected void visitOnDuplicateKeyConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null
+				&& conflictClause.getConstraintName() == null
+				&& conflictClause.getAssignments().isEmpty()
+				&& getDialect() instanceof GaussDBDialect g && !g.isMMode() ) {
+			// A mode (openGauss Oracle-compatible) rejects updating primary/unique key columns in
+			// ON DUPLICATE KEY UPDATE, but the base emulation of DO NOTHING renders
+			// `<first target column>=<first target column>`, which is the key column for typical
+			// inserts. Assign some other inserted column to itself instead &mdash; the identifier
+			// columns are rendered first, so the last target column is used. If the insert targets
+			// the key column only, the key column is used and DO NOTHING cannot be emulated in A mode.
+			final InsertSelectStatement statement = (InsertSelectStatement) getStatementStack().getCurrent();
+			final List<ColumnReference> targetColumns = statement.getTargetColumns();
+			final ColumnReference columnReference = targetColumns.get( targetColumns.size() - 1 );
+			getClauseStack().push( Clause.CONFLICT );
+			try {
+				appendSql( " on duplicate key update" );
+				getClauseStack().push( Clause.SET );
+				appendSql( ' ' );
+				appendSql( columnReference.getColumnExpression() );
+				appendSql( '=' );
+				visitColumnReference( columnReference );
+			}
+			finally {
+				getClauseStack().pop();
+				getClauseStack().pop();
+			}
+			return;
+		}
+		super.visitOnDuplicateKeyConflictClause( conflictClause );
+	}
+
+	@Override
+	public void visitColumnReference(ColumnReference columnReference) {
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode()
+				&& "excluded".equals( columnReference.getQualifier() )
+				&& getStatementStack().getCurrent() instanceof InsertSelectStatement insertSelectStatement
+				&& insertSelectStatement.getSourceSelectStatement() == null ) {
+			// M mode (MySQL-compatible) has no `excluded` row alias for insert-values ON DUPLICATE KEY
+			// UPDATE; reference the proposed value via `values(col)` (MySQL-standard). A mode (ON CONFLICT)
+			// uses `excluded.col` and keeps the base behavior.
+			appendSql( "values(" );
+			columnReference.appendReadExpression( this, null );
+			append( ')' );
+		}
+		else {
+			super.visitColumnReference( columnReference );
+		}
+	}
+
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		// Multi-table UPDATE renders MySQL-style `update t1 alias join t2 ...`: unqualified
+		// SET-clause columns of the target table are ambiguous when the joined tables have
+		// the same column names ("Column reference ... is ambiguous"), so qualify them with
+		// the target table's identification variable (probe-verified: `set p1_0.code=` works,
+		// bare `set code=` is rejected).
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode()
+				&& getCurrentDmlStatement() instanceof UpdateStatement updateStatement
+				&& !updateStatement.getFromClause().getRoots().isEmpty() ) {
+			final String dmlAlias = updateStatement.getTargetTable().getIdentificationVariable();
+			if ( dmlAlias != null ) {
+				column.appendColumnForWrite( this, dmlAlias );
+				return;
+			}
+		}
+		column.appendColumnForWrite( this, null );
+	}
+
+	@Override
+	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			// Multi-table UPDATE renders MySQL-style `update t1 alias join t2 ...`: unqualified
+			// SET-clause columns of the target table are ambiguous when the joined tables have
+			// the same column names ("Column reference ... is ambiguous"), so qualify them with
+			// the target table's identification variable (probe-verified: `set p1_0.code=` works,
+			// bare `set code=` is rejected).
+			if ( getClauseStack().getCurrent() == Clause.SET
+					&& getCurrentDmlStatement() instanceof UpdateStatement updateStatement
+					&& !updateStatement.getFromClause().getRoots().isEmpty() ) {
+				final String dmlAlias = updateStatement.getTargetTable().getIdentificationVariable();
+				if ( columnReference.getQualifier() == null && dmlAlias != null ) {
+					return dmlAlias;
+				}
+				return columnReference.getQualifier();
+			}
+			// M mode (MySQL-compatible) does not alias the INSERT target table, so a column reference
+			// qualified with the target table's identification variable (e.g. be1_0) in the ON DUPLICATE
+			// KEY UPDATE SET clause has no resolvable table &mdash; GaussDB raises "Missing FROM-clause
+			// entry for table be1_0". Re-qualify such references with the table expression (table name),
+			// mirroring MySQLSqlAstTranslator. A mode (ON CONFLICT) keeps the base behavior.
+			final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
+			final String dmlAlias;
+			if ( getClauseStack().getCurrent() != Clause.SET
+					|| !( getCurrentDmlStatement() instanceof InsertSelectStatement insertSelectStatement )
+					|| ( dmlAlias = insertSelectStatement.getTargetTable().getIdentificationVariable() ) == null
+					|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
+				return columnReference.getQualifier();
+			}
+			else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !getQueryPartStack().isEmpty() ) {
+				return getCurrentDmlStatement().getTargetTable().getTableExpression();
+			}
+			else {
+				return null;
+			}
+		}
+		return super.determineColumnReferenceQualifier( columnReference );
+	}
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		if ( tableInsert instanceof OptionalTableInsert
+				&& getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			// M mode (MySQL-compatible): emulate DO NOTHING for optional (collection/secondary) tables via
+			// `ON DUPLICATE KEY UPDATE col=col` (MySQL-standard). `UPDATE NOTHING` is not valid GaussDB/MySQL
+			// syntax and raises "syntax error at end of input". The base visitStandardTableInsert rejects
+			// OptionalTableInsert, so M mode overrides here. A mode does not build OptionalTableInsert — see
+			// GaussDBDialect#createOptionalTableUpdateOperation (A mode falls back to the default
+			// OptionalTableUpdateOperation, which uses a plain insert + catch unique-violation) — and thus
+			// uses the base translator, which is correct because A mode does not support ON CONFLICT either.
+			getCurrentClauseStack().push( Clause.INSERT );
+			try {
+				renderInsertInto( tableInsert );
+				appendSql( " on duplicate key update " );
+				final ColumnReference[] firstCol = new ColumnReference[1];
+				tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+					if ( columnPosition == 0 ) {
+						firstCol[0] = columnValueBinding.getColumnReference();
+					}
+				} );
+				appendSql( firstCol[0].getColumnExpression() );
+				appendSql( '=' );
+				visitColumnReference( firstCol[0] );
+				if ( tableInsert.getNumberOfReturningColumns() > 0 ) {
+					visitReturningColumns( tableInsert::getReturningColumns );
+				}
+			}
+			finally {
+				getCurrentClauseStack().pop();
+			}
+		}
+		else {
+			super.visitStandardTableInsert( tableInsert );
+		}
 	}
 
 	@Override
@@ -183,6 +427,12 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	protected void renderMaterializationHint(CteMaterialization materialization) {
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			// M mode (MySQL-compatible) rejects the `materialized`/`not materialized` CTE hint
+			// (syntax error); emit nothing so CTEs render as plain `as (select ...)`. A mode
+			// (Oracle-compatible, openGauss PG kernel) keeps the PostgreSQL-style hint.
+			return;
+		}
 		if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
 			appendSql( "not " );
 		}
@@ -258,8 +508,33 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
-		// We need a custom implementation here because GaussDB
-		// uses the backslash character as default escape character
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			if ( likePredicate.isCaseSensitive() ) {
+				// M mode's default collation is case-insensitive, so a case-sensitive LIKE would
+				// match 'Prod%' against "product"/"PROD" as well. Force a case-sensitive comparison
+				// with `collate "C"` so Hibernate's case-sensitive LIKE keeps its semantics.
+				// renderEscapeCharacter forces `escape ''` when no explicit escape is given, to
+				// disable backslash escaping (MySQL treats `\` as the escape; PG/Hibernate treat
+				// it as a literal).
+				likePredicate.getMatchExpression().accept( this );
+				appendSql( " collate \"C\"" );
+				if ( likePredicate.isNegated() ) {
+					appendSql( " not" );
+				}
+				appendSql( " like " );
+				likePredicate.getPattern().accept( this );
+				renderEscapeCharacter( likePredicate.getEscapeCharacter() );
+			}
+			else {
+				// Case-insensitive LIKE: M mode has no native ILIKE (supportsCaseInsensitiveLike()
+				// returns false), so let the base translator emulate it via lower(col) like lower(pattern).
+				// The lower()-folded operands are already case-insensitive, so no collate is needed.
+				super.visitLikePredicate( likePredicate );
+			}
+			return;
+		}
+		// A mode (openGauss PG kernel): we need a custom implementation here because GaussDB
+		// uses the backslash character as default escape character.
 		// According to the documentation, we can overcome this by specifying an empty escape character
 		// See https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
 		likePredicate.getMatchExpression().accept( this );
@@ -281,6 +556,25 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		}
 		else {
 			appendSql( " escape ''''" );
+		}
+	}
+
+	@Override
+	protected void renderEscapeCharacter(Expression escapeCharacter) {
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			// M mode: force an empty escape character to disable backslash escaping (MySQL default),
+			// making the backslash a literal — matching Hibernate/PG semantics. An explicit escape
+			// character is honored as-is.
+			if ( escapeCharacter != null ) {
+				appendSql( " escape " );
+				escapeCharacter.accept( this );
+			}
+			else {
+				appendSql( " escape ''''" );
+			}
+		}
+		else {
+			super.renderEscapeCharacter( escapeCharacter );
 		}
 	}
 

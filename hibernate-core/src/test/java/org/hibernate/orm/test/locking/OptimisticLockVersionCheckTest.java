@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.locking;
 
+import org.hibernate.exception.TransactionSerializationException;
 import org.junit.jupiter.api.Assumptions;
 
 import org.hibernate.dialect.lock.spi.BlockingDuration;
@@ -272,7 +273,8 @@ public class OptimisticLockVersionCheckTest {
 					|| cause instanceof StaleStateException
 					|| cause instanceof PessimisticLockException
 					|| cause instanceof LockTimeoutException
-					|| cause instanceof OptimisticLockException ) {
+					|| cause instanceof OptimisticLockException
+					|| cause instanceof TransactionSerializationException ) {
 				return true;
 			}
 		}

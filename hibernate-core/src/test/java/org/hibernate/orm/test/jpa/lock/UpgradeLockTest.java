@@ -7,7 +7,7 @@ package org.hibernate.orm.test.jpa.lock;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.RollbackException;
-
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -52,8 +52,17 @@ public class UpgradeLockTest {
 				// Leave the entity unchanged so an ordinary update cannot mask a missing lock upgrade.
 				if ( concurrentUpdate ) {
 					scope.inTransaction( writer -> writer.find( Lock.class, lock.getId() ).setName( "renamed" ) );
-					final var failure = assertThrows( RollbackException.class, transaction::commit );
-					assertInstanceOf( OptimisticLockException.class, failure.getCause() );
+					var failure = assertThrows( RollbackException.class, transaction::commit );
+					while (failure.getCause() instanceof RollbackException) {
+						failure = (RollbackException) failure.getCause();
+					}
+					if ( failure.getCause() instanceof TransactionSerializationException ) {
+						// Some databases have a higher isolation level and throw a transaction serialization exception
+						// when running the query, instead of returning no rows to allow our code to throw
+					}
+					else {
+						assertInstanceOf( OptimisticLockException.class, failure.getCause() );
+					}
 				}
 				else {
 					transaction.commit();

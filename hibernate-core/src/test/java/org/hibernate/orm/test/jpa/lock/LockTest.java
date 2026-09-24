@@ -39,6 +39,7 @@ import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.lock.internal.PessimisticEntityLockException;
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.testing.orm.ConcurrencyCheckResult;
 import org.hibernate.testing.orm.TransactionConcurrencyChecks;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -518,8 +519,17 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 				doInJPA( this::entityManagerFactory, writer -> {
 					writer.find( Lock.class, lock.getId() ).setName( "renamed" );
 				} );
-				final var failure = assertThrows( RollbackException.class, transaction::commit );
-				assertInstanceOf( OptimisticLockException.class, failure.getCause() );
+				var failure = assertThrows( RollbackException.class, transaction::commit );
+				while (failure.getCause() instanceof RollbackException) {
+					failure = (RollbackException) failure.getCause();
+				}
+				if ( failure.getCause() instanceof TransactionSerializationException ) {
+					// Some databases have a higher isolation level and throw a transaction serialization exception
+					// when running the query, instead of returning no rows to allow our code to throw
+				}
+				else {
+					assertInstanceOf( OptimisticLockException.class, failure.getCause() );
+				}
 			}
 			finally {
 				if ( transaction.isActive() ) {

@@ -86,6 +86,30 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20935" )
+	public void testElementCollectionMapKeyManyToManyNoDuplication(ServiceRegistryScope scope) {
+		// An element-collection <map> with <map-key-many-to-many> used to be transferred twice
+		// (transformElementCollection + transferElementInfo both invoked the common-info/table
+		// transfer), duplicating the map-key join column — mirroring the HHH-11841 envers failure.
+		transformAndVerify( "xml/jaxb/mapping/map-key-many-to-many-element/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().stream()
+					.filter( e -> "MapKeyElementEntity".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( entity.getAttributes().getElementCollectionAttributes() ).hasSize( 1 );
+
+			final var textItem = entity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( textItem.getName() ).isEqualTo( "textItem" );
+			assertThat( textItem.getMapKeyJoinColumns() )
+					.as( "map-key join column must be transferred exactly once" )
+					.hasSize( 1 );
+			assertThat( textItem.getMapKeyJoinColumns().get( 0 ).getName() ).isEqualTo( "item_id" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20451" )
 	public void mapKeyManyToManyTransformationTest(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/ternary/hbm.xml", scope, transformed -> {

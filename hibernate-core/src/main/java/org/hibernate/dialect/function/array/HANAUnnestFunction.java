@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.xml.HANAXmlTableFunction;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.json.ExpressionTypeHelper;
 import org.hibernate.dialect.function.json.HANAJsonValueFunction;
@@ -179,10 +180,14 @@ public class HANAUnnestFunction extends UnnestFunction {
 								wrapperExpression = new JsonWrapperExpression( idColumns, tableQualifier, argument );
 							}
 							cteQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( wrapperExpression ) );
-							cteContainer.addCteStatement( new CteStatement(
+							final CteStatement cteStatement = new CteStatement(
 									new CteTable( tableName, cteColumns ),
-									new SelectStatement( cteQuery )
-							) );
+									new SelectStatement( cteQuery ),
+									// We need the CTE to be rendered as such, since we refer to the "table" name,
+									// so we add this hint to prevent inlining
+									CteMaterialization.NOT_MATERIALIZED
+							);
+							cteContainer.addCteStatement( cteStatement );
 							sqlArguments.set( 0, new TableColumnReferenceExpression( argument, tableName, idColumns ) );
 							return querySpec;
 						} );

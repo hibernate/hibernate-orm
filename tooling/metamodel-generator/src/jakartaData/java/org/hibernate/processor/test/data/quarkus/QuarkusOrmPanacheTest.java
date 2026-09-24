@@ -57,4 +57,5 @@ class QuarkusOrmPanacheTest {
 		Assertions.assertNotNull( constructor );
 		Assertions.assertTrue( constructor.isAnnotationPresent( Inject.class ) );
 	}
+
 }

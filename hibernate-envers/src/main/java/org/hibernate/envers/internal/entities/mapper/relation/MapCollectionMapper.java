@@ -125,14 +125,10 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 
 	@Override
 	protected boolean isSame(CollectionPersister collectionPersister, Object oldObject, Object newObject) {
-		final Map.Entry oldEntry = Map.Entry.class.cast( oldObject );
-		final Map.Entry newEntry = Map.Entry.class.cast( newObject );
-		if ( collectionPersister.getKeyType().isSame( oldEntry.getKey(), newEntry.getKey() ) ) {
-			if ( collectionPersister.getElementType().isSame( oldEntry.getValue(), newEntry.getValue() ) ) {
-				return true;
-			}
-		}
-		return false;
+		final Map.Entry<?, ?> oldEntry = (Map.Entry<?, ?>) oldObject;
+		final Map.Entry<?, ?> newEntry = (Map.Entry<?, ?>) newObject;
+		return collectionPersister.getIndexType().isSame( oldEntry.getKey(), newEntry.getKey() )
+				&& collectionPersister.getElementType().isSame( oldEntry.getValue(), newEntry.getValue() );
 	}
 
 	@Override

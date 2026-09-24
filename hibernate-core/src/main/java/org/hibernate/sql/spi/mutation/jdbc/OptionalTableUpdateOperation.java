@@ -167,8 +167,9 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			UpdateValuesAnalysis valuesAnalysis) {
 		// there are some non-null values for the table - we need to update or insert the values.
 		// first, try the update and see if any row was affected
+		final boolean needsUpdate = valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping );
 		final boolean wasUpdated;
-		if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
+		if ( needsUpdate ) {
 			// either
 			// 		1) not know if the values for this table were previously all null (because old values are not known)
 			//		2) the values for this table were previously had at least one non-null
@@ -181,7 +182,17 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		if ( !wasUpdated ) {
 			MODEL_MUTATION_LOGGER.upsertUpdateNoRowsPerformingInsert( tableMapping.getTableName() );
 			try {
-				performInsert( jdbcValueBindings, session );
+				boolean retryUpdate = performInsert( jdbcValueBindings, session );
+				if ( needsUpdate && retryUpdate ) {
+					// In a concurrent insert-or-update scenario, the insert can be skipped, so we need to retry the
+					// update one last time to ensure we write the correct data for this transaction
+					final boolean updated = performUpdate( jdbcValueBindings, session );
+					if ( !updated ) {
+						// The row might have been deleted again in the meantime,
+						// so report a stale state instead of trying again
+						throw new StaleStateException( mutationTarget.getRolePath() );
+					}
+				}
 			}
 			catch (ConstraintViolationException cve) {
 				if ( cve.getKind() == UNIQUE ) {
@@ -402,7 +413,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
-	private void performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
+	private boolean performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		final var jdbcInsert = createJdbcOptionalInsert( session );
 		final var jdbcServices = session.getJdbcServices();
 		final var jdbcCoordinator = session.getJdbcCoordinator();
@@ -435,12 +446,18 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 				} );
 			}
 			final int rowCount = jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement, sql );
-			expectation.verifyOutcome(
-					rowCount,
-					insertStatement,
-					-1,
-					sql
-			);
+			if ( rowCount == 0 && isRetryUpdateAfterInsert() ) {
+				return true;
+			}
+			else {
+				expectation.verifyOutcome(
+						rowCount,
+						insertStatement,
+						-1,
+						sql
+				);
+				return false;
+			}
 		}
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(
@@ -453,6 +470,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insertStatement );
 			jdbcCoordinator.afterStatementExecution();
 		}
+	}
+
+	protected boolean isRetryUpdateAfterInsert() {
+		return false;
 	}
 
 	/*

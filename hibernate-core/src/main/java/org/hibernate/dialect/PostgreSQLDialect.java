@@ -1622,7 +1622,9 @@ public class PostgreSQLDialect extends Dialect {
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		return supportsMerge
+		// We now use insert ... on conflict do update for non-optional tables,
+		// which is better than using a separate update statement
+		return supportsMerge || !optionalTableUpdate.getMutatingTable().isOptional()
 				? new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate )
 						.createMergeOperation( optionalTableUpdate )
 				: new OptionalTableUpdateWithUpsertOperation( mutationTarget, optionalTableUpdate, factory );

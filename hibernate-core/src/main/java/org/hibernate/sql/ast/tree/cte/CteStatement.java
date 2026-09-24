@@ -123,4 +123,8 @@ public class CteStatement {
 	public void setRecursive() {
 		this.recursive = true;
 	}
+
+	public boolean isInlinable() {
+		return !recursive && materialization == CteMaterialization.UNDEFINED;
+	}
 }

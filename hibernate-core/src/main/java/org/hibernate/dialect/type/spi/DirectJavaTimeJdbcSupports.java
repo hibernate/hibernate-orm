@@ -35,6 +35,12 @@ public final class DirectJavaTimeJdbcSupports {
 		return StandardDirectJavaTimeJdbcSupport.jdbc42();
 	}
 
+	/// Return a scalar-access profile supporting `LocalDate`, `LocalTime` and `LocalDateTime`.
+	/// It makes no assumptions about native JDBC container support.
+	public static DirectJavaTimeJdbcSupport local() {
+		return StandardDirectJavaTimeJdbcSupport.local();
+	}
+
 	/// Return a scalar-access profile supporting every Java Time class recognized
 	/// by Hibernate. It makes no assumptions about native JDBC container support.
 	public static DirectJavaTimeJdbcSupport all() {

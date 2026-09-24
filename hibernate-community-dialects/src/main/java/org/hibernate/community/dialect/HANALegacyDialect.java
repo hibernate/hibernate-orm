@@ -156,9 +156,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Date;
@@ -208,14 +205,12 @@ import static org.hibernate.dialect.lob.spi.LobDataExtraction.extractString;
  * Column tables are created by this dialect by default when using the auto-ddl feature.
  */
 public class HANALegacyDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
-	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
-			DirectJavaTimeJdbcSupports.of( LocalDate.class, LocalTime.class, LocalDateTime.class );
 
 	private SchemaDropSupport schemaDropSupport;
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
-		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
+		return DirectJavaTimeJdbcSupports.local();
 	}
 
 	@Override

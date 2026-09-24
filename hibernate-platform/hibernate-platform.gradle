@@ -62,6 +62,7 @@ dependencies {
         }
 
         api libs.hibernateModels
+        api libs.hibernateAccessor
 
         api libs.jakarta.jpa
         api libs.jakarta.jta
@@ -72,6 +73,9 @@ dependencies {
         runtime libs.byteBuddy
         runtime libs.byteBuddyAgent
         runtime libs.jandex
+
+        runtime libs.hibernateAccessorAsm
+        runtime libs.hibernateAccessorByteBuddy
 
         runtime libs.jakarta.jaxb
         runtime libs.jakarta.jaxbApi

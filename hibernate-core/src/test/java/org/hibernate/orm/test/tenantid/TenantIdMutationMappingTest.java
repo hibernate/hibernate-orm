@@ -132,9 +132,9 @@ class TenantIdMutationMappingTest {
 		else {
 			// The tenant restriction prevents the update from matching the existing row.
 			// The fallback insert leaves that row untouched because its key already exists.
-			inspector.assertExecutedCount( 2 );
-			inspector.assertIsUpdate( 0 );
-			inspector.assertIsInsert( 1 );
+			inspector.assertExecutedCount( 1 );
+			final var sql = inspector.getSqlQueries().get( 0 );
+			assertTrue( sql.startsWith( "insert into " ) && sql.endsWith( " on conflict (id) do nothing" ), sql );
 		}
 		inTenant( scope, "mine", session -> assertEquals( "mine", session.find( Empty.class, 1L ).tenant ) );
 		inTenant( scope, "yours", session -> assertNull( session.find( Empty.class, 1L ) ) );

@@ -12,6 +12,7 @@ import org.hibernate.Session;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -198,8 +199,17 @@ class QueryLockingManagedEntityTest {
 					assertSame( managed, query.getSingleResult() );
 				}
 				scope.inTransaction( other -> other.find( Lockable.class, first.getId() ).setName( "changed" ) );
-				final var exception = assertThrows( RollbackException.class, transaction::commit );
-				assertInstanceOf( OptimisticLockException.class, exception.getCause() );
+				var failure = assertThrows( RollbackException.class, transaction::commit );
+				while (failure.getCause() instanceof RollbackException) {
+					failure = (RollbackException) failure.getCause();
+				}
+				if ( failure.getCause() instanceof TransactionSerializationException ) {
+					// Some databases have a higher isolation level and throw a transaction serialization exception
+					// when running the query, instead of returning no rows to allow our code to throw
+				}
+				else {
+					assertInstanceOf( OptimisticLockException.class, failure.getCause() );
+				}
 			}
 			finally {
 				if ( transaction.isActive() ) {

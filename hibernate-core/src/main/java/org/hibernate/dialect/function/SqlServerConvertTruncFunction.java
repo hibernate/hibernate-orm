@@ -4,12 +4,15 @@ import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
+import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExtractUnit;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
@@ -78,10 +81,24 @@ public class SqlServerConvertTruncFunction extends TruncFunction {
 				List<? extends SqlAstNode> sqlAstArguments,
 				ReturnableType<?> returnType,
 				SqlAstTranslator<?> walker) {
+			final var ddlTypeName = DdlTypeHelper.removeUnresolvedTypeArguments( DdlTypeHelper.getTypeName(
+					((Expression) sqlAstArguments.get( 0 )).getExpressionType(),
+					walker.getSessionFactory().getTypeConfiguration()
+			) );
+			final var hasOffset = ddlTypeName.toLowerCase( Locale.ROOT ).startsWith( "datetimeoffset" );
 			sqlAppender.appendSql( toDateFunction );
 			sqlAppender.append( '(' );
-			sqlAppender.append( "datetime," );
+			sqlAppender.append( ddlTypeName );
+			sqlAppender.append( ',' );
+			if ( hasOffset ) {
+				sqlAppender.append( "concat(" );
+			}
 			sqlAstArguments.get( 1 ).accept( walker );
+			if ( hasOffset ) {
+				sqlAppender.append( ",datename(tzoffset," );
+				sqlAstArguments.get( 0 ).accept( walker );
+				sqlAppender.append( "))" );
+			}
 			sqlAppender.append( ')' );
 		}
 	}

@@ -6,6 +6,7 @@ package org.hibernate.testing.transaction;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
@@ -637,10 +638,26 @@ public class TransactionUtil {
 				st.execute( String.format( "SET LOCK_TIMEOUT %d", millis == 0L ? -1L : millis ) );
 			}
 		}
-		else if ( dialect instanceof HANADialect ) {
+		else if ( dialect instanceof HANADialect hanaDialect ) {
 			try (Statement st = connection.createStatement()) {
 				//Prepared Statements fail for SET commands
-				st.execute( String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ) );
+				if ( millis == 0L ) {
+					if ( hanaDialect.isCloud() ) {
+						st.execute( "UNSET TRANSACTION LOCK WAIT TIMEOUT" );
+					}
+					else {
+						long defaultTimeout = 1_800_000L;
+						try (ResultSet rs = st.executeQuery( "select default_value from configuration_parameter_properties where section = 'transaction' and key = 'lock_wait_timeout'" )) {
+							if ( rs.next() ) {
+								defaultTimeout = Long.parseLong( rs.getString( 1 ) );
+							}
+						}
+						st.execute( String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", defaultTimeout ) );
+					}
+				}
+				else {
+					st.execute( String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ) );
+				}
 			}
 		}
 		else if ( dialect instanceof SybaseASEDialect ) {

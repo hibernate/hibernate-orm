@@ -316,6 +316,11 @@ class DerivedIdentifierBinder {
 		identifierColumn.setName( name );
 		if ( identifierColumn.getValue() instanceof SimpleValue simpleValue ) {
 			simpleValue.getTable().columnRenamed( identifierColumn );
+			bindingState.getRelationalModelCorrespondences().columnNames().register(
+					simpleValue.getTable(),
+					bindingState.getDatabase().toIdentifier( name ),
+					identifierColumn
+			);
 		}
 	}
 

@@ -170,6 +170,17 @@ public class IdentityAndGeneratedValuesSupportTests {
 				INSERT_RETURNING,
 				INSERT_RETURNING_ROW_ID
 		);
+		assertProfile(
+				new MariaDBDialect( DatabaseVersion.make( 12, 3 ) ).getGeneratedValuesSupport(),
+				INSERT_RETURNING,
+				INSERT_RETURNING_ROW_ID
+		);
+		assertProfile(
+				new MariaDBDialect( DatabaseVersion.make( 13, 0 ) ).getGeneratedValuesSupport(),
+				INSERT_RETURNING,
+				UPDATE_RETURNING,
+				INSERT_RETURNING_ROW_ID
+		);
 		assertProfile( new OracleDialect().getGeneratedValuesSupport(), ARBITRARY_GENERATED_KEYS );
 
 		final var h2 = new H2Dialect().getGeneratedValuesSupport();

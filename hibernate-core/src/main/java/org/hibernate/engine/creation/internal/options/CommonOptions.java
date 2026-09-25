@@ -266,6 +266,12 @@ public class CommonOptions {
 		}
 
 		if ( allowSessionInterceptorCreation ) {
+			final var strategy = options.getInterceptorStrategy();
+			final var strategyInterceptor = strategy.getInterceptorForSession( sessionFactory );
+			if ( strategyInterceptor != null && strategyInterceptor != EmptyInterceptor.INSTANCE ) {
+				return strategyInterceptor;
+			}
+
 			final var statelessInterceptorImplementorSupplier =
 					options.getStatelessInterceptorImplementorSupplier();
 			if ( statelessInterceptorImplementorSupplier != null ) {

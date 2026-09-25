@@ -18,6 +18,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
+import org.hibernate.callback.spi.InterceptorStrategy;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
@@ -137,6 +138,12 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Nullable
 	public Interceptor getInterceptor() {
 		return delegate.getInterceptor();
+	}
+
+	@Override
+	@Nonnull
+	public InterceptorStrategy getInterceptorStrategy() {
+		return delegate.getInterceptorStrategy();
 	}
 
 	@Override

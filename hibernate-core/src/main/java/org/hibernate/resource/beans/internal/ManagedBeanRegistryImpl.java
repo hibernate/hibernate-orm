@@ -61,6 +61,13 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 	}
 
 	@Override
+	public <T> ManagedBean<T> getBootstrapSafeBean(Class<T> beanClass, BeanInstanceCaching caching) {
+		return beanContainer.getBootstrapSafeBean( beanClass,
+				caching == BeanInstanceCaching.ALLOW ? this : UNCACHED_LIFECYCLE_OPTIONS,
+				FallbackBeanInstanceProducer.INSTANCE );
+	}
+
+	@Override
 	public <T> ManagedBean<T> getBean(Class<T> beanClass) {
 		return getBean( beanClass, FallbackBeanInstanceProducer.INSTANCE );
 	}

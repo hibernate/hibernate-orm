@@ -19,6 +19,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.callback.spi.InterceptorStrategy;
 import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
@@ -163,6 +164,15 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	@Nullable
 	Interceptor getInterceptor();
+
+	/**
+	 * The strategy for resolving and managing interceptor instances.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	@Nonnull
+	InterceptorStrategy getInterceptorStrategy();
 
 	/**
 	 * The StatementObserver, if one, applied to this SessionFactory.

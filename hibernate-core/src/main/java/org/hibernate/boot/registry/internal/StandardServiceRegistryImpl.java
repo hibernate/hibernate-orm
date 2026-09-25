@@ -12,7 +12,7 @@ import org.hibernate.Internal;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.boot.internal.BootstrapSettingsNormalizer;
 import org.hibernate.service.Service;
 import org.hibernate.service.internal.AbstractServiceRegistryImpl;
 import org.hibernate.service.internal.ProvidedService;
@@ -35,7 +35,7 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			Map<String,Object> configurationValues) {
 		super( bootstrapServiceRegistry, autoCloseRegistry );
-		this.configurationValues = normalize( configurationValues);
+		this.configurationValues = BootstrapSettingsNormalizer.normalize( configurationValues );
 	}
 
 	/**
@@ -146,37 +146,4 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 		this.configurationValues = null;
 	}
 
-	private static Map<String, Object> normalize(Map<String, Object> configurationValues) {
-		final Object jdbcUrl = configurationValues.get( AvailableSettings.JAKARTA_JDBC_URL );
-		if ( jdbcUrl != null ) {
-			configurationValues.putIfAbsent( AvailableSettings.URL, jdbcUrl );
-		}
-
-		final Object username = configurationValues.get( AvailableSettings.JAKARTA_JDBC_USER );
-		if ( username != null ) {
-			configurationValues.putIfAbsent( AvailableSettings.USER, username );
-		}
-
-		final Object password = configurationValues.get( AvailableSettings.JAKARTA_JDBC_PASSWORD );
-		if ( password != null ) {
-			configurationValues.putIfAbsent( AvailableSettings.PASS, password );
-		}
-
-		final Object driver = configurationValues.get( AvailableSettings.JAKARTA_JDBC_DRIVER );
-		if ( driver != null ) {
-			configurationValues.putIfAbsent( AvailableSettings.DRIVER, driver );
-		}
-
-		final Object nonJtaDatasource = configurationValues.get( AvailableSettings.JAKARTA_NON_JTA_DATASOURCE );
-		if ( nonJtaDatasource != null ) {
-			configurationValues.putIfAbsent( AvailableSettings.DATASOURCE, nonJtaDatasource );
-		}
-
-		final Object jtaDatasource = configurationValues.get( AvailableSettings.JAKARTA_JTA_DATASOURCE );
-		if ( jtaDatasource != null ) {
-			configurationValues.putIfAbsent( AvailableSettings.DATASOURCE, jtaDatasource );
-		}
-
-		return configurationValues;
-	}
 }

@@ -25,7 +25,6 @@ import org.hibernate.boot.CacheRegionDefinition.CacheRegionType;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
-import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
@@ -1494,9 +1493,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( typeContributorList != null ) {
 			typeContributorList.getTypeContributors().forEach( metamodelBuilder::applyTypes );
 		}
-		metamodelBuilder.getBootstrapContext().getClassLoaderService()
-				.loadJavaServices( TypeContributor.class )
-				.forEach( metamodelBuilder::applyTypes );
+		// Service-loaded contributors are applied by MetadataBuildingProcess for every bootstrap entry point.
 	}
 
 

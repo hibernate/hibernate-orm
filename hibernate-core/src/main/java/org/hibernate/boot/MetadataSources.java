@@ -416,6 +416,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addResource(String name) {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		if ( !binderAccess.isXmlMappingEnabled() ) {
+			return this;
+		}
 		addXmlBinding( UrlXmlSource.fromResource( name, classLoaderService, binderAccess.getMappingBinder() ) );
 		return this;
 	}
@@ -445,6 +448,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addFile(File file) {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		if ( !binderAccess.isXmlMappingEnabled() ) {
+			return this;
+		}
 		addXmlBinding( FileXmlSource.fromFile( file, binderAccess.getMappingBinder() ) );
 		return this;
 	}
@@ -566,6 +572,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addCacheableFile(File file, File cacheDirectory) {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		if ( !binderAccess.isXmlMappingEnabled() ) {
+			return this;
+		}
 		addXmlBinding( CacheableFileXmlSource.fromCacheableFile(
 				file,
 				cacheDirectory,
@@ -590,6 +599,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		if ( !binderAccess.isXmlMappingEnabled() ) {
+			return this;
+		}
 		addXmlBinding( CacheableFileXmlSource.fromCacheableFile(
 				file,
 				null,
@@ -614,6 +626,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addCacheableFileStrictly(File file, File cacheDir) throws SerializationException {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		if ( !binderAccess.isXmlMappingEnabled() ) {
+			return this;
+		}
 		addXmlBinding( CacheableFileXmlSource.fromCacheableFile(
 				file,
 				cacheDir,
@@ -632,6 +647,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addInputStream(InputStreamAccess xmlInputStreamAccess) {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		if ( !binderAccess.isXmlMappingEnabled() ) {
+			return this;
+		}
 		addXmlBinding( InputStreamAccessXmlSource.fromStreamAccess( xmlInputStreamAccess, binderAccess.getMappingBinder() ) );
 		return this;
 	}
@@ -645,6 +663,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addInputStream(InputStream xmlInputStream) {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		if ( !binderAccess.isXmlMappingEnabled() ) {
+			return this;
+		}
 		addXmlBinding( InputStreamXmlSource.fromStream( xmlInputStream, binderAccess.getMappingBinder() ) );
 		return this;
 	}
@@ -658,6 +679,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addURL(URL url) {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		if ( !binderAccess.isXmlMappingEnabled() ) {
+			return this;
+		}
 		addXmlBinding( UrlXmlSource.fromUrl( url, binderAccess.getMappingBinder() ) );
 		return this;
 	}
@@ -674,6 +698,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addJar(File jar) {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		if ( !binderAccess.isXmlMappingEnabled() ) {
+			return this;
+		}
 		JarFileEntryXmlSource.fromJar( jar, binderAccess.getMappingBinder(), this::addXmlBinding );
 		return this;
 	}
@@ -692,6 +719,9 @@ public class MetadataSources implements Serializable {
 	 * processing the contained mapping documents.
 	 */
 	public MetadataSources addDirectory(File dir) {
+		if ( !getXmlMappingBinderAccess().isXmlMappingEnabled() ) {
+			return this;
+		}
 		final File[] files = dir.listFiles();
 		if ( files != null ) {
 			for ( File file : files ) {

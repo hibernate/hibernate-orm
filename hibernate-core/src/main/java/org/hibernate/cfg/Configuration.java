@@ -202,6 +202,11 @@ public class Configuration {
 		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
+	private boolean isXmlMappingEnabled() {
+		final var setting = properties.get( MappingSettings.XML_MAPPING_ENABLED );
+		return setting == null || org.hibernate.engine.config.spi.StandardConverters.BOOLEAN.convert( setting );
+	}
+
 	private XmlMappingBinderAccess createMappingBinderAccess(BootstrapServiceRegistry serviceRegistry) {
 		return new XmlMappingBinderAccess( serviceRegistry,
 				settingName -> properties == null ? null : properties.get( settingName ) );
@@ -602,7 +607,9 @@ public class Configuration {
 	 * @see #addFile(File)
 	 */
 	public Configuration addFile(String xmlFile) throws MappingException {
-		metadataSources.addFile( xmlFile );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addFile( xmlFile );
+		}
 		return this;
 	}
 
@@ -616,7 +623,9 @@ public class Configuration {
 	 * @throws MappingException Indicates inability to locate the specified mapping file
 	 */
 	public Configuration addFile(File xmlFile) throws MappingException {
-		metadataSources.addFile( xmlFile );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addFile( xmlFile );
+		}
 		return this;
 	}
 
@@ -662,7 +671,9 @@ public class Configuration {
 	 * processing the non-cached file.
 	 */
 	public Configuration addCacheableFile(File xmlFile) throws MappingException {
-		metadataSources.addCacheableFile( xmlFile );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addCacheableFile( xmlFile );
+		}
 		return this;
 	}
 
@@ -680,7 +691,9 @@ public class Configuration {
 	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
 	 */
 	public Configuration addCacheableFileStrictly(File xmlFile) throws SerializationException {
-		metadataSources.addCacheableFileStrictly( xmlFile );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addCacheableFileStrictly( xmlFile );
+		}
 		return this;
 	}
 
@@ -698,7 +711,9 @@ public class Configuration {
 	 * @see #addCacheableFile(File)
 	 */
 	public Configuration addCacheableFile(String xmlFile) throws MappingException {
-		metadataSources.addCacheableFile( xmlFile );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addCacheableFile( xmlFile );
+		}
 		return this;
 	}
 
@@ -713,7 +728,9 @@ public class Configuration {
 	 * the mapping document.
 	 */
 	public Configuration addURL(URL url) throws MappingException {
-		metadataSources.addURL( url );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addURL( url );
+		}
 		return this;
 	}
 
@@ -728,7 +745,9 @@ public class Configuration {
 	 * processing the contained mapping document.
 	 */
 	public Configuration addInputStream(InputStream xmlInputStream) throws MappingException {
-		metadataSources.addInputStream( xmlInputStream );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addInputStream( xmlInputStream );
+		}
 		return this;
 	}
 
@@ -745,7 +764,9 @@ public class Configuration {
 	 * processing the contained mapping document.
 	 */
 	public Configuration addResource(String resourceName) throws MappingException {
-		metadataSources.addResource( resourceName );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addResource( resourceName );
+		}
 		return this;
 	}
 
@@ -885,7 +906,9 @@ public class Configuration {
 	 */
 	@Remove
 	public Configuration addJar(File jar) throws MappingException {
-		metadataSources.addJar( jar );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addJar( jar );
+		}
 		return this;
 	}
 
@@ -903,7 +926,9 @@ public class Configuration {
 	 * processing the contained mapping documents.
 	 */
 	public Configuration addDirectory(File dir) throws MappingException {
-		metadataSources.addDirectory( dir );
+		if ( isXmlMappingEnabled() ) {
+			metadataSources.addDirectory( dir );
+		}
 		return this;
 	}
 

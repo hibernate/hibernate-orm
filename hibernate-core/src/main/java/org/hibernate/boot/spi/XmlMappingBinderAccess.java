@@ -5,6 +5,12 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.Remove;
+import org.hibernate.Internal;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.jaxb.internal.FileXmlSource;
 import org.hibernate.boot.jaxb.internal.InputStreamAccessXmlSource;
@@ -33,15 +39,28 @@ import java.util.function.Function;
 public class XmlMappingBinderAccess {
 	private final ClassLoaderService classLoaderService;
 	private final MappingBinder mappingBinder;
+	private final Function<String, Object> configAccess;
 
 	public XmlMappingBinderAccess(ServiceRegistry serviceRegistry) {
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.mappingBinder = new MappingBinder( serviceRegistry );
+		this( serviceRegistry, settingName -> {
+			final var configurationService = serviceRegistry instanceof ServiceRegistryImplementor implementor
+					? implementor.fromRegistryOrChildren( ConfigurationService.class )
+					: serviceRegistry.getService( ConfigurationService.class );
+			return configurationService == null ? null : configurationService.getSettings().get( settingName );
+		} );
 	}
 
 	public XmlMappingBinderAccess(ServiceRegistry serviceRegistry, Function<String, Object> configAccess) {
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		this.mappingBinder = new MappingBinder( classLoaderService, configAccess );
+		this.configAccess = configAccess;
+	}
+
+	/// Whether mapping XML may be accessed and bound using the current settings.
+	@Internal
+	public boolean isXmlMappingEnabled() {
+		final var setting = configAccess == null ? null : configAccess.apply( XML_MAPPING_ENABLED );
+		return setting == null || BOOLEAN.convert( setting );
 	}
 
 	public MappingBinder getMappingBinder() {

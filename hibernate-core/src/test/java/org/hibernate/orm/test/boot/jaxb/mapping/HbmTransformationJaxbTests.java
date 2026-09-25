@@ -18,6 +18,7 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
+import org.hibernate.boot.jaxb.hbm.transform.TransformationException;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.mapping.GenerationTiming;
@@ -940,6 +941,43 @@ public class HbmTransformationJaxbTests {
 		)
 				.isInstanceOf( UnsupportedOperationException.class )
 				.hasMessageContaining( "polymorphism" );
+	}
+
+	@Test
+	@JiraKey( "HHH-20907" )
+	public void testUnsupportedCascadeLockThrowsException(ServiceRegistryScope scope) {
+		// cascade="lock" is not supported and should throw an UnsupportedOperationException
+		assertThatThrownBy( () ->
+				transformAndVerify( "xml/jaxb/mapping/cascade-lock/hbm.xml", scope, transformed -> {} )
+		)
+				.isInstanceOf( TransformationException.class )
+				.rootCause()
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "Unsupported cascade style: lock" );
+	}
+
+	@Test
+	@JiraKey( "HHH-20908" )
+	public void testClassProxyAttributeIsUnsupported(ServiceRegistryScope scope) {
+		// The <class proxy="..."> attribute has no equivalent in mapping.xsd,
+		// so the transformer must route it through handleUnsupported.
+		assertThatThrownBy( () ->
+				transformAndVerify( "xml/jaxb/mapping/proxy-attribute/hbm.xml", scope, transformed -> {} )
+		)
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "proxy" );
+	}
+
+	@Test
+	@JiraKey( "HHH-20908" )
+	public void testSubClassProxyAttributeIsUnsupported(ServiceRegistryScope scope) {
+		// The <subclass proxy="..."> attribute has no equivalent in mapping.xsd,
+		// so the transformer must route it through handleUnsupported.
+		assertThatThrownBy( () ->
+				transformAndVerify( "xml/jaxb/mapping/proxy-attribute/hbm2.xml", scope, transformed -> {} )
+		)
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "proxy" );
 	}
 
 	private void transformAndVerify(

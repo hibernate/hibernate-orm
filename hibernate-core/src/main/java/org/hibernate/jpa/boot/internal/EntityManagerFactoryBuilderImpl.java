@@ -13,6 +13,7 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.internal.BootstrapRegistryLifecycle;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -36,7 +37,6 @@ import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
@@ -46,9 +46,6 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.jpa.internal.JpaEntityNotFoundDelegate;
-import org.hibernate.service.spi.ServiceBinding;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
@@ -104,6 +101,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 
 	private final PersistenceUnitDescriptor persistenceUnit;
+	private final BootstrapRegistryLifecycle registryLifecycle;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// things built in first phase, needed for second phase
@@ -114,16 +112,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	public  EntityManagerFactoryBuilderImpl(HibernatePersistenceConfiguration cfg) {
 		var bootRegistry = buildBootstrapServiceRegistry( cfg.properties(), null, null );
-		var registryBuilder = StandardServiceRegistryBuilder.forJpa( bootRegistry );
-
-		final var mergedSettings = new JpaSettingsAssembler( null, dataSource, this::exceptionHeader ).assemble( cfg, registryBuilder );
-		// keep the merged config values for phase-2
-		configurationValues = mergedSettings.getConfigurationValues();
-
+		registryLifecycle = new BootstrapRegistryLifecycle( bootRegistry );
 		try {
+			var registryBuilder = StandardServiceRegistryBuilder.forJpa( bootRegistry );
+
+			final var mergedSettings = new JpaSettingsAssembler( null, dataSource, this::exceptionHeader ).assemble( cfg, registryBuilder );
+			// keep the merged config values for phase-2
+			configurationValues = mergedSettings.getConfigurationValues();
+
 			// Build the "standard" service registry
 			registryBuilder.applySettings( configurationValues );
-			standardServiceRegistry = registryBuilder.build();
+			standardServiceRegistry = registryLifecycle.register( registryBuilder.build() );
 
 			final var discovery = performScanning( cfg, standardServiceRegistry );
 			persistenceUnit = new PersistenceConfigurationDescriptor( cfg, discovery );
@@ -136,8 +135,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			completePreparation();
 		}
 		catch (Throwable throwable) {
-			bootRegistry.close();
-			cleanup();
+			registryLifecycle.close( throwable );
 			throw throwable;
 		}
 	}
@@ -193,6 +191,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final var bootstrapServiceRegistry =
 				buildBootstrapServiceRegistry( mergedIntegrationSettings( persistenceUnit, integrationSettings ),
 						providedClassLoader, providedClassLoaderService );
+		registryLifecycle = new BootstrapRegistryLifecycle( bootstrapServiceRegistry );
 		try {
 			// merge configuration sources and build the "standard" service registry
 			final var registryBuilder = getStandardServiceRegistryBuilder( bootstrapServiceRegistry );
@@ -203,7 +202,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			configurationValues = mergedSettings.getConfigurationValues();
 			// Build the "standard" service registry
 			registryBuilder.applySettings( configurationValues );
-			standardServiceRegistry = registryBuilder.build();
+			standardServiceRegistry = registryLifecycle.register( registryBuilder.build() );
 			final var metadataSources = new MetadataSources( standardServiceRegistry );
 			metamodelBuilder =
 					(MetadataBuilderImplementor)
@@ -212,8 +211,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			completePreparation();
 		}
 		catch (Throwable throwable) {
-			bootstrapServiceRegistry.close();
-			cleanup();
+			registryLifecycle.close( throwable );
 			throw throwable;
 		}
 	}
@@ -582,58 +580,57 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@Override
 	public void cancel() {
-		cleanup();
-		// todo : close the bootstrap registry (not critical, but nice to do)
-	}
-
-	private void cleanup() {
-		// Stop and deregister the ConnectionProvider to prevent connections lying around
-		if ( standardServiceRegistry instanceof ServiceRegistryImplementor serviceRegistry
-				&& standardServiceRegistry instanceof ServiceBinding.ServiceLifecycleOwner lifecycleOwner ) {
-			final var binding = serviceRegistry.locateServiceBinding( ConnectionProvider.class );
-			if ( binding != null && binding.getService() instanceof Stoppable ) {
-				lifecycleOwner.stopService( binding );
-				binding.setService( null );
-			}
-		}
+		registryLifecycle.close();
 	}
 
 	@Override
 	public void generateSchema() {
-		// This seems overkill, but building the SF is necessary to get the
-		// Integrators to kick in. Metamodel will clean this up...
+		Throwable failure = null;
 		try {
 			populateSessionFactoryBuilder();
 			SchemaManagementToolCoordinator.process( metadata, standardServiceRegistry,
 					configurationValues, DelayedDropRegistryNotAvailableImpl.INSTANCE );
 		}
 		catch (Exception e) {
-			throw new PersistenceException( "Error performing schema management " + exceptionHeader(), e );
+			final var exception = new PersistenceException( "Error performing schema management " + exceptionHeader(), e );
+			failure = exception;
+			throw exception;
+		}
+		catch (Error e) {
+			failure = e;
+			throw e;
 		}
 		finally {
-			// release this builder
-			cancel();
+			try {
+				cancel();
+			}
+			catch (RuntimeException | Error cleanupFailure) {
+				if ( failure == null ) {
+					throw cleanupFailure;
+				}
+				if ( failure != cleanupFailure ) {
+					failure.addSuppressed( cleanupFailure );
+				}
+			}
 		}
 	}
 
 	@Override
 	public EntityManagerFactory build() {
-		boolean success = false;
 		try {
 			final var sessionFactoryBuilder = populateSessionFactoryBuilder();
 			try {
 				final var entityManagerFactory = sessionFactoryBuilder.build();
-				success = true;
+				registryLifecycle.transferOwnership();
 				return entityManagerFactory;
 			}
 			catch (Exception e) {
 				throw new PersistenceException( "Unable to build Hibernate SessionFactory " + exceptionHeader() , e );
 			}
 		}
-		finally {
-			if ( !success ) {
-				cleanup();
-			}
+		catch (Throwable failure) {
+			registryLifecycle.close( failure );
+			throw failure;
 		}
 	}
 

@@ -655,6 +655,49 @@ Both messages retain their existing message IDs and `INFO` level.
 Update any logging configuration or filters targeting these messages to use `org.hibernate.orm.info`.
 This category allows applications and containers to suppress bootstrap information independently of other core and connection-pooling messages.
 
+
+[[native-bootstrap-disabled-xml]]
+=== Disabling XML mappings during native bootstrap
+
+When `hibernate.xml_mapping_enabled=false`, native bootstrap now skips access to mapping XML resources
+and JAXB binding. Previously, `MetadataSources` and `Configuration` still read and bound mapping XML,
+then excluded the bindings from metamodel building. Missing or malformed mapping XML therefore no longer
+causes bootstrap to fail when XML mapping processing is disabled.
+
+Set this option before registering XML mappings, for example before calling `addResource()` or `addFile()`.
+Native registration uses the setting available at the time of the call. Disabling XML later does not undo
+binding that has already occurred, and mappings skipped while disabled are not replayed if XML is enabled later.
+
+XML mapping resource, file, and jar references in `hibernate.cfg.xml` are also skipped when XML mappings
+are disabled, for both native and JPA bootstrap. The configuration document itself is still read,
+and its class and package mapping references still apply.
+
+
+[[native-bootstrap-legacy-jpa-aliases]]
+=== Legacy JPA connection aliases during settings normalization
+
+Native bootstrap now recognizes legacy `javax.persistence.*` connection settings when normalizing
+settings for the standard service registry. Previously, this normalization supplied Hibernate connection
+settings from `jakarta.persistence.*` aliases only; JPA bootstrap already recognized the legacy aliases.
+
+The newly recognized aliases are:
+
+* `javax.persistence.jdbc.url`
+* `javax.persistence.jdbc.driver`
+* `javax.persistence.jdbc.user`
+* `javax.persistence.jdbc.password`
+* `javax.persistence.nonJtaDataSource`
+* `javax.persistence.jtaDataSource`
+
+An existing Hibernate connection setting takes precedence over its Jakarta alias, which takes precedence
+over its legacy `javax.persistence.*` alias. For the datasource setting, all Jakarta aliases are considered
+before legacy aliases; within each namespace, the non-JTA datasource takes precedence over the JTA datasource.
+Existing JPA bootstrap source precedence is unchanged.
+
+Review native bootstrap configuration for stale legacy connection settings, which may now take effect
+when no corresponding Hibernate or Jakarta setting is present. Prefer the `jakarta.persistence.*` names
+when migrating legacy configuration.
+
 [[query-persistence-correctness]]
 === Query and persistence correctness fixes
 

@@ -2208,7 +2208,7 @@ public class ModelBinder {
 			final String cascadeStyleName = cascadeStyleSource.getCascadeStyleName();
 			property.setCascade( isNotEmpty( cascadeStyleName )
 					? cascadeStyleName
-					: toCascadeString( mappingDocument.getEffectiveDefaults().getDefaultCascadeTypes() ) );
+					: mappingDocument.getEffectiveDefaults().getDefaultCascadeStyleName() );
 		}
 
 		property.setOptimisticLocked( propertySource.isIncludedInOptimisticLocking() );

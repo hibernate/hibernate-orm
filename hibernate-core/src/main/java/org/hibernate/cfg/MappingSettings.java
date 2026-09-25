@@ -485,6 +485,11 @@ public interface MappingSettings {
 
 	/**
 	 * Whether XML mappings should be processed.
+	 * <p>
+	 * When disabled, mapping XML resources are not accessed or bound. Native source
+	 * registration checks the setting at registration time: disabling it later does
+	 * not undo earlier binding, and skipped registrations are not replayed when enabled.
+	 * Configuration XML is still read, including class and package mapping references.
 	 *
 	 * @apiNote This is a performance optimization appropriate when mapping details
 	 * are defined exclusively using annotations.

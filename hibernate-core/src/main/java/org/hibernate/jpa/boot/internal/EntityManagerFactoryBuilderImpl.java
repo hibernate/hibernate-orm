@@ -4,24 +4,17 @@
  */
 package org.hibernate.jpa.boot.internal;
 
-import java.net.URL;
-import java.util.HashSet;
-import java.util.Set;
 import org.hibernate.boot.model.process.internal.EnhancementCandidates;
-import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
 import org.hibernate.boot.model.process.internal.MappingSourceHelper;
 import org.hibernate.boot.scan.spi.ScanningResult;
 
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
-import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
@@ -43,7 +36,6 @@ import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
@@ -61,8 +53,6 @@ import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import javax.sql.DataSource;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -71,18 +61,15 @@ import java.util.function.Consumer;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.unmodifiableMap;
-import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.scan.internal.ScanningHelper.performScanning;
 import static org.hibernate.cfg.AvailableSettings.CLASSLOADERS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
-import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER_INSTANCE;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
-import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 import static org.hibernate.jpa.internal.util.LogHelper.logPersistenceUnitInformation;
 /**
@@ -123,7 +110,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private final Map<String,Object> configurationValues;
 	private final StandardServiceRegistry standardServiceRegistry;
 	private final ManagedResources managedResources;
-	private final Set<String> automaticMappingUrls = new HashSet<>();
 	private final MetadataBuilderImplementor metamodelBuilder;
 
 	public  EntityManagerFactoryBuilderImpl(HibernatePersistenceConfiguration cfg) {
@@ -156,20 +142,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private void applyDiscoveredMappings(ScanningResult scanningResult, MetadataSources metadataSources) {
-
-		if ( !metamodelBuilder.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
-			return;
-		}
-		scanningResult.mappingFiles().forEach( (mappingFileUri) -> {
-			try {
-				addAutomaticMapping( mappingFileUri.toURL(), metadataSources );
-			}
-			catch (MalformedURLException e) {
-				throw new HibernateException( "Unable to handle discovered mapping file : " + mappingFileUri, e );
-			}
-		} );
-	}
 
 
 	public EntityManagerFactoryBuilderImpl(
@@ -250,9 +222,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			MetadataSources metadataSources,
 			MergedSettings mergedSettings,
 			ScanningResult discovery) {
-		applyMappingResources( metadataSources );
-		applyDiscoveredMappings( discovery, metadataSources );
-		applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
+		final var sourcesCollector = new JpaMappingSourcesCollector(
+				persistenceUnit, standardServiceRegistry, configurationValues,
+				metamodelBuilder.getMetadataBuildingOptions().isXmlMappingEnabled() );
+		applyMetamodelBuilderSettings( mergedSettings, sourcesCollector.collect( metadataSources, discovery ) );
 		applyMetadataBuilderContributor();
 		setupMappingReferences( metadataSources );
 		return MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
@@ -405,12 +378,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	/**
-	 * Builds the context to be used in runtime bytecode enhancement
-	 *
-	 * @param dirtyTrackingEnabled To enable dirty tracking feature
-	 * @param lazyInitializationEnabled To enable lazy initialization feature
-	 * @param associationManagementEnabled To enable association management feature
-	 * @return An enhancement context for classes managed by this EM
+	 * Builds the representation of the domain model used by runtime bytecode enhancement
 	 */
 	protected EnhancementModel getEnhancementModel() {
 		return new PersistenceUnitEnhancementModel(managedResources.getAnnotatedClassNames());
@@ -529,83 +497,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 
-	private void applyMappingResources(MetadataSources metadataSources) {
-		assert persistenceUnit != null;
-		if ( persistenceUnit instanceof PersistenceConfigurationDescriptor configuration ) {
-			configuration.getManagedClasses().forEach( metadataSources::addAnnotatedClass );
-		}
-
-		persistenceUnit.getAllClassNames().forEach( name -> {
-			ManagedResourceValidation.validateClassName(
-					name, "getAllClassNames() entry '{class}'", "getAllPackageDescriptors() returning \"{package}\"", "getAllModuleDescriptors()" );
-			metadataSources.addAnnotatedClassName( name );
-		} );
-		persistenceUnit.getAllPackageDescriptors().forEach( metadataSources::addPackageDescriptor );
-		persistenceUnit.getAllModuleDescriptors().forEach( metadataSources::addModuleDescriptor );
-
-		if ( !metamodelBuilder.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
-			BOOT_LOGGER.ignoringXmlMappings(
-					persistenceUnit.getMappingFileNames().size(),
-					MappingSettings.XML_MAPPING_ENABLED
-			);
-		}
-		else {
-			persistenceUnit.getMappingFileNames().forEach( name -> {
-				metadataSources.addResource( name );
-				final var explicitUrl = standardServiceRegistry.requireService( ClassLoaderService.class ).locateResource( name );
-				if ( explicitUrl != null ) {
-					automaticMappingUrls.add( explicitUrl.toExternalForm() );
-				}
-			} );
-			addStandardMappings( persistenceUnit, metadataSources );
-
-			// add any explicit hbm.xml references passed in
-			final String explicitHbmXmls =
-					(String) configurationValues.remove( AvailableSettings.HBM_XML_FILES );
-			if ( explicitHbmXmls != null ) {
-				for ( String hbmXml : split( ", ", explicitHbmXmls ) ) {
-					metadataSources.addResource( hbmXml );
-				}
-			}
-		}
-	}
-
-	private void addStandardMappings(PersistenceUnitDescriptor persistenceUnit, MetadataSources metadataSources) {
-		var ormXmlUrls = standardServiceRegistry.requireService( ClassLoaderService.class ).locateResources( "META-INF/orm.xml" );
-		ormXmlUrls.forEach( url -> addAutomaticMapping( url, metadataSources ) );
-	}
-
-	private void addAutomaticMapping(URL url, MetadataSources sources) {
-		if ( automaticMappingUrls.add( url.toExternalForm() ) ) {
-			sources.addURL( url );
-		}
-	}
-
-	private List<ConverterDescriptor<?, ?>> getConverterDescriptors(MetadataSources metadataSources) {
-		final Object loadedClasses = configurationValues.remove( AvailableSettings.LOADED_CLASSES );
-		if ( loadedClasses instanceof List<?> loadedAnnotatedClasses) {
-			List<ConverterDescriptor<?, ?>> converterDescriptors = null;
-			for ( Object annotatedClass : loadedAnnotatedClasses ) {
-				if ( annotatedClass instanceof Class<?> converterClass ) {
-					if ( AttributeConverter.class.isAssignableFrom( converterClass ) ) {
-						if ( converterDescriptors == null ) {
-							converterDescriptors = new ArrayList<>();
-						}
-						@SuppressWarnings("unchecked") // Safe, because we just checked!
-						final var attributeConverterType = (Class<? extends AttributeConverter<?, ?>>) converterClass;
-						converterDescriptors.add( ConverterDescriptors.of( attributeConverterType ) );
-					}
-					else {
-						metadataSources.addAnnotatedClass( converterClass );
-					}
-				}
-			}
-			return converterDescriptors;
-		}
-		else {
-			return null;
-		}
-	}
 
 	private void applyMetamodelBuilderSettings(
 			MergedSettings mergedSettings,

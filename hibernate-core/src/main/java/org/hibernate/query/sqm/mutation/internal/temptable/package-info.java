@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Support for multi-table SQM mutation (insert, update, delete) operations using
 /// a table to temporarily hold the matching ids. There are 3 forms:
 /// * [org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy] uses

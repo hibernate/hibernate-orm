@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Internal sequence-support implementations owned by the community Dialects.
 ///
 /// Community Dialects may implement the Core sequence SPI or extend its

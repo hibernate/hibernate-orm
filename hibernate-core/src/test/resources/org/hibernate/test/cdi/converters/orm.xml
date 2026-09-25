@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
 <entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
                  version="2.1">
     <entity class="org.hibernate.orm.test.cdi.converters.TheOrmXmlEntity">

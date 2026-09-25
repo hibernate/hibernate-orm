@@ -1,7 +1,3 @@
-<!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
 <entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
                  version="2.1"
 >

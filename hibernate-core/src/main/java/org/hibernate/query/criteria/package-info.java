@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * The JPA-standard criteria query API defines all the operations needed express
  * any query written in standard JPQL. This package extends the JPA-defined API,

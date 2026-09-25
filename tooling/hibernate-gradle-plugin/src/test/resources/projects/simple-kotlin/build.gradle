@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 plugins {
     //NOTE : kotlin version updated for configuration cache support
     alias(libs.plugins.kotlin.jvm)

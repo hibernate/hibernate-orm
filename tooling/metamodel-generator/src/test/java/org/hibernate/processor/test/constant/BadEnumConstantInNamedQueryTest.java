@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.processor.test.constant;
 
 import org.hibernate.processor.test.util.CompilationTest;

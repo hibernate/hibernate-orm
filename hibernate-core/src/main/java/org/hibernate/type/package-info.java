@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * A Hibernate {@link org.hibernate.type.Type} is a strategy for mapping a Java
  * property type to a JDBC type or types. Every persistent attribute of an entity

@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// SQL AST and builders used with flushed-based mutations (persist, merge, etc.).
 ///
 /// The AST is modeled by [org.hibernate.sql.ast.spi.model.TableMutation] and its subtypes.

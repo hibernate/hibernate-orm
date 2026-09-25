@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package ee.jakarta.tck.data.standalone.persistence.stateless;
 
 import jakarta.annotation.Generated;

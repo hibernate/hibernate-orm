@@ -1,9 +1,3 @@
-
-
-    <!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
 <class name="Child">
 		<id name="id" column="ID">
             <generator class="increment"/>

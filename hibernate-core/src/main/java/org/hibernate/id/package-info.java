@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This package and its subpackages, especially {@link org.hibernate.id.enhanced},
  * contain the built-in id generators, all of which implement either

@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This package defines an SPI for integrating bytecode libraries with Hibernate.
  * A bytecode library is used for:

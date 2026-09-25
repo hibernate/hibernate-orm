@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Overall, this module is responsible for taking
  * {@linkplain org.hibernate.boot.model.process.spi.ManagedResources managed-resources} and

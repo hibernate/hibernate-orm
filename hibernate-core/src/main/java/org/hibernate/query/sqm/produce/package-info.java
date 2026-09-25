@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// ## Producing SQM
 ///
 /// This package defines support for producing SQM trees (see [org.hibernate.query.sqm.tree]).

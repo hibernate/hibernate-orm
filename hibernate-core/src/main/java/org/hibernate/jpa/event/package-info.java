@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Support for Jakarta Persistence entity listeners.
 ///
 /// @see jakarta.persistence.EntityListeners

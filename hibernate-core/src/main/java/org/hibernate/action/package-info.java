@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This package defines the notion of an "action" which is scheduled for
  * asynchronous execution by the event listeners. Every action implements

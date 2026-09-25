@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This package defines the Hibernate configuration-time mapping model.
  * The objects defined in this package are produced by the annotation

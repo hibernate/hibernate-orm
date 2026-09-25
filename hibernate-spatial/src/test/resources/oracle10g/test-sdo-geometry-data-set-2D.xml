@@ -1,9 +1,4 @@
 <!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
-
-<!--
  Special test data set for testing HQL/SpatialRestrictions in Oracle Spatial 10g (SDOGeometry).
 
  The  OGC functions only work on 2D geometries, there must be an index, and all SRIDs must be equal

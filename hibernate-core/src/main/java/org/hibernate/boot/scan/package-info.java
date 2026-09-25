@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Support for discovery of managed classes.
 /// Used in conjunction with {@linkplain jakarta.persistence.PersistenceConfiguration}, especially
 /// {@linkplain org.hibernate.jpa.HibernatePersistenceConfiguration}.

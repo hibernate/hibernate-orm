@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This package defines the boot-time metamodel, which is an interpretation
  * of the domain model (entity classes, embeddable classes, and attributes)

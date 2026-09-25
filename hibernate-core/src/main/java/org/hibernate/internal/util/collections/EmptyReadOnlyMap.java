@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.internal.util.collections;
 
 final class EmptyReadOnlyMap<K,V> implements ReadOnlyMap<K,V> {

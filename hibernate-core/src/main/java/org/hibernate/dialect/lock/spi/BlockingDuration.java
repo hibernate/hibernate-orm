@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.dialect.lock.spi;
 
 /// Describes how long protection acquired by one operation on a row prevents

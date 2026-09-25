@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Strategies for efficient retrieval of database-generated values.
 ///
 /// @see org.hibernate.generator.values.GeneratedValuesMutationDelegate

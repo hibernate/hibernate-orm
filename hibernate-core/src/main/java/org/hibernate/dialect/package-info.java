@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Defines the root contracts and built-in implementations for SQL dialects.
 ///
 /// This exact package is a provider-use SPI. Providers may select and construct

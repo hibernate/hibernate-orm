@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Support for mutable result/fetch builder graphs nodes built dynamically.
  * Using, for example, Hibernate's {@link org.hibernate.query.NativeQuery} API.

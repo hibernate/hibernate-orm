@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Support for defining {@linkplain org.hibernate.query.results.spi.ResultSetMapping result set mappings}
  * used in {@link org.hibernate.query.NativeQuery}, {@link org.hibernate.procedure.ProcedureCall},

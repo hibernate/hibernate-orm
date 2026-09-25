@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * A small API allowing the client of a Hibernate session to interact directly
  * with JDBC, using the same connection and transaction obtained by the session.

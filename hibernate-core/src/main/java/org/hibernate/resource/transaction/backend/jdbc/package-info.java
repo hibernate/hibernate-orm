@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Collectively models the concept of transaction coordination through the
  * "data store" specific notion of a transaction.  In Hibernate ORM uses this

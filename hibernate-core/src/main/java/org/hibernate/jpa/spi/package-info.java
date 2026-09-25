@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * An SPI for managing cases where, by default, Hibernate intentionally violates
  * the letter of the JPA specification.

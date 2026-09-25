@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines contracts for accessing managed beans, choosing a caching policy,
  * and supplying fallback instances independently of a particular bean container.

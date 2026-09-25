@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
@@ -171,7 +167,6 @@ spotless {
 	java {
 		// The shared source directory is outside this subproject's formatting scope.
 		target "src/**/*.java"
-		licenseHeaderFile rootProject.file("shared/config/spotless/license.java")
 		removeUnusedImports()
 		leadingSpacesToTabs(4)
 		trimTrailingWhitespace()

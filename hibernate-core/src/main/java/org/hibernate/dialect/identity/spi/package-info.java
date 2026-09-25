@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Provider contracts for identity-column DDL, insert syntax, and
 /// identity-specific value retrieval.
 ///

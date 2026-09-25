@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.action.queue.internal.decompose.collection;
 
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;

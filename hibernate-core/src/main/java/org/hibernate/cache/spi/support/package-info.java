@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This package provides a framework intended to reduce the work needed to implement
  * a caching provider. It takes care of most of the "grunt work" associated with the

@@ -1,7 +1,3 @@
-<!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
                  version="3.1">
     <entity class="org.hibernate.orm.test.boot.models.xml.SimpleEntity" access="FIELD">

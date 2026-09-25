@@ -29,6 +29,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.internal.BootstrapRegistryLifecycle;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.jaxb.spi.Binding;
@@ -1212,12 +1213,15 @@ public class Configuration {
 	public SessionFactory buildSessionFactory() throws HibernateException {
 		CORE_LOGGER.buildingFactoryWithInternalRegistryBuilder();
 		standardServiceRegistryBuilder.applySettings( properties );
-		var serviceRegistry = standardServiceRegistryBuilder.build();
+		final var lifecycle = new BootstrapRegistryLifecycle( null );
+		final var serviceRegistry = lifecycle.register( standardServiceRegistryBuilder.build() );
 		try {
-			return buildSessionFactory( serviceRegistry );
+			final var factory = buildSessionFactory( serviceRegistry );
+			lifecycle.transferOwnership();
+			return factory;
 		}
 		catch (Throwable t) {
-			serviceRegistry.close();
+			lifecycle.close( t );
 			throw t;
 		}
 	}

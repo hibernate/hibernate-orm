@@ -60,7 +60,9 @@ public interface EntityManagerFactoryBuilder {
 
 	/**
 	 * Cancel the building processing.  This is used to signal the builder to release any resources in the case of
-	 * something having gone wrong during the bootstrap process
+	 * something having gone wrong during the bootstrap process.
+	 * Repeated cancellation is harmless. After a successful {@link #build()}, the
+	 * factory owns those resources and cancellation does not release them.
 	 */
 	void cancel();
 

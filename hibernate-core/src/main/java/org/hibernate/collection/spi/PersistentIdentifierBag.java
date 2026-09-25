@@ -305,6 +305,10 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	@Override
 	public boolean hasDeletes(CollectionPersister persister) {
 		final Map<?,?> snap = (Map<?,?>) getSnapshot();
+		if ( snap == null ) {
+			// the collection was never initialized, so it has no deletes
+			return false;
+		}
 		int deletes = snap.size();
 		for ( E value : collection ) {
 			if ( value != null ) {

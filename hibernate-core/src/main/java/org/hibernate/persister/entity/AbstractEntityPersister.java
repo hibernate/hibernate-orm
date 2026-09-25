@@ -520,9 +520,9 @@ public abstract class AbstractEntityPersister
 	private final String queryLoaderName;
 
 	@Nullable
-	protected MultiValueReader multiValueReader;
+	protected final MultiValueReader multiValueReader;
 	@Nullable
-	protected MultiValueWriter multiValueWriter;
+	protected final MultiValueWriter multiValueWriter;
 
 	protected final String[] fullDiscriminatorSQLValues;
 	private final DiscriminatorValue[] fullDiscriminatorValues;

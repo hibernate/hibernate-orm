@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author stliu
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/stateless/Contact.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/stateless/Contact.orm.xml"
 )
 @SessionFactory
 @ServiceRegistry(

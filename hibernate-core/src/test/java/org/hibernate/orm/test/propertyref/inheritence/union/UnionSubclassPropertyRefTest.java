@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/propertyref/inheritence/union/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/propertyref/inheritence/union/Person.orm.xml"
 )
 @SessionFactory
 public class UnionSubclassPropertyRefTest {

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/orphan/one2one/fk/reversed/unidirectional/Mapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/orphan/one2one/fk/reversed/unidirectional/Mapping.orm.xml"
 )
 @SessionFactory
 public class DeleteOneToOneOrphansTest {

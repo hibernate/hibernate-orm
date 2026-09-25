@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.schemaupdate.manytomany;
 
 import org.hamcrest.MatcherAssert;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -26,8 +27,9 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
  * @author Andrea Boriero
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@ServiceRegistry(settings = @Setting(name = HBM2DDL_AUTO, value = "none"))
-@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/manytomany/UserGroup.hbm.xml")
+@ServiceRegistry(settings = {@Setting(name = HBM2DDL_AUTO, value = "none"),
+@Setting( name = AvailableSettings.TRANSFORM_HBM_XML, value = "true" )})
+@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/manytomany/UserGroup.orm.xml")
 public class ForeignKeyNameTest {
 
 	@Test

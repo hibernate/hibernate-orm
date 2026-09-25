@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MultiInheritanceDiscriminatorTest {
 
 	@DomainModel(
-			xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/AccountOwner.hbm.xml"
+			xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/AccountOwner.orm.xml"
 	)
 	@SessionFactory
 	@Test

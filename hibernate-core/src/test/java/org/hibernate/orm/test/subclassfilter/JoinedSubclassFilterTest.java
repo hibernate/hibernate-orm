@@ -25,7 +25,7 @@ import java.util.List;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-@DomainModel(xmlMappings = "org/hibernate/orm/test/subclassfilter/joined-subclass.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/subclassfilter/joined-subclass.orm.xml")
 @SessionFactory
 public class JoinedSubclassFilterTest {
 

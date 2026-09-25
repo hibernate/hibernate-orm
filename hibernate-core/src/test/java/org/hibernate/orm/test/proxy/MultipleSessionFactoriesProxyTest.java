@@ -38,7 +38,7 @@ public class MultipleSessionFactoriesProxyTest {
 
 	private SessionFactory produceSessionFactory() {
 		try (InputStream is = Thread.currentThread().getContextClassLoader()
-				.getResourceAsStream( "org/hibernate/orm/test/proxy/DataPoint.hbm.xml" )) {
+				.getResourceAsStream( "org/hibernate/orm/test/proxy/DataPoint.orm.xml" )) {
 			final Configuration cfg = new Configuration()
 					.addInputStream( is )
 					.addAnnotatedClass( Investor.class )

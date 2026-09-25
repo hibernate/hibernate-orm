@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.idgen.enhanced.sequence;
 
 
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/sequence/HiLo.hbm.xml" )
+@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/sequence/HiLo.orm.xml" )
 @SessionFactory
 public class HiLoSequenceTest {
 
@@ -31,8 +32,9 @@ public class HiLoSequenceTest {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getGenerator() ).isInstanceOf( SequenceStyleGenerator.class );
-		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getGenerator();
+		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );
+		assertThat( ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate() ).isInstanceOf( SequenceStyleGenerator.class );
+		final SequenceStyleGenerator generator = (SequenceStyleGenerator) ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate();
 		assertThat( generator.getOptimizer() ).isInstanceOf( HiLoOptimizer.class );
 		final HiLoOptimizer optimizer = (HiLoOptimizer) generator.getOptimizer();
 		final int increment = optimizer.getIncrementSize();

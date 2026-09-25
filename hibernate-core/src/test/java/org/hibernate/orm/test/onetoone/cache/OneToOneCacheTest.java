@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/onetoone/cache/Details.hbm.xml",
-				"org/hibernate/orm/test/onetoone/cache/Person.hbm.xml",
+				"org/hibernate/orm/test/onetoone/cache/Details.orm.xml",
+				"org/hibernate/orm/test/onetoone/cache/Person.orm.xml",
 		}
 )
 @SessionFactory(

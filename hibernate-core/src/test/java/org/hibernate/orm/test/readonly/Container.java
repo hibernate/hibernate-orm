@@ -19,9 +19,9 @@ public class Container implements Serializable {
 	private Info noProxyInfo;
 	private Info proxyInfo;
 	private Info nonLazyInfo;
-	private Set lazyDataPoints = new HashSet();
-	private Set nonLazyJoinDataPoints = new HashSet();
-	private Set nonLazySelectDataPoints = new HashSet();
+	private Set<DataPoint> lazyDataPoints = new HashSet<>();
+	private Set<DataPoint> nonLazyJoinDataPoints = new HashSet<>();
+	private Set<DataPoint> nonLazySelectDataPoints = new HashSet<>();
 
 	public Container() {
 	}
@@ -94,27 +94,27 @@ public class Container implements Serializable {
 		this.nonLazyInfo = nonLazyInfo;
 	}
 
-	public Set getLazyDataPoints() {
+	public Set<DataPoint> getLazyDataPoints() {
 		return lazyDataPoints;
 	}
 
-	public void setLazyDataPoints(Set lazyDataPoints) {
+	public void setLazyDataPoints(Set<DataPoint> lazyDataPoints) {
 		this.lazyDataPoints = lazyDataPoints;
 	}
 
-	public Set getNonLazyJoinDataPoints() {
+	public Set<DataPoint> getNonLazyJoinDataPoints() {
 		return nonLazyJoinDataPoints;
 	}
 
-	public void setNonLazyJoinDataPoints(Set nonLazyJoinDataPoints) {
+	public void setNonLazyJoinDataPoints(Set<DataPoint> nonLazyJoinDataPoints) {
 		this.nonLazyJoinDataPoints = nonLazyJoinDataPoints;
 	}
 
-	public Set getNonLazySelectDataPoints() {
+	public Set<DataPoint> getNonLazySelectDataPoints() {
 		return nonLazySelectDataPoints;
 	}
 
-	public void setNonLazySelectDataPoints(Set nonLazySelectDataPoints) {
+	public void setNonLazySelectDataPoints(Set<DataPoint> nonLazySelectDataPoints) {
 		this.nonLazySelectDataPoints = nonLazySelectDataPoints;
 	}
 }

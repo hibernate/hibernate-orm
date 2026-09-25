@@ -193,18 +193,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			metamodelBuilder =
 					(MetadataBuilderImplementor)
 							metadataSources.getMetadataBuilder( standardServiceRegistry );
-			applyMappingResources( metadataSources );
-			applyDiscoveredMappings( discovery, metadataSources );
-			applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
-			applyMetadataBuilderContributor();
-			setupMappingReferences( metadataSources );
-			managedResources =
-					MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
-			setupValidation();
-
-			setupEnhancement( persistenceUnit );
-			// for the time being we want to revoke access to the temp ClassLoader if one was passed
-			metamodelBuilder.applyTempClassLoader( null );
+			managedResources = prepareManagedResources( metadataSources, mergedSettings, discovery );
+			completePreparation();
 		}
 		catch (Throwable throwable) {
 			bootRegistry.close();
@@ -331,22 +321,34 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			metamodelBuilder =
 					(MetadataBuilderImplementor)
 							metadataSources.getMetadataBuilder( standardServiceRegistry );
-			applyMappingResources( metadataSources );
-			applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
-			applyMetadataBuilderContributor();
-			setupMappingReferences( metadataSources );
-			managedResources =
-					MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
-			setupValidation();
-			setupEnhancement( persistenceUnit );
-			// for the time being we want to revoke access to the temp ClassLoader if one was passed
-			metamodelBuilder.applyTempClassLoader( null );
+			managedResources = prepareManagedResources( metadataSources, mergedSettings, ScanningResult.NONE );
+			completePreparation();
 		}
 		catch (Throwable throwable) {
 			bootstrapServiceRegistry.close();
 			cleanup();
 			throw throwable;
 		}
+	}
+
+	private ManagedResources prepareManagedResources(
+			MetadataSources metadataSources,
+			MergedSettings mergedSettings,
+			ScanningResult discovery) {
+		applyMappingResources( metadataSources );
+		applyDiscoveredMappings( discovery, metadataSources );
+		applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
+		applyMetadataBuilderContributor();
+		setupMappingReferences( metadataSources );
+		return MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
+	}
+
+	private void completePreparation() {
+		// The constructors must assign managedResources before validation and enhancement callbacks run.
+		setupValidation();
+		setupEnhancement( persistenceUnit );
+		// Revoke access to the temporary ClassLoader once preparation has completed successfully.
+		metamodelBuilder.applyTempClassLoader( null );
 	}
 
 	private static Map<String, Object> mergedIntegrationSettings(

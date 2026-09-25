@@ -2897,7 +2897,7 @@ public class HbmXmlTransformer {
 		transferCollectionTable( source, target );
 
 		if ( source.getElement() != null ) {
-			transferElementInfo( source, source.getElement(), propertyInfo, target );
+			transferElementInfo( source.getElement(), propertyInfo, target );
 		}
 		else {
 			target.setTargetClass( source.getCompositeElement().getClazz() );
@@ -3509,14 +3509,10 @@ public class HbmXmlTransformer {
 
 
 	private void transferElementInfo(
-			PluralAttributeInfo hbmCollection,
 			JaxbHbmBasicCollectionElementType element,
 			PropertyInfo propertyInfo,
 			JaxbElementCollectionImpl target) {
-		transferCollectionCommonInfo( hbmCollection, target, propertyInfo );
-		transferCollectionTable( hbmCollection, target );
-
-		transferElementTypeInfo( hbmCollection, element, propertyInfo, target );
+		transferElementTypeInfo( element, propertyInfo, target );
 
 		transferColumnsAndFormulas(
 				propertyInfo,
@@ -3598,7 +3594,6 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferElementTypeInfo(
-			PluralAttributeInfo hbmCollection,
 			JaxbHbmBasicCollectionElementType element,
 			PropertyInfo propertyInfo,
 			JaxbElementCollectionImpl target) {
@@ -3631,9 +3626,6 @@ public class HbmXmlTransformer {
 			PluralAttributeInfo hbmCollection,
 			JaxbHbmCompositeCollectionElementType compositeElement,
 			JaxbElementCollectionImpl target) {
-		transferCollectionCommonInfo( hbmCollection, target, null );
-		transferCollectionTable( hbmCollection, target );
-
 		final String embeddableClassName = compositeElement.getClazz();
 		final String embeddableName = componentHandler.determineEmbeddableName( embeddableClassName, hbmCollection.getName() );
 

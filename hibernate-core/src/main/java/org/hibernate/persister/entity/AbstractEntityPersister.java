@@ -270,6 +270,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.function.Function.identity;
+import static org.hibernate.boot.model.internal.AuditHelper.getOverridesMap;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.CacheHelper.readingFromCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -687,6 +688,8 @@ public abstract class AbstractEntityPersister
 
 		final var propertyClosure = persistentClass.getPropertyClosure();
 		boolean foundFormula = false;
+		var auditOverrides = getOverridesMap( persistentClass,
+				creationContext.getBootstrapContext().getModelsContext() );
 		for ( int i = 0; i < propertyClosure.size(); i++ ) {
 			final var property = propertyClosure.get(i);
 			thisClassProperties.add( property );
@@ -695,7 +698,15 @@ public abstract class AbstractEntityPersister
 			final boolean temporalExcluded = property.isTemporalExcluded();
 			propertyTemporalExcluded[i] = temporalExcluded;
 			foundTemporalExcluded = foundTemporalExcluded || temporalExcluded;
-			propertyAuditedExcluded[i] = property.isAuditedExcluded();
+
+			var overrideForProperty = auditOverrides.get( property.getName() );
+			if ( overrideForProperty != null ) {
+				propertyAuditedExcluded[i] = !overrideForProperty.isAudited();
+			}
+			else {
+				propertyAuditedExcluded[i] = property.isAuditedExcluded();
+			}
+
 			foundNonExcludedCollection = foundNonExcludedCollection
 					|| propertyValue instanceof org.hibernate.mapping.Collection
 							&& !temporalExcluded;

@@ -507,7 +507,11 @@ public class EmbeddableInitializerImpl
 			final Object contributorValue = assembler == null ? null : assembler.assemble( rowProcessingState );
 			rowState[i] = contributorValue == BATCH_PROPERTY ? null : contributorValue;
 			if ( contributorValue != null ) {
-				stateAllNull = false;
+				// An attribute that was not fetched contributes the default value
+				// of its Java type, which says nothing about the row
+				if ( !( assembler instanceof NullValueAssembler ) ) {
+					stateAllNull = false;
+				}
 			}
 			else if ( isPartOfKey ) {
 				// If this is a foreign key and there is a null part, the whole thing has to be turned into null

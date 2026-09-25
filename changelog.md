@@ -1,5 +1,25 @@
 # Hibernate ORM Changelog
 
+## 8.0.0.Beta3 (September 25, 2026)
+
+[Full changelog](https://hibernate.atlassian.net/projects/HHH/versions/40456)
+
+
+### Bug
+* [HHH-20941](https://hibernate.atlassian.net/browse/HHH-20941) - Hibernate Processor IllegalArgumentException when processing @Query on repository with wildcard types in their type hierarchy
+* [HHH-20933](https://hibernate.atlassian.net/browse/HHH-20933) - Entity with generic and join properties leads to different orders in getPropertyClosure / propertyAccessMap
+* [HHH-20923](https://hibernate.atlassian.net/browse/HHH-20923) - ORDER BY clause missing from outer query when combining pagination with pessimistic locking on Oracle dialect
+
+### Improvement
+* [HHH-20940](https://hibernate.atlassian.net/browse/HHH-20940) - Allow configuring the accessor factory to "fallback" to reflection
+* [HHH-20938](https://hibernate.atlassian.net/browse/HHH-20938) - Unify bootstrap divergence between bootstrap entry points
+* [HHH-20929](https://hibernate.atlassian.net/browse/HHH-20929) - Changes for bootstrap logging
+* [HHH-20922](https://hibernate.atlassian.net/browse/HHH-20922) - Upgrade to Hibernate Models 1.3.4
+* [HHH-20866](https://hibernate.atlassian.net/browse/HHH-20866) - Clean up retrieval of packages/modules from ClassDetails
+
+### Task
+* [HHH-20932](https://hibernate.atlassian.net/browse/HHH-20932) - Add hibernate-accessor to hibernate-platform
+
 ## 8.0.0.Beta2 (September 23, 2026)
 
 [Full changelog](https://hibernate.atlassian.net/projects/HHH/versions/39688)

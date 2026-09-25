@@ -194,8 +194,8 @@ public final class TypeUtils {
 			case WILDCARD:
 				final var wildcardType = (WildcardType) type;
 				return context.getTypeUtils().getWildcardType(
-						extractClosestRealType( wildcardType.getExtendsBound(), context, beingVisited ),
-						extractClosestRealType( wildcardType.getSuperBound(), context, beingVisited )
+						upperBound( extractClosestRealType( wildcardType.getExtendsBound(), context, beingVisited ) ),
+						lowerBound( extractClosestRealType( wildcardType.getSuperBound(), context, beingVisited ) )
 				);
 			case DECLARED:
 				final var declaredType = (DeclaredType) type;

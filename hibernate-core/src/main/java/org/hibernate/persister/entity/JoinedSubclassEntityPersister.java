@@ -1335,6 +1335,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 			}
 		}
+		// Retain resolved secondary-table joins, including those mapped to auxiliary audit tables.
+		for ( int i = subclassCoreTableSpan; i < subclassTableNameClosure.length; i++ ) {
+			final var tableReference =
+					tableGroup.getTableReference( null, subclassTableNameClosure[i], false );
+			if ( tableReference != null ) {
+				retainedTableReferences.add( tableReference );
+			}
+		}
 		if ( !tableReferenceJoins.isEmpty() ) {
 			// The optimization is to remove all table reference joins that are not contained in the retainedTableReferences
 			// In addition, we switch from a possible LEFT join, to an INNER join for all tablesToInnerJoin
@@ -1350,15 +1358,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 										? new TableReferenceJoin( true, joinedTableReference, oldJoin.getPredicate() )
 										: oldJoin;
 						tableReferenceJoins.add( join );
-					}
-					else {
-						for ( int i = subclassCoreTableSpan; i < subclassTableNameClosure.length; i++ ) {
-							if ( joinedTableReference.getTableExpression().equals( subclassTableNameClosure[i] ) ) {
-								// Retain joins to secondary tables
-								tableReferenceJoins.add( oldJoin );
-								break;
-							}
-						}
 					}
 				}
 			}

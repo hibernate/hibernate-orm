@@ -24,12 +24,14 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.models.spi.AnnotationTarget;
 
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import org.hibernate.mapping.Value;
 
 import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
 import static org.hibernate.cfg.MappingSettings.PREFERRED_POOLED_OPTIMIZER;
 import static org.hibernate.id.IdentifierGenerator.CONTRIBUTOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
@@ -201,6 +203,15 @@ public class GeneratorParameters {
 	public static void interpretTableGenerator(
 			TableGenerator tableGeneratorAnnotation,
 			IdentifierGeneratorDefinition.Builder definitionBuilder) {
+		interpretTableGenerator( tableGeneratorAnnotation, definitionBuilder, null, null );
+	}
+
+	@Internal
+	public static void interpretTableGenerator(
+			TableGenerator tableGeneratorAnnotation,
+			IdentifierGeneratorDefinition.Builder definitionBuilder,
+			AnnotationTarget annotationTarget,
+			MetadataBuildingContext buildingContext) {
 		definitionBuilder.setName( tableGeneratorAnnotation.name() );
 		definitionBuilder.setStrategy( org.hibernate.id.enhanced.TableGenerator.class.getName() );
 		definitionBuilder.addParam( CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
@@ -210,7 +221,9 @@ public class GeneratorParameters {
 			definitionBuilder.addParam( CATALOG, catalog );
 		}
 
-		final String schema = tableGeneratorAnnotation.schema();
+		final String schema = buildingContext == null
+				? tableGeneratorAnnotation.schema()
+				: defaultSchema( tableGeneratorAnnotation.schema(), annotationTarget, buildingContext );
 		if ( isNotBlank( schema ) ) {
 			definitionBuilder.addParam( SCHEMA, schema );
 		}
@@ -257,6 +270,15 @@ public class GeneratorParameters {
 	public static void interpretSequenceGenerator(
 			SequenceGenerator sequenceGeneratorAnnotation,
 			IdentifierGeneratorDefinition.Builder definitionBuilder) {
+		interpretSequenceGenerator( sequenceGeneratorAnnotation, definitionBuilder, null, null );
+	}
+
+	@Internal
+	public static void interpretSequenceGenerator(
+			SequenceGenerator sequenceGeneratorAnnotation,
+			IdentifierGeneratorDefinition.Builder definitionBuilder,
+			AnnotationTarget annotationTarget,
+			MetadataBuildingContext buildingContext) {
 		definitionBuilder.setName( sequenceGeneratorAnnotation.name() );
 		definitionBuilder.setStrategy( SequenceStyleGenerator.class.getName() );
 
@@ -265,7 +287,9 @@ public class GeneratorParameters {
 			definitionBuilder.addParam( CATALOG, catalog );
 		}
 
-		final String schema = sequenceGeneratorAnnotation.schema();
+		final String schema = buildingContext == null
+				? sequenceGeneratorAnnotation.schema()
+				: defaultSchema( sequenceGeneratorAnnotation.schema(), annotationTarget, buildingContext );
 		if ( isNotBlank( schema ) ) {
 			definitionBuilder.addParam( SCHEMA, schema );
 		}

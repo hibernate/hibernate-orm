@@ -53,6 +53,7 @@ import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -62,6 +63,7 @@ import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.from.AuxiliaryTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -974,19 +976,19 @@ public class PluralAttributeMappingImpl
 			boolean addsPredicate,
 			Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
-
-		final var tableGroup =
-				rootTableGroup(
-						navigablePath,
-						lhs,
-						explicitSourceAlias,
-						fetched,
-						addsPredicate,
-						creationState,
-						determineSqlJoinType( lhs, requestedJoinType, fetched ),
-						creationState.getSqlAliasBaseGenerator()
-								.createSqlAliasBase( getSqlAliasStem() )
-				);
+		final SqlAstJoinType joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
+		final var tableGroup = rootTableGroup(
+				navigablePath,
+				lhs.canUseInnerJoins() && joinType == SqlAstJoinType.INNER,
+				explicitSourceAlias,
+				fetched,
+				addsPredicate,
+				creationState,
+				joinType,
+				explicitSqlAliasBase != null
+						? explicitSqlAliasBase
+						: creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() )
+		);
 
 		if ( predicateConsumer != null ) {
 			predicateConsumer.accept( getKeyDescriptor()
@@ -1007,17 +1009,16 @@ public class PluralAttributeMappingImpl
 
 	private TableGroup rootTableGroup(
 			NavigablePath navigablePath,
-			TableGroup lhs,
+			boolean canUseInnerJoins,
 			String explicitSourceAlias,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState,
 			SqlAstJoinType joinType,
 			SqlAliasBase sqlAliasBase) {
-		return useCollectionTableGroup( creationState )
+		final TableGroup tableGroup = useCollectionTableGroup( creationState )
 				? createCollectionTableGroup(
-						lhs.canUseInnerJoins()
-						&& joinType == SqlAstJoinType.INNER,
+						canUseInnerJoins,
 						joinType,
 						navigablePath,
 						fetched,
@@ -1027,8 +1028,7 @@ public class PluralAttributeMappingImpl
 						creationState
 				)
 				: createOneToManyTableGroup(
-						lhs.canUseInnerJoins()
-						&& joinType == SqlAstJoinType.INNER,
+						canUseInnerJoins,
 						joinType,
 						navigablePath,
 						fetched,
@@ -1037,6 +1037,24 @@ public class PluralAttributeMappingImpl
 						sqlAliasBase,
 						creationState
 				);
+
+		final FromClauseAccess fromClauseAccess = creationState.getFromClauseAccess();
+		if ( tableGroup instanceof PluralTableGroup pluralTableGroup ) {
+			final var elementTableGroup = pluralTableGroup.getElementTableGroup();
+			if ( elementTableGroup != null ) {
+				fromClauseAccess.registerTableGroup(
+						elementTableGroup.getNavigablePath(),
+						elementTableGroup
+				);
+			}
+			if ( pluralTableGroup.getIndexTableGroup() != null ) {
+				fromClauseAccess.registerTableGroup(
+						pluralTableGroup.getIndexTableGroup().getNavigablePath(),
+						pluralTableGroup.getIndexTableGroup()
+				);
+			}
+		}
+		return tableGroup;
 	}
 
 
@@ -1188,30 +1206,16 @@ public class PluralAttributeMappingImpl
 			SqlAliasBase explicitSqlAliasBase,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState) {
-		if ( !useCollectionTableGroup( creationState ) ) {
-			return createOneToManyTableGroup(
-					canUseInnerJoins,
-					SqlAstJoinType.INNER,
-					navigablePath,
-					false,
-					false,
-					explicitSourceAlias,
-					explicitSqlAliasBase,
-					creationState
-			);
-		}
-		else {
-			return createCollectionTableGroup(
-					canUseInnerJoins,
-					SqlAstJoinType.INNER,
-					navigablePath,
-					false,
-					false,
-					explicitSourceAlias,
-					explicitSqlAliasBase,
-					creationState
-			);
-		}
+		return rootTableGroup(
+				navigablePath,
+				canUseInnerJoins,
+				explicitSourceAlias,
+				false,
+				false,
+				creationState,
+				SqlAstJoinType.INNER,
+				explicitSqlAliasBase
+		);
 	}
 
 	@Override

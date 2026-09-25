@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
@@ -191,13 +192,22 @@ public final class SerializationHelper {
 			ClassLoader loader,
 			ClassLoader fallbackLoader1,
 			ClassLoader fallbackLoader2) throws SerializationException {
+		return doDeserialize( inputStream, loader, fallbackLoader1, fallbackLoader2, null );
+	}
+
+	public static <T> T doDeserialize(
+			InputStream inputStream,
+			ClassLoader loader,
+			ClassLoader fallbackLoader1,
+			ClassLoader fallbackLoader2,
+			ObjectInputFilter filter) throws SerializationException {
 		if ( inputStream == null ) {
 			throw new IllegalArgumentException( "The InputStream must not be null" );
 		}
 
 		CORE_LOGGER.trace( "Starting deserialization of object" );
 
-		try ( var in = new CustomObjectInputStream( inputStream, loader, fallbackLoader1, fallbackLoader2 ) ) {
+		try ( var in = new CustomObjectInputStream( inputStream, loader, fallbackLoader1, fallbackLoader2, filter ) ) {
 			//noinspection unchecked
 			return (T) in.readObject();
 		}
@@ -249,6 +259,25 @@ public final class SerializationHelper {
 		return doDeserialize( wrap( objectData ), loader, defaultClassLoader(), hibernateClassLoader() );
 	}
 
+	/**
+	 * Deserializes an object from an array of bytes, applying the given JEP-290
+	 * {@link ObjectInputFilter} to the deserialization stream.
+	 *
+	 * @param objectData the serialized object, must not be null
+	 * @param loader The classloader to use
+	 * @param filter The {@link ObjectInputFilter} to apply, or {@code null} to apply none
+	 *
+	 * @return the deserialized object
+	 *
+	 * @throws IllegalArgumentException if <code>objectData</code> is <code>null</code>
+	 * @throws SerializationException (runtime) if the serialization fails
+	 *
+	 * @since 8.1
+	 */
+	public static Object deserialize(byte[] objectData, ClassLoader loader, ObjectInputFilter filter) throws SerializationException {
+		return doDeserialize( wrap( objectData ), loader, defaultClassLoader(), hibernateClassLoader(), filter );
+	}
+
 
 	/**
 	 * By default, to resolve the classes being deserialized JDK serialization uses the
@@ -267,11 +296,15 @@ public final class SerializationHelper {
 				InputStream in,
 				ClassLoader loader1,
 				ClassLoader loader2,
-				ClassLoader loader3) throws IOException {
+				ClassLoader loader3,
+				ObjectInputFilter filter) throws IOException {
 			super( in );
 			this.loader1 = loader1;
 			this.loader2 = loader2;
 			this.loader3 = loader3;
+			if ( filter != null ) {
+				setObjectInputFilter( filter );
+			}
 		}
 
 		@Override

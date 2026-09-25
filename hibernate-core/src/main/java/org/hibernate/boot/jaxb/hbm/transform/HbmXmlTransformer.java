@@ -165,6 +165,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularAssociationAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularFetchModeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlResultSetMappingImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlSelectImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSynchronizedTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
@@ -226,6 +227,7 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.LockModeConverter;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.split;
@@ -1051,9 +1053,7 @@ public class HbmXmlTransformer {
 			mappingEntity.getSynchronizeTables().add( synchronizedTable );
 		}
 
-		if ( hbmClass.getLoader() != null ) {
-			handleUnsupported( "<loader/> is not supported in mapping.xsd - use <sql-select/> or <hql-select/> instead" );
-		}
+		transferEntityLoader( hbmClass, mappingEntity );
 
 		if ( !hbmClass.getTuplizer().isEmpty() ) {
 			handleUnsupported( "<tuplizer/> is not supported" );
@@ -1521,6 +1521,13 @@ public class HbmXmlTransformer {
 				: hbmReturn.getEntityName();
 		entityResult.setEntityClass( getFullyQualifiedClassName( entityName ) );
 
+		// Transfer lock mode if specified
+		if ( hbmReturn.getLockMode() != null ) {
+			entityResult.setLockMode(
+					LockModeConverter.convertToLockModeType( hbmReturn.getLockMode() )
+			);
+		}
+
 		for ( var propertyReturn : hbmReturn.getReturnProperty() ) {
 			final var field = new JaxbFieldResultImpl();
 			final List<String> columns = new ArrayList<>();
@@ -1633,6 +1640,11 @@ public class HbmXmlTransformer {
 		final var hbmNativeQueries = hbmXmlBinding.getRoot().getSqlQuery();
 		if ( !hbmNativeQueries.isEmpty() ) {
 			for ( var hbmQuery : hbmNativeQueries ) {
+				// A <sql-query> containing <load-collection> is a collection loader, not a standalone
+				// named query - it is inlined as <sql-select> on the collection that references it.
+				if ( isCollectionLoaderQuery( hbmQuery ) ) {
+					continue;
+				}
 				// A callable <sql-query> maps to a <named-stored-procedure-query>, everything else
 				// maps to a <named-native-query>.
 				if ( hbmQuery.isCallable() ) {
@@ -1645,6 +1657,16 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
+	}
+
+	private static boolean isCollectionLoaderQuery(JaxbHbmNamedNativeQueryType hbmQuery) {
+		for ( Object content : hbmQuery.getContent() ) {
+			if ( content instanceof JAXBElement<?> contentElement
+					&& contentElement.getValue() instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private JaxbNamedNativeQueryImpl transformNamedNativeQuery(JaxbHbmNamedNativeQueryType hbmQuery, String queryName) {
@@ -3054,6 +3076,214 @@ public class HbmXmlTransformer {
 			);
 			target.setClassification( LimitedCollectionClassification.LIST );
 		}
+
+		transferCollectionLoader( source, target );
+	}
+
+	private void transferEntityLoader(EntityInfo hbmClass, JaxbEntityImpl mappingEntity) {
+		final var loader = hbmClass.getLoader();
+		if ( loader == null || isEmpty( loader.getQueryRef() ) ) {
+			return;
+		}
+		final String queryRef = loader.getQueryRef();
+
+		final var nativeQuery = findNamedNativeQuery( queryRef );
+		if ( nativeQuery != null ) {
+			mappingEntity.setSqlSelect( toSqlSelect( nativeQuery, queryRef ) );
+			return;
+		}
+
+		final var hqlQuery = findNamedHqlQuery( queryRef );
+		if ( hqlQuery != null ) {
+			mappingEntity.setHqlSelect( extractQueryText( hqlQuery.getContent() ) );
+			return;
+		}
+
+		handleUnsupported(
+				"Entity <loader query-ref=\"%s\"> could not be resolved to a named query",
+				queryRef
+		);
+	}
+
+	private void transferCollectionLoader(PluralAttributeInfo source, JaxbPluralAttribute target) {
+		final var loader = source.getLoader();
+		if ( loader == null || isEmpty( loader.getQueryRef() ) ) {
+			return;
+		}
+		final String queryRef = loader.getQueryRef();
+
+		final var nativeQuery = findNamedNativeQuery( queryRef );
+		if ( nativeQuery != null ) {
+			target.setSqlSelect( toSqlSelect( nativeQuery, queryRef ) );
+			return;
+		}
+
+		final var hqlQuery = findNamedHqlQuery( queryRef );
+		if ( hqlQuery != null ) {
+			target.setHqlSelect( extractQueryText( hqlQuery.getContent() ) );
+			return;
+		}
+
+		handleUnsupported(
+				"Collection <loader query-ref=\"%s\"> could not be resolved to a named query",
+				queryRef
+		);
+	}
+
+	private JaxbHbmNamedNativeQueryType findNamedNativeQuery(String queryName) {
+		for ( var hbmQuery : hbmXmlBinding.getRoot().getSqlQuery() ) {
+			if ( queryName.equals( hbmQuery.getName() ) ) {
+				return hbmQuery;
+			}
+		}
+		return null;
+	}
+
+	private JaxbHbmNamedQueryType findNamedHqlQuery(String queryName) {
+		for ( var hbmQuery : hbmXmlBinding.getRoot().getQuery() ) {
+			if ( queryName.equals( hbmQuery.getName() ) ) {
+				return hbmQuery;
+			}
+		}
+		return null;
+	}
+
+	private JaxbSqlSelectImpl toSqlSelect(JaxbHbmNamedNativeQueryType nativeQuery, String queryRef) {
+		final var sqlSelect = new JaxbSqlSelectImpl();
+		JaxbHbmNativeQueryCollectionLoadReturnType collectionLoadReturn = null;
+
+		for ( Object content : nativeQuery.getContent() ) {
+			if ( content instanceof String sql ) {
+				final String trimmed = sql.trim();
+				if ( !trimmed.isEmpty() ) {
+					sqlSelect.setSql( trimmed );
+				}
+			}
+			else if ( content instanceof JAXBElement<?> element ) {
+				if ( element.getValue() instanceof JaxbHbmSynchronizeType hbmSynchronize ) {
+					final var synchronize = new JaxbSynchronizedTableImpl();
+					synchronize.setTable( hbmSynchronize.getTable() );
+					sqlSelect.getSynchronize().add( synchronize );
+				}
+				else if ( element.getValue() instanceof JaxbHbmNativeQueryCollectionLoadReturnType loadReturn ) {
+					collectionLoadReturn = loadReturn;
+				}
+			}
+		}
+
+		// If this is a collection loader query, create an implicit result-set-mapping
+		if ( collectionLoadReturn != null ) {
+			final String implicitResultSetMappingName = queryRef + "-collectionLoader-implicitResultSetMapping";
+			final var resultSetMapping = createCollectionLoaderResultSetMapping(
+					implicitResultSetMappingName,
+					collectionLoadReturn
+			);
+			mappingXmlBinding.getRoot().getSqlResultSetMappings().add( resultSetMapping );
+			sqlSelect.setResultSetMapping( resultSetMapping );
+		}
+
+		return sqlSelect;
+	}
+
+	private JaxbSqlResultSetMappingImpl createCollectionLoaderResultSetMapping(
+			String mappingName,
+			JaxbHbmNativeQueryCollectionLoadReturnType collectionLoadReturn) {
+		final var resultSetMapping = new JaxbSqlResultSetMappingImpl();
+		resultSetMapping.setName( mappingName );
+
+		// Extract the entity class from the role (e.g., "Owner.employments" -> "Employment")
+		// The role format is "EntityName.collectionProperty"
+		final String role = collectionLoadReturn.getRole();
+		final String entityClassName = extractCollectionElementType( role );
+
+		// Create an entity-result for the collection element
+		final var entityResult = new JaxbEntityResultImpl();
+		entityResult.setEntityClass( getFullyQualifiedClassName( entityClassName ) );
+
+		// Transfer lock mode if specified
+		if ( collectionLoadReturn.getLockMode() != null ) {
+			entityResult.setLockMode(
+				LockModeConverter.convertToLockModeType( collectionLoadReturn.getLockMode() )
+			);
+		}
+
+		// Transfer field results if any
+		for ( var propertyReturn : collectionLoadReturn.getReturnProperty() ) {
+			final var field = new JaxbFieldResultImpl();
+			field.setName( propertyReturn.getName() );
+			if ( !isEmpty( propertyReturn.getColumn() ) ) {
+				field.setColumn( propertyReturn.getColumn() );
+			}
+			entityResult.getFieldResult().add( field );
+		}
+
+		resultSetMapping.getEntityResult().add( entityResult );
+		return resultSetMapping;
+	}
+
+	private String extractCollectionElementType(String role) {
+		// The role is in format "OwnerEntityName.collectionPropertyName"
+		// We need to find the collection's element type from the boot model
+		final int dotIndex = role.lastIndexOf( '.' );
+		if ( dotIndex == -1 ) {
+			handleUnsupported(
+				"Invalid collection role format: %s. Expected 'EntityName.propertyName'",
+				role
+			);
+			return null;
+		}
+
+		final String ownerEntityName = role.substring( 0, dotIndex );
+		final String propertyName = role.substring( dotIndex + 1 );
+
+		// Look up the entity in the transformation state
+		final var entityInfo = transformationState.getEntityInfoByName().get(
+			getFullyQualifiedClassName( ownerEntityName )
+		);
+
+		if ( entityInfo == null ) {
+			handleUnsupported(
+				"Could not find entity info for collection role: %s",
+				role
+			);
+			return null;
+		}
+
+		// Get the collection property from the boot model
+		final var bootEntity = entityInfo.getPersistentClass();
+		try {
+			final var property = bootEntity.getProperty( propertyName );
+			if ( property.getValue() instanceof org.hibernate.mapping.Collection collection ) {
+				final var elementValue = collection.getElement();
+				if ( elementValue instanceof org.hibernate.mapping.OneToMany oneToMany ) {
+					return oneToMany.getReferencedEntityName();
+				}
+				else if ( elementValue instanceof org.hibernate.mapping.ManyToOne manyToOne ) {
+					return manyToOne.getReferencedEntityName();
+				}
+			}
+		}
+		catch ( Exception e ) {
+			handleUnsupported(
+				"Could not determine element type for collection role: %s - %s",
+				role,
+				e.getMessage()
+			);
+		}
+
+		return null;
+	}
+
+	private static String extractQueryText(List<?> content) {
+		for ( Object element : content ) {
+			if ( element instanceof String queryText ) {
+				final String trimmed = queryText.trim();
+				if ( !trimmed.isEmpty() ) {
+					return trimmed;
+				}
+			}
+		}
+		return null;
 	}
 
 	private void transferCollectionId(JaxbHbmIdBagCollectionType idBag, JaxbPluralAttribute target) {

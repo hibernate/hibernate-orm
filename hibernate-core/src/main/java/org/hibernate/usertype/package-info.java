@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * An API for user-defined custom types which extend the set of built-in
  * {@linkplain org.hibernate.type.Type types} defined in {@link org.hibernate.type}.

@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Package defining support for executing mutation SQL statements produced by an
  * {@linkplain org.hibernate.persister.entity.EntityPersister entity persister} or

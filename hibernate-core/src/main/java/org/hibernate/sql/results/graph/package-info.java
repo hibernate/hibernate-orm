@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Defines the provider-facing graph used to turn JDBC rows into domain results.
 ///
 /// Providers may consume the standard graph nodes and implement the interfaces

@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Simplified form of {@link org.hibernate.orm.test.mapping.cid.idclass}
  * for the purpose of tracking down seemingly duplicated calls to the

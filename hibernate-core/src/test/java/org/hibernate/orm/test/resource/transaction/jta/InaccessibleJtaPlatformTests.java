@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.resource.transaction.jta;
 
 import org.hibernate.resource.transaction.backend.jta.internal.JtaPlatformInaccessibleException;

@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Named queries and statements registered through a package descriptor.
 ///
 /// @author Steve Ebersole

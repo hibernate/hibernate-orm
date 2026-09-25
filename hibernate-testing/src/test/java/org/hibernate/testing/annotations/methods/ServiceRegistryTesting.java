@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.testing.annotations.methods;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;

@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Support for {@linkplain org.hibernate.query.specification.SelectionSpecification}
  * and {@linkplain org.hibernate.query.specification.MutationSpecification} which

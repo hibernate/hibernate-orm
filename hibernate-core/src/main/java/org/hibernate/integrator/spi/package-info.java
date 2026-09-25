@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * An SPI for extensions which integrate with Hibernate via the Java {@link java.util.ServiceLoader} facility.
  * <p>

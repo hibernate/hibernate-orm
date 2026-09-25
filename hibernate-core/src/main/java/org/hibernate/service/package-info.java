@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines a framework for pluggable {@linkplain org.hibernate.service.Service services},
  * allowing for customization of key components of Hibernate, and abstraction of these

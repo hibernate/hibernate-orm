@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines Hibernate's managed bean support, including integration with CDI and
  * other bean containers, and fallback instance creation. The central

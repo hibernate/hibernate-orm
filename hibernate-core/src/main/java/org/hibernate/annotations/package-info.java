@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * A set of mapping annotations which extend the O/R mapping annotations defined by JPA.
  * <p>

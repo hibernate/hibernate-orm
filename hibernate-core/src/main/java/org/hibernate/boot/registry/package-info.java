@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines {@linkplain org.hibernate.service.ServiceRegistry service registry} contracts a program may use for
  * configuring Hibernate.

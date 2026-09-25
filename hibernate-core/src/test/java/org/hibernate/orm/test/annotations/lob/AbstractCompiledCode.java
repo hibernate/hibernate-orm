@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.annotations.lob;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;

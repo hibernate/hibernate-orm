@@ -1,10 +1,6 @@
 
 apply plugin: UtilitiesPlugin
 
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 class UtilitiesPlugin implements Plugin<Project> {
     def void apply(Project project) {
         project.convention.plugins.utilities = new UtilitiesPluginDef()

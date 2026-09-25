@@ -1,9 +1,4 @@
 <!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
-
-<!--
 
 Tests for MySQL spatial functions should not contain empty geometries.
 In MySQL these are stored as null objects.

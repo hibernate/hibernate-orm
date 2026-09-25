@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This package contains the interfaces that make up the bootstrap API
  * for Hibernate. They collectively provide a way to specify configuration

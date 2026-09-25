@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Tests for how {@link org.hibernate.annotations.NotFound} mappings
  * work with bytecode enhancement.

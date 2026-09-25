@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines SPI contracts for obtaining JDBC {@link java.sql.Connection}s from a
  * provider implemented as a {@linkplain org.hibernate.service.Service service}.

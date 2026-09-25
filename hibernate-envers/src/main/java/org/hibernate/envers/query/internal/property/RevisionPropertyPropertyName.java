@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.envers.query.internal.property;
 
 import org.hibernate.envers.configuration.Configuration;

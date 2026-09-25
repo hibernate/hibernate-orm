@@ -1,7 +1,3 @@
-<!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
 <hibernate-configuration
         xmlns="http://www.hibernate.org/xsd/orm/cfg"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

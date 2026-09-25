@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * An SPI for defining, registering, and rendering functions in HQL. The
  * {@link org.hibernate.query.sqm.function.SqmFunctionRegistry} maintains

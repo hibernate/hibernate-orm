@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.jdbc.util;
 
 import org.hibernate.engine.jdbc.internal.BasicFormatterImpl;

@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.event.jfr.flush;
 
 import org.hibernate.testing.orm.junit.DomainModel;

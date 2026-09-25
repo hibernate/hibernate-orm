@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.annotations.derivedidentities.e4.b;
 import java.util.Date;
 import jakarta.persistence.Entity;

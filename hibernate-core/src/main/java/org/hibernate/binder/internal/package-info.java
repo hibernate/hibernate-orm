@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * 	Built-in implementations of {@link org.hibernate.binder.AttributeBinder}
  * 	and {@link org.hibernate.binder.TypeBinder}.

@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.mapping.identifier.uuid.random3;
 
 import org.hibernate.annotations.UuidGenerator;

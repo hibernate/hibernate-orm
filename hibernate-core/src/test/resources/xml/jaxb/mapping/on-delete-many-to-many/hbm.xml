@@ -1,8 +1,4 @@
 <?xml version="1.0"?>
-<!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
 <hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.ondeletemanytomnay">
     <class name="Author">
         <id name="id" type="long">

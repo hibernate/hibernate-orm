@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Support for processing mapping XML files and applying annotation references over the appropriate
  * {@linkplain org.hibernate.models.spi.ClassDetails classes},

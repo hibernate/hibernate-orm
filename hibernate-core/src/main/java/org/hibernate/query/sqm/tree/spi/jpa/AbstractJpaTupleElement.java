@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.tree.spi.SqmVisitableNode;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Base support for {@link JpaTupleElement} impls
@@ -24,6 +25,7 @@ public abstract class AbstractJpaTupleElement<T>
 		implements SqmVisitableNode, JpaTupleElement<T> {
 
 	private @Nullable SqmBindableType<T> expressibleType;
+	private @Nullable JavaType<T> javaType;
 	private @Nullable String alias;
 
 	protected AbstractJpaTupleElement(@Nullable SqmBindableType<? super T> expressibleType, @Nonnull NodeBuilder criteriaBuilder) {
@@ -51,12 +53,35 @@ public abstract class AbstractJpaTupleElement<T>
 		return expressibleType;
 	}
 
+	@Override
+	public @Nullable JavaType<T> getJavaTypeDescriptor() {
+		return javaType;
+	}
+
 	protected final void setExpressibleType(
 			// This is fine, since this method is final
 			AbstractJpaTupleElement<T> this,
 			@Nullable SqmBindableType<?> expressibleType) {
 		//noinspection unchecked
 		this.expressibleType = (SqmBindableType<T>) expressibleType;
+		this.javaType = null;
+	}
+
+	protected final void setExpressibleType(
+			// This is fine, since this method is final
+			AbstractJpaTupleElement<T> this,
+			@Nullable SqmBindableType<?> expressibleType,
+			@Nullable JavaType<?> javaType) {
+		//noinspection unchecked
+		this.expressibleType = (SqmBindableType<T>) expressibleType;
+		// Only need to set the java type when no expressible type is given
+		if ( expressibleType == null && javaType != null ) {
+			//noinspection unchecked
+			this.javaType = (JavaType<T>) javaType;
+		}
+		else {
+			this.javaType = null;
+		}
 	}
 
 }

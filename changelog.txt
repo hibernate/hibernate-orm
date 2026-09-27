@@ -1,6 +1,18 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.11.Final (September 27, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40453
+
+
+** Bug
+    * HHH-20894 StatelessSession upsert and upsertMultiple concurrency problem
+    * HHH-20876 StatelessSession: Interceptor#onLoad isn't called
+    * HHH-20826 Emit MERGE for on conflict do nothing on H2, Oracle, and SQL Server instead of silently dropping the conflict clause
+    * HHH-17020 Can't use enum as string in join column when field is part of composite primary key
+
 Changes in 7.4.10.Final (September 20, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

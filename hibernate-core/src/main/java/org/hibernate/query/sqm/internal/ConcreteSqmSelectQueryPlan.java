@@ -95,7 +95,14 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				sqm.producesUniqueResults() && !containsCollectionFetches( queryOptions )
 						? ListResultsConsumer.UniqueSemantic.NONE
 						: ListResultsConsumer.UniqueSemantic.ALLOW;
-		final var rowTransformer = determineRowTransformer( sqm, resultType, tupleMetadata );
+		RowTransformer<R> precomputedRowTransformer;
+		try {
+			precomputedRowTransformer = determineRowTransformer( sqm, resultType, tupleMetadata );
+		}
+		catch (InstantiationException e) {
+			precomputedRowTransformer = null;
+		}
+		final var rowTransformer = precomputedRowTransformer;
 		executeQueryInterpreter =
 				(resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings, skipPreFlush) -> {
 			final var session = executionContext.getSession();
@@ -116,7 +123,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
 						options.getTupleTransformer() != null
 								? makeRowTransformerTupleTransformerAdapter( sqm, options )
-								: rowTransformer,
+								: rowTransformer != null
+										? rowTransformer
+										: determineRowTransformer( sqm, resultType, tupleMetadata, options ),
 						null,
 						resultCountEstimate( sqmInterpretation, jdbcParameterBindings, executionContext ),
 						resultsConsumer
@@ -146,7 +155,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
 						options.getTupleTransformer() != null
 								? makeRowTransformerTupleTransformerAdapter( sqm, options )
-								: rowTransformer,
+								: rowTransformer != null
+										? rowTransformer
+										: determineRowTransformer( sqm, resultType, tupleMetadata, options ),
 						(Class<R>) executionContext.getResultType(),
 						uniqueSemantic,
 						resultCountEstimate( sqmInterpretation, jdbcParameterBindings, executionContext )
@@ -171,7 +182,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
 						options.getTupleTransformer() != null
 								? makeRowTransformerTupleTransformerAdapter( sqm, options )
-								: rowTransformer,
+								: rowTransformer != null
+										? rowTransformer
+										: determineRowTransformer( sqm, resultType, tupleMetadata, options ),
 						resultCountEstimate( sqmInterpretation, jdbcParameterBindings, executionContext )
 				);
 			}

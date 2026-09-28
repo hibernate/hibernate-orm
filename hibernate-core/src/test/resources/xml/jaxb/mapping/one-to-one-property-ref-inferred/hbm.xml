@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!--
+  A <one-to-one/> carrying a property-ref while specifying neither the 'class' nor
+  the 'entity-name' attribute, which is legal in hbm.xml: the target entity is then
+  inferred from the Java member type. The property-ref names a ToOne on the target
+  entity that points back at the declaring entity, so it represents the inverse side
+  of a bidirectional association and must be transformed to mapped-by.
+-->
+<hibernate-mapping package="org.hibernate.orm.test.ops">
+
+    <class name="Person" table="OPS_INFERRED_PERSON">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="name" column="NAME" type="string"/>
+        <one-to-one name="address" property-ref="resident" cascade="all" fetch="join"/>
+    </class>
+
+    <class name="Address" table="OPS_INFERRED_ADDRESS">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="streetAddress" column="STREET" type="string"/>
+        <property name="city" column="CITY" type="string"/>
+        <many-to-one name="resident" column="RESIDENT" class="Person"/>
+    </class>
+
+</hibernate-mapping>

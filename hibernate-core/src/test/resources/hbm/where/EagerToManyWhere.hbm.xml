@@ -19,7 +19,11 @@
             <one-to-many class="Category"/>
         </set>
 
-        <set name="categoriesWithDescOneToMany" lazy="false" outer-join="true" where="description is not null">
+        <!-- The Category columns `description_txt` and `inactive_flag` avoid the plain words
+             `description`/`inactive`, which gsjdbc4 reports as SQL keywords for GaussDB M mode
+             (MySQL-compatible), making Hibernate skip the table alias for them in where
+             fragments; the bare column then becomes ambiguous in the join ON clause. -->
+        <set name="categoriesWithDescOneToMany" lazy="false" outer-join="true" where="description_txt is not null">
             <key column="productWithDescOneToManyId"/>
             <one-to-many class="Category"/>
         </set>
@@ -32,13 +36,13 @@
 
         <set name="categoriesWithDescManyToMany" table="categoriesWithDescManyToMany" lazy="false" outer-join="true">
             <key column="productId"/>
-            <many-to-many class="Category" column="categoryId" where="description is not null"/>
+            <many-to-many class="Category" column="categoryId" where="description_txt is not null"/>
         </set>
 
         <set name="categoriesWithDescIdLt4ManyToMany" table = "categoriesWithDescIdLt4MToM" lazy="false" outer-join="true"
              where="categoryId != 4">
             <key column="productId"/>
-            <many-to-many class="Category" column="categoryId" where="description is not null"/>
+            <many-to-many class="Category" column="categoryId" where="description_txt is not null"/>
         </set>
 
     </class>
@@ -48,7 +52,7 @@
 
         <property name="name"/>
 
-        <property name="description"/>
+        <property name="description" column="description_txt"/>
 
         <property name="inactive" column="inactive_flag"/>
 

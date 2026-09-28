@@ -51,14 +51,12 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 	@Test
 	@JiraKey( value = "HHH-15936" )
-	// M mode (openGauss MySQL-compatible kernel) reports "Column reference ... is ambiguous" for
-	// every bare column of a user-provided restriction rendered in the ON clause of a left join
-	// during EAGER fetching (e.g. "description is not null" on the collections, even though the
-	// column exists on only one joined table), so the test cannot run there. A mode is unaffected.
+	// The Category columns are named `description_txt` and `inactive_flag` (rather than `description`
+	// and `inactive`) because gsjdbc4 reports those words as SQL keywords for GaussDB M mode
+	// (MySQL-compatible), which makes Hibernate skip the table alias when rendering user-provided
+	// restrictions, and the bare column is then ambiguous in the join ON clause. Neither renamed
+	// column collides with the keyword list of any supported database.
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
-		// The Category flag column is named `inactive_flag` (rather than `inactive`) to avoid the
-		// bare `inactive` column clash that makes A mode report "inactive is ambiguous" for the
-		// @SQLRestriction when Category is EAGER-fetched across joins.
 		var product = new Product();
 		var flowers = new Category();
 		flowers.id = 1;
@@ -167,7 +165,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 		@OneToMany(fetch = FetchType.EAGER)
 		@JoinColumn
-		@SQLRestriction( "description is not null" )
+		@SQLRestriction( "description_txt is not null" )
 		private Set<Category> categoriesWithDescOneToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
@@ -176,12 +174,12 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescManyToMany", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@SQLRestriction( "description is not null" )
+		@SQLRestriction( "description_txt is not null" )
 		private Set<Category> categoriesWithDescManyToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescIdLt4MToM", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@SQLRestriction( "description is not null" )
+		@SQLRestriction( "description_txt is not null" )
 		@SQLJoinTableRestriction("categoryId < 4")
 		private Set<Category> categoriesWithDescIdLt4ManyToMany = new HashSet<>();
 	}
@@ -195,6 +193,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 		private String name;
 
+		@Column(name = "description_txt")
 		private String description;
 
 		@Column(name = "inactive_flag")

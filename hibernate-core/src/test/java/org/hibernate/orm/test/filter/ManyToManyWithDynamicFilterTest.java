@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.filter;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
@@ -108,10 +109,15 @@ public class ManyToManyWithDynamicFilterTest {
 
 	@Entity(name = "User")
 	@Table(name = "`User`")
-	@FilterDef(name = "activeUserFilter", defaultCondition = "active = true")
+	// The active column is named `active_flag` (rather than `active`) because gsjdbc4 reports
+	// `active` as a SQL keyword for GaussDB M mode (MySQL-compatible), which makes Hibernate skip
+	// the table alias when rendering the filter condition, and the bare column is then ambiguous
+	// in the join ON clause of the many-to-many association.
+	@FilterDef(name = "activeUserFilter", defaultCondition = "active_flag = true")
 	@Filter(name = "activeUserFilter")
 	public static class User extends AbstractEntity {
 		private String name;
+		@Column(name = "active_flag")
 		private Boolean active;
 
 		@ManyToMany
@@ -156,10 +162,11 @@ public class ManyToManyWithDynamicFilterTest {
 
 	@Entity(name = "Role")
 	@Table(name="Roles")
-	@FilterDef(name = "activeRoleFilter", defaultCondition = "active = true")
+	@FilterDef(name = "activeRoleFilter", defaultCondition = "active_flag = true")
 	@Filter(name = "activeRoleFilter")
 	public static class Role extends AbstractEntity {
 		private String name;
+		@Column(name = "active_flag")
 		private Boolean active;
 
 		Role() {

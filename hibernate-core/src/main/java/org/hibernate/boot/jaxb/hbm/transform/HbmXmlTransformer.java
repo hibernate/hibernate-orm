@@ -2722,25 +2722,52 @@ public class HbmXmlTransformer {
 			oneToOne.getJoinColumnOrJoinFormula().add( formula );
 		}
 		oneToOne.setName( hbmOneToOne.getName() );
-		if ( isNotEmpty( hbmOneToOne.getEntityName() ) ) {
-			oneToOne.setTargetEntity( hbmOneToOne.getEntityName() );
-		}
-		else {
-			oneToOne.setTargetEntity( hbmOneToOne.getClazz() );
-		}
+		oneToOne.setTargetEntity( determineOneToOneTargetEntityName( hbmOneToOne, propertyInfo ) );
 
 		transferFetchable( hbmOneToOne.getLazy(), hbmOneToOne.getFetch(), hbmOneToOne.getOuterJoin(), hbmOneToOne.isConstrained(), oneToOne );
 
 		attributes.getOneToOneAttributes().add( oneToOne );
 	}
 
+	/**
+	 * Determines the name of the entity targeted by a {@code <one-to-one/>} association.
+	 * <p>
+	 * The target is normally given explicitly, either via {@code entity-name}, which names
+	 * the entity directly, or via {@code class}, which names the Java class and therefore
+	 * needs qualifying with the mapping's default package. When neither attribute is
+	 * present, as is legal in hbm.xml, the target has to be inferred from the boot model,
+	 * which resolved it from the Java member type while processing the hbm.xml mapping.
+	 *
+	 * @throws MappingException if the target entity cannot be determined
+	 */
+	private String determineOneToOneTargetEntityName(JaxbHbmOneToOneType hbmOneToOne, PropertyInfo propertyInfo) {
+		if ( isNotEmpty( hbmOneToOne.getEntityName() ) ) {
+			return hbmOneToOne.getEntityName();
+		}
+		if ( isNotEmpty( hbmOneToOne.getClazz() ) ) {
+			return StringHelper.qualifyConditionallyIfNot(
+					hbmXmlBinding.getRoot().getPackage(),
+					hbmOneToOne.getClazz()
+			);
+		}
+		// Neither attribute given -- fall back to the association target resolved by the boot
+		// model, which is any ToOne, not just a OneToOne.
+		final Value value = propertyInfo.bootModelProperty().getValue();
+		if ( value instanceof ToOne toOne && isNotEmpty( toOne.getReferencedEntityName() ) ) {
+			return toOne.getReferencedEntityName();
+		}
+		throw new MappingException(
+				String.format(
+						Locale.ROOT,
+						"Unable to determine the target entity of <one-to-one/> '%s': neither the 'entity-name' nor the 'class' attribute was given, and the target could not be inferred from the mapped member type",
+						hbmOneToOne.getName()
+				),
+				origin()
+		);
+	}
+
 	private boolean isPropertyRefBackReference(JaxbHbmOneToOneType hbmOneToOne, PropertyInfo propertyInfo) {
-		final String targetEntityName = isNotEmpty( hbmOneToOne.getEntityName() )
-				? hbmOneToOne.getEntityName()
-				: StringHelper.qualifyConditionallyIfNot(
-						hbmXmlBinding.getRoot().getPackage(),
-						hbmOneToOne.getClazz()
-				);
+		final String targetEntityName = determineOneToOneTargetEntityName( hbmOneToOne, propertyInfo );
 		final var targetEntityInfo = transformationState.getEntityInfoByName().get( targetEntityName );
 		if ( targetEntityInfo == null ) {
 			return false;

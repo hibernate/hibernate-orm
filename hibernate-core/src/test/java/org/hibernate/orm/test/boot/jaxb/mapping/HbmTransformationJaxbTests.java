@@ -805,6 +805,37 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testOneToOnePropertyRefInferredTargetTransformation(ServiceRegistryScope scope) {
+		transformAndVerifyMultiple(
+				new String[] { "xml/jaxb/mapping/one-to-one-property-ref-inferred/hbm.xml" },
+				scope,
+				(transformedRoots) -> {
+					final JaxbEntityMappingsImpl transformed = transformedRoots.get( 0 );
+					assertThat( transformed.getEntities() ).hasSize( 2 );
+
+					final JaxbEntityImpl personEntity = transformed.getEntities().stream()
+							.filter( e -> "Person".equals( e.getClazz() ) )
+							.findFirst()
+							.orElseThrow();
+
+					assertThat( personEntity.getAttributes().getOneToOneAttributes() ).hasSize( 1 );
+					final JaxbOneToOneImpl address = personEntity.getAttributes().getOneToOneAttributes().get( 0 );
+					assertThat( address.getName() ).isEqualTo( "address" );
+
+					assertThat( address.getMappedBy() )
+							.as( "One-to-one with property-ref but no class attribute should still generate mapped-by" )
+							.isEqualTo( "resident" );
+					assertThat( address.getPropertyRef() )
+							.as( "Property-ref is represented as mapped-by, so no <property-ref> should be emitted" )
+							.isNull();
+					assertThat( address.getTargetEntity() )
+							.as( "Target entity should be inferred from the boot model" )
+							.isEqualTo( "org.hibernate.orm.test.ops.Address" );
+				}
+		);
+	}
+
+	@Test
 	public void testElementCollectionNotNullTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/element-not-null/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );

@@ -2,6 +2,7 @@ package org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class DateCompositeCustomTypeTest {
 
 	@Test
 	public void testDateCompositeCustomType(EntityManagerFactoryScope scope) {
-		final Date date = Date.from( Instant.now() );
+		final Date date = Date.from( Instant.now().truncatedTo( ChronoUnit.SECONDS ) );
 		final Payment payment = new Payment();
 		payment.setAmount( new BigDecimal( 1000 ) );
 		payment.setDate( date );

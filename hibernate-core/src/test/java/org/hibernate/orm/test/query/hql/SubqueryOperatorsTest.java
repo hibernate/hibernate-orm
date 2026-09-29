@@ -7,7 +7,6 @@ package org.hibernate.orm.test.query.hql;
 import java.util.Calendar;
 import java.util.List;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
@@ -55,7 +54,6 @@ public class SubqueryOperatorsTest {
 
 	@Test @SuppressWarnings("deprecation")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE does not allow a subquery in the order by clause, but we could move it to the select clause and refer to it by position")
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "A syntax error has occurred")
 	public void testSubqueryInVariousClauses(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

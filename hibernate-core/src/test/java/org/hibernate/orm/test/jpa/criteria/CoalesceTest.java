@@ -7,13 +7,11 @@ package org.hibernate.orm.test.jpa.criteria;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
 
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -44,8 +42,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JiraKey( value = "HHH-15291")
 public class CoalesceTest {
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix does not support parameters in COALESCE" )
 	public void hhh15291JPQL1Test(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -61,8 +57,6 @@ public class CoalesceTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix does not support parameters in COALESCE" )
 	public void hhh15291JPQL2Test(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -77,8 +71,6 @@ public class CoalesceTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix does not support parameters in COALESCE" )
 	public void hhh15291Criteria1Test(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -99,8 +91,6 @@ public class CoalesceTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix does not support parameters in COALESCE" )
 	public void hhh15291Criteria2Test(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

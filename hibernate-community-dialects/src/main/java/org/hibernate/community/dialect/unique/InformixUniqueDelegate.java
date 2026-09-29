@@ -9,6 +9,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.unique.spi.DelegatingUniqueDelegate;
 import org.hibernate.dialect.unique.spi.UniqueDelegates;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
@@ -33,7 +34,9 @@ public class InformixUniqueDelegate extends DelegatingUniqueDelegate {
 		}
 		final var fragment = new StringBuilder();
 		for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {
-			if ( !uniqueKey.hasNullableColumn() ) {
+			// See org.hibernate.dialect.unique.internal.CreateTableUniqueDelegate.getTableCreationUniqueConstraintsFragment
+			// for the reason to check for isSingleColumnUnique
+			if ( !uniqueKey.hasNullableColumn() && !isSingleColumnUnique( table, uniqueKey ) ) {
 				fragment.append( ", " ).append( uniqueConstraintSql( uniqueKey ) );
 				if ( uniqueKey.isNameExplicit() ) {
 					fragment.append( " constraint " ).append( uniqueKey.getName() );
@@ -41,6 +44,24 @@ public class InformixUniqueDelegate extends DelegatingUniqueDelegate {
 			}
 		}
 		return fragment.toString();
+	}
+
+	private static boolean isSingleColumnUnique(Table table, UniqueKey uniqueKey) {
+		if ( uniqueKey.getColumns().size() == 1)  {
+			// Since columns are created on demand in IndexBinder.createColumn,
+			// we also have to check if the "real" column is unique to be safe
+			final Column uniqueKeyColumn = uniqueKey.getColumn(0);
+			if ( uniqueKeyColumn.isUnique() ) {
+				return true;
+			}
+			else {
+				final Column column = table.getColumn( uniqueKeyColumn );
+				return column != null && column.isUnique();
+			}
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override

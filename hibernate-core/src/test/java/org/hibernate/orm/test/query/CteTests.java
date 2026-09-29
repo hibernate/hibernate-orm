@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.query.Query;
@@ -131,8 +130,6 @@ public class CteTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Apparently nested CTEs are not supported")
 	public void testNested(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

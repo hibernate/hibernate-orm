@@ -6,8 +6,8 @@ package org.hibernate.orm.test.query.hql;
 
 import java.time.LocalDate;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SpannerDialect;
@@ -145,7 +145,6 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
 	public void testOnConflictDoUpdateWithWhere(SessionFactoryScope scope) {
@@ -171,6 +170,11 @@ public class InsertConflictTests {
 						// GaussDB seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof InformixDialect ) {
+						// Informix emulates additional predicate by wrapping update assignments with case expressions
+						// which will then report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
 					else {
 						assertEquals( 0, updated );
 					}
@@ -182,7 +186,6 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
 	public void testOnConflictDoUpdateWithWhereCriteria(SessionFactoryScope scope) {
@@ -212,6 +215,11 @@ public class InsertConflictTests {
 					}
 					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
 						// GaussDB seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof InformixDialect ) {
+						// Informix emulates additional predicate by wrapping update assignments with case expressions
+						// which will then report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else {
@@ -287,7 +295,6 @@ public class InsertConflictTests {
 	@SkipForDialect( dialectClass = SpannerDialect.class,
 			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
 	public void testOnConflictDoUpdateWithWhereMultiTable(SessionFactoryScope scope) {
@@ -311,6 +318,11 @@ public class InsertConflictTests {
 					}
 					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
 						// GaussDB seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof InformixDialect ) {
+						// Informix emulates additional predicate by wrapping update assignments with case expressions
+						// which will then report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else {

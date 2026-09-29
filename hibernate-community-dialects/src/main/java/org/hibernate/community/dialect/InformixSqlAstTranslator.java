@@ -6,6 +6,7 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.Locking;
 import org.hibernate.SPI;
@@ -19,6 +20,15 @@ import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
+import org.hibernate.sql.ast.spi.model.TenantIdColumnValueBinding;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.update.Assignable;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorWithMerge;
@@ -41,8 +51,12 @@ import org.hibernate.sql.ast.spi.query.select.QueryGroup;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
 
 /**
  * A SQL AST translator for Informix.
@@ -56,7 +70,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	@SPI({ SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
+	@SPI({ IMPLEMENT, SPI.Role.SUPPLY })
 	protected SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
 		return SelectItemReferenceStrategy.POSITION;
 	}
@@ -66,7 +80,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		visitSelectClause( querySpec.getSelectClause() );
 		visitFromClause( querySpec.getFromClause() );
 		if ( !hasFrom( querySpec.getFromClause() )
-				&& hasWhere( querySpec.getWhereClauseRestrictions() )
+				&& ( hasWhere( querySpec.getWhereClauseRestrictions() ) || querySpec.hasSortSpecifications() || querySpec.hasOffsetOrFetchClause() )
 				&& getDialect().getSingleRowTableSupport().getSelectOnlyFromClause().isBlank() ) {
 			append( " from " );
 			append( getSingleRowTableExpression() );
@@ -177,7 +191,39 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		renderComparisonEmulateIntersect( lhs, operator, rhs );
+		switch ( operator ) {
+			case DISTINCT_FROM:
+			case NOT_DISTINCT_FROM:
+				renderComparisonEmulateIntersect( lhs, operator, rhs );
+				break;
+			default:
+				renderComparisonOperand( lhs );
+				appendSql( operator.sqlText() );
+				renderComparisonOperand( rhs );
+				break;
+		}
+	}
+
+	private void renderComparisonOperand(Expression expression) {
+		if ( isNullLiteral( expression ) ) {
+			renderCasted( expression );
+		}
+		else {
+			expression.accept( this );
+		}
+	}
+
+	@Override
+	protected void renderLikePredicate(LikePredicate likePredicate) {
+		// Informix uses the backslash character as the default escape character and doesn't support
+		// an empty escape character to avoid escaping
+		if (likePredicate.getEscapeCharacter() == null) {
+			renderBackslashEscapedLikePattern( likePredicate.getPattern(), likePredicate.getEscapeCharacter(), true );
+			appendSql( " escape '\\'" );
+		}
+		else {
+			super.renderLikePredicate( likePredicate );
+		}
 	}
 
 	@Override
@@ -234,29 +280,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 
 	@Override
 	protected void visitArithmeticOperand(Expression expression) {
-		if ( isParameterInterpretation( expression )
-				&& expression.getExpressionType() != null
-				&& expression.getExpressionType().getJdbcTypeCount() == 1 ) {
-			final String castType =
-					switch ( expression.getExpressionType().getSingleJdbcMapping().getCastType() ) {
-						case FLOAT, DOUBLE ->  "float" ;
-						case INTEGER -> "integer" ;
-						case LONG -> "bigint";
-						default -> null;
-					};
-			if ( castType != null ) {
-				append( "cast(" );
-			}
-			super.visitArithmeticOperand( expression );
-			if ( castType != null ) {
-				append( " as " );
-				append( castType );
-				append( ")" );
-			}
-		}
-		else {
-			super.visitArithmeticOperand( expression );
-		}
+		render( expression, SqlAstNodeRenderingMode.NO_UNTYPED );
 	}
 
 	private static boolean isConcatFunction(Expression expression) {
@@ -326,8 +350,175 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 				return LockStrategy.FOLLOW_ON;
 			}
 		}
+		else if ( querySpec.hasSortSpecifications() || hasOffset( querySpec ) || hasLimit( querySpec ) ) {
+			// Informix does not allow FOR UPDATE when the query also contains an ORDER BY clause
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
+				throw new IllegalQueryOperationException( "Locking with ORDER BY, OFFSET or FETCH is not supported" );
+			}
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
+				return LockStrategy.NONE;
+			}
+			else {
+				return LockStrategy.FOLLOW_ON;
+			}
+		}
 		else {
 			return lockStrategy;
+		}
+	}
+
+	@Override
+	public void visitQueryGroup(QueryGroup queryGroup) {
+		// Informix does not like set operators on the top level select for an insert, so wrap it
+		if ( getStatementStack().depth() == 1 && getStatement() instanceof InsertSelectStatement ) {
+			appendSql( "select * from (" );
+			super.visitQueryGroup( queryGroup );
+			appendSql( ')' );
+		}
+		else {
+			super.visitQueryGroup( queryGroup );
+		}
+	}
+
+	@Override
+	protected boolean supportsUnionInInsertTopLevelSelect() {
+		return false;
+	}
+
+	@Override
+	protected boolean renderTenantRestriction(ColumnValueBinding binding, String qualifier) {
+		if ( binding instanceof TenantIdColumnValueBinding ) {
+			binding.getColumnReference().appendReadExpression( this, qualifier );
+			appendSql( "=coalesce((select " );
+			renderCasted( binding.getValueExpression() );
+			appendSql( ")," );
+			binding.getColumnReference().appendReadExpression( this, qualifier );
+			appendSql( ')' );
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
+		final String qualifier = super.determineColumnReferenceQualifier( columnReference );
+		if ( qualifier == null && columnReference.getQualifier() == null
+			&& getTranslationRequest() instanceof SqlAstTranslationRequest.ModelMutation<?> mutation ) {
+			// To avoid potentially ambiguous column references, use the table expression as qualifier
+			// for model mutations
+			return mutation.statement().getTableName();
+		}
+		else {
+			return qualifier;
+		}
+	}
+
+	@Override
+	protected void renderMergeUsingQuery(OptionalTableUpdate optionalTableUpdate) {
+		appendSql( "select s.* from (" );
+		super.renderMergeUsingQuery( optionalTableUpdate );
+		appendSql( ") s" );
+		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() != 0 ) {
+			appendSql( " left join " );
+			appendSql( optionalTableUpdate.getMutatingTable().getTableName() );
+			appendSql( " t " );
+			renderMergeOn( optionalTableUpdate );
+
+			appendSql( " where " );
+			optionalTableUpdate.getKeyBindings().get( 0 ).getColumnReference().appendReadExpression( this, "t" );
+			appendSql( " is null or " );
+			String separator = "";
+			for ( ColumnValueBinding optimisticLockBinding : optionalTableUpdate.getOptimisticLockBindings() ) {
+				appendSql( separator );
+				separator = " and ";
+				if ( renderTenantRestriction( optimisticLockBinding, "t" ) ) {
+					continue;
+				}
+				optimisticLockBinding.getColumnReference().appendReadExpression( this, "t" );
+				appendSql( '=' );
+				optimisticLockBinding.getValueExpression().accept( this );
+			}
+		}
+
+		// There is no need to handle optional tables, since we can't model a delete along with an update in the
+		// merge statement on Informix
+		assert !optionalTableUpdate.getMutatingTable().isOptional();
+//		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
+//			appendSql( separator );
+//			separator = "(";
+//			for ( ColumnValueBinding valueBinding : optionalTableUpdate.getValueBindings() ) {
+//				appendSql( separator );
+//				appendSql( "s." );
+//				appendSql( valueBinding.getColumnReference().getColumnExpression() );
+//				appendSql( " is not null" );
+//				separator = " or ";
+//			}
+//			appendSql( ')' );
+//		}
+	}
+
+	@Override
+	protected void renderMergeUpdate(OptionalTableUpdate optionalTableUpdate) {
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+
+		if ( valueBindings.stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
+			appendSql( "when matched then update set" );
+			char separatorChar = ' ';
+			for ( ColumnValueBinding binding : valueBindings ) {
+				if ( binding.isAttributeUpdatable() ) {
+					appendSql( separatorChar );
+					binding.getColumnReference().appendColumnForWrite( this, null );
+					appendSql( '=' );
+					binding.getColumnReference().appendColumnForWrite( this, "s" );
+					separatorChar = COMMA_SEPARATOR_CHAR;
+				}
+			}
+		}
+	}
+
+	@Override
+	@SPI(IMPLEMENT)
+	protected void renderMergeUpdateClause(List<Assignment> assignments, Predicate wherePredicate) {
+		// Don't render the predicate here, but use a case expression in the set assignments instead
+		appendSql( " then update" );
+		renderSetClause( assignments );
+	}
+
+	@Override
+	protected void renderAssignmentValue(
+			Assignable assignable,
+			@Nullable ColumnReference columnReference,
+			Expression expression) {
+		if ( getStatement() instanceof InsertSelectStatement insertSelectStatement
+			&& insertSelectStatement.getConflictClause() != null
+			&& insertSelectStatement.getConflictClause().getPredicate() != null ) {
+			if ( columnReference != null ) {
+				appendSql( "case when " );
+				insertSelectStatement.getConflictClause().getPredicate().accept( this );
+				appendSql( " then " );
+				expression.accept( this );
+				appendSql( " else " );
+				columnReference.accept( this );
+				appendSql( " end" );
+			}
+			else {
+				// Default to this row value constructor rendering, even though Informix doesn't support row values
+				appendSql( "case when " );
+				insertSelectStatement.getConflictClause().getPredicate().accept( this );
+				appendSql( " then " );
+				expression.accept( this );
+				appendSql( " else " );
+				char separator = OPEN_PARENTHESIS;
+				for ( ColumnReference reference : assignable.getColumnReferences() ) {
+					appendSql( separator );
+					renderAssignmentColumn( reference );
+					separator = COMMA_SEPARATOR_CHAR;
+				}
+				appendSql( ") end" );
+			}
+		}
+		else {
+			super.renderAssignmentValue( assignable, columnReference, expression );
 		}
 	}
 }

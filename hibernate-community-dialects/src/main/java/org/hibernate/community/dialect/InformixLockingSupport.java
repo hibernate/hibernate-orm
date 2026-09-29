@@ -70,7 +70,7 @@ public class InformixLockingSupport
 	@Override
 	public LockTimeoutType getLockTimeoutType(Timeout timeout) {
 		return switch ( timeout.milliseconds() ) {
-			case SKIP_LOCKED_MILLI -> LockTimeoutType.NONE;
+			case WAIT_FOREVER_MILLI, SKIP_LOCKED_MILLI -> LockTimeoutType.NONE;
 			// we can apply a timeout via the connection
 			default -> LockTimeoutType.CONNECTION;
 		};
@@ -79,6 +79,11 @@ public class InformixLockingSupport
 	@Override
 	public OuterJoinLockingType getOuterJoinLockingType() {
 		return OuterJoinLockingType.UNSUPPORTED;
+	}
+
+	@Override
+	public boolean supportsInnerJoins() {
+		return false;
 	}
 
 	@Override

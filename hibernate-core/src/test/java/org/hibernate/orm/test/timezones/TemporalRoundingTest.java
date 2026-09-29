@@ -9,6 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -31,7 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses = TemporalRoundingTest.Zoned.class)
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"))
-@SkipForDialect(dialectClass =  SybaseDialect.class, matchSubTypes = true)
+@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Doesn't support second precision 6")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Doesn't support second precision 6")
 public class TemporalRoundingTest {
 
 	@Test void test(SessionFactoryScope scope) {

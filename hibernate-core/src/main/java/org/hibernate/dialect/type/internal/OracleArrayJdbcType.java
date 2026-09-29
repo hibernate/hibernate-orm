@@ -10,9 +10,10 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 import java.util.Objects;
-
+import oracle.jdbc.OracleConnection;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.UserDefinedArrayType;
@@ -32,8 +33,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
-
-import oracle.jdbc.OracleConnection;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.sql.Types.ARRAY;
@@ -52,7 +51,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 	private final String upperTypeName;
 
 	public OracleArrayJdbcType(JdbcType elementJdbcType, String typeName) {
-		this( elementJdbcType, typeName, typeName );
+		this( elementJdbcType, null, typeName );
 	}
 
 	public OracleArrayJdbcType(JdbcType elementJdbcType, String logicalTypeName, String physicalTypeName) {
@@ -80,6 +79,11 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 
 	public String getLogicalTypeName() {
 		return logicalTypeName;
+	}
+
+	/// Whether this descriptor represents a synthesized boot name or a finalized implicit name.
+	public boolean isImplicitlyNamed() {
+		return typeName == null || logicalTypeName != null;
 	}
 
 	public OracleArrayJdbcType withTypeName(JdbcType elementType, String logicalName, String physicalName) {
@@ -277,7 +281,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 
 	private String arrayTypeName(JavaType<?> elementJavaType, JdbcType elementJdbcType, Dialect dialect) {
 		return logicalTypeName == null
-				? getTypeName( elementJavaType, elementJdbcType, dialect )
+				? typeName == null ? getTypeName( elementJavaType, elementJdbcType, dialect ) : typeName
 				: logicalTypeName;
 	}
 
@@ -285,7 +289,8 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 			String arrayTypeName, String elementTypeName, Size columnSize, JdbcType elementJdbcType, Database database) {
 		final var defaultNamespace = database.getDefaultNamespace();
 		final var userDefinedArrayType =
-				defaultNamespace.createUserDefinedArrayType(
+				!isImplicitlyNamed() ? registerPhysicalArray( arrayTypeName, database )
+						: defaultNamespace.createUserDefinedArrayType(
 						toIdentifier( arrayTypeName ),
 						name -> new UserDefinedArrayType( "orm", defaultNamespace, name )
 				);
@@ -294,6 +299,18 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 		userDefinedArrayType.setElementSqlTypeCode( elementJdbcType.getDefaultSqlTypeCode() );
 		userDefinedArrayType.setElementDdlTypeCode( elementJdbcType.getDdlTypeCode() );
 		userDefinedArrayType.setArrayLength( columnSize.getArrayLength() == null ? 127 : columnSize.getArrayLength() );
+	}
+
+	private static UserDefinedArrayType registerPhysicalArray(String name, Database database) {
+		final var parsed = QualifiedNameParser.INSTANCE.parse( name );
+		if ( parsed.getCatalogName() == null && parsed.getSchemaName() == null ) {
+			return database.getDefaultNamespace().createPhysicalUserDefinedArrayType( parsed.getObjectName() );
+		}
+		final var factory = database.getJdbcEnvironment().getIdentifierHelper().getPhysicalNameFactory();
+		return database.locatePhysicalNamespace(
+				parsed.getCatalogName() == null ? null : factory.create( parsed.getCatalogName().getText(), parsed.getCatalogName().isQuoted() ),
+				parsed.getSchemaName() == null ? null : factory.create( parsed.getSchemaName().getText(), parsed.getSchemaName().isQuoted() ) )
+				.createPhysicalUserDefinedArrayType( parsed.getObjectName() );
 	}
 
 	private static String elementType(

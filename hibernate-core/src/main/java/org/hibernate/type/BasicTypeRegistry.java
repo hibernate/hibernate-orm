@@ -20,6 +20,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.DelegatingJdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -266,7 +267,7 @@ public class BasicTypeRegistry implements Serializable {
 
 					@Override
 					public @Nullable String getTypeName() {
-						return null;
+						return arrayType instanceof SqlTypedJdbcType named ? named.getSqlTypeName() : null;
 					}
 
 					@Override

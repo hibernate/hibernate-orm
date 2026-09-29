@@ -1,5 +1,6 @@
 package org.hibernate.sql.exec.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
@@ -57,12 +58,12 @@ public interface LoadedValuesCollector {
 	/**
 	 * Access to all root entities loaded.
 	 */
-	List<LoadedEntityRegistration> getCollectedEntities();
+	@Nonnull List<LoadedEntityRegistration> getCollectedEntities();
 
 	/**
 	 * Access to all collection loaded.
 	 */
-	List<LoadedCollectionRegistration> getCollectedCollections();
+	@Nonnull List<LoadedCollectionRegistration> getCollectedCollections();
 
 	interface LoadedPartRegistration {
 		NavigablePath navigablePath();

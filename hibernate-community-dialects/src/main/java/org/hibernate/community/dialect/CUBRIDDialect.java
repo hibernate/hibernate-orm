@@ -847,7 +847,10 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 	@Override
 	public CteSupport getCteSupport() {
 		return CteSupport.builder()
-				.placement( CteSupport.Placement.SUBQUERY )
+				//CUBRID accepts a WITH clause in a subquery, but not one whose CTE references the outer query,
+				//and with SUBQUERY Hibernate hoists such a CTE to the top of the statement, out of that query's
+				//scope; with TOP_LEVEL it inlines the CTE as a derived table instead
+				.placement( CteSupport.Placement.TOP_LEVEL )
 				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
 				.mutationFeatures( CteSupport.MutationFeature.NON_QUERY )
 				.build();

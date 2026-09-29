@@ -105,6 +105,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionIdImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResultImpl;
@@ -190,6 +191,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
@@ -2799,6 +2801,72 @@ public class HbmXmlTransformer {
 		return null;
 	}
 
+	/**
+	 * Resolve the columns targeted by a {@code property-ref}, which names a property of the
+	 * entity the foreign key points at. Unlike {@code <many-to-one/>}, a collection has no
+	 * {@code property-ref} construct in {@code mapping.xml}, so the reference has to be
+	 * expanded into {@code referenced-column-name} on each generated {@code <join-column/>}.
+	 *
+	 * @return the referenced column names, or {@code null} when they cannot be determined
+	 */
+	private List<String> resolvePropertyRefColumnNames(
+			String propertyRef,
+			ManagedTypeInfo referencedEntityInfo) {
+		if ( !isNotEmpty( propertyRef ) || referencedEntityInfo == null ) {
+			return null;
+		}
+		final var refPropertyInfo = referencedEntityInfo.propertyInfoMap().get( propertyRef );
+		if ( refPropertyInfo == null ) {
+			return null;
+		}
+		final Value refValue = refPropertyInfo.bootModelProperty().getValue();
+		if ( !( refValue instanceof SimpleValue ) ) {
+			// a `property-ref` naming an association would target the referenced entity's
+			// key rather than this property's own columns
+			return null;
+		}
+		final List<String> columnNames = new ArrayList<>();
+		for ( Selectable selectable : refValue.getSelectables() ) {
+			if ( !( selectable instanceof Column column ) ) {
+				return null;
+			}
+			columnNames.add( column.getName() );
+		}
+		return columnNames.isEmpty() ? null : columnNames;
+	}
+
+	/**
+	 * Applies a {@code property-ref} to the given {@code <join-column/>}s, matching the
+	 * referenced columns positionally.
+	 */
+	private void applyReferencedColumnNames(
+			String propertyRef,
+			ManagedTypeInfo referencedEntityInfo,
+			List<JaxbJoinColumnImpl> joinColumns,
+			String description) {
+		final List<String> referencedColumnNames =
+				resolvePropertyRefColumnNames( propertyRef, referencedEntityInfo );
+		if ( referencedColumnNames == null || referencedColumnNames.size() != joinColumns.size() ) {
+			handleUnsupportedContent(
+					"property-ref=" + propertyRef + " for " + description +
+							" could not be resolved to matching referenced columns; " +
+							"transformed <join-column/> will need manual adjustment of referenced-column-name"
+			);
+			return;
+		}
+		for ( int i = 0; i < joinColumns.size(); i++ ) {
+			joinColumns.get( i ).setReferencedColumnName( referencedColumnNames.get( i ) );
+		}
+	}
+
+	private ManagedTypeInfo ownerEntityInfo(PropertyInfo propertyInfo) {
+		if ( propertyInfo == null ) {
+			return null;
+		}
+		return transformationState.getEntityInfoByName()
+				.get( propertyInfo.bootModelProperty().getPersistentClass().getEntityName() );
+	}
+
 	private void transferManyToOne(
 			ManagedTypeInfo managedTypeInfo,
 			JaxbAttributesContainer attributes,
@@ -3002,7 +3070,7 @@ public class HbmXmlTransformer {
 			PropertyInfo propertyInfo) {
 		final var target = new JaxbElementCollectionImpl();
 		transferCollectionCommonInfo( source, target, propertyInfo );
-		transferCollectionTable( source, target );
+		transferCollectionTable( source, target, propertyInfo );
 
 		if ( source.getElement() != null ) {
 			transferElementInfo( source.getElement(), propertyInfo, target );
@@ -3021,7 +3089,8 @@ public class HbmXmlTransformer {
 
 	private void transferCollectionTable(
 			final PluralAttributeInfo source,
-			final JaxbElementCollectionImpl target) {
+			final JaxbElementCollectionImpl target,
+			final PropertyInfo propertyInfo) {
 		target.setCollectionTable( new JaxbCollectionTableImpl() );
 
 		final var collectionTable = target.getCollectionTable();
@@ -3087,10 +3156,11 @@ public class HbmXmlTransformer {
 			);
 
 			if ( isNotEmpty( key.getPropertyRef() ) ) {
-				handleUnsupportedContent(
-						"Foreign-key (<key/>) for persistent collection (name=" + source.getName() +
-								") specified property-ref which is not supported for transformation; " +
-								"transformed <join-column/> will need manual adjustment of referenced-column-name"
+				applyReferencedColumnNames(
+						key.getPropertyRef(),
+						ownerEntityInfo( propertyInfo ),
+						collectionTable.getJoinColumns(),
+						"collection <key/> (name=" + source.getName() + ")"
 				);
 			}
 		}
@@ -3848,7 +3918,7 @@ public class HbmXmlTransformer {
 							@Override
 							public void addColumn(TargetColumnAdapter column) {
 								target.getJoinColumn()
-										.add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
+										.add( ((TargetColumnAdapterJaxbJoinColumn) column).getTargetColumn() );
 							}
 
 							@Override
@@ -3859,6 +3929,15 @@ public class HbmXmlTransformer {
 						new ColumnDefaultsCollectionKeyImpl( key ),
 						null
 				);
+
+				if ( isNotEmpty( key.getPropertyRef() ) ) {
+					applyReferencedColumnNames(
+							key.getPropertyRef(),
+							ownerEntityInfo( propertyInfo ),
+							target.getJoinColumn(),
+							"collection <key/> (name=" + hbmAttributeInfo.getName() + ")"
+					);
+				}
 			}
 		}
 
@@ -4204,6 +4283,27 @@ public class HbmXmlTransformer {
 
 		if ( isNotEmpty( manyToMany.getForeignKey() ) ) {
 			joinTable.setInverseForeignKey( transformForeignKey( manyToMany.getForeignKey() ) );
+		}
+
+		if ( isNotEmpty( manyToMany.getPropertyRef() ) ) {
+			// the boot model records both the entity and the property named by the element's
+			// `property-ref`, which is what the inverse-join-column has to reference
+			if ( bootValue.getElement() instanceof ToOne elementToOne ) {
+				applyReferencedColumnNames(
+						elementToOne.getReferencedPropertyName(),
+						transformationState.getEntityInfoByName()
+								.get( elementToOne.getReferencedEntityName() ),
+						joinTable.getInverseJoinColumn(),
+						"<many-to-many> element (name=" + hbmCollection.getName() + ")"
+				);
+			}
+			else {
+				handleUnsupportedContent(
+						"property-ref=" + manyToMany.getPropertyRef() + " for <many-to-many> element (name=" +
+								hbmCollection.getName() + ") could not be resolved; transformed " +
+								"<inverse-join-column/> will need manual adjustment of referenced-column-name"
+				);
+			}
 		}
 
 		transferCollectionCommonInfo( hbmCollection, target, propertyInfo );

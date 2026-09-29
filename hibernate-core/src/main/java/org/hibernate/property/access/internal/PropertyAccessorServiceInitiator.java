@@ -40,7 +40,7 @@ public class PropertyAccessorServiceInitiator implements StandardServiceInitiato
 		);
 		return switch ( strategy ) {
 			case GENERATED -> new ByteBuddyPropertyAccessorService( configurationValues );
-			case REFLECTION -> new DelegatingPropertyAccessorService( new ReflectionNoMultiAccessorFactory() );
+			case REFLECTION -> new DelegatingPropertyAccessorService( new ReflectionNoMultiAccessorFactory( configurationValues ) );
 		};
 	}
 

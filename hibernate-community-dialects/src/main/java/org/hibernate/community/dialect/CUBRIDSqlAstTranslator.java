@@ -12,6 +12,7 @@ import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.Statement;
@@ -30,6 +31,7 @@ import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.SqlTypes;
 
 /**
  * A SQL AST translator for CUBRID.
@@ -59,8 +61,57 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		//CUBRID has the null-safe '<=>' operator, so distinct-from needs no intersect emulation
-		renderComparisonDistinctOperator( lhs, operator, rhs );
+		if ( isClob( lhs ) || isClob( rhs ) ) {
+			renderClobComparison( lhs, operator, rhs );
+		}
+		else {
+			//CUBRID has the null-safe '<=>' operator, so distinct-from needs no intersect emulation
+			renderComparisonDistinctOperator( lhs, operator, rhs );
+		}
+	}
+
+	//CUBRID compares a clob by locator, so two clobs holding the same text never compare equal,
+	//and comparing a clob to a character type is rejected outright. Read both sides as characters.
+	private void renderClobComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final boolean negated = operator == ComparisonOperator.DISTINCT_FROM;
+		final String operatorText = switch ( operator ) {
+			case DISTINCT_FROM, NOT_DISTINCT_FROM -> "<=>";
+			default -> operator.sqlText();
+		};
+		if ( negated ) {
+			appendSql( "not(" );
+		}
+		renderAsCharacterData( lhs );
+		appendSql( operatorText );
+		renderAsCharacterData( rhs );
+		if ( negated ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
+	}
+
+	private void renderAsCharacterData(Expression expression) {
+		if ( isClob( expression ) ) {
+			appendSql( "clob_to_char(" );
+			expression.accept( this );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			expression.accept( this );
+		}
+	}
+
+	//every code below lands in a 'clob' column on CUBRID, including the long character types
+	//XML degrades to, so all of them compare by locator rather than by content
+	private static boolean isClob(Expression expression) {
+		final JdbcMappingContainer expressionType = expression.getExpressionType();
+		if ( expressionType == null || expressionType.getJdbcTypeCount() != 1 ) {
+			return false;
+		}
+		return switch ( expressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) {
+			case SqlTypes.CLOB, SqlTypes.NCLOB, SqlTypes.SQLXML,
+					SqlTypes.LONG32VARCHAR, SqlTypes.LONG32NVARCHAR -> true;
+			default -> false;
+		};
 	}
 
 	@Override

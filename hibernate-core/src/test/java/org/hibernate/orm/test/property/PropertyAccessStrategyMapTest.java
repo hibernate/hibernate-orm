@@ -8,6 +8,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,7 +64,7 @@ public class PropertyAccessStrategyMapTest {
 
 		@Override
 		public AccessorFactory hibernateAccessorFactory() {
-			return AccessorFactory.reflection();
+			return AccessorFactory.reflection( MethodHandles.lookup() );
 		}
 	}
 }

@@ -6,12 +6,12 @@ import org.hibernate.processor.model.Metamodel;
 
 public class CDIAccessorMetaAttribute implements MetaAttribute {
 
-	private AnnotationMetaEntity annotationMetaEntity;
+	private Metamodel metamodel;
 	private String propertyName;
 	private String typeName;
 
-	public CDIAccessorMetaAttribute(AnnotationMetaEntity annotationMetaEntity, String propertyName, String className) {
-		this.annotationMetaEntity = annotationMetaEntity;
+	public CDIAccessorMetaAttribute(Metamodel metamodel, String propertyName, String className) {
+		this.metamodel = metamodel;
 		this.propertyName = propertyName;
 		this.typeName = className;
 	}
@@ -37,10 +37,10 @@ public class CDIAccessorMetaAttribute implements MetaAttribute {
 	}
 
 	private void returnCDI(StringBuilder declaration) {
-		annotationMetaEntity.importType("jakarta.enterprise.inject.spi.CDI");
+		metamodel.importType("jakarta.enterprise.inject.spi.CDI");
 		declaration
 		.append("\treturn CDI.current().select(")
-		.append(annotationMetaEntity.importType(typeName))
+		.append(metamodel.importType(typeName))
 		.append(".class).get();\n");
 	}
 
@@ -50,7 +50,7 @@ public class CDIAccessorMetaAttribute implements MetaAttribute {
 
 	void preamble(StringBuilder declaration) {
 		declaration
-		.append(annotationMetaEntity.importType(typeName))
+		.append(metamodel.importType(typeName))
 				.append(" ")
 				.append( getPropertyName() );
 		declaration
@@ -85,7 +85,7 @@ public class CDIAccessorMetaAttribute implements MetaAttribute {
 
 	@Override
 	public Metamodel getHostingEntity() {
-		return annotationMetaEntity;
+		return metamodel;
 	}
 
 }

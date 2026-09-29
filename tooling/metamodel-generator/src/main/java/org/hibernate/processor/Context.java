@@ -14,7 +14,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.processor.spi.QuarkusDataTypeNames;
+import org.hibernate.processor.spi.HibernateProcessorExtension;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
@@ -100,7 +100,6 @@ public final class Context {
 	private boolean generateJakartaDataStaticMetamodel;
 	private boolean jakartaDataSortCompliance;
 	private boolean propagateSecurityAnnotations = true;
-	private boolean quarkusInjection;
 	private boolean springInjection;
 	private boolean dataEventPackageAvailable;
 
@@ -110,12 +109,7 @@ public final class Context {
 	// keep track of which named queries have been checked
 	private final Set<String> checkedNamedQueries = new HashSet<>();
 
-	private boolean usesQuarkusOrm = false;
-	private boolean usesQuarkusReactive = false;
-	private boolean usesQuarkusDataHibernate = false;
-	private boolean usesQuarkusReactiveCommon = false;
-
-	private QuarkusDataTypeNames quarkusDataTypeNames;
+	private HibernateProcessorExtension extension;
 
 	private String[] includes = {"*"};
 	private String[] excludes = {};
@@ -258,14 +252,6 @@ public final class Context {
 
 	public void setAddTransactionScopedAnnotation(boolean addTransactionScopedAnnotation) {
 		this.addTransactionScopedAnnotation = addTransactionScopedAnnotation;
-	}
-
-	public boolean isQuarkusInjection() {
-		return quarkusInjection;
-	}
-
-	public void setQuarkusInjection(boolean quarkusInjection) {
-		this.quarkusInjection = quarkusInjection;
 	}
 
 	public boolean isSpringInjection() {
@@ -496,44 +482,12 @@ public final class Context {
 		return checkedNamedQueries.add(name);
 	}
 
-	public void setUsesQuarkusOrm(boolean b) {
-		usesQuarkusOrm = b;
+	public void setExtension(HibernateProcessorExtension extension) {
+		this.extension = extension;
 	}
 
-	public boolean usesQuarkusOrm() {
-		return usesQuarkusOrm;
-	}
-
-	public void setUsesQuarkusReactive(boolean b) {
-		usesQuarkusReactive = b;
-	}
-
-	public boolean usesQuarkusReactive() {
-		return usesQuarkusReactive;
-	}
-
-	public void setUsesQuarkusDataHibernate(boolean b) {
-		usesQuarkusDataHibernate = b;
-	}
-
-	public boolean usesQuarkusDataHibernate() {
-		return usesQuarkusDataHibernate;
-	}
-
-	public void setQuarkusDataTypeNames(QuarkusDataTypeNames quarkusDataTypeNames) {
-		this.quarkusDataTypeNames = quarkusDataTypeNames;
-	}
-
-	public QuarkusDataTypeNames quarkusDataTypeNames() {
-		return quarkusDataTypeNames;
-	}
-
-	public void setUsesQuarkusReactiveCommon(boolean b) {
-		usesQuarkusReactiveCommon = b;
-	}
-
-	public boolean usesQuarkusReactiveCommon() {
-		return usesQuarkusReactiveCommon;
+	public HibernateProcessorExtension getExtension() {
+		return extension;
 	}
 
 	public void setInclude(String include) {

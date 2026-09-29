@@ -33,6 +33,7 @@ public class LockingSupportParameterized implements LockingSupport, LockingSuppo
 	private final LockTimeoutType supportsSkipLockedType;
 
 	private final OuterJoinLockingType outerJoinLockingType;
+	private final boolean supportsInnerJoins;
 	private final boolean readsWaitForUncommittedWrites;
 
 	public LockingSupportParameterized(
@@ -53,12 +54,25 @@ public class LockingSupportParameterized implements LockingSupport, LockingSuppo
 			LockTimeoutType skipLockedType,
 			OuterJoinLockingType outerJoinLockingType,
 			boolean readsWaitForUncommittedWrites) {
+		this( pessimisticLockStyle, rowLockStrategy, waitType, noWaitType, skipLockedType, outerJoinLockingType, true, readsWaitForUncommittedWrites );
+	}
+
+	public LockingSupportParameterized(
+			PessimisticLockStyle pessimisticLockStyle,
+			RowLockStrategy rowLockStrategy,
+			LockTimeoutType waitType,
+			LockTimeoutType noWaitType,
+			LockTimeoutType skipLockedType,
+			OuterJoinLockingType outerJoinLockingType,
+			boolean supportsInnerJoins,
+			boolean readsWaitForUncommittedWrites) {
 		this.pessimisticLockStyle = pessimisticLockStyle;
 		this.rowLockStrategy = rowLockStrategy;
 		this.supportsWaitType = waitType;
 		this.supportsNoWaitType = noWaitType;
 		this.supportsSkipLockedType = skipLockedType;
 		this.outerJoinLockingType = outerJoinLockingType;
+		this.supportsInnerJoins = supportsInnerJoins;
 		this.readsWaitForUncommittedWrites = readsWaitForUncommittedWrites;
 	}
 
@@ -157,6 +171,11 @@ public class LockingSupportParameterized implements LockingSupport, LockingSuppo
 	@Override
 	public OuterJoinLockingType getOuterJoinLockingType() {
 		return outerJoinLockingType;
+	}
+
+	@Override
+	public boolean supportsInnerJoins() {
+		return supportsInnerJoins;
 	}
 
 	@Override

@@ -193,6 +193,7 @@ public class AltibaseDialect extends Dialect implements CurrentTemporalSupport, 
 			LockTimeoutType.QUERY,
 			LockTimeoutType.NONE,
 			OuterJoinLockingType.UNSUPPORTED,
+			false,
 			org.hibernate.community.dialect.lock.internal.AltibaseTransactionConcurrencyResolver.INSTANCE
 	);
 

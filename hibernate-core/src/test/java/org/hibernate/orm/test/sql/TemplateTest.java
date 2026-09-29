@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.sql;
 
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.Template;
@@ -9,6 +10,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,6 +21,7 @@ public class TemplateTest {
 
 	@Test
 	@JiraKey("HHH-18256")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID reserves 'zone', so Template treats it as a keyword instead of the column reference this test expects")
 	public void templateLiterals(SessionFactoryScope scope) {
 		SessionFactoryImplementor factory = scope.getSessionFactory();
 		Dialect dialect = factory.getJdbcServices().getDialect();
@@ -78,6 +81,7 @@ public class TemplateTest {
 
 	@Test
 	@JiraKey("HHH-19695")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID reserves 'first' and 'next', so Template treats them as keywords instead of the column references this test expects")
 	public void testFetchGrammarVsColumnNames(SessionFactoryScope scope) {
 		SessionFactoryImplementor factory = scope.getSessionFactory();
 
@@ -100,6 +104,7 @@ public class TemplateTest {
 
 	@Test
 	@JiraKey("HHH-19695")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID reserves 'next', so Template treats it as a keyword instead of the column reference this test expects")
 	public void testFetchGrammarVariants(SessionFactoryScope scope) {
 		SessionFactoryImplementor factory = scope.getSessionFactory();
 		Dialect dialect = factory.getJdbcServices().getDialect();

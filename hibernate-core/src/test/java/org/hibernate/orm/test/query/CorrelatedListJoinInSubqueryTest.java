@@ -4,8 +4,10 @@ import java.util.List;
 
 import org.hibernate.community.dialect.TiDBDialect;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -61,6 +63,7 @@ public class CorrelatedListJoinInSubqueryTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	public void testEntityJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Tuple> resultList = session.createQuery(

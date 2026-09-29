@@ -574,7 +574,9 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.SMALLINT;
+		//'bit' here is the JDBC type code, not CUBRID's fixed-length bit string:
+		//it keeps the boolean JdbcType, which SMALLINT would replace, and the column stays smallint
+		return Types.BIT;
 	}
 
 	@Override

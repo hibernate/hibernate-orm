@@ -9,6 +9,8 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -60,6 +62,7 @@ public class ManyToManyWithDynamicFilterTest {
 
 	@Test
 	@JiraKey(value = "HHH-11410")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void testManyToManyCollectionWithActiveFilterOnJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.enableFilter( "activeUserFilter" );

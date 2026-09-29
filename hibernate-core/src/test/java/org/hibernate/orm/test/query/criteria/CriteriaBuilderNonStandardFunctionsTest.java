@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 import jakarta.persistence.criteria.ParameterExpression;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SpannerDialect;
@@ -158,6 +159,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner FORMAT_DATE does not support time specifiers for DATE types")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID to_char rejects a DATE value with time-format tokens")
 	public void testFormatWithJavaUtilDate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

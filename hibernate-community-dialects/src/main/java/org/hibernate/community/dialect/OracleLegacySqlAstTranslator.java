@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -579,6 +580,18 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				rhs.accept( this );
 				appendSql( "),'/*[local-name()=''xdiff'']/*')" );
 				break;
+			case SqlTypes.VARCHAR:
+			case SqlTypes.NVARCHAR:
+			case SqlTypes.LONG32VARCHAR:
+			case SqlTypes.LONG32NVARCHAR:
+			case SqlTypes.VARBINARY:
+			case SqlTypes.LONG32VARBINARY:
+				// Some mappings can also turn into LOBs if the size is big enough
+				if ( !(lhsExpressionType instanceof SqlTypedMapping sqlTypedMapping) || !sqlTypedMapping.isLob() ) {
+					renderComparisonEmulateDecode( lhs, operator, rhs );
+					break;
+				}
+				// Fall-through intended
 			case SqlTypes.CLOB:
 			case SqlTypes.NCLOB:
 			case SqlTypes.BLOB:
@@ -589,7 +602,13 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 						appendSql( "0=" );
 						break;
 					case NOT_EQUAL:
-						appendSql( "-1=" );
+						appendSql( "0<>" );
+						break;
+					case NOT_DISTINCT_FROM:
+						appendSql( "0=coalesce(" );
+						break;
+					case DISTINCT_FROM:
+						appendSql( "0<>coalesce(" );
 						break;
 					default:
 						renderComparisonEmulateDecode( lhs, operator, rhs );
@@ -600,6 +619,16 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				appendSql( ',' );
 				rhs.accept( this );
 				appendSql( ')' );
+				switch ( operator ) {
+					case NOT_DISTINCT_FROM:
+					case DISTINCT_FROM:
+						appendSql( ",case when " );
+						lhs.accept( this );
+						appendSql( " is null and " );
+						rhs.accept( this );
+						appendSql( " is null then 0 end)" );
+						break;
+				}
 				break;
 			case SqlTypes.ARRAY:
 				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getSqlTypeName();

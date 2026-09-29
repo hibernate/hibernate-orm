@@ -8,10 +8,12 @@ import java.util.List;
 
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -26,8 +28,10 @@ import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -57,6 +61,20 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		//CUBRID accepts a correlated derived table but not the 'lateral' keyword, and this is the
 		//only standard profile that renders every lateral reference implicitly
 		return StandardDerivedTableRenderingSupport.SQL_SERVER;
+	}
+
+	@Override
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		//'on duplicate key update' has no way to refer to the proposed row, so a do-update is a merge
+		return StandardInsertConflictRenderingSupport.MERGE;
+	}
+
+	@Override
+	protected void renderMergeUpdateClause(List<Assignment> assignments, Predicate wherePredicate) {
+		//CUBRID's merge takes the condition as a where clause of the update, not as 'when matched and'
+		appendSql( " then update" );
+		renderSetClause( assignments );
+		visitWhereClause( wherePredicate );
 	}
 
 	@Override

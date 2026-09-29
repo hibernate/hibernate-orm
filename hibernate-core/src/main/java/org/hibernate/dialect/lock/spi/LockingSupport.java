@@ -227,6 +227,12 @@ public interface LockingSupport {
 		/// The type of support for outer joins with pessimistic locking.
 		OuterJoinLockingType getOuterJoinLockingType();
 
+		/// Whether inner joins are supported with pessimistic locking.
+		default boolean supportsInnerJoins() {
+			// Most databases do support it
+			return true;
+		}
+
 		/// Whether the Dialect supports supplying a specific lock-timeout wait
 		/// period through query options, for example `for update (of)`.
 		///

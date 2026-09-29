@@ -14,7 +14,6 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -36,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Jpa(annotatedClasses = { Lockable.class, UnversionedLock.class })
 class QueryLockingManagedEntityTest {
@@ -67,6 +67,11 @@ class QueryLockingManagedEntityTest {
 	@ParameterizedTest
 	@EnumSource(LockModeType.class)
 	void testManagedAndNewStreamResults(LockModeType mode, EntityManagerFactoryScope scope) {
+		assumeTrue(
+				scope.getDialect().getLockingSupport().getMetadata().supportsInnerJoins()
+					|| !LockMode.fromJpaLockMode( mode ).isPessimistic(),
+				"Database requires follow-on locking for joins, which this streamed query disallows"
+		);
 		testManagedAndNewQueryResults( mode, Locking.FollowOn.DISALLOW, true, scope );
 	}
 
@@ -84,7 +89,6 @@ class QueryLockingManagedEntityTest {
 			"PESSIMISTIC_READ", "PESSIMISTIC_WRITE", "PESSIMISTIC_FORCE_INCREMENT"
 	})
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSelectLocking.class)
-	@FailureExpected(reason = "Follow-on locking runs before streamed results have been consumed")
 	@SkipForDialect(dialectClass = SQLServerDialect.class, matchSubTypes = true,
 			reason = "The dialect always uses inline locking, even when follow-on locking is forced")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, matchSubTypes = true,

@@ -6,6 +6,10 @@ package org.hibernate.boot.model.naming;
 
 import jakarta.annotation.Nonnull;
 
+import org.hibernate.boot.model.naming.spi.EnumNamingInput;
+import org.hibernate.boot.model.naming.spi.ArrayNamingInput;
+import org.hibernate.boot.model.naming.spi.NamedSqlTypeKind;
+
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.spi.PrimaryKeyNamingInput;
 import org.hibernate.sql.Alias;
@@ -89,6 +93,59 @@ import static org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnN
 @Incubating(since = "6.0")
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 public interface ImplicitNamingStrategy {
+
+	/// Determine the name of a separately named SQL enum selected by
+	/// [org.hibernate.annotations.JdbcTypeCode], such as
+	/// [org.hibernate.type.SqlTypes#NAMED_ENUM] or [org.hibernate.type.SqlTypes#NAMED_ORDINAL_ENUM].
+	/// [jakarta.persistence.Enumerated] and [jakarta.persistence.EnumeratedValue] affect
+	/// representation/values, but do not explicitly name the SQL object.
+	/// Inline enums and ordinary scalar enum columns do not invoke this callback.
+	///
+	/// @param input Resolved enum identity, representation, and database labels
+	/// @param context Focused naming capabilities
+	/// @return The non-null implicit logical name, defaulting to the enum's Java simple name
+	@Nonnull
+	default LogicalName determineEnumName(@Nonnull EnumNamingInput input, @Nonnull ImplicitNamingContext context) {
+		return context.implicitName( input.javaType().simpleName() );
+	}
+
+	/// Determine the name of a separately named SQL array object, including Oracle
+	/// nested tables selected by [org.hibernate.annotations.JdbcTypeCode].
+	/// [org.hibernate.annotations.Array] controls capacity, not the type name.
+	/// An array of an explicitly named [org.hibernate.annotations.Struct] still
+	/// requires its own implicit array name. Anonymous array syntax does not invoke
+	/// this callback. Named element dependencies have already been resolved.
+	///
+	/// @param input Element identities, representation, and resolved named dependencies
+	/// @param context Focused naming capabilities
+	/// @return The non-null implicit logical name, using the existing `Array` suffix convention
+	@Nonnull
+	default LogicalName determineArrayName(@Nonnull ArrayNamingInput input, @Nonnull ImplicitNamingContext context) {
+		if ( input.declaredElementTypeName().isPresent() ) {
+			final var name = input.declaredElementTypeName().get();
+			return context.implicitName( name.getText() + "Array", name.isQuoted() );
+		}
+		if ( input.converterType().isPresent() ) {
+			return context.implicitName( input.converterType().get().simpleName() + "Array" );
+		}
+		final var element = input.elementJavaType();
+		if ( element.arrayComponent().isPresent() ) {
+			return context.implicitName( element.arrayComponent().get().simpleName() + "ArrayArray" );
+		}
+		if ( input.namedElement().isPresent() && input.namedElement().get().kind() == NamedSqlTypeKind.STRUCT ) {
+			final var name = input.namedElement().get().name().physicalName();
+			return context.implicitName( name.getText() + "Array", name.isQuoted() );
+		}
+		if ( input.preferredJdbcJavaType().isEmpty() || input.preferredJdbcJavaType().get().equals( element ) ) {
+			return context.implicitName( element.simpleName() + "Array" );
+		}
+		final var preferred = input.preferredJdbcJavaType().get();
+		return context.implicitName( element.simpleName()
+				+ (preferred.arrayComponent().isPresent()
+						? preferred.arrayComponent().get().simpleName() + "Array"
+						: preferred.simpleName()) + "Array" );
+	}
+
 
 	/// Determine the implicit name of an [entity's][jakarta.persistence.Entity] primary table
 	/// when no name is supplied by [jakarta.persistence.Table#name()].

@@ -328,6 +328,13 @@ public class Namespace implements Serializable {
 		}
 	}
 
+	/// Register an array whose supplied name is already physical, without invoking naming again.
+	@org.hibernate.Internal
+	public UserDefinedArrayType createPhysicalUserDefinedArrayType(Identifier physicalName) {
+		return (UserDefinedArrayType) udts.computeIfAbsent( physicalName,
+				name -> new UserDefinedArrayType( "orm", this, name ) );
+	}
+
 	/// Resolve once during boot; the cached identifiers survive metadata serialization.
 	@org.hibernate.Internal
 	public Identifier resolvePhysicalEnumName(Identifier logicalName) {

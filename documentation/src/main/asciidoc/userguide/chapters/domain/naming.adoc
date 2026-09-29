@@ -97,8 +97,23 @@ An array of named enums uses the enum callback for its element type and, when th
 a named array object, the array callback for that object.
 Hibernate uses the resulting name consistently in type creation and dropping, column declarations,
 SQL casts and literals, and JDBC operations which refer to the type by name.
-The default enum and array names are calculated by the type mapping and dialect; these calculations
-do not have `ImplicitNamingStrategy` callbacks.
+Implicit names for these objects use `ImplicitNamingStrategy.determineEnumName()` and
+`determineArrayName()`, followed by their respective physical callbacks.
+The default enum name is the Java enum simple name. Named arrays retain the existing
+element/converter-based convention with the `Array` suffix. All built-in strategies
+share these defaults. Struct names still come from explicit `@Struct` declarations.
+
+Enum inputs expose the Java identity, textual or ordinal representation, converted
+database labels in DDL order, and converter identity. Array inputs expose element
+and JDBC Java representations, conversion, and resolved named-element dependencies.
+A dependency provides both logical and physical names, with qualification separate
+from the object identifier. Strategies may use either spelling. Default array naming
+does not automatically adopt a custom enum name; override `determineArrayName()` to
+choose that convention. Inputs describe the type rather than its first owning attribute.
+
+Names read from JDBC metadata and physical names supplied by custom SQL-typed JDBC
+descriptors are already physical and bypass naming strategies. Finalized metadata
+restoration does not replay either naming stage.
 
 An anonymous array declaration such as `integer[]` is SQL type syntax, not an independently named object.
 It does not receive a type-name callback, though a named enum element type does.

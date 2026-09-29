@@ -5,7 +5,9 @@
 package org.hibernate.dialect.type.internal;
 
 import jakarta.persistence.EnumType;
+import java.util.List;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.type.SqlTypes;
 
 import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
 
@@ -19,7 +21,7 @@ import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
  * &#64;JdbcTypeCode(SqlTypes.NAMED_ORDINAL_ENUM)
  * </pre>
  *
- * @see org.hibernate.type.SqlTypes#NAMED_ORDINAL_ENUM
+ * @see SqlTypes#NAMED_ORDINAL_ENUM
  * @see PostgreSQLDialect#getEnumSupport()
  */
 public class PostgreSQLOrdinalEnumJdbcType extends PostgreSQLEnumJdbcType {
@@ -30,6 +32,15 @@ public class PostgreSQLOrdinalEnumJdbcType extends PostgreSQLEnumJdbcType {
 
 	public PostgreSQLOrdinalEnumJdbcType(String name) {
 		super( name );
+	}
+
+	private PostgreSQLOrdinalEnumJdbcType(String name, List<String> values) {
+		super( name, values );
+	}
+
+	@Override
+	public PostgreSQLOrdinalEnumJdbcType withResolvedName(String name, List<String> values) {
+		return new PostgreSQLOrdinalEnumJdbcType( name, values );
 	}
 
 	@Override

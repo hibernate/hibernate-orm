@@ -28,7 +28,8 @@ public class OracleNestedTableJdbcTypeConstructor implements JdbcTypeConstructor
 			ColumnTypeInformation columnTypeInformation) {
 		String typeName = columnTypeInformation == null ? null : columnTypeInformation.getTypeName();
 		if ( typeName == null || typeName.isBlank() ) {
-			typeName = OracleArrayJdbcType.getTypeName( elementType, dialect );
+			// Resolve this synthesized name through ImplicitNamingStrategy during boot.
+			typeName = null;
 		}
 		return new OracleNestedTableJdbcType( elementType.getJdbcType(), typeName );
 	}

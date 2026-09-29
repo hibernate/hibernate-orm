@@ -29,7 +29,8 @@ public class OracleArrayJdbcTypeConstructor implements JdbcTypeConstructor {
 			ColumnTypeInformation columnTypeInformation) {
 		String typeName = columnTypeInformation == null ? null : columnTypeInformation.getTypeName();
 		if ( typeName == null || typeName.isBlank() ) {
-			typeName = OracleArrayJdbcType.getTypeName( elementType, dialect );
+			// Resolve this synthesized name through ImplicitNamingStrategy during boot.
+			typeName = null;
 		}
 //		if ( typeName == null ) {
 //			// Fallback to XML type for the representation of arrays as the native JSON type was only introduced in 21

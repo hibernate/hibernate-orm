@@ -4,13 +4,19 @@
  */
 package org.hibernate.dialect.type.internal;
 
-import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
-
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Arrays;
+import java.util.List;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -19,13 +25,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
-
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Arrays;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.type.SqlTypes.NAMED_ENUM;
@@ -41,7 +41,7 @@ import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnu
  * &#64;JdbcTypeCode(SqlTypes.NAMED_ENUM)
  * </pre>
  *
- * @see org.hibernate.type.SqlTypes#NAMED_ENUM
+ * @see SqlTypes#NAMED_ENUM
  * @see OracleDialect#getEnumSupport()
  *
  * @author Loïc Lefèvre
@@ -51,13 +51,23 @@ public class OracleEnumJdbcType implements SqlTypedJdbcType {
 	public static final OracleEnumJdbcType INSTANCE = new OracleEnumJdbcType();
 
 	private final String typeName;
+	private final List<String> resolvedValues;
 
 	public OracleEnumJdbcType() {
 		this( null );
 	}
 
 	public OracleEnumJdbcType(String typeName) {
+		this( typeName, null );
+	}
+
+	protected OracleEnumJdbcType(String typeName, List<String> values) {
 		this.typeName = typeName;
+		this.resolvedValues = values == null ? null : List.copyOf( values );
+	}
+
+	public OracleEnumJdbcType withResolvedName(String name, List<String> values) {
+		return new OracleEnumJdbcType( name, values );
 	}
 
 	@Override
@@ -161,7 +171,8 @@ public class OracleEnumJdbcType implements SqlTypedJdbcType {
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
 		@SuppressWarnings("unchecked")
 		final String[] enumeratedValues =
-				valueConverter == null
+				resolvedValues != null ? resolvedValues.toArray( String[]::new )
+						: valueConverter == null
 						? getEnumeratedValues( enumClass )
 						: getEnumeratedValues( enumClass, (BasicValueConverter<Enum<?>,?>) valueConverter ) ;
 		if ( getDefaultSqlTypeCode() == NAMED_ENUM ) {

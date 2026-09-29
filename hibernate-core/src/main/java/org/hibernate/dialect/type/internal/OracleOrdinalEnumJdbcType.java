@@ -5,20 +5,21 @@
 package org.hibernate.dialect.type.internal;
 
 import jakarta.persistence.EnumType;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.List;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 
 import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
 
@@ -32,7 +33,7 @@ import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
  * &#64;JdbcTypeCode(SqlTypes.NAMED_ORDINAL_ENUM)
  * </pre>
  *
- * @see org.hibernate.type.SqlTypes#NAMED_ORDINAL_ENUM
+ * @see SqlTypes#NAMED_ORDINAL_ENUM
  * @see OracleDialect#getEnumSupport()
  *
  * @author Loïc Lefèvre
@@ -45,6 +46,15 @@ public class OracleOrdinalEnumJdbcType extends OracleEnumJdbcType {
 
 	public OracleOrdinalEnumJdbcType(String name) {
 		super( name );
+	}
+
+	private OracleOrdinalEnumJdbcType(String name, List<String> values) {
+		super( name, values );
+	}
+
+	@Override
+	public OracleOrdinalEnumJdbcType withResolvedName(String name, List<String> values) {
+		return new OracleOrdinalEnumJdbcType( name, values );
 	}
 
 	@Override

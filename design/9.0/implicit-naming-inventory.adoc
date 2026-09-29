@@ -216,10 +216,10 @@ table emulation, segment columns, and value columns as distinct purposes.
 
 == Boundaries Still To Complete
 
-* SQL object types and dialect-generated auxiliary objects: `AggregateMappingIntent`
-  currently reads struct names from mapping information; that alone does not prove
-  an implicit type-name decision. Trace dialect-created array/type/function/trigger
-  names separately before assigning callbacks or declaring exceptions.
+* SQL object types: enum/array implicit naming is covered by the focused
+  specification. Struct names still require explicit mapping information; implicit
+  struct naming is the next slice. Dialect helper objects retain their existing
+  specialized naming mechanisms.
 * Mutation temporary tables: `TemporaryTable` derives names using an adjuster over
   mapped table spelling. Decide whether these implementation objects use the main
   strategy or a documented specialized policy; include lifecycle and dialect limits.
@@ -239,8 +239,8 @@ another object's name must be distinguished from those operations.
 
 The dialect/auxiliary-object investigation below refines the remaining boundaries.
 Its recommendations are investigation background. Named enum/array work has since
-been split into a completed repair of the existing physical contract and a deferred
-implicit-naming enhancement; see link:named-sql-type-physical-naming-spec.adoc[the physical naming specification].
+been completed in separate physical repair and implicit enum/array naming slices.
+Implicit struct naming is the next slice.
 
 === Dialect Objects: Investigation
 
@@ -284,9 +284,8 @@ The targeted search did not find generated trigger naming in core/community dial
 sources. Do not invent a trigger callback without a concrete contributing path.
 This is a source investigation, not database execution or an exhaustive plugin audit.
 
-Future option: expose implicit name generation for named SQL types. The existing
-physical hook is already part of 9.0; completing its enum/array coverage is a repair,
-not a new implicit naming feature.
+Implicit enum/array callbacks are implemented and verified by the core suite.
+Implicit struct naming remains separate.
 The recommendation for implementation helper functions/policies is to keep them under
 their dialect/feature support for now. A future specialized override could address
 DBA naming requirements, but it must resolve the whole linked set of names; changing

@@ -107,9 +107,9 @@ Do not route constraint names through a table or column physical callback.
 
 === Outside This Contract
 
-* Named SQL types are deferred at Steve's request. Do not add enum, array, or
-  other named-type callbacks in this redesign. Existing type-naming behavior
-  remains unchanged; the inventory retains the investigation for future work.
+* Named SQL types were excluded from this original slice. Enum and array callbacks
+  are now implemented and verified by the core suite;
+  implicit struct naming is the next slice.
 * Generator sequence/table and storage-column naming stays on
   `ImplicitDatabaseObjectNamingStrategy`, as Steve directed.
 * Propose retaining mutation staging-table names under temporary-table/dialect
@@ -311,8 +311,7 @@ link:constraint-index-naming-proposal.adoc#completed-index-and-column-references
   uncovered JPA naming rules with independent expected outputs. Do not duplicate the
   matrix as a separate verification project.
 
-New implicit enum and array callbacks remain unselected in
-link:named-sql-type-naming-proposal.adoc[the named SQL type proposal]. Repair of the
+Implicit enum and array callbacks are implemented and verified by the core suite. Repair of the
 existing physical hook is implemented in link:named-sql-type-physical-naming-spec.adoc[the physical naming specification]. Mutation temporary tables and dialect-generated helper
 objects remain under their specialized mechanisms; the source inventory retains the
 investigation and any unresolved boundary questions. Remaining relational name-type

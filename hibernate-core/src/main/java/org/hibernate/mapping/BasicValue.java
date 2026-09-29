@@ -376,12 +376,14 @@ public class BasicValue extends SimpleValue {
 		final var dialect = database.getDialect();
 		resolution = NamedSqlTypeResolution.resolveEnum( resolution, database );
 		if ( resolution.getJdbcType() instanceof OracleArrayJdbcType arrayType
+				&& arrayType.isImplicitlyNamed()
 				&& resolution.getLegacyResolvedBasicType() instanceof BasicPluralType<?, ?> ) {
 			if ( logicalArrayTypeName == null ) {
 				logicalArrayTypeName = arrayType.getLogicalTypeName();
 			}
 			resolution = NamedSqlTypeResolution.resolve(
 					resolution, logicalArrayTypeName, database );
+			logicalArrayTypeName = ((OracleArrayJdbcType) resolution.getJdbcType()).getLogicalTypeName();
 		}
 		final Size size;
 		if ( getColumn() instanceof Column column ) {

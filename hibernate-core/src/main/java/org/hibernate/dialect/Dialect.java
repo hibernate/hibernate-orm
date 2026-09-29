@@ -3120,6 +3120,9 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	///
 	/// Return null when array types are unsupported. The standard forms are
 	/// `element array` and `element array[length]`.
+	/// Named Oracle array objects mapped during boot obtain their logical identifier
+	/// from [org.hibernate.boot.model.naming.ImplicitNamingStrategy#determineArrayName]
+	/// instead. Overriding this SQL rendering method does not customize those names.
 	///
 	/// @since 6.1
 	@SPI({ USE, IMPLEMENT })

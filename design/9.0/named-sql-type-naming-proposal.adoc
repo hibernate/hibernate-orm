@@ -2,8 +2,8 @@
 :toc2:
 :sectanchors:
 
-Status: physical naming repair implemented and core tests passing; new implicit
-type-name callbacks remain unselected.
+Status: physical naming repair implemented and core tests passing. Enum and array
+implicit naming are implemented and verified by the core suite; struct implicit naming is the next slice.
 See link:named-sql-type-physical-naming-spec.adoc[Named SQL Type Physical Naming].
 
 The original `PhysicalNamingStrategy.toPhysicalTypeName()` contract covered SQL type
@@ -11,8 +11,19 @@ names and has now been split into `toPhysicalEnumName()`, `toPhysicalArrayName()
 and `toPhysicalStructName()`. Enum bypass and incomplete array propagation were
 defects in the original contract.
 Repairing them does not require an opt-in feature. Existing implicit calculations
-remain unchanged; introducing `ImplicitNamingStrategy` callbacks is a separate,
-unselected enhancement.
+remain unchanged. `ImplicitNamingStrategy` callbacks for enums and arrays are
+implemented separately from the completed physical repair.
+
+The final core suite passed with 18,076 tests, no failures or errors, and 1,526
+skipped tests. This includes 15 implicit SQL type naming tests and 21 physical
+named-type naming tests. Oracle/PostgreSQL coverage uses metadata and mocked JDBC
+in the local H2 profile; live Oracle/PostgreSQL integration was not run.
+
+Implicit struct naming remains the next slice. Comprehensive SQL type-definition
+collision validation and explicit enum/array naming annotations remain separate
+follow-ups. The completed implicit enum/array proposal and specification have
+been retired; the implementation, tests, Javadoc, User Guide, and targeted
+custom-dialect migration note capture their delivered behavior.
 
 Preserve names under the standard physical strategy. The physical hook is new in 9.0, so fixing its coverage does not require a migration
 warning. Document its consistent named-type behavior in the contract.
@@ -52,8 +63,9 @@ Fix both enum coverage and array propagation under the existing physical contrac
 The characterization above records pre-fix behavior; update its expectations as the
 repair is implemented. Do not preserve these mismatches as compatibility requirements.
 
-New implicit callbacks, explicit-name annotations, schema lifecycle controls, and the
-broader shared-definition redesign below remain unselected. Database type renaming
+Enum and array implicit callbacks are now implemented in the focused specification.
+Explicit-name annotations, schema lifecycle controls, and the broader shared-definition
+redesign below remain unselected. Database type renaming
 and migration of existing dependent columns are not performed automatically.
 
 == Scope And Constraints
@@ -168,7 +180,7 @@ structs. Normal dialect array syntax continues through dialect rendering.
 === Naming Contracts
 
 Recommend separate implicit enum and array callbacks on `ImplicitNamingStrategy`,
-returning non-null `LogicalName`, and the existing physical type-name callback for both.
+returning non-null `LogicalName`, followed by the dedicated enum and array physical callbacks.
 Do not introduce a second physical naming SPI for SQL types.
 
 Candidate input facts, subject to the working specification:

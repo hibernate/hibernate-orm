@@ -4,31 +4,32 @@
  */
 package org.hibernate.boot.model.relational;
 
-import org.hibernate.MappingException;
-import org.hibernate.relational.naming.spi.PhysicalName;
-import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
-
+import jakarta.annotation.Nullable;
 import java.io.Serializable;
-
-import org.hibernate.boot.model.relational.internal.PhysicalNamespaceSnapshot;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
-
-import jakarta.annotation.Nullable;
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.relational.naming.spi.LogicalName;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper;
+import org.hibernate.boot.model.process.internal.NamedSqlTypeNames;
 import org.hibernate.boot.model.relational.internal.PersistenceUnitJdbcEnvironment;
+import org.hibernate.boot.model.relational.internal.PhysicalNamespaceSnapshot;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.mapping.ColumnNameLifecycle;
+import org.hibernate.mapping.UserDefinedObjectType;
+import org.hibernate.relational.naming.spi.LogicalName;
+import org.hibernate.relational.naming.spi.PhysicalName;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.UnknownServiceException;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -49,6 +50,8 @@ public class Database implements Serializable {
 	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new LinkedHashMap<>();
 	private transient ServiceRegistry serviceRegistry;
 	private transient PhysicalNamingStrategy physicalNamingStrategy;
+	private final NamedSqlTypeNames sqlTypeNames =
+			new NamedSqlTypeNames();
 
 	private transient PhysicalNamespaceName physicalImplicitNamespaceName;
 	private PhysicalNamespaceSnapshot physicalImplicitNamespaceSnapshot;
@@ -64,6 +67,7 @@ public class Database implements Serializable {
 		typeConfiguration = buildingOptions.getTypeConfiguration();
 		physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
 		dialect = determineDialect( buildingOptions );
+		sqlTypeNames.attach( this, buildingOptions );
 
 		setImplicitNamespaceName(
 				toLogicalName( buildingOptions.getMappingDefaults().getImplicitCatalogName(), false ),
@@ -104,7 +108,7 @@ public class Database implements Serializable {
 
 	/// Supply already-physical default qualifiers, as used by JDBC reverse engineering.
 	public void setPhysicalImplicitNamespaceName(PhysicalNamespaceName name) {
-		physicalImplicitNamespaceName = java.util.Objects.requireNonNull( name );
+		physicalImplicitNamespaceName = Objects.requireNonNull( name );
 		physicalImplicitNamespaceSnapshot = PhysicalNamespaceSnapshot.from( name );
 	}
 
@@ -122,6 +126,10 @@ public class Database implements Serializable {
 		final Namespace namespace = new Namespace( getPhysicalNamingStrategy(), getJdbcEnvironment(), name );
 		namespaceMap.put( name, namespace );
 		return namespace;
+	}
+
+	public NamedSqlTypeNames getSqlTypeNames() {
+		return sqlTypeNames;
 	}
 
 	public Dialect getDialect() {
@@ -279,13 +287,14 @@ public class Database implements Serializable {
 		jdbcEnvironment = scopedJdbcEnvironment( buildingPlan, serviceRegistry.getService( JdbcEnvironment.class ) );
 		physicalNamingStrategy = buildingPlan.getPhysicalNamingStrategy();
 		dialect = determineDialect( buildingPlan );
+		sqlTypeNames.attach( this, buildingPlan );
 		physicalImplicitNamespaceName = physicalImplicitNamespaceSnapshot.restore( jdbcEnvironment.getIdentifierHelper().getPhysicalNameFactory() );
 		namespaceMap.values().forEach( namespace -> namespace.reattach( physicalNamingStrategy, jdbcEnvironment ) );
-		final var columnNames = new org.hibernate.mapping.ColumnNameLifecycle();
+		final var columnNames = new ColumnNameLifecycle();
 		namespaceMap.values().forEach( namespace -> {
 			namespace.getTables().forEach( columnNames::addContainer );
 			namespace.getUserDefinedTypes().forEach( type -> {
-				if ( type instanceof org.hibernate.mapping.UserDefinedObjectType objectType ) {
+				if ( type instanceof UserDefinedObjectType objectType ) {
 					columnNames.addUserDefinedType( objectType );
 				}
 			} );

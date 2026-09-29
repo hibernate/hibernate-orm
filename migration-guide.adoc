@@ -1190,3 +1190,18 @@ Collection association `@JoinTable` declarations containing only indexes or uniq
 constraints are now retained even when their table name and join columns are implicit.
 These declarations were previously ignored, so their constraints/indexes now participate
 in validation and schema generation.
+
+
+== Naming mapped Oracle array types
+
+Implicit naming of mapped Oracle array and nested-table type objects now uses
+`ImplicitNamingStrategy.determineArrayName()`, followed by
+`PhysicalNamingStrategy.toPhysicalArrayName()`. The built-in default spellings
+remain unchanged.
+
+Applications with a custom Oracle dialect overriding `Dialect.getArrayTypeName()`
+to choose mapped array object names should move that customization to
+`ImplicitNamingStrategy.determineArrayName()`. The dialect method remains responsible
+for anonymous array SQL syntax and its other non-mapping uses. Generated Oracle
+array helper names follow the finalized array type name; HQL and Criteria function
+names are unchanged.

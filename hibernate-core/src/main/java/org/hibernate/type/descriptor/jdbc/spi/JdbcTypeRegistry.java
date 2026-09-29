@@ -217,6 +217,12 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		return aggregateDescriptorMap.get( typeName.toLowerCase( Locale.ROOT ) );
 	}
 
+	/// Register a named descriptor after boot naming has finalized its physical identity.
+	public void registerSqlTypedDescriptor(JdbcType original, SqlTypedJdbcType descriptor) {
+		typeConstructorDescriptorMap.replaceAll( (key, value) -> value == original ? descriptor : value );
+		sqlTypedDescriptorMap.put( descriptor.getSqlTypeName().toLowerCase( Locale.ROOT ), descriptor );
+	}
+
 	public SqlTypedJdbcType findSqlTypedDescriptor(String sqlTypeName) {
 		return sqlTypedDescriptorMap.get( sqlTypeName.toLowerCase( Locale.ROOT ) );
 	}
@@ -264,7 +270,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 					return existingType;
 				}
 				else {
-					if ( jdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType ) {
+					if ( jdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType && sqlTypedJdbcType.getSqlTypeName() != null ) {
 						sqlTypedDescriptorMap.put(
 								sqlTypedJdbcType.getSqlTypeName().toLowerCase( Locale.ROOT ),
 								sqlTypedJdbcType

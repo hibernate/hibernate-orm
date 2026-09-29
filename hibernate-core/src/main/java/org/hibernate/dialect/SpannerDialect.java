@@ -251,7 +251,7 @@ public class SpannerDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder(
 						VARCHAR,
-						columnType( VARCHAR ),
+						columnType( LONG32VARCHAR ),
 						castType( VARCHAR ),
 						castType( VARCHAR ),
 						this
@@ -262,7 +262,7 @@ public class SpannerDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder(
 						NVARCHAR,
-						columnType( NVARCHAR ),
+						columnType( LONG32NVARCHAR ),
 						castType( NVARCHAR ),
 						castType( NVARCHAR ),
 						this
@@ -273,7 +273,7 @@ public class SpannerDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder(
 						VARBINARY,
-						columnType( VARBINARY ),
+						columnType( LONG32VARBINARY ),
 						castType( VARBINARY ),
 						castType( VARBINARY ),
 						this

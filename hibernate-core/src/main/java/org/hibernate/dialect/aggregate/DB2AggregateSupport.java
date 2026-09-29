@@ -424,12 +424,16 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 	}
 
 	private static String castTypeName(Column udtColumn, TypeConfiguration typeConfiguration) {
+		final var size = udtColumn.getColumnSize(
+				typeConfiguration.getMetadataBuildingContext().getMetadataCollector().getDatabase().getDialect(),
+				typeConfiguration.getMetadataBuildingContext().getMetadataCollector()
+		);
 		return getCastTypeName(
 				new SqlTypedMappingImpl(
-						udtColumn.getLength(),
-						udtColumn.getArrayLength(),
-						udtColumn.getPrecision(),
-						udtColumn.getScale(),
+						size.getLength(),
+						size.getArrayLength(),
+						size.getPrecision(),
+						size.getScale(),
 						udtColumn.getTemporalPrecision(),
 						udtColumn.getType()
 				),

@@ -256,7 +256,8 @@ public class AuditStateManagement implements StateManagement {
 		final String auditSubquery = unionPersister.generateSubquery(
 				bootClass,
 				tableNameResolver,
-				extraColumns
+				extraColumns,
+				creationProcess.getCreationContext().getMetadata()
 		);
 		map.put(
 				originalSubquery,

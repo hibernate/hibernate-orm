@@ -32,7 +32,7 @@ public class NvlCoalesceEmulation
 				"coalesce",
 				StandardArgumentsValidators.min( 2 ),
 				StandardFunctionReturnTypeResolvers.useFirstNonNull(),
-				StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
+				StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE
 		);
 	}
 

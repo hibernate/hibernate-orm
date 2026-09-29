@@ -1125,10 +1125,10 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 			case HOUR -> "(" + wholeSecondDiff( fromTemporalType, toTemporalType ) + "/3600)";
 			case MINUTE -> "(" + wholeSecondDiff( fromTemporalType, toTemporalType ) + "/60)";
 			case SECOND -> wholeSecondDiff( fromTemporalType, toTemporalType );
-			//a sub-second difference cannot be computed portably: current_timestamp is a second-precision
-			//TIMESTAMP and extract(millisecond) rejects it, so the sub-second digits are always 0 here
-			case NATIVE -> "(" + wholeSecondDiff( fromTemporalType, toTemporalType ) + "*1e3)";
-			case NANOSECOND -> "(" + wholeSecondDiff( fromTemporalType, toTemporalType ) + "*1e9)";
+			case NATIVE -> "(" + wholeSecondDiff( fromTemporalType, toTemporalType ) + "*1e3"
+					+ millisecondDiff( fromTemporalType, toTemporalType ) + ")";
+			case NANOSECOND -> "(cast((" + wholeSecondDiff( fromTemporalType, toTemporalType ) + "*1e3"
+					+ millisecondDiff( fromTemporalType, toTemporalType ) + ") as bigint)*1000000)";
 			default -> throw new SemanticException( "unsupported temporal unit for CUBRID: " + unit );
 		};
 	}
@@ -1147,7 +1147,7 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 		String separator = "";
 		if ( spansWholeDays ) {
 			//note: datediff() is backwards on CUBRID and ignores the time component
-			pattern.append( "datediff(?3,?2)*86400" );
+			pattern.append( "cast(datediff(?3,?2) as bigint)*86400" );
 			separator = "+";
 		}
 		if ( toHasTimeOfDay ) {
@@ -1160,6 +1160,22 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 			pattern.append( "-time_to_sec(?2)" );
 		}
 		return pattern.append( ")" ).toString();
+	}
+
+	/**
+	 * Renders the sub-second part of the difference between {@code ?2} (from) and {@code ?3} (to) in
+	 * milliseconds. CUBRID rejects {@code extract(millisecond)} on a TIMESTAMP, so each operand is cast to
+	 * DATETIME first; a TIME is left out because CUBRID's TIME has no sub-second digits to contribute.
+	 */
+	private static String millisecondDiff(TemporalType fromTemporalType, TemporalType toTemporalType) {
+		final StringBuilder pattern = new StringBuilder();
+		if ( toTemporalType != TemporalType.TIME ) {
+			pattern.append( "+extract(millisecond from cast(?3 as datetime))" );
+		}
+		if ( fromTemporalType != TemporalType.TIME ) {
+			pattern.append( "-extract(millisecond from cast(?2 as datetime))" );
+		}
+		return pattern.toString();
 	}
 
 	@Override

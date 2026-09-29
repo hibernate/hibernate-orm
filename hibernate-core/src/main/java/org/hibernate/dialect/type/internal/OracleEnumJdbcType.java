@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.type.internal;
 
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
+
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.dialect.Dialect;
@@ -17,7 +19,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -45,9 +46,32 @@ import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnu
  *
  * @author Loïc Lefèvre
  */
-public class OracleEnumJdbcType implements JdbcType {
+public class OracleEnumJdbcType implements SqlTypedJdbcType {
 
 	public static final OracleEnumJdbcType INSTANCE = new OracleEnumJdbcType();
+
+	private final String typeName;
+
+	public OracleEnumJdbcType() {
+		this( null );
+	}
+
+	public OracleEnumJdbcType(String typeName) {
+		this.typeName = typeName;
+	}
+
+	@Override
+	public String getSqlTypeName() {
+		return typeName;
+	}
+
+	public OracleEnumJdbcType withTypeName(String name) {
+		return new OracleEnumJdbcType( name );
+	}
+
+	private String typeName(Class<?> enumClass) {
+		return typeName == null ? enumClass.getSimpleName() : typeName;
+	}
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -64,9 +88,9 @@ public class OracleEnumJdbcType implements JdbcType {
 		@SuppressWarnings("unchecked")
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
 		return (appender, value, dialect, wrapperOptions) -> {
-			appender.appendSql( dialect.getEnumSupport().getTypeDeclaration( enumClass ) );
+			appender.appendSql( typeName == null ? dialect.getEnumSupport().getTypeDeclaration( enumClass ) : typeName );
 			appender.appendSql( '.' );
-			appender.appendSql( ((Enum<?>) value).name() );
+			appender.appendSql( value instanceof Enum<?> enumValue ? enumValue.name() : value.toString() );
 		};
 	}
 
@@ -145,12 +169,12 @@ public class OracleEnumJdbcType implements JdbcType {
 		}
 		final Dialect dialect = database.getDialect();
 		final String[] create =
-				getCreateTypeCommands( javaType.getJavaTypeClass().getSimpleName(), enumeratedValues, dialect );
-		final String[] drop = dialect.getEnumSupport().getDropTypeCommands( enumClass );
+				getCreateTypeCommands( typeName( enumClass ), enumeratedValues, dialect );
+		final String[] drop = dialect.getEnumSupport().getDropTypeCommands( typeName( enumClass ) );
 		if ( create != null && create.length > 0 ) {
 			database.addAuxiliaryDatabaseObject(
 					new NamedAuxiliaryDatabaseObject(
-							enumClass.getSimpleName(),
+							typeName( enumClass ),
 							database.getDefaultNamespace(),
 							create,
 							drop,

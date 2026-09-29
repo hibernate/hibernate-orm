@@ -64,7 +64,19 @@ public class PhysicalNamingStrategySnakeCaseImpl implements PhysicalNamingStrate
 
 	@Override
 	@Nonnull
-	public PhysicalName toPhysicalTypeName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
+	public PhysicalName toPhysicalEnumName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
+		return apply( logicalName, context );
+	}
+
+	@Override
+	@Nonnull
+	public PhysicalName toPhysicalArrayName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
+		return apply( logicalName, context );
+	}
+
+	@Override
+	@Nonnull
+	public PhysicalName toPhysicalStructName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return apply( logicalName, context );
 	}
 

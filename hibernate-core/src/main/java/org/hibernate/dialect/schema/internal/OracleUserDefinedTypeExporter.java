@@ -32,6 +32,8 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /// Built-in Oracle exporter for array user-defined types and their helper
 /// functions.
 ///
@@ -89,7 +91,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 		final boolean isBooleanType = elementType.equalsIgnoreCase( "boolean" );
 		return new String[] {
 				"create or replace type " + arrayTypeName + " as varying array(" + arrayLength + ") of " + elementType,
-				"create or replace function " + arrayTypeName + "_cmp(a in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_cmp" ) + "(a in " + arrayTypeName +
 						", b in " + arrayTypeName + ") return number deterministic is begin " +
 						"if a is null or b is null then return null; end if; " +
 						"for i in 1 .. least(a.count,b.count) loop " +
@@ -100,7 +102,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"if a.count=b.count then return 0; elsif a.count>b.count then return 1; else return -1; end if; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_distinct(a in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_distinct" ) + "(a in " + arrayTypeName +
 						", b in " + arrayTypeName + ") return number deterministic is begin " +
 						"if a is null and b is null then return 0; end if; " +
 						"if a is null or b is null or a.count <> b.count then return 1; end if; " +
@@ -109,7 +111,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"return 0; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_position(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_position" ) + "(arr in " + arrayTypeName +
 						", elem in " + getRawTypeName( elementType ) + ", startPos in number default 1) return number deterministic is begin " +
 						"if arr is null then return null; end if; " +
 						"if elem is null then " +
@@ -123,13 +125,13 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end if; " +
 						"return 0; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_length(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_length" ) + "(arr in " + arrayTypeName +
 						") return number deterministic is begin " +
 						"if arr is null then return null; end if; " +
 						"return arr.count; " +
 						"end;",
 				createOrReplaceConcatFunction( arrayTypeName ),
-				"create or replace function " + arrayTypeName + "_includes(haystack in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_includes" ) + "(haystack in " + arrayTypeName +
 						", needle in " + arrayTypeName + ", nullable in number) return number deterministic is found number(1,0); begin " +
 						"if haystack is null or needle is null then return null; end if; " +
 						"for i in 1 .. needle.count loop " +
@@ -141,7 +143,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"return 1; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_intersects(haystack in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_intersects" ) + "(haystack in " + arrayTypeName +
 						", needle in " + arrayTypeName + ", nullable in number) return number deterministic is begin " +
 						"if haystack is null or needle is null then return null; end if; " +
 						"if needle.count = 0 then return 1; end if; " +
@@ -152,12 +154,12 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"return 0; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_get(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_get" ) + "(arr in " + arrayTypeName +
 						", idx in number) return " + getRawTypeName( elementType ) + " deterministic is begin " +
 						"if arr is null or idx is null or arr.count < idx then return null; end if; " +
 						"return arr(idx); " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_set(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_set" ) + "(arr in " + arrayTypeName +
 						", idx in number, elem in " + getRawTypeName( elementType ) + ") return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if arr is not null then " +
@@ -176,7 +178,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"res(idx) := elem; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_remove(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_remove" ) + "(arr in " + arrayTypeName +
 						", elem in " + getRawTypeName( elementType ) + ") return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if arr is null then return null; end if; " +
@@ -191,7 +193,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end if; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_remove_index(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_remove_index" ) + "(arr in " + arrayTypeName +
 						", idx in number) return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if arr is null or idx is null then return arr; end if; " +
@@ -200,7 +202,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_slice(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_slice" ) + "(arr in " + arrayTypeName +
 						", startIdx in number, endIdx in number) return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if arr is null or startIdx is null or endIdx is null then return null; end if; " +
@@ -209,7 +211,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_replace(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_replace" ) + "(arr in " + arrayTypeName +
 						", old in " + getRawTypeName( elementType ) + ", elem in " + getRawTypeName( elementType ) + ") return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if arr is null then return null; end if; " +
@@ -230,7 +232,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end if; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_trim(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_trim" ) + "(arr in " + arrayTypeName +
 						", elems number) return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if arr is null or elems is null then return null; end if; " +
@@ -241,7 +243,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_reverse(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_reverse" ) + "(arr in " + arrayTypeName +
 						") return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if arr is null then return null; end if; " +
@@ -251,7 +253,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_sort(" +
+				"create or replace function " + helperName( arrayTypeName, "_sort" ) + "(" +
 						"arr in " + arrayTypeName + "," +
 						"p_descending in number default 0," +
 						"p_nulls_first in number default null" +
@@ -288,7 +290,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end if; " +
 						"return v_result; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_fill(elem in " + getRawTypeName( elementType ) +
+				"create or replace function " + helperName( arrayTypeName, "_fill" ) + "(elem in " + getRawTypeName( elementType ) +
 						", elems number) return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if elems is null then return null; end if; " +
@@ -299,7 +301,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_positions(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_positions" ) + "(arr in " + arrayTypeName +
 						", elem in " + getRawTypeName( elementType ) + ") return sdo_ordinate_array deterministic is " +
 						"res sdo_ordinate_array:=sdo_ordinate_array(); begin " +
 						"if arr is null then return null; end if; " +
@@ -314,7 +316,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end if; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_to_string(arr in " + arrayTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_to_string" ) + "(arr in " + arrayTypeName +
 						", sep in varchar2, nullVal in varchar2) return varchar2 deterministic is " +
 						"res varchar2(4000):=''; begin " +
 						"if arr is null or sep is null then return null; end if; " +
@@ -329,7 +331,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 						"end loop; " +
 						"return res; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_from_json(arr in " + jsonTypeName +
+				"create or replace function " + helperName( arrayTypeName, "_from_json" ) + "(arr in " + jsonTypeName +
 						") return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if arr is null then return null; end if; " +
@@ -369,26 +371,26 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 		}
 		return new String[] {
 				buildDropTypeSqlString(arrayTypeName),
-				buildDropFunctionSqlString(arrayTypeName + "_cmp"),
-				buildDropFunctionSqlString(arrayTypeName + "_distinct"),
-				buildDropFunctionSqlString(arrayTypeName + "_position"),
-				buildDropFunctionSqlString(arrayTypeName + "_length"),
-				buildDropFunctionSqlString(arrayTypeName + "_concat"),
-				buildDropFunctionSqlString(arrayTypeName + "_includes"),
-				buildDropFunctionSqlString(arrayTypeName + "_intersects"),
-				buildDropFunctionSqlString(arrayTypeName + "_get"),
-				buildDropFunctionSqlString(arrayTypeName + "_set"),
-				buildDropFunctionSqlString(arrayTypeName + "_remove"),
-				buildDropFunctionSqlString(arrayTypeName + "_remove_index"),
-				buildDropFunctionSqlString(arrayTypeName + "_slice"),
-				buildDropFunctionSqlString(arrayTypeName + "_replace"),
-				buildDropFunctionSqlString(arrayTypeName + "_trim"),
-				buildDropFunctionSqlString(arrayTypeName + "_reverse"),
-				buildDropFunctionSqlString(arrayTypeName + "_sort"),
-				buildDropFunctionSqlString(arrayTypeName + "_fill"),
-				buildDropFunctionSqlString(arrayTypeName + "_positions"),
-				buildDropFunctionSqlString(arrayTypeName + "_to_string"),
-				buildDropFunctionSqlString(arrayTypeName + "_from_json")
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_cmp" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_distinct" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_position" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_length" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_concat" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_includes" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_intersects" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_get" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_set" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_remove" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_remove_index" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_slice" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_replace" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_trim" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_reverse" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_sort" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_fill" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_positions" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_to_string" )),
+				buildDropFunctionSqlString(helperName( arrayTypeName, "_from_json" ))
 		};
 	}
 
@@ -481,7 +483,7 @@ public final class OracleUserDefinedTypeExporter implements Exporter<UserDefined
 
 	private String createOrReplaceConcatFunction(String arrayTypeName, int maxConcatParams) {
 		final var sb = new StringBuilder();
-		sb.append( "create or replace function " ).append( arrayTypeName ).append( "_concat(" );
+		sb.append( "create or replace function " ).append( helperName( arrayTypeName, "_concat" ) ).append( "(" );
 		sb.append( "arr0 in " ).append( arrayTypeName ).append( ",arr1 in " ).append( arrayTypeName );
 		for ( int i = 2; i < maxConcatParams; i++ ) {
 			sb.append( ",arr" ).append( i ).append( " in " ).append( arrayTypeName )

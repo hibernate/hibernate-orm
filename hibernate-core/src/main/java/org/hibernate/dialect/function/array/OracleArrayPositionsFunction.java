@@ -13,6 +13,8 @@ import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 public class OracleArrayPositionsFunction extends AbstractArrayPositionsFunction {
 
 	public OracleArrayPositionsFunction(boolean list, TypeConfiguration typeConfiguration) {
@@ -30,8 +32,8 @@ public class OracleArrayPositionsFunction extends AbstractArrayPositionsFunction
 				arrayExpression.getExpressionType(),
 				walker.getSessionFactory().getTypeConfiguration()
 		);
-		sqlAppender.appendSql( arrayTypeName );
-		sqlAppender.append( "_positions(" );
+		sqlAppender.appendSql( helperName( arrayTypeName, "_positions" ) );
+		sqlAppender.append( "(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );

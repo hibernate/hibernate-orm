@@ -92,7 +92,15 @@ public final class PhysicalNamingStrategyHelper {
 		return legacy( resolve( logicalName( name ), environment, strategy::toPhysicalColumnName, "column", false ), name );
 	}
 
-	public static Identifier toPhysicalTypeName(PhysicalNamingStrategy strategy, Identifier name, JdbcEnvironment environment) {
-		return legacy( resolve( logicalName( name ), environment, strategy::toPhysicalTypeName, "type", false ), name );
+	public static Identifier toPhysicalEnumName(PhysicalNamingStrategy strategy, Identifier name, JdbcEnvironment environment) {
+		return legacy( resolve( logicalName( name ), environment, strategy::toPhysicalEnumName, "enum", false ), name );
+	}
+
+	public static Identifier toPhysicalArrayName(PhysicalNamingStrategy strategy, Identifier name, JdbcEnvironment environment) {
+		return legacy( resolve( logicalName( name ), environment, strategy::toPhysicalArrayName, "array", false ), name );
+	}
+
+	public static Identifier toPhysicalStructName(PhysicalNamingStrategy strategy, Identifier name, JdbcEnvironment environment) {
+		return legacy( resolve( logicalName( name ), environment, strategy::toPhysicalStructName, "struct", false ), name );
 	}
 }

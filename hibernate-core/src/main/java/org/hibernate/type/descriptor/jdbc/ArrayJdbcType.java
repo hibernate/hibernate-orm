@@ -117,6 +117,10 @@ public class ArrayJdbcType implements JdbcType {
 		if ( elementJdbcType instanceof StructuredJdbcType structJdbcType ) {
 			return structJdbcType.getStructTypeName();
 		}
+		if ( elementJdbcType instanceof SqlTypedJdbcType namedType && namedType.getSqlTypeName() != null ) {
+			// A finalized name is not a type expression whose size suffix may be stripped.
+			return namedType.getSqlTypeName();
+		}
 		final var elementJavaType = elementJavaType( javaType );
 		final Size size =
 				session.getJdbcServices().getDialect().getSizeStrategy()

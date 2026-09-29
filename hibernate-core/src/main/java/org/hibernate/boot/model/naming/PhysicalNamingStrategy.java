@@ -75,13 +75,34 @@ public interface PhysicalNamingStrategy {
 	@Nonnull
 	PhysicalName toPhysicalColumnName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
 
-	/// Transform the logical named SQL type name into a physical name.
+	/// Transform the logical named SQL enum name into a physical name.
+	/// The result is used consistently for schema export and SQL/JDBC references.
 	///
 	/// @param logicalName The non-null explicit or implicit logical name
 	/// @param context The non-null context supplying the physical-name factory
-	/// @return The physical named SQL type name; never null
+	/// @return The physical enum name; never null
 	@Nonnull
-	PhysicalName toPhysicalTypeName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
+	PhysicalName toPhysicalEnumName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
+
+	/// Transform the logical named SQL array name into a physical name.
+	/// The result is used consistently for schema export and SQL/JDBC references.
+	/// Anonymous array expressions such as `integer[]` do not invoke this callback.
+	/// Named element types are transformed independently by their own callback.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical array name; never null
+	@Nonnull
+	PhysicalName toPhysicalArrayName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
+
+	/// Transform the logical named SQL struct name into a physical name.
+	/// The result is used consistently for schema export and SQL/JDBC references.
+	///
+	/// @param logicalName The non-null explicit or implicit logical name
+	/// @param context The non-null context supplying the physical-name factory
+	/// @return The physical struct name; never null
+	@Nonnull
+	PhysicalName toPhysicalStructName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context);
 
 	/// Transform the logical primary-key constraint name into a physical name.
 	///

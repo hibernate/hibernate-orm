@@ -15,6 +15,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * Oracle array_sort function.
  */
@@ -36,8 +38,8 @@ public class OracleArraySortFunction extends AbstractArraySortFunction {
 				walker.getSessionFactory().getTypeConfiguration()
 		);
 
-		sqlAppender.append( arrayTypeName );
-		sqlAppender.append( "_sort(" );
+		sqlAppender.append( helperName( arrayTypeName, "_sort" ) );
+		sqlAppender.append( "(" );
 		arrayExpression.accept( walker );
 
 		if ( sqlAstArguments.size() > 1 ) {

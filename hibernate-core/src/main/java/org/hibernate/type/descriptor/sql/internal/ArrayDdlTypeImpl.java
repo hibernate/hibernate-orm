@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.descriptor.sql.internal;
 
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.SqlExpressible;
@@ -31,6 +33,10 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 	@Override
 	public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
 		final var pluralType = (BasicPluralType<?, ?>) type;
+		if ( pluralType.getJdbcType() instanceof SqlTypedJdbcType named
+				&& named.getSqlTypeName() != null ) {
+			return named.getSqlTypeName();
+		}
 		return dialect.getArrayTypeName(
 				getElementTypeSimpleName( pluralType.getElementType(), dialect ),
 				castRawIfNecessary( getArrayElementTypeName( columnSize, ddlTypeRegistry, pluralType.getElementType() ) ),
@@ -69,6 +75,10 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 		}
 		else {
 			final var pluralType = (BasicPluralType<?, ?>) type;
+		if ( pluralType.getJdbcType() instanceof SqlTypedJdbcType named
+				&& named.getSqlTypeName() != null ) {
+			return named.getSqlTypeName();
+		}
 			final var elementType = pluralType.getElementType();
 			return dialect.getArrayTypeName(
 					getElementTypeSimpleName( pluralType.getElementType(), dialect ),

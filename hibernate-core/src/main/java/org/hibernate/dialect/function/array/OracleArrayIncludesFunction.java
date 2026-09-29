@@ -13,6 +13,8 @@ import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 public class OracleArrayIncludesFunction extends AbstractArrayIncludesFunction {
 
 	public OracleArrayIncludesFunction(boolean nullable, TypeConfiguration typeConfiguration) {
@@ -31,8 +33,8 @@ public class OracleArrayIncludesFunction extends AbstractArrayIncludesFunction {
 					haystackExpression.getExpressionType(),
 					walker.getSessionFactory().getTypeConfiguration()
 					);
-			sqlAppender.appendSql( arrayTypeName );
-			sqlAppender.append( "_includes(" );
+			sqlAppender.appendSql( helperName( arrayTypeName, "_includes" ) );
+			sqlAppender.append( "(" );
 			haystackExpression.accept( walker );
 			sqlAppender.append( ',' );
 			sqlAstArguments.get( 1 ).accept( walker );

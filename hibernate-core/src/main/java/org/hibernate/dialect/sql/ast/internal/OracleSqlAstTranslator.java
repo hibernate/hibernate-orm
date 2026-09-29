@@ -71,6 +71,8 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * A SQL AST translator for Oracle.
  *
@@ -463,16 +465,16 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				switch ( operator ) {
 					case DISTINCT_FROM:
 					case NOT_DISTINCT_FROM:
-						appendSql( arrayTypeName );
-						appendSql( "_distinct(" );
+						appendSql( helperName( arrayTypeName, "_distinct" ) );
+						appendSql( "(" );
 						visitSqlSelectExpression( lhs );
 						appendSql( ',' );
 						visitSqlSelectExpression( rhs );
 						appendSql( ")" );
 						break;
 					default:
-						appendSql( arrayTypeName );
-						appendSql( "_cmp(" );
+						appendSql( helperName( arrayTypeName, "_cmp" ) );
+						appendSql( "(" );
 						visitSqlSelectExpression( lhs );
 						appendSql( ',' );
 						visitSqlSelectExpression( rhs );

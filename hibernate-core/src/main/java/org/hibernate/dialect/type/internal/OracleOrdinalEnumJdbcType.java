@@ -41,6 +41,17 @@ public class OracleOrdinalEnumJdbcType extends OracleEnumJdbcType {
 
 	public static final OracleOrdinalEnumJdbcType INSTANCE = new OracleOrdinalEnumJdbcType();
 
+	public OracleOrdinalEnumJdbcType() {}
+
+	public OracleOrdinalEnumJdbcType(String name) {
+		super( name );
+	}
+
+	@Override
+	public OracleOrdinalEnumJdbcType withTypeName(String name) {
+		return new OracleOrdinalEnumJdbcType( name );
+	}
+
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.INTEGER;

@@ -49,12 +49,42 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcType {
 
 	private final String typeName;
+	private final String logicalTypeName;
 	private final String upperTypeName;
 
 	public OracleArrayJdbcType(JdbcType elementJdbcType, String typeName) {
+		this( elementJdbcType, typeName, typeName );
+	}
+
+	public OracleArrayJdbcType(JdbcType elementJdbcType, String logicalTypeName, String physicalTypeName) {
 		super( elementJdbcType );
-		this.typeName = typeName;
-		this.upperTypeName = typeName == null ? null : typeName.toUpperCase( Locale.ROOT );
+		this.logicalTypeName = logicalTypeName;
+		this.typeName = physicalTypeName;
+		this.upperTypeName = physicalTypeName == null ? null : jdbcTypeName( physicalTypeName );
+	}
+
+	private static String jdbcTypeName(String name) {
+		final var result = new StringBuilder();
+		int start = 0;
+		boolean quoted = false;
+		for ( int i = 0; i < name.length(); i++ ) {
+			if ( name.charAt( i ) == '"' ) {
+				final var part = name.substring( start, i );
+				result.append( quoted ? part : part.toUpperCase( Locale.ROOT ) ).append( '"' );
+				quoted = !quoted;
+				start = i + 1;
+			}
+		}
+		final var part = name.substring( start );
+		return result.append( quoted ? part : part.toUpperCase( Locale.ROOT ) ).toString();
+	}
+
+	public String getLogicalTypeName() {
+		return logicalTypeName;
+	}
+
+	public OracleArrayJdbcType withTypeName(JdbcType elementType, String logicalName, String physicalName) {
+		return new OracleArrayJdbcType( elementType, logicalName, physicalName );
 	}
 
 	@Override
@@ -202,7 +232,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 		else {
 			final var preferredJavaTypeClass =
 					elementJdbcType.getPreferredJavaTypeClass( null );
-			if ( preferredJavaTypeClass == javaClass) {
+			if ( preferredJavaTypeClass == null || preferredJavaTypeClass == javaClass ) {
 				return javaClass.getSimpleName();
 			}
 			else {
@@ -243,9 +273,9 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 	}
 
 	private String arrayTypeName(JavaType<?> elementJavaType, JdbcType elementJdbcType, Dialect dialect) {
-		return typeName == null
+		return logicalTypeName == null
 				? getTypeName( elementJavaType, elementJdbcType, dialect )
-				: typeName;
+				: logicalTypeName;
 	}
 
 	private void createUserDefinedArrayType(

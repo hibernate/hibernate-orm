@@ -4,6 +4,10 @@
  */
 package org.hibernate.type.descriptor.sql.internal;
 
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
+
+import org.hibernate.type.BasicType;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.SqlExpressible;
@@ -36,7 +40,11 @@ public class NamedNativeOrdinalEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
-		return type.getReturnedClass().getSimpleName();
+		return type instanceof BasicType<?> basicType
+				&& basicType.getJdbcType() instanceof SqlTypedJdbcType named
+				&& named.getSqlTypeName() != null
+				? named.getSqlTypeName()
+				: type.getReturnedClass().getSimpleName();
 	}
 
 	@Override
@@ -46,6 +54,9 @@ public class NamedNativeOrdinalEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
-		return type.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass().getSimpleName();
+		return type.getJdbcMapping().getJdbcType() instanceof SqlTypedJdbcType named
+				&& named.getSqlTypeName() != null
+				? named.getSqlTypeName()
+				: type.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass().getSimpleName();
 	}
 }

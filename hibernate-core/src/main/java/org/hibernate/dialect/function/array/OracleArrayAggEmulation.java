@@ -24,6 +24,8 @@ import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * @author Christian Beikov
  */
@@ -82,8 +84,8 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 					returnType,
 					translator.getSessionFactory().getTypeConfiguration()
 			);
-			sqlAppender.append( arrayTypeName );
-			sqlAppender.append( "_from_json(json_arrayagg(" );
+			sqlAppender.append( helperName( arrayTypeName, "_from_json" ) );
+			sqlAppender.append( "(json_arrayagg(" );
 		}
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;

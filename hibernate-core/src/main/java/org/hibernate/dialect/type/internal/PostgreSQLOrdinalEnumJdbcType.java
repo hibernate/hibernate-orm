@@ -26,6 +26,17 @@ public class PostgreSQLOrdinalEnumJdbcType extends PostgreSQLEnumJdbcType {
 
 	public static final PostgreSQLOrdinalEnumJdbcType INSTANCE = new PostgreSQLOrdinalEnumJdbcType();
 
+	public PostgreSQLOrdinalEnumJdbcType() {}
+
+	public PostgreSQLOrdinalEnumJdbcType(String name) {
+		super( name );
+	}
+
+	@Override
+	public PostgreSQLOrdinalEnumJdbcType withTypeName(String name) {
+		return new PostgreSQLOrdinalEnumJdbcType( name );
+	}
+
 	@Override
 	public int getDefaultSqlTypeCode() {
 		return NAMED_ORDINAL_ENUM;

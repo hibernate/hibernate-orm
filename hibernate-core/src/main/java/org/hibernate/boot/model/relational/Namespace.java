@@ -60,6 +60,9 @@ public class Namespace implements Serializable {
 	private final Map<LogicalName, Table> tables = new TreeMap<>();
 	private final Map<LogicalName, Sequence> sequences = new TreeMap<>();
 	private final Map<Identifier, UserDefinedType> udts = new HashMap<>();
+	private final Map<Identifier, Identifier> physicalEnumNames = new HashMap<>();
+	private final Map<Identifier, Identifier> physicalArrayNames = new HashMap<>();
+	private final Map<Identifier, Identifier> physicalStructNames = new HashMap<>();
 
 	public Namespace(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment, LogicalNamespaceName name) {
 		this( physicalNamingStrategy, jdbcEnvironment, name, physicalName( name, physicalNamingStrategy, jdbcEnvironment ) );
@@ -186,8 +189,10 @@ public class Namespace implements Serializable {
 	@Incubating(since = "6.6")
 	public List<UserDefinedType> getDependencyOrderedUserDefinedTypes() {
 		final var orderedUdts = new LinkedHashMap<Identifier, UserDefinedType>( udts.size() );
+		final var physicalUdts = new HashMap<Identifier, UserDefinedType>();
+		udts.values().forEach( type -> physicalUdts.put( type.getNameIdentifier(), type ) );
 		final var udtDependencies = new HashMap<Identifier, Set<Identifier>>( udts.size() );
-		for ( var entry : udts.entrySet() ) {
+		for ( var entry : physicalUdts.entrySet() ) {
 			final var dependencies = new HashSet<Identifier>();
 			final UserDefinedType udt = entry.getValue();
 			if ( udt instanceof UserDefinedObjectType userDefinedTypes ) {
@@ -196,16 +201,18 @@ public class Namespace implements Serializable {
 					if ( udtColumnType instanceof BasicType<?> basicType ) {
 						final JdbcType jdbcType = basicType.getJdbcType();
 						if ( jdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType ) {
-							dependencies.add( Identifier.toIdentifier( sqlTypedJdbcType.getSqlTypeName() ) );
+							dependencies.add( localTypeName( sqlTypedJdbcType.getSqlTypeName() ) );
 						}
 						else if ( jdbcType instanceof ArrayJdbcType arrayJdbcType ) {
 							final JdbcType elementJdbcType = arrayJdbcType.getElementJdbcType();
 							if ( elementJdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType ) {
-								dependencies.add( Identifier.toIdentifier( sqlTypedJdbcType.getSqlTypeName() ) );
+								dependencies.add( localTypeName( sqlTypedJdbcType.getSqlTypeName() ) );
 							}
 						}
 					}
 				}
+				// Enum types are auxiliary objects, not UDT entries in this ordering graph.
+				dependencies.retainAll( physicalUdts.keySet() );
 				if ( dependencies.isEmpty() ) {
 					// The UDTs without dependencies are added directly
 					orderedUdts.put( udt.getNameIdentifier(), udt );
@@ -216,8 +223,8 @@ public class Namespace implements Serializable {
 				}
 			}
 			else if ( udt instanceof UserDefinedArrayType userDefinedTypes ) {
-				final Identifier elementTypeName = Identifier.toIdentifier( userDefinedTypes.getElementTypeName() );
-				if ( udts.get( elementTypeName ) instanceof UserDefinedObjectType ) {
+				final Identifier elementTypeName = localTypeName( userDefinedTypes.getElementTypeName() );
+				if ( physicalUdts.containsKey( elementTypeName ) ) {
 					dependencies.add( elementTypeName );
 					udtDependencies.put( entry.getKey(), dependencies );
 				}
@@ -237,13 +244,17 @@ public class Namespace implements Serializable {
 				// If the dependencies have become empty
 				if ( dependencies.isEmpty() ) {
 					// the UDT can be inserted
-					orderedUdts.put( entry.getKey(), udts.get( entry.getKey() ) );
+					orderedUdts.put( entry.getKey(), physicalUdts.get( entry.getKey() ) );
 					iterator.remove();
 				}
 			}
 		}
 
 		return new ArrayList<>( orderedUdts.values() );
+	}
+
+	private static Identifier localTypeName(String typeName) {
+		return typeName == null ? null : QualifiedNameParser.INSTANCE.parse( typeName ).getObjectName();
 	}
 
 	/**
@@ -289,7 +300,7 @@ public class Namespace implements Serializable {
 		}
 		else {
 			final Identifier physicalTableName =
-					PhysicalNamingStrategyHelper.toPhysicalTypeName( physicalNamingStrategy, logicalTypeName, jdbcEnvironment );
+					resolvePhysicalStructName( logicalTypeName );
 			final UserDefinedObjectType type = creator.apply( physicalTableName );
 			udts.put( logicalTypeName, type );
 			return type;
@@ -310,11 +321,32 @@ public class Namespace implements Serializable {
 		}
 		else {
 			final Identifier physicalTableName =
-					PhysicalNamingStrategyHelper.toPhysicalTypeName( physicalNamingStrategy, logicalTypeName, jdbcEnvironment );
+					resolvePhysicalArrayName( logicalTypeName );
 			final UserDefinedArrayType type = creator.apply( physicalTableName );
 			udts.put( logicalTypeName, type );
 			return type;
 		}
+	}
+
+	/// Resolve once during boot; the cached identifiers survive metadata serialization.
+	@org.hibernate.Internal
+	public Identifier resolvePhysicalEnumName(Identifier logicalName) {
+		return physicalEnumNames.computeIfAbsent( logicalName, name ->
+				PhysicalNamingStrategyHelper.toPhysicalEnumName( physicalNamingStrategy, name, jdbcEnvironment ) );
+	}
+
+	/// Resolve once during boot; the cached identifiers survive metadata serialization.
+	@org.hibernate.Internal
+	public Identifier resolvePhysicalArrayName(Identifier logicalName) {
+		return physicalArrayNames.computeIfAbsent( logicalName, name ->
+				PhysicalNamingStrategyHelper.toPhysicalArrayName( physicalNamingStrategy, name, jdbcEnvironment ) );
+	}
+
+	/// Resolve once during boot; the cached identifiers survive metadata serialization.
+	@org.hibernate.Internal
+	public Identifier resolvePhysicalStructName(Identifier logicalName) {
+		return physicalStructNames.computeIfAbsent( logicalName, name ->
+				PhysicalNamingStrategyHelper.toPhysicalStructName( physicalNamingStrategy, name, jdbcEnvironment ) );
 	}
 
 	@Override

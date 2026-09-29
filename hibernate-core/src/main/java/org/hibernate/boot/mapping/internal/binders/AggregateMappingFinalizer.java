@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.dialect.type.internal.OracleArrayJdbcType;
+
 
 import static org.hibernate.boot.model.naming.internal.PhysicalNamingStrategyHelper.logicalName;
 
@@ -157,7 +159,9 @@ final class AggregateMappingFinalizer {
 				}
 				else if ( auxiliary instanceof AggregateUserDefinedArrayType arrayDescriptor ) {
 					final UserDefinedArrayType arrayType = auxiliaryNamespace.createUserDefinedArrayType(
-							Identifier.toIdentifier( arrayDescriptor.typeName() ),
+							Identifier.toIdentifier(
+									aggregateColumn.getJdbcType( metadataCollector ) instanceof OracleArrayJdbcType arrayJdbcType
+											? arrayJdbcType.getLogicalTypeName() : arrayDescriptor.typeName() ),
 							name -> new UserDefinedArrayType( "orm", auxiliaryNamespace, name )
 					);
 					arrayType.setArraySqlTypeCode( arrayDescriptor.arraySqlTypeCode() );

@@ -1,0 +1,176 @@
+= Named SQL Type Physical Naming
+:toc2:
+:sectanchors:
+
+Status: implemented and verified by the core suite. No migration warning is needed
+for this new 9.0 hook. PostgreSQL/Oracle database execution remains unverified locally.
+The approved refinement replaces `PhysicalNamingStrategy.toPhysicalTypeName()` with
+`toPhysicalEnumName()`, `toPhysicalArrayName()`, and `toPhysicalStructName()`. It does not introduce implicit SQL type naming callbacks.
+
+See link:named-sql-type-naming-proposal.adoc[proposal and characterization evidence].
+
+== Observable Behavior
+
+* Apply `toPhysicalEnumName()` to Hibernate-managed named enum types, including
+  textual and ordinal variants supported by the dialect.
+* For dialects requiring named array objects, use the finalized physical name in
+  every reference to that object, not just its exported definition.
+* Preserve the existing internal default-name calculations, including converter,
+  element-representation, nested-array, and structured-element considerations.
+  With the standard physical strategy, ordinary existing mappings retain their names.
+* A strategy adding `p_` to `State` produces an enum exported and referenced as
+  `p_State`. A strategy adding `p_` to `IntegerArray` produces an Oracle array
+  exported and referenced as `p_IntegerArray` (with dialect/JDBC case folding where
+  appropriate). Neither case may mix the original and transformed identities.
+* Preserve requested quoting; a strategy may add quoting but cannot remove it.
+  Quoted names retain their case in SQL and JDBC type-name arguments.
+* A null physical result is invalid, consistent with the existing type-name contract.
+
+== Scope
+
+Cover PostgreSQL and Oracle named enums and Oracle named arrays, including nested
+tables where they use the same naming path. Include arrays of named enums and
+existing structs as dependencies. Preserve explicit struct naming behavior.
+
+Anonymous array SQL expressions such as `integer[]` are not independent named
+objects and do not receive a type-name callback. Their named element dependencies
+must use the finalized element name. Do not pass a rendered SQL declaration,
+including size parameters or array brackets, through the identifier callback.
+
+No new `ImplicitNamingStrategy` methods, annotations, user-facing settings,
+type ownership controls, or automatic schema migration are part of this work.
+Do not change enum values, their ordering, array sizes, or JDBC representation.
+Definition collision policy is a separate issue; do not silently add a new merging
+or rejection policy to this repair.
+
+== Dedicated Callbacks
+
+The user approved replacing the shared type callback with three required methods,
+each accepting a non-null `LogicalName` and `PhysicalNamingContext` and returning a
+non-null `PhysicalName`. All preserve requested quoting. Standard and snake-case
+strategies retain their existing conventions for every kind. No legacy bridge is retained.
+
+Enums (including ordinal enums) use `toPhysicalEnumName()`. Named arrays, including
+Oracle nested tables, use `toPhysicalArrayName()`. Structured types use
+`toPhysicalStructName()`. Named array elements are resolved independently according
+to their own kind; anonymous array syntax receives no array callback. Cached names
+are independent per kind and survive metadata restoration. Generated SQL helper
+functions still derive from finalized array names; HQL/Criteria names do not change.
+
+Verification must assert dispatch for enums, arrays, and structs, including anonymous
+arrays of named enums and named arrays of structs, and independent per-kind caches.
+
+== Resolution And Storage
+
+. Resolve the existing logical type-name recipe during boot.
+. Finalize each named object through the existing physical naming helper before
+  column SQL types or runtime mappings capture its name. Reuse that result for
+  repeated references to the same registered object.
+. Retain the name in boot-scoped state and resolved JDBC mappings. Do not mutate
+  shared singleton JDBC descriptors with names belonging to a particular mapping
+  or SessionFactory. Separate boot contexts must remain independent.
+. Carry the finalized identity to export and runtime consumers. Do not rerun the
+  strategy while rendering SQL, binding values, or restoring finalized metadata.
+
+`BasicValue.finalizeResolution()` currently resolves the column before contributing
+auxiliary objects. Applying the hook only in `addAuxiliaryDatabaseObjects()` cannot
+satisfy this ordering. Integration must occur in type resolution before that point.
+
+Prefer resolved, mapping-specific JDBC descriptors and existing `SqlTypedJdbcType`
+consumption where applicable. Internal boot state may be added to retain finalized
+names; a general public named-type registry is not a prerequisite of this fix.
+Do not use a global map keyed only by Java class or simple name.
+
+Names obtained from JDBC metadata describe existing physical objects and must not
+be transformed again. Preserve existing namespace selection and qualification;
+physical object naming must not rename a schema or catalog a second time.
+Treat `columnDefinition` as an SQL fragment, not a new structured logical name input.
+
+== Consumers
+
+For enums, align creation/drop DDL, column declarations, cast targets, literal type
+references, and enum element names supplied to array JDBC operations. Preserve
+converter and ordinal behavior while replacing independent simple-name derivation.
+
+For named arrays, align creation/drop DDL, column declarations, casts, JDBC array
+creation, null binding, and callable out-parameter registration. Existing aggregate
+array registration must consume the same finalized identity.
+
+Dialect-generated array helper objects and SQL references must derive from the same
+finalized array name. Compose suffixes on identifier text before rendering quoting
+and qualification. Do not call the naming strategy independently for helper objects
+or registered query functions.
+
+== Compatibility And Documentation
+
+The physical SQL type callbacks are new in 9.0. There is no released implementation behavior
+of this hook to preserve and no migration warning is needed for fixing its coverage.
+Preserve existing default-name calculations and document the consistent behavior of
+the new hook. A customized physical name must match the application's intended schema.
+
+Clarify the three type-name callbacks’ Javadoc to identify the supported named objects
+and distinguish object identifiers from SQL type expressions.
+
+== Verification And Acceptance Criteria
+
+* Convert the six characterization cases into regression expectations for consistent
+  names. Retain default-strategy cases and use a non-idempotent prefix strategy to
+  detect repeated transformation.
+* Cover named textual/ordinal enums, converted enum values, repeated enum use,
+  and independent metadata builds with different physical strategies.
+* Cover named arrays, nested/structured dependencies, and PostgreSQL arrays of named
+  enums. Assert create/drop SQL, column/cast declarations, and helper references.
+* Exercise quoted mixed-case names and default schema qualification without double
+  transformation or unconditional uppercasing of quoted identifiers.
+* Assert JDBC type-name arguments for array creation, null binding, and callable
+  registration; distinguish these boundary tests from actual database execution.
+* Verify finalized-metadata restoration preserves names without invoking strategies.
+* Run the focused naming/type tests and relevant PostgreSQL/Oracle integration tests
+  where available. Report unavailable database execution as a validation limitation.
+
+Acceptance requires one consistent physical identity across the above consumers,
+unchanged default-name recipes, isolated boot state, and contract documentation.
+Any required public SPI change or departure from this scope must be brought back
+for review before implementation.
+
+== Implementation Sequence
+
+. Resolve and propagate enum physical names, including array element consumers.
+. Resolve and propagate named array identities, including aggregate and helper paths.
+. Complete quoting, restoration, JDBC, and dialect regression coverage.
+. Update Javadoc, and the remaining design inventory.
+
+== Implementation Notes
+
+The namespace retains finalized type identifiers in its serialized state. Enum
+resolution supplies immutable named JDBC descriptors; array resolution retains the
+logical recipe separately from the physical JDBC name. Runtime consumers read these
+names through `SqlTypedJdbcType`. Shared singleton descriptors remain unnamed.
+
+Aggregate array column declarations now come from the resolved mapping instead of
+being populated early with a synthesized logical spelling. Oracle helper DDL and SQL
+use one suffix-composition helper which preserves identifier quoting. JDBC array
+names preserve quoted case and normalize unquoted Oracle qualifiers.
+
+Verification includes default and prefixed naming, named textual/ordinal enums,
+`@EnumeratedValue`, explicit Java types and attribute converters, repeated references,
+enum arrays, named nested tables, struct arrays, quoting, configured schema names,
+JDBC metadata names, and metadata restoration. The database integration test covers
+persistence, enum literals, null/non-null array binding, and array functions when run
+on PostgreSQL or Oracle 23+. Skipping that test on H2 is not evidence of successful
+PostgreSQL/Oracle database execution.
+
+== Validation Results Before Callback Split
+
+The final `hibernate-core:test` run completed successfully: 18,059 tests, zero
+failures/errors, and 1,526 skipped. All 19 `NamedSqlTypeNamingImpactTest` cases passed.
+The separate PostgreSQL/Oracle integration test was skipped on the local H2 profile;
+no live PostgreSQL or Oracle validation is claimed. The focused naming and aggregate
+annotation run also passed all 52 tests before the final full-suite run.
+
+== Callback Split Validation
+
+The focused named SQL type, physical naming contract, and aggregate annotation
+checks passed after the split: 59 tests, zero failures/errors, and zero skipped.
+This includes callback dispatch and independent per-kind caching. All core test
+sources compiled. Live PostgreSQL/Oracle execution was not part of this run.

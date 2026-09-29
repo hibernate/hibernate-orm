@@ -4,6 +4,18 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.model.relational.Database;
+
+import org.hibernate.boot.model.process.internal.NamedSqlTypeResolution;
+
+import org.hibernate.type.BasicPluralType;
+
+import org.hibernate.dialect.type.internal.PostgreSQLEnumJdbcType;
+
+import org.hibernate.dialect.type.internal.OracleEnumJdbcType;
+
+import org.hibernate.dialect.type.internal.OracleArrayJdbcType;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -78,6 +90,7 @@ public class BasicValue extends SimpleValue {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Resolved state - available after `#resolve`
 	private transient Resolution<?> resolution;
+	private String logicalArrayTypeName;
 	private transient boolean resolutionFinalized;
 	private transient Integer jdbcTypeCode;
 
@@ -153,6 +166,7 @@ public class BasicValue extends SimpleValue {
 		this.aggregateColumn = original.aggregateColumn;
 		this.jdbcTypeCode = original.jdbcTypeCode;
 		this.resolution = original.resolution;
+		this.logicalArrayTypeName = original.logicalArrayTypeName;
 		this.resolutionFinalized = false;
 	}
 
@@ -360,6 +374,15 @@ public class BasicValue extends SimpleValue {
 		final var metadataCollector = state.metadataCollector();
 		final var database = state.database();
 		final var dialect = database.getDialect();
+		resolution = NamedSqlTypeResolution.resolveEnum( resolution, database );
+		if ( resolution.getJdbcType() instanceof OracleArrayJdbcType arrayType
+				&& resolution.getLegacyResolvedBasicType() instanceof BasicPluralType<?, ?> ) {
+			if ( logicalArrayTypeName == null ) {
+				logicalArrayTypeName = arrayType.getLogicalTypeName();
+			}
+			resolution = NamedSqlTypeResolution.resolve(
+					resolution, logicalArrayTypeName, database );
+		}
 		final Size size;
 		if ( getColumn() instanceof Column column ) {
 			resolveColumn( column, dialect );
@@ -372,16 +395,31 @@ public class BasicValue extends SimpleValue {
 		else {
 			size = Size.nil();
 		}
+		if ( resolution.getLegacyResolvedBasicType() instanceof BasicPluralType<?, ?> plural ) {
+			contributeNamedElementTypes( plural.getElementType(), size, database );
+		}
 		resolution.getJdbcType().addAuxiliaryDatabaseObjects(
-				resolution.getRelationalJavaType(),
+				resolution.getJdbcType() instanceof PostgreSQLEnumJdbcType || resolution.getJdbcType() instanceof OracleEnumJdbcType
+						? resolution.getDomainJavaType() : resolution.getRelationalJavaType(),
 				resolution.getValueConverter(),
 				size,
 				database
 		);
 	}
 
+	private static void contributeNamedElementTypes(BasicType<?> type, Size size, Database database) {
+		if ( type instanceof BasicPluralType<?, ?> plural ) {
+			contributeNamedElementTypes( plural.getElementType(), size, database );
+		}
+		if ( type.getJdbcType() instanceof PostgreSQLEnumJdbcType
+				|| type.getJdbcType() instanceof OracleEnumJdbcType
+				|| type.getJdbcType() instanceof OracleArrayJdbcType ) {
+			type.getJdbcType().addAuxiliaryDatabaseObjects( type.getJavaTypeDescriptor(), type.getValueConverter(), size, database );
+		}
+	}
+
 	@Override
-	public String getExtraCreateTableInfo(org.hibernate.boot.model.relational.Database database) {
+	public String getExtraCreateTableInfo(Database database) {
 		return resolution.getJdbcType()
 				.getExtraCreateTableInfo(
 						resolution.getRelationalJavaType(),

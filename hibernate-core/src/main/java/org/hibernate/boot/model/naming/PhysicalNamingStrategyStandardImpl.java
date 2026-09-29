@@ -59,7 +59,19 @@ public class PhysicalNamingStrategyStandardImpl implements PhysicalNamingStrateg
 
 	@Override
 	@Nonnull
-	public PhysicalName toPhysicalTypeName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
+	public PhysicalName toPhysicalEnumName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
+		return context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
+	}
+
+	@Override
+	@Nonnull
+	public PhysicalName toPhysicalArrayName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
+		return context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
+	}
+
+	@Override
+	@Nonnull
+	public PhysicalName toPhysicalStructName(@Nonnull LogicalName logicalName, @Nonnull PhysicalNamingContext context) {
 		return context.getPhysicalNameFactory().create( logicalName.getText(), logicalName.isQuoted() );
 	}
 

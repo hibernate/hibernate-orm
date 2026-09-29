@@ -12,6 +12,8 @@ import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * Oracle array_replace function.
  */
@@ -27,8 +29,8 @@ public class OracleArrayReplaceFunction extends ArrayReplaceUnnestFunction {
 				( (Expression) sqlAstArguments.get( 0 ) ).getExpressionType(),
 				walker.getSessionFactory().getTypeConfiguration()
 		);
-		sqlAppender.append( arrayTypeName );
-		sqlAppender.append( "_replace(" );
+		sqlAppender.append( helperName( arrayTypeName, "_replace" ) );
+		sqlAppender.append( "(" );
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );

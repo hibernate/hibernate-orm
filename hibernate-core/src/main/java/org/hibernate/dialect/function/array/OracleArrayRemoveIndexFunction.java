@@ -12,6 +12,8 @@ import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * Oracle array_remove_index function.
  */
@@ -31,8 +33,8 @@ public class OracleArrayRemoveIndexFunction extends ArrayRemoveIndexUnnestFuncti
 				( (Expression) sqlAstArguments.get( 0 ) ).getExpressionType(),
 				walker.getSessionFactory().getTypeConfiguration()
 		);
-		sqlAppender.append( arrayTypeName );
-		sqlAppender.append( "_remove_index(" );
+		sqlAppender.append( helperName( arrayTypeName, "_remove_index" ) );
+		sqlAppender.append( "(" );
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );

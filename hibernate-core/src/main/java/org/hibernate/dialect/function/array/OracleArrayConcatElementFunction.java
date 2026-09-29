@@ -12,6 +12,8 @@ import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * Oracle concatenation function for array and an element.
  */
@@ -34,8 +36,8 @@ public class OracleArrayConcatElementFunction extends ArrayConcatElementFunction
 						: firstArgument.getExpressionType(),
 				walker.getSessionFactory().getTypeConfiguration()
 		);
-		sqlAppender.append( arrayTypeName );
-		sqlAppender.append( "_concat(" );
+		sqlAppender.append( helperName( arrayTypeName, "_concat" ) );
+		sqlAppender.append( "(" );
 		if ( prepend ) {
 			sqlAppender.append( arrayTypeName );
 			sqlAppender.append( '(' );

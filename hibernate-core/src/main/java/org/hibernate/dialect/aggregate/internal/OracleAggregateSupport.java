@@ -49,6 +49,8 @@ import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTy
 import static org.hibernate.dialect.function.array.DdlTypeHelper.getTypeName;
 import static org.hibernate.type.SqlTypes.*;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 public class OracleAggregateSupport extends AggregateSupportImpl {
 
 	protected static final AggregateSupport V23_INSTANCE = new OracleAggregateSupport( true, JsonSupport.OSON );
@@ -245,7 +247,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 									case UUID:
 										return template.replace(
 												placeholder,
-												jdbcType.getSqlTypeName() + "_from_json(json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + "))"
+												helperName( jdbcType.getSqlTypeName(), "_from_json" ) + "(json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + "))"
 										);
 									default:
 										// getTypeName (not getCastTypeName) for the same reason

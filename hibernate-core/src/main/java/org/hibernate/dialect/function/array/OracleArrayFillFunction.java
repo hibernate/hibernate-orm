@@ -11,6 +11,8 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * Oracle array_fill function.
  */
@@ -30,8 +32,8 @@ public class OracleArrayFillFunction extends AbstractArrayFillFunction {
 				returnType,
 				walker.getSessionFactory().getTypeConfiguration()
 		);
-		sqlAppender.append( arrayTypeName );
-		sqlAppender.append( "_fill(" );
+		sqlAppender.append( helperName( arrayTypeName, "_fill" ) );
+		sqlAppender.append( "(" );
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );

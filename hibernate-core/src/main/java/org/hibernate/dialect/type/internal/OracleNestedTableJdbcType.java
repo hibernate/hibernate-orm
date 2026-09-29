@@ -22,6 +22,15 @@ public class OracleNestedTableJdbcType extends OracleArrayJdbcType {
 		super( elementJdbcType, typeName );
 	}
 
+	public OracleNestedTableJdbcType(JdbcType elementJdbcType, String logicalName, String physicalName) {
+		super( elementJdbcType, logicalName, physicalName );
+	}
+
+	@Override
+	public OracleNestedTableJdbcType withTypeName(JdbcType elementType, String logicalName, String physicalName) {
+		return new OracleNestedTableJdbcType( elementType, logicalName, physicalName );
+	}
+
 	@Override
 	public int getDdlTypeCode() {
 		return SqlTypes.TABLE;

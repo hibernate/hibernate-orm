@@ -16,6 +16,8 @@ import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 public class OracleArrayLengthFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	public OracleArrayLengthFunction(TypeConfiguration typeConfiguration) {
@@ -41,8 +43,8 @@ public class OracleArrayLengthFunction extends AbstractSqmSelfRenderingFunctionD
 				arrayExpression.getExpressionType(),
 				walker.getSessionFactory().getTypeConfiguration()
 		);
-		sqlAppender.appendSql( arrayTypeName );
-		sqlAppender.append( "_length(" );
+		sqlAppender.appendSql( helperName( arrayTypeName, "_length" ) );
+		sqlAppender.append( "(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ')' );
 	}

@@ -12,6 +12,8 @@ import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * Oracle array_reverse function.
  */
@@ -28,8 +30,8 @@ public class OracleArrayReverseFunction extends AbstractArrayReverseFunction {
 				arrayExpression.getExpressionType(),
 				walker.getSessionFactory().getTypeConfiguration()
 		);
-		sqlAppender.append( arrayTypeName );
-		sqlAppender.append( "_reverse(" );
+		sqlAppender.append( helperName( arrayTypeName, "_reverse" ) );
+		sqlAppender.append( "(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ')' );
 	}

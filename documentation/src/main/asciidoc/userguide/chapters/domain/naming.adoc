@@ -91,6 +91,20 @@ the attribute explicitly specified the column name or whether we determined that
 and intent.
 ====
 
+Named SQL types use dedicated `PhysicalNamingStrategy` callbacks: `toPhysicalEnumName()`,
+`toPhysicalArrayName()`, and `toPhysicalStructName()`. Strategies may customize each kind independently.
+An array of named enums uses the enum callback for its element type and, when the dialect requires
+a named array object, the array callback for that object.
+Hibernate uses the resulting name consistently in type creation and dropping, column declarations,
+SQL casts and literals, and JDBC operations which refer to the type by name.
+The default enum and array names are calculated by the type mapping and dialect; these calculations
+do not have `ImplicitNamingStrategy` callbacks.
+
+An anonymous array declaration such as `integer[]` is SQL type syntax, not an independently named object.
+It does not receive a type-name callback, though a named enum element type does.
+Quoting requested by a logical name is preserved, and the physical strategy may add quoting.
+Explicit SQL fragments such as `@Column(columnDefinition = "...")` are not rewritten by the naming strategy.
+
 The default implementation is to simply use the logical name as the physical name.  However
 applications and integrations can define custom implementations of this PhysicalNamingStrategy
 contract.  Here is an example PhysicalNamingStrategy for a fictitious company named Acme Corp

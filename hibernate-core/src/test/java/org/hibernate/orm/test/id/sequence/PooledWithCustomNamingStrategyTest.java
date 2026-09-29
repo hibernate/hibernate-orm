@@ -181,7 +181,19 @@ public class PooledWithCustomNamingStrategyTest {
 
 	@Override
 	@Nonnull
-	public PhysicalName toPhysicalTypeName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
+	public PhysicalName toPhysicalEnumName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
+		return context.getPhysicalNameFactory().create( name.getText(), name.isQuoted() );
+	}
+
+	@Override
+	@Nonnull
+	public PhysicalName toPhysicalArrayName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
+		return context.getPhysicalNameFactory().create( name.getText(), name.isQuoted() );
+	}
+
+	@Override
+	@Nonnull
+	public PhysicalName toPhysicalStructName(@Nonnull LogicalName name, @Nonnull PhysicalNamingContext context) {
 		return context.getPhysicalNameFactory().create( name.getText(), name.isQuoted() );
 	}
 

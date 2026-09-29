@@ -1123,10 +1123,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			final var column = identifier.getColumns().get( 0 );
-			length = column.getLength();
-			arrayLength = column.getArrayLength();
-			precision = column.getPrecision();
-			scale = column.getScale();
+			final var size = column.getColumnSize(
+					creationProcess.getCreationContext().getDialect(),
+					creationProcess.getCreationContext().getMetadata()
+			);
+			length = size.getLength();
+			arrayLength = size.getArrayLength();
+			precision = size.getPrecision();
+			scale = size.getScale();
 		}
 		final var identifierProperty = persistentClass.getIdentifierProperty();
 		final var value = identifierProperty.getValue();

@@ -494,10 +494,11 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column column ) {
-					length = column.getLength();
-					arrayLength = column.getArrayLength();
-					precision = column.getPrecision();
-					scale = column.getScale();
+					final var size = column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
+					length = size.getLength();
+					arrayLength = size.getArrayLength();
+					precision = size.getPrecision();
+					scale = size.getScale();
 					temporalPrecision = column.getTemporalPrecision();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 					nullable = bootPropertyDescriptor.isOptional() && column.isNullable() ;
@@ -748,12 +749,13 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		else {
 			final var column = discriminator.getColumns().get( 0 );
 			assert column != null : "Embeddable discriminators require a column";
+			final var size = column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
 			discriminatorColumnExpression = column.getReadExpr( creationContext.getDialect() );
 			name = column.getName();
-			length = column.getLength();
-			arrayLength = column.getArrayLength();
-			precision = column.getPrecision();
-			scale = column.getScale();
+			length = size.getLength();
+			arrayLength = size.getArrayLength();
+			precision = size.getPrecision();
+			scale = size.getScale();
 		}
 
 		return new ExplicitColumnDiscriminatorMappingImpl(

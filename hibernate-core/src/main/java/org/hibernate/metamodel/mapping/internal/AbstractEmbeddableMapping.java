@@ -338,10 +338,11 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column column ) {
-					length = column.getLength();
-					arrayLength = column.getArrayLength();
-					precision = column.getPrecision();
-					scale = column.getScale();
+					final var size = column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
+					length = size.getLength();
+					arrayLength = size.getArrayLength();
+					precision = size.getPrecision();
+					scale = size.getScale();
 					temporalPrecision = column.getTemporalPrecision();
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );

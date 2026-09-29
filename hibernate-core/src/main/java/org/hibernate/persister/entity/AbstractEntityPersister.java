@@ -6370,10 +6370,11 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			final var column = identifier.getColumns().get( 0 );
-			length = column.getLength();
-			arrayLength = column.getArrayLength();
-			precision = column.getPrecision();
-			scale = column.getScale();
+			final var size = column.getColumnSize( getDialect(), creationProcess.getCreationContext().getMetadata() );
+			length = size.getLength();
+			arrayLength = size.getArrayLength();
+			precision = size.getPrecision();
+			scale = size.getScale();
 		}
 
 		final var identifierProperty = bootEntityDescriptor.getIdentifierProperty();
@@ -6425,6 +6426,11 @@ public abstract class AbstractEntityPersister
 
 		final var column = (Column) bootModelVersionValue.getColumn();
 		final var dialect = creationProcess.getCreationContext().getDialect();
+		final var size = column.getColumnSize( dialect, creationProcess.getCreationContext().getMetadata() );
+		final var length = size.getLength();
+		final var arrayLength = size.getArrayLength();
+		final var precision = size.getPrecision();
+		final var scale = size.getScale();
 
 		return new EntityVersionMappingImpl(
 				bootModelRootEntityDescriptor.getRootClass(),
@@ -6432,10 +6438,10 @@ public abstract class AbstractEntityPersister
 				bootModelRootEntityDescriptor.getVersion().getName(),
 				entityPersister.getTableName(),
 				column.getText( dialect ),
-				column.getLength(),
-				column.getArrayLength(),
-				column.getPrecision(),
-				column.getScale(),
+				length,
+				arrayLength,
+				precision,
+				scale,
 				column.getTemporalPrecision(),
 				basicTypeResolution.getLegacyResolvedBasicType(),
 				entityPersister
@@ -6485,6 +6491,11 @@ public abstract class AbstractEntityPersister
 		final var value = bootProperty.getValue();
 		if ( propertyIndex == getVersionPropertyIndex() ) {
 			final var column = value.getColumns().get( 0 );
+			final var size = column.getColumnSize( getDialect(), creationContext.getMetadata() );
+			final var length = size.getLength();
+			final var arrayLength = size.getArrayLength();
+			final var precision = size.getPrecision();
+			final var scale = size.getScale();
 			return buildBasicAttributeMapping(
 					attrName,
 					getNavigableRole().append( bootProperty.getName() ),
@@ -6499,10 +6510,10 @@ public abstract class AbstractEntityPersister
 					false,
 					null,
 					"?",
-					column.getLength(),
-					column.getArrayLength(),
-					column.getPrecision(),
-					column.getScale(),
+					length,
+					arrayLength,
+					precision,
+					scale,
 					column.getTemporalPrecision(),
 					column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() ),
 					column.isNullable(),
@@ -6532,11 +6543,12 @@ public abstract class AbstractEntityPersister
 				customReadExpr = null;
 				customWriteExpr = "?";
 				Column column = value.getColumns().get( 0 );
-				length = column.getLength();
-				arrayLength = column.getArrayLength();
-				precision = column.getPrecision();
+				final var size = column.getColumnSize( getDialect(), creationContext.getMetadata() );
+				length = size.getLength();
+				arrayLength = size.getArrayLength();
+				precision = size.getPrecision();
 				temporalPrecision = column.getTemporalPrecision();
-				scale = column.getScale();
+				scale = size.getScale();
 				isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 				nullable = column.isNullable();
 			}
@@ -6565,11 +6577,12 @@ public abstract class AbstractEntityPersister
 							creationContext.getBootModel()
 					);
 					final var column = value.getColumns().get( 0 );
-					length = column.getLength();
-					arrayLength = column.getArrayLength();
-					precision = column.getPrecision();
+					final var size = column.getColumnSize( dialect, creationContext.getMetadata() );
+					length = size.getLength();
+					arrayLength = size.getArrayLength();
+					precision = size.getPrecision();
 					temporalPrecision = column.getTemporalPrecision();
-					scale = column.getScale();
+					scale = size.getScale();
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 					resolveAggregateColumnBasicType( creationProcess, role, column );

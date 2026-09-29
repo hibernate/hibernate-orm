@@ -103,6 +103,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 						? getSelectablePath( declaringModelPart.asAttributeMapping().getDeclaringType() )
 						: null;
 
+		final var metaSize = metaColumn.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
 		final var metaType = (MetaType) anyType.getDiscriminatorType();
 		final var discriminatorPart = new AnyDiscriminatorPart(
 				containerRole.append( AnyDiscriminatorPart.ROLE_NAME ),
@@ -114,10 +115,10 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 						: new SelectablePath( metaColumn.getQuotedName( dialect ) ),
 				metaColumn.getCustomReadExpression(),
 				metaColumn.getCustomWriteExpression(),
-				metaColumn.getLength(),
-				metaColumn.getArrayLength(),
-				metaColumn.getPrecision(),
-				metaColumn.getScale(),
+				metaSize.getLength(),
+				metaSize.getArrayLength(),
+				metaSize.getPrecision(),
+				metaSize.getScale(),
 				bootValueMapping.isColumnInsertable( 0 ),
 				bootValueMapping.isColumnUpdateable( 0 ),
 				bootValueMapping.isPartitionKey(),
@@ -128,6 +129,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		);
 
 
+		final var keySize = keyColumn.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
 		final var keyType = (BasicType<?>) anyType.getIdentifierType();
 		final var keyPart = new AnyKeyPart(
 				containerRole.append( AnyKeyPart.KEY_NAME ),
@@ -139,10 +141,10 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 						: new SelectablePath( keyColumn.getQuotedName( dialect ) ),
 				keyColumn.getCustomReadExpression(),
 				keyColumn.getCustomWriteExpression(),
-				keyColumn.getLength(),
-				keyColumn.getArrayLength(),
-				keyColumn.getPrecision(),
-				keyColumn.getScale(),
+				keySize.getLength(),
+				keySize.getArrayLength(),
+				keySize.getPrecision(),
+				keySize.getScale(),
 				bootValueMapping.isNullable(),
 				bootValueMapping.isColumnInsertable( 1 ),
 				bootValueMapping.isColumnUpdateable( 1 ),

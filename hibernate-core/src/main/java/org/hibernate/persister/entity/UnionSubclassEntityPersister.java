@@ -60,6 +60,7 @@ import org.hibernate.sql.ast.spi.query.from.UnionTableReference;
 import org.hibernate.sql.ast.spi.query.from.UnknownTableReferenceException;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.StandardBasicTypes;
 
 import static java.util.Collections.addAll;
@@ -156,18 +157,18 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		subclassSpaces = toStringArray( subclassTables );
 
-		subquery = generateSubquery( persistentClass );
+		subquery = generateSubquery( persistentClass, creationContext.getMetadata() );
 		final List<String> tableExpressions = new ArrayList<>( subclassSpaces.length * 2 );
 		addAll( tableExpressions, subclassSpaces );
 		tableExpressions.add( subquery );
 		var parentPersistentClass = persistentClass.getSuperclass();
 		while ( parentPersistentClass != null ) {
-			tableExpressions.add( generateSubquery( parentPersistentClass ) );
+			tableExpressions.add( generateSubquery( parentPersistentClass, creationContext.getMetadata() ) );
 			parentPersistentClass = parentPersistentClass.getSuperclass();
 		}
 		for ( var subclassPersistentClass : persistentClass.getSubclassClosure() ) {
 			if ( subclassPersistentClass.hasSubclasses() ) {
-				tableExpressions.add( generateSubquery( subclassPersistentClass ) );
+				tableExpressions.add( generateSubquery( subclassPersistentClass, creationContext.getMetadata() ) );
 			}
 		}
 		subclassTableExpressions = toStringArray( tableExpressions );
@@ -501,9 +502,16 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return new int[getPropertySpan()];
 	}
 
-	@Nonnull
-	protected String generateSubquery(@Nonnull PersistentClass model) {
+	/**
+	 * @deprecated Use {@link #generateSubquery(PersistentClass, MappingContext)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	protected @Nonnull String generateSubquery(@Nonnull PersistentClass model) {
 		return generateSubquery( model, null, null );
+	}
+
+	protected @Nonnull String generateSubquery(@Nonnull PersistentClass model, @Nonnull MappingContext mappingContext) {
+		return generateSubquery( model, null, null, mappingContext );
 	}
 
 	/**
@@ -514,11 +522,32 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	 * @param extraSelectExpressions additional column expressions to include in
 	 *                               each SELECT of the union (e.g. REV, REVTYPE)
 	 */
-	@Nonnull
-	public String generateSubquery(
+	/**
+	 * @deprecated Use {@link #generateSubquery(PersistentClass, MappingContext)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	public @Nonnull String generateSubquery(
 			@Nonnull PersistentClass model,
 			@Nullable Function<String, String> tableNameResolver,
 			@Nullable List<String> extraSelectExpressions) {
+		return generateSubquery( model, tableNameResolver, extraSelectExpressions, getFactory().getRuntimeMetamodels() );
+	}
+
+	/**
+	 * Generate a union subquery for the given model.
+	 *
+	 * @param model the persistent class model to create the subquery for
+	 * @param tableNameResolver when non-null, resolves original table names to
+	 *                          alternative names (e.g. audit table names)
+	 * @param extraSelectExpressions additional column expressions to include in
+	 *                               each SELECT of the union (e.g. REV, REVTYPE)
+	 * @param mappingContext the mapping context
+	 */
+	public @Nonnull String generateSubquery(
+			@Nonnull PersistentClass model,
+			@Nullable Function<String, String> tableNameResolver,
+			@Nullable List<String> extraSelectExpressions,
+			@Nonnull MappingContext mappingContext) {
 		final var factory = getFactory();
 		final var sqlStringGenerationContext = factory.getSqlStringGenerationContext();
 		if ( !model.hasSubclasses() ) {
@@ -554,7 +583,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					subquery.append( "select " );
 					for ( var column : columns ) {
 						if ( !projectionTable.containsColumn( column ) ) {
-							subquery.append( getSelectClauseNullString( column, dialect ) )
+							subquery.append( getSelectClauseNullString( column, dialect, mappingContext ) )
 									.append( " as " );
 						}
 						subquery.append( column.getQuotedName( dialect ) )
@@ -579,13 +608,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Nonnull
-	private String getSelectClauseNullString(@Nonnull Column column, @Nonnull Dialect dialect) {
+	private String getSelectClauseNullString(@Nonnull Column column, @Nonnull Dialect dialect, @Nonnull MappingContext mappingContext) {
+		final var size = column.getColumnSize( dialect, mappingContext );
 		return dialect.getSelectClauseNullString(
 				new SqlTypedMappingImpl(
-						column.getLength(),
-						column.getArrayLength(),
-						column.getPrecision(),
-						column.getScale(),
+						size.getLength(),
+						size.getArrayLength(),
+						size.getPrecision(),
+						size.getScale(),
 						column.getTemporalPrecision(),
 						column.getType()
 				),

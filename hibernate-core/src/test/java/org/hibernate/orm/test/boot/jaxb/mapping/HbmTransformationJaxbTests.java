@@ -836,6 +836,47 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testCollectionKeyPropertyRefTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-key-property-ref/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl personEntity = transformed.getEntities().stream()
+					.filter( e -> "Person".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( personEntity.getAttributes().getElementCollectionAttributes() ).hasSize( 1 );
+			final var systems = personEntity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( systems.getName() ).isEqualTo( "systems" );
+			final var collectionTable = systems.getCollectionTable();
+			assertThat( collectionTable ).isNotNull();
+			assertThat( collectionTable.getJoinColumns() ).hasSize( 1 );
+			final var keyJoinColumn = collectionTable.getJoinColumns().get( 0 );
+			assertThat( keyJoinColumn.getName() ).isEqualTo( "USER_ID" );
+			assertThat( keyJoinColumn.getReferencedColumnName() )
+					.as( "Collection <key property-ref='userId'> should reference the alternate-key column" )
+					.isEqualTo( "person_userid" );
+
+			final JaxbEntityImpl groupEntity = transformed.getEntities().stream()
+					.filter( e -> "Group".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( groupEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+			final var users = groupEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( users.getName() ).isEqualTo( "users" );
+			final var joinTable = users.getJoinTable();
+			assertThat( joinTable ).isNotNull();
+			assertThat( joinTable.getInverseJoinColumn() ).hasSize( 1 );
+			final var elementJoinColumn = joinTable.getInverseJoinColumn().get( 0 );
+			assertThat( elementJoinColumn.getName() ).isEqualTo( "userId" );
+			assertThat( elementJoinColumn.getReferencedColumnName() )
+					.as( "<many-to-many property-ref='userId'> should reference the alternate-key column" )
+					.isEqualTo( "person_userid" );
+		} );
+	}
+
+	@Test
 	public void testElementCollectionNotNullTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/element-not-null/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );

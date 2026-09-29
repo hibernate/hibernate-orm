@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.mapping.joinformula;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -72,13 +73,14 @@ class JoinFormulaCompositeUnidiTest {
 		@Id
 		String name;
 		@Id
+		@Column(name = "depth_val")
 		int depth;
 
 		@OneToMany(fetch = FetchType.LAZY)
 		@JoinColumnOrFormula(column = @JoinColumn(name = "parent_name",
 				referencedColumnName = "name"))
-		@JoinColumnOrFormula(formula = @JoinFormula(value = "depth-1",
-				referencedColumnName = "depth"))
+		@JoinColumnOrFormula(formula = @JoinFormula(value = "depth_val-1",
+				referencedColumnName = "depth_val"))
 		Set<Thing> childThings = new HashSet<>();
 
 	}

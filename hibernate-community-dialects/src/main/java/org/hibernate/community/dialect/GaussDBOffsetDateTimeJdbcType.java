@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
  * columns via {@link ResultSet#getTimestamp(int)} and writes via {@link PreparedStatement#setTimestamp(int, Timestamp)}
  * instead of {@code getObject}/{@code setObject(int, OffsetDateTime, int)}.
  *
- * <h3>Read path</h3>
+ * <h2>Read path</h2>
  * gsjdbc4's {@code ResultSet.getObject(int, Class)} raises "conversion to class java.time.OffsetDateTime
  * from datetime not supported" for a {@code DATETIME} column under M mode (the failure surfaces when
  * Hibernate loads an entity whose {@code OffsetDateTime} attribute is read through the default
@@ -32,7 +32,7 @@ import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
  * {@link org.hibernate.type.descriptor.java.OffsetDateTimeJavaType#wrap} converts the resulting
  * {@link Timestamp} to a {@code java.time.OffsetDateTime} (using the JVM default time zone).
  *
- * <h3>Write path</h3>
+ * <h2>Write path</h2>
  * gsjdbc4's {@code setObject(int, OffsetDateTime, TIMESTAMP_WITH_TIMEZONE)} sends a
  * {@code timestamp with time zone} expression that M mode {@code datetime(6)} rejects with
  * "column ... is of type datetime but expression is of type timestamp with time zone".

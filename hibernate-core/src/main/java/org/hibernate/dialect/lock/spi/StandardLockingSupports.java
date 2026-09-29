@@ -124,7 +124,18 @@ public final class StandardLockingSupports {
 			LockTimeoutType waitType, LockTimeoutType noWaitType, LockTimeoutType skipLockedType,
 			OuterJoinLockingType outerJoinType, TransactionConcurrencyResolver resolver) {
 		Objects.requireNonNull( resolver, "resolver" );
-		return new LockingSupportParameterized( style, rowLockStrategy, waitType, noWaitType, skipLockedType, outerJoinType ) {
+		return parameterized( style, rowLockStrategy, waitType, noWaitType, skipLockedType, outerJoinType, true, resolver );
+	}
+
+	/// Creates a parameterized SQL strategy with an explicit concurrency resolver.
+	///
+	/// @since 8.0
+	public static LockingSupport parameterized(
+			PessimisticLockStyle style, RowLockStrategy rowLockStrategy,
+			LockTimeoutType waitType, LockTimeoutType noWaitType, LockTimeoutType skipLockedType,
+			OuterJoinLockingType outerJoinType, boolean supportsInnerJoins, TransactionConcurrencyResolver resolver) {
+		Objects.requireNonNull( resolver, "resolver" );
+		return new LockingSupportParameterized( style, rowLockStrategy, waitType, noWaitType, skipLockedType, outerJoinType, supportsInnerJoins ) {
 			@Override
 			public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
 				return resolver;

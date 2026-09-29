@@ -148,7 +148,7 @@ public class LockingHelper {
 	 * @param lockTimeout A lock timeout to apply, if one.
 	 * @param ownerDetailsMap Details for each owner, whose collection-table rows should be locked.
 	 */
-public static void lockCollectionTable(
+	public static void lockCollectionTable(
 			PluralAttributeMapping attributeMapping,
 			LockMode lockMode,
 			Timeout lockTimeout,

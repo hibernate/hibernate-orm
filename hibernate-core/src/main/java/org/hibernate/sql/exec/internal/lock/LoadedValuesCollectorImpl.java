@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.internal.lock;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -53,12 +54,12 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 
 
 	@Override
-	public List<LoadedEntityRegistration> getCollectedEntities() {
+	public @Nonnull List<LoadedEntityRegistration> getCollectedEntities() {
 		return entitiesToLock == null ? Collections.emptyList() : entitiesToLock;
 	}
 
 	@Override
-	public List<LoadedCollectionRegistration> getCollectedCollections() {
+	public @Nonnull List<LoadedCollectionRegistration> getCollectedCollections() {
 		return collectionsToLock == null ? Collections.emptyList() : collectionsToLock;
 	}
 }

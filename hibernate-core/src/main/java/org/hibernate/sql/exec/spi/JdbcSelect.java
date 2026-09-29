@@ -69,7 +69,9 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	 * @param jdbcConnection The JDBC Connection.
 	 * @param executionContext Access to contextual information useful while executing.
 	 */
-	void performPreActions(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext);	/**
+	void performPreActions(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext);
+
+	/**
 	 * Perform any post-actions.
 	 * <p>
 	 * Generally the post-actions should use the passed {@code jdbcStatementAccess} to interact with the

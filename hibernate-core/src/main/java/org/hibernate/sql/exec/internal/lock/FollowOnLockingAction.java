@@ -90,6 +90,19 @@ public class FollowOnLockingAction implements PostAction {
 			Connection jdbcConnection,
 			ExecutionContext executionContext,
 			LoadedValuesCollector loadedValuesCollector) {
+		if ( executionContext.isScrollResult() ) {
+			executionContext.getCallback().registerAfterLoadAction( (entity, entityMappingType, session) -> {
+				performPostAction( executionContext, loadedValuesCollector );
+				loadedValuesCollector.getCollectedCollections().clear();
+				loadedValuesCollector.getCollectedEntities().clear();
+			} );
+		}
+		else {
+			performPostAction( executionContext, loadedValuesCollector );
+		}
+	}
+
+	protected void performPostAction(ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
 		LockingHelper.logLoadedValues( loadedValuesCollector );
 
 		final var session = executionContext.getSession();

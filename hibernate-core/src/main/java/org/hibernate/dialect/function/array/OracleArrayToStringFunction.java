@@ -18,6 +18,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * Oracle array_to_string function.
  */
@@ -103,8 +105,8 @@ public class OracleArrayToStringFunction extends ArrayToStringFunction {
 					expressionType,
 					walker.getSessionFactory().getTypeConfiguration()
 			);
-			sqlAppender.append( arrayTypeName );
-			sqlAppender.append( "_to_string(" );
+			sqlAppender.append( helperName( arrayTypeName, "_to_string" ) );
+			sqlAppender.append( "(" );
 			sqlAstArguments.get( 0 ).accept( walker );
 			sqlAppender.append( ',' );
 			sqlAstArguments.get( 1 ).accept( walker );

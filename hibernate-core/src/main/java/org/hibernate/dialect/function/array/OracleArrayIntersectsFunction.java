@@ -9,6 +9,8 @@ import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 public class OracleArrayIntersectsFunction extends AbstractArrayIntersectsFunction {
 
 	public OracleArrayIntersectsFunction(TypeConfiguration typeConfiguration, boolean nullable) {
@@ -27,8 +29,8 @@ public class OracleArrayIntersectsFunction extends AbstractArrayIntersectsFuncti
 					haystackExpression.getExpressionType(),
 					walker.getSessionFactory().getTypeConfiguration()
 					);
-			sqlAppender.appendSql( arrayTypeName );
-			sqlAppender.append( "_intersects(" );
+			sqlAppender.appendSql( helperName( arrayTypeName, "_intersects" ) );
+			sqlAppender.append( "(" );
 			haystackExpression.accept( walker );
 			sqlAppender.append( ',' );
 			sqlAstArguments.get( 1 ).accept( walker );

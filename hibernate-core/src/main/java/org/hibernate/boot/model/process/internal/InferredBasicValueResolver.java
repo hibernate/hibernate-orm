@@ -1,5 +1,9 @@
 package org.hibernate.boot.model.process.internal;
 
+import org.hibernate.dialect.type.internal.OracleEnumJdbcType;
+
+import org.hibernate.dialect.type.internal.PostgreSQLEnumJdbcType;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -407,8 +411,14 @@ public class InferredBasicValueResolver {
 			validateEnumeratedValue( enumeratedValueField, stdIndicators );
 		}
 
-		final var jdbcType =
+		var jdbcType =
 				enumJdbcType( enumJavaType, explicitJdbcType, stdIndicators, services, enumeratedValueField );
+		if ( jdbcType instanceof PostgreSQLEnumJdbcType postgres ) {
+			jdbcType = postgres.withTypeName( enumTypeName( enumJavaType, state ) );
+		}
+		else if ( jdbcType instanceof OracleEnumJdbcType oracle ) {
+			jdbcType = oracle.withTypeName( enumTypeName( enumJavaType, state ) );
+		}
 		final var basicType =
 				enumeratedValueField != null
 						? createEnumeratedValueJdbcMapping( enumeratedValueField, enumJavaType, jdbcType, services )
@@ -422,6 +432,10 @@ public class InferredBasicValueResolver {
 				basicType,
 				ImmutableMutabilityPlan.instance()
 		);
+	}
+
+	private static String enumTypeName(EnumJavaType<?> javaType, MappingResolutionState state) {
+		return NamedSqlTypeNames.resolveEnum( javaType.getJavaTypeClass().getSimpleName(), state.database() );
 	}
 
 	private static <E extends Enum<E>> JdbcType enumJdbcType(

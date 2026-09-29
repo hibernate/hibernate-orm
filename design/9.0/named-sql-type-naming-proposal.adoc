@@ -2,10 +2,59 @@
 :toc2:
 :sectanchors:
 
-Status: investigation and design proposal. Steve authorized investigation of named
-SQL enum and array types. No new API, compatibility policy, or implementation is
-approved by this document. Develop a working specification after the direction is
-accepted. Findings below are source inspection, not reproduced runtime failures.
+Status: physical naming repair implemented and core tests passing; new implicit
+type-name callbacks remain unselected.
+See link:named-sql-type-physical-naming-spec.adoc[Named SQL Type Physical Naming].
+
+The original `PhysicalNamingStrategy.toPhysicalTypeName()` contract covered SQL type
+names and has now been split into `toPhysicalEnumName()`, `toPhysicalArrayName()`,
+and `toPhysicalStructName()`. Enum bypass and incomplete array propagation were
+defects in the original contract.
+Repairing them does not require an opt-in feature. Existing implicit calculations
+remain unchanged; introducing `ImplicitNamingStrategy` callbacks is a separate,
+unselected enhancement.
+
+Preserve names under the standard physical strategy. The physical hook is new in 9.0, so fixing its coverage does not require a migration
+warning. Document its consistent named-type behavior in the contract.
+
+== Characterized Impact Of The Existing Hook
+
+The original `NamedSqlTypeNamingImpactTest` characterized six pre-fix cases: default naming and a physical
+strategy adding `p_`, for PostgreSQL named enums, Oracle named enums, and Oracle arrays.
+All six passed before implementation. The table records those original defects;
+the tests now assert consistent physical naming instead.
+
+[cols="1,2,2",options="header"]
+|===
+|Case |Default |Existing physical type-name override
+|PostgreSQL named enum
+|`State` in create/drop DDL, column and cast types, and enum literals
+|Unchanged; `toPhysicalTypeName()` is not called
+|Oracle named enum
+|`State` in create/drop DDL, column and cast types, and enum literals
+|Unchanged; `toPhysicalTypeName()` is not called
+|Oracle named array
+|`IntegerArray` in exported type, column and cast types; `INTEGERARRAY` in JDBC null binding
+|Exported type becomes `p_IntegerArray`, but column/cast types remain `IntegerArray`
+and JDBC null binding still uses `INTEGERARRAY`
+|===
+
+The Oracle harness selects version 23 and explicitly registers Hibernate's real
+`OracleArrayJdbcTypeConstructor` to bypass JDBC-driver discovery. It does not replace
+the naming or export implementations. These tests build metadata and generate SQL
+without a database connection; JDBC null binding uses a mocked statement. They do
+not establish successful database execution or cover non-null array binding,
+quoted/schema-qualified names, ordinal enums, converters, nested arrays, or collisions.
+
+=== Selected Next Boundary
+
+Fix both enum coverage and array propagation under the existing physical contract.
+The characterization above records pre-fix behavior; update its expectations as the
+repair is implemented. Do not preserve these mismatches as compatibility requirements.
+
+New implicit callbacks, explicit-name annotations, schema lifecycle controls, and the
+broader shared-definition redesign below remain unselected. Database type renaming
+and migration of existing dependent columns are not performed automatically.
 
 == Scope And Constraints
 
@@ -21,10 +70,10 @@ boot, schema tooling, SQL generation, JDBC use, and metadata restoration.
 * Do not apply naming strategies to registered query functions or introduce helper
   function callbacks. Dialect-generated array helper DDL and SQL references must
   consistently derive from the resolved array identity under dialect control.
-* Reuse the existing physical type-name hook, additive quoting, logical/physical
+* Use the dedicated enum, array, and struct physical callbacks, additive quoting, logical/physical
   value types, explicit-name bypass, and no callback replay on restoration.
 
-== Source Findings
+== Pre-fix Source Findings
 
 Source paths below are relative to `hibernate-core/src/main/java`.
 
@@ -87,7 +136,7 @@ for arbitrary quoted names; repeated registrations may reuse an object then set
 its definition from the current contributor. These are design risks established
 by separate source paths, not verified cross-dialect runtime outcomes.
 
-== Recommended Direction
+== Earlier Design Direction: Not Yet Selected
 
 === Resolve A Shared Type Identity
 
@@ -104,7 +153,7 @@ Proposed lifecycle:
 . Find or register the shared definition and verify compatible reuse.
 . For an unnamed definition, obtain its logical name from a role-specific implicit
   callback. An explicit name bypasses that callback.
-. Finalize through `PhysicalNamingStrategy.toPhysicalTypeName()` exactly once per
+. Finalize through the appropriate enum, array, or struct physical callback exactly once per
   registered definition, retaining catalog/schema/object parts and quoting.
 . Make JDBC mappings, column/cast/literal rendering, creation/drop, and dialect helper
   dependencies consume that same identity, using appropriate SQL/JDBC rendering.

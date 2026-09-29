@@ -47,9 +47,10 @@ sections describe their respective runs, not a cumulative total or a new run.
 
 == Remaining Work And Sequence
 
-Named enum and array type naming is the current investigation in
-link:named-sql-type-naming-proposal.adoc[the focused proposal]. Struct naming and
-independent helper-function naming are outside that scope.
+Named enum and array physical naming is implemented under
+link:named-sql-type-physical-naming-spec.adoc[the completed specification and validation results]. New implicit
+type-name callbacks remain unselected in link:named-sql-type-naming-proposal.adoc[the proposal].
+Struct naming redesign and independent helper-function naming are outside that scope.
 
 [cols="1,3",options="header"]
 |===
@@ -837,7 +838,9 @@ interface PhysicalNamingStrategy {
     PhysicalName toPhysicalTableName(LogicalName name, PhysicalNamingContext context);
     PhysicalName toPhysicalSequenceName(LogicalName name, PhysicalNamingContext context);
     PhysicalName toPhysicalColumnName(LogicalName name, PhysicalNamingContext context);
-    PhysicalName toPhysicalTypeName(LogicalName name, PhysicalNamingContext context);
+    PhysicalName toPhysicalEnumName(LogicalName name, PhysicalNamingContext context);
+    PhysicalName toPhysicalArrayName(LogicalName name, PhysicalNamingContext context);
+    PhysicalName toPhysicalStructName(LogicalName name, PhysicalNamingContext context);
 }
 ----
 
@@ -846,9 +849,8 @@ other inputs/results are non-null. Keeping nullable qualification callbacks lets
 strategies supply physical qualification when mapping defaults leave it absent.
 Missing table/column/sequence/type names are resolved before invoking the strategy;
 a null result for those roles is a mapping error identifying the role and logical
-input. Recommend making the type callback independent of table naming, with
-identity behavior in the standard implementation instead of a default interface
-method delegating to the table callback.
+input. The enum, array, and struct callbacks are independent of table naming,
+with identity behavior in the standard implementation.
 
 Start with the factory as the context's only capability. Identifier parsing,
 metadata lookup, SQL rendering, services, and the whole dialect/JDBC environment

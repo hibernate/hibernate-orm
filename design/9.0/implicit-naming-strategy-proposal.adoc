@@ -311,8 +311,9 @@ link:constraint-index-naming-proposal.adoc#completed-index-and-column-references
   uncovered JPA naming rules with independent expected outputs. Do not duplicate the
   matrix as a separate verification project.
 
-Named enum and array types are under renewed investigation in
-link:named-sql-type-naming-proposal.adoc[the named SQL type proposal]; implementation is not yet approved. Mutation temporary tables and dialect-generated helper
+New implicit enum and array callbacks remain unselected in
+link:named-sql-type-naming-proposal.adoc[the named SQL type proposal]. Repair of the
+existing physical hook is implemented in link:named-sql-type-physical-naming-spec.adoc[the physical naming specification]. Mutation temporary tables and dialect-generated helper
 objects remain under their specialized mechanisms; the source inventory retains the
 investigation and any unresolved boundary questions. Remaining relational name-type
 boundaries are tracked in link:naming-strategy-redesign.adoc[the parent design].

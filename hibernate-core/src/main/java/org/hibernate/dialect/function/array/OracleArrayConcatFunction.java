@@ -8,6 +8,8 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 
+import static org.hibernate.dialect.type.internal.OracleArrayTypeNames.helperName;
+
 /**
  * Oracle concatenation function for arrays.
  */
@@ -27,8 +29,7 @@ public class OracleArrayConcatFunction extends ArrayConcatFunction {
 				(JdbcMappingContainer) returnType,
 				walker.getSessionFactory().getTypeConfiguration()
 		);
-		sqlAppender.append( arrayTypeName );
-		sqlAppender.append( "_concat" );
+		sqlAppender.append( helperName( arrayTypeName, "_concat" ) );
 		super.render( sqlAppender, sqlAstArguments, returnType, walker );
 	}
 }

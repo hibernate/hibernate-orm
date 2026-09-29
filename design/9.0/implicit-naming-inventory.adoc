@@ -239,13 +239,15 @@ another object's name must be distinguished from those operations.
 
 The dialect/auxiliary-object investigation below refines the remaining boundaries.
 Its recommendations are investigation background. Named enum/array work has since
-been reopened in the focused proposal below; no implementation accompanies it.
+been split into a completed repair of the existing physical contract and a deferred
+implicit-naming enhancement; see link:named-sql-type-physical-naming-spec.adoc[the physical naming specification].
 
 === Dialect Objects: Investigation
 
 The earlier deferral has been reopened for named enums and arrays in
 link:named-sql-type-naming-proposal.adoc[the focused design proposal]. The findings below
-remain investigation background, not implemented coverage or acceptance requirements.
+record the original investigation. The physical naming repair and its acceptance
+criteria are tracked in link:named-sql-type-physical-naming-spec.adoc[the implemented specification].
 
 Named SQL types are a meaningful candidate for user naming control. They may be
 shared schema objects or types which already exist independently of Hibernate.
@@ -253,7 +255,7 @@ That differs from SQL type syntax: `Dialect.getArrayTypeName()` renders forms su
 as `element array[length]`, while `OracleDialect` derives a named type by appending
 `Array`. A general identifier-naming callback must not receive SQL type expressions.
 
-Concrete paths inspected:
+Original paths inspected (before the physical naming repair):
 
 * `AggregateMappingIntent.toQualifiedName()` reads the explicit `@Struct` name,
   catalog, and schema. This path is not evidence of an implicit struct-name default.
@@ -282,8 +284,9 @@ The targeted search did not find generated trigger naming in core/community dial
 sources. Do not invent a trigger callback without a concrete contributing path.
 This is a source investigation, not database execution or an exhaustive plugin audit.
 
-Future option: support naming actual named SQL types, with dialect-owned syntax,
-capabilities, and validation. This is now being designed for named enums and arrays.
+Future option: expose implicit name generation for named SQL types. The existing
+physical hook is already part of 9.0; completing its enum/array coverage is a repair,
+not a new implicit naming feature.
 The recommendation for implementation helper functions/policies is to keep them under
 their dialect/feature support for now. A future specialized override could address
 DBA naming requirements, but it must resolve the whole linked set of names; changing

@@ -91,7 +91,10 @@ final class AggregateComponentBinder {
 		aggregateColumn.setValue( aggregateValue );
 		if ( plan.structNameText() != null && aggregateColumn.getSqlType() == null ) {
 			aggregateColumn.setSqlTypeCode( plan.aggregateColumnSqlTypeCode() );
-			aggregateColumn.setSqlType( plan.aggregateColumnSqlType() );
+			// Array declarations come from the resolved mapping, including physical type naming.
+			if ( !plan.intent().plural() ) {
+				aggregateColumn.setSqlType( plan.aggregateColumnSqlType() );
+			}
 		}
 		else if ( plan.aggregateColumnSqlTypeCode() != null ) {
 			aggregateColumn.setSqlTypeCode( plan.aggregateColumnSqlTypeCode() );
@@ -102,6 +105,13 @@ final class AggregateComponentBinder {
 				state.getMetadataBuildingContext().getServiceComponents(),
 				state.getMappingResolutionState()
 		);
+		if ( plan.structNameText() != null && plan.intent().plural() && aggregateColumn.getSqlType() == null ) {
+			// Named arrays use their finalized identity; anonymous arrays retain the dialect expression.
+			aggregateColumn.setSqlType(
+					aggregateValue.resolve().getJdbcType() instanceof org.hibernate.dialect.type.internal.OracleArrayJdbcType arrayType
+							? arrayType.getSqlTypeName() : plan.aggregateColumnSqlType() );
+		}
+
 		if ( enclosingTarget.isAggregateMemberTarget() ) {
 			enclosingTarget.registerMemberColumn( aggregateColumn );
 		}

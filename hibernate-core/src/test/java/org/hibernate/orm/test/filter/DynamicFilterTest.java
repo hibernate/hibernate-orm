@@ -748,6 +748,7 @@ public class DynamicFilterTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testManyToManyFilterOnLoad(SessionFactoryScope factoryScope) {
 		var sessionFactory = factoryScope.getSessionFactory();
 		var stats = sessionFactory.getStatistics();

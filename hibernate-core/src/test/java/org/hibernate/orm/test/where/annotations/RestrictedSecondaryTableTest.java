@@ -10,8 +10,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -71,6 +73,7 @@ class RestrictedSecondaryTableTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = { "find", "query", "fetch", "graph" })
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void secondaryTableColumnRestriction(String loading, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Project> projects;

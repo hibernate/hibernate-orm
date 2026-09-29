@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 @SessionFactory
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @JiraKey("HHH-17522")
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLateralOrSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 public class CorrelationCteDerivedJoinTest {
 

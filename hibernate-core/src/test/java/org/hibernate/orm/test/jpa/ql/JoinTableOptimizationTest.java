@@ -7,6 +7,8 @@ package org.hibernate.orm.test.jpa.ql;
 import java.util.Set;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -118,6 +120,7 @@ public class JoinTableOptimizationTest {
 
 	@Test
 	@JiraKey("HHH-16691")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testLeftJoinCustomOnClause(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();

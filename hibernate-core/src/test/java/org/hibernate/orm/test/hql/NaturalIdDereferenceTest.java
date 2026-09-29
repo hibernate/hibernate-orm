@@ -6,6 +6,8 @@ package org.hibernate.orm.test.hql;
 
 import org.hibernate.annotations.NaturalId;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -238,6 +240,7 @@ public class NaturalIdDereferenceTest {
 	 * This results in three joins in total.
 	 */
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void dereferenceNaturalIdInJoin(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();

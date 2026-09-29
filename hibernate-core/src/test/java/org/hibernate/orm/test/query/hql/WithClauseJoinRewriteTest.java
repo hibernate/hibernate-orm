@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 
@@ -43,6 +45,7 @@ public class WithClauseJoinRewriteTest {
 
 	@Test
 	@JiraKey(value = "HHH-11230")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testInheritanceReAliasing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

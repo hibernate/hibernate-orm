@@ -414,6 +414,7 @@ public class OuterJoinTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testJoinOrderWithRightNormalJoinWithInnerImplicitJoins(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			List<Tuple> resultList = em.createQuery(

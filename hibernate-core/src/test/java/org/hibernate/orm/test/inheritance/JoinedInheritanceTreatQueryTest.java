@@ -13,6 +13,8 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -79,6 +81,7 @@ public class JoinedInheritanceTreatQueryTest {
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testTreatedJoinWithCondition(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
@@ -95,6 +98,7 @@ public class JoinedInheritanceTreatQueryTest {
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testMultipleTreatedJoinWithCondition(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();

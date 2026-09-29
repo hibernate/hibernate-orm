@@ -10,7 +10,7 @@
 
     <class 
     	name="org.hibernate.orm.test.legacy.Top"
-    	table="rootclass" 
+    	table="root_class" 
     	dynamic-insert="true" 
     	dynamic-update="true"
     	select-before-update="true">

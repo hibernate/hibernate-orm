@@ -22,6 +22,8 @@ import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,6 +49,7 @@ class AuditSecondaryTableTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testWriteAndPointInTimeRead(SessionFactoryScope scope) {
 		currentTxId = 0;
 
@@ -135,6 +138,7 @@ class AuditSecondaryTableTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testAssociationOnSecondaryTable(SessionFactoryScope scope) {
 		currentTxId = 200;
 

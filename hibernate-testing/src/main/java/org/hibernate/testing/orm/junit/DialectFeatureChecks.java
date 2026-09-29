@@ -49,6 +49,7 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
@@ -57,10 +58,17 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.dialect.sql.ast.spi.CteSupport;
 import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.dialect.aggregate.spi.AggregateComponentReadRequest;
 import org.hibernate.dialect.array.spi.ArraySupport;
@@ -117,6 +125,7 @@ import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
@@ -137,6 +146,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.mockito.Mockito;
 
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
@@ -235,7 +245,8 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJdbcEscapes implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
-			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
+			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect
+					|| dialect instanceof CUBRIDDialect);
 		}
 	}
 
@@ -840,14 +851,91 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsSubqueryInOnClause implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			// TiDB db does not support subqueries for ON condition
-			return !( dialect instanceof TiDBDialect );
+			// TiDB and CUBRID do not support subqueries in an ON condition
+			return !( dialect instanceof TiDBDialect || dialect instanceof CUBRIDDialect );
+		}
+	}
+
+	public static class SupportsLateralOrSubqueryInOnClause implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// without lateral, a lateral join is emulated with a subquery in the ON condition
+			return dialect.getSubquerySupport().supports( SubquerySupport.Feature.LATERAL )
+					|| new SupportsSubqueryInOnClause().apply( dialect );
 		}
 	}
 
 	public static class SupportsFullJoin implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof DerbyDialect );
+			// Derby and CUBRID do not support FULL [OUTER] JOIN
+			return !( dialect instanceof DerbyDialect || dialect instanceof CUBRIDDialect );
+		}
+	}
+
+	public static class SupportsMicroSecondPrecision implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getTypeSizingProfile().maxTimestampPrecision() >= 6;
+		}
+	}
+
+	public static class SupportsTimestampPrecision0 implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return declaresTimestampPrecision( dialect, 0 );
+		}
+	}
+
+	public static class SupportsTimestampPrecision3 implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return declaresTimestampPrecision( dialect, 3 )
+					|| dialect.getTypeSizingProfile().defaultTimestampPrecision() == 3;
+		}
+	}
+
+	/// Whether the timestamp DDL type carries the requested precision, rather than ignoring it.
+	private static boolean declaresTimestampPrecision(Dialect dialect, int precision) {
+		final var typeConfiguration = getFunctionContributions( dialect ).typeConfiguration;
+		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		return ddlTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP )
+				.getTypeName(
+						Size.precision( precision ),
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.TIMESTAMP ),
+						ddlTypeRegistry
+				)
+				.contains( String.valueOf( precision ) );
+	}
+
+	public static class SupportsNestedJoinGroups implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// CUBRID accepts a parenthesized joined table as a from item, but not as the right
+			// operand of a join, and an outer join of such a group cannot be flattened into a
+			// sequence of joins without changing which rows are null-extended
+			return !( dialect instanceof CUBRIDDialect );
+		}
+	}
+
+	public static class NoAutoQuotingEnabled implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			final var keywords = dialect.getKeywordSupport().getKeywords();
+			if ( keywords.isEmpty() ) {
+				return true;
+			}
+			final var jdbcMetadata = Mockito.mock( JdbcMetadata.class );
+			Mockito.when( jdbcMetadata.getUnquotedIdentifierCaseStrategy() )
+					.thenReturn( IdentifierCaseStrategy.UPPER );
+			Mockito.when( jdbcMetadata.getQuotedIdentifierCaseStrategy() )
+					.thenReturn( IdentifierCaseStrategy.MIXED );
+			Mockito.when( jdbcMetadata.getSqlKeywords() ).thenReturn( Set.of() );
+			final var builder = IdentifierHelperBuilder.from( Mockito.mock( JdbcEnvironment.class ) );
+			// what the default configuration seeds; a dialect that wants auto-quoting turns it back on
+			builder.setAutoQuoteKeywords( false );
+			final var helper = dialect.getIdentifierSupport().buildIdentifierHelper(
+					new IdentifierHelperBuildRequest(
+							builder,
+							jdbcMetadata,
+							dialect.getKeywordSupport(),
+							NameQualifierSupport.BOTH
+					)
+			);
+			return !helper.toIdentifier( keywords.iterator().next() ).isQuoted();
 		}
 	}
 

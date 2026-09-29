@@ -24,6 +24,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -180,6 +182,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(2)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testPointInTimeRead(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -214,6 +217,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(3)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testLazyPointInTimeRead(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -234,6 +238,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(4)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testGetHistory(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			var history = auditLog.getHistory( Book.class, 1L );
@@ -264,6 +269,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(5)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testJoinFetchAllRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions()
 				.atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
@@ -300,6 +306,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(6)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testJoinFetchPointInTime(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -326,6 +333,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(7)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testExplicitEntityJoinPointInTime(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -359,6 +367,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(8)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testNullAssociationPointInTimeRead(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -377,6 +386,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(9)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testNullAssociationGetHistory(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			var history = auditLog.getHistory( Book.class, 10L );
@@ -395,6 +405,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(10)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testLeftJoinFetchNullAssociationAllRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions()
 				.atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
@@ -417,6 +428,7 @@ class AuditToOneAssociationTest {
 
 	@Test
 	@Order(11)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testOneToOnePointInTimeRead(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 

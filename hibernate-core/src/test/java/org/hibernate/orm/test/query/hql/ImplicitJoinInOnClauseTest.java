@@ -6,6 +6,8 @@ package org.hibernate.orm.test.query.hql;
 
 import java.util.List;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -32,6 +34,7 @@ import jakarta.persistence.ManyToOne;
 public class ImplicitJoinInOnClauseTest {
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testImplicitJoinInEntityJoinPredicate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

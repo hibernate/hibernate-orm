@@ -17,6 +17,8 @@ import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -187,6 +189,7 @@ class AuditStatelessSessionTest {
 
 	@Test
 	@Order(2)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testPointInTimeReads(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -237,6 +240,7 @@ class AuditStatelessSessionTest {
 
 	@Test
 	@Order(4)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testUpsertAsInsert(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -262,6 +266,7 @@ class AuditStatelessSessionTest {
 
 	@Test
 	@Order(5)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testAssociationNavigation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -282,6 +287,7 @@ class AuditStatelessSessionTest {
 
 	@Test
 	@Order(6)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testDeletedEntityInvisible(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -333,6 +339,7 @@ class AuditStatelessSessionTest {
 
 	@Test
 	@Order(9)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testBatchOperations(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
@@ -388,6 +395,7 @@ class AuditStatelessSessionTest {
 
 	@Test
 	@Order(10)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testReadOnlyStatelessDoesNotCreateChangeset(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 

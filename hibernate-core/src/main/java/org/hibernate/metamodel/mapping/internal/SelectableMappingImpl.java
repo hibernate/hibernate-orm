@@ -142,11 +142,12 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		}
 		else {
 			var column = (Column) selectable;
+			final var size = column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
 			columnExpression = selectable.getText( dialect );
-			length = column.getLength();
-			arrayLength = column.getArrayLength();
-			precision = column.getPrecision();
-			scale = column.getScale();
+			length = size.getLength();
+			arrayLength = size.getArrayLength();
+			precision = size.getPrecision();
+			scale = size.getScale();
 			temporalPrecision = column.getTemporalPrecision();
 
 			isNullable = !forceNotNullable && column.isNullable();

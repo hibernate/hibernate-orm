@@ -354,21 +354,21 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( JSON, columnType( JSON ),this ));
 		ddlTypeRegistry.addDescriptor(
-				StandardDdlTypes.builder( VARCHAR, columnType( VARCHAR ), this )
+				StandardDdlTypes.builder( VARCHAR, columnType( LONG32VARCHAR ), this )
 						.castTypeNamePattern( castType( VARCHAR ) )
 						.castTypeName( castType( VARCHAR ) )
 				.withTypeCapacity( getTypeSizingProfile().maxVarcharLength(), columnType( VARCHAR ) )
 				.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				StandardDdlTypes.builder( NVARCHAR, columnType( NVARCHAR ), this )
+				StandardDdlTypes.builder( NVARCHAR, columnType( LONG32NVARCHAR ), this )
 						.castTypeNamePattern( castType( NVARCHAR ) )
 						.castTypeName( castType( NVARCHAR ) )
 				.withTypeCapacity( getTypeSizingProfile().maxNVarcharLength(), columnType( NVARCHAR ) )
 				.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				StandardDdlTypes.builder( VARBINARY, columnType( VARBINARY ), this )
+				StandardDdlTypes.builder( VARBINARY, columnType( LONG32VARBINARY ), this )
 						.castTypeNamePattern( castType( VARBINARY ) )
 						.castTypeName( castType( VARBINARY ) )
 				.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), columnType( VARBINARY ) )

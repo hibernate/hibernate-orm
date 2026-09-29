@@ -14,6 +14,8 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.type.BasicPluralType;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
+
 /**
  * PostgreSQL variant of the function to properly return {@code null} when the array argument is null.
  */
@@ -83,8 +85,7 @@ public class PostgreSQLArrayConcatElementFunction extends ArrayConcatElementFunc
 
 	private static boolean needsElementCasting(Expression elementExpression) {
 		// PostgreSQL needs casting of null and string literal expressions
-		return elementExpression instanceof Literal literal
-			&& ( elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
-					|| literal.getLiteralValue() == null );
+		return isNullLiteral( elementExpression ) || elementExpression instanceof Literal
+			&& elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString();
 	}
 }

@@ -48,6 +48,8 @@ import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
+
 /**
  * A SQL AST translator for Altibase.
  *
@@ -483,6 +485,17 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			appendSql( "floor" );
 		}
 		super.visitBinaryArithmeticExpression(arithmeticExpression);
+	}
+
+	@Override
+	protected void visitArithmeticOperand(Expression expression) {
+		// Altibase requires an explicit type for null literals in arithmetic expressions.
+		if ( isNullLiteral( expression ) ) {
+			renderCasted( expression );
+		}
+		else {
+			super.visitArithmeticOperand( expression );
+		}
 	}
 
 }

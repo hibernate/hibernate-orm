@@ -35,7 +35,6 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Over;
-import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
@@ -48,6 +47,8 @@ import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
 
 /**
  * A SQL AST translator for Altibase.
@@ -489,8 +490,8 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void visitArithmeticOperand(Expression expression) {
 		// Altibase requires an explicit type for null literals in arithmetic expressions.
-		if ( expression instanceof QueryLiteral<?> literal && literal.getLiteralValue() == null ) {
-			renderCasted( literal );
+		if ( isNullLiteral( expression ) ) {
+			renderCasted( expression );
 		}
 		else {
 			super.visitArithmeticOperand( expression );

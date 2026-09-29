@@ -43,6 +43,8 @@ import org.hibernate.sql.ast.spi.query.select.SelectClause;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
+
 /**
  * A SQL AST translator for Firebird.
  *
@@ -290,7 +292,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	private void visitLiteral(Literal literal) {
-		if ( literal.getLiteralValue() == null ) {
+		if ( isNullLiteral( literal ) ) {
 			appendSql( SqlAppender.NULL_KEYWORD );
 		}
 		else {

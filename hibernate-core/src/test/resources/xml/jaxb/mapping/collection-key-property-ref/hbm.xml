@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!--
+  Collections have no property-ref construct in mapping.xml, so a <key/> or <many-to-many>
+  element that specifies a property-ref has to be expanded into referenced-column-name on
+  the generated <join-column/>/<inverse-join-column/>. Here the collection keys reference
+  the alternate key 'userId' (column person_userid) of Person rather than its primary key.
+-->
+<hibernate-mapping package="org.hibernate.orm.test.propertyref.basic">
+
+    <class name="Person" table="PCKPR_PERSON">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name" length="100"/>
+        <property name="userId" column="person_userid" length="8" unique="true" not-null="true"/>
+        <bag name="systems" table="PCKPR_SYSTEMS" lazy="true" inverse="false" cascade="all">
+            <key column="USER_ID" property-ref="userId" />
+            <element type="string" column="SYSTEM_ID" />
+        </bag>
+    </class>
+
+    <class name="Group" table="PCKPR_GROUP">
+        <id name="name"/>
+        <set name="users" table="PCKPR_USERGROUP" cascade="merge">
+            <key column="groupName"/>
+            <many-to-many column="userId" class="Person" property-ref="userId"/>
+        </set>
+    </class>
+
+</hibernate-mapping>

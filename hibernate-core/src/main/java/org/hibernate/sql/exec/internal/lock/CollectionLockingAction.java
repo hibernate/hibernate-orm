@@ -74,7 +74,16 @@ public class CollectionLockingAction implements PostAction {
 			Connection jdbcConnection,
 			ExecutionContext executionContext,
 			LoadedValuesCollector loadedValuesCollector) {
-		performPostAction( executionContext, loadedValuesCollector );
+		if ( executionContext.isScrollResult() ) {
+			executionContext.getCallback().registerAfterLoadAction( (entity, entityMappingType, session) -> {
+				performPostAction( executionContext, loadedValuesCollector );
+				loadedValuesCollector.getCollectedCollections().clear();
+				loadedValuesCollector.getCollectedEntities().clear();
+			} );
+		}
+		else {
+			performPostAction( executionContext, loadedValuesCollector );
+		}
 	}
 
 	// Used by Hibernate Reactive

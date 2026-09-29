@@ -52,7 +52,7 @@ public enum SqlAstNodeRenderingMode {
 
 	/**
 	 * Wrap all nested parameters with a database specific wrapping strategy,
-	 * defaulting to wrapping via a subquery e.g. {@code (select ?)}.
+	 * defaulting to wrapping via a casting subquery e.g. {@code (select cast(? as x))}.
 	 * This is useful for certain databases that don't support parameters directly within certain functions, like Informix.
 	 */
 	WRAP_ALL_PARAMETERS

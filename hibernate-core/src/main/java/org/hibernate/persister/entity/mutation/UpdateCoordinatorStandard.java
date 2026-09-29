@@ -26,6 +26,7 @@ import org.hibernate.engine.internal.FilteredUpdateCache;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
 import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -1603,8 +1604,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 		if ( changedPredicate.isEmpty() ) {
 			// Keep a parameterized CASE shape even when the entity has no updateable
-			// versionable columns; a column is never distinct from itself.
-			changedPredicate.add( new ComparisonPredicate( versionColumn, DISTINCT_FROM, versionColumn ) );
+			// versionable columns
+			// An empty in list predicate is always false, which we use to retain the shape
+			changedPredicate.add( new InListPredicate( versionColumn ) );
 		}
 
 		final var nextVersion = new ColumnValueParameter( versionColumn, ParameterUsage.SET );

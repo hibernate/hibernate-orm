@@ -25,6 +25,8 @@ import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
+
 public class SpannerPostgreSQLSqlAstTranslator<T extends JdbcOperation> extends PostgreSQLSqlAstTranslator<T> {
 
 	public SpannerPostgreSQLSqlAstTranslator(
@@ -177,9 +179,5 @@ public class SpannerPostgreSQLSqlAstTranslator<T extends JdbcOperation> extends 
 			appendSql( UnaryArithmeticOperator.UNARY_MINUS.getOperatorChar() );
 		}
 		unaryOperationExpression.getOperand().accept( this );
-	}
-
-	private static boolean isNullLiteral(Expression expression) {
-		return expression instanceof Literal literal && literal.getLiteralValue() == null;
 	}
 }

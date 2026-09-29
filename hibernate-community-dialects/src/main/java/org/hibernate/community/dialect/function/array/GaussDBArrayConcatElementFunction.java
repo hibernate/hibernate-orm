@@ -20,6 +20,8 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.type.BasicPluralType;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
+
 /**
  * GaussDB variant of the function to properly return {@code null} when the array argument is null.
  *
@@ -93,9 +95,7 @@ public class GaussDBArrayConcatElementFunction extends ArrayConcatElementFunctio
 
 	private static boolean needsElementCasting(Expression elementExpression) {
 		// GaussDB needs casting of null and string literal expressions
-		return elementExpression instanceof Literal && (
-				elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
-						|| ( (Literal) elementExpression ).getLiteralValue() == null
-		);
+		return isNullLiteral( elementExpression ) || elementExpression instanceof Literal &&
+				elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString();
 	}
 }

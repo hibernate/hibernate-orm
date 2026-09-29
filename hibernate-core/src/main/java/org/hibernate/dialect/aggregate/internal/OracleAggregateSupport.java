@@ -27,7 +27,6 @@ import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
-import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -47,6 +46,7 @@ import java.util.Map;
 
 import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
 import static org.hibernate.dialect.function.array.DdlTypeHelper.getTypeName;
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
 import static org.hibernate.type.SqlTypes.*;
 
 public class OracleAggregateSupport extends AggregateSupportImpl {
@@ -840,7 +840,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			// since we don't know how the custom write expression looks like where this is embedded,
 			// so we have to be pessimistic and avoid ambiguities
 			final Expression valueExpression = expression.getValueExpression( selectableMapping );
-			if ( valueExpression instanceof Literal literal && literal.getLiteralValue() == null ) {
+			if ( isNullLiteral( valueExpression ) ) {
 				// Except for the null literal. That is just rendered as-is
 				sb.append( "null" );
 			}

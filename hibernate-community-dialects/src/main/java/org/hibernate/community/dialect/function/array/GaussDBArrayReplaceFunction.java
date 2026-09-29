@@ -10,9 +10,10 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
-import org.hibernate.sql.ast.spi.query.expression.Literal;
 
 import java.util.List;
+
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
 
 /**
  * GaussDB array_replace function.
@@ -31,15 +32,8 @@ public class GaussDBArrayReplaceFunction extends ArrayReplaceUnnestFunction {
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.append( " IS NULL THEN NULL ELSE COALESCE((SELECT array_agg(CASE ");
 		final Expression originValueExpression = (Expression) sqlAstArguments.get( 1 );
-		if ( originValueExpression instanceof Literal literal) {
-			Object literalValue = literal.getLiteralValue();
-			if ( literalValue != null ) {
-				sqlAppender.append( "WHEN val =  ");
-				sqlAstArguments.get( 1 ).accept( walker );
-			}
-			else {
-				sqlAppender.append( "WHEN val is null  ");
-			}
+		if ( isNullLiteral( originValueExpression ) ) {
+			sqlAppender.append( "WHEN val is null  ");
 		}
 		else {
 			sqlAppender.append( "WHEN val =  ");

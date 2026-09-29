@@ -54,6 +54,8 @@ import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 import org.hibernate.sql.spi.mutation.jdbc.DeleteOrUpsertOperation;
 import org.hibernate.sql.spi.mutation.jdbc.UpsertOperation;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
+
 /**
  * A SQL AST translator for Spanner.
  *
@@ -93,16 +95,13 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	private Expression castNullLiteral(Expression expression) {
-		// Numeric literals cannot be null, and parsing their value may overflow the inferred Java type.
-		if ( expression instanceof UnparsedNumericLiteral<?> ) {
-			return expression;
-		}
-		if ( expression instanceof Literal literal && literal.getLiteralValue() == null ) {
-			final var jdbcMapping = literal.getJdbcMapping();
+		if ( isNullLiteral( expression ) ) {
+			assert expression.getExpressionType() != null;
+			final var jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 			return new SelfRenderingFunctionSqlAstExpression<>(
 					"cast",
 					castFunction(),
-					List.of( literal, new CastTarget( jdbcMapping ) ),
+					List.of( expression, new CastTarget( jdbcMapping ) ),
 					null,
 					jdbcMapping
 			);

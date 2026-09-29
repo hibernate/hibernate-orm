@@ -12,8 +12,9 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
-import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.type.BasicPluralType;
+
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
 
 /**
  * Uses typed array literals for {@code null} arrays like {@code ARRAY<type>[null]}, to resolve ambiguity.
@@ -66,9 +67,6 @@ public class SpannerArrayConcatElementFunction extends ArrayConcatElementFunctio
 	}
 
 	private static boolean needsTypedLiteral(Expression elementExpression) {
-		if ( elementExpression instanceof Literal literal ) {
-			return literal.getLiteralValue() == null;
-		}
-		return false;
+		return isNullLiteral( elementExpression );
 	}
 }

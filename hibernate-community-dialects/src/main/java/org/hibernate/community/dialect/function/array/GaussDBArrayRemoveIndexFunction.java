@@ -10,9 +10,10 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
-import org.hibernate.sql.ast.spi.query.expression.Literal;
 
 import java.util.List;
+
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
 
 /**
  * GaussDB array_remove index function.
@@ -44,11 +45,8 @@ public class GaussDBArrayRemoveIndexFunction extends ArrayRemoveIndexUnnestFunct
 		arrayExpression.accept( walker );
 		sqlAppender.append( ", 1) AS idx " );
 
-		if ( indexExpression instanceof Literal literal ) {
-			Object literalValue = literal.getLiteralValue();
-			if ( literalValue != null ) {
-				appendWhere( sqlAppender, walker, indexExpression );
-			}
+		if ( isNullLiteral( indexExpression ) ) {
+			// no-op
 		}
 		else {
 			appendWhere( sqlAppender, walker, indexExpression );

@@ -10,9 +10,10 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
-import org.hibernate.sql.ast.spi.query.expression.Literal;
 
 import java.util.List;
+
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
 
 /**
  * GaussDB array_remove function.
@@ -27,7 +28,7 @@ public class GaussDBArrayRemoveFunction extends AbstractArrayRemoveFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
-		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
+		final Expression valueExpression = (Expression) sqlAstArguments.get( 1 );
 
 		sqlAppender.append( "CASE WHEN ");
 		arrayExpression.accept( walker );
@@ -35,17 +36,11 @@ public class GaussDBArrayRemoveFunction extends AbstractArrayRemoveFunction {
 		arrayExpression.accept( walker );
 		sqlAppender.append( ") AS val" );
 
-		if ( indexExpression instanceof Literal literal ) {
-			Object literalValue = literal.getLiteralValue();
-			if ( literalValue != null ) {
-				appendWhere( sqlAppender, walker, indexExpression );
-			}
-			else {
-				sqlAppender.append( " where val IS NOT NULL" );
-			}
+		if ( isNullLiteral( valueExpression ) ) {
+			sqlAppender.append( " where val IS NOT NULL" );
 		}
 		else {
-			appendWhere( sqlAppender, walker, indexExpression );
+			appendWhere( sqlAppender, walker, valueExpression );
 		}
 		sqlAppender.append( "),  CAST(ARRAY[] AS VARCHAR[]) ) END AS result_array" );
 	}

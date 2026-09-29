@@ -9,9 +9,9 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
-import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
@@ -31,7 +31,7 @@ public class HSQLJsonArrayFunction extends JsonArrayFunction {
 	}
 
 	static void renderJsonWriteExpression(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
-		if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
+		if ( isNullLiteral( value ) ) {
 			sqlAppender.appendSql( "cast(null as int)" );
 		}
 		else {

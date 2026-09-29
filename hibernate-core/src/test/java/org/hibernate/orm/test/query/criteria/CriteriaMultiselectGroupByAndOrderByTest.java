@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -128,8 +127,6 @@ public class CriteriaMultiselectGroupByAndOrderByTest {
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17231" )
 	@SkipForDialect( dialectClass = SybaseASEDialect.class,
 			reason = "Sybase doesn't support order by + offset in subqueries")
-	@SkipForDialect( dialectClass = InformixDialect.class,
-			reason = "Informix doesn't support offset in subqueries")
 	public void testSubqueryGroupByAndOrderBy(SessionFactoryScope scope) {
 		executeSubquery( scope, true, false );
 	}
@@ -138,8 +135,6 @@ public class CriteriaMultiselectGroupByAndOrderByTest {
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17231" )
 	@SkipForDialect( dialectClass = SybaseASEDialect.class,
 			reason = "Sybase doesn't support order by + offset in subqueries")
-	@SkipForDialect( dialectClass = InformixDialect.class,
-			reason = "Informix doesn't support offset in subqueries")
 	public void testSubqueryGroupByAndOrderByAndHaving(SessionFactoryScope scope) {
 		executeSubquery( scope, true, true );
 	}

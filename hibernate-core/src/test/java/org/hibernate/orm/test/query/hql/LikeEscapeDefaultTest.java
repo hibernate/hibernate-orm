@@ -2,7 +2,6 @@ package org.hibernate.orm.test.query.hql;
 
 import java.util.List;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -11,7 +10,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -47,8 +45,6 @@ public class LikeEscapeDefaultTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix does not support empty escape ''")
 	public void testDefaultEscapeBackslash(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Query<BasicEntity> q = session.createQuery(
@@ -62,8 +58,6 @@ public class LikeEscapeDefaultTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix does not support empty escape ''")
 	public void testDefaultEscapeBackslashLiteral(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Query<BasicEntity> q = session.createQuery(
@@ -77,8 +71,6 @@ public class LikeEscapeDefaultTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix does not support empty escape ''")
 	public void testDefaultEscapeNoResults(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Query<BasicEntity> q = session.createQuery(

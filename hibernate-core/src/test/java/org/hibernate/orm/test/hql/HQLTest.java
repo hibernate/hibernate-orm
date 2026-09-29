@@ -13,7 +13,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -21,7 +20,6 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
-import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.domain.userguide.Account;
 import org.hibernate.testing.orm.domain.userguide.AddressType;
 import org.hibernate.testing.orm.domain.userguide.Call;
@@ -1479,10 +1477,8 @@ public class HQLTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class)
-	@SkipForDialect(dialectClass = SybaseASEDialect.class)
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "order by not supported in list")
-	@SkipForDialect(dialectClass = InformixDialect.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsListagg.class)
 	public void test_hql_aggregate_functions_within_group_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-aggregate-functions-within-group-example[]

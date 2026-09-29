@@ -313,6 +313,10 @@ tasks.withType( Test.class ).configureEach { test ->
         test.maxParallelForks = forks.asInt
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
+    if (!forks.present || forks.asInt == 1) {
+        // To reduce the JVM metaspace pressure, reduce the amount of classes that can run in one fork
+        test.forkEvery = 8096
+    }
 }
 
 tasks.named( "javadoc", Javadoc ) {

@@ -26,7 +26,7 @@ public class CoalesceIfnullEmulation
 		super(
 				"ifnull",
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
+				StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE
 		);
 	}
 

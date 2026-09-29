@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import org.hibernate.Incubating;
 import org.hibernate.accessor.AccessorFactory;
@@ -15,7 +16,7 @@ import org.hibernate.accessor.ValueReader;
 import org.hibernate.accessor.ValueWriter;
 
 /**
- * Decorator around {@link AccessorFactory#reflection()} that disables multi-value
+ * Decorator around {@link AccessorFactory#reflection(org.hibernate.accessor.spi.AccessorConfiguration)} that disables multi-value
  * accessor generation, causing callers to fall back to per-property access.
  */
 @Incubating(since = "8.0")
@@ -24,7 +25,11 @@ public class ReflectionNoMultiAccessorFactory implements AccessorFactory {
 	private static final String MULTI_VALUE_DISABLED_MESSAGE =
 			"Multi-value accessors are disabled by hibernate.accessor.strategy=reflection-no-multi";
 
-	private final AccessorFactory delegate = AccessorFactory.reflection();
+	private final AccessorFactory delegate;
+
+	public ReflectionNoMultiAccessorFactory(Map<String, Object> configurationValues) {
+		this.delegate = AccessorFactory.reflection( HibernateOrmAccessContext.configuration( configurationValues ) );
+	}
 
 	@Override
 	public <T> Instantiator<T> instantiator(Constructor<T> constructor) {

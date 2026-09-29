@@ -29,7 +29,6 @@ import net.bytebuddy.jar.asm.Type;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.accessor.bytebuddy.ByteBuddyAccessorFactory;
-import org.hibernate.accessor.spi.AccessorConfiguration;
 import org.hibernate.accessor.spi.BytecodeDumper;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.BridgeMembersClassInfo;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.DelegatingAccessorMember;
@@ -86,10 +85,7 @@ public class HibernateOrmAccessorFactory implements AccessorFactory {
 	private volatile EnhancerImplConstants constants;
 
 	public HibernateOrmAccessorFactory(MethodHandles.Lookup lookup, Map<String, Object> configurationValues) {
-		final var accessFactoryConfiguration = new AccessorConfiguration(
-				lookup,
-				configurationValues
-		);
+		final var accessFactoryConfiguration = HibernateOrmAccessContext.configuration( configurationValues );
 		this.delegate = ByteBuddyAccessorFactory.factory( accessFactoryConfiguration );
 		this.lookupBridge = new CrossClassLoaderLookupBridge( lookup, OrmBridgeClassGenerator::generate );
 		this.bytecodeDumper = new BytecodeDumper( accessFactoryConfiguration );

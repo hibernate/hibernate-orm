@@ -25,14 +25,14 @@ import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
  * columns via {@link ResultSet#getTimestamp(int)} and writes via {@link PreparedStatement#setTimestamp(int, Timestamp)}
  * instead of {@code getObject}/{@code setObject(int, LocalDateTime, int)}.
  *
- * <h3>Read path</h3>
+ * <h2>Read path</h2>
  * gsjdbc4's {@code ResultSet.getObject(int, Class)} cannot convert a {@code DATETIME} column to
  * {@code java.time.LocalDateTime} &mdash; it throws "Cannot convert the column of type DATETIME to
  * requested type timestamp." {@code getTimestamp(int)} reads the value fine, and
  * {@link org.hibernate.type.descriptor.java.LocalDateTimeJavaType#wrap} converts the resulting
  * {@link Timestamp} to a {@code java.time.LocalDateTime}.
  *
- * <h3>Write path</h3>
+ * <h2>Write path</h2>
  * gsjdbc4's {@code setObject(int, LocalDateTime, TIMESTAMP)} routes to {@code setTimestamp(LocalDateTime)},
  * whose {@code TimestampUtils.toString(LocalDateTime)} <em>attaches the default time zone</em> (converting
  * through {@code OffsetDateTime}) and emits a string like {@code 2026-07-10 09:31:09.29287+00}. GaussDB M

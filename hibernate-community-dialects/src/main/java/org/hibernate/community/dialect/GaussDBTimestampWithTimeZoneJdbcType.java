@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
  * {@link PreparedStatement#setTimestamp(int, Timestamp, Calendar)} instead of
  * {@code getObject}/{@code setObject(int, OffsetDateTime, TIMESTAMP_WITH_TIMEZONE)}.
  *
- * <h3>Why a separate descriptor</h3>
+ * <h2>Why a separate descriptor</h2>
  * The default {@code TimestampWithTimeZoneJdbcType} binds through
  * {@code setObject(int, OffsetDateTime, Types.TIMESTAMP_WITH_TIMEZONE)}, which gsjdbc4 turns into a
  * {@code timestamp with time zone} expression. M mode {@code datetime(6)} columns reject that with

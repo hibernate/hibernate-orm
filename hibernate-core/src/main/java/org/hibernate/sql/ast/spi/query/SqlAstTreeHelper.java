@@ -1,6 +1,9 @@
 package org.hibernate.sql.ast.spi.query;
 
+import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.analysis.AggregateFunctionChecker;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.spi.query.predicate.Junction;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
@@ -57,5 +60,10 @@ public final class SqlAstTreeHelper {
 
 	public static boolean hasAggregateFunctions(QuerySpec querySpec) {
 		return AggregateFunctionChecker.hasAggregateFunctions( querySpec );
+	}
+
+	public static boolean isNullLiteral(SqlAstNode expression) {
+		return !(expression instanceof UnparsedNumericLiteral<?>) && expression instanceof Literal literal
+			&& literal.getLiteralValue() == null;
 	}
 }

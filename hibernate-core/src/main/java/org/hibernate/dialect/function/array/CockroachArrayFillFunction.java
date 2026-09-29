@@ -9,6 +9,8 @@ import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
+
 /**
  * Implement the array fill function by using {@code generate_series}.
  */
@@ -52,8 +54,7 @@ public class CockroachArrayFillFunction extends AbstractArrayFillFunction {
 
 	private static boolean needsElementCasting(Expression elementExpression) {
 		// PostgreSQL needs casting of null and string literal expressions
-		return elementExpression instanceof Literal literal
-			&& ( elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
-					|| literal.getLiteralValue() == null );
+		return isNullLiteral( elementExpression ) || elementExpression instanceof Literal
+			&& elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString();
 	}
 }

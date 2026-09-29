@@ -13,6 +13,8 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
+
 /**
  * PostgreSQL json_replace function.
  */
@@ -62,7 +64,7 @@ public class PostgreSQLJsonReplaceFunction extends AbstractJsonReplaceFunction {
 			separator = ',';
 		}
 		sqlAppender.appendSql( "]::text[]," );
-		if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
+		if ( isNullLiteral( value ) ) {
 			sqlAppender.appendSql( "null::jsonb" );
 		}
 		else {

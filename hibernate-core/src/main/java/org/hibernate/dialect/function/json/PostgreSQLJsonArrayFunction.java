@@ -12,6 +12,8 @@ import org.hibernate.sql.ast.spi.query.expression.JsonNullBehavior;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.isNullLiteral;
+
 /**
  * PostgreSQL json_array function.
  */
@@ -63,7 +65,7 @@ public class PostgreSQLJsonArrayFunction extends JsonArrayFunction {
 						sqlAppender.appendSql( '(' );
 						sqlAppender.appendSql( i );
 						sqlAppender.appendSql( ',' );
-						if ( node instanceof Literal literal && literal.getLiteralValue() == null ) {
+						if ( isNullLiteral( node ) ) {
 							sqlAppender.appendSql( "null::jsonb" );
 						}
 						else {

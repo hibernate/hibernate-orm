@@ -9,14 +9,12 @@ import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.domain.contacts.ContactsDomainModel;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -104,8 +102,6 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-18575" )
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix does not like '? in (?,?)'")
 	void testMultiValuedBigDecimals() {
 		inTransaction( session -> {
 			assertEquals(

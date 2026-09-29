@@ -12,12 +12,14 @@ import jakarta.persistence.Table;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
@@ -64,6 +66,7 @@ public class UuidCapableJavaTypeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support unique / primary constraints on binary columns")
 	void testBuiltInLegacyTransformerBridges(SessionFactoryScope scope) {
 		final var autoString = new AutoStringEntity();
 		final var explicitString = new ExplicitStringEntity();

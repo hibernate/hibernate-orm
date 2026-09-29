@@ -316,6 +316,7 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 
 	@Test
 	@JiraKey("HHH-20646")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void criteriaJoinOtherEntityOnAttributeOfDerivedJoinEntity(SessionFactoryScope scope) {
 		// The derived table selects an entity which is not the one it is joined to
 		scope.inTransaction( session -> {

@@ -182,6 +182,8 @@ public non-sealed class Set extends Collection {
 		final var resolution = softDeleteValue.resolve();
 		@SuppressWarnings("unchecked")
 		final var converter = (BasicValueConverter<Boolean, ?>) resolution.getValueConverter();
+		// BasicValue already reverses ACTIVE converters, so false means a live row
+		// for both strategies when using the resolved converter.
 		final Object nonDeletedValue = converter == null
 				? getSoftDeleteStrategy() == SoftDeleteType.ACTIVE
 						? true

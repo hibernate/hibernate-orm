@@ -364,7 +364,7 @@ public class EmbeddableBindingTests {
 				EmbeddedIdentifierWithUnannotatedPluralEntity.class
 		) )
 				.isInstanceOf( org.hibernate.AnnotationException.class )
-				.hasMessageContaining( "Embeddable identifier member 'labels' is collection-valued" )
+				.hasMessageContaining( "Embeddable identifier member 'id.labels' is collection-valued" )
 				.hasMessageContaining( "embeddables used as entity identifiers may not contain plural attributes" );
 	}
 
@@ -378,7 +378,7 @@ public class EmbeddableBindingTests {
 				EmbeddedIdentifierWithNestedPluralEntity.class
 		) )
 				.isInstanceOf( org.hibernate.AnnotationException.class )
-				.hasMessageContaining( "Embeddable identifier member 'nested.labels' is collection-valued" )
+				.hasMessageContaining( "Embeddable identifier member 'id.nested.labels' is collection-valued" )
 				.hasMessageContaining( "embeddables used as entity identifiers may not contain plural attributes" );
 	}
 
@@ -680,7 +680,7 @@ public class EmbeddableBindingTests {
 							.containsExactly( "line1", "zipCode" );
 					assertThat( component.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "address_line1", "address_zipCode" );
+							.containsExactly( "line1", "zipCode" );
 
 					final var contributions = context.getBindingState().getBootBindingModel()
 							.embeddableContributions();
@@ -726,7 +726,7 @@ public class EmbeddableBindingTests {
 					assertThat( component.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( component.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "address_line1", "address_zipCode" );
+							.containsExactly( "line1", "zipCode" );
 				},
 				scope.getRegistry(),
 				ImplicitEmbeddedEntity.class
@@ -867,7 +867,7 @@ public class EmbeddableBindingTests {
 					assertThat( component.getColumnContainer() ).isSameAs( join.getTable() );
 					assertThat( component.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "address_line1", "address_zipCode" );
+							.containsExactly( "line1", "zipCode" );
 				},
 				scope.getRegistry(),
 				EmbeddedTableEntity.class
@@ -890,10 +890,10 @@ public class EmbeddableBindingTests {
 					assertThat( location.getComponentClassName() ).isEqualTo( Location.class.getName() );
 					assertThat( location.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "address_location_city", "address_location_country" );
+							.containsExactly( "city", "country" );
 					assertThat( address.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "address_line1", "address_location_city", "address_location_country", "address_zipCode" );
+							.containsExactly( "line1", "city", "country", "zipCode" );
 
 					final var contributions = context.getBindingState().getBootBindingModel()
 							.embeddableContributions();
@@ -945,7 +945,7 @@ public class EmbeddableBindingTests {
 							.containsExactly( "home_city", "home_country" );
 					assertThat( address.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "address_line1", "home_city", "home_country", "address_zipCode" );
+							.containsExactly( "line1", "home_city", "home_country", "zipCode" );
 				},
 				scope.getRegistry(),
 				NestedOverrideEmbeddedEntity.class
@@ -985,7 +985,7 @@ public class EmbeddableBindingTests {
 					assertThat( country.getReferencedEntityName() ).isEqualTo( Country.class.getName() );
 					assertThat( country.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "address_country_id" );
+							.containsExactly( "country_id" );
 				},
 				scope.getRegistry(),
 				Country.class,

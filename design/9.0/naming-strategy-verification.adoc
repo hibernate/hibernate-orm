@@ -5,11 +5,14 @@
 Status: Steve approved retaining JPA, moving component-path safety into Standard, and
 deprecating the other three strategies with runtime warnings. That work is implemented
 and validated. This document retains the test contract and outstanding coverage work.
-All five registrations remain available; Standard remains the default.
+All five implementations remain available; JPA is the default.
+Steve approved the supported-strategy conformance specification below.
+Implementation and validation are complete.
 
-Latest full core validation: 18,039 tests, 1,525 skipped,
+Latest full core validation: 18,130 tests, 1,526 skipped,
 0 failures and 0 errors.
-This run includes entity attribute fallback, explicit collection role references,
+This run includes both dedicated supported-strategy suites and the approved namespace
+and full-path fixes, alongside entity attribute fallback, explicit collection role references,
 join-table declaration detection, the index contract/resolution migration, the FK and UK contract migrations, HHH-20916 unique-column
 finalization, HHH-20917 reference resolution, UK absorption and name emission, and
 null-only PK result validation. Slice-local counts below describe historical runs;
@@ -17,6 +20,239 @@ they are not cumulative totals.
 
 See link:implicit-naming-strategy-proposal.adoc[the replacement contract] and
 link:naming-strategy-redesign.adoc[the broader naming redesign].
+
+== Supported-Strategy Conformance Expansion
+
+Status: approved by Steve. Implementation and validation are complete.
+
+=== Goal And Design
+
+Give each supported strategy a dedicated executable contract:
+
+* `JpaImplicitNamingStrategyComplianceTest`: verify specification-defined names
+  using the actual `ImplicitNamingStrategyJpaCompliantImpl` and identity physical naming.
+* `StandardImplicitNamingStrategyTest`: verify Hibernate's documented conventions
+  using the actual `StandardImplicitNamingStrategy`, including full attribute paths
+  and logical table-name composition.
+
+Share mapping fixtures and metadata inspection helpers where useful, but declare
+expected names independently. Do not derive expected names from strategy callbacks,
+strategy helpers, or the metadata being tested. Both suites must be independently
+runnable. Test-method Markdown Javadoc describes intent; JPA cases link the rule
+and identify its scope. Common fixtures must not force strategy-dependent results
+into a single opaque expectation function.
+
+Retain the existing five-strategy matrix for regression comparisons and deprecated
+implementation coverage. Existing callback/provenance tests remain responsible for
+custom strategy invocation. A small amount of overlap with the matrix makes the
+supported contracts readable on their own; avoid copying whole existing suites.
+
+Alternatives considered: extending only the five-strategy matrix keeps everything
+in one place but obscures which assertions express JPA requirements; duplicating
+all fixtures for each strategy makes the suites independent but increases drift.
+Dedicated suites with shared fixtures and separately stated expectations are preferred.
+
+=== Specification Baseline And Boundaries
+
+The dependency is `jakarta.persistence-api:4.0.0-M7` in `gradle/libs.versions.toml`.
+Use the published
+https://jakarta.ee/specifications/persistence/4.0/jakarta-persistence-spec-4.0-m4[4.0-M4 specification]
+as a versioned prose baseline, checking relevant annotation contracts against the
+M7 API sources before recording final rule references. The local published M7
+source artifact was checked for Table, Column, JoinColumn, JoinColumns, JoinTable,
+CollectionTable, MapKeyColumn, MapKeyJoinColumn, OrderColumn, PrimaryKeyJoinColumn,
+SecondaryTable, DiscriminatorColumn, and MapsId. Do not silently treat a
+moving nightly document as a pinned baseline. Record any difference or ambiguity
+before choosing an expectation.
+
+Start with relationship mapping defaults (section 2.12), identifier treatment
+(section 2.15), and the mapping annotation contracts. The published API references
+reviewed for this proposal include
+https://jakarta.ee/specifications/persistence/4.0/apidocs/jakarta.persistence/jakarta/persistence/joincolumn[JoinColumn],
+https://jakarta.ee/specifications/persistence/4.0/apidocs/jakarta.persistence/jakarta/persistence/jointable[JoinTable],
+https://jakarta.ee/specifications/persistence/4.0/apidocs/jakarta.persistence/jakarta/persistence/collectiontable[CollectionTable],
+https://jakarta.ee/specifications/persistence/4.0/apidocs/jakarta.persistence/jakarta/persistence/mapkeyjoincolumn[MapKeyJoinColumn], and
+https://jakarta.ee/specifications/persistence/4.0/apidocs/jakarta.persistence/jakarta/persistence/primarykeyjoincolumn[PrimaryKeyJoinColumn].
+
+Every case must be classified as a specification requirement, an explicitly
+provider-defined choice, or a Hibernate extension. In particular, ordinary
+`JoinColumn` and `MapKeyJoinColumn` default-name rules are limited to single-column
+joins. Do not label implicit composite-join conventions as JPA requirements.
+Required explicit declarations, such as secondary-table names, are not missing
+implicit callbacks. Generated constraint-name spelling is not assumed to be
+specified by JPA. Generator naming has its own strategy and remains outside this slice.
+
+Physical prefixing, inline views, tenant/soft-delete columns, and named SQL types
+belong to extension tests. Preserve their existing focused coverage. JPA plus a
+custom physical strategy is tested as Hibernate integration, not as a normative
+JPA output. No public SPI is introduced by this test expansion. Strategy alias selection is
+independent of the conformance assertions.
+
+=== Coverage To Establish
+
+The following is the acceptance inventory, not a claim that every row currently
+lacks tests. Existing cases may satisfy rows after their expectations and rule
+references are reviewed. Gaps in the present matrix include property access,
+embedded relationships, richer ownership variants, identifier reuse, and mapping
+XML parity; focused custom-strategy tests do not substitute for these default tests.
+
+[cols="1,3",options="header"]
+|===
+|Area |Required assertions
+|Entity and ordinary columns
+|Default entity/table names, entity-name overrides distinct from explicit table
+names; identifier/basic/version columns under field and property access; inherited
+mapped-superclass attributes; explicit names and overrides.
+|Embeddables
+|Nested and repeated embeddables; JPA terminal names with explicit overrides for
+collisions, Standard full paths; embedded identifiers and IdClass; embedded to-one
+relationships and association overrides; explicit map key/value attribute overrides.
+|To-one and one-to-many
+|Unidirectional and bidirectional one-to-one and many-to-one; mappedBy sharing;
+unidirectional one-to-many with default join table and with a declared FK mapping;
+explicitly renamed target PK columns; owning and inverse table/column identity.
+|Association tables
+|Unidirectional and bidirectional many-to-many, self-reference, embedded ownership,
+entity names differing from table names, explicit join tables and owner/inverse
+join-column overrides. Reverse registration order for shared inverse mappings.
+|Element collections and maps
+|Basic and embeddable values, owner key with renamed PK, collection table naming;
+basic map keys, entity map keys, borrowed keys (no extra key column), explicit key
+names, and declared order-column defaults. Do not infer an order column for every List.
+|Inheritance and identity
+|Single-table discriminator defaults and explicit annotation defaults; joined
+inheritance and secondary-table PK joins with renamed identifiers; table-per-class;
+simple and composite MapsId reuse. Separate portable explicit composite mappings
+from Hibernate's inferred composite naming.
+|Identifier treatment and XML
+|Explicit quoting and effective namespace defaults; representative orm.xml-only
+basic, relationship, collection, and override cases matching their annotation
+counterparts; XML delimited-identifiers. No hbm.xml coverage.
+|Standard-specific extensions
+|Full-path behavior for embedded basic/id/join/map/order inputs and synthetic path
+normalization; logical association-table composition under a non-idempotent physical
+prefix; shared defaults such as discriminator naming remain unchanged. Assert the
+chosen conventions, without describing deviations as JPA conformance.
+|===
+
+=== Implementation Sequence And Failure Policy
+
+. Build a rule-to-test checklist from the inventory. Link existing qualifying tests
+  and identify concrete gaps before adding fixtures.
+. Add the two dedicated suites, common inspection support, and missing default
+  cases. Begin with identity physical naming and ordinary/association names.
+. Add embedded, identity/inheritance, XML, and quoting cases; retain independent
+  extension checks for physical naming and composite defaults.
+. For each failure, establish whether it is a naming callback defect, binding/input
+  defect, invalid fixture, or ambiguous requirement. Preserve the specification-based
+  expectation. Report behavior changes before changing production naming algorithms;
+  do not bless current output or hide failures under expected-failure annotations.
+. Run both suites, the existing naming matrix and related focused tests. Run the
+  core suite after production fixes or broader test changes requiring integration
+  validation. Record exact results and unresolved cases.
+
+Completion requires traceable coverage for each applicable inventory row, both
+supported implementations exercised without behavioral overrides, independently
+specified expected names, and no unresolved normative mismatch concealed by the
+matrix. Representative H2 schema creation/use should verify shared joins and derived
+identity where metadata spelling alone is insufficient. Do not claim cross-dialect
+execution or full Jakarta Persistence certification from naming tests.
+
+=== Approval Checkpoint
+
+Steve approved the dedicated-suite organization and coverage above.
+The namespace and full-path findings were presented separately, and Steve explicitly
+approved both repairs before implementation. Standard alias selection remains separate
+from the conformance assertions.
+
+== Supported-Strategy Coverage Record
+
+The dedicated suites are implemented in `JpaImplicitNamingStrategyComplianceTest`
+and `StandardImplicitNamingStrategyTest`, with common literal assertions and
+fixtures in `AbstractSupportedImplicitNamingTest`. No implicit strategy is subclassed
+to change its behavior. The shared methods are discovered and run in each suite.
+
+[cols="1,2,2",options="header"]
+|===
+|Rule family |Executable cases |Basis / classification
+|Table, Column, Version, access
+|`entityNamesAndInheritedFields`, `propertyAccessUsesPropertyNames`
+|M7 Table.name / Column.name; entity and persistent-attribute defaults
+|Single-column relationships
+|`toOneUsesRenamedTargetPrimaryKey`, `bidirectionalOneToOneHasOneOwningColumn`, `inverseOneToManyReusesOwnerForeignKey`, `unidirectionalOneToManyStorageAndNames`
+|M4 section 2.12; M7 JoinColumn.name / table
+|Association tables and ownership
+|`bidirectionalManyToManyUsesBothRelationshipNames`, `selfReferencingJoinTable`, `nestedEmbeddableNaming`; existing `JpaCompliantManyToManyImplicitNamingTest`
+|M4 section 2.12; M7 JoinTable.name / joinColumns / inverseJoinColumns
+|Collection and map naming
+|`collectionAndMapDefaults`, `embeddableElementNames`, `embeddableMapOverrides`
+|M7 CollectionTable, MapKey, MapKeyColumn, MapKeyJoinColumn, OrderColumn
+|Embedded members and overrides
+|`nestedEmbeddableNaming`, `nestedOverridesWin`, `repeatedEmbeddablesWithOverrides`; Standard `repeatedEmbeddablesNeedNoOverrides`
+|M7 Column, JoinColumn, AttributeOverride, AssociationOverride; full paths are the Standard convention
+|Identifiers and inheritance
+|`implicitEmbeddedIdentifierNames`, `implicitIdClassNames`, `idClassKeepsDeclaredColumns`, `derivedIdentityReusesDeclaredJoinColumns`, `joinedAndSecondaryTablePrimaryKeys`, `singleTableDiscriminatorDefaults`, `tablePerClassRetainsInheritedNames`
+|M4 section 2.4.2; M7 EmbeddedId, IdClass, MapsId, PrimaryKeyJoinColumn, DiscriminatorColumn, Inheritance
+|Namespaces, quoting, XML parity
+|`quotedIdentifiersAndNamespaces`, `xmlAndAnnotationDefaultsAgree`, `xmlDelimitedIdentifiersAndDefaultNamespaces`
+|M4 sections 2.12, 2.15 and XML metadata defaults; M7 annotation counterparts
+|Physical naming integration
+|`associationTableWithPhysicalPrefix`; existing `ImplicitTableNamingContractTest`, `PhysicalNamingStrategyContractTest`, `ImplicitNamingStrategyMatrixTest`
+|Hibernate extension; JPA and Standard assert different dependency-stage composition
+|Runtime integration
+|`sharedJoinAndDerivedIdentityWorkAtRuntime`
+|Generated schema, insert/load, inverse collection navigation and MapsId identity reuse
+|Explicit names, constraints and unsupported roles
+|Existing matrix plus `ImplicitForeignKeyNamingTest`, `ImplicitUniqueKeyNamingTest`, `ImplicitIndexNamingTest`, `ImplicitSqlTypeNamingTest`, specialized column tests
+|Provider-selected spellings and Hibernate extension contracts, not additional normative JPA algorithms
+|Composite defaults and correspondence
+|Existing `ImplicitJoinColumnNamingContractTest`, `CompositeReferenceNamingTest`, `DerivedColumnNamingTest`; portable explicit composite MapsId in both new suites
+|Separate inferred composite naming extensions from portable explicit declarations
+|===
+
+`IdClass` fields are directly declared on the entity. Their full public attribute
+paths are `region` and `number`, not an artificial `id.region` / `id.number`.
+An `EmbeddedId` declared as `id`, in contrast, has actual nested attribute paths.
+The tests distinguish these cases rather than imposing a synthetic prefix on both.
+
+=== Approved Findings And Repairs
+
+. With XML persistence-unit `delimited-identifiers`, schema/catalog defaults
+  `NamingSchema` / `NamingCatalog` become quoted `namingschema` / `namingcatalog`.
+  Quoting is present, but original case is lost. `BindingOptionsImpl` creates
+  unquoted default namespace identifiers and `TableBinder` canonicalizes them
+  before finalization. Preserve case and requested quoting before canonicalization.
+. Standard's embedded-id input omits the `id` attribute path. `ComponentSource`
+  constructs the embedded-identifier source with an empty naming prefix. The
+  proposed full-path convention expects `id_region`, not `region`.
+. Embedded collection inputs retain only their member name in several binders:
+  `CollectionIndexBinder` (order and basic map-key columns),
+  `ElementCollectionAttributeBinder` (basic element columns), and
+  `PluralAssociationAttributeBinder` (target join columns). Thus Standard yields
+  `tags_ORDER`, `labels_KEY`, `tags`, and `links_target_pk` for members of `home`,
+  despite using `home_tags` for the collection table and full paths for ordinary
+  embedded columns. Supply owner-relative paths to the existing strategy methods.
+
+Steve explicitly approved both the namespace and full-path repairs. Binding options
+now retain global quoting for namespace defaults, and table binding forwards rendered
+identifiers rather than canonical comparison strings. Embedded identifiers and
+collection column inputs retain their complete owner-relative paths, including
+entity-valued map keys. JPA still selects terminal names; Standard and ComponentPath
+can produce different names for affected mappings. Migration guidance documents both
+changes. The failing expectations are retained as ordinary regression assertions,
+without expected-failure suppression.
+
+=== Final Validation
+
+Both dedicated suites pass: 26 JPA cases and 27 Standard cases, with no skips,
+failures, or errors. The complete core suite passes with 18,130 tests, 1,526 skipped,
+and zero failures or errors. Runtime cases execute against H2; no cross-dialect
+execution or Jakarta Persistence certification is claimed.
+
+Existing general mapping fixtures now expect the restored JPA default, while the
+Standard suite explicitly selects Standard and checks full-path names. Composite
+join callback tests retain their Standard strategy and use the corrected embedded-id
+column names. Migration notes cover the namespace and full-path changes.
 
 == Unified PK Naming Validation
 
@@ -84,7 +320,7 @@ conformance. Historical behavior passing a test does not make it desirable or no
 physical naming: `StandardImplicitNamingStrategy`, `ImplicitNamingStrategyJpaCompliantImpl`,
 `ImplicitNamingStrategyLegacyJpaImpl`, `ImplicitNamingStrategyLegacyHbmImpl`, and
 `ImplicitNamingStrategyComponentPathImpl`. Thus there are five implementations to evaluate,
-not just the historical four. The `default` registration currently selects Standard.
+not just the historical four. The `default` registration selects JPA.
 
 The physical transformation prefixes table and column names with `p_`. Constraint tests
 instead prefix each physical constraint/index role independently. This deliberately exposes
@@ -194,19 +430,22 @@ used. Do not infer a JPA requirement for every prefixing result, or change all c
 to physical dependency composition just to match one table rule.
 
 The JPA implementation overrides association-table composition and the attribute-path
-hook to preserve terminal attribute names. A complete rule-by-rule conformance audit remains necessary,
-including alternate relationship ownership, embedded relationship paths, and explicit target
-column names. The matrix is a regression foundation for that audit, not a claim that the
-entire naming implementation is already conformant.
+hook to preserve terminal attribute names. The dedicated supported-strategy suites now
+cover alternate relationship ownership, embedded relationship paths, explicit target
+column names, and the other rule families recorded above. This completes the approved
+naming coverage inventory; it does not establish full Jakarta Persistence certification.
 
 == Further Coverage
 
-The matrix is broad but not exhaustive. Add strategy-matrix cases alongside the remaining
-callback migrations, especially implicit composite joins and composite MapsId across all
-variants, IdClass, embeddable associations/overrides, table-per-class, XML mappings supported
-in 9.0, audit/history columns, and schema/catalog quoting.
+The matrix and dedicated suites are broad but not exhaustive. IdClass, embeddable
+associations/overrides, table-per-class, representative XML mappings, namespace quoting,
+and portable simple/composite MapsId are covered by the supported-strategy suites.
+Further coverage may expand inferred composite joins and MapsId combinations, additional
+XML variants, and audit/history integration. These are extensions beyond the completed
+approved inventory, not unresolved failures in it.
 Generator storage names remain a separate `ImplicitDatabaseObjectNamingStrategy` concern.
-Named SQL types remain deferred and mutation temporary tables remain internal.
+Named enum/array naming is implemented with dedicated tests; implicit struct naming
+remains deferred. Mutation temporary tables remain internal.
 
 Also retain focused callback tests: identical final spelling alone cannot prove that a
 callback was invoked, skipped for an explicit declaration, or invoked exactly once.
@@ -227,8 +466,8 @@ The implemented retention decision is:
 * Emit `HHH90000046` through `DeprecationLogger` once per mapping resolution using
   a deprecated strategy, including subclasses, after programmatic overrides are
   applied. Accepting an unused deprecated configuration must not produce a warning.
-* Keep Standard as the default. Its newly qualified embeddable names are an
-  intentional schema-name change; users must review mappings before switching.
+* Keep JPA as the default. Standard is opt-in; its qualified embeddable names
+  can change schema names, so users must review mappings before switching.
   Component-path and Standard still differ in association-table composition, so
   this is not a promise of identical schemas after replacing the former.
 

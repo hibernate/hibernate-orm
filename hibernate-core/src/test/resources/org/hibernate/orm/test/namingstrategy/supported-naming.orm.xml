@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="3.2">
+
+    <entity class="org.hibernate.orm.test.namingstrategy.AbstractSupportedImplicitNamingTest$XmlOnlyOwner" name="XmlOwner" access="FIELD" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="text"/>
+            <many-to-one name="target" target-entity="org.hibernate.orm.test.namingstrategy.AbstractSupportedImplicitNamingTest$XmlOnlyTarget"/>
+            <element-collection name="tags" target-class="java.lang.String"/>
+            <embedded name="value">
+                <attribute-override name="code"><column name="overridden_code"/></attribute-override>
+            </embedded>
+        </attributes>
+    </entity>
+    <entity class="org.hibernate.orm.test.namingstrategy.AbstractSupportedImplicitNamingTest$XmlOnlyTarget" name="XmlTarget" access="FIELD" metadata-complete="true">
+        <attributes><id name="id"><column name="target_pk"/></id></attributes>
+    </entity>
+    <embeddable class="org.hibernate.orm.test.namingstrategy.AbstractSupportedImplicitNamingTest$XmlOnlyCode" access="FIELD" metadata-complete="true">
+        <attributes><basic name="code"/></attributes>
+    </embeddable>
+</entity-mappings>

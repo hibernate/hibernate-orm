@@ -218,8 +218,8 @@ public class TableBinder {
 		final boolean explicitTableName = tableSource != null && tableSource.nonEmptyName() != null;
 
 		final DenormalizedTable binding = bindingState.createDenormalizedTable(
-				logicalSchemaName == null ? null : logicalSchemaName.getCanonicalName(),
-				logicalCatalogName == null  ? null : logicalCatalogName.getCanonicalName(),
+				logicalSchemaName == null ? null : logicalSchemaName.render(),
+				logicalCatalogName == null  ? null : logicalCatalogName.render(),
 				explicitTableName ? logicalName.render() : logicalName.getText(),
 				type.isAbstract(),
 				unionBaseTable
@@ -314,8 +314,8 @@ public class TableBinder {
 		final Identifier logicalCatalogName = bindingOptions.getDefaultCatalogName();
 
 		final Table binding = bindingState.getOrCreateTable(
-				toCanonicalName( logicalSchemaName ),
-				toCanonicalName( logicalCatalogName ),
+				renderNamespaceName( logicalSchemaName ),
+				renderNamespaceName( logicalCatalogName ),
 				nameForAddTable( logicalName ),
 				null,
 				type.isAbstract(),
@@ -534,13 +534,13 @@ public class TableBinder {
 	private String explicitSchemaName(TableSource tableSource, Identifier logicalSchemaName) {
 		return tableSource != null && tableSource.schema() != null && !tableSource.schema().isEmpty()
 				? tableSource.schema()
-				: toCanonicalName( logicalSchemaName );
+				: renderNamespaceName( logicalSchemaName );
 	}
 
 	private String explicitCatalogName(TableSource tableSource, Identifier logicalCatalogName) {
 		return tableSource != null && tableSource.catalog() != null && !tableSource.catalog().isEmpty()
 				? tableSource.catalog()
-				: toCanonicalName( logicalCatalogName );
+				: renderNamespaceName( logicalCatalogName );
 	}
 
 	private Identifier determineCollectionTableLogicalName(
@@ -685,11 +685,11 @@ public class TableBinder {
 		return result;
 	}
 
-	private String toCanonicalName(Identifier name) {
+	private String renderNamespaceName(Identifier name) {
 		if ( name == null ) {
 			return null;
 		}
-		return name.getCanonicalName();
+		return name.render();
 	}
 
 	private String nameForAddTable(Identifier logicalName) {

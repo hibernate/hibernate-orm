@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -86,6 +87,10 @@ public non-sealed class Set extends Collection {
 			final var collectionTable = getCollectionTable();
 			if ( !collectionTable.hasPrimaryKey()
 					&& collectionTable.getUniqueKeys().isEmpty() ) {
+				final var softDeleteColumn = getSoftDeleteColumn();
+				if ( softDeleteColumn != null && getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP ) {
+					return;
+				}
 				boolean useUniqueKey = false;
 				for ( var selectable : getElement().getSelectables() ) {
 					if ( selectable instanceof Column column ) {
@@ -102,7 +107,6 @@ public non-sealed class Set extends Collection {
 						}
 					}
 				}
-				final var softDeleteColumn = getSoftDeleteColumn();
 				if ( softDeleteColumn != null && softDeleteColumn.isNullable() ) {
 					useUniqueKey = true;
 				}

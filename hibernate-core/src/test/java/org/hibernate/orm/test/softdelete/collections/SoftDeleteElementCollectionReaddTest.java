@@ -24,39 +24,107 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DomainModel( annotatedClasses = SoftDeleteElementCollectionReaddTest.SoftDeleteCollectionOwner.class )
+@DomainModel( annotatedClasses = {
+		SoftDeleteElementCollectionReaddTest.TimestampSoftDeleteCollectionOwner.class,
+		SoftDeleteElementCollectionReaddTest.ActiveSoftDeleteCollectionOwner.class,
+		SoftDeleteElementCollectionReaddTest.DeletedSoftDeleteCollectionOwner.class
+} )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-20585" )
 public class SoftDeleteElementCollectionReaddTest {
 	@Test
-	void readdingPreviouslySoftDeletedElementCollectionEntry(SessionFactoryScope scope) {
+	void readdingPreviouslyTimestampSoftDeletedElementCollectionEntry(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final SoftDeleteCollectionOwner owner = new SoftDeleteCollectionOwner( 1L );
+			final TimestampSoftDeleteCollectionOwner owner = new TimestampSoftDeleteCollectionOwner( 1L );
 			owner.getMobiles().addAll( Set.of( "1", "2" ) );
 			session.persist( owner );
 		} );
 
 		scope.inTransaction( session -> {
-			final SoftDeleteCollectionOwner owner = session.get( SoftDeleteCollectionOwner.class, 1L );
+			final TimestampSoftDeleteCollectionOwner owner = session.get( TimestampSoftDeleteCollectionOwner.class, 1L );
 			owner.getMobiles().clear();
 			owner.getMobiles().addAll( Set.of( "2", "3" ) );
 		} );
 
 		scope.inTransaction( session -> {
-			final SoftDeleteCollectionOwner owner = session.get( SoftDeleteCollectionOwner.class, 1L );
+			final TimestampSoftDeleteCollectionOwner owner = session.get( TimestampSoftDeleteCollectionOwner.class, 1L );
 			owner.getMobiles().clear();
 			owner.getMobiles().addAll( Set.of( "1", "3" ) );
 		} );
 
 		scope.inTransaction( session -> {
-			final SoftDeleteCollectionOwner owner = session.get( SoftDeleteCollectionOwner.class, 1L );
+			final TimestampSoftDeleteCollectionOwner owner = session.get( TimestampSoftDeleteCollectionOwner.class, 1L );
 			assertThat( owner.getMobiles() ).containsExactlyInAnyOrder( "1", "3" );
+		} );
+	}
+
+	@Test
+	void reremovingPreviouslyActiveSoftDeletedElementCollectionEntry(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final ActiveSoftDeleteCollectionOwner owner = new ActiveSoftDeleteCollectionOwner( 1L );
+			owner.getMobiles().addAll( Set.of( "1", "2" ) );
+			session.persist( owner );
+		} );
+
+		scope.inTransaction( session -> {
+			final ActiveSoftDeleteCollectionOwner owner = session.get( ActiveSoftDeleteCollectionOwner.class, 1L );
+			owner.getMobiles().clear();
+			owner.getMobiles().addAll( Set.of( "2", "3" ) );
+		} );
+
+		scope.inTransaction( session -> {
+			final ActiveSoftDeleteCollectionOwner owner = session.get( ActiveSoftDeleteCollectionOwner.class, 1L );
+			owner.getMobiles().clear();
+			owner.getMobiles().addAll( Set.of( "1", "3" ) );
+		} );
+
+		scope.inTransaction( session -> {
+			final ActiveSoftDeleteCollectionOwner owner = session.get( ActiveSoftDeleteCollectionOwner.class, 1L );
+			owner.getMobiles().clear();
+			owner.getMobiles().add( "3" );
+		} );
+
+		scope.inTransaction( session -> {
+			final ActiveSoftDeleteCollectionOwner owner = session.get( ActiveSoftDeleteCollectionOwner.class, 1L );
+			assertThat( owner.getMobiles() ).containsExactly( "3" );
+		} );
+	}
+
+	@Test
+	void reremovingPreviouslyDeletedSoftDeletedElementCollectionEntry(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final DeletedSoftDeleteCollectionOwner owner = new DeletedSoftDeleteCollectionOwner( 1L );
+			owner.getMobiles().addAll( Set.of( "1", "2" ) );
+			session.persist( owner );
+		} );
+
+		scope.inTransaction( session -> {
+			final DeletedSoftDeleteCollectionOwner owner = session.get( DeletedSoftDeleteCollectionOwner.class, 1L );
+			owner.getMobiles().clear();
+			owner.getMobiles().addAll( Set.of( "2", "3" ) );
+		} );
+
+		scope.inTransaction( session -> {
+			final DeletedSoftDeleteCollectionOwner owner = session.get( DeletedSoftDeleteCollectionOwner.class, 1L );
+			owner.getMobiles().clear();
+			owner.getMobiles().addAll( Set.of( "1", "3" ) );
+		} );
+
+		scope.inTransaction( session -> {
+			final DeletedSoftDeleteCollectionOwner owner = session.get( DeletedSoftDeleteCollectionOwner.class, 1L );
+			owner.getMobiles().clear();
+			owner.getMobiles().add( "3" );
+		} );
+
+		scope.inTransaction( session -> {
+			final DeletedSoftDeleteCollectionOwner owner = session.get( DeletedSoftDeleteCollectionOwner.class, 1L );
+			assertThat( owner.getMobiles() ).containsExactly( "3" );
 		} );
 	}
 
 	@Entity( name = "SoftDeleteCollectionOwner" )
 	@Table( name = "soft_delete_collection_owner" )
-	static class SoftDeleteCollectionOwner {
+	static class TimestampSoftDeleteCollectionOwner {
 		@Id
 		private Long id;
 
@@ -65,10 +133,56 @@ public class SoftDeleteElementCollectionReaddTest {
 		@SoftDelete( columnName = "deleted_at", strategy = SoftDeleteType.TIMESTAMP )
 		private Set<String> mobiles = new LinkedHashSet<>();
 
-		SoftDeleteCollectionOwner() {
+		TimestampSoftDeleteCollectionOwner() {
 		}
 
-		SoftDeleteCollectionOwner(Long id) {
+		TimestampSoftDeleteCollectionOwner(Long id) {
+			this.id = id;
+		}
+
+		Set<String> getMobiles() {
+			return mobiles;
+		}
+	}
+
+	@Entity( name = "ActiveSoftDeleteCollectionOwner" )
+	@Table( name = "active_soft_delete_collection_owner" )
+	static class ActiveSoftDeleteCollectionOwner {
+		@Id
+		private Long id;
+
+		@ElementCollection
+		@CollectionTable( name = "active_soft_delete_collection_owner_mobile", joinColumns = @JoinColumn( name = "owner_id" ) )
+		@SoftDelete( strategy = SoftDeleteType.ACTIVE )
+		private Set<String> mobiles = new LinkedHashSet<>();
+
+		ActiveSoftDeleteCollectionOwner() {
+		}
+
+		ActiveSoftDeleteCollectionOwner(Long id) {
+			this.id = id;
+		}
+
+		Set<String> getMobiles() {
+			return mobiles;
+		}
+	}
+
+	@Entity( name = "DeletedSoftDeleteCollectionOwner" )
+	@Table( name = "deleted_soft_delete_collection_owner" )
+	static class DeletedSoftDeleteCollectionOwner {
+		@Id
+		private Long id;
+
+		@ElementCollection
+		@CollectionTable( name = "deleted_soft_delete_collection_owner_mobile", joinColumns = @JoinColumn( name = "owner_id" ) )
+		@SoftDelete( strategy = SoftDeleteType.DELETED )
+		private Set<String> mobiles = new LinkedHashSet<>();
+
+		DeletedSoftDeleteCollectionOwner() {
+		}
+
+		DeletedSoftDeleteCollectionOwner(Long id) {
 			this.id = id;
 		}
 

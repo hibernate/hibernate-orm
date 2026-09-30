@@ -166,7 +166,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	@Override
 	public Iterator<E> iterator() {
 		read();
-		return new IteratorProxy<>( collection.iterator() );
+		return new IdentifierBagIterator<>( collection.iterator() );
 	}
 
 	@Override
@@ -438,13 +438,13 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	@Override
 	public ListIterator<E> listIterator() {
 		read();
-		return new ListIteratorProxy( bagAsList().listIterator() );
+		return new IdentifierBagListIterator( bagAsList().listIterator() );
 	}
 
 	@Override
 	public ListIterator<E> listIterator(int index) {
 		read();
-		return new ListIteratorProxy( bagAsList().listIterator( index ) );
+		return new IdentifierBagListIterator( bagAsList().listIterator( index ) );
 	}
 
 	private void beforeRemove(int index) {
@@ -467,6 +467,106 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 			identifiers.put( i+1, identifiers.get( i ) );
 		}
 		identifiers.remove( index );
+	}
+
+	// HHH-10875: the generic IteratorProxy/ListIteratorProxy from AbstractPersistentCollection
+	// don't maintain the identifiers map on remove()/add(), causing misaligned identifiers
+	// that lead to wrong deletes and spurious updates during flush
+	private final class IdentifierBagIterator<E> implements Iterator<E> {
+		private final Iterator<E> itr;
+		private int cursor = -1;
+		private int lastReturnedIndex = -1;
+		public IdentifierBagIterator(Iterator<E> itr) {
+			this.itr = itr;
+		}
+		@Override
+		public boolean hasNext() {
+			return itr.hasNext();
+		}
+		@Override
+		public E next() {
+			final E element = itr.next();
+			lastReturnedIndex = ++cursor;
+			return element;
+		}
+		@Override
+		public void remove() {
+			if ( lastReturnedIndex < 0 ) {
+				throw new IllegalStateException();
+			}
+			write();
+			beforeRemove( lastReturnedIndex );
+			itr.remove();
+			elementRemoved = true;
+			lastReturnedIndex = -1;
+		}
+	}
+
+	private class IdentifierBagListIterator implements ListIterator<E> {
+		private final ListIterator<E> delegate;
+		private int lastReturnedIndex = -1;
+
+		IdentifierBagListIterator(ListIterator<E> delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return delegate.hasNext();
+		}
+
+		@Override
+		public E next() {
+			lastReturnedIndex = delegate.nextIndex();
+			return delegate.next();
+		}
+
+		@Override
+		public boolean hasPrevious() {
+			return delegate.hasPrevious();
+		}
+
+		@Override
+		public E previous() {
+			lastReturnedIndex = delegate.previousIndex();
+			return delegate.previous();
+		}
+
+		@Override
+		public int nextIndex() {
+			return delegate.nextIndex();
+		}
+
+		@Override
+		public int previousIndex() {
+			return delegate.previousIndex();
+		}
+
+		@Override
+		public void remove() {
+			if ( lastReturnedIndex < 0 ) {
+				throw new IllegalStateException();
+			}
+			write();
+			beforeRemove( lastReturnedIndex );
+			delegate.remove();
+			elementRemoved = true;
+			lastReturnedIndex = -1;
+		}
+
+		@Override
+		public void set(E e) {
+			write();
+			delegate.set( e );
+		}
+
+		@Override
+		public void add(E e) {
+			write();
+			beforeAdd( delegate.nextIndex() );
+			delegate.add( e );
+			lastReturnedIndex = -1;
+		}
 	}
 
 	@Override

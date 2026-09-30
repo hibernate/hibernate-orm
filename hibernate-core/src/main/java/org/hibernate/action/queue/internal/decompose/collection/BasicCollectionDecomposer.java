@@ -1687,10 +1687,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			);
 		}
 		else if ( identifierDescriptor != null ) {
-			// For IdBag collections, restrict by the synthetic identifier
-			// rowValue for IdBag updates should contain the identifier
+			// HHH-10875: for IdBag collections, rowValue is the element (not the identifier),
+			// so we must look up the actual collection identifier via getIdentifier()
 			identifierDescriptor.decompose(
-					rowValue,  // For IdBag, rowValue is the identifier value
+					collection.getIdentifier( rowValue, rowPosition ),
 					jdbcValueBindings::bindRestriction,
 					session
 			);

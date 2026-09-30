@@ -4,8 +4,10 @@
  */
 
 import groovy.transform.Field
-import io.jenkins.blueocean.rest.impl.pipeline.PipelineNodeGraphVisitor
-import io.jenkins.blueocean.rest.impl.pipeline.FlowNodeWrapper
+import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker
+import org.jenkinsci.plugins.workflow.graph.BlockEndNode
+import org.jenkinsci.plugins.workflow.actions.ThreadNameAction
+import org.jenkinsci.plugins.workflow.actions.ErrorAction
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 /*
@@ -341,16 +343,40 @@ void handleNotifications(currentBuild, buildEnv) {
 
 @NonCPS
 String getParallelResult( RunWrapper build, String parallelBranchName ) {
-    def visitor = new PipelineNodeGraphVisitor( build.rawBuild )
-    def branch = visitor.pipelineNodes.find{ it.type == FlowNodeWrapper.NodeType.PARALLEL && parallelBranchName == it.displayName }
-    if ( branch == null ) {
-    	echo "Couldn't find parallel branch name '$parallelBranchName'. Available parallel branch names:"
-		visitor.pipelineNodes.findAll{ it.type == FlowNodeWrapper.NodeType.PARALLEL }.each{
-			echo " - ${it.displayName}"
-		}
-    	return null;
+    def execution = build.rawBuild.execution
+    if ( execution == null ) {
+        return 'UNKNOWN'
     }
-    return branch.status.result
+    def branchStart = null
+    def branchNames = []
+    def allNodes = []
+    for ( def node : new FlowGraphWalker( execution ) ) {
+        allNodes.add( node )
+        def threadName = node.getAction( ThreadNameAction.class )
+        if ( threadName != null ) {
+            branchNames.add( threadName.threadName )
+            if ( threadName.threadName == parallelBranchName ) {
+                branchStart = node
+            }
+        }
+    }
+    if ( branchStart == null ) {
+        echo "Couldn't find parallel branch name '$parallelBranchName'. Available parallel branch names:"
+        branchNames.each { echo " - ${it}" }
+        return null
+    }
+    for ( def node : allNodes ) {
+        if ( node instanceof BlockEndNode && node.startNode.id == branchStart.id ) {
+            return node.getAction( ErrorAction.class ) != null ? 'FAILURE' : 'SUCCESS'
+        }
+    }
+    for ( def node : allNodes ) {
+        if ( node.getAction( ErrorAction.class ) != null
+                && node.getEnclosingBlocks().any { it.id == branchStart.id } ) {
+            return 'FAILURE'
+        }
+    }
+    return 'UNKNOWN'
 }
 
 // try-finally construct that properly suppresses exceptions thrown in the finally block.

@@ -8,6 +8,8 @@ import jakarta.persistence.query.NativeQuery;
 import java.util.List;
 
 interface InvalidNativeStaticQuery {
+	EntityAgent agent();
+
 	record Summary(String isbn, String title) {
 	}
 

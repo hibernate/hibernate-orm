@@ -151,11 +151,11 @@ public class SmokeTests {
 			assertThat( attrMapping.getEmbeddableTypeDescriptor().getJdbcTypeCount(), is( 4 ) );
 			assertThat(
 					attrMapping.getEmbeddableTypeDescriptor().getSelectable( 0 ).getSelectionExpression(),
-					is( "component_attribute1" )
+					is( "attribute1" )
 			);
 			assertThat(
 					attrMapping.getEmbeddableTypeDescriptor().getSelectable( 1 ).getSelectionExpression(),
-					is( "component_attribute2" )
+					is( "attribute2" )
 			);
 		}
 	}

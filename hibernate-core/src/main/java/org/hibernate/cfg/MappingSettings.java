@@ -426,11 +426,13 @@ public interface MappingSettings {
 	 * <ul>
 	 *     <li>{@code "default"} and {@code "jpa"} are abbreviations for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}
-	 *     <li>{@code "legacy-jpa"} is an abbreviation for
+	 *     <li>{@code "hibernate"} is an abbreviations for
+	 *     {@link org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy}
+	 *     <li>{@code "legacy-jpa"} (deprecated) is an abbreviation for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl}
-	 *     <li>{@code "legacy-hbm"} is an abbreviation for
+	 *     <li>{@code "legacy-hbm"} (deprecated) is an abbreviation for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl}
-	 *     <li>{@code "component-path"} is an abbreviation for
+	 *     <li>{@code "component-path"} (deprecated) is an abbreviation for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl}
 	 * </ul>
 	 *

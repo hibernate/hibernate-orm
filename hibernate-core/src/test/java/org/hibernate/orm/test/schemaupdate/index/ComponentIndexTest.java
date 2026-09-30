@@ -42,7 +42,7 @@ public class ComponentIndexTest {
 		boolean createIndexCommandIsGenerated = false;
 		for ( String command : commands ) {
 			if ( command.toLowerCase().contains( "create index city_index" ) ) {
-				Assertions.assertTrue( command.contains( "address_city" ), "Index must use the mapped component column" );
+				Assertions.assertTrue( command.contains( "(city)" ), "Index must use the mapped component column" );
 				createIndexCommandIsGenerated = true;
 				break;
 			}

@@ -229,7 +229,7 @@ public class SimpleIdTests {
 					assertThat( naturalId.getValue() ).isInstanceOf( Component.class );
 					assertThat( ( (Component) naturalId.getValue() ).getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "naturalId_key1", "naturalId_key2" );
+							.containsExactly( "key1", "key2" );
 				},
 				scope.getRegistry(),
 				AggregatedIdEntity.class

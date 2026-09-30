@@ -939,7 +939,7 @@ class PluralAssociationAttributeBinder {
 							.determineAssociationKeyColumnName(
 									new AssociationKeyNamingInput(
 											JoinColumnNaming.entity( ownerBinding ), JoinColumnNaming.entity( target.typeBinder().getTypeBinding() ),
-											propertyName, JoinColumnNaming.reference( target.typeBinder().getTypeBinding(), target.primaryTable(), targetColumns,
+											collectionRolePath, JoinColumnNaming.reference( target.typeBinder().getTypeBinding(), target.primaryTable(), targetColumns,
 													orderedJoinColumns.stream().map( JoinColumn::referencedColumnName ).toList(), position, bindingState ) ),
 									JoinColumnNaming.context( bindingState ) ), "association-table target key" );
 			final ColumnSource columnSource = ColumnSource.from( joinColumnAnn );

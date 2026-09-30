@@ -80,11 +80,11 @@ class ImplicitJoinColumnNamingContractTest {
 			final var strategy = new RecordingStrategy();
 			final var metadata = MetadataBuildingTestHelper.buildMetadataWithNaming( registry,
 					new MappingSources().addManagedClasses( CompositeOwner.class, CompositeTarget.class ), strategy, new PrefixStrategy() );
-			assertThat( strategy.calls ).containsExactly( "toOne_target_first", "toOne_target_second" );
+			assertThat( strategy.calls ).containsExactly( "toOne_target_id_first", "toOne_target_id_second" );
 			assertThat( strategy.positions ).containsExactly( 0, 1 );
 			assertThat( metadata.getEntityBinding( CompositeOwner.class.getName() ).getProperty( "target" ).getColumns() )
 					.extracting( org.hibernate.mapping.Column::getName )
-					.containsExactly( "p_toOne_target_first", "p_toOne_target_second" );
+					.containsExactly( "p_toOne_target_id_first", "p_toOne_target_id_second" );
 		}
 	}
 
@@ -190,7 +190,7 @@ class ImplicitJoinColumnNamingContractTest {
 	@Entity(name = "CompositeJoinOwner")
 	static class CompositeOwner {
 		@Id long id;
-		@ManyToOne @JoinColumns({ @JoinColumn(referencedColumnName = "second"), @JoinColumn(referencedColumnName = "first") })
+		@ManyToOne @JoinColumns({ @JoinColumn(referencedColumnName = "id_second"), @JoinColumn(referencedColumnName = "id_first") })
 		CompositeTarget target;
 	}
 	@Entity(name = "JoinBusinessTarget")

@@ -951,7 +951,7 @@ public class ElementCollectionBindingTests {
 					assertThat( collection.getMapKeyPropertyName() ).isEqualTo( "zipCode" );
 					assertThat( collection.getIndex().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "addresses_zipCode" );
+							.containsExactly( "zipCode" );
 					assertThat( collection.getElement() ).isInstanceOf( Component.class );
 				},
 				scope.getRegistry(),
@@ -975,7 +975,7 @@ public class ElementCollectionBindingTests {
 					assertThat( key.getComponentClassName() ).isEqualTo( Location.class.getName() );
 					assertThat( key.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "addresses_location_city", "addresses_location_country" );
+							.containsExactly( "city", "country" );
 					assertThat( collection.getElement() ).isInstanceOf( Component.class );
 				},
 				scope.getRegistry(),
@@ -1151,7 +1151,7 @@ public class ElementCollectionBindingTests {
 					assertThat( element.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "addresses_line1", "addresses_zipCode" );
+							.containsExactly( "line1", "zipCode" );
 					final MappingRole elementRole = MappingRole.collection( collection.getRole() )
 							.append( MappingRole.PartKind.ELEMENT );
 					final var appliedElement = context.getBindingState().getBootBindingModel()
@@ -1185,7 +1185,7 @@ public class ElementCollectionBindingTests {
 					assertThat( element.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "addresses_line1", "addresses_zipCode" );
+							.containsExactly( "line1", "zipCode" );
 				},
 				scope.getRegistry(),
 				EmbeddableListOwner.class
@@ -1212,7 +1212,7 @@ public class ElementCollectionBindingTests {
 					assertThat( element.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "addresses_line1", "addresses_zipCode" );
+							.containsExactly( "line1", "zipCode" );
 				},
 				scope.getRegistry(),
 				EmbeddableMapOwner.class
@@ -1273,7 +1273,7 @@ public class ElementCollectionBindingTests {
 					assertThat( element.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "addresses_line1", "addresses_zipCode" );
+							.containsExactly( "line1", "zipCode" );
 				},
 				scope.getRegistry(),
 				EmbeddedIntentElementOwner.class
@@ -1297,7 +1297,7 @@ public class ElementCollectionBindingTests {
 							.containsExactly( "home_city", "home_country" );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "addresses_line1", "home_city", "home_country", "addresses_zipCode" );
+							.containsExactly( "line1", "home_city", "home_country", "zipCode" );
 				},
 				scope.getRegistry(),
 				NestedEmbeddableElementOwner.class

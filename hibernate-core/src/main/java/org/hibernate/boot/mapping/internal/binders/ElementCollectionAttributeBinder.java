@@ -502,7 +502,7 @@ class ElementCollectionAttributeBinder {
 		final jakarta.persistence.Column column = source.elementColumn();
 		final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumnWithNameBinding( table,
 				ColumnSource.from( column ),
-				() -> implicitElementColumnName( source ), false, true, 255, 0, 0, bindingOptions, bindingState
+				() -> implicitElementColumnName(), false, true, 255, 0, 0, bindingOptions, bindingState
 		);
 		final Property property = new Property();
 		property.setName( source.member().resolveAttributeName() );
@@ -518,9 +518,9 @@ class ElementCollectionAttributeBinder {
 		return element;
 	}
 
-		private String implicitElementColumnName(CollectionSource source) {
+		private String implicitElementColumnName() {
 			return ImplicitNamingHelper.columnName( bindingContext.getImplicitNamingStrategy()
-					.determineCollectionElementColumnName( new CollectionElementColumnNamingInput( source.member().resolveAttributeName() ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "CollectionElementColumn" );
+					.determineCollectionElementColumnName( new CollectionElementColumnNamingInput( collectionRolePath ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "CollectionElementColumn" );
 		}
 
 	private EntityTypeMetadataImpl resolveOwnerEntityType() {

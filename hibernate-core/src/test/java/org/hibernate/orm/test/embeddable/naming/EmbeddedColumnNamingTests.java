@@ -97,11 +97,11 @@ public class EmbeddedColumnNamingTests {
 
 		final AttributeMapping workStreetMapping = workAddressType.findAttributeMapping( "street" );
 		assertThat( workStreetMapping.getJdbcTypeCount() ).isEqualTo( 1 );
-		assertThat( workStreetMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "workAddress_street" );
+		assertThat( workStreetMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "street" );
 
 		final AttributeMapping workCityMapping = workAddressType.findAttributeMapping( "city" );
 		assertThat( workCityMapping.getJdbcTypeCount() ).isEqualTo( 1 );
-		assertThat( workCityMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "workAddress_city" );
+		assertThat( workCityMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "city" );
 	}
 
 	/**

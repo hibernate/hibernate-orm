@@ -304,7 +304,7 @@ public record ComponentSource(
 				new PathAdjustmentCollector( member, bindingContext ),
 				defaultAccessType,
 				"",
-				""
+				member.resolveAttributeName() + "."
 		);
 	}
 

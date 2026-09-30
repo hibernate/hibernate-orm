@@ -73,10 +73,11 @@ import static org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnN
 /// [explicit provenance][LogicalName#isExplicit()] set to `false`; use
 /// [ImplicitNamingContext#implicitName(String)] or its quoting overload to construct it.
 ///
-/// Hibernate's default [StandardImplicitNamingStrategy][org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy]
+/// Hibernate defaults to [ImplicitNamingStrategyJpaCompliantImpl], which provides
+/// JPA naming conventions. The separately selectable
+/// [StandardImplicitNamingStrategy][org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy]
 /// uses full attribute paths to distinguish repeated embeddables and logical dependency
-/// names to compose association-table names. [ImplicitNamingStrategyJpaCompliantImpl]
-/// provides the separately selectable JPA naming conventions. Applications may select
+/// names to compose association-table names. Applications may select
 /// a supplied strategy, subclass one to customize individual roles, or implement this
 /// interface. Changing strategies may change schema names; verify the resulting mappings
 /// when migrating an existing application.
@@ -84,6 +85,8 @@ import static org.hibernate.boot.model.naming.spi.EmbeddableDiscriminatorColumnN
 /// Select a strategy using the configuration property
 /// {@value org.hibernate.cfg.MappingSettings#IMPLICIT_NAMING_STRATEGY} or
 /// [Configuration#setImplicitNamingStrategy][org.hibernate.cfg.Configuration#setImplicitNamingStrategy(ImplicitNamingStrategy)].
+///
+/// The use of short-names should be preferred for selecting built-in strategies.
 ///
 /// @see PhysicalNamingStrategy
 /// @see org.hibernate.cfg.Configuration#setImplicitNamingStrategy(ImplicitNamingStrategy)

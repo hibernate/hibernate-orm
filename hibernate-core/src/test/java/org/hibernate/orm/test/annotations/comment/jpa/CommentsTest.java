@@ -79,8 +79,8 @@ public class CommentsTest {
 		@Column(comment = "I am id")
 		private Long id;
 
-		@AttributeOverride(name = "firstName", column = @Column(comment = "I am name_firstName"))
-		@AttributeOverride(name = "lastName", column = @Column(comment = "I am name_lastName"))
+		@AttributeOverride(name = "firstName", column = @Column(comment = "I am firstName"))
+		@AttributeOverride(name = "lastName", column = @Column(comment = "I am lastName"))
 		private Name name;
 
 		private Money money;
@@ -102,9 +102,9 @@ public class CommentsTest {
 
 	@Embeddable
 	public static class Money {
-		@Column(comment = "I am money_amount")
+		@Column(comment = "I am amount")
 		private BigDecimal amount;
-		@Column(comment = "I am money_currency")
+		@Column(comment = "I am currency")
 		private Currency currency;
 	}
 

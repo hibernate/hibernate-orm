@@ -90,11 +90,11 @@ public class BindingOptionsImpl implements BindingOptions {
 
 		defaultCatalogName = Identifier.toIdentifier(
 				coalesce( effectiveDefaults.getDefaultCatalogName(), persistenceUnitMetadata.getDefaultCatalog() ),
-				false, false, false
+				globallyQuote, false, false
 		);
 		defaultSchemaName = Identifier.toIdentifier(
 				coalesce( effectiveDefaults.getDefaultSchemaName(), persistenceUnitMetadata.getDefaultSchema() ),
-				false, false, false
+				globallyQuote, false, false
 		);
 		this.createImplicitDiscriminatorsForJoinedInheritance = createImplicitDiscriminatorsForJoinedInheritance;
 		this.ignoreExplicitDiscriminatorsForJoinedInheritance = ignoreExplicitDiscriminatorsForJoinedInheritance;

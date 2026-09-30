@@ -10,9 +10,9 @@ import java.util.List;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.boot.model.naming.spi.StandardImplicitNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
@@ -232,12 +232,17 @@ public class StrategySelectorBuilder {
 		strategySelector.registerStrategyImplementor(
 				ImplicitNamingStrategy.class,
 				"default",
-				StandardImplicitNamingStrategy.class
+				ImplicitNamingStrategyJpaCompliantImpl.class
 		);
 		strategySelector.registerStrategyImplementor(
 				ImplicitNamingStrategy.class,
 				"jpa",
 				ImplicitNamingStrategyJpaCompliantImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"hibernate",
+				StandardImplicitNamingStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
 				ImplicitNamingStrategy.class,

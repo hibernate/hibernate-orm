@@ -1096,7 +1096,7 @@ public class ToOneAssociationTests {
 					assertThat( index.getComponentClassName() ).isEqualTo( LocationKey.class.getName() );
 					assertThat( index.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "locationKey_city", "locationKey_country" );
+							.containsExactly( "city", "country" );
 					assertIndexMappingRoles( collection, index );
 				},
 				scope.getRegistry(),
@@ -1347,7 +1347,7 @@ public class ToOneAssociationTests {
 					assertThat( inverseIndex.getComponentClassName() ).isEqualTo( LocationKey.class.getName() );
 					assertThat( inverseIndex.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "locationKey_city", "locationKey_country" );
+							.containsExactly( "city", "country" );
 					assertIndexMappingRoles( inverseCollection, inverseIndex );
 				},
 				scope.getRegistry(),

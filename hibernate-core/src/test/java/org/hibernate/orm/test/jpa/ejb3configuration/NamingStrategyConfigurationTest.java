@@ -8,6 +8,9 @@ import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import java.util.Map;
 
 import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.orm.test.jpa.MyNamingStrategy;
@@ -26,6 +29,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @BaseUnitTest
 public class NamingStrategyConfigurationTest {
+	/// Unconfigured boot and both JPA aliases must select the JPA implementation,
+	/// rather than its superclass with Hibernate-specific naming conventions.
+	@Test
+	public void testJpaImplicitNamingIsDefault() {
+		for ( String selection : new String[] { null, "default", "jpa" } ) {
+			var builder = ServiceRegistryUtil.serviceRegistryBuilder();
+			if ( selection != null ) {
+				builder.applySetting( AvailableSettings.IMPLICIT_NAMING_STRATEGY, selection );
+			}
+			try ( var registry = builder.build() ) {
+				var options = new MappingResolutionOptionsImpl( registry );
+				assertEquals( ImplicitNamingStrategyJpaCompliantImpl.class, options.getImplicitNamingStrategy().getClass() );
+				assertEquals( PhysicalNamingStrategyStandardImpl.class, options.getPhysicalNamingStrategy().getClass() );
+			}
+		}
+	}
 
 	@Test
 	public void testNamingStrategyFromProperty() {

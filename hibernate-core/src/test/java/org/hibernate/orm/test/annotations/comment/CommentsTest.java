@@ -93,17 +93,17 @@ public class CommentsTest {
 
 	@Embeddable
 	public static class Name {
-		@Column(comment = "I am name_firstName")
+		@Column(comment = "I am firstName")
 		private String firstName;
-		@Column(comment = "I am name_lastName")
+		@Column(comment = "I am lastName")
 		private String lastName;
 	}
 
 	@Embeddable
 	public static class Money {
-		@Column(comment = "I am money_amount")
+		@Column(comment = "I am amount")
 		private BigDecimal amount;
-		@Column(comment = "I am money_currency")
+		@Column(comment = "I am currency")
 		private Currency currency;
 	}
 

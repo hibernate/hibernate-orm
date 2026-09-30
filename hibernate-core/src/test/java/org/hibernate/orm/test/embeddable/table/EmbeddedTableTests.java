@@ -98,7 +98,7 @@ public class EmbeddedTableTests {
 				logicalName( Identifier.toIdentifier( secondaryTableName ) ) );
 		assertThat( secondaryTable.getColumns() ).hasSize( 3 );
 		assertThat( secondaryTable.getColumns().stream().map( org.hibernate.mapping.Column::getName ) )
-				.containsExactlyInAnyOrder( "tag_text", "tag_added", "post_fk" );
+				.containsExactlyInAnyOrder( "text", "added", "post_fk" );
 	}
 
 	@Test
@@ -132,14 +132,14 @@ public class EmbeddedTableTests {
 				logicalName( Identifier.toIdentifier( "supp" ) ) );
 		assertThat( secondaryTable.getColumns() ).hasSize( 3 );
 		assertThat( secondaryTable.getColumns().stream().map( org.hibernate.mapping.Column::getName ) )
-				.containsExactlyInAnyOrder( "subContainer_nested_thing1", "subContainer_nested_thing2", "top_fk" );
+				.containsExactlyInAnyOrder( "thing1", "thing2", "top_fk" );
 
 		// thing1, thing2, top_fk
 		final org.hibernate.mapping.Table collectionTable = dbNamespace.locateTable(
 				logicalName( Identifier.toIdentifier( "sub_containers" ) ) );
 		assertThat( collectionTable.getColumns() ).hasSize( 3 );
 		assertThat( collectionTable.getColumns().stream().map( org.hibernate.mapping.Column::getName ) )
-				.containsExactlyInAnyOrder( "subContainers_nested_thing1", "subContainers_nested_thing2", "top_fk" );
+				.containsExactlyInAnyOrder( "thing1", "thing2", "top_fk" );
 	}
 
 	private void checkContainerComponent(Component containerComponent, String tableName) {
@@ -165,7 +165,7 @@ public class EmbeddedTableTests {
 			session.createSelectionQuery( "from Post", Post.class ).list();
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			assertThat( sqlCollector.getSqlQueries().get( 0 ) )
-					.contains( "p1_0.id", "p1_0.name", "p1_1.tag_added", "p1_1.tag_text" );
+					.contains( "p1_0.id", "p1_0.name", "p1_1.added", "p1_1.text" );
 		} );
 	}
 

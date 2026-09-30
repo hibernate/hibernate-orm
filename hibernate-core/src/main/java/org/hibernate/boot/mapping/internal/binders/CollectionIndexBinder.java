@@ -89,7 +89,7 @@ class CollectionIndexBinder {
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumnWithNameBinding( table,
 				ColumnSource.from( source.orderColumn() ),
-				() -> implicitListIndexColumnName( source, bindingState ),
+				() -> implicitListIndexColumnName( collection, bindingState ),
 				false,
 				true, 255, 0, 0, bindingOptions, bindingState
 		);
@@ -120,16 +120,21 @@ class CollectionIndexBinder {
 		collection.setIndex( index );
 	}
 
+	/// Retain enclosing embeddable segments while excluding the entity role prefix.
+	private static String collectionAttributePath(org.hibernate.mapping.Collection collection) {
+		return collection.getRole().substring( collection.getOwnerEntityName().length() + 1 );
+	}
+
 	private static int effectiveListIndexBase(CollectionSource source) {
 		final var listIndexBase = source.listIndexBase();
 		return listIndexBase == null ? 0 : listIndexBase.value();
 	}
 
-	private static String implicitListIndexColumnName(CollectionSource source, BindingState bindingState) {
+	private static String implicitListIndexColumnName(IndexedCollection collection, BindingState bindingState) {
 		return ImplicitNamingHelper.columnName( bindingState.getMetadataBuildingContext()
 				.getBuildingPlan()
 				.getImplicitNamingStrategy()
-				.determineListIndexColumnName( new ListIndexColumnNamingInput( source.member().resolveAttributeName() ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "ListIndexColumn" );
+				.determineListIndexColumnName( new ListIndexColumnNamingInput( collectionAttributePath( collection ) ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "ListIndexColumn" );
 	}
 
 	static void bindMapKey(
@@ -689,7 +694,7 @@ class CollectionIndexBinder {
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumnWithNameBinding( table,
 				ColumnSource.from( source.mapKeyColumn() ),
-				() -> implicitMapKeyColumnName( source, bindingState ),
+				() -> implicitMapKeyColumnName( collection, bindingState ),
 				false,
 				false, 255, 0, 0, bindingOptions, bindingState
 		);
@@ -705,11 +710,11 @@ class CollectionIndexBinder {
 		collection.setIndex( index );
 	}
 
-	private static String implicitMapKeyColumnName(CollectionSource source, BindingState bindingState) {
+	private static String implicitMapKeyColumnName(org.hibernate.mapping.Map collection, BindingState bindingState) {
 		return ImplicitNamingHelper.columnName( bindingState.getMetadataBuildingContext()
 				.getBuildingPlan()
 				.getImplicitNamingStrategy()
-				.determineMapKeyColumnName( new MapKeyColumnNamingInput( source.member().resolveAttributeName() ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "MapKeyColumn" );
+				.determineMapKeyColumnName( new MapKeyColumnNamingInput( collectionAttributePath( collection ) ), ImplicitNamingContextImpl.forPhysicalNaming( bindingState.getMetadataBuildingContext() ) ), "MapKeyColumn" );
 	}
 
 	private static void bindEntityMapKey(
@@ -802,7 +807,7 @@ class CollectionIndexBinder {
 								.determineMapKeyJoinColumnName(
 										new MapKeyJoinColumnNamingInput(
 												JoinColumnNaming.entity( collection.getOwner() ), JoinColumnNaming.entity( targetTypeBinder.getTypeBinding() ),
-												source.member().resolveAttributeName(),
+												collectionAttributePath( collection ),
 												JoinColumnNaming.reference( targetTypeBinder.getTypeBinding(), targetTypeBinder.getTypeBinding().getTable(), entityIdentifierBinding.columns(),
 														orderedJoinColumns.stream().map( MapKeyJoinColumn::referencedColumnName ).toList(), position, bindingState ), referenceToPrimaryKey ),
 										JoinColumnNaming.context( bindingState ) ), "map-key join column" );

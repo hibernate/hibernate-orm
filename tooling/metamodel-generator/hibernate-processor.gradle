@@ -58,7 +58,11 @@ dependencies {
 	jakartaDataImplementation "jakarta.data:jakarta.data.stateful-api:1.1.0-M4"
 	jakartaDataImplementation "jakarta.enterprise.concurrent:jakarta.enterprise.concurrent-api:3.1.1"
 	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:3.0.1.Final"
-	jakartaDataImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.24.1"
+	jakartaDataImplementation libs.jakarta.interceptors
+	jakartaDataImplementation libs.jakarta.inject
+	jakartaDataImplementation libs.jakarta.cdi
+	jakartaDataImplementation libs.jakarta.jta
+	jakartaDataImplementation libs.jakarta.annotation
 
 	testImplementation libs.compilation.jetbrainsAnnotations
 	testImplementation libs.compilation.jspecify

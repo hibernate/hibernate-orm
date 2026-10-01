@@ -229,6 +229,7 @@ abstract class AbstractSharedSessionContract
 
 	private final boolean autoJoinTransactions;
 	private final boolean isTransactionCoordinatorShared;
+	private final boolean isInterceptorShared;
 	@Nonnull
 	private final PhysicalConnectionHandlingMode connectionHandlingMode;
 
@@ -296,6 +297,10 @@ abstract class AbstractSharedSessionContract
 		jdbcBatchSize = options.getJdbcBatchSize();
 		cacheMode = options.getInitialCacheMode();
 		interceptor = interpret( options.resolveInterceptor( factory ) );
+		isInterceptorShared = options.isInterceptorShared();
+		if ( isInterceptorShared ) {
+			factory.getInterceptorStrategy().registerSharedUse( interceptor );
+		}
 		jdbcTimeZone = options.getJdbcTimeZone();
 
 		sessionEventsManager = createSessionEventsManager( factoryOptions, options );
@@ -1066,6 +1071,9 @@ abstract class AbstractSharedSessionContract
 				else {
 					throw e;
 				}
+			}
+			finally {
+				factory.getInterceptorStrategy().releaseInterceptor( interceptor );
 			}
 
 			if ( sessionEventsManager != null ) {

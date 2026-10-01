@@ -19,6 +19,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.callback.spi.ConfiguredInterceptor;
 import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
@@ -160,9 +161,22 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.SessionEventSettings#INTERCEPTOR
 	 *
 	 * @see org.hibernate.SessionBuilder#interceptor(Interceptor)
+	 *
+	 * @deprecated Use {@link #getConfiguredInterceptor()} instead
 	 */
+	@Deprecated(since = "8.0")
 	@Nullable
 	Interceptor getInterceptor();
+
+	/**
+	 * Describes how an interceptor was configured, without resolving
+	 * any CDI or managed beans.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	@Nonnull
+	ConfiguredInterceptor getConfiguredInterceptor();
 
 	/**
 	 * The StatementObserver, if one, applied to this SessionFactory.
@@ -182,7 +196,10 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.SessionEventSettings#SESSION_SCOPED_INTERCEPTOR
 	 *
 	 * @see org.hibernate.SessionBuilder#interceptor(Interceptor)
+	 *
+	 * @deprecated Use {@link #getConfiguredInterceptor()} instead
 	 */
+	@Deprecated(since = "8.0")
 	@Nullable
 	Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier();
 

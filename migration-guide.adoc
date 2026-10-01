@@ -1136,10 +1136,6 @@ This requires that, if sequences are used, the sequence is altered to change the
 Alternatively, users can configure the allocation size to match the legacy value `1` by defining
 `@NativeGenerator(sequenceForm = @SequenceGenerator(allocationSize = 1), tableForm = @TableGenerator(allocationSize = 1)`.
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// XSD changes
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 [[enumerated-value-unknown-values]]
 === Unknown column values for `@EnumeratedValue` enums
 
@@ -1151,10 +1147,21 @@ as a `NullPointerException` or as a wrong attribute value.  Applications which r
 the lenient behavior, e.g. while an enum value is being removed, must clean up the affected
 rows before the enum value is dropped.
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// XSD changes
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 [[xsd-changes]]
 == Changes in XSD
 
 This section describes changes in XML Schema Descriptors
+
+[[xsd-mapping-https]]
+=== Use of HTTPS for mapping.xsd namespace
+
+The namespace for `mapping.xsd` is now `https://www.hibernate.org/xsd/orm/mapping`, using HTTPS instead of HTTP.  Hibernate will handle this on the fly at runtime, though you should also consider changing your mapping documents using this XSD either manually or using the https://github.com/hibernate/hibernate-migration-recipes[`hibernate-migration-recipes`] OpenRewrite recipes.
+
 
 [[xsd-comments]]
 === Table and Column Comments

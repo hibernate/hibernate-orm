@@ -72,7 +72,7 @@ public abstract class AbstractEventReader extends EventReaderDelegate {
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( startElement.getLocation() );
 		return xmlEventFactory.createStartElement(
-				new QName( xsdDescriptor.getNamespaceUri(), startElement.getName().getLocalPart() ),
+				mapName( startElement.getName() ),
 				newElementAttributeList.iterator(),
 				newNamespaceList.iterator()
 		);
@@ -100,12 +100,9 @@ public abstract class AbstractEventReader extends EventReaderDelegate {
 		//		1) validate its version attribute is valid per our "latest XSD"
 		//		2) update its version attribute to the latest version if not already
 		//
-		// NOTE : atm this is a very simple check using just the attribute's local name
-		// rather than checking its qualified name.  It is possibly (though unlikely)
-		// that this could match on "other" version attributes in the same element
-
-		if ( rootElementName.equals( startElement.getName().getLocalPart() ) ) {
-			if ( VERSION_ATTRIBUTE_NAME.equals( originalAttribute.getName().getLocalPart() ) ) {
+		if ( rootElementName.equals( startElement.getName().getLocalPart() )
+				&& xsdDescriptor.getNamespaceUri().equals( mapName( startElement.getName() ).getNamespaceURI() ) ) {
+			if ( new QName( VERSION_ATTRIBUTE_NAME ).equals( originalAttribute.getName() ) ) {
 				final String specifiedVersion = originalAttribute.getValue();
 
 				if ( !XsdHelper.isValidJpaVersion( specifiedVersion ) ) {
@@ -120,7 +117,13 @@ public abstract class AbstractEventReader extends EventReaderDelegate {
 	}
 
 	private List<Namespace> mapNamespaces(StartElement startElement) {
-		return mapNamespaces( existingXmlNamespacesIterator( startElement ) );
+		final List<Namespace> namespaces = mapNamespaces( existingXmlNamespacesIterator( startElement ) );
+		if ( startElement.getName().getNamespaceURI().isEmpty()
+				&& shouldBeMappedToLatestJpaDescriptor( "" )
+				&& namespaces.stream().noneMatch( namespace -> namespace.getPrefix().isEmpty() ) ) {
+			namespaces.add( xmlEventFactory.createNamespace( xsdDescriptor.getNamespaceUri() ) );
+		}
+		return namespaces;
 	}
 
 	private List<Namespace> mapNamespaces(Iterator<Namespace> originalNamespaceIterator ) {
@@ -130,10 +133,6 @@ public abstract class AbstractEventReader extends EventReaderDelegate {
 			final Namespace originalNamespace  = originalNamespaceIterator.next();
 			final Namespace mappedNamespace = mapNamespace( originalNamespace );
 			mappedNamespaces.add( mappedNamespace );
-		}
-
-		if ( mappedNamespaces.isEmpty() ) {
-			mappedNamespaces.add( xmlEventFactory.createNamespace( xsdDescriptor.getNamespaceUri() ) );
 		}
 
 		return mappedNamespaces;
@@ -154,6 +153,12 @@ public abstract class AbstractEventReader extends EventReaderDelegate {
 
 	protected abstract boolean shouldBeMappedToLatestJpaDescriptor(String uri);
 
+	private QName mapName(QName name) {
+		return shouldBeMappedToLatestJpaDescriptor( name.getNamespaceURI() )
+				? new QName( xsdDescriptor.getNamespaceUri(), name.getLocalPart(), name.getPrefix() )
+				: name;
+	}
+
 	private XMLEvent wrap(EndElement endElement) {
 		final List<Namespace> targetNamespaces = mapNamespaces( existingXmlNamespacesIterator( endElement ) );
 
@@ -161,7 +166,7 @@ public abstract class AbstractEventReader extends EventReaderDelegate {
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( endElement.getLocation() );
 		return xmlEventFactory.createEndElement(
-				new QName( xsdDescriptor.getNamespaceUri(), endElement.getName().getLocalPart() ),
+				mapName( endElement.getName() ),
 				targetNamespaces.iterator()
 		);
 	}

@@ -7,6 +7,7 @@ package org.hibernate.boot.jaxb.internal.stax;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 import javax.xml.stream.XMLStreamException;
 
 import org.hibernate.boot.ResourceStreamLocator;
@@ -34,10 +35,24 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 	public Object resolveEntity(String publicID, String systemID, String baseURI, String namespace) throws XMLStreamException {
 		JAXB_LOGGER.resolveEntityInvocation( publicID, systemID, baseURI, namespace );
 
+		if ( systemID != null ) {
+			for ( var descriptor : List.of( MappingXsdSupport._310, MappingXsdSupport._70, MappingXsdSupport._80 ) ) {
+				final String resourceName = descriptor.getLocalResourceName();
+				final String schemaName = resourceName.substring( resourceName.lastIndexOf( '/' ) + 1 );
+				final String schemaPath = "www.hibernate.org/xsd/orm/mapping/" + schemaName;
+				if ( systemID.equals( "http://" + schemaPath ) || systemID.equals( "https://" + schemaPath ) ) {
+					return openUrlStream( descriptor );
+				}
+			}
+		}
+
 		if ( namespace != null ) {
 			JAXB_LOGGER.interpretingNamespace( namespace );
-			if ( MappingXsdSupport.latestDescriptor().getNamespaceUri().matches( namespace ) ) {
+			if ( MappingXsdSupport.latestDescriptor().getNamespaceUri().equals( namespace ) ) {
 				return openUrlStream( MappingXsdSupport.latestDescriptor() );
+			}
+			if ( MappingXsdSupport._70.getNamespaceUri().equals( namespace ) ) {
+				return openUrlStream( MappingXsdSupport._70 );
 			}
 			if ( MappingXsdSupport.jpa10.getNamespaceUri().matches( namespace ) ) {
 				// JPA 1.0 and 2.0 share the same namespace URI

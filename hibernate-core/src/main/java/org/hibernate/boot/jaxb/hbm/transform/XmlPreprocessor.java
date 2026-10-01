@@ -16,6 +16,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.xsd.MappingXsdSupport;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -40,6 +41,7 @@ public class XmlPreprocessor {
 			TransformationState transformationState) {
 		final var hbmRoot = hbmXmlBinding.getRoot();
 		final var mappingRoot = new JaxbEntityMappingsImpl();
+		mappingRoot.setVersion( MappingXsdSupport.latestDescriptor().getVersion() );
 		transformationState.getJaxbRootMap().put( hbmRoot, mappingRoot );
 
 		final var origin = hbmXmlBinding.getOrigin();

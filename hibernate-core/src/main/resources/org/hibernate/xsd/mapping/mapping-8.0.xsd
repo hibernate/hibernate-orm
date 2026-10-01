@@ -6,9 +6,9 @@
   -->
 
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            xmlns="http://www.hibernate.org/xsd/orm/mapping"
-            xmlns:orm="http://www.hibernate.org/xsd/orm/mapping"
-            targetNamespace="http://www.hibernate.org/xsd/orm/mapping"
+            xmlns="https://www.hibernate.org/xsd/orm/mapping"
+            xmlns:orm="https://www.hibernate.org/xsd/orm/mapping"
+            targetNamespace="https://www.hibernate.org/xsd/orm/mapping"
             elementFormDefault="qualified"
             version="8.0">
     <xsd:annotation>
@@ -16,7 +16,7 @@
         XSD which "extends" the JPA `orm.xml` XSD adding support for Hibernate
         specific features.
 
-        <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+        <entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 version="8.0">
             ...

@@ -6,6 +6,8 @@ package org.hibernate.orm.test.boot.jaxb.mapping;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -57,6 +59,7 @@ import jakarta.xml.bind.JAXBException;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
 
@@ -65,6 +68,27 @@ import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
  */
 @ServiceRegistry
 public class HbmTransformationJaxbTests {
+	@Test
+	public void hbmTransformationNamespaceTest(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/basic/hbm.xml", scope, transformed -> {
+			assertThatCode( () -> {
+				final var context = JAXBContext.newInstance( JaxbEntityMappingsImpl.class );
+				final var writer = new StringWriter();
+				context.createMarshaller().marshal( transformed, writer );
+				final String xml = writer.toString();
+				assertThat( xml ).contains( "https://www.hibernate.org/xsd/orm/mapping", "version=\"8.0\"" )
+						.doesNotContain( "http://www.hibernate.org/xsd/orm/mapping" );
+				final var unmarshaller = context.createUnmarshaller();
+				final var roundTrip = (JaxbEntityMappingsImpl) unmarshaller.unmarshal(
+						new StringReader( xml )
+				);
+				assertThat( roundTrip.getEntities() ).hasSize( 1 );
+				assertThat( roundTrip.getEntities().get( 0 ).getClazz() )
+						.isEqualTo( transformed.getEntities().get( 0 ).getClazz() );
+			} ).doesNotThrowAnyException();
+		} );
+	}
+
 	@Test
 	public void hbmTransformationTest(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/basic/hbm.xml", scope, transformed -> {

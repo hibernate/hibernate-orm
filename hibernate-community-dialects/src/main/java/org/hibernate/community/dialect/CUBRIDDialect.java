@@ -123,6 +123,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -1177,8 +1178,11 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 				Integer scale,
 				Long length) {
 			final Size size = super.resolveSize( jdbcType, javaType, precision, scale, length );
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
 			//CUBRID measures 'bit'/'bit varying' length in bits, so scale the byte length up to bits
-			final int ddlTypeCode = jdbcType.getDdlTypeCode();
+			final int ddlTypeCode = elementJdbcType.getDdlTypeCode();
 			if ( ( ddlTypeCode == BINARY || ddlTypeCode == VARBINARY || ddlTypeCode == LONGVARBINARY )
 					&& size.getLength() != null ) {
 				size.setLength( size.getLength() * 8 );

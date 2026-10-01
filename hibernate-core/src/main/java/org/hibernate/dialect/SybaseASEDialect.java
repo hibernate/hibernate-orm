@@ -67,6 +67,7 @@ import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
@@ -118,7 +119,10 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDdlTypeCode() ) {
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
+			switch ( elementJdbcType.getDdlTypeCode() ) {
 				case Types.NCLOB:
 				case Types.CLOB:
 				case Types.BLOB:

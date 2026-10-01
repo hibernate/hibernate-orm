@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
@@ -247,39 +248,39 @@ public class VarbinaryArrayTest {
 		@Id
 		private Long id;
 
-		@Column
+		@Column(length = Length.LONG32)
 		@JdbcTypeCode(SqlTypes.VARBINARY)
 		private boolean[] boolArray;
 
-		@Column
+		@Column(length = Length.LONG32)
 		@JdbcTypeCode(SqlTypes.VARBINARY)
 		private byte[] byteArray;
 
-		@Column
+		@Column(length = Length.LONG32)
 		@JdbcTypeCode(SqlTypes.VARBINARY)
 		private char[] charArray;
 
-		@Column
+		@Column(length = Length.LONG32)
 		@JdbcTypeCode(SqlTypes.VARBINARY)
 		private double[] doubleArray;
 
-		@Column
+		@Column(length = Length.LONG32)
 		@JdbcTypeCode(SqlTypes.VARBINARY)
 		private float[] floatArray;
 
-		@Column
+		@Column(length = Length.LONG32)
 		@JdbcTypeCode(SqlTypes.VARBINARY)
 		private int[] intArray;
 
-		@Column
+		@Column(length = Length.LONG32)
 		@JdbcTypeCode(SqlTypes.VARBINARY)
 		private long[] longArray;
 
-		@Column
+		@Column(length = Length.LONG32)
 		@JdbcTypeCode(SqlTypes.VARBINARY)
 		private short[] shortArray;
 
-		@Column
+		@Column(length = Length.LONG32)
 		@JdbcTypeCode(SqlTypes.VARBINARY)
 		private Serializable[] serializableArray;
 

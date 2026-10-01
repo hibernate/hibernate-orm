@@ -135,6 +135,7 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
@@ -306,7 +307,10 @@ public class SingleStoreDialect extends Dialect implements CurrentTemporalSuppor
 		@Override
 		public Size resolveSize(
 				JdbcType jdbcType, JavaType<?> javaType, Integer precision, Integer scale, Long length) {
-			switch ( jdbcType.getDdlTypeCode() ) {
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
+			switch ( elementJdbcType.getDdlTypeCode() ) {
 				case BIT:
 					if ( length != null ) {
 						return Size.length( Math.min( Math.max( length, 1 ), 64 ) );

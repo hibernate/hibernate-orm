@@ -135,6 +135,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
@@ -267,7 +268,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 				Integer precision,
 				Integer scale,
 				Long length) {
-			return switch ( jdbcType.getDdlTypeCode() ) {
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
+			return switch ( elementJdbcType.getDdlTypeCode() ) {
 				case BLOB, CLOB, NCLOB ->
 						super.resolveSize( jdbcType, javaType, precision, scale,
 								length == null ? getTypeSizingProfile().defaultLobLength() : length );

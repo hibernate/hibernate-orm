@@ -43,8 +43,11 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
@@ -125,12 +128,53 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
+	protected String castType(int sqlTypeCode) {
+		return switch (sqlTypeCode) {
+			// MariaDB, contrary to MySQL, allows casting to DOUBLE/FLOAT, but without precision
+			case REAL -> "float";
+			case FLOAT, DOUBLE -> "double";
+			default -> super.castType(sqlTypeCode);
+		};
+	}
+
+	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		}
+		// Override the DdlType for FLOAT, REAL and DOUBLE to force a castTypeNamePattern, having the effect that a cast
+		// to that type then will use the parameter-less variants float/double instead of float($p),
+		// which is unsupported by MariaDB. Ideally, DdlTypeImpl wouldn't force the typeNamePattern to be used when
+		// the castTypeName is static, since it being static usually means that sized casts are not supported.
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl(
+				FLOAT,
+				false,
+				columnType( FLOAT ),
+				castType( FLOAT ),
+				castType( FLOAT ),
+				narrowCastType( FLOAT ),
+				this
+		) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl(
+				REAL,
+				false,
+				columnType( REAL ),
+				castType( REAL ),
+				castType( REAL ),
+				narrowCastType( REAL ),
+				this
+		) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl(
+				DOUBLE,
+				false,
+				columnType( DOUBLE ),
+				castType( DOUBLE ),
+				castType( DOUBLE ),
+				narrowCastType( DOUBLE ),
+				this
+		) );
 	}
 
 	@Override

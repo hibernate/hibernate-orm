@@ -32,6 +32,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.log;
 import static java.util.Collections.unmodifiableList;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.lastIndexOfLetter;
@@ -48,6 +50,8 @@ import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
 public sealed class Column
 		implements Selectable, Serializable, Cloneable, ColumnTypeInformation
 		permits AggregateColumn {
+
+	private static final double LOG_BASE2OF10 = log( 10 ) / log( 2 );
 
 	private Long length;
 	private Integer precision;
@@ -440,11 +444,18 @@ public sealed class Column
 		if ( type instanceof ComponentType componentType ) {
 			type = getTypeForComponentValue( mappingContext, componentType, getTypeIndex() );
 		}
-		if ( type instanceof BasicType<?> basicType
-				&& isTemporal( basicType.getExpressibleJavaType() ) ) {
-			precisionToUse = getTemporalPrecision();
-			lengthToUse = null;
-			scaleToUse = null;
+		if ( type instanceof BasicType<?> basicType ) {
+			if ( isTemporal( basicType.getExpressibleJavaType() ) ) {
+				precisionToUse = getTemporalPrecision();
+				lengthToUse = null;
+				scaleToUse = null;
+			}
+			else if ( basicType.getJdbcType().isFloat() && precisionToUse != null ) {
+				// if the user explicitly specifies the precision, we need to convert it:
+				// convert from base 10 (as specified in @Column) to base 2 (as specified by SQL)
+				// using the magic of high school math: log_2(10^n) = n*log_2(10) = n*ln(10)/ln(2)
+				precisionToUse = (int) ceil( precisionToUse * LOG_BASE2OF10 );
+			}
 		}
 		if ( type == null ) {
 			throw new AssertionFailure( "no typing information available to determine column size" );

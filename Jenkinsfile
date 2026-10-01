@@ -45,11 +45,11 @@ stage('Configure') {
 		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview' ),
 		// --illegal-final-field-mutation=deny: check we don't try to mutate final fields anywhere in tests, because that'll be forbidden eventually.
 		new BuildEnvironment( testJdkVersion: '26', testJdkLauncherArgs: '--enable-preview --illegal-final-field-mutation=deny' ),
+		new BuildEnvironment( testJdkVersion: '27', testJdkLauncherArgs: '--enable-preview --illegal-final-field-mutation=deny', additionalOptions: '-PskipJacoco=true' ),
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
 		// they require the use of -Dnet.bytebuddy.experimental=true.
 		// Make sure to remove that argument as soon as possible
 		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '27', testJdkLauncherArgs: '--enable-preview --illegal-final-field-mutation=deny -Dnet.bytebuddy.experimental=true', additionalOptions: '-PskipJacoco=true' ),
 		new BuildEnvironment( testJdkVersion: '28', testJdkLauncherArgs: '--enable-preview --illegal-final-field-mutation=deny -Dnet.bytebuddy.experimental=true', additionalOptions: '-PskipJacoco=true' )
 	];
 

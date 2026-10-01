@@ -10,18 +10,14 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
 /**
- * Default no-op implementation. Framework-specific behavior is provided
- * by implementations discovered via {@link java.util.ServiceLoader}.
+ * The {@link HibernateProcessorExtension} used when no other implementation is
+ * registered with {@link java.util.ServiceLoader}. It does nothing: the processor
+ * behaves exactly as it would without any framework-specific support.
  */
 public class DefaultHibernateProcessorExtension implements HibernateProcessorExtension {
 
 	@Override
 	public void init(ProcessingEnvironment processingEnvironment) {
-	}
-
-	@Override
-	public boolean isInjectionAvailable() {
-		return false;
 	}
 
 	@Override

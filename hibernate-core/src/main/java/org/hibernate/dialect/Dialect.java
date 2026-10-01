@@ -157,8 +157,10 @@ import org.hibernate.tool.schema.spi.TableMigrator;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -5981,7 +5983,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				length = null;
 			}
 
-			switch ( jdbcType.getDdlTypeCode() ) {
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+					? arrayJdbcType.getElementJdbcType()
+					: jdbcType;
+			final JavaType<?> elementJavaType = javaType instanceof BasicPluralJavaType<?> pluralJavaType
+					? pluralJavaType.getElementJavaType()
+					: javaType;
+			switch ( elementJdbcType.getDdlTypeCode() ) {
 				case SqlTypes.ARRAY:
 					break;
 				case SqlTypes.BIT:
@@ -5993,19 +6001,19 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				case SqlTypes.VARBINARY:
 				case SqlTypes.CLOB:
 				case SqlTypes.BLOB:
-					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
+					size.setLength( elementJavaType.getDefaultSqlLength( Dialect.this, elementJdbcType ) );
 					break;
 				case SqlTypes.LONGVARCHAR:
 				case SqlTypes.LONGNVARCHAR:
 				case SqlTypes.LONGVARBINARY:
-					size.setLength( javaType.getLongSqlLength() );
+					size.setLength( elementJavaType.getLongSqlLength() );
 					break;
 				case SqlTypes.FLOAT:
 				case SqlTypes.DOUBLE:
 				case SqlTypes.REAL:
 					// this is almost always the thing we use:
 					length = null;
-					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
+					size.setPrecision( elementJavaType.getDefaultSqlPrecision( Dialect.this, elementJdbcType ) );
 					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for SQL floating point types");
 					}
@@ -6017,7 +6025,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 				case SqlTypes.TIMESTAMP_UTC:
 					length = null;
-					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
+					size.setPrecision( elementJavaType.getDefaultSqlPrecision( Dialect.this, elementJdbcType ) );
 					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for SQL time or timestamp types");
 					}
@@ -6025,8 +6033,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				case SqlTypes.NUMERIC:
 				case SqlTypes.DECIMAL:
 				case SqlTypes.INTERVAL_SECOND:
-					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
-					size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
+					size.setPrecision( elementJavaType.getDefaultSqlPrecision( Dialect.this, elementJdbcType ) );
+					size.setScale( elementJavaType.getDefaultSqlScale( Dialect.this, elementJdbcType ) );
 					break;
 			}
 

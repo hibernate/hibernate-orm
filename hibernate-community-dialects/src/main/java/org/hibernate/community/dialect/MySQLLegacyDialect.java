@@ -114,6 +114,7 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -213,7 +214,10 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
+			switch ( elementJdbcType.getDefaultSqlTypeCode() ) {
 				case Types.BIT:
 					// MySQL allows BIT with a length up to 64 (less the default length 255)
 					if ( length != null ) {

@@ -122,6 +122,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
@@ -227,7 +228,10 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect implement
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDdlTypeCode() ) {
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
+			switch ( elementJdbcType.getDdlTypeCode() ) {
 				case BLOB:
 				case CLOB:
 				case NCLOB:

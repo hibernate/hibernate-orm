@@ -46,6 +46,8 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.sql.ast.spi.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.type.spi.SizeStrategy;
+import org.hibernate.dialect.type.spi.StandardSizeStrategy;
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
@@ -65,6 +67,7 @@ import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
 import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
 import org.hibernate.dialect.schema.spi.IfExistsSupport;
 import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.SemanticException;
 import org.hibernate.dialect.temporaltype.spi.IntervalType;
@@ -79,7 +82,12 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
@@ -93,6 +101,7 @@ import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.LONGVARBINARY;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
@@ -666,6 +675,65 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 				.tableExpression( tableExpression )
 				.selectOnlyFromClause( " from " + tableExpression )
 				.build();
+	}
+
+	private final SizeStrategy sizeStrategy = new StandardSizeStrategy( this ) {
+		@Override
+		public Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Integer precision,
+				Integer scale,
+				Long length) {
+			final Size size = super.resolveSize( jdbcType, javaType, precision, scale, length );
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
+			//CUBRID measures 'bit'/'bit varying' length in bits, so scale the byte length up to bits
+			final int ddlTypeCode = elementJdbcType.getDdlTypeCode();
+			if ( ( ddlTypeCode == BINARY || ddlTypeCode == VARBINARY || ddlTypeCode == LONGVARBINARY )
+					&& size.getLength() != null ) {
+				size.setLength( size.getLength() * 8 );
+			}
+			return size;
+		}
+	};
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public SizeStrategy getSizeStrategy() {
+		return sizeStrategy;
+	}
+
+	/**
+	 * Keeps the binary-to-decimal precision conversion of the standard binary float descriptor for DDL,
+	 * but casts to {@code double}, since CUBRID rejects a large explicit precision such as {@code float(53)}.
+	 */
+	private record BinaryFloatCastAsDouble(DdlType delegate) implements DdlType {
+		@Override
+		public int getSqlTypeCode() {
+			return delegate.getSqlTypeCode();
+		}
+
+		@Override
+		public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
+			return delegate.getTypeName( columnSize, type, ddlTypeRegistry );
+		}
+
+		@Override
+		public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
+			return "double";
+		}
+
+		@Override
+		public boolean isLob(Size size) {
+			return delegate.isLob( size );
+		}
+
+		@Override
+		public String[] getRawTypeNames() {
+			return delegate.getRawTypeNames();
+		}
 	}
 
 	@Override

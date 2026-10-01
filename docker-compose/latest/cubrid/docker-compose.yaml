@@ -1,6 +1,6 @@
 services:
   cubrid:
-    image: ${CUBRID_IMAGE:-docker.io/cubrid/cubrid:11.4@sha256:36bfafdc98a5b3211291764532cd3d241def03d17f4836e86b11e4f7afa3e13b}
+    image: ${CUBRID_IMAGE:-docker.io/cubrid/cubrid:11.4@sha256:1248b77ad39888df9e064655937188ab99fe056ed7e35b57d06155a015dc1791}
     container_name: cubrid
     environment:
       CUBRID_DB: hibernate_orm

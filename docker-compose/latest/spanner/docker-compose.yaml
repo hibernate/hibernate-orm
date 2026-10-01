@@ -1,13 +1,13 @@
 services:
   spanner:
-    image: ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.57@sha256:4987860c9f8ecf1fffbbcdac115cb88cb9d1a42bd966c235a9ab843aea34fbd1}
+    image: ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.58@sha256:c6f3402f2599684f295a0fdefb6fbbbfb18a0e43e309ff5456ccb452a4570a79}
     container_name: ${SPANNER_CONTAINER_NAME:-spanner}
     ports:
       - "${SPANNER_GRPC_PORT:-9011}:9010"
       - "${SPANNER_REST_PORT:-9021}:9020"
   spanner-healthcheck:
     # Sidecar: spanner emulator image has no tools, so we use UBI to run the healthcheck:
-    image: registry.access.redhat.com/ubi9/ubi-minimal:latest@sha256:7fbeae18dc9476399f565e68255f602a3374ea8614ba3d14843565131a13ff93
+    image: registry.access.redhat.com/ubi9/ubi-minimal:latest@sha256:1d7c5517a4a1a8e2688620b39ee980e82505ca1ab7ae5541b5463120ae9b3897
     container_name: ${SPANNER_CONTAINER_NAME:-spanner}_healthcheck
     depends_on:
       spanner:

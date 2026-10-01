@@ -384,9 +384,9 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 				//but don't just return 'decimal' because
 				//the default scale is 0 (no decimal places)
 				return getMySQLVersion().isSameOrAfter( 8, 0, 17 )
-					// In newer versions of MySQL, casting to float/double is supported
-					? super.castType( sqlTypeCode )
-					: "decimal($p,$s)";
+						// In newer versions of MySQL, casting to float/double is supported
+						? super.castType( sqlTypeCode )
+						: "decimal($p,$s)";
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
@@ -453,7 +453,7 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 		final DdlTypeBuilder varbinaryBuilder =
 				StandardDdlTypes.builder( VARBINARY, columnType( BLOB ), this )
 						.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
-						.castTypeNamePattern( columnType( BINARY ) )
+						.castTypeNamePattern( castType( VARBINARY ) )
 						.castTypeName( castType( BINARY ) )
 						.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), "varbinary($l)" )
 						.withTypeCapacity( maxMediumLobLen, "mediumblob" );
@@ -805,6 +805,8 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLJdbcTypes.castingJson() );
 			jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLJdbcTypes.castingJsonArrayConstructor() );
 		}
+		// Custom VARBINARY type that allows casting with a size
+		typeContributions.contributeJdbcType( MySQLJdbcTypes.varbinary() );
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
@@ -848,6 +850,13 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 					// MySQL/MariaDB don't support casting to bit
 					return "abs(sign(?1))";
 			}
+		}
+		else if ( !getMySQLVersion().isSameOrAfter( 8, 0, 17 )
+				&& ( to == CastType.DOUBLE || to == CastType.FLOAT ) ) {
+			// Old MySQL version don't let you cast to DOUBLE/FLOAT
+			// so cast to the biggest decimal and then turn the value into an actual double
+			// by casting to char and adding 0.0
+			return "(0.0+cast(cast(?1 as decimal(65,30)) as char))";
 		}
 		return super.castPattern( from, to );
 	}

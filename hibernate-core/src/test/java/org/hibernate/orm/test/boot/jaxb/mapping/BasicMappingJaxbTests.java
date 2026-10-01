@@ -6,9 +6,15 @@ package org.hibernate.orm.test.boot.jaxb.mapping;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
+import javax.xml.transform.stream.StreamSource;
 
+import org.hibernate.boot.UnsupportedOrmXsdVersionException;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.internal.stax.MappingEventReader;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -23,6 +29,7 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
 
 /**
@@ -30,6 +37,19 @@ import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
  */
 @ServiceRegistry
 public class BasicMappingJaxbTests {
+	@Test
+	public void unsupportedVersionTest(ServiceRegistryScope scope) {
+		final var binder = new MappingBinder( scope.getRegistry() );
+		final var source = new StreamSource( new StringReader( """
+				<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="99.0"/>
+				""" ) );
+		final var origin = new Origin( SourceType.OTHER, "unsupported-version" );
+
+		assertThatExceptionOfType( UnsupportedOrmXsdVersionException.class )
+				.isThrownBy( () -> binder.bind( source, origin ) )
+				.satisfies( exception -> assertThat( exception.getRequestedVersion() ).isEqualTo( "99.0" ) );
+	}
+
 	@Test
 	public void simpleUnifiedJaxbTest(ServiceRegistryScope scope) {
 		scope.withService( ClassLoaderService.class, (cls) -> {

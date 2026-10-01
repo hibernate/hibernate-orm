@@ -7,8 +7,6 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.log;
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
@@ -31,7 +29,6 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Gavin King
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public class StandardSizeStrategy implements SizeStrategy {
-	private static final double LOG_BASE2OF10 = log( 10 ) / log( 2 );
 
 	private final Dialect dialect;
 
@@ -90,12 +87,6 @@ public class StandardSizeStrategy implements SizeStrategy {
 				size.setPrecision( javaType.getDefaultSqlPrecision( dialect, jdbcType ) );
 				if ( scale != null && scale != 0 ) {
 					throw new IllegalArgumentException( "scale has no meaning for SQL floating point types" );
-				}
-				// but if the user explicitly specifies the precision, we need to convert it:
-				if ( precision != null ) {
-					// convert from base 10 (as specified in @Column) to base 2 (as specified by SQL)
-					// using the magic of high school math: log_2(10^n) = n*log_2(10) = n*ln(10)/ln(2)
-					precision = (int) ceil( precision * LOG_BASE2OF10 );
 				}
 				break;
 			case SqlTypes.TIME:

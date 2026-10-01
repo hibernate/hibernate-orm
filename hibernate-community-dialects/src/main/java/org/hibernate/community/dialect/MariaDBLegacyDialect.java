@@ -65,8 +65,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
@@ -150,6 +153,16 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
+	protected String castType(int sqlTypeCode) {
+		return switch (sqlTypeCode) {
+			// MariaDB, contrary to MySQL, allows casting to DOUBLE/FLOAT, but without precision
+			case REAL -> "float";
+			case FLOAT, DOUBLE -> "double";
+			default -> super.castType(sqlTypeCode);
+		};
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
@@ -157,6 +170,25 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
 			ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( UUID, "uuid", this ) );
 		}
+		// Override the DdlType for FLOAT, REAL and DOUBLE to force a castTypeNamePattern, having the effect that a cast
+		// to that type then will use the parameter-less variants float/double instead of float($p),
+		// which is unsupported by MariaDB. Ideally, DdlTypeImpl wouldn't force the typeNamePattern to be used when
+		// the castTypeName is static, since it being static usually means that sized casts are not supported.
+		ddlTypeRegistry.addDescriptor(  StandardDdlTypes.builder( FLOAT, columnType( FLOAT ), this )
+				.castTypeName( castType( FLOAT ) )
+				.castTypeNamePattern( castType( FLOAT ) )
+				.narrowCastTypeName( narrowCastType( FLOAT ) )
+				.build() );
+		ddlTypeRegistry.addDescriptor(  StandardDdlTypes.builder( REAL, columnType( REAL ), this )
+				.castTypeName( castType( REAL ) )
+				.castTypeNamePattern( castType( REAL ) )
+				.narrowCastTypeName( narrowCastType( REAL ) )
+				.build() );
+		ddlTypeRegistry.addDescriptor(  StandardDdlTypes.builder( DOUBLE, columnType( DOUBLE ), this )
+				.castTypeName( castType( DOUBLE ) )
+				.castTypeNamePattern( castType( DOUBLE ) )
+				.narrowCastTypeName( narrowCastType( DOUBLE ) )
+				.build() );
 	}
 
 	@Override

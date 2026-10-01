@@ -3,6 +3,7 @@ package org.hibernate.dialect.type.spi;
 import org.hibernate.SPI;
 import org.hibernate.dialect.type.internal.MySQLCastingJsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.internal.MySQLCastingJsonJdbcType;
+import org.hibernate.dialect.type.internal.MySQLVarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 
@@ -25,6 +26,11 @@ public final class MySQLJdbcTypes {
 	/// Obtain MySQL's casting JSON descriptor.
 	public static JdbcType castingJson() {
 		return MySQLCastingJsonJdbcType.INSTANCE;
+	}
+
+	/// Obtain MySQL's VARBINARY descriptor that allows casting with a target size.
+	public static JdbcType varbinary() {
+		return MySQLVarbinaryJdbcType.INSTANCE;
 	}
 
 	/// Obtain MySQL's casting JSON-array type constructor.

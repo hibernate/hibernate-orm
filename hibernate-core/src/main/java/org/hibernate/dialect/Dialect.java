@@ -214,7 +214,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 import static java.lang.String.join;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
@@ -6009,12 +6008,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for SQL floating point types");
-					}
-					// but if the user explicitly specifies the precision, we need to convert it:
-					if ( precision != null ) {
-						// convert from base 10 (as specified in @Column) to base 2 (as specified by SQL)
-						// using the magic of high school math: log_2(10^n) = n*log_2(10) = n*ln(10)/ln(2)
-						precision = (int) ceil( precision * LOG_BASE2OF10 );
 					}
 					break;
 				case SqlTypes.TIME:

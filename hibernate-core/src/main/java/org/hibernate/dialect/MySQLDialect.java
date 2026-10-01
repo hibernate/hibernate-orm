@@ -167,8 +167,6 @@ import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
-import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -179,7 +177,6 @@ import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -271,17 +268,6 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 					if ( length != null ) {
 						return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
 					}
-				case FLOAT:
-				case DOUBLE:
-				case REAL:
-					//MySQL doesn't let you cast to DOUBLE/FLOAT
-					//but don't just return 'decimal' because
-					//the default scale is 0 (no decimal places)
-					Size size = super.resolveSize( jdbcType, javaType, precision, scale, length );
-					//cast() on MySQL does not behave sensibly if
-					//we set scale > 20
-					size.setScale( Math.min( size.getPrecision(), 20 ) );
-					return size;
 				case BLOB:
 				case NCLOB:
 				case CLOB:
@@ -443,13 +429,6 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 			case BOOLEAN, BIT -> "unsigned";
 			// MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
 			case TINYINT, SMALLINT, INTEGER, BIGINT -> "signed";
-			// MySQL doesn't let you cast to DOUBLE/FLOAT
-			// but don't just return 'decimal' because
-			// the default scale is 0 (no decimal places)
-			case FLOAT, REAL, DOUBLE -> getMySQLVersion().isSameOrAfter( 8, 0, 17 )
-					// In newer versions of MySQL, casting to float/double is supported
-					? super.castType( sqlTypeCode )
-					: "decimal($p,$s)";
 			// MySQL doesn't let you cast to TEXT/LONGTEXT
 			case CHAR, VARCHAR, LONG32VARCHAR, CLOB -> "char";
 			case NCHAR, NVARCHAR, LONG32NVARCHAR, NCLOB -> "char character set utf8mb4";
@@ -516,7 +495,7 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 		final var varbinaryBuilder =
 				StandardDdlTypes.builder( VARBINARY, columnType( BLOB ), this )
 						.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
-						.castTypeNamePattern( columnType( BINARY ) )
+						.castTypeNamePattern( castType( VARBINARY ) )
 						.castTypeName( castType( BINARY ) )
 						.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), "varbinary($l)" )
 						.withTypeCapacity( maxMediumLobLen, "mediumblob" );
@@ -801,6 +780,9 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLJdbcTypes.castingJson() );
 		jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLJdbcTypes.castingJsonArrayConstructor() );
+
+		// Custom VARBINARY type that allows casting with a size
+		typeContributions.contributeJdbcType( MySQLJdbcTypes.varbinary() );
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );

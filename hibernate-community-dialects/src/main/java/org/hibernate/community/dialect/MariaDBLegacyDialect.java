@@ -69,8 +69,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
@@ -151,6 +154,15 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 						.register();
 			}
 		}
+	}
+
+	@Override
+	protected String castType(int sqlTypeCode) {
+		return switch (sqlTypeCode) {
+			// MariaDB, contrary to MySQL, allows casting to DOUBLE/FLOAT
+			case FLOAT, REAL, DOUBLE -> columnType( sqlTypeCode );
+			default -> super.castType(sqlTypeCode);
+		};
 	}
 
 	@Override

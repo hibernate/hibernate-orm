@@ -35,6 +35,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
+import org.hibernate.boot.ConflictingInterceptorSettingsException;
 import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
@@ -404,6 +405,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		statisticsEnabled =
 				configurationService.getSetting( GENERATE_STATISTICS, BOOLEAN, false );
 
+		if ( settings.get( INTERCEPTOR ) != null && settings.get( SESSION_SCOPED_INTERCEPTOR ) != null ) {
+			throw new ConflictingInterceptorSettingsException();
+		}
 		interceptor = determineInterceptor( settings, strategySelector );
 		statelessInterceptorSupplier = determineStatelessInterceptor( settings, strategySelector );
 

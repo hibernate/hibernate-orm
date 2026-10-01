@@ -214,7 +214,7 @@ mysql_post_setup() {
 ###############################################################################
 
 mariadb() {
-  mariadb_12_2
+  mariadb_13_0
 }
 
 mariadb_10_6() {
@@ -254,6 +254,18 @@ mariadb_12_1() {
 }
 
 mariadb_12_2() {
+    compose_down "mariadb"
+    compose_up "latest/mariadb/docker-compose.yaml"
+    mariadb_post_setup
+}
+
+mariadb_12_3() {
+    compose_down "mariadb"
+    compose_up "versioned/mariadb-12-3/docker-compose.yaml"
+    mariadb_post_setup
+}
+
+mariadb_13_0() {
     compose_down "mariadb"
     compose_up "latest/mariadb/docker-compose.yaml"
     mariadb_post_setup
@@ -1222,6 +1234,8 @@ if [ -z ${1} ]; then
     echo -e "\thana"
     echo -e "\tmariadb"
     echo -e "\tmariadb_verylatest"
+    echo -e "\tmariadb_13_0"
+    echo -e "\tmariadb_12_3"
     echo -e "\tmariadb_12_2"
     echo -e "\tmariadb_12_1"
     echo -e "\tmariadb_12_0"

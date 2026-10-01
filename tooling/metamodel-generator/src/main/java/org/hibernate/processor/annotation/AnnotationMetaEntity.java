@@ -1238,23 +1238,29 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 		final var sessionVariableName = getSessionVariableName( sessionType );
 		final var name = method == null ? sessionVariableName : method.getSimpleName().toString();
 
-		putMember( name,
-				new RepositoryConstructor(
-						this,
-						getConstructorName(),
-						name,
-						sessionType,
-						sessionVariableName,
-						dataStore(),
-						context.addInjectAnnotation(),
-						context.addNonnullAnnotation(),
-						method != null,
-						jakartaDataRepository,
-						context.getExtension().qualifierAnnotation()
-				)
-		);
-		if ( isProvidedSessionAccess( sessionType ) ) {
-			sessionGetter = name + "()";
+		if ( method == null || !method.isDefault() ) {
+			putMember( name,
+					new RepositoryConstructor(
+							this,
+							getConstructorName(),
+							name,
+							sessionType,
+							sessionVariableName,
+							dataStore(),
+							context.addInjectAnnotation(),
+							context.addNonnullAnnotation(),
+							method != null,
+							jakartaDataRepository,
+							context.getExtension().qualifierAnnotation()
+					)
+			);
+			if ( isProvidedSessionAccess( sessionType ) ) {
+				sessionGetter = name + "()";
+			}
+		}
+		else {
+			// use this getter to get the method, do not generate an injection point for its type
+			sessionGetter = method.getSimpleName() + "()";
 		}
 		return sessionType;
 	}

@@ -186,9 +186,8 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect implements C
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
-		return driverKind == SybaseDriverKind.JTDS
-				? DirectJavaTimeJdbcSupports.none()
-				: super.getDirectJavaTimeJdbcSupport();
+		// Not even the jconnect driver supports this: https://userapps.support.sap.com/sap/support/knowledge/en/3577433
+		return DirectJavaTimeJdbcSupports.none();
 	}
 
 	@Override

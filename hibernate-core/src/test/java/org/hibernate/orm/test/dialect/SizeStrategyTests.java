@@ -90,7 +90,7 @@ public class SizeStrategyTests {
 	}
 
 	@Test
-	void floatingPointPrecisionIsConvertedAndNonzeroScaleIsRejected() {
+	void floatingPointNonzeroScaleIsRejected() {
 		final JdbcType jdbcType = jdbcType( SqlTypes.FLOAT );
 		final JavaType<?> javaType = mock( JavaType.class );
 		when( javaType.getDefaultSqlPrecision( dialect, jdbcType ) ).thenReturn( 24 );
@@ -98,7 +98,7 @@ public class SizeStrategyTests {
 		assertThat( strategy.resolveSize( jdbcType, javaType, null, null, null ).getPrecision() )
 				.isEqualTo( 24 );
 		assertThat( strategy.resolveSize( jdbcType, javaType, 10, 0, null ).getPrecision() )
-				.isEqualTo( 34 );
+				.isEqualTo( 10 );
 		assertThatIllegalArgumentException()
 				.isThrownBy( () -> strategy.resolveSize( jdbcType, javaType, null, 1, null ) )
 				.withMessageContaining( "floating point" );

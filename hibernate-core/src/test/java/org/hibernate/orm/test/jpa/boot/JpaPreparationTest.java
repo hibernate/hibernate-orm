@@ -6,6 +6,7 @@ package org.hibernate.orm.test.jpa.boot;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -31,7 +32,9 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -58,6 +61,10 @@ import static org.hibernate.jpa.boot.spi.JpaSettings.METADATA_BUILDER_CONTRIBUTO
 /// @author Steve Ebersole
 @BaseUnitTest
 public class JpaPreparationTest {
+
+	// Ensure no JAR files are being cached to avoid file deletion issues on Windows
+	private static boolean jarDefaultUseCaches;
+
 	private static final ThreadLocal<State> STATE = ThreadLocal.withInitial( State::new );
 	private static final String TYPE_NAME = "preparation_type";
 	private static final NamedBasicTypeImpl<String> CONFIGURED_TYPE =
@@ -67,6 +74,17 @@ public class JpaPreparationTest {
 
 	@TempDir
 	Path directory;
+
+	@BeforeAll
+	public static void setup() {
+		jarDefaultUseCaches = URLConnection.getDefaultUseCaches( "jar" );
+		URLConnection.setDefaultUseCaches( "jar", false );
+	}
+
+	@AfterAll
+	public static void cleanup() {
+		URLConnection.setDefaultUseCaches( "jar", jarDefaultUseCaches );
+	}
 
 	@AfterEach
 	void clearState() {

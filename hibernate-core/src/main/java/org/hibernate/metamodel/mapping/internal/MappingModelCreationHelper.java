@@ -114,6 +114,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
+import static org.hibernate.metamodel.mapping.internal.FetchOptionsHelper.determineFetchStyleByMetadata;
 import static org.hibernate.metamodel.mapping.internal.FetchOptionsHelper.determineFetchTiming;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -1477,21 +1478,42 @@ public class MappingModelCreationHelper {
 					creationProcess.getEntityPersister( indexEntityType.getAssociatedEntityName() );
 
 			final EntityCollectionPart indexDescriptor;
-			if ( bootMapKeyDescriptor instanceof OneToMany ) {
+			if ( bootMapKeyDescriptor instanceof OneToMany oneToMany ) {
 				indexDescriptor = new OneToManyCollectionPart(
 						CollectionPart.Nature.INDEX,
 						bootValueMapping,
 						collectionDescriptor,
 						associatedEntity,
+						determineFetchStyleByMetadata(
+								oneToMany.getFetchMode(),
+								indexEntityType,
+								creationProcess.getCreationContext().getSessionFactory()
+						),
+						FetchTiming.IMMEDIATE,
 						creationProcess
 				);
 			}
 			else {
+				final ToOne toOne = (ToOne) bootMapKeyDescriptor;
+				final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+				final FetchStyle fetchStyle = determineFetchStyleByMetadata(
+						toOne.getFetchMode(),
+						indexEntityType,
+						sessionFactory
+				);
 				indexDescriptor = new ManyToManyCollectionPart(
 						CollectionPart.Nature.INDEX,
 						bootValueMapping,
 						collectionDescriptor,
 						associatedEntity,
+						fetchStyle,
+						determineFetchTiming(
+								fetchStyle,
+								indexEntityType,
+								toOne.isLazy(),
+								collectionDescriptor.getNavigableRole().append( CollectionPart.Nature.INDEX.getName() ).getFullPath(),
+								sessionFactory
+						),
 						creationProcess
 				);
 			}
@@ -1592,16 +1614,36 @@ public class MappingModelCreationHelper {
 						bootDescriptor,
 						collectionDescriptor,
 						associatedEntity,
+						determineFetchStyleByMetadata(
+								oneToMany.getFetchMode(),
+								elementEntityType,
+								creationProcess.getCreationContext().getSessionFactory()
+						),
+						FetchTiming.IMMEDIATE,
 						oneToMany.getNotFoundAction(),
 						creationProcess
 				);
 			}
 			else if ( element instanceof ManyToOne manyToOne ) {
+				final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+				final FetchStyle fetchStyle = determineFetchStyleByMetadata(
+						manyToOne.getFetchMode(),
+						elementEntityType,
+						sessionFactory
+				);
 				elementDescriptor = new ManyToManyCollectionPart(
 						CollectionPart.Nature.ELEMENT,
 						bootDescriptor,
 						collectionDescriptor,
 						associatedEntity,
+						fetchStyle,
+						determineFetchTiming(
+								fetchStyle,
+								elementEntityType,
+								manyToOne.isLazy(),
+								collectionDescriptor.getNavigableRole().append( CollectionPart.Nature.ELEMENT.getName() ).getFullPath(),
+								sessionFactory
+						),
 						manyToOne.getNotFoundAction(),
 						creationProcess
 				);

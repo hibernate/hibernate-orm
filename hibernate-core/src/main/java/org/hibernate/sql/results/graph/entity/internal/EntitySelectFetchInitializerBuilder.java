@@ -16,6 +16,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.BATCH_INITIALIZE;
 import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.BATCH_LOAD;
@@ -25,7 +26,7 @@ public class EntitySelectFetchInitializerBuilder {
 
 	public static EntityInitializer<?> createInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping fetchedAttribute,
+			EntityValuedFetchable fetchedAttribute,
 			EntityPersister entityPersister,
 			DomainResult<?> keyResult,
 			NavigablePath navigablePath,
@@ -71,7 +72,7 @@ public class EntitySelectFetchInitializerBuilder {
 				if ( parent.isEmbeddableInitializer() ) {
 					return new BatchEntityInsideEmbeddableSelectFetchInitializer(
 							parent,
-							fetchedAttribute,
+							(ToOneAttributeMapping) fetchedAttribute,
 							navigablePath,
 							entityPersister,
 							keyResult,
@@ -82,7 +83,7 @@ public class EntitySelectFetchInitializerBuilder {
 				else {
 					return new BatchEntitySelectFetchInitializer(
 							parent,
-							fetchedAttribute,
+							(ToOneAttributeMapping) fetchedAttribute,
 							navigablePath,
 							entityPersister,
 							keyResult,
@@ -93,7 +94,7 @@ public class EntitySelectFetchInitializerBuilder {
 			case BATCH_INITIALIZE:
 				return new BatchInitializeEntitySelectFetchInitializer(
 						parent,
-						fetchedAttribute,
+						(ToOneAttributeMapping) fetchedAttribute,
 						navigablePath,
 						entityPersister,
 						keyResult,

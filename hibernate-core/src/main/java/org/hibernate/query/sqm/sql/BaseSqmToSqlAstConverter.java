@@ -377,6 +377,7 @@ import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -2945,7 +2946,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			fromClauseIndex.register( from, tableGroup );
-			registerPluralTableGroupParts( tableGroup );
 			// Note that we do not need to register the correlated table group to the from clause
 			// because that is never "rendered" in the subquery anyway.
 			// Any table group joins added to the correlated table group are added to the query spec
@@ -3695,7 +3695,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
 
 		registerSqmFromTableGroup( sqmJoin, joinedTableGroup );
-		registerPluralTableGroupParts( joinedTableGroup );
 		if ( sqmJoin.isFetched() ) {
 			// A fetch is like a projection usage, so register that properly
 			registerEntityNameProjectionUsage( sqmJoin, getActualTableGroup( joinedTableGroup, sqmJoin ) );
@@ -4331,26 +4330,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			&& cteContainer.getCteStatement( cteTableGroup.getPrimaryTableReference().getTableId() ).isRecursive();
 	}
 
-	private void registerPluralTableGroupParts(TableGroup tableGroup) {
-		registerPluralTableGroupParts( null, tableGroup );
-	}
-
 	private void registerPluralTableGroupParts(NavigablePath navigablePath, TableGroup tableGroup) {
-		if ( tableGroup instanceof PluralTableGroup pluralTableGroup ) {
+		if ( tableGroup instanceof PluralTableGroup pluralTableGroup
+			&& navigablePath != tableGroup.getNavigablePath() ) {
 			final var elementTableGroup = pluralTableGroup.getElementTableGroup();
 			if ( elementTableGroup != null ) {
 				getFromClauseAccess().registerTableGroup(
-						navigablePath == null || navigablePath == tableGroup.getNavigablePath()
-								? elementTableGroup.getNavigablePath()
-								: navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
+						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						elementTableGroup
 				);
 			}
 			if ( pluralTableGroup.getIndexTableGroup() != null ) {
 				getFromClauseAccess().registerTableGroup(
-						navigablePath == null || navigablePath == tableGroup.getNavigablePath()
-								? pluralTableGroup.getIndexTableGroup().getNavigablePath()
-								: navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
+						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 						pluralTableGroup.getIndexTableGroup()
 				);
 			}
@@ -5070,7 +5062,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
-			registerPluralTableGroupParts( tableGroup );
 			subQuerySpec.getFromClause().addRoot( tableGroup );
 
 			final var functionDescriptor = resolveFunction( "count" );
@@ -5222,7 +5213,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
-			registerPluralTableGroupParts( tableGroup );
 			subQuerySpec.getFromClause().addRoot( tableGroup );
 
 			final var functionDescriptor = resolveFunction( function );
@@ -5365,7 +5355,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 
 				getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
-				registerPluralTableGroupParts( tableGroup );
 				subQuerySpec.getFromClause().addRoot( tableGroup );
 
 				final List<String> columnNames = new ArrayList<>( jdbcTypeCount );
@@ -8164,7 +8153,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
-			registerPluralTableGroupParts( tableGroup );
 			subQuerySpec.getFromClause().addRoot( tableGroup );
 
 			pluralAttributeMapping.getElementDescriptor().getInclusionCheckPart().applySqlSelections(
@@ -8368,7 +8356,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			subQueryState.getSqlAstCreationState().getFromClauseAccess()
 					.registerTableGroup( parentNavPath, tableGroup );
-			registerPluralTableGroupParts( tableGroup );
 
 			final var pluralAttributeMapping =
 					(PluralAttributeMapping)
@@ -8790,7 +8777,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
 		final var fromClauseIndex = getFromClauseIndex();
-		final var fetchedJoin = fromClauseIndex.findFetchedJoinByPath( resolvedNavigablePath );
+		// SQM joins are registered for the attribute path, not the {element} collection part path,
+		// so we need to check for the parent navigable path instead
+		final var isCollectionElementPart =
+				CollectionPart.Nature.ELEMENT.getName().equals( resolvedNavigablePath.getLocalName() );
+		final var fetchedJoin = fromClauseIndex.findFetchedJoinByPath(
+				isCollectionElementPart
+						? resolvedNavigablePath.getParent()
+						: resolvedNavigablePath
+		);
 
 		boolean explicitFetch = false;
 		EntityGraphTraversalState.TraversalResult traversalResult = null;
@@ -8799,7 +8794,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final NavigablePath fetchablePath;
 		if ( fetchedJoin != null ) {
-			fetchablePath = fetchedJoin.getNavigablePath();
+			// Have to re-add the {element} part to the navigable path to select the correct table group
+			if ( isCollectionElementPart ) {
+				fetchablePath = fetchedJoin.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() );
+			}
+			else {
+				fetchablePath = fetchedJoin.getNavigablePath();
+			}
 			// there was an explicit fetch in the SQM
 			//		there should be a TableGroupJoin registered for this `fetchablePath` already
 			assert fromClauseIndex.getTableGroup( fetchedJoin.getNavigablePath() ) != null;
@@ -8811,7 +8812,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			alias = fetchedJoin.getExplicitAlias();
 			explicitFetch = true;
 
-			if ( entityGraphTraversalState != null ) {
+			if ( entityGraphTraversalState != null && !( fetchable instanceof CollectionPart ) ) {
 				// Still do traverse the entity graph even if we encounter a fetch join
 				traversalResult = entityGraphTraversalState.traverse(
 						fetchParent,
@@ -8868,6 +8869,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //						}
 					}
 				}
+			}
+			else {
+				// If the collection is join fetched, we also join fetch the element part
+				joined = fetchParent instanceof EagerCollectionFetch && isCollectionElementPart
+						// Otherwise, rely on the mapped fetch style of the collection part
+						|| fetchable.getMappedFetchOptions().getStyle() == FetchStyle.JOIN;
 			}
 
 			// lastly, account for any app-defined max-fetch-depth

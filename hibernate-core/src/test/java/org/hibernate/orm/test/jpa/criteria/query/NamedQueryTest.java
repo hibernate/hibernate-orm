@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.jpa.criteria.query;
 
+import java.util.List;
+
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
@@ -11,9 +13,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -62,6 +66,39 @@ public class NamedQueryTest {
 			assertNull( query.getQueryOptions().getLimit().getFirstRow() );
 			assertNull( query.getQueryOptions().getLimit().getMaxRows() );
 			assertEquals( 2, query.getResultList().size() );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-15321")
+	public void testCriteriaTupleAliases(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final CriteriaBuilder cb = session.getCriteriaBuilder();
+			final CriteriaQuery<Tuple> criteria = cb.createTupleQuery();
+			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+			criteria.multiselect(
+					root.get( "id" ).alias( "entityId" ),
+					root.get( "data" ).alias( "entityData" )
+			);
+			criteria.orderBy( cb.asc( root.get( "id" ) ) );
+			scope.getSessionFactory().addNamedQuery( "criteria_tuple_query", session.createQuery( criteria ) );
+		} );
+
+		scope.inTransaction( session -> {
+			final List<Tuple> results = session.createNamedQuery( "criteria_tuple_query", Tuple.class ).getResultList();
+			assertEquals( 2, results.size() );
+			for ( int i = 0; i < results.size(); i++ ) {
+				final Tuple tuple = results.get( i );
+				assertEquals( i + 1, tuple.get( "entityId", Integer.class ) );
+				assertEquals( "test_" + ( i + 1 ), tuple.get( "entityData", String.class ) );
+				assertEquals( tuple.get( 0 ), tuple.get( "entityId" ) );
+				assertEquals( tuple.get( 1 ), tuple.get( "entityData" ) );
+				assertEquals( 2, tuple.getElements().size() );
+				assertEquals( "entityId", tuple.getElements().get( 0 ).getAlias() );
+				assertEquals( "entityData", tuple.getElements().get( 1 ).getAlias() );
+				assertEquals( Integer.class, tuple.getElements().get( 0 ).getJavaType() );
+				assertEquals( String.class, tuple.getElements().get( 1 ).getJavaType() );
+			}
 		} );
 	}
 

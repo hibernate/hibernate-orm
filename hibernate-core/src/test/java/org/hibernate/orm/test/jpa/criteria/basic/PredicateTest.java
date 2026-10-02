@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -95,6 +96,26 @@ public class PredicateTest {
 
 			List<Order> orders = entityManager.createQuery( orderCriteria ).getResultList();
 			assertEquals( 3, orders.size() );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-14908" )
+	public void testIsFalseComparisonPredicate(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			final CriteriaQuery<String> criteria = builder.createQuery( String.class );
+			final Root<Order> root = criteria.from( Order.class );
+			criteria.select( root.get( "id" ) );
+			criteria.orderBy( builder.asc( root.get( "id" ) ) );
+			final Predicate original = builder.equal( root.get( "id" ), "order-1" );
+			final Predicate negated = builder.isFalse( original );
+			assertNotSame( original, negated );
+
+			criteria.where( negated );
+			assertEquals( List.of( "order-2", "order-3" ), entityManager.createQuery( criteria ).getResultList() );
+
+			criteria.where( original );
+			assertEquals( List.of( "order-1" ), entityManager.createQuery( criteria ).getResultList() );
 		} );
 	}
 

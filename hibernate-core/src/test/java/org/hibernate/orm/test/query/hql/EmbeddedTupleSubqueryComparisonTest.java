@@ -33,6 +33,18 @@ public class EmbeddedTupleSubqueryComparisonTest {
 	}
 
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-14015" )
+	public void testIdEqualitySubquery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery(
+					"select 1 from EmbeddedIdEntity e1 where e1.id = " +
+							"(select e2.id from EmbeddedIdEntity e2)",
+					Integer.class
+			).getResultList() ).containsExactly( 1 );
+		} );
+	}
+
+	@Test
 	public void testIdSubquery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final EmbeddedIdEntity result = session.createQuery(

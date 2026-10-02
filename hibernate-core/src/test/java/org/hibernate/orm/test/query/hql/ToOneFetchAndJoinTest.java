@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -26,8 +27,40 @@ import static org.junit.Assert.assertTrue;
 				Entity3.class
 		}
 )
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 public class ToOneFetchAndJoinTest {
+
+	@Test
+	@JiraKey("HHH-15109")
+	public void testNestedCriteriaFetchWithImplicitPathRestrictions(SessionFactoryScope scope) {
+		final var statementObserver = scope.getCollectingStatementObserver();
+		scope.inTransaction( session -> {
+			final var builder = session.getCriteriaBuilder();
+			final var query = builder.createQuery( Entity1.class );
+			final var root = query.from( Entity1.class );
+			root.fetch( "entity2" ).fetch( "entity3" );
+			query.select( root ).where( builder.and(
+					builder.like( root.get( "entity2" ).get( "value" ), "%entity2%" ),
+					builder.like( root.get( "entity2" ).get( "entity3" ).get( "value" ), "%entity3%" )
+			) );
+
+			statementObserver.clear();
+			final var results = session.createQuery( query ).getResultList();
+			assertThat( results ).hasSize( 1 );
+			final var entity = results.get( 0 );
+			assertTrue( Hibernate.isInitialized( entity.getEntity2() ) );
+			assertTrue( Hibernate.isInitialized( entity.getEntity2().getEntity3() ) );
+			assertEquals( "entity1", entity.getValue() );
+			assertEquals( "entity2", entity.getEntity2().getValue() );
+			assertEquals( "entity3", entity.getEntity2().getEntity3().getValue() );
+
+			assertThat( statementObserver.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementObserver.getSqlQueries().get( 0 ) )
+					.containsOnlyOnce( " join entity2 " )
+					.containsOnlyOnce( " join entity3 " )
+					.doesNotContain( " cross join " );
+		} );
+	}
 
 	@Test
 	@JiraKey( value = "HHH-9637")

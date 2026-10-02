@@ -79,7 +79,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateWithUpsertOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -1594,7 +1594,7 @@ public class PostgreSQLDialect extends Dialect {
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		return new OptionalTableUpdateWithUpsertOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
 	@Override

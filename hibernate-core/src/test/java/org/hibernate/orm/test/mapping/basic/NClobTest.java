@@ -1,22 +1,29 @@
 package org.hibernate.orm.test.mapping.basic;
 
+import java.sql.Clob;
 import java.sql.NClob;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.jdbc.proxy.NClobProxy;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -31,6 +38,32 @@ import static org.junit.jupiter.api.Assertions.fail;
 )
 @SkipForDialect(dialectClass = SybaseASEDialect.class)
 public class NClobTest {
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.dropData();
+	}
+
+	@Test
+	@JiraKey( "HHH-14296" )
+	@RequiresDialect( OracleDialect.class )
+	public void testNativeQueryNClobAutoDiscovery(EntityManagerFactoryScope scope) {
+		final String warranty = "My product®™ warranty 😍";
+		scope.inTransaction( entityManager -> {
+			final Product product = new Product();
+			product.setId( 2 );
+			product.setName( "Mobile phone" );
+			product.setWarranty( NClobProxy.generateProxy( warranty ) );
+			entityManager.persist( product );
+		} );
+
+		scope.inTransaction( entityManager -> {
+			final Object result = entityManager.createNativeQuery( "select warranty from Product where id = 2" )
+					.getSingleResult();
+			final Clob clob = assertInstanceOf( Clob.class, result );
+			assertEquals( warranty, assertDoesNotThrow( () -> clob.getSubString( 1, (int) clob.length() ) ) );
+		} );
+	}
+
 	@Test
 	public void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction(

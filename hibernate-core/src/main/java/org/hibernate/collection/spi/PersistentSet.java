@@ -364,6 +364,10 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	public boolean hasDeletes(CollectionPersister persister) {
 		final Type elementType = persister.getElementType();
 		final java.util.Map<?,?> sn = (java.util.Map<?,?>) getSnapshot();
+		if ( sn == null ) {
+			// the collection was never initialized, so it has no deletes
+			return false;
+		}
 
 		Iterator<?> itr = sn.keySet().iterator();
 		while ( itr.hasNext() ) {

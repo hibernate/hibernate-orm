@@ -538,7 +538,12 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 
 	@Override
 	public boolean hasDeletes(CollectionPersister persister) {
-		for ( var entry : ((Map<?,?>) getSnapshot()).entrySet() ) {
+		final Map<?,?> sn = (Map<?,?>) getSnapshot();
+		if ( sn == null ) {
+			// the collection was never initialized, so it has no deletes
+			return false;
+		}
+		for ( var entry : sn.entrySet() ) {
 			if ( entry.getValue() != null && map.get( entry.getKey() ) == null ) {
 				return true;
 			}

@@ -74,7 +74,7 @@ public final class AuditHelper {
 			RootClass rootClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
-		bindAuditTable( auditTable, rootClass, context );
+		bindAuditTable( auditTable, null, rootClass, context );
 		bindSecondaryAuditTables( auditTable, rootClass, classDetails, context );
 		bindSubclassAuditTables( auditTable, rootClass, context );
 	}
@@ -83,11 +83,20 @@ public final class AuditHelper {
 			@Nullable Audited.Table auditTable,
 			Collection collection,
 			MetadataBuildingContext context) {
-		bindAuditTable( auditTable, (Stateful) collection, context );
+		bindAuditTable( auditTable, null, collection, context );
+	}
+
+	static void bindAuditTable(
+			@Nullable Audited.Table auditTable,
+			@Nullable Audited.CollectionTable collectionAuditTable,
+			Collection collection,
+			MetadataBuildingContext context) {
+		bindAuditTable( auditTable, collectionAuditTable, (Stateful) collection, context );
 	}
 
 	private static void bindAuditTable(
 			@Nullable Audited.Table auditTable,
+			@Nullable Audited.CollectionTable collectionAuditTable,
 			Stateful auditable,
 			MetadataBuildingContext context) {
 		final var collector = context.getMetadataCollector();
@@ -97,7 +106,32 @@ public final class AuditHelper {
 		final String auditCatalog;
 		final String csIdColumnName;
 		final String modTypeColumnName;
-		if ( auditTable != null ) {
+
+		// For collections, handle name and schema/catalog separately
+		if ( collectionAuditTable != null ) {
+			// Use @Audited.CollectionTable name if specified, otherwise use default
+			explicitAuditTableName = !isBlank( collectionAuditTable.name() ) ? collectionAuditTable.name() : "";
+			// Fall back to declaring class' @Audited.Table schema/catalog if CollectionTable's are blank
+			auditSchema = !isBlank( collectionAuditTable.schema() )
+					? collectionAuditTable.schema()
+					: (auditTable != null ? auditTable.schema() : "");
+			auditCatalog = !isBlank( collectionAuditTable.catalog() )
+					? collectionAuditTable.catalog()
+					: (auditTable != null ? auditTable.catalog() : "");
+			// CollectionTable doesn't have column name customization, use defaults
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
+		}
+		else if ( auditable instanceof Collection ) {
+			// Collection without @Audited.CollectionTable: use defaults for name, but inherit schema/catalog
+			explicitAuditTableName = "";
+			auditSchema = auditTable != null ? auditTable.schema() : "";
+			auditCatalog = auditTable != null ? auditTable.catalog() : "";
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
+		}
+		else if ( auditTable != null ) {
+			// Entity with @Audited.Table
 			explicitAuditTableName = auditTable.name();
 			auditSchema = auditTable.schema();
 			auditCatalog = auditTable.catalog();
@@ -105,6 +139,7 @@ public final class AuditHelper {
 			modTypeColumnName = auditTable.modificationTypeColumn();
 		}
 		else {
+			// Entity without @Audited.Table: all defaults
 			explicitAuditTableName = "";
 			auditSchema = "";
 			auditCatalog = "";

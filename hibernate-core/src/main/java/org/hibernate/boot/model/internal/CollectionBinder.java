@@ -2575,8 +2575,12 @@ public abstract class CollectionBinder {
 		}
 		final var audited = extract( Audited.class, property, buildingContext );
 		if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+			// Get the owning entity's @Audited.Table for schema/catalog defaults
+			final var auditTable = extract( Audited.Table.class, property, buildingContext );
+			final var collectionAuditTable = property.getDirectAnnotationUsage( Audited.CollectionTable.class );
 			AuditHelper.bindAuditTable(
-					extract( Audited.Table.class, property, buildingContext ),
+					auditTable,
+					collectionAuditTable,
 					collection,
 					buildingContext
 			);

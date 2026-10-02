@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <named-query name="userNameIn">
+        <query>from User where person.name in (:nameList) or userName in (:nameList)</query>
+    </named-query>
+
+    <entity class="org.hibernate.orm.test.timestamp.User"
+            access="PROPERTY" metadata-complete="true">
+        <table name="T_USER"/>
+        <dynamic-update>true</dynamic-update>
+        <attributes>
+            <id name="userName"/>
+            <basic name="password" optimistic-lock="false">
+                <column name="`password`" nullable="false"/>
+            </basic>
+            <version name="lastModified">
+                <temporal>TIMESTAMP</temporal>
+            </version>
+            <embedded name="person"/>
+        </attributes>
+    </entity>
+
+    <embeddable class="org.hibernate.orm.test.timestamp.Person"
+                access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <basic name="name">
+                <column name="name" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="dob">
+                <column name="dob" nullable="false" updatable="false"/>
+            </basic>
+            <basic name="currentAddress">
+                <column name="address" insertable="false" updatable="false"/>
+            </basic>
+        </attributes>
+    </embeddable>
+
+</entity-mappings>

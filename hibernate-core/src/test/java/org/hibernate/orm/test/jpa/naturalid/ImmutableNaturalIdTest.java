@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ImmutableNaturalIdTest extends AbstractJPATest {
 	@Override
 	protected String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/jpa/naturalid/User.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/jpa/naturalid/User.orm.xml" };
 	}
 
 	@Override

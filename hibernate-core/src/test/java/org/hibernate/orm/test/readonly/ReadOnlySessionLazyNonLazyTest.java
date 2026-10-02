@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = { "org/hibernate/orm/test/readonly/DataPoint.hbm.xml" }
+		xmlMappings = { "org/hibernate/orm/test/readonly/DataPoint.orm.xml" }
 )
 public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 

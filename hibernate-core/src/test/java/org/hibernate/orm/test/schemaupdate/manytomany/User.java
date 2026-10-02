@@ -14,7 +14,7 @@ import java.util.Set;
 public class User implements Serializable {
 
 	private Long id;
-	private Set groups = new HashSet();
+	private Set<Group> groups = new HashSet<>();
 
 	public Long getId() {
 		return id;

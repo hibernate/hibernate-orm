@@ -33,7 +33,7 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES_SQL_E
 		@Setting(name = HBM2DDL_IMPORT_FILES, value = "/org/hibernate/orm/test/tool/schema/scripts/multi-line-statements.sql"),
 		@Setting(name = HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR, value = "org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor"),
 })
-@DomainModel(xmlMappings = "/org/hibernate/orm/test/tool/schema/scripts/Human.hbm.xml")
+@DomainModel(annotatedClasses = Human.class)
 @SessionFactory
 public class MultiLineImportFileTest {
 

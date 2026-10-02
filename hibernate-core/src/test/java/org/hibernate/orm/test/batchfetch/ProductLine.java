@@ -12,7 +12,7 @@ import java.util.Set;
 public class ProductLine {
 	private Integer id;
 	private String description;
-	private Set models = new HashSet();
+	private Set<Model> models = new HashSet<>();
 
 	public ProductLine() {
 	}
@@ -33,10 +33,10 @@ public class ProductLine {
 	public void setId(Integer id) {
 		this.id = id;
 	}
-	public Set getModels() {
+	public Set<Model> getModels() {
 		return models;
 	}
-	public void setModels(Set models) {
+	public void setModels(Set<Model> models) {
 		this.models = models;
 	}
 }

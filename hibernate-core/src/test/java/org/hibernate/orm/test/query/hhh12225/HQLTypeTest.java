@@ -19,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @JiraKey(value = "HHH-12225")
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/query/hhh12225/Contract.hbm.xml",
-				"org/hibernate/orm/test/query/hhh12225/Vehicle.hbm.xml"
+				"org/hibernate/orm/test/query/hhh12225/Contract.orm.xml",
+				"org/hibernate/orm/test/query/hhh12225/Vehicle.orm.xml"
 		}
 )
 @SessionFactory

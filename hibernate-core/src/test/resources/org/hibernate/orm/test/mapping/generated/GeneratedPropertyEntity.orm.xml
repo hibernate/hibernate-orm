@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <package>org.hibernate.orm.test.mapping.generated</package>
+
+    <entity class="GeneratedPropertyEntity" metadata-complete="true" access="PROPERTY">
+        <table name="gen_prop"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="native"/>
+            </id>
+            <basic name="name"/>
+            <basic name="lastModified">
+                <column name="lastModified" length="8"/>
+                <generated>ALWAYS</generated>
+            </basic>
+        </attributes>
+    </entity>
+
+    <database-object>
+        <create>
+            CREATE OR REPLACE TRIGGER t_iu_gen_prop
+            BEFORE INSERT OR UPDATE ON gen_prop
+            FOR EACH ROW
+            BEGIN
+                IF INSERTING THEN
+                    :new.lastModified := HEXTORAW( '1' );
+                ELSE
+                    :new.lastModified := HEXTORAW(
+                        TO_NUMBER( RAWTOHEX( :old.lastModified ) ) + 1
+                    );
+                END IF;
+            END;
+        </create>
+        <drop>
+            DROP TRIGGER t_iu_gen_prop
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+    </database-object>
+
+</entity-mappings>

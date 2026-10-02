@@ -21,7 +21,7 @@ public class LocalizedStrings {
 	}
 
 	public String getString(Locale locale) {
-		return ( String ) strings.get( locale );
+		return strings.get( locale );
 	}
 
 	public Map<Locale,String> getStringsCopy() {

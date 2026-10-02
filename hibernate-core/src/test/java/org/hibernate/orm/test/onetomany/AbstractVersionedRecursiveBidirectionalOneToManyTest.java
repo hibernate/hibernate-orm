@@ -15,7 +15,7 @@ public abstract class AbstractVersionedRecursiveBidirectionalOneToManyTest
 
 	@Override
 	protected String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/onetomany/VersionedNode.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/onetomany/VersionedNode.orm.xml" };
 	}
 
 	@Override

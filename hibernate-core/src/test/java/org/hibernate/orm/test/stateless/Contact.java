@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.stateless;
 
 
+
 /**
- *
  * @author stliu
  */
 public class Contact {

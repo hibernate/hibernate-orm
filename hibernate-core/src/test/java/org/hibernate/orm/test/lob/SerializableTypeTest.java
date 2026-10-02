@@ -22,9 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/lob/SerializableMappings.hbm.xml"
-)
+@DomainModel(xmlMappings = "mappings/lob/SerializableMappings.orm.xml")
 @SessionFactory
 public class SerializableTypeTest {
 

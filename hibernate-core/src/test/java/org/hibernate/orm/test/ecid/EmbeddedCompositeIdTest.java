@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/ecid/Course.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/ecid/Course.orm.xml"
 )
 @SessionFactory
 public class EmbeddedCompositeIdTest {

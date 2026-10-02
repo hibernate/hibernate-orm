@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/pagination/DataPoint.hbm.xml"
+				"org/hibernate/orm/test/pagination/DataPoint.orm.xml"
 		}
 )
 public class PaginationTest {

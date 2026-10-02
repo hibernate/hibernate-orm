@@ -39,8 +39,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 				@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "0")
 		},
 		xmlMappings = {
-				"org/hibernate/orm/test/jpa/ops/Node.hbm.xml",
-				"org/hibernate/orm/test/jpa/ops/Employer.hbm.xml"
+				"org/hibernate/orm/test/jpa/ops/Node.orm.xml",
+				"org/hibernate/orm/test/jpa/ops/Employer.orm.xml"
 		}
 )
 public class GetLoadTest {
@@ -56,7 +56,7 @@ public class GetLoadTest {
 
 		Integer empId = scope.fromTransaction(
 				entityManager -> {
-					Session s = ( Session ) entityManager.getDelegate();
+					Session s =  entityManager.unwrap(Session.class);
 
 					Employer emp = new Employer();
 					s.persist( emp );
@@ -70,7 +70,7 @@ public class GetLoadTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					Session s = ( Session ) entityManager.getDelegate();
+					Session s = entityManager.unwrap(Session.class);
 					Employer emp = s.get( Employer.class, empId );
 					assertTrue( Hibernate.isInitialized( emp ) );
 					assertFalse( Hibernate.isInitialized( emp.getEmployees() ) );
@@ -84,7 +84,7 @@ public class GetLoadTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					Session s = ( Session ) entityManager.getDelegate();
+					Session s = entityManager.unwrap(Session.class);
 					Employer emp = ( Employer ) s.get( Employer.class.getName(), empId );
 					assertTrue( Hibernate.isInitialized( emp ) );
 					Node node = ( Node ) s.get( Node.class.getName(), nodeName );
@@ -102,7 +102,7 @@ public class GetLoadTest {
 
 		Integer empId = scope.fromTransaction(
 				entityManager -> {
-					Session s = ( Session ) entityManager.getDelegate();
+					Session s = entityManager.unwrap(Session.class);
 
 					Employer emp = new Employer();
 					s.persist( emp );
@@ -116,7 +116,7 @@ public class GetLoadTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					Session s = ( Session ) entityManager.getDelegate();
+					Session s = entityManager.unwrap(Session.class);
 					Employer emp = s.getReference( Employer.class, empId );
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
@@ -128,7 +128,7 @@ public class GetLoadTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					Session s = ( Session ) entityManager.getDelegate();
+					Session s = entityManager.unwrap(Session.class);
 					Employer emp = ( Employer ) s.getReference( Employer.class.getName(), empId );
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
@@ -175,7 +175,7 @@ public class GetLoadTest {
 	public void testLoadGetId(EntityManagerFactoryScope scope) {
 		Workload workload = scope.fromTransaction(
 				entityManager -> {
-					Session s = ( Session ) entityManager.getDelegate();
+					Session s = entityManager.unwrap(Session.class);
 					Workload _workload = new Workload();
 					s.persist(_workload);
 					return _workload;
@@ -184,7 +184,7 @@ public class GetLoadTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					Session s = ( Session ) entityManager.getDelegate();
+					Session s = entityManager.unwrap(Session.class);
 
 					Workload proxy = s.getReference(Workload.class, workload.id);
 					proxy.getId();
@@ -205,7 +205,7 @@ public class GetLoadTest {
 				entityManager -> {
 					try {
 						entityManager.getTransaction().begin();
-						Session s = (Session) entityManager.getDelegate();
+						Session s = entityManager.unwrap(Session.class);
 
 						assertNull( s.find( Workload.class, 999 ) );
 
@@ -250,7 +250,7 @@ public class GetLoadTest {
 				entityManager -> {
 					try {
 						entityManager.getTransaction().begin();
-						Session s = (Session) entityManager.getDelegate();
+						Session s = entityManager.unwrap(Session.class);
 
 						assertNull( s.find( Employee.class, 999 ) );
 

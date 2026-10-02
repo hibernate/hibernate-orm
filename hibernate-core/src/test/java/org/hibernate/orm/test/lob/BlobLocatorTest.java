@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class )
-@DomainModel(xmlMappings = "org/hibernate/orm/test/lob/LobMappings.hbm.xml")
+@DomainModel(xmlMappings = "mappings/lob/LobMappings.orm.xml")
 @SessionFactory
 public class BlobLocatorTest {
 	private static final long BLOB_SIZE = 10000L;

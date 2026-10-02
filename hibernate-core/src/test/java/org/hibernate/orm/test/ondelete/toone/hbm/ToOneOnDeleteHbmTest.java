@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
  * @author Vlad Mihalcea
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/ondelete/toone/hbm/ToOneOnDelete.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/ondelete/toone/hbm/ToOneOnDelete.orm.xml"
 )
 @SessionFactory
 public class ToOneOnDeleteHbmTest {

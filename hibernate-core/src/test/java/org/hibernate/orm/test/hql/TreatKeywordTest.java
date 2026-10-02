@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @see org.hibernate.orm.test.jpa.ql.TreatKeywordTest
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/hql/Animal.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/hql/Animal.orm.xml")
 @SessionFactory
 public class TreatKeywordTest {
 	@AfterEach

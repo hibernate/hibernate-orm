@@ -66,7 +66,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
 	public String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/onetoone/formula/Person.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/onetoone/formula/Person.orm.xml" };
 	}
 
 

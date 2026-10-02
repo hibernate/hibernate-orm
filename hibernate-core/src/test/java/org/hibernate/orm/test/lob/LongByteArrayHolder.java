@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.lob;
 
-
 /**
  * An entity containing data that is materialized into a byte array immediately.
  * The hibernate type mapped for {@link #longByteArray} determines the SQL type

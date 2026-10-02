@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Selaron
  */
 @DomainModel(xmlMappings = {
-		"org/hibernate/orm/test/serialization/DynamicMapMappings.hbm.xml"
+		"org/hibernate/orm/test/serialization/DynamicMapMappings.orm.xml"
 })
 @SessionFactory
 @ServiceRegistry(settings = {

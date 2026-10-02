@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.manytomanyassociationclass.nestedreference.Item"
+            access="PROPERTY" metadata-complete="true">
+        <table name="Items"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="name">
+                <column name="item_name" nullable="false" unique="true"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="false"/>
+            </basic>
+            <many-to-one name="owner"
+                         target-entity="org.hibernate.orm.test.manytomanyassociationclass.nestedreference.Item">
+                <join-column name="owner_id"/>
+            </many-to-one>
+            <many-to-one name="bagOwner"
+                         target-entity="org.hibernate.orm.test.manytomanyassociationclass.nestedreference.Item">
+                <join-column name="bagowner_id"/>
+            </many-to-one>
+            <one-to-many name="items"
+                         target-entity="org.hibernate.orm.test.manytomanyassociationclass.nestedreference.Item"
+                         mapped-by="owner"
+                         classification="SET"/>
+            <one-to-many name="bagOfItems"
+                         target-entity="org.hibernate.orm.test.manytomanyassociationclass.nestedreference.Item"
+                         mapped-by="bagOwner"
+                         classification="BAG"/>
+            <many-to-many name="otherItems"
+                          target-entity="org.hibernate.orm.test.manytomanyassociationclass.nestedreference.OtherItem"
+                          classification="SET">
+                <join-table name="items_otheritems">
+                    <join-column name="item_name" referenced-column-name="item_name"/>
+                    <inverse-join-column name="other_item_id"/>
+                </join-table>
+            </many-to-many>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.manytomanyassociationclass.nestedreference.OtherItem"
+            access="PROPERTY" metadata-complete="true">
+        <table name="OtherItems"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="name">
+                <column name="other_item_name" nullable="false" unique="true"/>
+            </basic>
+            <many-to-one name="favoriteItem"
+                         target-entity="org.hibernate.orm.test.manytomanyassociationclass.nestedreference.Item">
+                <join-column name="favoriteItem" referenced-column-name="item_name"/>
+            </many-to-one>
+            <many-to-many name="bagOfItems"
+                          target-entity="org.hibernate.orm.test.manytomanyassociationclass.nestedreference.Item"
+                          mapped-by="otherItems"
+                          classification="BAG"/>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

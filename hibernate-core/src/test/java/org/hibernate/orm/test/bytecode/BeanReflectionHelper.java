@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode;
+import java.lang.invoke.MethodHandles;
 import java.util.Date;
 
 import org.hibernate.accessor.AccessorFactory;
@@ -95,7 +96,7 @@ public class BeanReflectionHelper {
 
 		@Override
 		public AccessorFactory hibernateAccessorFactory() {
-			return AccessorFactory.reflection();
+			return AccessorFactory.reflection( MethodHandles.lookup() );
 		}
 	}
 }

@@ -11,6 +11,8 @@ import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 
@@ -92,7 +94,7 @@ public class BasicPropertyAccessorTest {
 
 		@Override
 		public AccessorFactory hibernateAccessorFactory() {
-			return AccessorFactory.reflection();
+			return AccessorFactory.reflection( MethodHandles.lookup() );
 		}
 	}
 }

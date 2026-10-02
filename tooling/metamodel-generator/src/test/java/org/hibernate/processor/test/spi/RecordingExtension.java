@@ -16,6 +16,7 @@ import java.util.List;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.spi.AnnotationMetaEntityContext;
+import org.hibernate.processor.spi.DefaultHibernateProcessorExtension;
 import org.hibernate.processor.spi.HibernateProcessorExtension;
 import org.hibernate.processor.spi.SessionSetup;
 
@@ -24,11 +25,14 @@ import org.hibernate.processor.spi.SessionSetup;
  * the whole test source set, which records every call made to it by the processor.
  * <p>
  * It only does something when {@linkplain #arm() armed}, and then only for types annotated
- * {@link ExtensionMarker}, so that it does not influence the other tests.
+ * {@link ExtensionMarker}. Otherwise it delegates to the {@link DefaultHibernateProcessorExtension}
+ * the processor uses when nothing is registered, so that it does not influence the other tests.
  */
 public class RecordingExtension implements HibernateProcessorExtension {
 
 	static final String QUALIFIER = SpiQualifier.class.getName();
+
+	private final HibernateProcessorExtension fallback = new DefaultHibernateProcessorExtension();
 
 	private static final List<String> EVENTS = new ArrayList<>();
 	private static boolean armed;
@@ -65,31 +69,44 @@ public class RecordingExtension implements HibernateProcessorExtension {
 
 	@Override
 	public void init(ProcessingEnvironment processingEnvironment) {
+		fallback.init( processingEnvironment );
 		record( "init" );
 	}
 
 	@Override
 	public @Nullable String qualifierAnnotation() {
 		record( "qualifierAnnotation" );
-		return isArmed() ? QUALIFIER : null;
+		return isArmed() ? QUALIFIER : fallback.qualifierAnnotation();
 	}
 
 	@Override
 	public boolean isExtensionEntity(TypeElement type) {
 		record( "isExtensionEntity:" + type.getSimpleName() );
-		return isMarked( type ) && type.getKind() == ElementKind.CLASS;
+		return isMarked( type ) ? type.getKind() == ElementKind.CLASS : fallback.isExtensionEntity( type );
 	}
 
 	@Override
 	public boolean isExtensionRepository(TypeElement type) {
 		record( "isExtensionRepository:" + type.getSimpleName() );
-		return isMarked( type ) && type.getKind() == ElementKind.INTERFACE;
+		return isMarked( type ) ? type.getKind() == ElementKind.INTERFACE : fallback.isExtensionRepository( type );
 	}
 
 	@Override
 	public void addRepositoryMembers(TypeElement element, AnnotationMetaEntityContext context) {
 		record( "addRepositoryMembers:" + element.getSimpleName() );
+		if ( !isMarked( element ) ) {
+			fallback.addRepositoryMembers( element, context );
+			return;
+		}
+		// exercise the context
+		record( "context.hasMember(before)=" + context.hasMember( "spiMember" ) );
 		context.addMember( "spiMember", new SpiMember( context.metamodel() ) );
+		record( "context.hasMember(after)=" + context.hasMember( "spiMember" ) );
+		final var primary = context.primaryEntity();
+		record( "context.primaryEntity=" + ( primary == null ? null : primary.getSimpleName() ) );
+		record( "context.addInjectAnnotation=" + context.addInjectAnnotation() );
+		record( "context.addNonnullAnnotation=" + context.addNonnullAnnotation() );
+		record( "context.getAllMembers.size>0=" + !context.getAllMembers( element ).isEmpty() );
 	}
 
 	@Override
@@ -99,10 +116,16 @@ public class RecordingExtension implements HibernateProcessorExtension {
 			AnnotationMetaEntityContext context) {
 		record( "setupRepositorySession:" + element.getSimpleName() + ":getter=" + getter );
 		if ( isMarked( element ) && element.getKind() == ElementKind.INTERFACE ) {
-			context.addRepositoryConstructor( "getSpiSession", "org.hibernate.Session" );
+			if ( element.getSimpleName().toString().startsWith( "SpiGetter" ) ) {
+				// the session is not injected, but obtained with an expression
+				context.setSessionGetter( SpiSessions.class.getName() + ".session()" );
+			}
+			else {
+				context.addRepositoryConstructor( "getSpiSession", "org.hibernate.Session" );
+			}
 			return new SessionSetup( "org.hibernate.Session", true );
 		}
-		return null;
+		return fallback.setupRepositorySession( element, getter, context );
 	}
 
 	/** A static method added to the metamodel class by {@link #addRepositoryMembers}. */

@@ -35,7 +35,8 @@ class ProcessorExtensionTest {
 	}
 
 	@Test
-	@WithClasses({ SpiBook.class, SpiRepository.class, SpiQualifier.class, ExtensionMarker.class })
+	@WithClasses({ SpiBook.class, SpiRepository.class, SpiGetterRepository.class, SpiSessions.class,
+			SpiQualifier.class, ExtensionMarker.class })
 	void testExtensionIsInvoked() {
 		final var events = RecordingExtension.events();
 		System.out.println( events );
@@ -48,6 +49,14 @@ class ProcessorExtensionTest {
 		assertTrue( events.contains( "isExtensionEntity:SpiBook" ), events.toString() );
 		assertTrue( events.contains( "addRepositoryMembers:SpiBook" ), events.toString() );
 		assertFalse( events.contains( "addRepositoryMembers:SpiRepository" ), events.toString() );
+
+		// the context gives access to the metamodel being built
+		assertTrue( events.contains( "context.hasMember(before)=false" ), events.toString() );
+		assertTrue( events.contains( "context.hasMember(after)=true" ), events.toString() );
+		assertTrue( events.contains( "context.primaryEntity=SpiBook" ), events.toString() );
+		assertTrue( events.contains( "context.addInjectAnnotation=true" ), events.toString() );
+		assertTrue( events.contains( "context.addNonnullAnnotation=true" ), events.toString() );
+		assertTrue( events.contains( "context.getAllMembers.size>0=true" ), events.toString() );
 
 		// consulted for the repository, which gets its session from the extension
 		assertTrue( events.contains( "isExtensionRepository:SpiRepository" ), events.toString() );
@@ -65,5 +74,16 @@ class ProcessorExtensionTest {
 		System.out.println( repository );
 		assertTrue( repository.contains( "public class _SpiRepository implements SpiRepository" ), repository );
 		assertTrue( repository.contains( "public @Nonnull Session getSpiSession()" ), repository );
+
+		// a repository for which the extension declares a session getter expression: no injected session
+		assertTrue( events.contains( "isExtensionRepository:SpiGetterRepository" ), events.toString() );
+		assertTrue( events.contains( "setupRepositorySession:SpiGetterRepository:getter=null" ), events.toString() );
+		assertMetamodelClassGeneratedFor( SpiGetterRepository.class, true );
+		final String getterRepository = getMetaModelSourceAsString( SpiGetterRepository.class, true );
+		System.out.println( getterRepository );
+		assertTrue( getterRepository.contains( "public class _SpiGetterRepository implements SpiGetterRepository" ),
+				getterRepository );
+		assertFalse( getterRepository.contains( "@Inject" ), getterRepository );
+		assertFalse( getterRepository.contains( "Session session" ), getterRepository );
 	}
 }

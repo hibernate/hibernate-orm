@@ -8,6 +8,7 @@ import java.util.EnumSet;
 
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.model.internal.BinderHelper;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.CollectionClassification;
@@ -100,6 +101,24 @@ public interface EffectiveMappingDefaults {
 	 * @see JaxbEntityMappingsImpl#getDefaultCascade()
 	 */
 	EnumSet<CascadeType> getDefaultCascadeTypes();
+
+	/**
+	 * The default cascade styles to apply to associations.
+	 * Default cascade styles as defined in `hbm.xml`, that will be removed along with `hbm.xml` support
+	 * in a future version.
+	 *
+	 * @see MappingDefaults#getImplicitCascadeStyleName()
+	 * @see PersistenceUnitMetadata#getDefaultCascadeTypes()
+	 * @see JaxbEntityMappingsImpl#getDefaultCascade()
+	 * @deprecated Deprecated like hbm.xml is in general. Will be removed along with hbm.xml support
+	 */
+	@Deprecated(forRemoval = true)
+	default String getDefaultCascadeStyleName() {
+		final EnumSet<CascadeType> defaultCascadeTypes = getDefaultCascadeTypes();
+		return defaultCascadeTypes == null || defaultCascadeTypes.isEmpty()
+				? null
+				: BinderHelper.renderCascadeTypeList( defaultCascadeTypes );
+	}
 
 	/**
 	 * The default AccessType to use if not specified in the mapping.

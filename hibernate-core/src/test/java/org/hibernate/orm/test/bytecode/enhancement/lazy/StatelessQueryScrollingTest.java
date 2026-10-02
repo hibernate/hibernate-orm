@@ -1,7 +1,9 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,13 +19,17 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static java.util.stream.Collectors.toSet;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -96,6 +102,39 @@ public class StatelessQueryScrollingTest {
 		}
 	}
 
+
+	@Test
+	@JiraKey("HHH-13405")
+	public void testCompleteCollectionContentsDuringScroll(SessionFactoryScope scope) {
+		final List<Producer> producers = new ArrayList<>();
+		scope.inStatelessTransaction( session -> {
+			try ( var results = session.createQuery(
+					"select p from Producer p join fetch p.products order by p.id",
+					Producer.class
+			).scroll( ScrollMode.FORWARD_ONLY ) ) {
+				assertTrue( results.next() );
+				final Producer first = results.get();
+				assertEquals( 1, first.getId() );
+				assertTrue( Hibernate.isInitialized( first.getProducts() ) );
+				assertEquals( 2, first.getProducts().size() );
+				assertEquals( Set.of( 1, 2 ), first.getProducts().stream().map( Product::getId ).collect( toSet() ) );
+				first.getProducts().forEach( product -> assertSame( first, product.getProducer() ) );
+				producers.add( first );
+
+				assertTrue( results.next() );
+				final Producer second = results.get();
+				assertEquals( 2, second.getId() );
+				assertTrue( Hibernate.isInitialized( second.getProducts() ) );
+				assertEquals( 1, second.getProducts().size() );
+				assertEquals( Set.of( 3 ), second.getProducts().stream().map( Product::getId ).collect( toSet() ) );
+				second.getProducts().forEach( product -> assertSame( second, product.getProducer() ) );
+				producers.add( second );
+				assertFalse( results.next() );
+			}
+		} );
+		assertEquals( Set.of( 1, 2 ), producers.get( 0 ).getProducts().stream().map( Product::getId ).collect( toSet() ) );
+		assertEquals( Set.of( 3 ), producers.get( 1 ).getProducts().stream().map( Product::getId ).collect( toSet() ) );
+	}
 
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {

@@ -81,6 +81,27 @@ public class PostgreSQLUUIDTest {
 	}
 
 	@Test
+	@JiraKey("HHH-13484")
+	public void testNativeSQLUUIDAutoDiscovery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<?> results = session.createNativeQuery( "select id from Book" ).getResultList();
+			Assertions.assertEquals( 1, results.size() );
+			Assertions.assertInstanceOf( UUID.class, results.get( 0 ) );
+			Assertions.assertEquals( id, results.get( 0 ) );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-13484")
+	public void testTypedNativeSQLUUID(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<UUID> results = session.createNativeQuery( "select id from Book", UUID.class )
+					.getResultList();
+			Assertions.assertEquals( List.of( id ), results );
+		} );
+	}
+
+	@Test
 	@JiraKey( value = "HHH-14358" )
 	public void testUUIDNullBinding(SessionFactoryScope scope) {
 		scope.inTransaction(

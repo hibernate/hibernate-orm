@@ -11,6 +11,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -40,6 +42,43 @@ public class EagerToManyWhereTest {
 	@AfterEach
 	void dropTestData(SessionFactoryScope factoryScope) {
 		factoryScope.dropData();
+	}
+
+	@Test
+	@JiraKey( "HHH-14437" )
+	public void testLeftJoinFetchWithRestrictedManyToManyElement(SessionFactoryScope scope) {
+		final List<Integer> productIds = scope.fromTransaction( session -> {
+			final Category active = new Category();
+			active.id = 1;
+			active.name = "active";
+			final Category deleted = new Category();
+			deleted.id = 2;
+			deleted.name = "deleted";
+			deleted.inactive = 1;
+			session.persist( active );
+			session.persist( deleted );
+
+			final Product mixed = new Product();
+			mixed.categoriesManyToMany.addAll( List.of( active, deleted ) );
+			session.persist( mixed );
+			final Product onlyDeleted = new Product();
+			onlyDeleted.categoriesManyToMany.add( deleted );
+			session.persist( onlyDeleted );
+			return List.of( mixed.id, onlyDeleted.id );
+		} );
+
+		scope.inTransaction( session -> {
+			for ( int productId : productIds ) {
+				final Product product = session.createQuery(
+						"select p from Product p left join fetch p.categoriesManyToMany where p.id = :id",
+						Product.class
+				).setParameter( "id", productId ).getSingleResult();
+				assertTrue( Hibernate.isInitialized( product.categoriesManyToMany ) );
+				final Integer[] expectedIds = productId == productIds.get( 0 ) ? new Integer[] { 1 } : new Integer[] {};
+				assertEquals( expectedIds.length, product.categoriesManyToMany.size() );
+				checkIds( product.categoriesManyToMany, expectedIds );
+			}
+		} );
 	}
 
 	@Test

@@ -18,6 +18,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+/// Tests collection-size expressions with restricted collection elements.
+///
+/// @author Steve Ebersole
 @JiraKey(value = "HHH-14585")
 @DomainModel(annotatedClasses = { Region.class, City.class })
 @SessionFactory
@@ -99,6 +102,20 @@ public class WhereAnnotatedOneToManySizeTest {
 			List<Object[]> result = query.getResultList();
 			assertThat( result ).extracting( f -> f[0] ).extracting( "name" ).containsExactly( "Lombardy", "Lazio" );
 			assertThat( result ).extracting( f -> f[1] ).containsExactly( 2, 1 );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-14594" )
+	public void orderBy_sizeProjectionAlias(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			final List<Object[]> result = session.createQuery(
+					"select r, size(r.cities) as cityCount from Region r order by cityCount desc",
+					Object[].class
+			).getResultList();
+			assertThat( result ).extracting( row -> row[0] ).extracting( "name" )
+					.containsExactly( "Lombardy", "Lazio" );
+			assertThat( result ).extracting( row -> row[1] ).containsExactly( 2, 1 );
 		} );
 	}
 

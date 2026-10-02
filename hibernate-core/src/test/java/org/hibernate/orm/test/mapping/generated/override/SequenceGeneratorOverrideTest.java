@@ -15,11 +15,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
+/// @author Steve Ebersole
 @DomainModel(
 		annotatedClasses = {
 				SequenceGeneratorOverrideTest.Entity1.class,
 				SequenceGeneratorOverrideTest.Entity2.class,
+				SequenceGeneratorOverrideTest.SharedEntity1.class,
+				SequenceGeneratorOverrideTest.SharedEntity2.class,
 		}
 )
 @SessionFactory
@@ -42,6 +44,53 @@ public class SequenceGeneratorOverrideTest {
 				.isEqualTo( "base_sequence" );
 		assertThat( generator2.getDatabaseStructure().getPhysicalName().render() )
 				.isEqualTo( "sub_sequence" );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-15103")
+	public void testMappedSuperclassSharedSequence(SessionFactoryScope scope) {
+		final var first = new SharedEntity1();
+		final var second = new SharedEntity2();
+		final var mappingMetamodel = scope.getSessionFactory().getMappingMetamodel();
+		for ( var entityClass : new Class<?>[] { SharedEntity1.class, SharedEntity2.class } ) {
+			final var generator = (SequenceStyleGenerator) mappingMetamodel
+					.getEntityDescriptor( entityClass ).getGenerator();
+			assertThat( generator.getDatabaseStructure().getPhysicalName().render() )
+					.isEqualTo( "shared_sequence" );
+		}
+
+		scope.inTransaction( session -> {
+			session.persist( first );
+			session.persist( second );
+			session.flush();
+			assertThat( first.id ).isNotNull();
+			assertThat( second.id ).isEqualTo( first.id + 1 );
+		} );
+
+		scope.inTransaction( session -> {
+			final var loadedFirst = session.find( SharedEntity1.class, first.id );
+			final var loadedSecond = session.find( SharedEntity2.class, second.id );
+			assertThat( loadedFirst ).isNotNull();
+			assertThat( loadedSecond ).isNotNull();
+			session.remove( loadedFirst );
+			session.remove( loadedSecond );
+		} );
+	}
+
+	@MappedSuperclass
+	@SequenceGenerator(name = "SEQ_SHARED", sequenceName = "shared_sequence", allocationSize = 1)
+	public static abstract class SharedBaseEntity {
+		@Id
+		@GeneratedValue(generator = "SEQ_SHARED")
+		protected Long id;
+	}
+
+	@jakarta.persistence.Entity(name = "SharedEntity1")
+	public static class SharedEntity1 extends SharedBaseEntity {
+	}
+
+	@jakarta.persistence.Entity(name = "SharedEntity2")
+	public static class SharedEntity2 extends SharedBaseEntity {
 	}
 
 	//tag::identifiers-generators-sequence-override-example[]

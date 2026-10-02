@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.where.annotations;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -48,6 +49,11 @@ public class EagerToManyWhereTest {
 
 	@Test
 	@JiraKey( value = "HHH-13011" )
+	// The Category columns are named `description_txt` and `inactive_flag` (rather than `description`
+	// and `inactive`) because gsjdbc4 reports those words as SQL keywords for GaussDB M mode
+	// (MySQL-compatible), which makes Hibernate skip the table alias when rendering user-provided
+	// restrictions, and the bare column is then ambiguous in the join ON clause. Neither renamed
+	// column collides with the keyword list of any supported database.
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
 		var product = new Product();
 		var flowers = new Category();
@@ -157,7 +163,7 @@ public class EagerToManyWhereTest {
 
 		@OneToMany(fetch = FetchType.EAGER)
 		@JoinColumn
-		@SQLRestriction( "description is not null" )
+		@SQLRestriction( "description_txt is not null" )
 		private Set<Category> categoriesWithDescOneToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
@@ -166,27 +172,29 @@ public class EagerToManyWhereTest {
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescManyToMany", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@SQLRestriction( "description is not null" )
+		@SQLRestriction( "description_txt is not null" )
 		private Set<Category> categoriesWithDescManyToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescIdLt4MToM", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@SQLRestriction( "description is not null" )
+		@SQLRestriction( "description_txt is not null" )
 		@SQLJoinTableRestriction( "categoryId < 4")
 		private Set<Category> categoriesWithDescIdLt4ManyToMany = new HashSet<>();
 	}
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@SQLRestriction("inactive = 0")
+	@SQLRestriction("inactive_flag = 0")
 	public static class Category {
 		@Id
 		private int id;
 
 		private String name;
 
+		@Column(name = "description_txt")
 		private String description;
 
+		@Column(name = "inactive_flag")
 		private int inactive;
 	}
 }

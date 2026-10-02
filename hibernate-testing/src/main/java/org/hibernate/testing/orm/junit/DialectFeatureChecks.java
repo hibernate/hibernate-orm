@@ -593,7 +593,34 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return (dialect instanceof PostgreSQLDialect && !(dialect instanceof SpannerPostgreSQLDialect))
 				|| dialect instanceof DB2Dialect
-				|| dialect instanceof GaussDBDialect;
+				// M mode lacks RETURNING (single-node only), so the CTE-based insert
+				// strategy (with t as (insert ... returning) select) is unavailable; the
+				// dialect falls back to LocalTemporaryTableInsertStrategy, whose ID-allocation
+				// semantics differ (it consumes reserved HiLo/Pooled IDs rather than opening a
+				// new segment), so the CTE-insert tests don't apply. A mode keeps CTE insert.
+				|| dialect instanceof GaussDBDialect g && !g.isMMode();
+		}
+	}
+
+	public static class NotGaussDBMMode implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// GaussDB M mode (MySQL-compatible) folds unquoted identifiers to lowercase on
+			// CREATE SEQUENCE, yet treats nextval()'s string argument as case-sensitive, so the
+			// dialect must render unquoted sequence names in lowercase to match. Tests that assert
+			// mixed-case sequence names (e.g. catalog/schema qualifier-substitution checks) cannot
+			// hold in M mode. A mode (Oracle-compatible) and every other dialect are unaffected.
+			return !( dialect instanceof GaussDBDialect g && g.isMMode() );
+		}
+	}
+
+	public static class NotGaussDBAMode implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// GaussDB A mode (openGauss Oracle-compatible) does not support PostgreSQL's ON CONFLICT
+			// syntax, and its MySQL-style ON DUPLICATE KEY UPDATE rejects updating primary/unique key
+			// columns, so DO NOTHING / upsert of tables that have no updatable non-key column cannot
+			// be emulated. M mode (MySQL-compatible) allows updating key columns and every other
+			// dialect is unaffected.
+			return !( dialect instanceof GaussDBDialect g && !g.isMMode() );
 		}
 	}
 
@@ -750,7 +777,11 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsFullJoin implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof DerbyDialect );
+			// GaussDB M mode (MySQL-compatible) does not support FULL JOIN; skip the test rather
+			// than fail on the rendered `full join` syntax error. A mode (openGauss PG kernel)
+			// supports it.
+			return !( dialect instanceof DerbyDialect )
+					&& !( dialect instanceof GaussDBDialect g && g.isMMode() );
 		}
 	}
 
@@ -795,18 +826,24 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsStructAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			// GaussDB M mode (MySQL-compatible) reports no aggregate support at all
+			// (see GaussDBDialect#getAggregateSupport), so this returns false there.
 			return supportsAggregate( dialect, SqlTypes.STRUCT );
 		}
 	}
 
 	public static class SupportsJsonAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			// GaussDB M mode (MySQL-compatible) reports no aggregate support at all
+			// (see GaussDBDialect#getAggregateSupport), so this returns false there.
 			return supportsAggregate( dialect, SqlTypes.JSON );
 		}
 	}
 
 	public static class SupportsXmlAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			// GaussDB M mode (MySQL-compatible) reports no aggregate support at all
+			// (see GaussDBDialect#getAggregateSupport), so this returns false there.
 			return supportsAggregate( dialect, SqlTypes.SQLXML );
 		}
 	}

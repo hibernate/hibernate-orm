@@ -646,6 +646,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "date and timestamp are not compatible")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Datetime truncation is not supported")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <timestamptz> - <date>")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode current_date returns a datea carrying the current time (not midnight), so trunc(local datetime, day) - local date is non-zero. A mode current_date is a pure date (midnight).")
 	public void testDateTruncWithLocalDatetimeMinusLocalDate(SessionFactoryScope scope) {
 		scope.inTransaction( session ->
 				assertThat( session.createQuery( "select trunc(local datetime, day) - local date", Duration.class )
@@ -1147,6 +1148,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL treats the cast value as a hexadecimal literal")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support casting varchar to binary")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix doesn't support casting varchar to byte")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode cast(varchar as binary) raises 'parameter is out of range'. A mode (PG kernel) supports cast as bytea.")
 	public void testCastFunctionBinary(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1350,6 +1352,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsVarSampFunction.class)
 	public void testSampleStatisticalFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createQuery( "select var_samp(e.theDouble), stddev_samp(e.theDouble) from EntityOfBasics e", Object[].class)
@@ -1358,6 +1361,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsVarSampFunction.class)
 	public void testPopulationStatisticalFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createQuery( "select var_pop(abs(e.theDouble)), stddev_pop(e.theDouble) from EntityOfBasics e", Object[].class)
@@ -2021,6 +2025,8 @@ public class FunctionTests {
 	@Test
 	@SkipForDialect(dialectClass = MySQLDialect.class,
 			reason = "MySQL has a really weird TIME type")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class,
+			comment = "GaussDB M mode (MySQL-compatible) timestampadd on TIME with negative wrap returns an invalid value (22007), same as MySQLDialect weird TIME type. A mode (PG kernel) supports time - interval wraparound.")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "The result of a datetime computation is out of range")
 	public void testTimeDurationArithmeticWrapAroundWithLiterals(SessionFactoryScope scope) {

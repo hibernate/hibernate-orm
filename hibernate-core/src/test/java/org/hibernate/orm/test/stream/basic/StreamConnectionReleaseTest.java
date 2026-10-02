@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.stream.basic;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Stream;
 
 import jakarta.persistence.Entity;
@@ -8,6 +9,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -18,7 +20,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 
+/// Streams must retain their JDBC resources until closed, including outside a transaction.
+///
+/// @author Steve Ebersole
 @DomainModel(
 		annotatedClasses = {StreamConnectionReleaseTest.MyEntity.class})
 @SessionFactory
@@ -70,6 +76,36 @@ public class StreamConnectionReleaseTest {
 			assertThat( session.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() )
 					.as( "connection should be released after stream close outside a transaction" )
 					.isFalse();
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-14721" )
+	void testFetchSizeStreamOutsideTransaction(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			for ( int i = 5; i < 405; i++ ) {
+				final MyEntity entity = new MyEntity();
+				entity.id = i;
+				entity.name = "Entity #" + i;
+				session.persist( entity );
+			}
+		} );
+
+		scope.inSession( session -> {
+			assertThat( session.getTransaction().isActive() ).isFalse();
+			final List<Integer> ids = new ArrayList<>();
+			try (Stream<MyEntity> stream = session.createQuery( "from MyEntity order by id", MyEntity.class )
+					.setHint( HINT_FETCH_SIZE, 200 ).getResultStream()) {
+				stream.forEach( entity -> {
+					assertThat( entity.name ).isEqualTo( "Entity #" + entity.id );
+					ids.add( entity.id );
+				} );
+				assertThat( ids ).containsExactlyElementsOf( java.util.stream.IntStream.range( 0, 405 ).boxed().toList() );
+				assertThat( session.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() ).isTrue();
+			}
+			assertThat( session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources() )
+					.isFalse();
+			assertThat( session.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() ).isFalse();
 		} );
 	}
 

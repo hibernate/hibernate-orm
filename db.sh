@@ -49,6 +49,27 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   DB_COUNT=$(sysctl -n hw.physicalcpu)
   # PostGIS images only support amd64, so we force emulation on macOS
   export POSTGRESQL_PLATFORM="linux/amd64"
+  # On Apple arm with Podman, Rosetta must be enabled to run any x86 images
+  # Since we rely on many such images, let's just fail if we notice that Rosetta is not enabled:
+  if [[ "$IS_PODMAN" == "true" ]]; then
+    PODMAN_MACHINE=$(podman machine ls --format '{{.Name}} {{.Running}}' 2>/dev/null | grep 'true' | head -1 | awk '{print $1}')
+    if [[ -z "$PODMAN_MACHINE" ]]; then
+      echo "ERROR: No running Podman machine was found."
+      echo "Your Podman machine is not running, so the containerized database cannot be started."
+      echo "Start it with: podman machine start"
+      exit 1
+    fi
+    # On Intel Macs the machine runs natively as amd64, so Rosetta is neither needed nor supported
+    if [[ "$(uname -m)" == "arm64" ]]; then
+      ROSETTA=$(podman machine inspect "$PODMAN_MACHINE" --format '{{.Rosetta}}' 2>/dev/null)
+      if [[ "$ROSETTA" != "true" ]]; then
+        echo "WARNING: Rosetta is not enabled in your Podman machine '$PODMAN_MACHINE'."
+        echo "A lot of used database images are x86-only and will fail to start without Rosetta."
+        echo "Recreate your Podman machine with Rosetta enabled."
+      fi
+    fi
+  fi
+
 else
   IS_OSX=false
   DB_COUNT=$(nproc)

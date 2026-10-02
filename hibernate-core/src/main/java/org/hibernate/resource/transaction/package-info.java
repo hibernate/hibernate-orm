@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines the resource-level transaction capabilities of Hibernate, centered
  * around the {@link org.hibernate.resource.transaction.spi.TransactionCoordinator}

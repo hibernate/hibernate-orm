@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.sql.hand.custom.sybase;
 
 import org.hibernate.dialect.SybaseDialect;

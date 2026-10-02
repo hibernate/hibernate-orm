@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Integrates a range of types defined by the JDK with the type system
  * of Hibernate. Each Java type is described by an implementation of

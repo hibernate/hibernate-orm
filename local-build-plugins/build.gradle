@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 plugins {
 	id "java-gradle-plugin"
 	id 'groovy-gradle-plugin'
@@ -111,14 +107,25 @@ spotless {
 	java {
 		target "src/**/*.java"
 		targetExclude( "**/target/**/*.java" )
-		licenseHeaderFile project.file("../shared/config/spotless/license.java")
+		replaceRegex "removeRedHatHeader", new GroovyShell().evaluate(project.file("../shared/config/spotless/header-patterns.groovy")).block, '${prefix}'
 		removeUnusedImports()
 		leadingSpacesToTabs( 4 )
 		trimTrailingWhitespace()
 		endWithNewline()
 	}
 }
-tasks.compileJava.dependsOn tasks.spotlessJavaApply
+// Bootstrapping a header-only run must not apply unrelated Java formatting in this included build.
+def invocation = gradle
+while (invocation.parent != null) {
+	invocation = invocation.parent
+}
+def headerOnlyInvocation = !invocation.startParameter.taskNames.empty && invocation.startParameter.taskNames.every {
+	def taskName = it.tokenize(':').last()
+	taskName in ['sourceHeadersApply', 'sourceHeadersCheck'] || taskName.startsWith('spotlessSourceHeaders')
+}
+if (!headerOnlyInvocation) {
+	tasks.compileJava.dependsOn tasks.spotlessJavaApply
+}
 
 tasks.test {
 	useJUnitPlatform()

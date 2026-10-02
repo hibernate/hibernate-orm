@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines the integration aspect of Hibernate's second-level caching, allowing
  * a "caching backend" to be plugged in as a cache provider.

@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 @GenericGenerator(type = SequenceStyleGenerator.class,
 		parameters = {
 				@Parameter(name = "prefer_sequence_per_entity", value = "true"),

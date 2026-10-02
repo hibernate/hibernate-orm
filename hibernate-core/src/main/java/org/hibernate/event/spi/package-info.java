@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines the event types and event listener interfaces for
  * events produced by the stateful {@link org.hibernate.Session}.

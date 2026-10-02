@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.bytecode.enhance.internal;
 
 import org.hibernate.bytecode.enhance.spi.Enhancer;

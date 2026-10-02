@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * An SPI for managing JDBC connections and other heavyweight resources, based around the
  * idea of a {@linkplain org.hibernate.resource.jdbc.spi.JdbcSessionOwner "JDBC session"}.

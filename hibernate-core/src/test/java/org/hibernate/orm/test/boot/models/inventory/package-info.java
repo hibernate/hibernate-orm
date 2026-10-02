@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Descriptor metadata does not enroll the entities in this package.
 ///
 /// @author Steve Ebersole

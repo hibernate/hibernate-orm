@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Package defining boot-time handling of JPA
  * {@link jakarta.persistence.AttributeConverter}s.

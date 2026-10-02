@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 import groovy.sql.Sql
 import groovy.xml.MarkupBuilder
 import org.geolatte.geom.ByteBuffer

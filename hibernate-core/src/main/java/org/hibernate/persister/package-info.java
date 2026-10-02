@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * A persister defines a persistence mechanism and/or mapping strategy
  * for a collection or entity:

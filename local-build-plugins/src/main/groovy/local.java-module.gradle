@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
@@ -314,12 +309,13 @@ tasks.withType(Jar).configureEach {jarTask ->
             )
         }
     }
-    if ("jar".equals(jarTask.name)) {
-        metaInf {
-            from(rootProject.projectDir, {
-                include "LICENSE.txt"
-            })
-        }
+    metaInf {
+        // include LICENSE.txt from the root project dir into each jar
+        //      - this is maybe a bit aggressive as it could just be "published jars", but applying it here is easiest
+        //          as moving it to local.publishing-java-module would miss a few modules (Gradle plugin e.g.).
+        from(rootProject.projectDir, {
+            include "LICENSE.txt"
+        })
     }
 }
 

@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Supported row-level-security strategies, rendering requests, and
 /// declarative schema DDL supplied by a Dialect.
 ///

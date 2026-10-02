@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 // Support for SQL CTE statements (WITH).  The general syntax for a CTE statement is:
 //
 // 	cte:: WITH {cte-label} OPEN_PAREN cteColumns CLOSE_PAREN AS cteDefinition consumer

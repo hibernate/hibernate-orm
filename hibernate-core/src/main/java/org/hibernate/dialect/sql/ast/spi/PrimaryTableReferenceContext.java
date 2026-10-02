@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.dialect.sql.ast.spi;
 
 /// Read-only semantic context for rendering a prefix before a primary table

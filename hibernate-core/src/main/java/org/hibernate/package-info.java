@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This package defines the central Hibernate APIs, beginning with
  * {@link org.hibernate.SessionFactory}, which represents an instance of

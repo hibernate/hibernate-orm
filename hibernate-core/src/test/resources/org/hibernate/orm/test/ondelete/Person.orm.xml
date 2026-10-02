@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
-<!--
 
   This mapping demonstrates the use of database-level
   cascade delete.

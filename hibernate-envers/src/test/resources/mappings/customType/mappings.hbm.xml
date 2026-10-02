@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="WINDOWS-1251"?>
-<!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <class name="org.hibernate.orm.test.envers.entities.customtype.UnspecifiedEnumTypeEntity" table="ENUM_ENTITY">

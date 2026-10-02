@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.dialect.sql.ast.internal;
 
 import org.hibernate.dialect.sql.ast.spi.PostgreSQLSqlAstTranslator;

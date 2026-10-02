@@ -3,6 +3,7 @@ package org.hibernate.orm.test.embeddable;
 import java.util.List;
 
 
+import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -19,7 +20,11 @@ import jakarta.persistence.ManyToOne;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/// Associations within an element collection must support lazy loading and explicit join fetching.
+///
+/// @author Steve Ebersole
 @Jpa(
 		annotatedClasses = {
 				ElementCollectionLazyToOneTest.TheEntity.class
@@ -61,6 +66,28 @@ public class ElementCollectionLazyToOneTest {
 					assertThat( theEmbeddable.getEntity() ).isNotNull();
 				}
 		);
+	}
+
+	@Test
+	@JiraKey( "HHH-14609" )
+	public void testFetchAssociationWithinFetchedElementCollection(EntityManagerFactoryScope scope) {
+		final TheEntity entity = scope.fromEntityManager( entityManager -> {
+			final TheEntity result = entityManager.createQuery(
+					"select e from TheEntity e left join fetch e.embeddables emb left join fetch emb.entity where e.id = :id",
+					TheEntity.class )
+					.setParameter( "id", ENTITY_1 )
+					.getSingleResult();
+			assertTrue( Hibernate.isInitialized( result.getEmbeddables() ) );
+			assertThat( result.getEmbeddables().size() ).isEqualTo( 1 );
+			assertTrue( Hibernate.isInitialized( result.getEmbeddables().get( 0 ).getEntity() ) );
+			return result;
+		} );
+
+		assertThat( entity.getId() ).isEqualTo( ENTITY_1 );
+		final TheEmbeddable element = entity.getEmbeddables().get( 0 );
+		assertThat( element.getContent() ).isEqualTo( "abc" );
+		assertThat( element.getEntity().getId() ).isEqualTo( ENTITY_2 );
+		assertThat( element.getEntity().getName() ).isEqualTo( "e2" );
 	}
 
 	@Embeddable

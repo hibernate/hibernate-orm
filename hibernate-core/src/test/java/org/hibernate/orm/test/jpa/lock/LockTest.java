@@ -24,6 +24,7 @@ import org.hibernate.Session;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
@@ -1295,6 +1296,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "The USTORE storage engine does not support For Key Share and For No Key Update")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the foreign-key check waits for a shared lock on the exclusively locked parent row and nothing bounds the wait, so the broker drops the idle lock holder at its session timeout and that connection can no longer commit")
 	public void testLockInsertFkTarget() {
 		assertTimeout( Duration.ofSeconds(70), () -> {
 			Lock lock = new Lock();
@@ -1338,6 +1340,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "The USTORE storage engine does not support For Key Share and For No Key Update")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the foreign-key check waits for a shared lock on the exclusively locked parent row and nothing bounds the wait, so the broker drops the idle lock holder at its session timeout and that connection can no longer commit")
 	public void testLockUpdateFkTarget() {
 		assertTimeout( Duration.ofSeconds(70), () -> {
 			Lock lock1 = new Lock();

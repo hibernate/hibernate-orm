@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_HALT_ON_ERROR;
 
@@ -51,6 +53,7 @@ import org.junit.jupiter.api.Test;
 )
 public class SchemaMigratorHaltOnErrorTest {
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NoAutoQuotingEnabled.class)
 	void testHaltOnError(EntityManagerFactoryScope factoryScope) {
 		try {
 			factoryScope.getEntityManagerFactory();

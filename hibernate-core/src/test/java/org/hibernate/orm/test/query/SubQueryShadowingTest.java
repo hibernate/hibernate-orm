@@ -26,6 +26,7 @@ public class SubQueryShadowingTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class, comment = "The check is for both, limit and offset in subqueries")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19745")
 	public void testSelectCase(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

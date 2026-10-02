@@ -11,7 +11,9 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -72,6 +74,7 @@ public class WithClauseTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testWithClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -107,6 +110,7 @@ public class WithClauseTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testWithClauseWithImplicitJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -158,6 +162,7 @@ public class WithClauseTest {
 
 	@Test
 	@JiraKey(value = "HHH-9329")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testWithClauseAsSubquery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -172,6 +177,7 @@ public class WithClauseTest {
 
 	@Test
 	@JiraKey(value = "HHH-11230")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testWithClauseAsSubqueryWithEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -185,6 +191,7 @@ public class WithClauseTest {
 
 	@Test
 	@JiraKey(value = "HHH-9329")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testWithClauseAsSubqueryWithKey(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

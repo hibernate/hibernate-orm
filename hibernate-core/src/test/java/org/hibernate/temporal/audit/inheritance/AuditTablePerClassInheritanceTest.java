@@ -25,6 +25,8 @@ import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -254,6 +256,7 @@ class AuditTablePerClassInheritanceTest {
 
 	@Test
 	@Order(5)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testToOneAssociation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 

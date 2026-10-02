@@ -220,7 +220,8 @@ public class SharedDriverManagerConnectionProvider extends DriverManagerConnecti
 	}
 
 	private static final Set<String> DRIVER_REQUIRES_NEW_CONNECTION_ON_TIMEZONE_CHANGE = Set.of(
-			"org.h2.Driver", "org.hsqldb.jdbc.JDBCDriver", "org.firebirdsql.jdbc.FBDriver" );
+			"org.h2.Driver", "org.hsqldb.jdbc.JDBCDriver", "org.firebirdsql.jdbc.FBDriver",
+			"cubrid.jdbc.driver.CUBRIDDriver" );
 
 	public void onDefaultTimeZoneChange() {
 		if ( DRIVER_REQUIRES_NEW_CONNECTION_ON_TIMEZONE_CHANGE.contains( config.driverClassName ) ) {

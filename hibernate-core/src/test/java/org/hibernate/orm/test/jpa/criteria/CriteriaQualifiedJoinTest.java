@@ -68,7 +68,7 @@ public class CriteriaQualifiedJoinTest {
 	}
 
 	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLateralOrSubqueryInOnClause.class )
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class )
 	public void testJoinLateral(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {

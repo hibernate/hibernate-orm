@@ -6,6 +6,8 @@ package org.hibernate.orm.test.query.hhh12076;
 
 import java.util.List;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -67,6 +69,7 @@ public class HbmMappingJoinClassTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testClassExpressionInOnClause(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			List<SettlementTask> results = session.createQuery(

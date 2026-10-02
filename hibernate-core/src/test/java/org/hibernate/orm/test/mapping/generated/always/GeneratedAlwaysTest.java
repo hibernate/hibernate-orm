@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -40,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SkipForDialect(dialectClass = SybaseASEDialect.class)
 @SkipForDialect(dialectClass = AltibaseDialect.class, reason = "generated always is not supported in Altibase")
 @SkipForDialect(dialectClass = InformixDialect.class)
+@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID does not support generated (computed) columns")
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class GeneratedAlwaysTest {
 

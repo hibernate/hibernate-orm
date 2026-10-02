@@ -9,7 +9,9 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SqlFragmentAlias;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -44,6 +46,7 @@ class ToOneAssociationCompositionTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = { "find", "fetch", "native" })
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void targetAndAssociationPredicatesComposeAcrossTables(String loading, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			for ( long id = 1; id <= 5; id++ ) {

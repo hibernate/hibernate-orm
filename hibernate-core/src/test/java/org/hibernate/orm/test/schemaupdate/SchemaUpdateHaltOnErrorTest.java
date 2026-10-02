@@ -12,8 +12,10 @@ import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -45,6 +47,7 @@ import java.util.EnumSet;
 @DomainModel(annotatedClasses = SchemaUpdateHaltOnErrorTest.From.class)
 public class SchemaUpdateHaltOnErrorTest {
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NoAutoQuotingEnabled.class)
 	public void testHaltOnError(DomainModelScope modelScope) {
 		var model = modelScope.getDomainModel();
 		model.orderColumns( false );

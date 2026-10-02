@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @DomainModel(annotatedClasses = SubQueryInFromOneToManyEmbeddedIdTests.Contact.class)
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLateralOrSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 public class SubQueryInFromOneToManyEmbeddedIdTests {
 

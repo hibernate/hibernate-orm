@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.query;
 
+import org.hibernate.Hibernate;
+
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -126,6 +128,27 @@ public class EntityValuedPathsGroupByOrderByTest {
 	}
 
 	// Implicit join ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-15821" )
+	public void testCriteriaFetchAndOrderByAssociationAndRoot(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var builder = session.getCriteriaBuilder();
+			final var criteria = builder.createQuery( EntityA.class );
+			final var root = criteria.from( EntityA.class );
+			root.fetch( "secondary" );
+			criteria.select( root );
+			criteria.orderBy( builder.asc( root.get( "secondary" ) ), builder.asc( root ) );
+
+			final var results = session.createQuery( criteria ).getResultList();
+			assertThat( results ).extracting( EntityA::getId ).containsExactly( 2L, 3L );
+			for ( var result : results ) {
+				assertThat( Hibernate.isInitialized( result.getSecondary() ) ).isTrue();
+				assertThat( result.getSecondary().getId() ).isEqualTo( 1L );
+				assertThat( result.getSecondary().getName() ).isEqualTo( "entity_b" );
+			}
+		} );
+	}
 
 	@Test
 	public void testImplicitJoinGroupBy(SessionFactoryScope scope) {

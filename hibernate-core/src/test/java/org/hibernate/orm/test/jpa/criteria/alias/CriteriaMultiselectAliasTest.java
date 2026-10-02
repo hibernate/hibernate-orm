@@ -2,6 +2,7 @@ package org.hibernate.orm.test.jpa.criteria.alias;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -63,6 +65,42 @@ public class CriteriaMultiselectAliasTest {
 
 			assertEquals( 1, (int) dto.getId() );
 			assertEquals( bookName(), dto.getTitle() );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-8196")
+	public void testSelectionAliasesAvailableToQueryAndTransformer(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			final CriteriaQuery<Tuple> criteria = cb.createTupleQuery();
+			final Root<Book> book = criteria.from( Book.class );
+			criteria.multiselect(
+					book.get( "id" ).alias( "id" ),
+					book.get( "name" ).alias( "title" )
+			);
+
+			assertEquals( "id", criteria.getSelection().getCompoundSelectionItems().get( 0 ).getAlias() );
+			assertEquals( "title", criteria.getSelection().getCompoundSelectionItems().get( 1 ).getAlias() );
+
+			final List<Tuple> tuples = entityManager.createQuery( criteria ).getResultList();
+			assertEquals( 1, tuples.size() );
+			final Tuple tuple = tuples.get( 0 );
+			assertEquals( "id", tuple.getElements().get( 0 ).getAlias() );
+			assertEquals( "title", tuple.getElements().get( 1 ).getAlias() );
+			assertEquals( 1, tuple.get( "id", Integer.class ) );
+			assertEquals( bookName(), tuple.get( "title", String.class ) );
+
+			final List<BookDto> dtos = entityManager.createQuery( criteria )
+					.unwrap( Query.class )
+					.setTupleTransformer( (values, aliases) -> {
+						assertArrayEquals( new String[] { "id", "title" }, aliases );
+						return bookDtoTransformer( values, aliases );
+					} )
+					.getResultList();
+			assertEquals( 1, dtos.size() );
+			assertEquals( 1, dtos.get( 0 ).getId() );
+			assertEquals( bookName(), dtos.get( 0 ).getTitle() );
 		} );
 	}
 

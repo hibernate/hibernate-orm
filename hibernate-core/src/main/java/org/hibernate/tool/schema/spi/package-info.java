@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * An SPI for tooling related to DDL generation, export, migration, and validation.
  * Schema management actions may be requested programmatically by calling

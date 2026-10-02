@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.tool.reveng.jdbc2cfg.BasicMultiSchema;
 
 import org.hibernate.boot.Metadata;

@@ -1,0 +1,75 @@
+// Keep this script self-contained so the configuration can be ported between branches.
+def configDirectory = project.findProperty('sourceHeaderConfigDirectory') ?: rootProject.file('shared/config/spotless')
+def patterns = new GroovyShell().evaluate(new File(configDirectory.toString(), 'header-patterns.groovy'))
+def formats = [
+    block: ['**/*.java', '**/*.java_', '**/*.kt', '**/*.groovy', '**/*.gradle', '**/*.css', '**/*Jenkinsfile'],
+    xml: ['**/*.xml', '**/*.xsd', '**/*.xjb', '**/*.dtd', '**/*.html', '**/*.md',
+          'hibernate-envers/src/test/resources/org/hibernate/orm/test/envers/integration/blob/blob.txt'],
+    freemarker: ['**/*.ftl'],
+    hash: ['**/*.properties', '**/*.sql', '**/*.yaml', '**/*.yml', '**/META-INF/services/*', 'rules/forbidden-apis.txt'],
+    antlr: ['**/*.g4'],
+    utilities: ['utilities.gradle']
+]
+// Anchor output exclusions to project roots: package names such as org.hibernate.build
+// and org.hibernate.orm.test.envers.integration.generated are handwritten sources.
+def projectDirectories = allprojects.collect { it.projectDir } + gradle.includedBuilds.collect { it.projectDir }
+def outputExclusions = projectDirectories.findAll { it.toPath().startsWith(rootDir.toPath()) }.collectMany { directory ->
+    def relative = rootDir.toPath().relativize(directory.toPath()).toString().replace(File.separator, '/')
+    def prefix = relative ? relative + '/' : ''
+    ['build', 'target', 'generated', 'generated-sources'].collect { prefix + it + '/**' }
+}
+def exclusions = outputExclusions + ['**/.gradle/**', '**/.git/**',
+                  '**/node_modules/**', '**/gradlew', '**/gradlew.bat',
+                  '**/gradle/wrapper/**', 'LICENSE.txt', 'AUTHORS.txt', 'dco.txt', 'CONTRIBUTING.md',
+                  '.github/PULL_REQUEST_TEMPLATE.md']
+def preserveLineEndings = Enum.valueOf(spotless.lineEndings.declaringClass, 'PRESERVE')
+def applyTasks = []
+def checkTasks = []
+formats.each { syntax, globs ->
+    def formatName = "sourceHeaders${syntax.capitalize()}"
+    spotless.format(formatName) {
+        target project.fileTree(rootDir) {
+            include globs
+            exclude exclusions
+            if (syntax == 'block') {
+                exclude 'utilities.gradle'
+            }
+            exclude { element ->
+                if (element.directory) {
+                    return false
+                }
+                def text = element.file.getText('ISO-8859-1')
+                // Spotless normalizes newlines internally: preserve mixed-ending files untouched.
+                def withoutCrLf = text.replace('\r\n', '')
+                def mixedEndings = (text.contains('\r\n') && (withoutCrLf.contains('\n') || withoutCrLf.contains('\r'))) ||
+                        (withoutCrLf.contains('\n') && withoutCrLf.contains('\r'))
+                // Exclude the entire schema, even if it also contains a Red Hat notice.
+                mixedEndings || (element.file.name.endsWith('.xsd') &&
+                        (text =~ /(?i)Copyright[^\r\n]*Oracle/).find())
+            }
+        }
+        // Notices are ASCII: a one-byte charset preserves UTF-8 and legacy-encoded payloads alike.
+        encoding 'ISO-8859-1'
+        lineEndings = preserveLineEndings
+        replaceRegex 'removeRedHatHeader', patterns[syntax], '${prefix}'
+    }
+    applyTasks.add("spotless${formatName.capitalize()}Apply")
+    checkTasks.add("spotless${formatName.capitalize()}Check")
+}
+tasks.register('sourceHeadersApply') {
+    group = 'formatting'
+    description = 'Remove recognized Red Hat file headers without other formatting changes.'
+    dependsOn applyTasks
+}
+tasks.register('sourceHeadersCheck') {
+    group = 'verification'
+    description = 'Check for recognized Red Hat file headers without changing files.'
+    dependsOn checkTasks
+}
+// Reuse the root convention task when present; standalone verification builds need their own.
+if (tasks.findByName('formatChecks') == null) {
+    tasks.register('formatChecks')
+}
+tasks.named('formatChecks') {
+    dependsOn tasks.named('sourceHeadersCheck')
+}

@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This package defines an API for accessing the runtime metamodel describing persistent
  * entities in Java and their mappings to the relational database schema.

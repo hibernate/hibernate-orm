@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * 	This package defines an easy way to extend Hibernate with user-defined
  * 	annotations that define customized O/R mappings of annotated entities

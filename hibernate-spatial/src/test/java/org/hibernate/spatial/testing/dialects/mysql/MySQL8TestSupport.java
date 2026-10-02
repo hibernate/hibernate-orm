@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.spatial.testing.dialects.mysql;
 
 import org.hibernate.spatial.testing.datareader.TestData;

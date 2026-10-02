@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * SPI for execution of SQL statements via JDBC. The statement to execute is
  * modeled by {@link org.hibernate.sql.exec.spi.JdbcOperation} and is

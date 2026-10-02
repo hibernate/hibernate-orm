@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.engine.jdbc.env.spi;
 
 import org.hibernate.dialect.lock.spi.TransactionConcurrency;

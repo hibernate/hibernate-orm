@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * An SPI supporting custom instantiation of
  * {@linkplain org.hibernate.metamodel.spi.EntityInstantiator entity instances} and

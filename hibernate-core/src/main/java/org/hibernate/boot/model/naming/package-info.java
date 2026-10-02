@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * This API allows intervention by generic code in the process of determining the names of
  * database objects (tables, columns, and constraints).

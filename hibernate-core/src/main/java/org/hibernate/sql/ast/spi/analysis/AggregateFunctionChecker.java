@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.sql.ast.spi.analysis;
 
 import org.hibernate.query.sqm.tree.spi.expression.Conversion;

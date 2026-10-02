@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.api.internal.provider.DefaultProvider
 

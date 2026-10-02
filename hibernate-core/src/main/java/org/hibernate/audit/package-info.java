@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * API for querying the history of
  * {@linkplain org.hibernate.annotations.Audited audited} entities.

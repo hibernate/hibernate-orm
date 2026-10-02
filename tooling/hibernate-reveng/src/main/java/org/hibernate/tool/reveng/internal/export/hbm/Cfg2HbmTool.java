@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.tool.reveng.internal.export.hbm;
 
 import org.hibernate.engine.FetchStyle;

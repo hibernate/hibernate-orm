@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Hibernate's built-in dialect-specific JDBC type implementations.
 ///
 /// Provider Dialects must obtain reusable stock descriptors through the

@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Implementations of {@link org.hibernate.resource.transaction.spi.TransactionCoordinator}
  * based on JTA.

@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
 <!-- Java Persistence API object/relational mapping file schema -->
 <xsd:schema targetNamespace="http://java.sun.com/xml/ns/persistence/orm"
             xmlns:orm="http://java.sun.com/xml/ns/persistence/orm"

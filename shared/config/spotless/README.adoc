@@ -1,0 +1,45 @@
+= Source header cleanup
+
+The root build applies `source-headers.gradle` to register header-only Spotless formats.
+Run these tasks from the repository root:
+
+[source,shell]
+----
+./gradlew :sourceHeadersCheck
+./gradlew :sourceHeadersApply
+----
+
+`sourceHeadersCheck` reports recognized headers without editing files and is included in the root `formatChecks` task.
+The Static code analysis GitHub Actions job runs it through `formatChecks`.
+`sourceHeadersApply` removes those headers without running import or whitespace formatters.
+The included build skips its compilation-time Java formatter during explicit header-only task invocations.
+Normal Java compilation retains its existing formatting behavior and shares the block-comment rule.
+
+`header-patterns.groovy` defines the common notice text and the comment wrappers.
+Only the short Apache SPDX notice attributed to Red Hat Inc. and Hibernate Authors,
+and the full Apache notice attributed solely to Red Hat, Inc., are recognized.
+Unknown or mixed attributions and comments containing extra prose are preserved.
+
+Coverage includes Java and Java fixtures, Kotlin, Groovy, Gradle, CSS, Jenkinsfiles,
+XML and schemas, HTML, Markdown, FreeMarker, properties, SQL fixtures, YAML,
+service descriptors, and the two explicitly selected text resources.
+ANTLR notices are removed only immediately inside `@header` actions.
+`utilities.gradle` has a separate rule for its historical notice following `apply plugin: UtilitiesPlugin`.
+
+Wrapper files, licensing and contribution documents, Oracle-copyrighted schemas,
+and build/cache/generated directories are excluded. Output-directory exclusions are anchored to project roots,
+so handwritten packages named `build` or `generated` remain covered.
+The dedicated formats use a one-byte charset to preserve non-ASCII payload bytes,
+including legacy-encoded SQL fixtures. Uniform LF and CRLF styles are preserved. Files with mixed newline styles are excluded
+because Spotless would otherwise normalize them as an unrelated change.
+No final-newline, import, or indentation steps are added.
+
+To port the configuration, copy this directory and port the root script application,
+Java-rule wiring, and included-build header-only guard as focused changes.
+Do not replace complete Gradle build files across branches.
+Verify the destination branch's Spotless compatibility before running the tasks.
+
+Tests in `org.hibernate.orm.format` cover recognized and unrecognized notices,
+LF/CRLF inputs, documentation, declarations, and idempotence.
+The `.fixture` pairs are excerpts from immediately before and after commit `f738da7ee01`;
+`historical.cases` records their source paths. Their extensions keep them out of formatting targets.

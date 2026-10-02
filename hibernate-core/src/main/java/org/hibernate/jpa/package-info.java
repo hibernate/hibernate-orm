@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * The packages in this namespace are responsible for implementing certain
  * requirements of the JPA specification, especially things which are only

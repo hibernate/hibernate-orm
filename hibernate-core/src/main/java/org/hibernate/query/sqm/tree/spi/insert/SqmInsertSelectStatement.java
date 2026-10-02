@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.query.sqm.tree.spi.insert;
 
 import jakarta.annotation.Nullable;

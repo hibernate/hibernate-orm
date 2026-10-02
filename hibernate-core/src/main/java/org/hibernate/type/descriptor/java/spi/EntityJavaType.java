@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.type.descriptor.WrapperOptions;

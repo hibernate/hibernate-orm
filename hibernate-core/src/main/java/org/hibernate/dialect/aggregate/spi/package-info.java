@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Supported aggregate-column mapping, rendering, DDL, and capability
 /// contracts supplied by a Dialect.
 ///

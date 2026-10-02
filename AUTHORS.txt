@@ -6,6 +6,7 @@
 
 Red Hat, Inc.
 Oracle, Corporation.
+International Business Machines Corp.
 
 # Individual contributors
 

@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.envers.integration.modifiedflags.naming;
 
 import org.hibernate.envers.configuration.EnversSettings;

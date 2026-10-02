@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.tool.reveng.jdbc2cfg.NoPrimaryKey;
 
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;

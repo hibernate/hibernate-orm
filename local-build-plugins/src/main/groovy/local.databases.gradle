@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 ext {
     // this `db` property is defined in gradle.properties and so we assume it is always available
     assert project.hasProperty('db')

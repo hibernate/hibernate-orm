@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Tuple-valued result graph contracts and standard implementations.
 ///
 /// @author Steve Ebersole

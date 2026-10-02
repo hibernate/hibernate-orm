@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.processor.test.hhh17613;
 
 import org.hibernate.processor.test.hhh17613.a.ChildA;

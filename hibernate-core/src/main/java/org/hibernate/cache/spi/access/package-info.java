@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines contracts for transactional and concurrent access to cached
  * {@linkplain org.hibernate.cache.spi.access.EntityDataAccess entity} and

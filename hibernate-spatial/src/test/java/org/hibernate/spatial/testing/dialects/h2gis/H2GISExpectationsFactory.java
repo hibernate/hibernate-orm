@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.spatial.testing.dialects.h2gis;
 
 import org.hibernate.spatial.dialect.h2gis.H2GISWkb;

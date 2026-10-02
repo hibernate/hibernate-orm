@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * An SPI used to {@linkplain org.hibernate.jpa.boot.spi.Bootstrap initiate}
  * and {@linkplain org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder control}

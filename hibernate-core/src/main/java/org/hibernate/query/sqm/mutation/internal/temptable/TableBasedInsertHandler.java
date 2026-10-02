@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;

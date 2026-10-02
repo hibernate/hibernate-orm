@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines basic-typed value conversions, including support for handling JPA
  * {@link jakarta.persistence.AttributeConverter} instances as part of the

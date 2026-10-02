@@ -1,7 +1,3 @@
-<!--
-  ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright Red Hat Inc. and Hibernate Authors
-  -->
 <validation-config
         xmlns="https://jakarta.ee/xml/ns/validation/configuration"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

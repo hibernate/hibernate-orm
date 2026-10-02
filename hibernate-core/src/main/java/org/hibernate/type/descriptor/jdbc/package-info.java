@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /**
  * Defines handling of almost the full range of standard JDBC-defined {@linkplain
  * java.sql.Types SQL data types}. Each JDBC type is described by an implementation

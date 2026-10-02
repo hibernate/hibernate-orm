@@ -589,20 +589,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				putMember( "class", new AnnotationMetaType( this ) );
 			}
 
-			validatePersistentMembers( fieldsOfClass );
-			validatePersistentMembers( gettersAndSettersOfClass );
+			if ( !repositoryQueryMetamodel ) {
+				validatePersistentMembers( fieldsOfClass );
+				validatePersistentMembers( gettersAndSettersOfClass );
 
-			addPersistentMembers( fieldsOfClass, AccessType.FIELD );
-			addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
+				addPersistentMembers( fieldsOfClass, AccessType.FIELD );
+				addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 
-			if ( needsLifecycleEventListener() ) {
-				addLifecycleEventListener();
-			}
+				if ( needsLifecycleEventListener() ) {
+					addLifecycleEventListener();
+				}
 
-			addIdClassIfNeeded( fieldsOfClass, gettersAndSettersOfClass );
+				addIdClassIfNeeded( fieldsOfClass, gettersAndSettersOfClass );
 
-			if ( hasAnnotation( element, ENTITY ) && isQuarkusDataType( element ) && !jakartaDataStaticModel ) {
-				addRepositoryMembers( element );
+				if ( hasAnnotation( element, ENTITY ) && isQuarkusDataType( element ) && !jakartaDataStaticModel ) {
+					addRepositoryMembers( element );
+				}
 			}
 		}
 

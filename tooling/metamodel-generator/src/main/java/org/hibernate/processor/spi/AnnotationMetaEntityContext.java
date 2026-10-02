@@ -75,7 +75,8 @@ public interface AnnotationMetaEntityContext {
 	String getConstructorName();
 
 	/**
-	 * The name of the data store configured for the repository, or {@code null} if there is none.
+	 * The name of the data store of the repository, given by the {@code dataStore} member of the Jakarta Data
+	 * {@code @Repository} annotation, or {@code null} if there is none.
 	 */
 	@Nullable String dataStore();
 

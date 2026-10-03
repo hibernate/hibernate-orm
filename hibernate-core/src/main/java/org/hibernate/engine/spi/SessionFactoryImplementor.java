@@ -17,6 +17,7 @@ import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.callback.spi.InterceptorStrategy;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
@@ -292,6 +293,15 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	@Override
 	@Nonnull
 	SessionFactoryOptions getSessionFactoryOptions();
+
+	/**
+	 * The strategy for resolving and managing interceptor instances.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	@Nonnull
+	InterceptorStrategy getInterceptorStrategy();
 
 	/**
 	 * Access to the StatementObserver associated with this factory.

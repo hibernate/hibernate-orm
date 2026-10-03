@@ -45,6 +45,7 @@ public class CommonOptions {
 	protected Interceptor interceptor;
 	protected boolean allowInterceptor = true;
 	protected boolean allowSessionInterceptorCreation = true;
+	protected boolean interceptorShared;
 	protected Connection connection;
 	protected PhysicalConnectionHandlingMode connectionHandlingMode;
 	protected Object tenantIdentifier;
@@ -147,6 +148,11 @@ public class CommonOptions {
 	public void useInterceptor(Interceptor interceptor) {
 		this.interceptor = interceptor;
 		this.allowInterceptor = true;
+		this.interceptorShared = true;
+	}
+
+	public boolean isInterceptorShared() {
+		return interceptorShared;
 	}
 
 	public void noInterceptor() {
@@ -254,18 +260,11 @@ public class CommonOptions {
 			return interceptor;
 		}
 
-		final var options = sessionFactory.getSessionFactoryOptions();
-
-		final var optionsInterceptor = options.getInterceptor();
-		if ( optionsInterceptor != null && optionsInterceptor != EmptyInterceptor.INSTANCE ) {
-			return optionsInterceptor;
-		}
-
-		if ( allowSessionInterceptorCreation ) {
-			final var statelessInterceptorImplementorSupplier =
-					options.getStatelessInterceptorImplementorSupplier();
-			if ( statelessInterceptorImplementorSupplier != null ) {
-				return statelessInterceptorImplementorSupplier.get();
+		final var strategy = sessionFactory.getInterceptorStrategy();
+		if ( !strategy.isScoped() || allowSessionInterceptorCreation ) {
+			final var strategyInterceptor = strategy.getInterceptorForSession( sessionFactory );
+			if ( strategyInterceptor != null && strategyInterceptor != EmptyInterceptor.INSTANCE ) {
+				return strategyInterceptor;
 			}
 		}
 

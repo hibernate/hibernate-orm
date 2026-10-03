@@ -6,8 +6,8 @@ import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.annotation.AnnotationMetaPackage;
 import org.hibernate.processor.annotation.NonManagedMetamodel;
 import org.hibernate.processor.model.Metamodel;
-import org.hibernate.processor.spi.DefaultQuarkusDataTypeNames;
-import org.hibernate.processor.spi.QuarkusDataTypeNames;
+import org.hibernate.processor.spi.DefaultHibernateProcessorExtension;
+import org.hibernate.processor.spi.HibernateProcessorExtension;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.xml.JpaDescriptorParser;
 
@@ -300,40 +300,13 @@ public class HibernateProcessor extends AbstractProcessor {
 		final var jakartaDataPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "jakarta.data" );
-		final var quarkusOrmPackage =
-				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( "io.quarkus.hibernate.orm" );
-		final var quarkusReactivePackage =
-				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( "io.quarkus.hibernate.reactive.runtime" );
 		final var dataEventPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "jakarta.data.event" );
 
-		var quarkusOrmPanachePackage =
-				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( "io.quarkus.hibernate.orm.panache" );
-		final var quarkusDataTypeNames = loadQuarkusDataTypeNames();
-		context.setQuarkusDataTypeNames( quarkusDataTypeNames );
-		var quarkusDataHibernatePackage =
-				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( quarkusDataTypeNames.packageName() );
-		var quarkusReactivePanachePackage =
-				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( "io.quarkus.hibernate.reactive.panache" );
-		// This is imported automatically by Quarkus extensions when HR is also imported
-		var quarkusReactivePanacheCommonPackage =
-				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( "io.quarkus.hibernate.reactive.panache.common" );
-
-		if ( packagePresent(quarkusReactivePanachePackage)
-				&& packagePresent(quarkusOrmPanachePackage) ) {
-			context.logMessage(
-					Diagnostic.Kind.WARNING,
-					"Both Quarkus Hibernate ORM and Hibernate Reactive with Panache detected: this is not supported, so will proceed as if none were there"
-			);
-			quarkusOrmPanachePackage = quarkusReactivePanachePackage = null;
-		}
+		final var extension = loadExtension();
+		extension.init( environment );
+		context.setExtension( extension );
 
 		final var springBeansPackage =
 				context.getProcessingEnvironment().getElementUtils()
@@ -348,13 +321,8 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setCdiAvailable( packagePresent(jakartaContextPackage) );
 		context.setAddTransactionScopedAnnotation( packagePresent(jakartaTransactionPackage) );
 		context.setDataEventPackageAvailable( packagePresent(dataEventPackage) );
-		context.setQuarkusInjection( packagePresent(quarkusOrmPackage) || packagePresent(quarkusReactivePackage) );
-		context.setUsesQuarkusOrm( packagePresent(quarkusOrmPanachePackage) );
-		context.setUsesQuarkusReactive( packagePresent(quarkusReactivePanachePackage) );
 		context.setSpringInjection( packagePresent(springBeansPackage) );
 		context.setAddComponentAnnotation( packagePresent(springStereotypePackage) );
-		context.setUsesQuarkusDataHibernate( packagePresent(quarkusDataHibernatePackage) );
-		context.setUsesQuarkusReactiveCommon( packagePresent(quarkusReactivePanacheCommonPackage) );
 
 		final var options = environment.getOptions();
 
@@ -395,14 +363,14 @@ public class HibernateProcessor extends AbstractProcessor {
 			&& !pack.getEnclosedElements().isEmpty();
 	}
 
-	private static QuarkusDataTypeNames loadQuarkusDataTypeNames() {
-		final Iterator<QuarkusDataTypeNames> iterator =
-				ServiceLoader.load( QuarkusDataTypeNames.class, QuarkusDataTypeNames.class.getClassLoader() )
+	private static HibernateProcessorExtension loadExtension() {
+		final Iterator<HibernateProcessorExtension> iterator =
+				ServiceLoader.load( HibernateProcessorExtension.class, HibernateProcessorExtension.class.getClassLoader() )
 						.iterator();
 		if ( iterator.hasNext() ) {
 			return iterator.next();
 		}
-		return new DefaultQuarkusDataTypeNames();
+		return new DefaultHibernateProcessorExtension();
 	}
 
 	@Override
@@ -626,7 +594,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			}
 		}
 		if ( isClassRecordOrInterfaceType( element ) ) {
-			// Any repository nested in an entity gets an automatic primary entity of the enclosing entity for Quarkus Panache 2
+			// Any repository nested in an entity gets an automatic primary entity of the enclosing entity for Quarkus Data
 			var newPrimaryEntity = isEntityOrEmbeddable( element ) && element instanceof TypeElement ? (TypeElement) element : null;
 			for ( final var child : element.getEnclosedElements() ) {
 				if ( isClassRecordOrInterfaceType( child ) ) {
@@ -637,7 +605,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private boolean isImplicitRepository(TypeElement typeElement) {
-		if ( AnnotationMetaEntity.isQuarkusDataRepository( typeElement, context.quarkusDataTypeNames() ) ) {
+		if ( context.getExtension().isExtensionRepository( typeElement ) ) {
 			return true;
 		}
 		for ( var member : typeElement.getEnclosedElements() ) {

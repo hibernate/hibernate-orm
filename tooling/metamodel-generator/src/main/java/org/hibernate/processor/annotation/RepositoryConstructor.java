@@ -33,7 +33,7 @@ public class RepositoryConstructor implements MetaAttribute {
 	private final boolean addNonnullAnnotation;
 	private final boolean addOverrideAnnotation;
 	private final boolean dataRepository;
-	private final boolean quarkusInjection;
+	private final @Nullable String qualifierAnnotation;
 
 	public RepositoryConstructor(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -46,7 +46,7 @@ public class RepositoryConstructor implements MetaAttribute {
 			boolean addNonnullAnnotation,
 			boolean addOverrideAnnotation,
 			boolean dataRepository,
-			boolean quarkusInjection) {
+			@Nullable String qualifierAnnotation) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.constructorName = constructorName;
 		this.methodName = methodName;
@@ -57,7 +57,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.addOverrideAnnotation = addOverrideAnnotation;
 		this.dataRepository = dataRepository;
-		this.quarkusInjection = quarkusInjection;
+		this.qualifierAnnotation = qualifierAnnotation;
 	}
 
 	@Override
@@ -208,10 +208,10 @@ public class RepositoryConstructor implements MetaAttribute {
 	 * directly.
 	 */
 	private void qualifier(StringBuilder declaration) {
-		if ( addInjectAnnotation && quarkusInjection && dataStore != null ) {
+		if ( addInjectAnnotation && qualifierAnnotation != null && dataStore != null ) {
 			declaration
 					.append('@')
-					.append(annotationMetaEntity.importType("io.quarkus.hibernate.orm.PersistenceUnit"))
+					.append(annotationMetaEntity.importType(qualifierAnnotation))
 					.append("(\"")
 					.append(dataStore)
 					.append("\") ");

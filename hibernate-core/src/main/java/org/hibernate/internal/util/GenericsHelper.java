@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -270,9 +271,29 @@ public final class GenericsHelper {
 				return typeVariable.getBounds()[0];
 			}
 		}
+		else if ( target instanceof GenericArrayType genericArrayType ) {
+			final var componentType =
+					substituteTypeArguments( genericArrayType.getGenericComponentType(), context );
+			return componentType instanceof Class<?> componentClass
+					? componentClass.arrayType()
+					: new SimpleGenericArrayType( componentType );
+		}
+		else if ( target instanceof WildcardType wildcardType ) {
+			return new SimpleWildcardType(
+					substituteAll( wildcardType.getUpperBounds(), context ),
+					substituteAll( wildcardType.getLowerBounds(), context ) );
+		}
 		else {
 			return target;
 		}
+	}
+
+	private static Type[] substituteAll(Type[] targets, Type context) {
+		final var substituted = new Type[targets.length];
+		for ( int i = 0; i < targets.length; i++ ) {
+			substituted[i] = substituteTypeArguments( targets[i], context );
+		}
+		return substituted;
 	}
 
 	private static ParameterizedType replaceTypeVariablesWithArguments(
@@ -313,6 +334,45 @@ public final class GenericsHelper {
 				joiner.add( type.getTypeName() );
 			}
 			return raw.getName() + joiner;
+		}
+	}
+
+	private record SimpleGenericArrayType(Type componentType)
+			implements GenericArrayType {
+		@Override
+		public Type getGenericComponentType() {
+			return componentType;
+		}
+
+		@Override
+		public String toString() {
+			return componentType.getTypeName() + "[]";
+		}
+	}
+
+	private record SimpleWildcardType(Type[] upperBounds, Type[] lowerBounds)
+			implements WildcardType {
+		@Override
+		public Type[] getUpperBounds() {
+			return upperBounds;
+		}
+
+		@Override
+		public Type[] getLowerBounds() {
+			return lowerBounds;
+		}
+
+		@Override
+		public String toString() {
+			if ( lowerBounds.length > 0 ) {
+				return "? super " + lowerBounds[0].getTypeName();
+			}
+			else if ( upperBounds[0] != Object.class ) {
+				return "? extends " + upperBounds[0].getTypeName();
+			}
+			else {
+				return "?";
+			}
 		}
 	}
 }

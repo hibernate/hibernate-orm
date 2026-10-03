@@ -164,6 +164,44 @@ public class TenantIdTest implements SessionFactoryProducer {
 	}
 
 	@Test
+	@JiraKey("HHH-16470")
+	public void testTenantRestrictionOnUnrelatedLeftJoin(SessionFactoryScope scope) {
+		currentTenant = "mine";
+		final Client matchingClient = new Client( "shared" );
+		final Client unmatchedClient = new Client( "unmatched" );
+		final Account matchingAccount = new Account( matchingClient );
+		final Account unmatchedAccount = new Account( unmatchedClient );
+		scope.inTransaction( session -> {
+			session.persist( matchingClient );
+			session.persist( unmatchedClient );
+			session.persist( matchingAccount );
+			session.persist( unmatchedAccount );
+		} );
+
+		currentTenant = "yours";
+		scope.inTransaction( session -> {
+			final Client otherTenantClient = new Client( "shared" );
+			session.persist( otherTenantClient );
+			session.persist( new Account( otherTenantClient ) );
+		} );
+
+		currentTenant = "mine";
+		scope.inTransaction( session -> {
+			final var results = session.createQuery(
+					"select a.id, c.id from Account a left join Client c "
+							+ "on c.name = a.client.name and c.name = :name order by a.id",
+					jakarta.persistence.Tuple.class
+			).setParameter( "name", "shared" ).getResultList();
+
+			assertThat( results ).hasSize( 2 );
+			assertThat( results.get( 0 ).get( 0 ) ).isEqualTo( matchingAccount.id );
+			assertThat( results.get( 0 ).get( 1 ) ).isEqualTo( matchingClient.id );
+			assertThat( results.get( 1 ).get( 0 ) ).isEqualTo( unmatchedAccount.id );
+			assertThat( results.get( 1 ).get( 1 ) ).isNull();
+		} );
+	}
+
+	@Test
 	public void testErrorOnInsert(SessionFactoryScope scope) {
 		currentTenant = "mine";
 		Client client = new Client("Gavin");

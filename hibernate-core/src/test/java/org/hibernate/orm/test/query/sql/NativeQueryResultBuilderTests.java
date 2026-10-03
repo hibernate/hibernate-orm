@@ -22,6 +22,7 @@ import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -142,6 +143,23 @@ public class NativeQueryResultBuilderTests {
 					assertThat( values[2], is( STRING_VALUE ) );
 				}
 		);
+	}
+
+	@Test
+	@JiraKey("HHH-16489")
+	public void testTypedNativeQueryWithExplicitScalar(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final NativeQuery<Integer> query = session.createNativeQuery(
+					"select id from EntityOfBasics where the_string = :name", Integer.class
+			);
+			query.addScalar( "id", StandardBasicTypes.INTEGER );
+			query.setParameter( "name", STRING_VALUE );
+
+			final List<?> results = query.getResultList();
+			assertThat( results.size(), is( 1 ) );
+			assertThat( results.get( 0 ), instanceOf( Integer.class ) );
+			assertThat( results.get( 0 ), is( 1 ) );
+		} );
 	}
 
 	@Test

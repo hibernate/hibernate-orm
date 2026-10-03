@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
@@ -84,6 +85,7 @@ public class EagerOneToManyScrollTest {
 		private Integer id;
 
 		@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+		@OrderColumn(name = "course_position")
 		private List<Course> courses = new ArrayList<>();
 	}
 
@@ -92,7 +94,7 @@ public class EagerOneToManyScrollTest {
 	public static class Course {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		private Integer id;
+		private Long id;
 
 		private String name;
 	}

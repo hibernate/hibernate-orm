@@ -813,6 +813,12 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.schema.spi.SchemaCommentSupport getSchemaCommentSupport() {
+		return org.hibernate.dialect.schema.spi.SchemaCommentSupports.none();
+	}
+
+	@Override
 	@SPI({ USE, IMPLEMENT })
 	public String renderAddConstraint(
 			org.hibernate.dialect.constraint.spi.ForeignKeyConstraintRequest request) {

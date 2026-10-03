@@ -6,6 +6,7 @@ import java.util.List;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.constraint.spi.CheckConstraintPlacement;
 import org.hibernate.dialect.constraint.spi.CheckConstraintRenderRequest;
 import org.hibernate.dialect.constraint.spi.ForeignKeyConstraintRequest;
@@ -41,6 +42,15 @@ class ConstraintAndSchemaCommentSupportTests {
 		assertSame( dialect, dialect.getCheckConstraintSupport() );
 		assertSame( dialect.getUniqueDelegate(), dialect.getUniqueDelegate() );
 		assertSame( dialect.getSchemaCommentSupport(), dialect.getSchemaCommentSupport() );
+	}
+
+	@Test
+	void spannerPostgreSqlDoesNotExportSchemaComments() {
+		final var support = new SpannerPostgreSQLDialect().getSchemaCommentSupport();
+		for ( var target : CommentTarget.values() ) {
+			assertEquals( CommentPlacement.NONE, support.placement( target ) );
+			assertEquals( "", support.render( request( target ) ) );
+		}
 	}
 
 	@Test

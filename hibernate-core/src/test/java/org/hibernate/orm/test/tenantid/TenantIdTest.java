@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.tenantid;
 
+import org.hibernate.CacheMode;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
@@ -30,6 +31,8 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -120,6 +123,52 @@ public class TenantIdTest implements SessionFactoryProducer {
 			assertNotNull( session.find(Account.class, acc.id) );
 			assertEquals( 1, session.createQuery("from Account", Account.class).getResultList().size() );
 		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	@JiraKey("HHH-16561")
+	public void testTenantRestrictionOnMultiLoad(boolean ordered, SessionFactoryScope scope) {
+		final Client myClient = new Client( "mine" );
+		final Account myAccount = new Account( myClient );
+		currentTenant = "mine";
+		scope.inTransaction( session -> {
+			session.persist( myClient );
+			session.persist( myAccount );
+		} );
+
+		final Client yourClient = new Client( "yours" );
+		final Account yourAccount = new Account( yourClient );
+		currentTenant = "yours";
+		scope.inTransaction( session -> {
+			session.persist( yourClient );
+			session.persist( yourAccount );
+		} );
+
+		for ( String tenant : List.of( "mine", "yours" ) ) {
+			currentTenant = tenant;
+			// Each load uses a fresh session so the tenant restriction is tested at the database.
+			scope.inTransaction( session -> {
+				final List<Account> accounts = session.byMultipleIds( Account.class )
+						.with( CacheMode.IGNORE )
+						.withReadOnly( true )
+						.enableOrderedReturn( ordered )
+						.multiLoad( myAccount.id, yourAccount.id );
+				final Long expectedId = tenant.equals( "mine" ) ? myAccount.id : yourAccount.id;
+				if ( ordered ) {
+					assertEquals( 2, accounts.size() );
+					final int visibleIndex = tenant.equals( "mine" ) ? 0 : 1;
+					assertNull( accounts.get( 1 - visibleIndex ) );
+					assertEquals( expectedId, accounts.get( visibleIndex ).id );
+					assertEquals( tenant, accounts.get( visibleIndex ).tenantId );
+				}
+				else {
+					assertEquals( 1, accounts.size() );
+					assertEquals( expectedId, accounts.get( 0 ).id );
+					assertEquals( tenant, accounts.get( 0 ).tenantId );
+				}
+			} );
+		}
 	}
 
 	@Test

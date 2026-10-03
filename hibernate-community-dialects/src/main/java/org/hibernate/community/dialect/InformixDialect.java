@@ -1,5 +1,6 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -15,6 +16,9 @@ import org.hibernate.SPI;
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
+
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
@@ -77,6 +81,7 @@ import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.type.BasicType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.namespace.spi.NamespaceSupport;
@@ -174,6 +179,10 @@ public class InformixDialect extends Dialect implements CurrentTemporalSupport, 
 	private IfExistsSupport ifExistsSupport;
 	private SchemaDropSupport schemaDropSupport;
 
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.local();
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
@@ -457,7 +466,7 @@ public class InformixDialect extends Dialect implements CurrentTemporalSupport, 
 		// as arguments, even with a cast (on Informix 14)
 		functionRegistry.namedDescriptorBuilder( "coalesce" )
 				.setMinArgumentCount( 1 )
-				.setArgumentRenderingMode( SqlAstNodeRenderingMode.INLINE_PARAMETERS )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
@@ -512,6 +521,23 @@ public class InformixDialect extends Dialect implements CurrentTemporalSupport, 
 				return new InformixSqlAstTranslator<>( request );
 			}
 		};
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public MutationOperation createOptionalTableUpdateOperation(
+			OptionalTableUpdateOperationRequest request) {
+		final var optionalTableUpdate = request.update();
+		if ( !optionalTableUpdate.getMutatingTable().isOptional() ) {
+			final var factory = request.sessionFactory();
+			final InformixSqlAstTranslator<?> translator =
+					new InformixSqlAstTranslator<>(
+							new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ) );
+			return translator.createMergeOperation( optionalTableUpdate );
+		}
+		else {
+			return super.createOptionalTableUpdateOperation( request );
+		}
 	}
 
 	/**
@@ -1199,7 +1225,7 @@ public class InformixDialect extends Dialect implements CurrentTemporalSupport, 
 		return CteSupport.builder()
 				.placement(
 						getVersion().isSameOrAfter( 14, 10 )
-								? CteSupport.Placement.NESTED
+								? CteSupport.Placement.SUBQUERY
 								: CteSupport.Placement.NONE
 				)
 				.build();

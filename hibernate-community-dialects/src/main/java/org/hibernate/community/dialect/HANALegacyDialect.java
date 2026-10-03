@@ -19,7 +19,8 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
-
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
@@ -200,8 +201,13 @@ import static org.hibernate.dialect.lob.spi.LobDataExtraction.extractString;
  * Column tables are created by this dialect by default when using the auto-ddl feature.
  */
 public class HANALegacyDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
 	private SchemaDropSupport schemaDropSupport;
 
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.local();
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

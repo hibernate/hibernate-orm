@@ -1,7 +1,6 @@
 package org.hibernate.orm.test.locking.options;
 
 import jakarta.persistence.LockModeType;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -41,7 +40,6 @@ public class ScopeAndSecondaryTableTests {
 	@Test
 	@RequiresDialectFeature(feature=DialectFeatureChecks.SupportsLockingJoins.class, comment = "Come back and rework this to account for follow-on testing")
 	@RequiresDialectFeature(feature=DialectFeatureChecks.SupportsConcurrentTransactions.class)
-	@SkipForDialect( dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
 			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 	void simpleTest(SessionFactoryScope factoryScope) {

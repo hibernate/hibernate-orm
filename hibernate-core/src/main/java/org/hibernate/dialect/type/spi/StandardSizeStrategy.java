@@ -4,11 +4,11 @@ import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.log;
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
@@ -31,7 +31,6 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Gavin King
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public class StandardSizeStrategy implements SizeStrategy {
-	private static final double LOG_BASE2OF10 = log( 10 ) / log( 2 );
 
 	private final Dialect dialect;
 
@@ -63,9 +62,13 @@ public class StandardSizeStrategy implements SizeStrategy {
 			length = null;
 		}
 
-		switch ( jdbcType.getDdlTypeCode() ) {
-			case SqlTypes.ARRAY:
-				break;
+		final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
+		final JavaType<?> elementJavaType = javaType instanceof BasicPluralJavaType<?> pluralJavaType
+				? pluralJavaType.getElementJavaType()
+				: javaType;
+		switch ( elementJdbcType.getDdlTypeCode() ) {
 			case SqlTypes.BIT:
 			case SqlTypes.CHAR:
 			case SqlTypes.NCHAR:
@@ -75,27 +78,21 @@ public class StandardSizeStrategy implements SizeStrategy {
 			case SqlTypes.VARBINARY:
 			case SqlTypes.CLOB:
 			case SqlTypes.BLOB:
-				size.setLength( javaType.getDefaultSqlLength( dialect, jdbcType ) );
+				size.setLength( elementJavaType.getDefaultSqlLength( dialect, jdbcType ) );
 				break;
 			case SqlTypes.LONGVARCHAR:
 			case SqlTypes.LONGNVARCHAR:
 			case SqlTypes.LONGVARBINARY:
-				size.setLength( javaType.getLongSqlLength() );
+				size.setLength( elementJavaType.getLongSqlLength() );
 				break;
 			case SqlTypes.FLOAT:
 			case SqlTypes.DOUBLE:
 			case SqlTypes.REAL:
 				// this is almost always the thing we use:
 				length = null;
-				size.setPrecision( javaType.getDefaultSqlPrecision( dialect, jdbcType ) );
+				size.setPrecision( elementJavaType.getDefaultSqlPrecision( dialect, jdbcType ) );
 				if ( scale != null && scale != 0 ) {
 					throw new IllegalArgumentException( "scale has no meaning for SQL floating point types" );
-				}
-				// but if the user explicitly specifies the precision, we need to convert it:
-				if ( precision != null ) {
-					// convert from base 10 (as specified in @Column) to base 2 (as specified by SQL)
-					// using the magic of high school math: log_2(10^n) = n*log_2(10) = n*ln(10)/ln(2)
-					precision = (int) ceil( precision * LOG_BASE2OF10 );
 				}
 				break;
 			case SqlTypes.TIME:
@@ -105,7 +102,7 @@ public class StandardSizeStrategy implements SizeStrategy {
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 			case SqlTypes.TIMESTAMP_UTC:
 				length = null;
-				size.setPrecision( javaType.getDefaultSqlPrecision( dialect, jdbcType ) );
+				size.setPrecision( elementJavaType.getDefaultSqlPrecision( dialect, jdbcType ) );
 				if ( scale != null && scale != 0 ) {
 					throw new IllegalArgumentException( "scale has no meaning for SQL time or timestamp types" );
 				}
@@ -113,8 +110,8 @@ public class StandardSizeStrategy implements SizeStrategy {
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DECIMAL:
 			case SqlTypes.INTERVAL_SECOND:
-				size.setPrecision( javaType.getDefaultSqlPrecision( dialect, jdbcType ) );
-				size.setScale( javaType.getDefaultSqlScale( dialect, jdbcType ) );
+				size.setPrecision( elementJavaType.getDefaultSqlPrecision( dialect, jdbcType ) );
+				size.setScale( elementJavaType.getDefaultSqlScale( dialect, jdbcType ) );
 				break;
 		}
 

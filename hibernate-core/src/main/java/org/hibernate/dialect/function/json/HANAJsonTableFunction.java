@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJsonTableFunction;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.ast.internal.ColumnQualifierCollectorSqlAstWalker;
 import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
@@ -291,10 +292,14 @@ public class HANAJsonTableFunction extends JsonTableFunction {
 							);
 							final Expression wrapperExpression = new JsonWrapperExpression( idColumns, tableQualifier, argument );
 							cteQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( wrapperExpression ) );
-							cteContainer.addCteStatement( new CteStatement(
+							final CteStatement cteStatement = new CteStatement(
 									new CteTable( tableName, cteColumns ),
-									new SelectStatement( cteQuery )
-							) );
+									new SelectStatement( cteQuery ),
+									// We need the CTE to be rendered as such, since we refer to the "table" name,
+									// so we add this hint to prevent inlining
+									CteMaterialization.NOT_MATERIALIZED
+							);
+							cteContainer.addCteStatement( cteStatement );
 							sqlArguments.set( 0, new TableColumnReferenceExpression( argument, tableName, idColumns ) );
 							return querySpec;
 						} );

@@ -155,9 +155,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.SQLException;
 import java.sql.Types;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
@@ -225,12 +222,10 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
 /// @since 8.0
 @SPI({ USE, IMPLEMENT })
 public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
-	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
-			DirectJavaTimeJdbcSupports.of( LocalDate.class, LocalTime.class, LocalDateTime.class );
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
-		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
+		return DirectJavaTimeJdbcSupports.local();
 	}
 
 	private IfExistsSupport ifExistsSupport;
@@ -1554,7 +1549,9 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 			OptionalTableUpdateOperationRequest request) {
 		final var optionalTableUpdate = request.update();
 		final var factory = request.sessionFactory();
-		return supportsMerge
+		// We now use insert ... on conflict do update for non-optional tables,
+		// which is better than using a separate update statement
+		return supportsMerge || !optionalTableUpdate.getMutatingTable().isOptional()
 				? new PostgreSQLSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ) )
 						.createMergeOperation( optionalTableUpdate )
 				: new OptionalTableUpdateWithUpsertOperation( optionalTableUpdate, request.versionedTarget() );

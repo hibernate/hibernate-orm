@@ -3,7 +3,6 @@ package org.hibernate.orm.test.hql;
 import jakarta.persistence.NamedNativeStatement;
 import junit.framework.AssertionFailedError;
 import org.hibernate.QueryException;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -245,8 +244,6 @@ public class BulkManipulationTest {
 
 	@Test
 	@JiraKey( value = "HHH-15161")
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix does not allow 'union' in 'insert select'")
 	public void testInsertWithNullParamValueSetOperation(SessionFactoryScope  factoryScope) {
 		TestData data = new TestData();
 		data.prepare( factoryScope );

@@ -22,7 +22,8 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
-
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
@@ -220,8 +221,14 @@ import static org.hibernate.dialect.lob.spi.LobDataExtraction.extractString;
  * @author Jonathan Bregler
  */
 public class HANADialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
 	private SchemaDropSupport schemaDropSupport;
 
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.local();
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
@@ -975,7 +982,7 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public NamespaceSupport getNamespaceSupport() {
-		return NamespaceSupports.standard( true, true );
+		return NamespaceSupports.standard( false, false );
 	}
 
 

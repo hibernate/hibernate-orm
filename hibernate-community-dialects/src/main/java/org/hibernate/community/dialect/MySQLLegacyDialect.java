@@ -9,7 +9,8 @@ import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
-
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.EnumSupport;
 import org.hibernate.dialect.type.spi.EnumSupports;
 import org.hibernate.dialect.type.spi.ObjectNullBindingStrategy;
@@ -113,6 +114,7 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -137,8 +139,6 @@ import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
-import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -149,7 +149,6 @@ import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -163,6 +162,7 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * @author Gavin King
  */
 public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
 	private final UniqueDelegate uniqueDelegate = new org.hibernate.dialect.unique.spi.DelegatingUniqueDelegate(
 			org.hibernate.dialect.unique.spi.UniqueDelegates.alterTable( this ) ) {
 		@Override
@@ -177,6 +177,10 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 	private IfExistsSupport ifExistsSupport;
 	private SchemaDropSupport schemaDropSupport;
 
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.local();
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
@@ -207,7 +211,10 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
+			switch ( elementJdbcType.getDefaultSqlTypeCode() ) {
 				case Types.BIT:
 					// MySQL allows BIT with a length up to 64 (less the default length 255)
 					if ( length != null ) {
@@ -371,16 +378,6 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 			case BIGINT:
 				//MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
 				return "signed";
-			case FLOAT:
-			case REAL:
-			case DOUBLE:
-				//MySQL doesn't let you cast to DOUBLE/FLOAT
-				//but don't just return 'decimal' because
-				//the default scale is 0 (no decimal places)
-				return getMySQLVersion().isSameOrAfter( 8, 0, 17 )
-					// In newer versions of MySQL, casting to float/double is supported
-					? super.castType( sqlTypeCode )
-					: "decimal($p,$s)";
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
@@ -447,7 +444,7 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 		final DdlTypeBuilder varbinaryBuilder =
 				StandardDdlTypes.builder( VARBINARY, columnType( BLOB ), this )
 						.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
-						.castTypeNamePattern( columnType( BINARY ) )
+						.castTypeNamePattern( castType( VARBINARY ) )
 						.castTypeName( castType( BINARY ) )
 						.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), "varbinary($l)" )
 						.withTypeCapacity( maxMediumLobLen, "mediumblob" );
@@ -799,6 +796,8 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLJdbcTypes.castingJson() );
 			jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLJdbcTypes.castingJsonArrayConstructor() );
 		}
+		// Custom VARBINARY type that allows casting with a size
+		typeContributions.contributeJdbcType( MySQLJdbcTypes.varbinary() );
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
@@ -842,6 +841,13 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 					// MySQL/MariaDB don't support casting to bit
 					return "abs(sign(?1))";
 			}
+		}
+		else if ( !getMySQLVersion().isSameOrAfter( 8, 0, 17 )
+				&& ( to == CastType.DOUBLE || to == CastType.FLOAT ) ) {
+			// Old MySQL version don't let you cast to DOUBLE/FLOAT
+			// so cast to the biggest decimal and then turn the value into an actual double
+			// by casting to char and adding 0.0
+			return "(0.0+cast(cast(?1 as decimal(65,30)) as char))";
 		}
 		return super.castPattern( from, to );
 	}

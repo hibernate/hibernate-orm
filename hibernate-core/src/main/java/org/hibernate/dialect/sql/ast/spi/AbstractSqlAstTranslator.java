@@ -14,6 +14,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.SPI;
 import org.hibernate.Timeouts;
+import org.hibernate.sql.ast.spi.query.SqlAstTreeHelper;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.array.spi.ArraySupport;
@@ -1575,10 +1576,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final SqlTuple sqlTuple = getSqlTuple( assignedValue );
 			if ( sqlTuple != null ) {
 				assert sqlTuple.getExpressions().size() == 1;
-				sqlTuple.getExpressions().get( 0 ).accept( this );
+				renderAssignmentValue( assignable, columnReferences.get( 0 ), sqlTuple.getExpressions().get( 0 ) );
 			}
 			else {
-				assignedValue.accept( this );
+				renderAssignmentValue( assignable, columnReferences.get( 0 ), assignedValue );
 			}
 		}
 		else if ( assignedValue instanceof SelectStatement ) {
@@ -1589,19 +1590,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				separator = COMMA_SEPARATOR_CHAR;
 			}
 			appendSql( ")=" );
-			assignedValue.accept( this );
+			renderAssignmentValue( assignable, null, assignedValue );
 		}
 		else {
 			assert assignedValue instanceof SqlTupleContainer;
 			final List<? extends Expression> expressions = ( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
 			renderAssignmentColumn( columnReferences.get( 0 ) );
 			appendSql( '=' );
-			expressions.get( 0 ).accept( this );
+			renderAssignmentValue( assignable, columnReferences.get( 0 ), expressions.get( 0 ) );
 			for ( int i = 1; i < columnReferences.size(); i++ ) {
 				appendSql( ',' );
 				renderAssignmentColumn( columnReferences.get( i ) );
 				appendSql( '=' );
-				expressions.get( i ).accept( this );
+				renderAssignmentValue( assignable, columnReferences.get( i ), expressions.get( i ) );
 			}
 		}
 	}
@@ -1609,6 +1610,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@SPI(IMPLEMENT)
 	protected void renderAssignmentColumn(ColumnReference column) {
 		column.appendColumnForWrite( this, null );
+	}
+
+	@SPI(IMPLEMENT)
+	protected void renderAssignmentValue(
+			Assignable assignable,
+			@Nullable ColumnReference columnReference,
+			Expression expression) {
+		expression.accept( this );
 	}
 
 	protected final void renderSetAssignmentEmulateJoin(Assignment assignment, UpdateStatement statement) {
@@ -2222,9 +2231,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( dialect.getValuesListSupport().supports( ValuesListSupport.Context.INSERT ) ) {
 			renderValuesListStandard( valuesList );
 		}
+		else if ( !supportsUnionInInsertTopLevelSelect() ) {
+			appendSql( "select * from (" );
+			renderValuesListAsSelectUnion( valuesList );
+			appendSql( ')' );
+		}
 		else {
 			renderValuesListAsSelectUnion( valuesList );
 		}
+	}
+
+	@SPI(IMPLEMENT)
+	protected boolean supportsUnionInInsertTopLevelSelect() {
+		// Most databases do
+		return true;
 	}
 
 	protected final void renderValuesListStandard(List<Values> valuesList) {
@@ -2685,7 +2705,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( needsCteInlining() && !originalCteStatements.isEmpty() ) {
 			cteStatements = new ArrayList<>( originalCteStatements.size() );
 			for ( CteStatement cteStatement : originalCteStatements ) {
-				if ( cteStatement.isRecursive() ) {
+				if ( (getCteSupport().supportsWithClause() || cteStatement.isRecursive())
+						&& !cteStatement.isInlinable() ) {
 					cteStatements.add( cteStatement );
 				}
 			}
@@ -6556,7 +6577,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void renderSelectExpressionWithCastedOrInlinedPlainParameters(Expression expression) {
 		// Null literals have to be cast in the select clause
 		if ( expression instanceof Literal literal ) {
-			if ( literal.getLiteralValue() == null ) {
+			if ( SqlAstTreeHelper.isNullLiteral( literal ) ) {
 				renderCasted( literal );
 			}
 			else {
@@ -8590,7 +8611,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitParameter(JdbcParameter jdbcParameter) {
-		switch ( getParameterRenderingMode() ) {
+		final SqlAstNodeRenderingMode oldParameterRenderingMode = getParameterRenderingMode();
+		parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
+		switch ( oldParameterRenderingMode ) {
 			case NO_UNTYPED:
 			case NO_PLAIN_PARAMETER:
 				renderCasted( jdbcParameter );
@@ -8607,6 +8630,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				visitParameterAsParameter( jdbcParameter );
 				break;
 		}
+		parameterRenderingMode = oldParameterRenderingMode;
 	}
 
 	protected void visitParameterAsParameter(JdbcParameter jdbcParameter) {
@@ -8619,7 +8643,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		try {
 			appendSql( "(select " );
-			visitParameterAsParameter( jdbcParameter );
+			renderCasted( jdbcParameter );
 			appendSql( getSelectOnlyFromClause() );
 			appendSql( ')' );
 		}
@@ -9102,7 +9126,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private void visitLiteral(Literal literal) {
-		if ( literal.getLiteralValue() == null ) {
+		if ( !(literal instanceof UnparsedNumericLiteral<?>) && literal.getLiteralValue() == null ) {
 			renderNull( literal );
 		}
 		else {
@@ -10420,14 +10444,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Render an equality restriction whose null parameter denotes a root tenant.
 	 * Qualify both references when a merge exposes source and target columns.
 	 */
-	protected final boolean renderTenantRestriction(ColumnValueBinding binding, String qualifier) {
+	protected boolean renderTenantRestriction(ColumnValueBinding binding, String qualifier) {
 		if ( binding instanceof TenantIdColumnValueBinding ) {
 			binding.getColumnReference().appendReadExpression( this, qualifier );
 			appendSql( "=coalesce(" );
 			binding.getValueExpression().accept( this );
-			appendSql( "," );
+			appendSql( ',' );
 			binding.getColumnReference().appendReadExpression( this, qualifier );
-			appendSql( ")" );
+			appendSql( ')' );
 			return true;
 		}
 		return false;

@@ -8928,9 +8928,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitAnsiCaseSearchedExpression(
 			CaseSearchedExpression caseSearchedExpression,
 			Consumer<Expression> resultRenderer) {
+		final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+
+		// Handle empty CASE expression (HHH-20949)
+		// This can occur with @ConcreteProxy and JOINED inheritance when table references are not available
+		if ( whenFragments.isEmpty() ) {
+			final Expression otherwise = caseSearchedExpression.getOtherwise();
+			if ( otherwise != null ) {
+				resultRenderer.accept( otherwise );
+			}
+			else {
+				appendSql( "null" );
+			}
+			return;
+		}
+
 		appendSql( "case" );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		for ( var whenFragment : caseSearchedExpression.getWhenFragments() ) {
+		for ( var whenFragment : whenFragments ) {
 			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
 					&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
@@ -8952,9 +8967,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitDecodeCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
+		final var whenFragments = caseSearchedExpression.getWhenFragments();
+
+		// Handle empty CASE expression (HHH-20949)
+		// This can occur with @ConcreteProxy and JOINED inheritance when table references are not available
+		if ( whenFragments.isEmpty() ) {
+			final Expression otherwise = caseSearchedExpression.getOtherwise();
+			if ( otherwise != null ) {
+				otherwise.accept( this );
+			}
+			else {
+				appendSql( "null" );
+			}
+			return;
+		}
+
 		appendSql( "decode( " );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		final var whenFragments = caseSearchedExpression.getWhenFragments();
 		final int caseNumber = whenFragments.size();
 		CaseSearchedExpression.WhenFragment firstWhenFragment = null;
 		for ( int i = 0; i < caseNumber; i++ ) {
@@ -9006,13 +9035,28 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitAnsiCaseSimpleExpression(
 			CaseSimpleExpression caseSimpleExpression,
 			Consumer<Expression> resultRenderer) {
+		final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
+
+		// Handle empty CASE expression (HHH-20949)
+		// This can occur with @ConcreteProxy and JOINED inheritance when table references are not available
+		if ( whenFragments.isEmpty() ) {
+			final Expression otherwise = caseSimpleExpression.getOtherwise();
+			if ( otherwise != null ) {
+				resultRenderer.accept( otherwise );
+			}
+			else {
+				appendSql( "null" );
+			}
+			return;
+		}
+
 		appendSql( "case " );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
 		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 			this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 		}
 		caseSimpleExpression.getFixture().accept( this );
-		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
+		for ( CaseSimpleExpression.WhenFragment whenFragment : whenFragments ) {
 			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}

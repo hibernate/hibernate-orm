@@ -7,7 +7,6 @@ import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -17,6 +16,9 @@ import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 
 /**
  * @author Steve Ebersole
@@ -93,24 +95,24 @@ public class SqmCaseSimple<T, R>
 	public void otherwise(@Nonnull SqmExpression<? extends R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
 
-		applyInferableResultType( otherwiseExpression.getNodeType() );
+		applyInferableResultType( otherwiseExpression.getNodeType(), otherwiseExpression.getJavaTypeDescriptor() );
 	}
 
 	public void when(@Nonnull SqmExpression<? extends T> test, @Nonnull SqmExpression<? extends R> result) {
 		whenFragments.add( new WhenFragment<>( test, result ) );
 
 		// TODO: currently does nothing, but it would be nice if it worked!
-		test.applyInferableType( fixture.getNodeType() );
+		test.applyInferableType( fixture.getNodeType(), fixture.getJavaTypeDescriptor() );
 
-		applyInferableResultType( result.getNodeType() );
+		applyInferableResultType( result.getNodeType(), result.getJavaTypeDescriptor() );
 	}
 
-	private void applyInferableResultType(@Nullable SqmBindableType<?> type) {
+	private void applyInferableResultType(@Nullable SqmBindableType<?> type, @Nullable JavaType<?> clazz) {
 		if ( type != null ) {
 			final SqmBindableType<?> oldType = getExpressible();
-			final SqmBindableType<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
+			final SqmBindableType<?> newType = highestPrecedenceType2( oldType, type );
 			if ( newType != null && newType != oldType ) {
-				internalApplyInferableType( newType );
+				internalApplyInferableType( newType, highestPrecedenceType2( getJavaTypeDescriptor(), clazz ) );
 			}
 		}
 	}
@@ -125,6 +127,19 @@ public class SqmCaseSimple<T, R>
 
 		if ( whenFragments != null ) {
 			whenFragments.forEach( whenFragment -> whenFragment.getResult().applyInferableType( newType ) );
+		}
+	}
+
+	@Override
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType, @Nullable JavaType<?> newJavaType) {
+		super.internalApplyInferableType( newType, newJavaType );
+
+		if ( otherwise != null ) {
+			otherwise.applyInferableType( newType, newJavaType );
+		}
+
+		if ( whenFragments != null ) {
+			whenFragments.forEach( whenFragment -> whenFragment.getResult().applyInferableType( newType, newJavaType ) );
 		}
 	}
 

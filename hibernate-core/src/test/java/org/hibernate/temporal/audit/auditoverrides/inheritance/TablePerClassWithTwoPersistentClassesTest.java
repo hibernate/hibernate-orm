@@ -1,0 +1,154 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.temporal.audit.auditoverrides.inheritance;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
+import org.hibernate.SharedSessionContract;
+import org.hibernate.annotations.Audited;
+import org.hibernate.audit.AuditLog;
+import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.mapping.Column;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+import static org.hibernate.temporal.audit.auditoverrides.inheritance.SingleTableInheritanceTest.assertTable;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+
+@SessionFactory
+@DomainModel(annotatedClasses = {
+		TablePerClassWithTwoPersistentClassesTest.Base.class,
+		TablePerClassWithTwoPersistentClassesTest.Sub.class,
+		TablePerClassWithTwoPersistentClassesTest.SubSub.class,
+})
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
+		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
+public class TablePerClassWithTwoPersistentClassesTest {
+	private static int currentTxId;
+
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
+		@Override
+		public Integer generateIdentifier(SharedSessionContract session) {
+			return ++currentTxId;
+		}
+	}
+
+
+	/**
+	 * Entity: @Audited.Excluded
+	 * Entity: @Audited.Override.isAudited = true
+	 *
+	 */
+
+	@Entity(name = "Base")
+	@Table(name = "Base")
+	@Audited
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	static class Base {
+		@Id
+		long id;
+
+		@Audited.Excluded
+		String str1;
+
+		String str2;
+	}
+
+	@Entity(name = "Sub")
+	@Audited.Overrides( {
+			@Audited.Override(name = "str1", isAudited = true), // <-- revokes initial exclusion of str1
+			@Audited.Override(name = "str2", isAudited = false) // <-- revokes initial inclusion of str2
+	} )
+	static class Sub extends Base {
+		@Audited.Excluded
+		String str3;
+	}
+
+	@Entity
+	@Audited.Overrides( {
+			@Audited.Override(name = "str3", isAudited = true),
+	} )
+	static class SubSub extends Sub {
+	}
+
+	@Test
+	public void test(DomainModelScope domainModelScope, SessionFactoryScope scope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		assertTable( tables, "Base_AUD", table -> {
+			assertFalse( table.containsColumn( new Column( "str1" ) ) );
+			assertTrue( table.containsColumn( new Column( "str2" ) ) );
+			assertFalse( table.containsColumn( new Column( "str3" ) ) );
+		} );
+
+		assertTable( tables, "Sub_AUD", table -> {
+			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+			assertFalse( table.containsColumn( new Column( "str2" ) ) );
+			assertFalse( table.containsColumn( new Column( "str3" ) ) );
+		} );
+
+		assertTable( tables, "TablePerClassWithTwoPersistentClassesTest$SubSub_AUD", table -> {
+			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+			assertFalse( table.containsColumn( new Column( "str2" ) ) );
+			assertTrue( table.containsColumn( new Column( "str3" ) ) );
+		} );
+
+		scope.inTransaction( s -> {
+			var baseEntity = new Base();
+			baseEntity.id = 0;
+			baseEntity.str1 = "v";
+			baseEntity.str2 = "w";
+			s.persist( baseEntity );
+
+			var subEntity = new Sub();
+			subEntity.id = 1;
+			subEntity.str1 = "v";
+			subEntity.str2 = "w";
+			s.persist( subEntity );
+
+			var subSubEntity = new Sub();
+			subSubEntity.id = 2;
+			subSubEntity.str1 = "v";
+			subSubEntity.str2 = "w";
+			subSubEntity.str3 = "x";
+			s.persist( subSubEntity );
+		} );
+
+		scope.inTransaction( s -> {
+			var statelessSession = s.getSessionFactory().withStatelessOptions().atChangeset( AuditLog.ALL_CHANGESETS )
+					.openStatelessSession();
+			var auditedBase = statelessSession.createSelectionQuery("from Base", Base.class).getResultList();
+			if ( auditedBase instanceof Base base ) {
+				assertNull( base.str1 );
+				assertNotNull( base.str2 );
+			}
+
+			if ( auditedBase instanceof Sub sub ) {
+				assertNotNull( sub.str1 );
+				assertNull( sub.str2 );
+				assertNull( sub.str3 );
+			}
+
+			if ( auditedBase instanceof SubSub subsub ) {
+				assertNotNull( subsub.str1 );
+				assertNull( subsub.str2 );
+				assertNotNull( subsub.str3 );
+			}
+		} );
+	}
+
+}

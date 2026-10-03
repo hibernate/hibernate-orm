@@ -19,6 +19,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.type.descriptor.java.SqlDateTimeHelper.toLocalDate;
+import static org.hibernate.type.descriptor.java.SqlDateTimeHelper.toLocalDateTime;
+
 /**
  * Java type descriptor for the {@link LocalDate} type.
  *
@@ -138,7 +141,7 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 			// but on top of being more complex than the line below, it won't always work.
 			// ts.toInstant() assumes the number of milliseconds since the epoch means the
 			// same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
-			return timestamp.toLocalDateTime().toLocalDate();
+			return toLocalDateTime( timestamp ).toLocalDate();
 		}
 
 		if (value instanceof Long longValue) {
@@ -152,7 +155,7 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 
 		if (value instanceof Date date) {
 			return value instanceof java.sql.Date sqlDate
-					? sqlDate.toLocalDate()
+					? toLocalDate( sqlDate )
 					: Instant.ofEpochMilli( date.getTime() ).atZone( ZoneId.systemDefault() ).toLocalDate();
 		}
 

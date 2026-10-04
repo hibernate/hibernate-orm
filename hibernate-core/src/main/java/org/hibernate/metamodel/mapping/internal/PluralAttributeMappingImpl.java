@@ -936,9 +936,11 @@ public class PluralAttributeMappingImpl
 				collectionPredicateCollector::applyPredicate,
 				creationState
 		);
+		// A @ManyToAny element group is virtual, so its predicates must stay on the collection join.
 		final var predicateCollector =
 				tableGroup.getNestedTableGroupJoins().isEmpty()
-						// No nested table group joins means that the predicate has to be pushed to the last join
+						&& !( elementDescriptor instanceof DiscriminatedCollectionPart )
+						// Target table predicates have to be pushed to the last join
 						? new PredicateCollector()
 						: collectionPredicateCollector;
 

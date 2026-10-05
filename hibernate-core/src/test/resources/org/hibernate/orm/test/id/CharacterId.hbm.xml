@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-access="field">
+    <class name="org.hibernate.orm.test.id.CharacterIdTest$PrimitiveCharacterEntity" table="primitive_character_id">
+        <id name="id" type="character">
+            <generator class="assigned"/>
+        </id>
+        <property name="name"/>
+    </class>
+    <class name="org.hibernate.orm.test.id.CharacterIdTest$BoxedCharacterEntity" table="boxed_character_id">
+        <id name="id" type="character">
+            <generator class="assigned"/>
+        </id>
+        <property name="name"/>
+    </class>
+</hibernate-mapping>

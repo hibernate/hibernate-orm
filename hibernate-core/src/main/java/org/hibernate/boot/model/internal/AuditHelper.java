@@ -949,7 +949,6 @@ public final class AuditHelper {
 			 * 	  	an @Audited.Override(name="prop", isAudited = false) annotation on the @Entity class or a @MappedSuperClass
 			 * 	    in between.
 			 */
-			//this logic here assumes that the override
 			boolean initiallyExcluded = excludedAtDeclaration; //it might be excluded at declaration and revoked
 			var override = findAuditOverrideInPersistentClassAndItsMSCs( propertyName, persistentClass, modelsContext );
 			if ( override != null ) {

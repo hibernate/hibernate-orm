@@ -78,6 +78,45 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17354")
+	public void testQuotedDerivedRootColumn(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Integer> ids = session.createQuery(
+					"""
+						select derived.`Item ID`
+						from (select c.id as `Item ID` from Contact c) derived
+						order by derived.`Item ID`
+						""",
+					Integer.class
+			).getResultList();
+			assertThat( ids ).containsExactly( 1, 2, 3 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17354")
+	public void testQuotedColumnsInNestedDerivedRoots(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Tuple> rows = session.createQuery(
+					"""
+						select derived.`Item ID` as `Item ID`, derived.`Full Name`.first as `First Name`
+						from (
+							select middle.`Full Name` as `Full Name`, middle.`Item ID` as `Item ID`
+							from (select c.name as `Full Name`, c.id as `Item ID` from Contact c) middle
+						) derived
+						order by derived.`Item ID`
+						""",
+					Tuple.class
+			).getResultList();
+			assertThat( rows ).hasSize( 3 );
+			assertThat( rows.stream().map( row -> row.get( "Item ID", Integer.class ) ).toList() )
+					.containsExactly( 1, 2, 3 );
+			assertThat( rows.stream().map( row -> row.get( "First Name", String.class ) ).toList() )
+					.containsExactly( "John", "Jane", "Granny" );
+		} );
+	}
+
+	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-17898")
 	public void testJoinSubqueryUsingInvalidAlias1(SessionFactoryScope scope) {
 		scope.inTransaction(

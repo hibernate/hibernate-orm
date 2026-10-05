@@ -87,7 +87,8 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			DomainType<?> domainType,
 			String componentName,
 			EmbeddableValuedModelPart existingModelPartContainer,
-			int fetchableIndex) {
+			int fetchableIndex,
+			boolean generateColumnNames) {
 		this.modelPartMap = createModelParts(
 				sqmExpressible,
 				sqlTypedMappings,
@@ -95,7 +96,8 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 				selectionExpression,
 				compatibleTableExpressions,
 				attributes,
-				existingModelPartContainer
+				existingModelPartContainer,
+				generateColumnNames
 		);
 		this.modelParts = modelPartMap.values().toArray( new ModelPart[0] );
 		this.domainType = domainType;
@@ -111,7 +113,8 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
 			Set<? extends Attribute<?, ?>> attributes,
-			EmbeddableValuedModelPart modelPartContainer) {
+			EmbeddableValuedModelPart modelPartContainer,
+			boolean generateColumnNames) {
 		final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
 		int index = 0;
 		for ( Attribute<?, ?> attribute : attributes ) {
@@ -129,9 +132,11 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 					attribute.getName(),
 					modelPartContainer.findSubPart( attribute.getName(), null ),
 					compatibleTableExpressions,
-					index++
+					modelParts.size(),
+					generateColumnNames
 			);
 			modelParts.put( modelPart.getPartName(), modelPart );
+			index += modelPart.getJdbcTypeCount();
 		}
 		return modelParts;
 	}

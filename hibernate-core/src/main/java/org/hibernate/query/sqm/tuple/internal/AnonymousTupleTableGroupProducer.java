@@ -37,6 +37,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.spi.SqmExpressible;
+import org.hibernate.query.sqm.tree.spi.cte.SqmCteTable;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
@@ -79,6 +80,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		// The empty table expression is the default for derived model parts
 		compatibleTableExpressions.add( "" );
 
+		final boolean generateColumnNames = !( tupleType instanceof SqmCteTable<?> );
 		final int componentCount = tupleType.componentCount();
 		final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( componentCount );
 		int selectionIndex = 0;
@@ -100,7 +102,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 						partName,
 						tableGroup == null ? null : getModelPart( tableGroup ),
 						compatibleTableExpressions,
-						modelParts.size()
+						modelParts.size(),
+						generateColumnNames
 				);
 			}
 			else if ( sqlTypedMappings[selectionIndex] instanceof SelectableMapping selectable ) {
@@ -114,10 +117,11 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 				compatibleTableExpressions.add( selectable.getContainingTableExpression() );
 			}
 			else {
+				// HQL component names may contain spaces or other characters unsuitable for SQL identifiers.
 				modelPart = new AnonymousTupleBasicValuedModelPart(
 						this,
 						partName,
-						partName,
+						generateColumnNames ? "c" + selectionIndex : partName,
 						expressible,
 						sqlTypedMappings[selectionIndex].getJdbcMapping(),
 						modelParts.size()
@@ -151,7 +155,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			String partName,
 			ModelPart existingModelPart,
 			Set<String> compatibleTableExpressions,
-			int fetchableIndex) {
+			int fetchableIndex,
+			boolean generateColumnNames) {
 		if ( domainType instanceof EntityDomainType<?> entityDomainType ) {
 			final EntityValuedModelPart existingModelPartContainer = (EntityValuedModelPart) existingModelPart;
 			final EntityIdentifierMapping identifierMapping =
@@ -170,7 +175,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 							compatibleTableExpressions,
 							sqmPathType.getAttributes(),
 							domainType,
-							(CompositeIdentifierMapping) identifierMapping
+							(CompositeIdentifierMapping) identifierMapping,
+							generateColumnNames
 					);
 				}
 				else if ( sqlTypedMappings[selectionIndex] instanceof SelectableMapping selectable ) {
@@ -185,7 +191,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 				else {
 					newIdentifierMapping = new AnonymousTupleBasicEntityIdentifierMapping(
 							mappingType,
-							selectionExpression + "_" + identifierMapping.getAttributeName(),
+							generateColumnNames ? "c" + selectionIndex : selectionExpression + "_" + identifierMapping.getAttributeName(),
 							sqmExpressible,
 							sqlTypedMappings[selectionIndex].getJdbcMapping(),
 							(BasicEntityIdentifierMapping) identifierMapping
@@ -205,7 +211,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 						sqmPathType.getAttributes(),
 						domainType,
 						selectionExpression,
-						(NonAggregatedIdentifierMapping) identifierMapping
+						(NonAggregatedIdentifierMapping) identifierMapping,
+						generateColumnNames
 				);
 			}
 			if ( existingModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
@@ -230,7 +237,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 					domainType,
 					selectionExpression,
 					(EmbeddableValuedModelPart) existingModelPart,
-					fetchableIndex
+					fetchableIndex,
+					generateColumnNames
 			);
 		}
 		else if ( sqlTypedMappings[selectionIndex] instanceof SelectableMapping selectable ) {
@@ -247,7 +255,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			return new AnonymousTupleBasicValuedModelPart(
 					mappingType,
 					partName,
-					selectionExpression,
+					generateColumnNames ? "c" + selectionIndex : selectionExpression,
 					sqmExpressible,
 					sqlTypedMappings[selectionIndex].getJdbcMapping(),
 					fetchableIndex

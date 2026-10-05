@@ -37,7 +37,8 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 			Set<? extends Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
 			String componentName,
-			NonAggregatedIdentifierMapping delegate) {
+			NonAggregatedIdentifierMapping delegate,
+			boolean generateColumnNames) {
 		super(
 				sqmExpressible,
 				sqlTypedMappings,
@@ -48,7 +49,8 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 				domainType,
 				componentName,
 				delegate,
-				-1
+				-1,
+				generateColumnNames
 		);
 		this.delegate = delegate;
 	}

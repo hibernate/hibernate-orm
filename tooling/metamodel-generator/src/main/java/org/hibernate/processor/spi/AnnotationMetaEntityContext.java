@@ -9,6 +9,7 @@ import javax.tools.Diagnostic;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
@@ -18,6 +19,7 @@ import org.hibernate.processor.model.Metamodel;
  * <p>
  * An instance is only valid during the call of the extension method it is passed to.
  */
+@Incubating(since = "8.0", group = "processor-extension")
 public interface AnnotationMetaEntityContext {
 
 	/**

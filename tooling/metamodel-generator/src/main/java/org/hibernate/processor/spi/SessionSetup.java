@@ -1,5 +1,7 @@
 package org.hibernate.processor.spi;
 
+import org.hibernate.Incubating;
+
 /**
  * The result of
  * {@link HibernateProcessorExtension#setupRepositorySession(javax.lang.model.element.TypeElement,
@@ -13,5 +15,6 @@ package org.hibernate.processor.spi;
  * generated. When {@code false}, the session type is only used for the static methods
  * generated in the metamodel class, and no repository implementation is generated.
  */
+@Incubating(since = "8.0", group = "processor-extension")
 public record SessionSetup(String sessionType, boolean isRepository) {
 }

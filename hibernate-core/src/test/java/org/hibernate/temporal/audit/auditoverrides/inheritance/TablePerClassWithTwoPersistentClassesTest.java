@@ -79,7 +79,7 @@ public class TablePerClassWithTwoPersistentClassesTest {
 		String str3;
 	}
 
-	@Entity
+	@Entity(name = "SubSub")
 	@Audited.Overrides( {
 			@Audited.Override(name = "str3", isAudited = true),
 	} )
@@ -101,7 +101,7 @@ public class TablePerClassWithTwoPersistentClassesTest {
 			assertFalse( table.containsColumn( new Column( "str3" ) ) );
 		} );
 
-		assertTable( tables, "TablePerClassWithTwoPersistentClassesTest$SubSub_AUD", table -> {
+		assertTable( tables, "SubSub_AUD", table -> {
 			assertTrue( table.containsColumn( new Column( "str1" ) ) );
 			assertFalse( table.containsColumn( new Column( "str2" ) ) );
 			assertTrue( table.containsColumn( new Column( "str3" ) ) );
@@ -131,23 +131,19 @@ public class TablePerClassWithTwoPersistentClassesTest {
 		scope.inTransaction( s -> {
 			var statelessSession = s.getSessionFactory().withStatelessOptions().atChangeset( AuditLog.ALL_CHANGESETS )
 					.openStatelessSession();
-			var auditedBase = statelessSession.createSelectionQuery("from Base", Base.class).getResultList();
-			if ( auditedBase instanceof Base base ) {
-				assertNull( base.str1 );
-				assertNotNull( base.str2 );
-			}
+			var auditedBase = statelessSession.createSelectionQuery("from Base b where Type(b) = Base", Base.class).getSingleResult();
+			assertNull( auditedBase.str1 );
+			assertNotNull( auditedBase.str2 );
 
-			if ( auditedBase instanceof Sub sub ) {
-				assertNotNull( sub.str1 );
-				assertNull( sub.str2 );
-				assertNull( sub.str3 );
-			}
+			var auditedSub = statelessSession.createSelectionQuery("from Sub s where Type(s) = Sub", Sub.class).getSingleResult();
+			assertNotNull( auditedSub.str1 );
+			assertNull( auditedSub.str2 );
+			assertNull( auditedSub.str3 );
 
-			if ( auditedBase instanceof SubSub subsub ) {
-				assertNotNull( subsub.str1 );
-				assertNull( subsub.str2 );
-				assertNotNull( subsub.str3 );
-			}
+			var auditedSubSub = statelessSession.createSelectionQuery("from SubSub s where Type(s) = SubSub", SubSub.class).getSingleResult();
+			assertNotNull( auditedSubSub.str1 );
+			assertNull( auditedSubSub.str2 );
+			assertNotNull( auditedSubSub.str3 );
 		} );
 	}
 

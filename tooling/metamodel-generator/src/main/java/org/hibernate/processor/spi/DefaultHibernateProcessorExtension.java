@@ -5,11 +5,14 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
+import org.hibernate.Incubating;
+
 /**
  * The {@link HibernateProcessorExtension} used when no other implementation is
  * registered with {@link java.util.ServiceLoader}. It does nothing: the processor
  * behaves exactly as it would without any framework-specific support.
  */
+@Incubating(since = "8.0", group = "processor-extension")
 public class DefaultHibernateProcessorExtension implements HibernateProcessorExtension {
 
 	@Override

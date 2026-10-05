@@ -877,6 +877,7 @@ public final class AuditHelper {
 	}
 
 	private static InheritanceType getInheritanceStrategy(String className, ModelsContext context) {
+		//TODO maybe check rootClass instead of current?
 		var classDetails = context.getClassDetailsRegistry()
 				.getClassDetails( className )
 				.getAnnotationUsage( Inheritance.class, context );
@@ -887,8 +888,7 @@ public final class AuditHelper {
 		var fullHierarchy = new ArrayList<PersistentClass>( persistentClass.getSubclasses() );
 		fullHierarchy.add( persistentClass );
 		for ( var pc : fullHierarchy ) {
-			var auditOverride = findAuditOverride( propertyName,
-					modelsContext.getClassDetailsRegistry().getClassDetails( pc.getClassName() ), modelsContext );
+			var auditOverride = findAuditOverrideInPersistentClassAndItsMSCs( propertyName, pc, modelsContext );
 			if ( auditOverride != null ) {
 				return auditOverride.collectionTable();
 			}
@@ -931,50 +931,72 @@ public final class AuditHelper {
 
 
 	static boolean isEffectivelyExcluded(ModelsContext modelsContext, PersistentClass persistentClass, String propertyName, boolean excludedAtDeclaration) {
-		var classDetails = modelsContext.getClassDetailsRegistry().getClassDetails( persistentClass.getClassName() );
-		var override = findAuditOverride( propertyName, classDetails, modelsContext );
-		var inheritanceStrategy = getInheritanceStrategy( persistentClass.getRootClass().getClassName(), modelsContext ); //TODO get inheritance strategy from rootClass!
+		var inheritanceStrategy = getInheritanceStrategy( persistentClass.getRootClass().getClassName(),
+				modelsContext );
+		if ( inheritanceStrategy.equals( InheritanceType.TABLE_PER_CLASS ) ) {
+			var currentPersistentClass = persistentClass;
+			while ( currentPersistentClass != null ) {
+				var auditOverride = findAuditOverrideInPersistentClassAndItsMSCs( propertyName, currentPersistentClass,
+						modelsContext );
+				if ( auditOverride != null) {
+					return !auditOverride.isAudited();
+				}
+				currentPersistentClass = currentPersistentClass.getSuperPersistentClass();
+			}
+			return excludedAtDeclaration;
+		}
+		else {
+			var override = findAuditOverrideInPersistentClassAndItsMSCs( propertyName, persistentClass, modelsContext );
 
-		/*
-		 * A property is initially excluded in two cases:
-		 * 1) 	At declaration, it has an @Audited.Excluded annotation
-		 * 2) 	If the property is inherited from a @MappedSuperClass and there is
-		 * 	  	an @Audited.Override(name="prop", isAudited = false) annotation on the @Entity class or a @MappedSuperClass
-		 * 	    in between.
-		 */
-		boolean initiallyExcluded = excludedAtDeclaration;
+			/*
+			 * A property is initially excluded in two cases:
+			 * 1) 	At declaration, it has an @Audited.Excluded annotation
+			 * 2) 	If the property is inherited from a @MappedSuperClass and there is
+			 * 	  	an @Audited.Override(name="prop", isAudited = false) annotation on the @Entity class or a @MappedSuperClass
+			 * 	    in between.
+			 */
+			//this logic here assumes that the override
+			boolean initiallyExcluded = excludedAtDeclaration; //it might be excluded at declaration and revoked
 		if ( override != null ) {
 			initiallyExcluded = !override.isAudited();
 		}
-		return initiallyExcluded && !isRevoked( propertyName, persistentClass, inheritanceStrategy != InheritanceType.TABLE_PER_CLASS, modelsContext );
+			return initiallyExcluded && !isRevoked( propertyName, persistentClass, modelsContext );
+		}
 	}
 
-	static @Nullable Audited.Override findAuditOverride(
+	static @Nullable Audited.Override findAuditOverrideInPersistentClassAndItsMSCs(
 			String propertyName,
-			ClassDetails classDetails,
+			PersistentClass persistentClass,
 			ModelsContext modelsContext) {
-		var current = classDetails;
-		while ( current != null ) {
-			var override = current.getNamedAnnotationUsage(
+
+		var classDetails = modelsContext.getClassDetailsRegistry().getClassDetails( persistentClass.getClassName() );
+		var override = classDetails.getNamedAnnotationUsage(
+				Audited.Override.class, propertyName, "name", modelsContext
+		);
+		if ( override != null ) {
+			return override;
+		}
+
+		var msc = persistentClass.getSuperMappedSuperclass();
+		while ( msc != null ) {
+			var mscDetails = modelsContext.getClassDetailsRegistry().getClassDetails( msc.getMappedClass().getName() );
+			var mscOverride = mscDetails.getNamedAnnotationUsage(
 					Audited.Override.class, propertyName, "name", modelsContext
 			);
-			if ( override != null ) {
-				return override;
+			if ( mscOverride != null ) {
+				return mscOverride;
 			}
-			current = current.getSuperClass();
+			msc = msc.getSuperMappedSuperclass();
 		}
 		return null;
 	}
 
-	static boolean isRevoked(String propertyName, PersistentClass persistentClass, boolean processSubclasses, ModelsContext modelsContext) {
+	static boolean isRevoked(String propertyName, PersistentClass persistentClass, ModelsContext modelsContext) {
 		var classesToScan = new ArrayList<PersistentClass>();
-		if ( processSubclasses ) {
-			classesToScan.addAll( persistentClass.getSubclasses() );
-		}
+		classesToScan.addAll( persistentClass.getSubclasses() );
 		classesToScan.add( persistentClass );
 		for ( var pc : classesToScan ) {
-			var auditOverride = findAuditOverride( propertyName,
-					modelsContext.getClassDetailsRegistry().getClassDetails( pc.getClassName() ), modelsContext );
+			var auditOverride = findAuditOverrideInPersistentClassAndItsMSCs( propertyName, pc, modelsContext );
 			if ( auditOverride != null && auditOverride.isAudited() ) {
 				return true;
 			}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-access="field">
+    <class name="org.hibernate.orm.test.sql.hand.identity.CustomIdentityInsertRoundTripTest$Item"
+           entity-name="CustomIdentityItem" table="custom_identity_item">
+        <id name="id" column="item_id" type="long">
+            <generator class="identity"/>
+        </id>
+        <property name="name" column="item_name" type="string"/>
+        <sql-insert>insert into custom_identity_item (item_name) values (upper(?))</sql-insert>
+    </class>
+</hibernate-mapping>

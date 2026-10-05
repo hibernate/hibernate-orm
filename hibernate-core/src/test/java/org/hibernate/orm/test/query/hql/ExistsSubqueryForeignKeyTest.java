@@ -4,6 +4,7 @@ import org.hibernate.dialect.HSQLDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -29,6 +30,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQLDB doesn't like the case-when selection not being in the group-by")
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18816" )
 public class ExistsSubqueryForeignKeyTest {
+	@Test
+	@JiraKey("HHH-4491")
+	public void testSelectedExistsWithParameter(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			var query = session.createQuery(
+					"select d, (exists(select p from Person p where p.name = :name and p.id = d.owner.id)) "
+							+ "from Document d",
+					Object[].class
+			);
+			assertThat( query.getParameter( "name" ).getParameterType() ).isEqualTo( String.class );
+			var matching = query.setParameter( "name", "person_1" ).getSingleResult();
+			assertThat( matching[0] ).isInstanceOf( Document.class );
+			assertThat( ( (Document) matching[0] ).id ).isEqualTo( 1L );
+			assertThat( matching[1] ).isEqualTo( true );
+
+			var nonMatching = query.setParameter( "name", "missing" ).getSingleResult();
+			assertThat( nonMatching[0] ).isSameAs( matching[0] );
+			assertThat( nonMatching[1] ).isEqualTo( false );
+		} );
+	}
+
 	@Test
 	public void testWhereClause(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

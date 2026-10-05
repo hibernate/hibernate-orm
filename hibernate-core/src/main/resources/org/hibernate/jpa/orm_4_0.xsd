@@ -540,9 +540,6 @@
                    minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="embedded" type="orm:embedded"
                    minOccurs="0" maxOccurs="unbounded"/>
-      <xsd:element name="excluded-from-versioning"
-                   type="orm:excluded-from-versioning"
-                   minOccurs="0"/>
       <xsd:element name="transient" type="orm:transient"
                    minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
@@ -570,6 +567,8 @@
         <xsd:element name="enumerated" type="orm:enumerated" minOccurs="0"/>
         <xsd:element name="convert" type="orm:convert" minOccurs="0"/>
       </xsd:choice>
+      <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                   minOccurs="0"/>
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="required"/>
     <xsd:attribute name="fetch" type="orm:fetch-type"/>
@@ -964,6 +963,8 @@
       </xsd:choice>
       <xsd:element name="collection-table" type="orm:collection-table"
                    minOccurs="0"/>
+      <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                   minOccurs="0"/>
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="required"/>
     <xsd:attribute name="target-class" type="xsd:string"/>
@@ -1041,6 +1042,8 @@
                    minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="convert" type="orm:convert"
                    minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                   minOccurs="0"/>
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="required"/>
     <xsd:attribute name="access" type="orm:access-type"/>
@@ -1734,6 +1737,8 @@
                    minOccurs="0"/>
       <xsd:element name="cascade" type="orm:cascade-type"
                    minOccurs="0"/>
+      <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                   minOccurs="0"/>
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="required"/>
     <xsd:attribute name="target-entity" type="xsd:string"/>
@@ -1770,6 +1775,8 @@
                      minOccurs="0"/>
       </xsd:choice>
       <xsd:element name="cascade" type="orm:cascade-type"
+                   minOccurs="0"/>
+      <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                    minOccurs="0"/>
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -2386,6 +2393,8 @@
       </xsd:choice>
       <xsd:element name="cascade" type="orm:cascade-type"
                    minOccurs="0"/>
+      <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                   minOccurs="0"/>
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="required"/>
     <xsd:attribute name="target-entity" type="xsd:string"/>
@@ -2433,6 +2442,8 @@
                      minOccurs="0"/>
       </xsd:choice>
       <xsd:element name="cascade" type="orm:cascade-type"
+                   minOccurs="0"/>
+      <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                    minOccurs="0"/>
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -2828,21 +2839,6 @@
       <xsd:enumeration value="TIMESTAMP"/>
     </xsd:restriction>
   </xsd:simpleType>
-
-  <!-- **************************************************** -->
-
-  <xsd:complexType name="excluded-from-versioning">
-    <xsd:annotation>
-      <xsd:documentation>
-
-        @Target({METHOD, FIELD})
-        @Retention(RUNTIME)
-        public @interface ExcludedFromVersioning {}
-
-      </xsd:documentation>
-    </xsd:annotation>
-    <xsd:attribute name="name" type="xsd:string" use="required"/>
-  </xsd:complexType>
 
   <!-- **************************************************** -->
 

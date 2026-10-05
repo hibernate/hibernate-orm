@@ -17,7 +17,7 @@ import org.hibernate.service.JavaServiceLoadable;
  * class loader of this interface, by listing its fully qualified class name in
  * {@code META-INF/services/org.hibernate.processor.spi.HibernateProcessorExtension}.
  * Only the first implementation found is used. When none is found,
- * {@link DefaultHibernateProcessorExtension}, which does nothing, is used instead.
+ * {@link org.hibernate.processor.internal.DefaultHibernateProcessorExtension}, which does nothing, is used instead.
  * <p>
  * A single instance is created each time the processor is initialized, and
  * {@link #init(ProcessingEnvironment)} is called once on it before any other method.

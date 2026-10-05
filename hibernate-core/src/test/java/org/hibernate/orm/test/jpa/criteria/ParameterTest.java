@@ -40,6 +40,27 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ParameterTest {
 
 	@Test
+	@JiraKey("HHH-17419")
+	public void testUnmappedEnumParameterJavaType(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var builder = session.getCriteriaBuilder();
+			final var unnamed = builder.parameter( UnmappedEnum.class );
+			final var named = builder.parameter( UnmappedEnum.class, "enumValue" );
+
+			// Assert the public Criteria accessor before any mapping context is inferred.
+			assertEquals( UnmappedEnum.class, unnamed.getJavaType() );
+			assertEquals( UnmappedEnum.class, unnamed.getParameterType() );
+			assertEquals( UnmappedEnum.class, named.getJavaType() );
+			assertEquals( UnmappedEnum.class, named.getParameterType() );
+		} );
+	}
+
+	private enum UnmappedEnum {
+		FIRST,
+		SECOND
+	}
+
+	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Blobs are not allowed in this expression")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)

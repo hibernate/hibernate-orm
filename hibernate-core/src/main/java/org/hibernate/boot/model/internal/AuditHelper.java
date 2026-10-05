@@ -213,7 +213,7 @@ public final class AuditHelper {
 				final var secondaryAuditTable = createAuditTable(
 						sourceTable,
 						csIdColumnName,
-						resolveExcludedColumns( join.getProperties(), rootClass, context.getBootstrapContext().getModelsContext() ), //TODO
+						resolveExcludedColumns( join.getProperties(), rootClass, context.getBootstrapContext().getModelsContext() ),
 						nullIfBlank( auditSchema ),
 						nullIfBlank( auditCatalog ),
 						customName,

@@ -21,6 +21,7 @@ import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;
 import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
 import static org.hibernate.property.access.internal.AccessStrategyHelper.fieldOrNull;
 import static org.hibernate.property.access.internal.AccessStrategyHelper.getAccessType;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.valueWriterOrNull;
 
 /**
  * A {@link PropertyAccess} based on mix of getter/setter method and/or field.
@@ -51,7 +52,7 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 				setter = fieldSetter( containerJavaType, propertyName, field );
 				propertyValueAccessor = PropertyValueAccessor.standard(
 						propertyAccessorService.hibernateAccessorFactory().valueReader( field ),
-						propertyAccessorService.hibernateAccessorFactory().valueWriter( field ),
+						valueWriterOrNull( propertyAccessorService.hibernateAccessorFactory(), field ),
 						propertyName
 				);
 				break;

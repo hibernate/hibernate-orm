@@ -4,6 +4,8 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.accessor.AccessorFactory;
+import org.hibernate.accessor.ValueWriter;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
@@ -56,6 +58,17 @@ public class AccessStrategyHelper {
 
 		// prefer using the field for getting if we can
 		return field != null ? AccessType.FIELD : AccessType.PROPERTY;
+	}
+
+	/**
+	 * Obtains a {@link ValueWriter} for the given field from the given factory, unless the
+	 * field is a record component, in which case there is no point asking the factory: record
+	 * components are implicitly {@code final} and can never be written to. A {@code null}
+	 * return pushes callers toward read-only access for the property, which
+	 * {@link org.hibernate.property.access.spi.PropertyValueAccessor} already handles.
+	 */
+	public static @Nullable ValueWriter valueWriterOrNull(AccessorFactory factory, Field field) {
+		return field.getDeclaringClass().isRecord() ? null : factory.valueWriter( field );
 	}
 
 	public static @Nullable AccessType getExplicitAccessType(Class<?> containerClass, String propertyName, @Nullable Field field) {

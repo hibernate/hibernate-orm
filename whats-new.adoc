@@ -418,3 +418,12 @@ Individual contracts marked `@Incubating` retain their incubating status.
 The central SQL AST and translator SPIs are now out of incubation, including translator factories and typed requests, `JdbcParameterFactory`, and `JdbcOperations` builders.
 Their supported provider roles now carry the normal SPI compatibility expectations within an `X.Y` release family.
 Some specialized contracts remain incubating; see the link:{migrationGuide}#sql-ast-translator-stability[Migration Guide] for details.
+
+[[hibernate-bom]]
+== Skinny BOM (`hibernate-bom`)
+
+A new `org.hibernate.orm:hibernate-bom` artifact is available.
+It manages versions of the published Hibernate ORM modules only, without constraining third-party dependency versions.
+This is useful when your project already manages third-party dependencies through another platform or parent POM.
+
+The existing `org.hibernate.orm:hibernate-platform` continues to manage both Hibernate and third-party dependency versions.

@@ -117,6 +117,7 @@ include 'hibernate-envers'
 include 'hibernate-spatial'
 
 include 'hibernate-platform'
+include 'hibernate-bom'
 
 include 'hibernate-community-dialects'
 include 'hibernate-vector'
@@ -175,4 +176,3 @@ rootProject.children.each { project ->
     assert project.buildFile.exists()
     assert project.buildFile.isFile()
 }
-include 'hibernate-platform'

@@ -274,7 +274,7 @@ public final class AuditHelper {
 				final var subclassAuditTable = createAuditTable(
 						subclass.getTable(),
 						csIdColumnName,
-						resolveExcludedColumns( subclass.getPropertyClosure(), subclass, context.getBootstrapContext().getModelsContext() ),
+						resolveExcludedColumns( subclass.getProperties(), subclass, context.getBootstrapContext().getModelsContext() ),
 						effective != null ? nullIfBlank( effective.schema() ) : null,
 						effective != null ? nullIfBlank( effective.catalog() ) : null,
 						effective != null ? nullIfBlank( effective.name() ) : null,
@@ -835,7 +835,7 @@ public final class AuditHelper {
 	private static Set<String> resolveExcludedColumns(Iterable<Property> properties, PersistentClass pc, ModelsContext mc) {
 		final Set<String> excluded = new HashSet<>();
 		for ( var property : properties ) {
-			if ( isEffectivelyExcluded( mc, pc, property.getName(), property.isAuditedExcluded() ) || property instanceof Backref ) { //TODO hier effectivelyExcluded!
+			if ( isEffectivelyExcluded( mc, pc, property.getName(), property.isAuditedExcluded() ) || property instanceof Backref ) {
 				for ( var column : property.getColumns() ) {
 					excluded.add( column.getCanonicalName() );
 				}
@@ -942,11 +942,6 @@ public final class AuditHelper {
 			return excludedAtDeclaration;
 		}
 		else {
-			//TODO in JOINED inheritance, this will be called via bindSubClasses and the Subclass as pc, but with a property that has been declared by a parent class
-			//Therefore, the override will be of the subclass and not the base class that declares the property
-
-			var override = findAuditOverrideInPersistentClassAndItsMSCs( propertyName, persistentClass, modelsContext );
-
 			/*
 			 * A property is initially excluded in two cases:
 			 * 1) 	At declaration, it has an @Audited.Excluded annotation
@@ -956,9 +951,10 @@ public final class AuditHelper {
 			 */
 			//this logic here assumes that the override
 			boolean initiallyExcluded = excludedAtDeclaration; //it might be excluded at declaration and revoked
-		if ( override != null ) {
-			initiallyExcluded = !override.isAudited();
-		}
+			var override = findAuditOverrideInPersistentClassAndItsMSCs( propertyName, persistentClass, modelsContext );
+			if ( override != null ) {
+				initiallyExcluded = !override.isAudited();
+			}
 			return initiallyExcluded && !isRevoked( propertyName, persistentClass, modelsContext );
 		}
 	}

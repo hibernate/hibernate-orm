@@ -34,7 +34,8 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 			Set<String> compatibleTableExpressions,
 			Set<? extends Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
-			CompositeIdentifierMapping delegate) {
+			CompositeIdentifierMapping delegate,
+			boolean generateColumnNames) {
 		super(
 				sqmExpressible,
 				sqlTypedMappings,
@@ -45,7 +46,8 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 				domainType,
 				delegate.getAttributeName(),
 				delegate,
-				-1
+				-1,
+				generateColumnNames
 		);
 		this.delegate = delegate;
 	}

@@ -11,8 +11,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import jakarta.annotation.Nonnull;
-import jakarta.persistence.criteria.ComparableExpression;
-import jakarta.persistence.criteria.TemporalExpression;
 import jakarta.persistence.metamodel.BooleanAttribute;
 import jakarta.persistence.metamodel.ComparableAttribute;
 import jakarta.persistence.metamodel.NumericAttribute;
@@ -29,6 +27,7 @@ import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.expression.AbstractSqmExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmComparableExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteral;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
@@ -441,9 +440,9 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Nonnull
 	@Override
-	public <C extends Comparable<? super C>> ComparableExpression<C> get(@Nonnull ComparableAttribute<? super T, C> attribute) {
+	public <C extends Comparable<? super C>> SqmComparableExpression<C> get(@Nonnull ComparableAttribute<? super T, C> attribute) {
 		//noinspection unchecked
-		return (ComparableExpression<C>) resolvePath( (PersistentAttribute<T, C>) attribute );
+		return (SqmComparableExpression<C>) resolvePath( (PersistentAttribute<T, C>) attribute );
 	}
 
 	@Nonnull
@@ -455,7 +454,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Nonnull
 	@Override
-	public <T1 extends Temporal & Comparable<? super T1>> TemporalExpression<T1> get(@Nonnull TemporalAttribute<? super T, T1> attribute) {
+	public <T1 extends Temporal & Comparable<? super T1>> SqmTemporalPath<T1> get(@Nonnull TemporalAttribute<? super T, T1> attribute) {
 		//noinspection unchecked
 		return (SqmTemporalPath<T1>) resolvePath( (PersistentAttribute<?, T1>) attribute );
 	}

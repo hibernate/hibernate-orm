@@ -4,7 +4,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
@@ -33,8 +33,10 @@ public class PrimitiveByteArrayDescriptorTest extends AbstractDescriptorTest<byt
 
 	@Test
 	public void testExtractLoggableRepresentation() {
-		assertEquals( "null", PrimitiveByteArrayJavaType.INSTANCE.extractLoggableRepresentation( null));
-		assertEquals( "[]", PrimitiveByteArrayJavaType.INSTANCE.extractLoggableRepresentation( new byte[] {} ));
-		assertEquals( "[1, 2, 3]", PrimitiveByteArrayJavaType.INSTANCE.extractLoggableRepresentation( original));
+		var javaType = PrimitiveByteArrayJavaType.INSTANCE;
+
+		assertThat( javaType.extractLoggableRepresentation( null ) ).isEqualTo( "null" );
+		assertThat( javaType.extractLoggableRepresentation( new byte[] {} ) ).isEqualTo( "byte[0]" );
+		assertThat( javaType.extractLoggableRepresentation( original ) ).isEqualTo( "byte[3]" );
 	}
 }

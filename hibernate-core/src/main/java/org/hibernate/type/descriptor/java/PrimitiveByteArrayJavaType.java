@@ -95,7 +95,9 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 
 	@Override
 	public String extractLoggableRepresentation(byte[] value) {
-		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
+		return value == null
+				? super.extractLoggableRepresentation( null )
+				: "byte[" + value.length + "]";
 	}
 
 	@Override

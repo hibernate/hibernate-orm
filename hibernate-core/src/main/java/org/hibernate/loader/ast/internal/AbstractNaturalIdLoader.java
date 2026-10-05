@@ -202,15 +202,39 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		return sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
 	}
 
+	private static String naturalIdToLoggableString(
+			@Nullable Object naturalId, EntityMappingType entityDescriptor, SessionFactoryImplementor factory) {
+		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
+		if ( naturalId == null || naturalIdMapping == null ) {
+			return String.valueOf( naturalId );
+		}
+		final var attributes = naturalIdMapping.getNaturalIdAttributes();
+		final var propertyTypes = entityDescriptor.getEntityPersister().getPropertyTypes();
+		if ( attributes.size() == 1 ) {
+			// A simple natural id may be wrapped, but an array may itself be its scalar value.
+			if ( naturalId instanceof Object[] values && values.length == 1
+					&& !naturalIdMapping.isNormalized( naturalId ) ) {
+				naturalId = values[0];
+			}
+			return propertyTypes[attributes.get( 0 ).getStateArrayPosition()]
+					.toLoggableString( naturalId, factory );
+		}
+		final var values = (Object[]) naturalId;
+		final var loggableValues = new String[attributes.size()];
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			loggableValues[i] = propertyTypes[attributes.get( i ).getStateArrayPosition()]
+					.toLoggableString( values[i], factory );
+		}
+		return Arrays.toString( loggableValues );
+	}
+
 	@Nullable
 	@Override
 	public Object resolveNaturalIdToId(@Nullable Object naturalIdValue, @Nonnull SharedSessionContractImplementor session) {
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.retrievingIdForNaturalId(
 					entityDescriptor.getEntityName(),
-					naturalIdValue instanceof Object[] array
-							? Arrays.toString( array )
-							: naturalIdValue
+					naturalIdToLoggableString( naturalIdValue, entityDescriptor, session.getFactory() )
 			);
 		}
 

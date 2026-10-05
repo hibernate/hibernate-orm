@@ -8,6 +8,7 @@ import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Resolution;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -59,6 +60,32 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		return getEntityResolutions( session().getFactory().getMappingMetamodel().getEntityDescriptor( entityType ) );
 	}
 
+	private static String naturalIdToLoggableString(
+			@Nullable Object naturalId, EntityMappingType entityDescriptor, SessionFactoryImplementor factory) {
+		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
+		if ( naturalId == null || naturalIdMapping == null ) {
+			return String.valueOf( naturalId );
+		}
+		final var attributes = naturalIdMapping.getNaturalIdAttributes();
+		final var propertyTypes = entityDescriptor.getEntityPersister().getPropertyTypes();
+		if ( attributes.size() == 1 ) {
+			// A simple natural id may be wrapped, but an array may itself be its scalar value.
+			if ( naturalId instanceof Object[] values && values.length == 1
+					&& !naturalIdMapping.isNormalized( naturalId ) ) {
+				naturalId = values[0];
+			}
+			return propertyTypes[attributes.get( 0 ).getStateArrayPosition()]
+					.toLoggableString( naturalId, factory );
+		}
+		final var values = (Object[]) naturalId;
+		final var loggableValues = new String[attributes.size()];
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			loggableValues[i] = propertyTypes[attributes.get( i ).getStateArrayPosition()]
+					.toLoggableString( values[i], factory );
+		}
+		return Arrays.toString( loggableValues );
+	}
+
 	@Override
 	public boolean cacheResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
 		validateNaturalId( entityDescriptor, naturalId );
@@ -70,7 +97,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.cachingNaturalIdResolutionFromLoad(
 					entityDescriptor.getEntityName(),
-					naturalId instanceof Object[] array ? Arrays.toString( array ) : naturalId,
+					naturalIdToLoggableString( naturalId, entityDescriptor, session().getFactory() ),
 					id
 			);
 		}
@@ -98,7 +125,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.locallyCachingNaturalIdResolution(
 					entityDescriptor.getEntityName(),
-					naturalId instanceof Object[] array ? Arrays.toString( array ) : naturalId,
+					naturalIdToLoggableString( naturalId, entityDescriptor, session().getFactory() ),
 					id
 			);
 		}
@@ -154,7 +181,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 				NATURAL_ID_LOGGER.removingLocallyCachedNaturalIdResolution(
 						entityDescriptor.getEntityName(),
-						naturalId instanceof Object[] array ? Arrays.toString( array ) : naturalId,
+						naturalIdToLoggableString( naturalId, entityDescriptor, session().getFactory() ),
 						id
 				);
 			}
@@ -593,7 +620,8 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			if ( identifier != null ) {
 				// Found in session cache
 				if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
-					NATURAL_ID_LOGGER.resolvedNaturalIdInSessionCache( naturalId, identifier,
+					NATURAL_ID_LOGGER.resolvedNaturalIdInSessionCache(
+							naturalIdToLoggableString( naturalId, entityDescriptor, session().getFactory() ), identifier,
 							entityDescriptor.getEntityName() );
 				}
 				return identifier;
@@ -625,8 +653,9 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					);
 				}
 				if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
-					// protected to avoid Arrays.toString call unless needed
-					NATURAL_ID_LOGGER.foundNaturalIdInSecondLevelCache( naturalId, id,
+					// Render the natural id only when TRACE is enabled.
+					NATURAL_ID_LOGGER.foundNaturalIdInSecondLevelCache(
+							naturalIdToLoggableString( naturalId, persister, session.getFactory() ), id,
 							persister.getRootEntityName() );
 				}
 				storeInResolutionCache( resolutionCache, persister, id, cachedNaturalId );

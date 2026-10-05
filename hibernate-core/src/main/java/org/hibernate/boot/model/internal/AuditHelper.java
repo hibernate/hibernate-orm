@@ -874,7 +874,6 @@ public final class AuditHelper {
 	}
 
 	private static InheritanceType getInheritanceStrategy(String className, ModelsContext context) {
-		//TODO maybe check rootClass instead of current?
 		var classDetails = context.getClassDetailsRegistry()
 				.getClassDetails( className )
 				.getAnnotationUsage( Inheritance.class, context );

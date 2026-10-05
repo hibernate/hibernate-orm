@@ -679,9 +679,6 @@
                          minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="embedded" type="orm:embedded"
                          minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="excluded-from-versioning"
-                         type="orm:excluded-from-versioning"
-                         minOccurs="0"/>
             <xsd:element name="transient" type="orm:transient"
                          minOccurs="0" maxOccurs="unbounded"/>
             <!-- hbm: discriminated association mapping -->
@@ -729,6 +726,8 @@
 
                 <xsd:group ref="orm:basic-type-group" />
             </xsd:choice>
+            <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                         minOccurs="0"/>
             <!-- hbm : is the state of this property considered mutable : ! @Immutable -->
             <xsd:element name="mutable" type="xsd:boolean" minOccurs="0"/>
         </xsd:sequence>
@@ -1162,6 +1161,8 @@
                 </xsd:sequence>
             </xsd:choice>
             <xsd:element name="collection-table" type="orm:collection-table" minOccurs="0"/>
+            <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                         minOccurs="0"/>
             <!-- hbm : on-delete cascade for collection key : @OnDelete on collection field -->
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
@@ -1251,6 +1252,8 @@
                          minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="convert" type="orm:convert"
                          minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                         minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
@@ -1935,6 +1938,8 @@
 
             <xsd:element name="cascade" type="orm:cascade-type"
                          minOccurs="0"/>
+            <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                         minOccurs="0"/>
             <!-- hbm : on-delete cascade for collection key : @OnDelete on collection field -->
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
@@ -1985,6 +1990,8 @@
                 <xsd:element name="join-table" type="orm:join-table" minOccurs="0"/>
             </xsd:choice>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
+            <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                         minOccurs="0"/>
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -2579,6 +2586,8 @@
             </xsd:choice>
             <xsd:element name="cascade" type="orm:cascade-type"
                          minOccurs="0"/>
+            <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                         minOccurs="0"/>
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -2640,6 +2649,8 @@
                              minOccurs="0"/>
             </xsd:choice>
             <xsd:element name="cascade" type="orm:cascade-type"
+                         minOccurs="0"/>
+            <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                          minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -3023,21 +3034,6 @@
             <xsd:enumeration value="TIMESTAMP"/>
         </xsd:restriction>
     </xsd:simpleType>
-
-    <!-- **************************************************** -->
-
-    <xsd:complexType name="excluded-from-versioning">
-        <xsd:annotation>
-            <xsd:documentation>
-
-                @Target({METHOD, FIELD})
-                @Retention(RUNTIME)
-                public @interface ExcludedFromVersioning {}
-
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:attribute name="name" type="xsd:string" use="required"/>
-    </xsd:complexType>
 
     <!-- **************************************************** -->
 
@@ -3565,6 +3561,8 @@
             <xsd:element name="discriminator" type="orm:any-discriminator"/>
             <xsd:element name="key" type="orm:any-key" />
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
+            <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                         minOccurs="0"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>
@@ -3635,6 +3633,8 @@
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
 
             <xsd:element name="join-table" type="orm:join-table"/>
+            <xsd:element name="exclude-from-versioning" type="orm:emptyType"
+                         minOccurs="0"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>

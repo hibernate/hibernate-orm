@@ -11,6 +11,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 
 import static org.hibernate.internal.util.ReflectHelper.findField;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.valueWriterOrNull;
 
 /**
  * @author Steve Ebersole
@@ -34,8 +35,7 @@ public class PropertyAccessFieldImpl implements PropertyAccess {
 		propertyValueAccessor = PropertyValueAccessor.standard(
 				propertyAccessorService
 						.hibernateAccessorFactory().valueReader( field ),
-				propertyAccessorService
-						.hibernateAccessorFactory().valueWriter( field ),
+				valueWriterOrNull( propertyAccessorService.hibernateAccessorFactory(), field ),
 				propertyName
 		);
 	}

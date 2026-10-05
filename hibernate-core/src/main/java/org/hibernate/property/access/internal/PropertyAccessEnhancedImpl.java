@@ -26,6 +26,7 @@ import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
 import static org.hibernate.property.access.internal.AccessStrategyHelper.determineEnhancementState;
 import static org.hibernate.property.access.internal.AccessStrategyHelper.fieldOrNull;
 import static org.hibernate.property.access.internal.AccessStrategyHelper.getAccessType;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.valueWriterOrNull;
 
 /**
  * A {@link PropertyAccess} for byte code enhanced entities. Enhanced setter methods ( if available ) are used for
@@ -66,7 +67,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 				setter = new EnhancedSetterImpl( containerJavaType, propertyName, field );
 				propertyValueAccessor = PropertyValueAccessor.enhanced(
 						propertyAccessorService.hibernateAccessorFactory().valueReader( field ),
-						propertyAccessorService.hibernateAccessorFactory().valueWriter( field ),
+						valueWriterOrNull( propertyAccessorService.hibernateAccessorFactory(), field ),
 						determineEnhancementState( containerJavaType, field.getType() ),
 						propertyName
 				);
@@ -81,7 +82,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 				}
 
 				final ValueReader<?> reader;
-				final ValueWriter writer;
+				final @Nullable ValueWriter writer;
 				final int enhancementState;
 
 				if ( classAccessType != null && getAccessType( containerJavaType, propertyName ) == AccessType.FIELD ) {
@@ -93,7 +94,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 					reader = propertyAccessorService.hibernateAccessorFactory().valueReader( field );
 
 					setter = new EnhancedSetterImpl( containerJavaType, propertyName, field );
-					writer = propertyAccessorService.hibernateAccessorFactory().valueWriter( field );
+					writer = valueWriterOrNull( propertyAccessorService.hibernateAccessorFactory(), field );
 				}
 				else {
 					// when classAccessType is null, know PROPERTY is the explicit access type

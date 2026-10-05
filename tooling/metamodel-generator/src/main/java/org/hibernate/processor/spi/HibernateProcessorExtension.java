@@ -5,6 +5,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
+import org.hibernate.Incubating;
 import org.hibernate.service.JavaServiceLoadable;
 
 /**
@@ -24,6 +25,7 @@ import org.hibernate.service.JavaServiceLoadable;
  * @see AnnotationMetaEntityContext
  * @see SessionSetup
  */
+@Incubating(since = "8.0", group = "processor-extension")
 @JavaServiceLoadable
 public interface HibernateProcessorExtension {
 

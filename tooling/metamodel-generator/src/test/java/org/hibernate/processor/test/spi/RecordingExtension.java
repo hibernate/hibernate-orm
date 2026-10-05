@@ -9,10 +9,10 @@ import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.processor.internal.DefaultHibernateProcessorExtension;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.spi.AnnotationMetaEntityContext;
-import org.hibernate.processor.spi.DefaultHibernateProcessorExtension;
 import org.hibernate.processor.spi.HibernateProcessorExtension;
 import org.hibernate.processor.spi.SessionSetup;
 

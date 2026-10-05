@@ -6,7 +6,6 @@ package org.hibernate.temporal.audit.auditoverrides.inheritance;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
@@ -34,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses = {
 		SingleTableInheritanceTest.Base.class,
 		SingleTableInheritanceTest.Sub.class,
+		SingleTableInheritanceTest.SubSub.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
@@ -47,21 +47,10 @@ public class SingleTableInheritanceTest {
 		}
 	}
 
-	/**
-	 * MSC: @Audited.Excluded
-	 * MSC: @Audited.Override.isAudited = false
-	 * Entity: -
-	 *
-	 * MSC: @Audited.Override.isAudited = true
-	 * MSC: -
-	 * Entity: -
-	 *
-	 */
-
-	@MappedSuperclass
+	@Entity(name = "Base")
+	@Table(name = "Base")
 	@Audited
-	static class UpperMSCThatAuditsAProperty {
-
+	static class Base {
 		@Id
 		long id;
 		@Audited.Excluded
@@ -70,36 +59,23 @@ public class SingleTableInheritanceTest {
 		String str2;
 
 	}
-	@MappedSuperclass
-	@Audited.Overrides( @Audited.Override(name = "str1", isAudited = false) )
-	static class LowerMSCThatExcludesTheProperty extends UpperMSCThatAuditsAProperty {
-
-
-	}
-	@Entity(name = "Base")
-	@Table
-	static class Base extends LowerMSCThatExcludesTheProperty {
-
-	}
-	@MappedSuperclass
-	@Audited.Overrides(
-			{@Audited.Override(name = "str1", isAudited = true)} // <-- revocation of str1
-	)
-	static class UpperSecondMSCThatRevokesTheExclusion extends Base {
-
-	}
-	@MappedSuperclass
-	@Audited.Overrides(
-			{@Audited.Override(name = "str2", isAudited = false)} // <-- exclusion of str2
-	)
-
-	static class LowerSecondMSCThatDoesNothing extends UpperSecondMSCThatRevokesTheExclusion{
-
-	}
 	@Entity(name = "Sub")
-	static class Sub extends LowerSecondMSCThatDoesNothing {
-
+	@Audited.Overrides( {
+			@Audited.Override(name = "str1", isAudited = true), // <-- revokes initial exclusion of str1
+			@Audited.Override(name = "str2", isAudited = false) // <-- revokes initial inclusion of str2
+	} )
+	static class Sub extends Base {
+		@Audited.Excluded
+		String str3;
 	}
+
+	@Entity(name = "SubSub")
+	@Audited.Overrides( {
+			@Audited.Override(name = "str3", isAudited = true),
+	} )
+	static class SubSub extends Sub {
+	}
+
 	@Test
 	public void twoGroups(DomainModelScope domainModelScope, SessionFactoryScope scope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
@@ -119,6 +95,13 @@ public class SingleTableInheritanceTest {
 			subEntity.str1 = "v";
 			subEntity.str2 = "w";
 			s.persist( subEntity );
+
+			var subSubEntity = new SubSub();
+			subSubEntity.id = 2;
+			subSubEntity.str1 = "v";
+			subSubEntity.str2 = "w";
+			subSubEntity.str3 = "x";
+			s.persist( subSubEntity );
 		} );
 
 		scope.inTransaction( s -> {
@@ -128,9 +111,15 @@ public class SingleTableInheritanceTest {
 			assertNull( auditedBase.str1 );
 			assertNotNull( auditedBase.str2 );
 
-			var auditedSub = statelessSession.createSelectionQuery("from Sub", Sub.class).getSingleResult();
+			var auditedSub = statelessSession.createSelectionQuery("from Sub s where Type(s) = Sub", Sub.class).getSingleResult();
 			assertNotNull( auditedSub.str1 );
 			assertNull( auditedSub.str2 );
+			assertNull( auditedSub.str3 );
+
+			var auditedSubSub = statelessSession.createSelectionQuery("from SubSub s where Type(s) = SubSub", SubSub.class).getSingleResult();
+			assertNotNull( auditedSubSub.str1 );
+			assertNull( auditedSubSub.str2 );
+			assertNotNull( auditedSubSub.str3 );
 		} );
 	}
 

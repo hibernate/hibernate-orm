@@ -120,7 +120,7 @@ public class TablePerClassWithTwoPersistentClassesTest {
 			subEntity.str2 = "w";
 			s.persist( subEntity );
 
-			var subSubEntity = new Sub();
+			var subSubEntity = new SubSub();
 			subSubEntity.id = 2;
 			subSubEntity.str1 = "v";
 			subSubEntity.str2 = "w";

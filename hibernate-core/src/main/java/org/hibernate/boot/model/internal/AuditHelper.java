@@ -405,6 +405,13 @@ public final class AuditHelper {
 		} );
 	}
 
+	/*
+	Scans up the hierarchy for Audited.Override Annotations.
+	Returns a map keyed by the name-value of the annotation and the annotation itself.
+	If the scan finds multiple annotations for the same property name, just the first one will be taken into account.
+	The other ones will be ignored.
+
+	 */
 	public static HashMap<String, Audited.Override> getOverridesMap(PersistentClass pc, ModelsContext modelsContext) {
 		var persistendClassToScan = pc;
 		var overridesMap = new HashMap<String, Audited.Override>();
@@ -833,17 +840,7 @@ public final class AuditHelper {
 					excluded.add( column.getCanonicalName() );
 				}
 			}
-		} //TODO check joined inheritance aswell for the SubSub scenario and full hierarchy upscanning...
-		if ( pc != null ) { //TODO currently, pc is null, when this method is called from bindSecondaryAuditTables (because secondary tables auditoverrides are not finished yet)
-			getOverridesMap( pc, mc ).forEach( (str, annotation ) -> { //TODO scan the full hierarchy for exclusions
-				if ( !annotation.isAudited() ) {
-					for ( var column : pc.getProperty( str ).getColumns() ) {
-						excluded.add( column.getCanonicalName() );
-					}
-				}
-			} );
 		}
-
 		return excluded;
 	}
 
@@ -946,6 +943,9 @@ public final class AuditHelper {
 			return excludedAtDeclaration;
 		}
 		else {
+			//TODO in JOINED inheritance, this will be called via bindSubClasses and the Subclass as pc, but with a property that has been declared by a parent class
+			//Therefore, the override will be of the subclass and not the base class that declares the property
+
 			var override = findAuditOverrideInPersistentClassAndItsMSCs( propertyName, persistentClass, modelsContext );
 
 			/*

@@ -1,0 +1,74 @@
+plugins {
+    id "java-platform"
+    id "local.module"
+    id "local.publishing"
+}
+
+description = 'Bill of Materials (BOM) for Hibernate ORM published artifacts'
+
+// Ensure all sibling subprojects are evaluated before this one,
+// so that we can detect which ones apply 'local.publishing-java-module'.
+rootProject.subprojects.each { sub ->
+    if ( sub != project && sub.name != 'hibernate-platform' ) {
+        evaluationDependsOn( sub.path )
+    }
+}
+
+dependencies {
+    constraints {
+        rootProject.subprojects.each { sub ->
+            if ( sub != project
+                    && sub.pluginManager.hasPlugin( 'local.publishing-java-module' ) ) {
+                api project( ":${sub.path}" )
+            }
+        }
+
+        // Published through the Gradle Plugin Portal; does not use local.publishing-java-module.
+        api project( ":hibernate-gradle-plugin" )
+
+        // Not all JDK implementations support JFR, so we cannot rely on a project() reference here.
+        // The coordinate should always be part of the BOM regardless.
+        if ( !rootProject.subprojects.any { it.name == 'hibernate-jfr' } ) {
+            api "org.hibernate.orm:hibernate-jfr:$version"
+        }
+    }
+}
+
+
+tasks.register("verifySkinnyBom") {
+    group = "verification"
+    description = "Verify that the BOM only constrains org.hibernate.orm artifacts"
+
+    doLast {
+        var violations = []
+        ['api', 'runtime'].each { confName ->
+            configurations.getByName( confName ).dependencyConstraints.each { constraint ->
+                if ( constraint.group != 'org.hibernate.orm' ) {
+                    violations.add( "${constraint.group}:${constraint.name}" )
+                }
+            }
+        }
+        if ( !violations.isEmpty() ) {
+            throw new GradleException(
+                    "hibernate-bom must only contain org.hibernate.orm artifacts, " +
+                            "but found: ${violations.join( ', ' )}"
+            )
+        }
+    }
+}
+tasks.check.dependsOn( 'verifySkinnyBom' )
+
+tasks.register("releasePrepare") {
+    group = "release-prepare"
+    description = "See :release:releasePrepare for details."
+
+    dependsOn tasks.check
+    dependsOn tasks.generateMetadataFileForPublishedArtifactsPublication
+    dependsOn tasks.generatePomFileForPublishedArtifactsPublication
+    dependsOn tasks.publishAllPublicationsToStagingRepository
+}
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
+    from components.javaPlatform
+}

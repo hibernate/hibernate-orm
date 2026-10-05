@@ -85,12 +85,18 @@ The https://hibernate.org/orm/releases/#compatibility-matrix[compatibility matri
 |===
 
 [[platform]]
-=== Platform / BOM
+=== Platform and BOM
 
-Hibernate also provides a platform (BOM in Maven terminology) module which can be used to align versions of the Hibernate modules along with the versions of its libraries.  The platform artifact is named `hibernate-platform`.
+Hibernate provides two dependency management artifacts to keep artifact versions aligned.
 
-To apply the platform in Gradle
+[[hibernate-platform]]
+==== `hibernate-platform`
 
+The platform manages versions of all published Hibernate ORM modules together with their key third-party
+dependencies (Jakarta Persistence, Jakarta Transactions, ByteBuddy, etc.).
+Use it when you want a single import to align everything.
+
+Gradle::
 [source,groovy,subs="attributes+"]
 ----
 dependencies {
@@ -101,22 +107,12 @@ dependencies {
   implementation "jakarta.transaction:jakarta.transaction-api"
 }
 ----
-
++
 See the https://docs.gradle.org/current/userguide/java_platform_plugin.html#sec:java_platform_consumption[Gradle documentation] for capabilities of applying a platform.
 
-To apply the platform (BOM) in Maven
-
+Maven::
 [source,xml,subs="attributes+"]
 ----
-<dependency>
-    <groupId>org.hibernate.orm</groupId>
-    <artifactId>hibernate-core</artifactId>
-</dependency>
-<dependency>
-    <groupId>jakarta.transaction</groupId>
-    <artifactId>jakarta.transaction-api</artifactId>
-</dependency>
-
 <dependencyManagement>
   <dependencies>
     <dependency>
@@ -128,6 +124,61 @@ To apply the platform (BOM) in Maven
     </dependency>
   </dependencies>
 </dependencyManagement>
+<dependencies>
+  <dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-core</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>jakarta.transaction</groupId>
+    <artifactId>jakarta.transaction-api</artifactId>
+  </dependency>
+</dependencies>
+----
+
+[[hibernate-bom]]
+==== `hibernate-bom`
+
+The BOM manages versions of the published Hibernate ORM modules only, without constraining third-party
+dependency versions.
+Use it when your project already manages third-party dependency versions separately (for example through
+another platform or a parent POM) and you only need to align the Hibernate artifacts.
+
+NOTE: Hibernate ORM is not guaranteed to function correctly if its third-party dependencies are not
+at the versions it was built and tested with.
+When using `hibernate-bom` instead of `hibernate-platform`, it is your responsibility to ensure that
+those dependency versions are compatible.
+
+Gradle::
+[source,groovy,subs="attributes+"]
+----
+dependencies {
+  implementation platform "org.hibernate.orm:hibernate-bom:{fullVersion}"
+
+  // use the versions from the BOM
+  implementation "org.hibernate.orm:hibernate-core"
+}
+----
+Maven::
+[source,xml,subs="attributes+"]
+----
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-bom</artifactId>
+      <version>{fullVersion}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+<dependencies>
+  <dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-core</artifactId>
+  </dependency>
+</dependencies>
 ----
 
 [[examples]]

@@ -42,7 +42,7 @@ Applications that wish to remain portable across Jakarta Persistence providers s
 
 Hibernate, however, is not as strict in its requirements. Differences from the list above include:
 
-- Fields may be declared `final`.
+- Fields may be declared `final` in many cases; see <<entity-pojo-final-fields>> below.
 
 - The constructor with no parameters may be declared with package visibility, or, when the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancer>> is used, it may be omitted completely.
 
@@ -63,6 +63,30 @@ This feature depends on:
 Hibernate _can_ persist a `final` entity class that does not implement any interface, but it is then not able to use proxies for lazily fetching to-one associations to that entity type, limiting options for performance tuning.
 
 The bytecode enhancer automatically makes any entity class non-`final`, along with all its methods.
+
+[[entity-pojo-final-fields]]
+==== Prefer non-final persistent fields
+
+While the JPA specification requires persistent fields to be non-`final`, Hibernate tolerates `final` persistent fields.
+However, `final` persistent fields are not guaranteed to work in every situation.
+
+Hibernate typically instantiates entities using a no-argument constructor and then sets persistent fields individually through reflection.
+Setting a `final` field through reflection is deprecated starting with JDK 26 and will be denied in a future JDK version.
+When Hibernate detects `final` persistent fields that will need to be set through reflection, it logs a warning on boot.
+
+The <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancer>> automatically removes the `final` modifier from persistent fields,
+resolving these warnings.
+Alternatively, simply remove the `final` modifier from the persistent field declarations.
+
+Note that `final` fields are fine for embeddable types that use constructor-based instantiation,
+such as record types used as `@Embeddable` (including `@EmbeddedId`)
+or embeddable types with an `@Instantiator`-annotated constructor,
+since those are instantiated through their constructor without any reflective field mutation.
+In contrast, `@IdClass` types are instantiated using a default constructor and reflective field mutation,
+so their persistent fields should not be declared `final`.
+
+The configuration property `hibernate.mapping.final_persistent_fields` controls the behavior of this check.
+Valid values are `warn` (the default), `error` (fail on boot), and `ignore` (suppress the check).
 
 [[entity-pojo-constructor]]
 ==== Implement a no-argument constructor

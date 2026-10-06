@@ -302,6 +302,31 @@ public interface MappingSettings {
 	String PREFER_LOCALE_LANGUAGE_TAG = "hibernate.type.prefer_locale_language_tag";
 
 	/**
+	 * Specifies how to handle persistent fields declared {@code final}
+	 * that will need to be set through reflection.
+	 * <p>
+	 * Such reflective mutation of final fields is deprecated starting
+	 * with JDK 26 and will be denied in a future JDK version.
+	 * <p>
+	 * Valid values are defined by {@link CheckHandling}:
+	 * <ul>
+	 *     <li>{@link CheckHandling#WARN} (the default) &mdash; log a warning on boot</li>
+	 *     <li>{@link CheckHandling#ERROR} &mdash; throw an exception, preventing boot</li>
+	 *     <li>{@link CheckHandling#IGNORE} &mdash; suppress the check entirely</li>
+	 * </ul>
+	 * <p>
+	 * Enable bytecode enhancement to resolve these warnings: the
+	 * enhancer automatically removes the {@code final} modifier from
+	 * persistent fields.
+	 *
+	 * @settingDefault {@link CheckHandling#WARN}
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	String FINAL_PERSISTENT_FIELDS = "hibernate.mapping.final_persistent_fields";
+
+	/**
 	 * Specifies the preferred JDBC type for storing plural i.e. array/collection values.
 	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},

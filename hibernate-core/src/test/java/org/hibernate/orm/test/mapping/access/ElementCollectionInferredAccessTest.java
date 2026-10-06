@@ -35,15 +35,18 @@ class ElementCollectionInferredAccessTest {
 		var metamodel = scope.getSessionFactory().getJpaMetamodel();
 		assertThat( metamodel.entity( FieldOwner.class ).getId( Long.class ).getJavaMember() )
 				.isInstanceOf( Field.class );
+		assertThat( metamodel.entity( FieldOwner.class ).getAttribute( "name" ).getJavaMember() )
+				.isInstanceOf( Field.class );
 		assertThat( metamodel.entity( FieldOwner.class ).getAttribute( "details" ).getJavaMember() )
 				.isInstanceOf( Field.class );
 		assertThat( metamodel.embeddable( FieldDetail.class ).getAttribute( "description" ).getJavaMember() )
 				.isInstanceOf( Field.class );
 		assertThat( metamodel.entity( FieldOwner.class ).getAttributes() ).extracting( attribute -> attribute.getName() )
-				.containsExactlyInAnyOrder( "id", "details" );
+				.containsExactlyInAnyOrder( "id", "name", "details" );
 
 		Long id = scope.fromTransaction( session -> {
 			FieldOwner owner = new FieldOwner();
+			owner.name = "field owner";
 			FieldDetail detail = new FieldDetail();
 			detail.description = "field access";
 			owner.details.add( detail );
@@ -52,6 +55,7 @@ class ElementCollectionInferredAccessTest {
 		} );
 		scope.inTransaction( session -> {
 			var owner = session.find( FieldOwner.class, id );
+			assertThat( owner.name ).isEqualTo( "field owner" );
 			assertThat( owner.details ).extracting( detail -> detail.description ).containsExactly( "field access" );
 		} );
 	}
@@ -61,6 +65,8 @@ class ElementCollectionInferredAccessTest {
 		var metamodel = scope.getSessionFactory().getJpaMetamodel();
 		assertThat( metamodel.entity( PropertyOwner.class ).getId( Long.class ).getJavaMember() )
 				.isInstanceOf( Method.class );
+		assertThat( metamodel.entity( PropertyOwner.class ).getAttribute( "name" ).getJavaMember() )
+				.isInstanceOf( Method.class );
 		assertThat( metamodel.entity( PropertyOwner.class ).getAttribute( "details" ).getJavaMember() )
 				.isInstanceOf( Method.class );
 		assertThat( metamodel.embeddable( PropertyDetail.class ).getAttribute( "description" ).getJavaMember() )
@@ -68,6 +74,7 @@ class ElementCollectionInferredAccessTest {
 
 		Long id = scope.fromTransaction( session -> {
 			PropertyOwner owner = new PropertyOwner();
+			owner.setName( "property owner" );
 			PropertyDetail detail = new PropertyDetail();
 			detail.setDescription( "property access" );
 			owner.getDetails().add( detail );
@@ -76,6 +83,7 @@ class ElementCollectionInferredAccessTest {
 		} );
 		scope.inTransaction( session -> {
 			var owner = session.find( PropertyOwner.class, id );
+			assertThat( owner.getName() ).isEqualTo( "property owner" );
 			assertThat( owner.getDetails() ).extracting( PropertyDetail::getDescription )
 					.containsExactly( "property access" );
 		} );
@@ -86,6 +94,7 @@ class ElementCollectionInferredAccessTest {
 		@Id
 		@GeneratedValue( strategy = GenerationType.IDENTITY )
 		private Long id;
+		private String name;
 		@ElementCollection
 		private Set<FieldDetail> details = new HashSet<>();
 
@@ -102,6 +111,7 @@ class ElementCollectionInferredAccessTest {
 	@Entity( name = "InferredPropertyAccessOwner" )
 	public static class PropertyOwner {
 		private Long id;
+		private String name;
 		private Set<PropertyDetail> details = new HashSet<>();
 
 		@Id
@@ -112,6 +122,14 @@ class ElementCollectionInferredAccessTest {
 
 		public void setId(Long id) {
 			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 
 		@ElementCollection

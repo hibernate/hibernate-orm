@@ -229,6 +229,27 @@ public class JoinedInheritanceDiscriminatorSelectionTest {
 		} );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-10700" )
+	public void testOptionalTypeFilterWithNullParameter(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			var query = session.createQuery(
+					"select p.name from ParentEntity p where (:personType is null or type(p) = :personType)",
+					String.class
+			);
+			assertThat( query.setParameter( "personType", null ).getResultList() )
+					.containsExactlyInAnyOrder( "parent", "child_a", "sub_child_a", "child_b" );
+			assertThat( query.setParameter( "personType", ChildA.class ).getResultList() )
+					.containsExactly( "child_a" );
+			assertThat( query.setParameter( "personType", SubChildA.class ).getResultList() )
+					.containsExactly( "sub_child_a" );
+			assertThat( query.setParameter( "personType", ParentEntity.class ).getResultList() )
+					.containsExactly( "parent" );
+			assertThat( query.setParameter( "personType", null ).getResultList() )
+					.containsExactlyInAnyOrder( "parent", "child_a", "sub_child_a", "child_b" );
+		} );
+	}
+
 	@Entity( name = "ParentEntity" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	@DiscriminatorColumn( discriminatorType = DiscriminatorType.STRING )

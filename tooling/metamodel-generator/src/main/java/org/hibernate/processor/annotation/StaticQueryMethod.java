@@ -272,8 +272,10 @@ class StaticQueryMethod implements MetaAttribute {
 
 	private static String argumentList(AnnotationMetaEntity annotationMetaEntity, List<String> paramNames) {
 		final var list = new StringBuilder()
-				.append(annotationMetaEntity.importType(LIST))
-				.append(".of(");
+				.append(annotationMetaEntity.importType("java.util.Collections"))
+				.append(".unmodifiableList(")
+				.append(annotationMetaEntity.importType("java.util.Arrays"))
+				.append(".asList(");
 		for ( int i = 0; i < paramNames.size(); i++ ) {
 			if ( i > 0 ) {
 				list.append(", ");
@@ -282,7 +284,7 @@ class StaticQueryMethod implements MetaAttribute {
 					.append("(Object) ")
 					.append(parameterName(paramNames.get( i )));
 		}
-		return list.append(')').toString();
+		return list.append("))").toString();
 	}
 
 	private static void queryOptions(

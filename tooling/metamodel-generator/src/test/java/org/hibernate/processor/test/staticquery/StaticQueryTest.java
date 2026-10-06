@@ -23,6 +23,8 @@ import java.util.Locale;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMethodFromMetamodelFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import javax.tools.DiagnosticCollector;
@@ -76,6 +78,19 @@ class StaticQueryTest {
 		assertEquals( List.of(), statementReference.getParameterTypes() );
 		assertEquals( List.of(), statementReference.getParameterNames() );
 		assertEquals( List.of(), statementReference.getArguments() );
+	}
+
+	@Test
+	@WithClasses({ Book.class, Library.class, NotARepo.class })
+	void nullableStaticQueryArguments() throws ReflectiveOperationException {
+		for ( var methodName : List.of( "findBooks", "nativeBook" ) ) {
+			final var method = getMethodFromMetamodelFor( Library.class, methodName, String.class );
+			final var reference = (TypedQueryReference<?>) method.invoke( null, (Object) null );
+			assertEquals( 1, reference.getArguments().size() );
+			assertNull( reference.getArguments().get( 0 ) );
+			assertThrows( UnsupportedOperationException.class, () -> reference.getArguments().set( 0, "changed" ) );
+			assertThrows( UnsupportedOperationException.class, () -> reference.getArguments().add( "extra" ) );
+		}
 	}
 
 	@Test

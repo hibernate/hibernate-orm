@@ -11,6 +11,7 @@ import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.cfg.CheckHandling;
 import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
@@ -463,6 +464,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isFailOnPaginationOverCollectionFetchEnabled() {
 		return delegate.isFailOnPaginationOverCollectionFetchEnabled();
+	}
+
+	@Override
+	public CheckHandling getFinalPersistentFieldsHandling() {
+		return delegate.getFinalPersistentFieldsHandling();
 	}
 
 	@Override

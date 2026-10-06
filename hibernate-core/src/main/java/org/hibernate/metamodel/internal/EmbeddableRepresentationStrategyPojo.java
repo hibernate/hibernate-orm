@@ -1,5 +1,6 @@
 package org.hibernate.metamodel.internal;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
@@ -11,6 +12,9 @@ import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
+import org.hibernate.MappingException;
+import org.hibernate.cfg.CheckHandling;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
@@ -23,10 +27,13 @@ import org.hibernate.accessor.MultiValueReader;
 import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
 import org.hibernate.usertype.CompositeUserType;
 
+import static java.lang.reflect.Modifier.isFinal;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAccessStrategy;
@@ -81,6 +88,9 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 				foundCustomAccessor = true;
 			}
 		}
+
+		warnOnFinalFields( bootDescriptor, propertyAccesses, customInstantiator,
+				creationContext.getSessionFactoryOptions().getFinalPersistentFieldsHandling() );
 
 		if ( canBuildMultiValueAccessors( bootDescriptor, foundCustomAccessor ) ) {
 			final var multiValueAccessors = PropertyAccessHelper.buildMultiValueAccessors(
@@ -214,6 +224,38 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 				&& bootDescriptor.getCustomInstantiator() == null
 				&& bootDescriptor.getInstantiator() == null
 				&& !bootDescriptor.isPolymorphic();
+	}
+
+	private static void warnOnFinalFields(
+			Component bootDescriptor,
+			PropertyAccess[] propertyAccesses,
+			EmbeddableInstantiator customInstantiator,
+			CheckHandling handling) {
+		if ( customInstantiator != null && !( customInstantiator instanceof StandardEmbeddableInstantiator ) ) {
+			return;
+		}
+		if ( handling == CheckHandling.IGNORE ) {
+			return;
+		}
+		var finalFields = new ArrayList<String>();
+		for ( int i = 0; i < propertyAccesses.length; i++ ) {
+			if ( propertyAccesses[i].getSetter() instanceof SetterFieldImpl setter
+					&& isFinal( setter.getField().getModifiers() ) ) {
+				finalFields.add( bootDescriptor.getProperty( i ).getName() );
+			}
+		}
+		if ( !finalFields.isEmpty() ) {
+			if ( handling == CheckHandling.ERROR ) {
+				throw new MappingException( String.format(
+						"Persistent fields %s in embeddable class '%s' are declared 'final'",
+						finalFields, bootDescriptor.getComponentClassName()
+				) );
+			}
+			CORE_LOGGER.finalPersistentFields(
+					finalFields, "embeddable", bootDescriptor.getComponentClassName(),
+					MappingSettings.FINAL_PERSISTENT_FIELDS
+			);
+		}
 	}
 
 	private static Map<String, Class<?>> getSubclassesByName(

@@ -581,4 +581,17 @@ public interface CoreMessageLogger extends BasicLogger {
 			"Consider filing a feature request for this support with the driver/database developers.")
 	void unsupportedDirectJavaTimeJdbcAccess(String dialect, String javaTimeTypes, String fallback);
 
+	@LogMessage(level = WARN)
+	@Message(
+			id = 6597,
+			value = "Persistent fields %s in %s class '%s' are declared 'final'. "
+					+ "Hibernate uses reflection to set these fields, "
+					+ "which is deprecated starting with JDK 26 "
+					+ "and will be denied in a future JDK version. "
+					+ "To resolve this, enable bytecode enhancement, "
+					+ "which automatically removes the 'final' modifier "
+					+ "from persistent fields, or remove 'final' from these fields. "
+					+ "To suppress this warning, set '%s' to 'ignore'."
+	)
+	void finalPersistentFields(Object fieldNames, String classKind, String className, String settingName);
 }

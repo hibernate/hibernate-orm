@@ -15,6 +15,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
+import org.hibernate.cfg.CheckHandling;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -28,6 +30,7 @@ import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
@@ -125,6 +128,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		);
 
 		propertyAccessMap = buildPropertyAccessMap( propertyAccessorService, bootDescriptor, strategySelector );
+		warnOnFinalFields( identifierPropertyAccess, propertyAccessMap, mappedJtd,
+				creationContext.getSessionFactoryOptions().getFinalPersistentFieldsHandling() );
 		final List<Property> propertyClosure = bootDescriptor.getPropertyClosure();
 		final var multiValuePropertyAccesses = new ArrayList<PropertyAccess>( propertyClosure.size() );
 		for ( Property property : propertyClosure ) {
@@ -407,6 +412,45 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				return null;
 			}
 		}
+	}
+
+	private static void warnOnFinalFields(
+			PropertyAccess identifierPropertyAccess,
+			Map<String, PropertyAccess> propertyAccessMap,
+			JavaType<?> mappedJtd,
+			CheckHandling handling) {
+		if ( handling == CheckHandling.IGNORE ) {
+			return;
+		}
+		var finalFields = collectFinalFields( propertyAccessMap );
+		if ( identifierPropertyAccess != null
+				&& identifierPropertyAccess.getSetter() instanceof SetterFieldImpl setter
+				&& isFinal( setter.getField().getModifiers() ) ) {
+			finalFields.add( setter.getPropertyName() );
+		}
+		if ( !finalFields.isEmpty() ) {
+			if ( handling == CheckHandling.ERROR ) {
+				throw new MappingException( String.format(
+						"Persistent fields %s in entity class '%s' are declared 'final'",
+						finalFields, mappedJtd.getTypeName()
+				) );
+			}
+			CORE_LOGGER.finalPersistentFields(
+					finalFields, "entity", mappedJtd.getTypeName(),
+					MappingSettings.FINAL_PERSISTENT_FIELDS
+			);
+		}
+	}
+
+	private static List<String> collectFinalFields(Map<String, PropertyAccess> propertyAccessMap) {
+		var finalFields = new ArrayList<String>();
+		for ( var entry : propertyAccessMap.entrySet() ) {
+			if ( entry.getValue().getSetter() instanceof SetterFieldImpl setter
+					&& isFinal( setter.getField().getModifiers() ) ) {
+				finalFields.add( entry.getKey() );
+			}
+		}
+		return finalFields;
 	}
 
 	private static void validateGetterSetterMethodProxyability(String getterOrSetter, Method method ) {

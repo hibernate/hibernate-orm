@@ -70,6 +70,8 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.cfg.CheckHandling;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.spi.HqlTranslator;
@@ -290,6 +292,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private PhysicalConnectionHandlingMode connectionHandlingMode;
 	@Nonnull
 	private final ValueHandlingMode criteriaValueHandlingMode;
+	@Nonnull
+	private final CheckHandling finalPersistentFieldsHandling;
 	@Nonnull
 	private final ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
@@ -584,6 +588,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		jpaCompliance = context.getJpaCompliance();
 
 		failOnPaginationOverCollectionFetchEnabled = getBoolean( FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, settings );
+
+		finalPersistentFieldsHandling =
+				CheckHandling.interpret(
+						settings.get( MappingSettings.FINAL_PERSISTENT_FIELDS ), CheckHandling.WARN );
 
 		immutableEntityUpdateQueryHandlingMode =
 				ImmutableEntityUpdateQueryHandlingMode.interpret(
@@ -1517,6 +1525,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean getNativeJdbcParametersIgnored() {
 		return nativeJdbcParametersIgnored;
+	}
+
+	@Override
+	public CheckHandling getFinalPersistentFieldsHandling() {
+		return finalPersistentFieldsHandling;
 	}
 
 	@Override

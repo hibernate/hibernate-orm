@@ -147,6 +147,16 @@ public abstract class ClassificationMigrationValidationTask extends DefaultTask 
 			throw new GradleException( "Invalid classification migration input; see " + reportFile.get().getAsFile(), e );
 		}
 		write( new ClassificationMigrationReportRenderer().render( result ) );
+		if ( result.hasWarnings() ) {
+			getLogger().warn(
+					"Migration compatibility findings against baseline {} are nonblocking because the baseline is an Alpha/Beta/CR release "
+							+ "(ERROR={}, REVIEW={}); see {}",
+					result.getBaseline().getSourceVersion(),
+					result.getDiagnosticCount( ClassificationMigrationValidator.Severity.ERROR ),
+					result.getDiagnosticCount( ClassificationMigrationValidator.Severity.REVIEW ),
+					reportFile.get().getAsFile()
+			);
+		}
 		if ( result.hasFailures() ) {
 			throw new GradleException( "Classification migration compatibility failed; see " + reportFile.get().getAsFile() );
 		}

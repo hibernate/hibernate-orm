@@ -43,6 +43,58 @@ public class ClassificationMigrationValidatorTests {
 	private final ClassificationMigrationValidator validator = new ClassificationMigrationValidator();
 
 	@Test
+	public void alphaBetaAndCrBaselinesPreserveNonblockingErrors() throws IOException {
+		final var analysis = removedMethodAnalysis();
+		for ( String version : List.of( "8.0.0.Alpha1", "8.0.0.Beta3", "8.0.0-alpha2", "8.0.0-bEtA4", "8.0.0.CR1", "8.0.0-cr2", "8.0.0.cR3" ) ) {
+			final var result = validator.validate(
+					metadata( "8.0", version, categoryModel( org.hibernate.orm.post.ClassificationModel.Category.API, Collections.emptyList(), true ) ),
+					metadata( "8.1", "8.1.0-SNAPSHOT", categoryModel( org.hibernate.orm.post.ClassificationModel.Category.API, Collections.emptyList(), false ) ),
+					analysis
+			);
+			assertEquals( ClassificationMigrationValidator.BaselinePolicy.ADVISORY_PRERELEASE, result.getBaselinePolicy(), version );
+			assertTrue( result.isApiEnforced() );
+			assertFalse( result.hasFailures(), version );
+			assertTrue( result.hasWarnings(), version );
+			assertEquals( 1, result.getDiagnosticCount( ClassificationMigrationValidator.Severity.ERROR ) );
+			assertDiagnostic( result, API, METHOD_REMOVED );
+			final String report = new ClassificationMigrationReportRenderer().render( result );
+			assertTrue( report.startsWith( "Hibernate ORM migration compatibility: PASSED_WITH_WARNINGS\n" ) );
+			assertTrue( report.contains( "Baseline policy: ADVISORY_PRERELEASE" ) );
+			assertTrue( report.contains( "[ERROR] API_COMPATIBILITY_REGRESSION" ) );
+		}
+	}
+
+	@Test
+	public void otherBaselineQualifiersRemainStrictEvenWhenCurrentIsBeta() throws IOException {
+		final var analysis = removedMethodAnalysis();
+		for ( String version : List.of( "8.0.0", "8.0.0.Final", "8.0.0-SNAPSHOT", "8.0.0.Preview1",
+				"8.0.0.CR", "8.0.0.CR1-SNAPSHOT", "8.0.0.NotCR1", "8.0.0.Beta", "8.0.0.Beta3-SNAPSHOT", "8.0.0.NotBeta3", "prefix-8.0.0.Beta3", "8.0.Beta3" ) ) {
+			final var result = validator.validate(
+					metadata( "8.0", version, categoryModel( org.hibernate.orm.post.ClassificationModel.Category.API, Collections.emptyList(), true ) ),
+					metadata( "8.1", "8.1.0.Beta1", categoryModel( org.hibernate.orm.post.ClassificationModel.Category.API, Collections.emptyList(), false ) ),
+					analysis
+			);
+			assertEquals( ClassificationMigrationValidator.BaselinePolicy.STRICT, result.getBaselinePolicy(), version );
+			assertTrue( result.hasFailures(), version );
+			assertFalse( result.hasWarnings(), version );
+			assertTrue( new ClassificationMigrationReportRenderer().render( result ).startsWith( "Hibernate ORM migration compatibility: FAILED\n" ) );
+		}
+	}
+
+	@Test
+	public void betaSpiBaselineAlsoPreservesNonblockingErrors() throws IOException {
+		final var result = validator.validate(
+				metadata( "8.1", "8.1.0.Beta1", categoryModel( org.hibernate.orm.post.ClassificationModel.Category.SPI, List.of( USE ), true ) ),
+				metadata( "8.1", "8.1.0", categoryModel( org.hibernate.orm.post.ClassificationModel.Category.SPI, List.of( USE ), false ) ),
+				removedMethodAnalysis()
+		);
+		assertTrue( result.isSpiEnforced() );
+		assertDiagnostic( result, SPI, METHOD_REMOVED );
+		assertFalse( result.hasFailures() );
+		assertTrue( result.hasWarnings() );
+	}
+
+	@Test
 	public void apiIsProtectedAcrossMinorFamiliesWhileSpiIsNot() throws IOException {
 		final JavaMigrationCompatibilityAnalyzer.Analysis analysis = removedMethodAnalysis();
 		final ClassificationMetadata apiBaseline = metadata( "8.0", "8.0.4", categoryModel( org.hibernate.orm.post.ClassificationModel.Category.API, Collections.emptyList(), true ) );
@@ -185,6 +237,16 @@ public class ClassificationMigrationValidatorTests {
 		final String report = new ClassificationMigrationReportRenderer().render( result );
 		assertTrue( report.contains( "SPI X.Y-family compatibility: ENFORCED" ) );
 		assertTrue( report.contains( "Diagnostics: 1; ERROR=0; REVIEW=1" ) );
+		final var advisory = validator.validate(
+				metadata( "8.1", "8.1.0.Beta3", typeOnlySpiModel( IMPLEMENT, false ) ),
+				metadata( "8.1", "8.1.1", typeOnlySpiModel( IMPLEMENT, false ) ),
+				analyze( baseline, current )
+		);
+		assertEquals( REVIEW, advisory.getDiagnostics().get( 0 ).getSeverity() );
+		assertTrue( advisory.hasWarnings() );
+		assertFalse( advisory.hasFailures() );
+		assertTrue( new ClassificationMigrationReportRenderer().render( advisory )
+				.startsWith( "Hibernate ORM migration compatibility: PASSED_WITH_WARNINGS\n" ) );
 	}
 
 	@Test
@@ -248,6 +310,14 @@ public class ClassificationMigrationValidatorTests {
 				IllegalArgumentException.class,
 				() -> validator.validate(
 						metadata( "8.1", "8.1.0", unresolved.build() ),
+						metadata( "8.1", "8.1.1", typeOnlySpiModel( USE, false ) ),
+						emptyAnalysis()
+				)
+		);
+		assertThrows(
+				IllegalArgumentException.class,
+				() -> validator.validate(
+						metadata( "8.1", "8.1.0.Beta3", unresolved.build() ),
 						metadata( "8.1", "8.1.1", typeOnlySpiModel( USE, false ) ),
 						emptyAnalysis()
 				)

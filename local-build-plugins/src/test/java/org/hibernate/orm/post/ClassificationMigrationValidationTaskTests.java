@@ -8,6 +8,7 @@ import java.util.Collections;
 
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.objectweb.asm.ClassWriter;
@@ -18,6 +19,10 @@ import static org.hibernate.orm.post.ClassificationModel.ElementKind.TYPE;
 import static org.hibernate.orm.post.ClassificationModel.OriginKind.DIRECT;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
+import static org.gradle.testkit.runner.TaskOutcome.FAILED;
 
 /// Gradle input, execution, and deterministic-report coverage for migration
 /// validation.
@@ -26,6 +31,63 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class ClassificationMigrationValidationTaskTests {
 	@TempDir
 	Path temporaryDirectory;
+
+	@Test
+	public void prereleaseFindingsWarnWhileStrictBaselinesFail() throws Exception {
+		Files.writeString( temporaryDirectory.resolve( "settings.gradle" ), "" );
+		Files.writeString( temporaryDirectory.resolve( "build.gradle" ),
+				"plugins { id 'org.hibernate.orm.build.reports' }\n"
+						+ "tasks.register('validateFixture', org.hibernate.orm.post.ClassificationMigrationValidationTask) {\n"
+						+ "    baselineClassificationMetadataFile = layout.projectDirectory.file('baseline.json')\n"
+						+ "    currentClassificationMetadataFile = layout.projectDirectory.file('current.json')\n"
+						+ "    baselineArtifacts.from('baseline-classes')\n"
+						+ "    currentArtifacts.from('current-classes')\n"
+						+ "}\n" );
+		writeContract( temporaryDirectory.resolve( "baseline-classes" ) );
+		Files.createDirectories( temporaryDirectory.resolve( "current-classes" ) );
+		final ClassificationMetadataJson json = new ClassificationMetadataJson();
+		Files.writeString( temporaryDirectory.resolve( "current.json" ),
+				json.write( new ClassificationMetadata( "8.1", "8.1.0-SNAPSHOT", ClassificationModel.builder().build() ) ) );
+		final GradleRunner runner = GradleRunner.create().withProjectDir( temporaryDirectory.toFile() )
+				.withPluginClasspath().withArguments( "validateFixture", "--offline" );
+		for ( String version : new String[] { "8.0.0.Alpha1", "8.0.0.Beta3", "8.0.0.CR1", "8.0.0.Final" } ) {
+			Files.writeString( temporaryDirectory.resolve( "baseline.json" ),
+					json.write( new ClassificationMetadata( "8.0", version, model() ) ) );
+			final boolean advisory = version.contains( "Alpha" ) || version.contains( "Beta" ) || version.contains( "CR" );
+			final var result = advisory ? runner.build() : runner.buildAndFail();
+			assertEquals( advisory ? SUCCESS : FAILED, result.task( ":validateFixture" ).getOutcome() );
+			final Path reportPath = temporaryDirectory.resolve( "build/orm/reports/migration-compatibility-validation.txt" );
+			final String report = Files.readString( reportPath );
+			assertTrue( report.contains( "[ERROR] API_COMPATIBILITY_REGRESSION" ) );
+			if ( advisory ) {
+				assertTrue( report.startsWith( "Hibernate ORM migration compatibility: PASSED_WITH_WARNINGS\n" ) );
+				assertTrue( result.getOutput().contains( "Migration compatibility findings against baseline " + version ) );
+				assertTrue( result.getOutput().contains( "nonblocking because the baseline is an Alpha/Beta/CR release (ERROR=1, REVIEW=0); see " ), result.getOutput() );
+				assertTrue( result.getOutput().contains( reportPath.toRealPath().toString() ), result.getOutput() );
+			}
+			else {
+				assertTrue( report.startsWith( "Hibernate ORM migration compatibility: FAILED\n" ) );
+				assertFalse( result.getOutput().contains( "Migration compatibility findings against baseline" ) );
+			}
+		}
+
+		Files.writeString( temporaryDirectory.resolve( "baseline.json" ),
+				json.write( new ClassificationMetadata( "8.0", "8.0.0.CR1", model() ) ) );
+		writeContract( temporaryDirectory.resolve( "current-classes" ) );
+		Files.writeString( temporaryDirectory.resolve( "current.json" ),
+				json.write( new ClassificationMetadata( "8.1", "8.1.0-SNAPSHOT", model() ) ) );
+		final var compatible = runner.build();
+		assertFalse( compatible.getOutput().contains( "Migration compatibility findings against baseline" ) );
+		assertTrue( Files.readString( temporaryDirectory.resolve( "build/orm/reports/migration-compatibility-validation.txt" ) )
+				.startsWith( "Hibernate ORM migration compatibility: PASSED\n" ) );
+
+		Files.writeString( temporaryDirectory.resolve( "current.json" ), "{}" );
+		final var invalid = runner.buildAndFail();
+		assertEquals( FAILED, invalid.task( ":validateFixture" ).getOutcome() );
+		assertTrue( Files.readString( temporaryDirectory.resolve( "build/orm/reports/migration-compatibility-validation.txt" ) )
+				.contains( "Configuration error:" ) );
+		assertFalse( invalid.getOutput().contains( "Migration compatibility findings against baseline" ) );
+	}
 
 	@Test
 	public void executesWithExplicitBaselineAndCurrentInputs() throws Exception {

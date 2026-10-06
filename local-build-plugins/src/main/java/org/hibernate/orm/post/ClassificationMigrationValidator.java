@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static org.hibernate.orm.post.ClassificationModel.Category.API;
 import static org.hibernate.orm.post.ClassificationModel.Category.SPI;
@@ -23,6 +24,7 @@ import static org.hibernate.orm.post.JavaMigrationCompatibilityAnalyzer.Cause;
 /// API compatibility is enforced within one major release. Stable SPI
 /// compatibility is enforced within one `X.Y` release family. Incubating
 /// declarations are intentionally excluded from both guarantees.
+/// Findings against Alpha/Beta/CR baselines remain visible but are nonblocking.
 ///
 /// @author Steve Ebersole
 public final class ClassificationMigrationValidator {
@@ -449,10 +451,26 @@ public final class ClassificationMigrationValidator {
 		}
 	}
 
+	/// Whether compatibility findings can fail validation for the baseline.
+	public enum BaselinePolicy {
+		STRICT,
+		ADVISORY_PRERELEASE;
+
+		private static final Pattern PRERELEASE = Pattern.compile(
+				"\\d+\\.\\d+\\.\\d+[.-](?:Alpha|Beta|CR)\\d+", Pattern.CASE_INSENSITIVE
+		);
+
+		private static BaselinePolicy forVersion(String sourceVersion) {
+			return sourceVersion != null && PRERELEASE.matcher( sourceVersion ).matches()
+					? ADVISORY_PRERELEASE : STRICT;
+		}
+	}
+
 	/// The complete policy decision and its diagnostics.
 	public static final class Result {
 		private final ClassificationMetadata baseline;
 		private final ClassificationMetadata current;
+		private final BaselinePolicy baselinePolicy;
 		private final boolean apiEnforced;
 		private final boolean spiEnforced;
 		private final List<Diagnostic> diagnostics;
@@ -465,6 +483,7 @@ public final class ClassificationMigrationValidator {
 				Collection<Diagnostic> diagnostics) {
 			this.baseline = baseline;
 			this.current = current;
+			this.baselinePolicy = BaselinePolicy.forVersion( baseline.getSourceVersion() );
 			this.apiEnforced = apiEnforced;
 			this.spiEnforced = spiEnforced;
 			this.diagnostics = Collections.unmodifiableList( new ArrayList<>( diagnostics ) );
@@ -476,6 +495,19 @@ public final class ClassificationMigrationValidator {
 
 		public ClassificationMetadata getCurrent() {
 			return current;
+		}
+
+		public BaselinePolicy getBaselinePolicy() {
+			return baselinePolicy;
+		}
+
+		/// Whether advisory findings should produce a warning and remain in the report.
+		public boolean hasWarnings() {
+			return baselinePolicy == BaselinePolicy.ADVISORY_PRERELEASE && !diagnostics.isEmpty();
+		}
+
+		public long getDiagnosticCount(Severity severity) {
+			return diagnostics.stream().filter( diagnostic -> diagnostic.getSeverity() == severity ).count();
 		}
 
 		public boolean isApiEnforced() {
@@ -491,7 +523,7 @@ public final class ClassificationMigrationValidator {
 		}
 
 		public boolean hasFailures() {
-			return diagnostics.stream().anyMatch( diagnostic -> diagnostic.getSeverity() == Severity.ERROR );
+			return baselinePolicy == BaselinePolicy.STRICT && getDiagnosticCount( Severity.ERROR ) > 0;
 		}
 	}
 

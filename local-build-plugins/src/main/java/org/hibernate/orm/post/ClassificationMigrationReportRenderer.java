@@ -1,8 +1,5 @@
 package org.hibernate.orm.post;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 /// Renders a deterministic, review-oriented API and SPI migration report.
 ///
 /// @author Steve Ebersole
@@ -10,10 +7,11 @@ public final class ClassificationMigrationReportRenderer {
 	public String render(ClassificationMigrationValidator.Result result) {
 		final StringBuilder report = new StringBuilder();
 		report.append( "Hibernate ORM migration compatibility: " )
-				.append( result.hasFailures() ? "FAILED" : "PASSED" )
+				.append( result.hasFailures() ? "FAILED" : result.hasWarnings() ? "PASSED_WITH_WARNINGS" : "PASSED" )
 				.append( "\n\n" )
 				.append( "Baseline compatibility family: " ).append( result.getBaseline().getHibernateVersion() ).append( '\n' )
 				.append( "Baseline source version: " ).append( result.getBaseline().getSourceVersion() ).append( '\n' )
+				.append( "Baseline policy: " ).append( result.getBaselinePolicy() ).append( '\n' )
 				.append( "Current compatibility family: " ).append( result.getCurrent().getHibernateVersion() ).append( '\n' )
 				.append( "Current source version: " ).append( result.getCurrent().getSourceVersion() ).append( '\n' )
 				.append( "Classification schema: " ).append( ClassificationMetadata.SCHEMA )
@@ -21,13 +19,12 @@ public final class ClassificationMigrationReportRenderer {
 				.append( "API major-family compatibility: " ).append( result.isApiEnforced() ? "ENFORCED" : "NOT_APPLICABLE" ).append( '\n' )
 				.append( "SPI X.Y-family compatibility: " ).append( result.isSpiEnforced() ? "ENFORCED" : "NOT_APPLICABLE" ).append( "\n\n" );
 
-		final Map<ClassificationMigrationValidator.Severity, Integer> counts = new EnumMap<>( ClassificationMigrationValidator.Severity.class );
-		for ( ClassificationMigrationValidator.Diagnostic diagnostic : result.getDiagnostics() ) {
-			counts.merge( diagnostic.getSeverity(), 1, Integer::sum );
+		if ( result.getBaselinePolicy() == ClassificationMigrationValidator.BaselinePolicy.ADVISORY_PRERELEASE ) {
+			report.append( "Compatibility findings are nonblocking because the baseline is an Alpha/Beta/CR release.\n\n" );
 		}
 		report.append( "Diagnostics: " ).append( result.getDiagnostics().size() )
-				.append( "; ERROR=" ).append( counts.getOrDefault( ClassificationMigrationValidator.Severity.ERROR, 0 ) )
-				.append( "; REVIEW=" ).append( counts.getOrDefault( ClassificationMigrationValidator.Severity.REVIEW, 0 ) )
+				.append( "; ERROR=" ).append( result.getDiagnosticCount( ClassificationMigrationValidator.Severity.ERROR ) )
+				.append( "; REVIEW=" ).append( result.getDiagnosticCount( ClassificationMigrationValidator.Severity.REVIEW ) )
 				.append( "\n\n" );
 
 		if ( result.getDiagnostics().isEmpty() ) {

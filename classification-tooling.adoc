@@ -403,6 +403,25 @@ classification, role, and release horizon.
 `REVIEW`:: A context-dependent Java change which requires human review and must
 not be silently treated as compatible.
 
+Baseline source versions with a numbered `Alpha`, `Beta`, or `CR` qualifier use
+advisory enforcement. Matching is case-insensitive and accepts dot or hyphen
+separators, for example `8.0.0.Beta3`, `8.0.0-Beta3`, or `8.0.0.CR1`.
+Compatibility analysis still runs and preserves all findings and their original `ERROR` or `REVIEW`
+severities. If findings exist, the task succeeds with a `PASSED_WITH_WARNINGS`
+report and emits a Gradle warning identifying the baseline, severity counts,
+and report path. Without findings, the report is `PASSED` and no warning is
+emitted. Warnings are emitted when validation executes; normal Gradle
+up-to-date behavior is unchanged.
+
+The report identifies the baseline policy as `ADVISORY_PRERELEASE` or
+`STRICT`; the API and SPI horizon lines still describe the applicable
+compatibility promises. Stable releases, snapshots, and unknown
+qualifiers retain strict enforcement. The current source version's qualifier
+does not affect this policy. Invalid metadata, missing artifacts, unresolved
+classifications, and other configuration or input errors still fail validation
+for every baseline. Baseline family selection and exact artifact resolution
+are unchanged.
+
 The Java analyzer resolves inherited methods before reporting a removed
 declaration. Removing a redundant override does not remove an otherwise
 unchanged inherited callable contract; the inherited declaration must still

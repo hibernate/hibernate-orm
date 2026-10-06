@@ -8,12 +8,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
-
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +65,9 @@ class TablePerClassSiblingColumnTypeTest {
 	}
 
 	@Test
+	// MySQL and MariaDB both actually allow this :/
+	@SkipForDialect(dialectClass = MySQLDialect.class)
+	@SkipForDialect(dialectClass = MariaDBDialect.class)
 	@FailureExpected(jiraKey = "HHH-5605", reason = "The polymorphic union combines same-named sibling columns with incompatible types")
 	void testPolymorphicQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> assertRows( session.createQuery(

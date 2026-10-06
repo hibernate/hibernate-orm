@@ -728,6 +728,22 @@ Legacy `hbm.xml` mappings that specify `cascade="lock"`, either alone or in a co
 Remove `lock` from these cascade declarations, omitting the declaration if no other cascade styles remain.
 Applications that need to lock associated entities should explicitly request the required lock on each entity instead of relying on lock cascading or use JPA "extended locking".
 
+[[final-field-warning]]
+=== Boot-time warning for final persistent fields
+
+Hibernate now warns on boot when it detects persistent fields declared `final` in entity or embeddable classes that will need to be set through reflection.
+Reflective mutation of final fields is deprecated starting with JDK 26 and will be denied in a future JDK version.
+
+To resolve these warnings:
+
+- Enable bytecode enhancement, which automatically removes the `final` modifier from persistent fields, or
+- remove the `final` modifier from the persistent field declarations.
+
+The behavior of this check is controlled by the configuration property `hibernate.mapping.final_persistent_fields`,
+which accepts the values `warn` (the default), `error` (fail on boot), and `ignore` (suppress the check).
+
+See the link:{userGuideBase}#entity-pojo-final-fields[User Guide] for details.
+
 [[collection-remove-create-callback-order]]
 === Collection remove/create callback order
 

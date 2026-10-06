@@ -256,6 +256,20 @@ var entityManager = entityManagerFactory.createEntityManager(
 );
 ----
 
+[[final-field-check]]
+== Boot-time check for final persistent fields
+
+Hibernate now checks on boot for persistent fields declared `final` that will need to be set through reflection.
+Such reflective mutation of final fields is deprecated starting with JDK 26 and will be denied in a future JDK version.
+
+The bytecode enhancer automatically removes the `final` modifier from persistent fields, resolving these warnings.
+Alternatively, remove the `final` modifier from the field declarations.
+
+The behavior of this check is controlled by the `hibernate.mapping.final_persistent_fields` setting,
+which accepts values `warn` (the default), `error`, and `ignore`.
+
+See the link:{userGuideBase}#entity-pojo-final-fields[User Guide] for details.
+
 === Query Options
 
 Finally, implementations of `TypedQuery.Option` and `Statement.Option` define settings affecting the execution of queries and statements:

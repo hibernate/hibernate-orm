@@ -17,6 +17,12 @@ public class SpannerIdentityColumnSupport extends IdentityColumnSupportBase {
 	}
 
 	@Override
+	public String getIdentityInsertString() {
+		// https://docs.cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax#default-values
+		return "default";
+	}
+
+	@Override
 	public String getIdentitySelectString(String table, String column, int type) throws MappingException {
 		throw new MappingException(
 				getClass().getName() + " does not support selecting the last generated identity value");

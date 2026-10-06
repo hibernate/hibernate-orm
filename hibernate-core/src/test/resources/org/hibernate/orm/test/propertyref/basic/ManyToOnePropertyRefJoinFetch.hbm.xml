@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.propertyref.basic" default-access="field">
+    <class name="ManyToOnePropertyRefJoinFetchTest$Owner" table="property_ref_join_owner">
+        <id name="id"/>
+        <many-to-one name="target" class="ManyToOnePropertyRefJoinFetchTest$Target"
+                     column="target_code" property-ref="code" fetch="join" lazy="false" not-null="true"/>
+    </class>
+
+    <class name="ManyToOnePropertyRefJoinFetchTest$Target" table="property_ref_join_target">
+        <id name="id"/>
+        <property name="code" unique="true" not-null="true"/>
+        <property name="name"/>
+    </class>
+</hibernate-mapping>

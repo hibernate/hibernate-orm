@@ -10,12 +10,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+import org.hibernate.Hibernate;
+import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -35,6 +45,48 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 @SessionFactory
 public class BagDuplicatesTest {
+
+	@AfterEach
+	void cleanup(SessionFactoryScope scope) {
+		scope.dropData();
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	@JiraKey("HHH-4171")
+	void testPersistChildAddedToUninitializedBag(boolean flushBeforeInitialization, SessionFactoryScope scope) {
+		Long parentId = scope.fromTransaction( session -> {
+			var parent = new Parent();
+			session.persist( parent );
+			return parent.getId();
+		} );
+
+		scope.inTransaction( session -> {
+			var parent = session.find( Parent.class, parentId );
+			assertFalse( Hibernate.isInitialized( parent.getChildren() ) );
+			var child = new Child();
+			child.setName( "new child" );
+			parent.addChild( child );
+			assertFalse( Hibernate.isInitialized( parent.getChildren() ) );
+			assertTrue( assertInstanceOf( PersistentBag.class, parent.getChildren() ).hasQueuedOperations() );
+
+			session.persist( child );
+			if ( flushBeforeInitialization ) {
+				session.flush();
+			}
+			assertFalse( Hibernate.isInitialized( parent.getChildren() ) );
+
+			Hibernate.initialize( parent.getChildren() );
+			assertEquals( 1, parent.getChildren().size() );
+			assertSame( child, parent.getChildren().get( 0 ) );
+		} );
+
+		scope.inTransaction( session -> {
+			var parent = session.find( Parent.class, parentId );
+			assertEquals( 1, parent.getChildren().size() );
+			assertEquals( "new child", parent.getChildren().get( 0 ).getName() );
+		} );
+	}
 
 	@Test
 	public void HHH10385Test(SessionFactoryScope scope) {

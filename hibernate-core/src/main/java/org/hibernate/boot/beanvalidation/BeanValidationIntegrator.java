@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -38,6 +39,43 @@ public class BeanValidationIntegrator implements Integrator {
 	private static final String ACTIVATOR_CLASS_NAME = "org.hibernate.boot.beanvalidation.TypeSafeActivator";
 	private static final String VALIDATE_SUPPLIED_FACTORY_METHOD_NAME = "validateSuppliedFactory";
 	private static final String ACTIVATE_METHOD_NAME = "activate";
+
+	/// Apply validation-derived schema metadata without constructing a SessionFactory.
+	/// The supplied validator factory, if any, remains owned by its caller.
+	@Internal
+	public static void applyRelationalConstraints(
+			Metadata metadata,
+			ServiceRegistry serviceRegistry,
+			Object validatorFactory) {
+		final var influence = ValidationConstraintDdlInfluence.resolve( serviceRegistry, getValidationModes( serviceRegistry ) );
+		if ( influence == ValidationConstraintDdlInfluence.DISABLED ) {
+			return;
+		}
+		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		if ( !isBeanValidationApiAvailable( classLoaderService ) ) {
+			validateMissingBeanValidationApi( Set.of(), influence );
+			return;
+		}
+		try {
+			loadTypeSafeActivatorClass( classLoaderService )
+					.getMethod( "applyRelationalConstraints", Metadata.class, ServiceRegistry.class,
+							Object.class, ValidationConstraintDdlInfluence.class )
+					.invoke( null, metadata, serviceRegistry, validatorFactory, influence );
+		}
+		catch (InvocationTargetException e) {
+			final var cause = e.getTargetException();
+			if ( cause instanceof HibernateException exception ) {
+				throw exception;
+			}
+			if ( cause instanceof Error error ) {
+				throw error;
+			}
+			throw new IntegrationException( "Error applying Bean Validation constraints to schema metadata", cause );
+		}
+		catch (ReflectiveOperationException e) {
+			throw new IntegrationException( "Unable to apply Bean Validation constraints to schema metadata", e );
+		}
+	}
 
 	/**
 	 * Used to validate the type of an explicitly passed ValidatorFactory instance
@@ -152,7 +190,7 @@ public class BeanValidationIntegrator implements Integrator {
 		return ValidationMode.parseValidationModes( modeSetting );
 	}
 
-	private boolean isBeanValidationApiAvailable(ClassLoaderService classLoaderService) {
+	private static boolean isBeanValidationApiAvailable(ClassLoaderService classLoaderService) {
 		try {
 			classLoaderService.classForName( JAKARTA_BV_CHECK_CLASS );
 			return true;
@@ -167,7 +205,7 @@ public class BeanValidationIntegrator implements Integrator {
 	 *
 	 * @param modes The requested validation modes.
 	 */
-	private void validateMissingBeanValidationApi(Set<ValidationMode> modes, ValidationConstraintDdlInfluence constraintInfluence) {
+	private static void validateMissingBeanValidationApi(Set<ValidationMode> modes, ValidationConstraintDdlInfluence constraintInfluence) {
 		if ( modes.contains( ValidationMode.CALLBACK ) ) {
 			throw new IntegrationException( "Jakarta Validation API was not available, but 'callback' validation was requested" );
 		}
@@ -177,7 +215,7 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 	}
 
-	private Class<?> loadTypeSafeActivatorClass(ClassLoaderService classLoaderService) {
+	private static Class<?> loadTypeSafeActivatorClass(ClassLoaderService classLoaderService) {
 		try {
 			return classLoaderService.classForName( ACTIVATOR_CLASS_NAME );
 		}

@@ -584,6 +584,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		Throwable failure = null;
 		try {
 			populateSessionFactoryBuilder();
+			BeanValidationIntegrator.applyRelationalConstraints( metadata, standardServiceRegistry, validatorFactory );
 			SchemaManagementToolCoordinator.process( metadata, standardServiceRegistry,
 					configurationValues, DelayedDropRegistryNotAvailableImpl.INSTANCE );
 		}

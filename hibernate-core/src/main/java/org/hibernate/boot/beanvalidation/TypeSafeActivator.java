@@ -26,6 +26,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.beanvalidation.GroupsPerOperation.Operation;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -45,6 +46,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
 
 import org.hibernate.mapping.Table;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import jakarta.validation.Validation;
@@ -72,6 +74,42 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 class TypeSafeActivator {
+
+	/// Prepare schema metadata, closing only a validator factory created for this operation.
+	@SuppressWarnings("unused")
+	public static void applyRelationalConstraints(
+			Metadata metadata,
+			ServiceRegistry serviceRegistry,
+			Object validatorFactoryReference,
+			ValidationConstraintDdlInfluence influence) {
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final var suppliedFactory = validatorFactoryReference == null
+				? resolveProvidedFactory( configurationService )
+				: validatorFactory( validatorFactoryReference, "programmatic ValidatorFactory" );
+		if ( suppliedFactory != null ) {
+			applyRelationalConstraints( suppliedFactory, metadata, serviceRegistry );
+			return;
+		}
+
+		final ValidatorFactory factory;
+		try {
+			factory = buildDefaultValidatorFactory();
+		}
+		catch (IntegrationException e) {
+			if ( influence == ValidationConstraintDdlInfluence.REQUIRED ) {
+				throw new IntegrationException( "Jakarta Validation provider was not available, but '"
+						+ APPLY_VALIDATION_CONSTRAINTS + "' was resolved to 'REQUIRED'", e );
+			}
+			if ( e.getCause() instanceof NoProviderFoundException ) {
+				BEAN_VALIDATION_LOGGER.validationFactorySkipped();
+				return;
+			}
+			throw e;
+		}
+		try ( factory ) {
+			applyRelationalConstraints( factory, metadata, serviceRegistry );
+		}
+	}
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
@@ -173,16 +211,18 @@ class TypeSafeActivator {
 
 	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext context) {
 		if ( isConstraintBasedValidationEnabled( context ) ) {
-			final var serviceRegistry = context.getServiceRegistry();
-			applyRelationalConstraints(
-					factory,
-					context.getMetadata().getEntityBindings(),
-					serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
-					serviceRegistry.requireService( JdbcServices.class ).getDialect(),
-					new ClassLoaderAccessImpl( null,
-							serviceRegistry.getService( ClassLoaderService.class ) )
-			);
+			applyRelationalConstraints( factory, context.getMetadata(), context.getServiceRegistry() );
 		}
+	}
+
+	private static void applyRelationalConstraints(ValidatorFactory factory, Metadata metadata, ServiceRegistry serviceRegistry) {
+		applyRelationalConstraints(
+				factory,
+				metadata.getEntityBindings(),
+				serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
+				serviceRegistry.requireService( JdbcServices.class ).getDialect(),
+				new ClassLoaderAccessImpl( null, serviceRegistry.requireService( ClassLoaderService.class ) )
+		);
 	}
 
 	public static void applyRelationalConstraints(
@@ -665,6 +705,10 @@ class TypeSafeActivator {
 		}
 
 		// 3 - build our own
+		return buildDefaultValidatorFactory();
+	}
+
+	private static ValidatorFactory buildDefaultValidatorFactory() {
 		try {
 			return Validation.buildDefaultValidatorFactory();
 		}
@@ -708,7 +752,7 @@ class TypeSafeActivator {
 		);
 		if ( jpaValidationFactory != null ) {
 			DEPRECATION_LOGGER.deprecatedSetting( JPA_VALIDATION_FACTORY, JAKARTA_VALIDATION_FACTORY );
-			return null;
+			return jpaValidationFactory;
 		}
 		return null;
 	}

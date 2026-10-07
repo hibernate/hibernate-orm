@@ -9,6 +9,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -49,6 +50,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isAssociationAffectedByEn
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
 	private final Expression sqlExpression;
+	private final ModelPart parameterInferenceMapping;
 	private final @Nullable String affectedTableName;
 
 	public static <T> EntityValuedPathInterpretation<T> from(
@@ -357,7 +359,13 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				sqlExpression,
 				navigablePath,
 				tableGroup,
-				treatedMapping
+				treatedMapping,
+				treatedMapping instanceof ValuedModelPart valuedModelPart
+						? determineAffectedTableName( tableGroup, valuedModelPart )
+						: null,
+				resultModelPart instanceof EntityIdentifierMapping identifierMapping
+						? identifierMapping.findContainingEntityMapping()
+						: mapping
 		);
 	}
 
@@ -439,9 +447,26 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping,
 			@Nullable String affectedTableName) {
+		this( sqlExpression, navigablePath, tableGroup, mapping, affectedTableName, mapping );
+	}
+
+	private EntityValuedPathInterpretation(
+			Expression sqlExpression,
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			EntityValuedModelPart mapping,
+			@Nullable String affectedTableName,
+			ModelPart parameterInferenceMapping) {
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
 		this.affectedTableName = affectedTableName;
+		this.parameterInferenceMapping = parameterInferenceMapping;
+	}
+
+	/// The mapping used to extract an entity parameter's value for comparison with this expression.
+	/// Retains association-key extraction when rendering the FK, and identifier extraction when rendering the PK.
+	public ModelPart getParameterInferenceMapping() {
+		return parameterInferenceMapping;
 	}
 
 	@Override

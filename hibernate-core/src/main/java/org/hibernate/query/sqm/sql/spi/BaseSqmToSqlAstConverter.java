@@ -8207,24 +8207,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Predicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
-		inferrableTypeAccessStack.push( () -> determineValueMapping( predicate.getRightHandExpression(), fromClauseIndex ) );
-
+		final var left = predicate.getLeftHandExpression();
+		final var right = predicate.getRightHandExpression();
 		final Expression lhs;
-		try {
-			lhs = (Expression) visitWithRequiredResult( predicate.getLeftHandExpression() );
-		}
-		finally {
-			inferrableTypeAccessStack.pop();
-		}
-
-		inferrableTypeAccessStack.push( () -> determineValueMapping( predicate.getLeftHandExpression(), fromClauseIndex ) );
-
 		final Expression rhs;
-		try {
-			rhs = (Expression) visitWithRequiredResult( predicate.getRightHandExpression() );
+		if ( left instanceof SqmParameter<?> && right instanceof SqmPath<?> rightPath
+				&& rightPath.getExpressible() instanceof EntityDomainType<?> ) {
+			// Interpret the non-parameter operand first so its selected comparison key
+			// determines both the rendered columns and entity-parameter extraction.
+			rhs = interpretComparisonOperand( right, () -> determineValueMapping( left, fromClauseIndex ) );
+			lhs = interpretComparisonOperand( left, () -> rhs instanceof EntityValuedPathInterpretation<?> entityPath
+					? entityPath.getParameterInferenceMapping()
+					: determineValueMapping( right, fromClauseIndex ) );
 		}
-		finally {
-			inferrableTypeAccessStack.pop();
+		else {
+			lhs = interpretComparisonOperand( left, () -> determineValueMapping( right, fromClauseIndex ) );
+			rhs = interpretComparisonOperand( right, () -> right instanceof SqmParameter<?>
+					&& lhs instanceof EntityValuedPathInterpretation<?> entityPath
+					? entityPath.getParameterInferenceMapping()
+					: determineValueMapping( left, fromClauseIndex ) );
 		}
 
 		final var sqmOperator =
@@ -8239,6 +8240,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			handleTypeComparison( lhs, rhs, sqmOperator == ComparisonOperator.EQUAL );
 			return new ComparisonPredicate( lhs, sqmOperator, rhs, getBooleanType() );
+		}
+	}
+
+	private Expression interpretComparisonOperand(
+			SqmExpression<?> operand,
+			Supplier<MappingModelExpressible<?>> inferredMapping) {
+		inferrableTypeAccessStack.push( inferredMapping );
+		try {
+			return (Expression) visitWithRequiredResult( operand );
+		}
+		finally {
+			inferrableTypeAccessStack.pop();
 		}
 	}
 

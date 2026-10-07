@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.interfaceproxy">
+    <class name="InheritedInterfacePropertyTest$ContentElement"
+           table="inherited_interface_content" abstract="true" discriminator-value="base">
+        <id name="id" column="id" type="long"/>
+        <discriminator column="content_type" type="string"/>
+        <property name="trashed" type="boolean" not-null="true"/>
+        <subclass name="InheritedInterfacePropertyTest$ContentElementImpl" discriminator-value="content"/>
+    </class>
+</hibernate-mapping>

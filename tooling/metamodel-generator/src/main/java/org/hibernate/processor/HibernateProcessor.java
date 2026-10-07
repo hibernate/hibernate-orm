@@ -609,6 +609,13 @@ public class HibernateProcessor extends AbstractProcessor {
 							AnnotationMetaEntity.create( typeElement, context,
 									parentMetadata( parent, context::getMetaEntity ),
 									primaryEntity );
+					if ( metaEntity.isImplementation() && hasRepositoryQueryReferenceMethods( typeElement ) ) {
+						final var queryMetaEntity =
+								AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
+										parentMetadata( parent, context::getMetaEntity ),
+										primaryEntity );
+						context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
+					}
 					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				}
 				if ( enclosesEntityOrEmbeddable( element ) ) {

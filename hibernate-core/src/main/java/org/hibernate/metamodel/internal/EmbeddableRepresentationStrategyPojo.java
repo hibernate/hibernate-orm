@@ -1,6 +1,7 @@
 package org.hibernate.metamodel.internal;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
@@ -71,6 +72,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		// We need access to the Class objects, used only during initialization
 		final var subclassesByName = getSubclassesByName( bootDescriptor, creationContext );
 		boolean foundCustomAccessor = false;
+		var finalFields = new ArrayList<String>();
 		for ( int i = 0; i < bootDescriptor.getProperties().size(); i++ ) {
 			final var property = bootDescriptor.getProperty( i );
 			final var embeddableClass = getEmbeddableClass( bootDescriptor, subclassesByName, property );
@@ -87,9 +89,13 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			if ( !property.isBasicPropertyAccessor() ) {
 				foundCustomAccessor = true;
 			}
+			if ( propertyAccesses[i].getSetter() instanceof SetterFieldImpl setter
+					&& isFinal( setter.getField().getModifiers() ) ) {
+				finalFields.add( property.getName() );
+			}
 		}
 
-		warnOnFinalFields( bootDescriptor, propertyAccesses, customInstantiator,
+		warnOnFinalFields( bootDescriptor, finalFields, customInstantiator,
 				creationContext.getSessionFactoryOptions().getFinalPersistentFieldsHandling() );
 
 		if ( canBuildMultiValueAccessors( bootDescriptor, foundCustomAccessor ) ) {
@@ -228,34 +234,25 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 
 	private static void warnOnFinalFields(
 			Component bootDescriptor,
-			PropertyAccess[] propertyAccesses,
+			List<String> finalFields,
 			EmbeddableInstantiator customInstantiator,
 			CheckHandling handling) {
 		if ( customInstantiator != null && !( customInstantiator instanceof StandardEmbeddableInstantiator ) ) {
 			return;
 		}
-		if ( handling == CheckHandling.IGNORE ) {
+		if ( handling == CheckHandling.IGNORE || finalFields.isEmpty() ) {
 			return;
 		}
-		var finalFields = new ArrayList<String>();
-		for ( int i = 0; i < propertyAccesses.length; i++ ) {
-			if ( propertyAccesses[i].getSetter() instanceof SetterFieldImpl setter
-					&& isFinal( setter.getField().getModifiers() ) ) {
-				finalFields.add( bootDescriptor.getProperty( i ).getName() );
-			}
+		if ( handling == CheckHandling.ERROR ) {
+			throw new MappingException( String.format(
+					"Persistent fields %s in embeddable class '%s' are declared 'final'",
+					finalFields, bootDescriptor.getComponentClassName()
+			) );
 		}
-		if ( !finalFields.isEmpty() ) {
-			if ( handling == CheckHandling.ERROR ) {
-				throw new MappingException( String.format(
-						"Persistent fields %s in embeddable class '%s' are declared 'final'",
-						finalFields, bootDescriptor.getComponentClassName()
-				) );
-			}
-			CORE_LOGGER.finalPersistentFields(
-					finalFields, "embeddable", bootDescriptor.getComponentClassName(),
-					MappingSettings.FINAL_PERSISTENT_FIELDS
-			);
-		}
+		CORE_LOGGER.finalPersistentFields(
+				finalFields, "embeddable", bootDescriptor.getComponentClassName(),
+				MappingSettings.FINAL_PERSISTENT_FIELDS
+		);
 	}
 
 	private static Map<String, Class<?>> getSubclassesByName(

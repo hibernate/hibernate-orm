@@ -1205,7 +1205,7 @@ public class MappingModelCreationHelper {
 		if ( bootValueMapping instanceof Collection collectionBootValueMapping ) {
 			componentType = (ComponentType) collectionBootValueMapping.getKey().getType();
 			final var key = (SortableValue) collectionBootValueMapping.getKey();
-			assert key.isSorted();
+			key.sortProperties();
 			sorted = key.isSorted();
 		}
 		else {
@@ -1215,7 +1215,7 @@ public class MappingModelCreationHelper {
 			if ( identifierOrUniqueKeyType instanceof ComponentType composite ) {
 				componentType = composite;
 				if ( bootValueMapping instanceof ToOne toOne ) {
-					assert toOne.isSorted();
+					toOne.sortProperties();
 					sorted = toOne.isSorted();
 				}
 				else {

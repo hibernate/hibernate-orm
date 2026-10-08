@@ -78,12 +78,12 @@ The <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancer
 resolving these warnings.
 Alternatively, simply remove the `final` modifier from the persistent field declarations.
 
-Note that `final` fields are fine for embeddable types that use constructor-based instantiation,
-such as record types used as `@Embeddable` (including `@EmbeddedId`)
-or embeddable types with an `@Instantiator`-annotated constructor,
+Note that `final` fields are fine for types that use constructor-based instantiation:
+
+* record types used as `@Embeddable` (including `@EmbeddedId`) or as `@IdClass`,
+* embeddable or `@IdClass` types with an `@Instantiator`-annotated constructor,
+
 since those are instantiated through their constructor without any reflective field mutation.
-In contrast, `@IdClass` types are instantiated using a default constructor and reflective field mutation,
-so their persistent fields should not be declared `final`.
 
 The configuration property `hibernate.mapping.final_persistent_fields` controls the behavior of this check.
 Valid values are `warn` (the default), `error` (fail on boot), and `ignore` (suppress the check).

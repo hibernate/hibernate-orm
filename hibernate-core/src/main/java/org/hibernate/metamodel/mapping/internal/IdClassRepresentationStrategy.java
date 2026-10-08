@@ -6,10 +6,12 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.accessor.MultiValueReader;
 import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoIndirecting;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoStandard;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordIndirecting;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordStandard;
@@ -30,6 +32,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 	public IdClassRepresentationStrategy(
 			PropertyAccessorService propertyAccessorService,
 			IdClassEmbeddable idClassEmbeddable,
+			Component idClassSource,
 			boolean simplePropertyOrder,
 			Supplier<String[]> attributeNamesAccess) {
 		idClassType = idClassEmbeddable.getMappedJavaType();
@@ -39,12 +42,29 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 					? new EmbeddableInstantiatorRecordStandard( javaTypeClass )
 					: EmbeddableInstantiatorRecordIndirecting.of( javaTypeClass, attributeNamesAccess.get() );
 		}
+		else if ( idClassSource.getInstantiator() != null ) {
+			idClassSource.sortProperties();
+			instantiator = EmbeddableInstantiatorPojoIndirecting.of(
+					idClassSource.getPropertyNames(),
+					idClassSource.getInstantiator(),
+					idClassSource.getInstantiatorPropertyNames()
+			);
+		}
 		else {
 			instantiator = new EmbeddableInstantiatorPojoStandard(
 					idClassType.getJavaTypeClass(),
 					() -> idClassEmbeddable
 			);
 		}
+		this.propertyAccessorService = propertyAccessorService;
+	}
+
+	IdClassRepresentationStrategy(
+			PropertyAccessorService propertyAccessorService,
+			IdClassEmbeddable idClassEmbeddable,
+			EmbeddableInstantiator instantiator) {
+		this.idClassType = idClassEmbeddable.getMappedJavaType();
+		this.instantiator = instantiator;
 		this.propertyAccessorService = propertyAccessorService;
 	}
 

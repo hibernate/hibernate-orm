@@ -4,9 +4,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -35,59 +36,60 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 /// inherited association and sibling collections without explicit target entities.
 ///
 /// @author Steve Ebersole
-@Jpa(annotatedClasses = {
+@DomainModel(annotatedClasses = {
 		ConcreteParentLazyCollectionDiscriminatorTest.ParentEntity.class,
 		ConcreteParentLazyCollectionDiscriminatorTest.Child1.class,
 		ConcreteParentLazyCollectionDiscriminatorTest.Child2.class,
 		ConcreteParentLazyCollectionDiscriminatorTest.SomeEntity.class
 })
+@SessionFactory
 @JiraKey("HHH-14069")
 public class ConcreteParentLazyCollectionDiscriminatorTest {
 	@AfterEach
-	void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			entityManager.createQuery( "delete from ParentEntity" ).executeUpdate();
-			entityManager.createQuery( "delete from SomeEntity" ).executeUpdate();
+	void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createMutationQuery( "delete from ParentEntity" ).executeUpdate();
+			session.createMutationQuery( "delete from SomeEntity" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	void testLazyCollectionSizes(EntityManagerFactoryScope scope) {
+	void testLazyCollectionSizes(SessionFactoryScope scope) {
 		reproduce( scope, false );
 	}
 
 	@Test
-	void testTypedIterationAfterInitializingSibling(EntityManagerFactoryScope scope) {
+	void testTypedIterationAfterInitializingSibling(SessionFactoryScope scope) {
 		reproduce( scope, true );
 	}
 
-	private void reproduce(EntityManagerFactoryScope scope, boolean iterateSecondCollection) {
-		final Long ownerId = scope.fromTransaction( entityManager -> {
+	private void reproduce(SessionFactoryScope scope, boolean iterateSecondCollection) {
+		final Long ownerId = scope.fromTransaction( session -> {
 			SomeEntity entity = new SomeEntity();
 			Child1 child1 = new Child1();
 			Child2 child2 = new Child2();
 			child1.setSomeEntity( entity );
 			child2.setSomeEntity( entity );
-			entityManager.persist( entity );
-			entityManager.persist( child1 );
-			entityManager.persist( child2 );
-			entityManager.flush();
+			session.persist( entity );
+			session.persist( child1 );
+			session.persist( child2 );
+			session.flush();
 			return entity.getId();
 		} );
 
-		scope.inTransaction( entityManager -> {
-			var builder = entityManager.getCriteriaBuilder();
+		scope.inTransaction( session -> {
+			var builder = session.getCriteriaBuilder();
 			var query = builder.createQuery( SomeEntity.class );
 			var root = query.from( SomeEntity.class );
 			root.fetch( "oneChildren", LEFT );
 			root.fetch( "twoChildren", LEFT );
 			query.where( builder.equal( root.get( "id" ), ownerId ) );
-			SomeEntity entity = entityManager.createQuery( query ).getSingleResult();
+			SomeEntity entity = session.createQuery( query ).getSingleResult();
 			assertEquals( 1, entity.getOneChildren().size() );
 			assertEquals( 1, entity.getTwoChildren().size() );
 
-			entityManager.clear();
-			entity = entityManager.find( SomeEntity.class, ownerId );
+			session.clear();
+			entity = session.find( SomeEntity.class, ownerId );
 			assertFalse( Hibernate.isInitialized( entity.getOneChildren() ) );
 			assertFalse( Hibernate.isInitialized( entity.getTwoChildren() ) );
 			assertEquals( 1, entity.getOneChildren().size() );

@@ -1,6 +1,7 @@
 package org.hibernate.dialect.function.json;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
@@ -114,11 +115,16 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public static String jsonValueReturningType(SqlTypedMapping column, TypeConfiguration typeConfiguration) {
-		return jsonValueReturningType( getCastTypeName( column, typeConfiguration ) );
+	public static String jsonValueReturningType(SqlTypedMapping column, SqlAstTranslator<?> translator) {
+		return jsonValueReturningType( getCastTypeName( column, translator.getSessionFactory().getTypeConfiguration() ), isCloud( translator ) );
 	}
 
-	public static String jsonValueReturningType(String columnDefinition) {
+	private static boolean isCloud(SqlAstTranslator<?> translator) {
+		return translator.getSessionFactory().getJdbcServices().getDialect() instanceof HANADialect hanaDialect
+			&& hanaDialect.isCloud();
+	}
+
+	public static String jsonValueReturningType(String columnDefinition, boolean isCloud) {
 		final int parenthesisIndex = columnDefinition.indexOf( '(' );
 		final String baseName = parenthesisIndex == -1
 				? columnDefinition
@@ -127,8 +133,8 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 			case "real", "float", "double", "decimal" -> "decimal";
 			case "tinyint", "smallint" -> "integer";
 			// Clobs are also not supported, so use the biggest varchar/nvarchar possible
-			case "clob" -> "varchar(" + MEMORY_LIMIT + ")";
-			case "nclob" -> "nvarchar(" + MEMORY_LIMIT + ")";
+			case "clob" -> "varchar(" + (isCloud ? 5000 : MEMORY_LIMIT) + ")";
+			case "nclob" -> "nvarchar(" + (isCloud ? 5000 : MEMORY_LIMIT) + ")";
 			default -> columnDefinition;
 		};
 	}
@@ -139,7 +145,8 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 		if ( arguments.returningType() != null && !requiresSpecialExtraction( arguments.returningType().getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) ) {
 			sqlAppender.appendSql( " returning " );
 			sqlAppender.appendSql( jsonValueReturningType(
-					getCastTypeName( arguments.returningType(), walker.getSessionFactory().getTypeConfiguration() )
+					getCastTypeName( arguments.returningType(), walker.getSessionFactory().getTypeConfiguration() ),
+					isCloud( walker )
 			) );
 		}
 	}

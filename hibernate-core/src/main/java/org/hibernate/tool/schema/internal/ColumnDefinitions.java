@@ -23,6 +23,7 @@ import java.util.Locale;
 
 import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.type.SqlTypes.ENUM;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isStringType;
 
@@ -60,6 +61,12 @@ public class ColumnDefinitions {
 		if ( !column.getSqlType( metadata ).contains("(") ) {
 			// the DDL type does not explicitly specify a length,
 			// and so we do not require an exact match
+			return true;
+		}
+		else if ( column.getSqlTypeCode( metadata ) == ENUM ) {
+			// a native enum type is not parameterized by the column
+			// length, and the size reported by JDBC is just the length
+			// of the longest enumerated value
 			return true;
 		}
 		else {

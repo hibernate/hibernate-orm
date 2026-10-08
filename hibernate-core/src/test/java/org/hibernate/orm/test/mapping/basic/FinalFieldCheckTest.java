@@ -120,6 +120,15 @@ public class FinalFieldCheckTest {
 		assertThat( watcher.wasTriggered() ).isFalse();
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20542")
+	@DomainModel(annotatedClasses = EntityWithInstantiatorIdClass.class)
+	@SessionFactory
+	void testInstantiatorIdClassNoWarning(MessageKeyWatcher watcher, SessionFactoryScope scope) {
+		scope.getSessionFactory();
+		assertThat( watcher.wasTriggered() ).isFalse();
+	}
+
 	@Entity(name = "SimpleEntityWithFinalField")
 	public static class SimpleEntityWithFinalField {
 		@Id
@@ -322,6 +331,80 @@ public class FinalFieldCheckTest {
 		}
 
 		public EntityWithFinalIdClass(Long key1, String key2, String data) {
+			this.key1 = key1;
+			this.key2 = key2;
+			this.data = data;
+		}
+
+		public Long getKey1() {
+			return key1;
+		}
+
+		public String getKey2() {
+			return key2;
+		}
+
+		public String getData() {
+			return data;
+		}
+	}
+
+	public static class InstantiatorIdClass implements Serializable {
+		private final Long key1;
+		private final String key2;
+
+		public InstantiatorIdClass() {
+			this.key1 = null;
+			this.key2 = null;
+		}
+
+		@Instantiator({ "key1", "key2" })
+		public InstantiatorIdClass(Long key1, String key2) {
+			this.key1 = key1;
+			this.key2 = key2;
+		}
+
+		public Long getKey1() {
+			return key1;
+		}
+
+		public String getKey2() {
+			return key2;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			InstantiatorIdClass that = (InstantiatorIdClass) o;
+			return Objects.equals( key1, that.key1 ) && Objects.equals( key2, that.key2 );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( key1, key2 );
+		}
+	}
+
+	@Entity(name = "EntityWithInstantiatorIdClass")
+	@IdClass(InstantiatorIdClass.class)
+	public static class EntityWithInstantiatorIdClass {
+		@Id
+		private Long key1;
+
+		@Id
+		private String key2;
+
+		private String data;
+
+		protected EntityWithInstantiatorIdClass() {
+		}
+
+		public EntityWithInstantiatorIdClass(Long key1, String key2, String data) {
 			this.key1 = key1;
 			this.key2 = key2;
 			this.data = data;

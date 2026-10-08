@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 
 import jakarta.persistence.Embedded;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.metamodel.Type;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
@@ -122,6 +123,14 @@ class ByteBuddyEnhancementContext {
 					if (isMappedSuperclassClass(parent.asErasure())) {
 						discoverCompositeTypes(parent.asErasure(), typePool, scheduled, visited, scheduledVisits);
 					}
+				}
+				final var idClassAnnotation = managedCtClass.getDeclaredAnnotations().ofType( IdClass.class );
+				if ( idClassAnnotation != null ) {
+					final var idClassName = idClassAnnotation.getValue( "value" )
+							.resolve( TypeDescription.class ).getName();
+					final var idClassType = typePool.describe( idClassName ).resolve();
+					registerDiscoveredType( idClassType, Type.PersistenceType.EMBEDDABLE );
+					discoverCompositeTypes( idClassType, typePool, scheduled, visited, scheduledVisits );
 				}
 				final var enhancedFields =
 						collectPersistentFields( managedCtClass, this, typePool, constants )

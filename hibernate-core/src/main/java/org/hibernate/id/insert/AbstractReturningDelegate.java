@@ -66,7 +66,18 @@ public abstract class AbstractReturningDelegate
 
 			operation.getBindPlan().bindValues( valueBindings, operation, session );
 			valueBindings.beforeStatement( preparedStatement, session );
-			return executeAndExtractReturning( sql, preparedStatement, session );
+			final var generatedValues = executeAndExtractReturning( sql, preparedStatement, session );
+			if ( generatedValues == null && getTiming() == EventType.UPDATE ) {
+				operation.checkResult( 0, preparedStatement, -1, sql, session.getFactory() );
+			}
+			return generatedValues;
+		}
+		catch (SQLException e) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"Unable to check the result of an update returning generated values",
+					sql
+			);
 		}
 		finally {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );

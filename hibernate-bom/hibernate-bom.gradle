@@ -6,31 +6,41 @@ plugins {
 
 description = 'Bill of Materials (BOM) for Hibernate ORM published artifacts'
 
-// Ensure all sibling subprojects are evaluated before this one,
-// so that we can detect which ones apply 'local.publishing-java-module'.
-rootProject.subprojects.each { sub ->
-    if ( sub != project && sub.name != 'hibernate-platform' ) {
-        evaluationDependsOn( sub.path )
-    }
-}
-
 dependencies {
     constraints {
-        rootProject.subprojects.each { sub ->
-            if ( sub != project
-                    && sub.pluginManager.hasPlugin( 'local.publishing-java-module' ) ) {
-                api project( ":${sub.path}" )
-            }
-        }
+        api project( ":hibernate-core" )
+        api project( ":hibernate-testing" )
+        api project( ":hibernate-dialect-testkit" )
 
-        // Published through the Gradle Plugin Portal; does not use local.publishing-java-module.
+        api project( ":hibernate-envers" )
+        api project( ":hibernate-spatial" )
+        api project( ":hibernate-vector" )
+
+        api project( ":hibernate-community-dialects" )
+        api project( ":hibernate-scan-jandex" )
+
+        api project( ":hibernate-agroal" )
+        api project( ":hibernate-c3p0" )
+        api project( ":hibernate-hikaricp" )
+        api project( ":hibernate-ucp" )
+
+        api project( ":hibernate-jcache" )
+
+        api project( ":hibernate-micrometer" )
+        api project( ":hibernate-graalvm" )
+
+        api project( ":hibernate-processor" )
         api project( ":hibernate-gradle-plugin" )
+        api project( ":hibernate-maven-plugin" )
+        api project( ":hibernate-ant" )
+
+        api project( ":hibernate-assistant" )
+
+        api project( ":hibernate-reveng" )
 
         // Not all JDK implementations support JFR, so we cannot rely on a project() reference here.
         // The coordinate should always be part of the BOM regardless.
-        if ( !rootProject.subprojects.any { it.name == 'hibernate-jfr' } ) {
-            api "org.hibernate.orm:hibernate-jfr:$version"
-        }
+        api "org.hibernate.orm:hibernate-jfr:$version"
     }
 }
 

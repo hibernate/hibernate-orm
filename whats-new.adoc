@@ -264,6 +264,8 @@ Such reflective mutation of final fields is deprecated starting with JDK 26 and 
 
 The bytecode enhancer automatically removes the `final` modifier from persistent fields, resolving these warnings.
 Alternatively, remove the `final` modifier from the field declarations.
+For `@IdClass` types, the `@Instantiator` annotation can be used to designate a constructor for instantiation,
+avoiding reflective field mutation entirely (link:https://hibernate.atlassian.net/browse/HHH-20542[HHH-20542]).
 
 The behavior of this check is controlled by the `hibernate.mapping.final_persistent_fields` setting,
 which accepts values `warn` (the default), `error`, and `ignore`.

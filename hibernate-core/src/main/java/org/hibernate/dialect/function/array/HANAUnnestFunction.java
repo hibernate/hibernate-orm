@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.QueryException;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.function.xml.HANAXmlTableFunction;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
@@ -460,14 +461,19 @@ public class HANAUnnestFunction extends UnnestFunction {
 	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
 		final String ddlType = super.getDdlType( sqlTypedMapping, containerSqlTypeCode, translator );
 		if ( containerSqlTypeCode == SqlTypes.JSON_ARRAY ) {
-			return HANAJsonValueFunction.jsonValueReturningType( ddlType );
+			return HANAJsonValueFunction.jsonValueReturningType( ddlType, isCloud( translator ) );
 		}
 		else if ( containerSqlTypeCode == SqlTypes.XML_ARRAY ) {
-			return HANAXmlTableFunction.xmlValueReturningType( sqlTypedMapping, ddlType );
+			return HANAXmlTableFunction.xmlValueReturningType( sqlTypedMapping, ddlType, isCloud( translator ) );
 		}
 		else {
 			return ddlType;
 		}
+	}
+
+	private static boolean isCloud(SqlAstTranslator<?> translator) {
+		return translator.getSessionFactory().getJdbcServices().getDialect() instanceof HANADialect hanaDialect
+			&& hanaDialect.isCloud();
 	}
 
 	@Override

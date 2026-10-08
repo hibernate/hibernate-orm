@@ -85,6 +85,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		representationStrategy = new IdClassRepresentationStrategy(
 				propertyAccessorService,
 				this,
+				idClassSource,
 				idClassSource.sortProperties() == null,
 				idClassSource::getPropertyNames
 		);
@@ -151,13 +152,9 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		this.representationStrategy = new IdClassRepresentationStrategy(
 				creationProcess.getCreationContext().getServiceRegistry()
 						.requireService( PropertyAccessorService.class ),
-				this, false, () -> {
-			final var attributeNames = new String[inverseMappingType.getNumberOfAttributeMappings()];
-			for ( int i = 0; i < attributeNames.length; i++ ) {
-				attributeNames[i] = inverseMappingType.getAttributeMapping( i ).getAttributeName();
-			}
-			return attributeNames;
-		} );
+				this,
+				inverseMappingType.getRepresentationStrategy().getInstantiator()
+		);
 		this.embedded = valueMapping;
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
@@ -186,8 +183,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	@Nonnull
 	@Override
 	public Object getIdentifier(@Nonnull Object entity, @Nullable SharedSessionContractImplementor session) {
-		final Object id = representationStrategy.getInstantiator().instantiate( null );
-
 		final var propertyValues = new Object[virtualIdEmbeddable.getNumberOfAttributeMappings()];
 
 		for ( int i = 0; i < propertyValues.length; i++ ) {
@@ -219,9 +214,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			}
 		}
 
-		setValues( id, propertyValues );
-
-		return id;
+		return representationStrategy.getInstantiator().instantiate( () -> propertyValues );
 	}
 
 	@Override

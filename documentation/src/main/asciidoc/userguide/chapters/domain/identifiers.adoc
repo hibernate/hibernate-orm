@@ -156,6 +156,17 @@ In Jakarta Persistence terms, one would use "derived identifiers". For more deta
 Modeling a composite identifier using an IdClass differs from using an EmbeddedId in that the entity defines each individual
 attribute making up the composition.  The IdClass is used as the representation of the identifier for load-by-id operations.
 
+[NOTE]
+====
+While Jakarta Persistence requires that the primary key class have a no-arg constructor,
+Hibernate also supports Java records and classes with an `@Instantiator`-annotated constructor
+as `@IdClass` types.
+
+This is particularly useful when the id class has `final` fields,
+since constructor-based instantiation avoids reflective field mutation entirely.
+See <<chapters/domain/entity.adoc#entity-pojo-final,Final persistent fields>> for details.
+====
+
 [[identifiers-basic-idclass-mapping-example]]
 .Basic `@IdClass`
 ====

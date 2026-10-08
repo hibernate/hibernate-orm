@@ -376,6 +376,13 @@ public class NativeQueryImpl<R>
 				return true;
 			}
 		}
+		else if ( selectionMemento.getResultType() != null
+				&& context.getMappingMetamodel().isEntityClass( selectionMemento.getResultType() ) ) {
+			resultSetMapping.addResultBuilder(
+					Builders.resultClassBuilder( selectionMemento.getResultType(), context )
+			);
+			return true;
+		}
 
 		return false;
 	}

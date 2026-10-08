@@ -38,9 +38,7 @@ dependencies {
 
         api project( ":hibernate-reveng" )
 
-        // Not all JDK implementations support JFR, so we cannot rely on a project() reference here.
-        // But the coordinate should always generate into the BOM.
-        api "org.hibernate.orm:hibernate-jfr:$version"
+        api project( ":hibernate-jfr" )
 
         api libs.hibernateModels
         api libs.hibernateAccessor

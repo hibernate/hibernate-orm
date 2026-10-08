@@ -113,7 +113,7 @@ public class NativeSelectionMementoImpl<R>
 	@Nonnull
 	@Override
 	public NativeQueryImplementor<R> toSelectionQuery(@Nonnull SharedSessionContractImplementor session) {
-		return toSelectionQuery( session, null );
+		return toSelectionQuery( session, getResultType() );
 	}
 
 	@Nonnull

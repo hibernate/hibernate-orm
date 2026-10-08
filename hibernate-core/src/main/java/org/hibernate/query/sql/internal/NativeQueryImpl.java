@@ -116,7 +116,6 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
 import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
-import static org.hibernate.query.results.internal.Builders.resultClassBuilder;
 import static org.hibernate.query.results.internal.jpa.JpaMappingHelper.toHibernateMapping;
 import static org.hibernate.query.results.spi.ResultSetMapping.resolveResultSetMapping;
 import static org.hibernate.query.sqm.internal.SqmUtil.isResultTypeAlwaysAllowed;
@@ -232,7 +231,10 @@ public class NativeQueryImpl<R>
 					final String name =
 							resultSetMappingName( selectionMemento, specifiedResultType,
 									specifiedResultSetMappingName );
-					return resolveResultSetMapping( name, false, session.getFactory() );
+					final boolean dynamicMapping = selectionMemento.getResultType() != null
+							&& specifiedResultSetMappingName == null
+							&& selectionMemento.getResultMappingName() == null;
+					return resolveResultSetMapping( name, dynamicMapping, session.getFactory() );
 				},
 				(resultSetMapping, querySpaceConsumer, context) ->
 						populateMapping(
@@ -326,7 +328,18 @@ public class NativeQueryImpl<R>
 				resultSetMappingHandler.resolveResultSetMapping( resultSetMapping, querySpaces::add, this );
 
 		resultType = resultClass;
-		handleExplicitResultSetMapping();
+		if ( resultMappingSuppliedToCtor ) {
+			handleExplicitResultSetMapping();
+		}
+		else {
+			final Class<?> implicitResultType = resultClass == null ? selectionMemento.getResultType() : resultClass;
+			handleImplicitResultSetMapping( implicitResultType, session );
+			if ( resultClass == null && implicitResultType != null
+					&& ( getMappingMetamodel().isEntityClass( implicitResultType )
+							|| hasJavaTypeDescriptor( implicitResultType ) ) ) {
+				resultSetMapping.addResultBuilder( Builders.resultClassBuilder( implicitResultType, getMappingMetamodel() ) );
+			}
+		}
 
 		checkResultType( resultClass, resultSetMapping );
 		applyMementoOptions( selectionMemento );
@@ -364,13 +377,7 @@ public class NativeQueryImpl<R>
 			}
 		}
 
-		if ( selectionMemento.getResultType() != null ) {
-			resultSetMapping.addResultBuilder( resultClassBuilder( selectionMemento.getResultType(), context ) );
-			return true;
-		}
-		else {
-			return false;
-		}
+		return false;
 	}
 
 	private static String resultSetMappingName(NativeSelectionMementoImpl<?> memento) {
@@ -2095,8 +2102,12 @@ public class NativeQueryImpl<R>
 	/// If there was an explicit resultType (which is not an entity class), apply a "tuple transformation"
 	/// to handle construction of the specified resultType.
 	private void handleImplicitResultSetMapping(SharedSessionContractImplementor session) {
-		if ( resultType != null && !session.getFactory().getMappingMetamodel().isEntityClass( resultType )  ) {
-			setTupleTransformerForResultType( resultType );
+		handleImplicitResultSetMapping( resultType, session );
+	}
+
+	private void handleImplicitResultSetMapping(Class<?> implicitResultType, SharedSessionContractImplementor session) {
+		if ( implicitResultType != null && !session.getFactory().getMappingMetamodel().isEntityClass( implicitResultType ) ) {
+			setTupleTransformerForResultType( implicitResultType );
 		}
 	}
 

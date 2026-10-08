@@ -85,7 +85,7 @@ public abstract class AbstractReturningDelegate
 		session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
 		try {
 			valueBindings.beforeStatement( statementDetails );
-			return executeAndExtractReturning( sql, statementDetails.getStatement(), session );
+			return executeAndExtractReturning( sql, statementDetails.getStatement(), session, statementDetails, entity );
 		}
 		finally {
 			if ( statementDetails.getStatement() != null ) {
@@ -131,6 +131,15 @@ public abstract class AbstractReturningDelegate
 			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session,
 			FlushOperation operation) {
+		return executeAndExtractReturning( sql, preparedStatement, session );
+	}
+
+	protected GeneratedValues executeAndExtractReturning(
+			String sql,
+			PreparedStatement preparedStatement,
+			SharedSessionContractImplementor session,
+			PreparedStatementDetails statementDetails,
+			Object entity) {
 		return executeAndExtractReturning( sql, preparedStatement, session );
 	}
 }

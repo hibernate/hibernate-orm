@@ -39,7 +39,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.spi.cte.SqmCteTable;
+import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;

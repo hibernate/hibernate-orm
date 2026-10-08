@@ -10,3 +10,23 @@ dependencies {
 
     testImplementation project( ':hibernate-testing' )
 }
+
+tasks.named( 'test' ) {
+    // JFR tests require a VM that supports Flight Recorder (e.g. HotSpot).
+    // OpenJ9 ships the jdk.jfr module but does not implement recording.
+    // Check the actual test launcher, which may differ from the Gradle JVM (e.g. via -Ptest.jdk.version).
+    onlyIf( 'JFR must be available on the test JDK' ) { task ->
+        def javaExec = (task as Test).javaLauncher.get().executablePath.asFile
+        try {
+            def proc = new ProcessBuilder( javaExec.absolutePath, '--version' )
+                    .redirectErrorStream( true )
+                    .start()
+            def output = proc.inputStream.text
+            proc.waitFor()
+            return !output.contains( 'OpenJ9' )
+        }
+        catch ( Exception ignored ) {
+            return true
+        }
+    }
+}

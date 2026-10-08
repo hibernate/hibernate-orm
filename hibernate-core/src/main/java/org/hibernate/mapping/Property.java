@@ -271,6 +271,19 @@ public class Property implements Serializable, MetaAttributable {
 		this.generatorCreator = generator;
 	}
 
+	/**
+	 * Release state which is only needed while binding the boot model,
+	 * once the {@code SessionFactory} has been created.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#RELEASE_BOOT_BINDING_STATE
+	 */
+	@Internal
+	public void releaseBindingState() {
+		// the generator was already created for the runtime model,
+		// and the creator might capture binding state
+		generatorCreator = null;
+	}
+
 	public void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
 	}

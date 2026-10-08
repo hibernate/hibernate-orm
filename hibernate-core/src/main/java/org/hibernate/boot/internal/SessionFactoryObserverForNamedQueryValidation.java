@@ -18,7 +18,7 @@ import org.hibernate.query.spi.QueryEngine;
  * @author Gavin King
  */
 class SessionFactoryObserverForNamedQueryValidation implements SessionFactoryObserver {
-	private final Metadata metadata;
+	private Metadata metadata;
 
 	SessionFactoryObserverForNamedQueryValidation(MetadataImplementor metadata) {
 		this.metadata = metadata;
@@ -28,7 +28,15 @@ class SessionFactoryObserverForNamedQueryValidation implements SessionFactoryObs
 	public void sessionFactoryCreated(SessionFactory factory) {
 		final var sessionFactory = (SessionFactoryImplementor) factory;
 		final var queryEngine = sessionFactory.getQueryEngine();
-		queryEngine.getNamedObjectRepository().prepare( sessionFactory, metadata );
+		try {
+			queryEngine.getNamedObjectRepository().prepare( sessionFactory, metadata );
+		}
+		finally {
+			// the boot model is not needed after this point, and
+			// holding on to it would keep it reachable for the whole
+			// lifetime of the SessionFactory
+			metadata = null;
+		}
 		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {
 			queryEngine.validateNamedQueries();
 		}

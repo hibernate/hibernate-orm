@@ -33,6 +33,7 @@ import org.hibernate.action.queue.spi.ActionQueueFactory;
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.action.queue.internal.support.ActionQueueFactoryService;
 import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.boot.internal.BindingStateReleaser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -148,6 +149,8 @@ import static java.util.Collections.unmodifiableSet;
 import static java.util.Locale.ROOT;
 import static org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory.buildPlanningOptions;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
+import static org.hibernate.cfg.PersistenceSettings.RELEASE_BOOT_BINDING_STATE;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
 import static org.hibernate.internal.SessionFactoryLogging.SESSION_FACTORY_LOGGER;
 import static org.hibernate.internal.SessionFactorySettings.determineJndiName;
@@ -381,6 +384,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			observerChain.sessionFactoryCreated( this );
 
 			persistenceUnitLifecycleCallbacks.postCreate( this );
+
+			if ( isReleaseBootBindingState() ) {
+				BindingStateReleaser.release( bootMetamodel, bootstrapContext );
+			}
 		}
 		catch ( Exception e ) {
 			disintegrate( e, integratorObserver );
@@ -395,6 +402,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		SESSION_FACTORY_LOGGER.instantiatedFactory( uuid );
+	}
+
+	private boolean isReleaseBootBindingState() {
+		return serviceRegistry.requireService( ConfigurationService.class )
+				.getSetting( RELEASE_BOOT_BINDING_STATE, BOOLEAN, true );
 	}
 
 	private PersistenceUnitLifecycleCallbacks persistenceUnitLifecycleCallbacks(

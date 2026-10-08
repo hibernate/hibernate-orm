@@ -820,6 +820,22 @@ public abstract class SimpleValue implements KeyValue {
 		return memberDetails;
 	}
 
+	/**
+	 * Release state which is only needed while binding the boot model,
+	 * once the {@code SessionFactory} has been created.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#RELEASE_BOOT_BINDING_STATE
+	 */
+	@Internal
+	public void releaseBindingState() {
+		memberDetails = null;
+		if ( customIdGeneratorCreator != null && !customIdGeneratorCreator.isAssigned() ) {
+			// the generator was already created for the runtime model,
+			// and the creator might capture binding state
+			customIdGeneratorCreator = null;
+		}
+	}
+
 	public void copyTypeFrom(SimpleValue sourceValue ) {
 		setTypeName( sourceValue.getTypeName() );
 		setTypeParameters( sourceValue.getTypeParameters() );

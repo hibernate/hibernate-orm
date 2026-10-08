@@ -14,10 +14,13 @@ import org.hibernate.id.uuid.UuidVersion7Strategy;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Property;
 
+import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.uuid.IdGeneratorCreationContext;
 import org.junit.jupiter.api.AfterEach;
@@ -30,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 		EntitySeven.class, OtherEntitySeven.class, EntitySix.class
 })
 @SessionFactory
+// the boot model is inspected after the SessionFactory has been created
+@ServiceRegistry(settings = @Setting(name = PersistenceSettings.RELEASE_BOOT_BINDING_STATE, value = "false"))
 @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
 		reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte")
 public class UuidGeneratorAnnotationTests {

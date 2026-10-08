@@ -11,9 +11,11 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.Instantiator;
 import org.hibernate.engine.spi.Managed;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.util.ReflectionUtil;
@@ -32,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @DomainModel(annotatedClasses = {
 		FinalFieldTest.EntityWithFinalField.class,
@@ -39,6 +42,9 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 		FinalFieldTest.EntityWithFinalIdClass.class,
 		FinalFieldTest.EntityWithFinalIdClassRecord.class,
 		FinalFieldTest.EntityWithFinalEmbeddedId.class,
+		FinalFieldTest.EntityWithFinalIdClassReordered.class,
+		FinalFieldTest.EntityWithFinalIdClassMixedTypes.class,
+		FinalFieldTest.EntityWithFinalIdClassNoInstantiator.class,
 		FinalFieldTest.ParentWithFinalOneToMany.class,
 		FinalFieldTest.ChildOfParent.class,
 		FinalFieldTest.AuthorWithFinalManyToMany.class,
@@ -186,10 +192,8 @@ public class FinalFieldTest {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20542")
 	public void testFinalIdClassFields(SessionFactoryScope scope) {
-		assumeFalse( Managed.class.isAssignableFrom( EntityWithFinalIdClass.class ),
-				"https://hibernate.atlassian.net/browse/HHH-20542" );
-
 		scope.inTransaction( s -> {
 			EntityWithFinalIdClass entity = new EntityWithFinalIdClass( 1L, 2L, "test" );
 			s.persist( entity );
@@ -213,6 +217,70 @@ public class FinalFieldTest {
 
 		scope.inTransaction( s -> {
 			EntityWithFinalIdClassRecord loaded = s.find( EntityWithFinalIdClassRecord.class, new CompositeIdRecord( 1L, 2L ) );
+			assertNotNull( loaded );
+			assertEquals( 1L, loaded.getId1() );
+			assertEquals( 2L, loaded.getId2() );
+			assertEquals( "test", loaded.getName() );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20542")
+	public void testFinalIdClassFieldsReordered(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			EntityWithFinalIdClassReordered entity = new EntityWithFinalIdClassReordered( 10L, 20L, "test" );
+			s.persist( entity );
+		} );
+
+		scope.inTransaction( s -> {
+			// Constructor takes (id2, id1), so pass id2 first
+			EntityWithFinalIdClassReordered loaded = s.find(
+					EntityWithFinalIdClassReordered.class,
+					new CompositeIdReordered( 20L, 10L )
+			);
+			assertNotNull( loaded );
+			assertEquals( 10L, loaded.getId1() );
+			assertEquals( 20L, loaded.getId2() );
+			assertEquals( "test", loaded.getName() );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20542")
+	public void testFinalIdClassFieldsMixedTypes(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			EntityWithFinalIdClassMixedTypes entity = new EntityWithFinalIdClassMixedTypes( 1L, "key", "test" );
+			s.persist( entity );
+		} );
+
+		scope.inTransaction( s -> {
+			EntityWithFinalIdClassMixedTypes loaded = s.find(
+					EntityWithFinalIdClassMixedTypes.class,
+					new CompositeIdMixedTypes( 1L, "key" )
+			);
+			assertNotNull( loaded );
+			assertEquals( 1L, loaded.getId1() );
+			assertEquals( "key", loaded.getId2() );
+			assertEquals( "test", loaded.getName() );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20542")
+	public void testFinalIdClassFieldsEnhancedNoInstantiator(SessionFactoryScope scope) {
+		assumeTrue( Managed.class.isAssignableFrom( EntityWithFinalIdClassNoInstantiator.class ),
+				"Requires bytecode enhancement to remove final modifiers from IdClass fields" );
+
+		scope.inTransaction( s -> {
+			EntityWithFinalIdClassNoInstantiator entity = new EntityWithFinalIdClassNoInstantiator( 1L, 2L, "test" );
+			s.persist( entity );
+		} );
+
+		scope.inTransaction( s -> {
+			EntityWithFinalIdClassNoInstantiator loaded = s.find(
+					EntityWithFinalIdClassNoInstantiator.class,
+					new CompositeIdNoInstantiator( 1L, 2L )
+			);
 			assertNotNull( loaded );
 			assertEquals( 1L, loaded.getId1() );
 			assertEquals( 2L, loaded.getId2() );
@@ -380,6 +448,7 @@ public class FinalFieldTest {
 			this.id2 = null;
 		}
 
+		@Instantiator({ "id1", "id2" })
 		public CompositeId(Long id1, Long id2) {
 			this.id1 = id1;
 			this.id2 = id2;
@@ -674,6 +743,227 @@ public class FinalFieldTest {
 
 		public Set<String> getTags() {
 			return tags;
+		}
+	}
+
+	// IdClass with @Instantiator and reversed parameter order
+	public static class CompositeIdReordered implements Serializable {
+		private final Long id1;
+		private final Long id2;
+
+		protected CompositeIdReordered() {
+			this.id1 = null;
+			this.id2 = null;
+		}
+
+		@Instantiator({ "id2", "id1" })
+		public CompositeIdReordered(Long id2, Long id1) {
+			this.id1 = id1;
+			this.id2 = id2;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			CompositeIdReordered that = (CompositeIdReordered) o;
+			return Objects.equals( id1, that.id1 ) && Objects.equals( id2, that.id2 );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( id1, id2 );
+		}
+	}
+
+	@Entity(name = "EntityWithFinalIdClassReordered")
+	@IdClass(FinalFieldTest.CompositeIdReordered.class)
+	public static class EntityWithFinalIdClassReordered {
+
+		@Id
+		private final Long id1;
+
+		@Id
+		private final Long id2;
+
+		private String name;
+
+		protected EntityWithFinalIdClassReordered() {
+			this.id1 = null;
+			this.id2 = null;
+		}
+
+		public EntityWithFinalIdClassReordered(Long id1, Long id2, String name) {
+			this.id1 = id1;
+			this.id2 = id2;
+			this.name = name;
+		}
+
+		public Long getId1() {
+			return id1;
+		}
+
+		public Long getId2() {
+			return id2;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
+	// IdClass with @Instantiator and mixed types (Long + String)
+	public static class CompositeIdMixedTypes implements Serializable {
+		private final Long id1;
+		private final String id2;
+
+		protected CompositeIdMixedTypes() {
+			this.id1 = null;
+			this.id2 = null;
+		}
+
+		@Instantiator({ "id1", "id2" })
+		public CompositeIdMixedTypes(Long id1, String id2) {
+			this.id1 = id1;
+			this.id2 = id2;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			CompositeIdMixedTypes that = (CompositeIdMixedTypes) o;
+			return Objects.equals( id1, that.id1 ) && Objects.equals( id2, that.id2 );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( id1, id2 );
+		}
+	}
+
+	@Entity(name = "EntityWithFinalIdClassMixedTypes")
+	@IdClass(FinalFieldTest.CompositeIdMixedTypes.class)
+	public static class EntityWithFinalIdClassMixedTypes {
+
+		@Id
+		private final Long id1;
+
+		@Id
+		private final String id2;
+
+		private String name;
+
+		protected EntityWithFinalIdClassMixedTypes() {
+			this.id1 = null;
+			this.id2 = null;
+		}
+
+		public EntityWithFinalIdClassMixedTypes(Long id1, String id2, String name) {
+			this.id1 = id1;
+			this.id2 = id2;
+			this.name = name;
+		}
+
+		public Long getId1() {
+			return id1;
+		}
+
+		public String getId2() {
+			return id2;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
+	// IdClass without @Instantiator — relies on bytecode enhancement to remove final
+	public static class CompositeIdNoInstantiator implements Serializable {
+		private final Long id1;
+		private final Long id2;
+
+		protected CompositeIdNoInstantiator() {
+			this.id1 = null;
+			this.id2 = null;
+		}
+
+		public CompositeIdNoInstantiator(Long id1, Long id2) {
+			this.id1 = id1;
+			this.id2 = id2;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			CompositeIdNoInstantiator that = (CompositeIdNoInstantiator) o;
+			return Objects.equals( id1, that.id1 ) && Objects.equals( id2, that.id2 );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( id1, id2 );
+		}
+	}
+
+	@Entity(name = "EntityWithFinalIdClassNoInstantiator")
+	@IdClass(FinalFieldTest.CompositeIdNoInstantiator.class)
+	public static class EntityWithFinalIdClassNoInstantiator {
+
+		@Id
+		private final Long id1;
+
+		@Id
+		private final Long id2;
+
+		private String name;
+
+		protected EntityWithFinalIdClassNoInstantiator() {
+			this.id1 = null;
+			this.id2 = null;
+		}
+
+		public EntityWithFinalIdClassNoInstantiator(Long id1, Long id2, String name) {
+			this.id1 = id1;
+			this.id2 = id2;
+			this.name = name;
+		}
+
+		public Long getId1() {
+			return id1;
+		}
+
+		public Long getId2() {
+			return id2;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 }

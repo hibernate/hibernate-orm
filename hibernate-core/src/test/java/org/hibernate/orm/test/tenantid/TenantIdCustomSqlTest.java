@@ -21,6 +21,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
@@ -264,6 +265,16 @@ class TenantIdCustomSqlTest {
 	@Table(name = "tenant_custom_legacy")
 	@SQLUpdate(sql = "update tenant_custom_legacy set item_name=? where id=? and '?'='?' /* ? */", verify = Expectation.RowCount.class)
 	@SQLDelete(sql = "delete from tenant_custom_legacy where id=? -- ?\n", verify = Expectation.RowCount.class)
+	// Sybase ASE jConnect driver interprets a question mark as parameter marker, even if it is placed in a comment.
+	// To avoid an error, we wrap the question mark in single quotes.
+	@DialectOverride.SQLUpdate(dialect = SybaseASEDialect.class, override =
+	@SQLUpdate(
+			sql = "update tenant_custom_legacy set item_name=? where id=? and '?'='?' /* '?' */",
+			verify = Expectation.RowCount.class))
+	@DialectOverride.SQLDelete(dialect = SybaseASEDialect.class, override =
+	@SQLDelete(
+			sql = "delete from tenant_custom_legacy where id=? -- '?'\n",
+			verify = Expectation.RowCount.class))
 	static class Legacy extends Base {
 	}
 

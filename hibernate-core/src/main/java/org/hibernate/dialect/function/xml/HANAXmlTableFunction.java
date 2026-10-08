@@ -4,6 +4,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -396,11 +397,16 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 
 	@Override
 	protected String determineColumnType(CastTarget castTarget, SqlAstTranslator<?> walker) {
-		return xmlValueReturningType( castTarget, super.determineColumnType( castTarget, walker ) );
+		return xmlValueReturningType( castTarget, super.determineColumnType( castTarget, walker ), isCloud( walker ) );
+	}
+
+	private static boolean isCloud(SqlAstTranslator<?> translator) {
+		return translator.getSessionFactory().getJdbcServices().getDialect() instanceof HANADialect hanaDialect
+			&& hanaDialect.isCloud();
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public static String xmlValueReturningType(SqlTypedMapping column, String columnDefinition) {
+	public static String xmlValueReturningType(SqlTypedMapping column, String columnDefinition, boolean isCloud) {
 		final int parenthesisIndex = columnDefinition.indexOf( '(' );
 		final String baseName = parenthesisIndex == -1
 				? columnDefinition
@@ -415,8 +421,8 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 			// Float is also not supported, but double is
 			case "float" -> "double";
 			// Clobs are also not supported, so use the biggest nvarchar possible
-			case "clob" -> "varchar(" + MEMORY_LIMIT + ")";
-			case "nclob" -> "nvarchar(" + MEMORY_LIMIT + ")";
+			case "clob" -> "varchar(" + (isCloud ? 5000 : MEMORY_LIMIT) + ")";
+			case "nclob" -> "nvarchar(" + (isCloud ? 5000 : MEMORY_LIMIT) + ")";
 			default -> columnDefinition;
 		};
 	}

@@ -1,5 +1,6 @@
 package org.hibernate.dialect.aggregate.internal;
 
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 
 import org.hibernate.dialect.Dialect;
@@ -61,7 +62,8 @@ import static org.hibernate.type.SqlTypes.ZONED_DATE_TIME;
 
 public class HANAAggregateSupport extends AggregateSupportImpl {
 
-	private static final AggregateSupport INSTANCE = new HANAAggregateSupport();
+	private static final AggregateSupport PLATFORM_INSTANCE = new HANAAggregateSupport( false );
+	private static final AggregateSupport CLOUD_INSTANCE = new HANAAggregateSupport( true );
 
 	private static final String JSON_QUERY_START = "json_query(";
 	private static final String JSON_QUERY_END = "' error on error)";
@@ -72,11 +74,16 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 	private static final String XML_EXTRACT_READ_INVOCATION_START = "'<" + XmlHelper.ROOT_TAG + ">'||xmlextract(";
 	private static final String XML_EXTRACT_READ_END = "/*')||'</" + XmlHelper.ROOT_TAG + ">' end";
 
-	private HANAAggregateSupport() {
+	private final boolean isCloud;
+
+	private HANAAggregateSupport(boolean isCloud) {
+		this.isCloud = isCloud;
 	}
 
 	public static AggregateSupport valueOf(Dialect dialect) {
-		return dialect.getVersion().isSameOrAfter( 2, 0, 40 ) ? INSTANCE : AggregateSupportImpl.INSTANCE;
+		return dialect.getVersion().isSameOrAfter( 2, 0, 40 )
+				? dialect instanceof HANADialect hanaDialect && hanaDialect.isCloud() ? CLOUD_INSTANCE : PLATFORM_INSTANCE
+				: AggregateSupportImpl.INSTANCE;
 	}
 
 	@Override
@@ -147,7 +154,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								"json_value(" + jsonParentPartExpression + columnExpression + "' returning " + jsonValueReturningType( column, typeConfiguration ) + " error on error)"
+								"json_value(" + jsonParentPartExpression + columnExpression + "' returning " + jsonValueReturningType( getCastTypeName( column, typeConfiguration ), isCloud ) + " error on error)"
 						);
 				}
 			case SQLXML:
@@ -194,7 +201,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 						// Cast from clob to varchar first
 						return template.replace(
 								placeholder,
-								caseExpression + "cast(cast(xmlextractvalue(" + xmlParentPartExpression + columnExpression + "') as varchar(36)) as " + xmlValueReturningType( column, getCastTypeName( column, typeConfiguration ) ) + ") end"
+								caseExpression + "cast(cast(xmlextractvalue(" + xmlParentPartExpression + columnExpression + "') as varchar(36)) as " + xmlValueReturningType( column, getCastTypeName( column, typeConfiguration ), isCloud ) + ") end"
 						);
 					case SQLXML:
 						return template.replace(
@@ -222,7 +229,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								caseExpression + "cast(xmlextractvalue(" + xmlParentPartExpression + columnExpression + "') as " + xmlValueReturningType( column, getCastTypeName( column, typeConfiguration ) ) + ") end"
+								caseExpression + "cast(xmlextractvalue(" + xmlParentPartExpression + columnExpression + "') as " + xmlValueReturningType( column, getCastTypeName( column, typeConfiguration ), isCloud ) + ") end"
 						);
 				}
 		}
@@ -605,7 +612,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					sb.append( parentPartExpression );
 					sb.append( selectableMapping.getSelectableName() );
 					sb.append( "' returning " );
-					sb.append( jsonValueReturningType( selectableMapping, translator.getSessionFactory().getTypeConfiguration() ) );
+					sb.append( jsonValueReturningType( selectableMapping, translator ) );
 					sb.append( " error on error)" );
 					break;
 				case JSON:

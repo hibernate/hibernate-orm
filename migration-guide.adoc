@@ -633,6 +633,25 @@ Existing implementations and registration calls require no source changes.
 The affected contracts now carry the SPI compatibility promise within an `X.Y`
 release family, instead of the API promise across a major version.
 
+[[session-factory-options-interceptor]]
+=== Removed `SessionFactoryOptions.getInterceptor()` and `getStatelessInterceptorImplementorSupplier()`
+
+The `SessionFactoryOptions.getInterceptor()` and `getStatelessInterceptorImplementorSupplier()` methods have been removed, along with their declarations on `AbstractDelegatingSessionFactoryOptions`.
+Both methods forced immediate resolution of the configured `Interceptor`, which bypassed CDI-managed bean lifecycles and could no longer reflect a session factory's interceptor configuration now that interceptors may be resolved as CDI beans.
+
+Use `SessionFactoryOptions.getConfiguredInterceptor()` instead, which reports how the interceptor was configured (instance, global, session-scoped, or supplied) without resolving any bean.
+To obtain the actual factory-level interceptor, use `SessionFactoryImplementor.getInterceptorStrategy().getFactoryInterceptorBean()`, which returns a `ManagedBean<? extends Interceptor>` resolved lazily on first access to `getBeanInstance()`.
+
+[source,java]
+----
+// Before:
+Interceptor interceptor = sessionFactory.getSessionFactoryOptions().getInterceptor();
+
+// After:
+var bean = sessionFactoryImplementor.getInterceptorStrategy().getFactoryInterceptorBean();
+Interceptor interceptor = bean == null ? null : bean.getBeanInstance();
+----
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
@@ -1164,6 +1183,15 @@ Previously such a value was silently read as `null`, which typically surfaced mu
 as a `NullPointerException` or as a wrong attribute value.  Applications which relied on
 the lenient behavior, e.g. while an enum value is being removed, must clean up the affected
 rows before the enum value is dropped.
+
+
+[[interceptor-configuration-behavior]]
+=== Conflicting interceptor settings are now rejected
+
+Configuring both `hibernate.session_factory.interceptor` and `hibernate.session_factory.session_scoped_interceptor` now throws `ConflictingInterceptorSettingsException` when building the `SessionFactory`.
+Previously, one setting silently took precedence over the other with no indication that both had been configured.
+
+Applications that set both must choose one: `hibernate.session_factory.interceptor` for a shared instance or CDI-managed global interceptor, or `hibernate.session_factory.session_scoped_interceptor` for a per-session interceptor obtained from a `Supplier` or a CDI-managed class.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

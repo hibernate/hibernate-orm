@@ -429,3 +429,15 @@ It manages versions of the published Hibernate ORM modules only, without constra
 This is useful when your project already manages third-party dependencies through another platform or parent POM.
 
 The existing `org.hibernate.orm:hibernate-platform` continues to manage both Hibernate and third-party dependency versions.
+
+[[cdi-interceptors]]
+== Configured interceptors can now come from CDI
+
+An `Interceptor` configured via `hibernate.session_factory.interceptor` or `hibernate.session_factory.session_scoped_interceptor` as a `Class` is now resolved through the bean container, participating in CDI dependency injection and `@PostConstruct`/`@PreDestroy` lifecycle callbacks when a CDI `BeanManager` is available.
+
+A global interceptor (`hibernate.session_factory.interceptor`) resolves one bean shared by the factory and every session.
+
+A session-scoped interceptor (`hibernate.session_factory.session_scoped_interceptor`) resolves a new bean per session, released when that session closes or, for sessions sharing a parent's interceptor, once every sharing session has closed.
+A session-scoped interceptor may also still be configured as a plain `java.util.function.Supplier<? extends Interceptor>`, obtaining a new non-CDI-managed instance per session exactly as before.
+
+See the link:{migrationGuide}#interceptor-configuration-behavior[migration guide] for a related behavior change if you configure interceptors today.

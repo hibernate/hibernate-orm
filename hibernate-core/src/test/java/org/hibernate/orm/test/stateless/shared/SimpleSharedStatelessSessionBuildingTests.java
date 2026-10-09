@@ -64,7 +64,10 @@ public class SimpleSharedStatelessSessionBuildingTests {
 
 	@Test
 	void testInterceptor(SessionFactoryScope factoryScope) {
-		final var sfInterceptor = factoryScope.getSessionFactory().getSessionFactoryOptions().getInterceptor();
+		final var sfInterceptor = factoryScope.getSessionFactory()
+				.getInterceptorStrategy()
+				.getFactoryInterceptorBean()
+				.getBeanInstance();
 
 		// apply a special StatementInspector to the base and check the behavior of the various options
 		final var appliedToBase = new InterceptorImpl( "Applied to base" );

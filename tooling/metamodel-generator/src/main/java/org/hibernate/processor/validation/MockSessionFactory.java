@@ -37,6 +37,10 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.callback.internal.ConfiguredInterceptorImpl;
+import org.hibernate.callback.internal.NoInterceptorStrategy;
+import org.hibernate.callback.spi.ConfiguredInterceptor;
+import org.hibernate.callback.spi.InterceptorStrategy;
 import org.hibernate.cache.internal.DisabledCaching;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.access.AccessType;
@@ -422,6 +426,18 @@ public abstract class MockSessionFactory
 	@Nonnull
 	public SessionFactoryOptions getSessionFactoryOptions() {
 		return this;
+	}
+
+	@Override
+	@Nonnull
+	public InterceptorStrategy getInterceptorStrategy() {
+		return NoInterceptorStrategy.INSTANCE;
+	}
+
+	@Override
+	@Nonnull
+	public ConfiguredInterceptor getConfiguredInterceptor() {
+		return ConfiguredInterceptorImpl.none();
 	}
 
 	@Override

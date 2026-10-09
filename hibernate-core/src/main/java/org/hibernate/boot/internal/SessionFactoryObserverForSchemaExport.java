@@ -19,7 +19,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
  * @author Gavin King
  */
 class SessionFactoryObserverForSchemaExport implements SessionFactoryObserver {
-	private final MetadataImplementor metadata;
+	private MetadataImplementor metadata;
 	private DelayedDropAction delayedDropAction;
 
 	SessionFactoryObserverForSchemaExport(MetadataImplementor metadata) {
@@ -28,12 +28,20 @@ class SessionFactoryObserverForSchemaExport implements SessionFactoryObserver {
 
 	@Override
 	public void sessionFactoryCreated(SessionFactory factory) {
-		SchemaManagementToolCoordinator.process(
-				metadata,
-				getRegistry( factory ),
-				factory.getProperties(),
-				action -> delayedDropAction = action
-		);
+		try {
+			SchemaManagementToolCoordinator.process(
+					metadata,
+					getRegistry( factory ),
+					factory.getProperties(),
+					action -> delayedDropAction = action
+			);
+		}
+		finally {
+			// only the DelayedDropAction is needed after this point,
+			// and holding on to the boot model would keep it reachable
+			// for the whole lifetime of the SessionFactory
+			metadata = null;
+		}
 	}
 
 	@Override

@@ -374,6 +374,19 @@ public class BasicValue extends SimpleValue
 	}
 
 	@Override
+	public void releaseBindingState() {
+		super.releaseBindingState();
+		if ( resolution != null ) {
+			// these are only used to build the resolution, and they
+			// capture the binders along with the whole ModelsContext
+			explicitJavaTypeAccess = null;
+			explicitJdbcTypeAccess = null;
+			explicitMutabilityPlanAccess = null;
+			implicitJavaTypeAccess = null;
+		}
+	}
+
+	@Override
 	public boolean resolve(MetadataBuildingContext buildingContext) {
 		resolve();
 		return true;

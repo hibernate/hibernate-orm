@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.CollectionClassification;
@@ -24,13 +25,45 @@ import org.hibernate.sql.results.graph.collection.internal.SetInitializerProduce
  */
 @Incubating
 public class InitializerProducerBuilder {
+
+	public static CollectionInitializerProducer createInitializerProducer(
+			PluralAttributeMapping attributeMapping,
+			@Nullable Fetch identifierFetch,
+			@Nullable Fetch indexFetch,
+			Fetch elementFetch) {
+		return switch ( attributeMapping.getCollectionDescriptor().getCollectionSemantics().getCollectionClassification() ) {
+			case ARRAY -> {
+				assert indexFetch != null;
+				yield new ArrayInitializerProducer( attributeMapping, indexFetch, elementFetch );
+			}
+			case BAG -> new BagInitializerProducer( attributeMapping, null, elementFetch );
+			case ID_BAG -> {
+				assert identifierFetch != null;
+				yield new BagInitializerProducer( attributeMapping, identifierFetch, elementFetch );
+			}
+			case LIST -> {
+				assert indexFetch != null;
+				yield new ListInitializerProducer( attributeMapping, indexFetch, elementFetch );
+			}
+			case MAP, ORDERED_MAP, SORTED_MAP -> {
+				assert indexFetch != null;
+				yield new MapInitializerProducer( attributeMapping, indexFetch, elementFetch );
+			}
+			case SET, ORDERED_SET, SORTED_SET -> new SetInitializerProducer( attributeMapping, elementFetch );
+		};
+	}
+
+	/**
+	 * @deprecated Use {@link #createInitializerProducer(PluralAttributeMapping, Fetch, Fetch, Fetch)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			CollectionClassification classification,
 			FetchParent fetchParent,
 			boolean selected,
-			Fetch indexFetch,
+			@Nullable Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
 		return switch ( classification ) {
@@ -47,13 +80,17 @@ public class InitializerProducerBuilder {
 		};
 	}
 
+	/**
+	 * @deprecated Use {@link #createInitializerProducer(PluralAttributeMapping, Fetch, Fetch, Fetch)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static CollectionInitializerProducer createArrayInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
-			Fetch indexFetch,
-			Fetch elementFetch,
+			@Nullable Fetch indexFetch,
+			@Nullable Fetch elementFetch,
 			DomainResultCreationState creationState) {
 		if ( indexFetch == null ) {
 			indexFetch = fetchParent.generateFetchableFetch(
@@ -79,12 +116,16 @@ public class InitializerProducerBuilder {
 		return new ArrayInitializerProducer( attributeMapping, indexFetch, elementFetch );
 	}
 
+	/**
+	 * @deprecated Use {@link #createInitializerProducer(PluralAttributeMapping, Fetch, Fetch, Fetch)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static CollectionInitializerProducer createBagInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
-			Fetch elementFetch,
+			@Nullable Fetch elementFetch,
 			DomainResultCreationState creationState) {
 
 		final Fetch idBagIdFetch;
@@ -116,13 +157,17 @@ public class InitializerProducerBuilder {
 		return new BagInitializerProducer( attributeMapping, idBagIdFetch, elementFetch );
 	}
 
+	/**
+	 * @deprecated Use {@link #createInitializerProducer(PluralAttributeMapping, Fetch, Fetch, Fetch)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static CollectionInitializerProducer createListInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
-			Fetch indexFetch,
-			Fetch elementFetch,
+			@Nullable Fetch indexFetch,
+			@Nullable Fetch elementFetch,
 			DomainResultCreationState creationState) {
 		if ( indexFetch == null ) {
 			indexFetch = fetchParent.generateFetchableFetch(
@@ -148,13 +193,17 @@ public class InitializerProducerBuilder {
 		return new ListInitializerProducer( attributeMapping, indexFetch, elementFetch );
 	}
 
+	/**
+	 * @deprecated Use {@link #createInitializerProducer(PluralAttributeMapping, Fetch, Fetch, Fetch)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static CollectionInitializerProducer createMapInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
-			Fetch indexFetch,
-			Fetch elementFetch,
+			@Nullable Fetch indexFetch,
+			@Nullable Fetch elementFetch,
 			DomainResultCreationState creationState) {
 		assert attributeMapping.getIndexDescriptor() != null;
 
@@ -183,12 +232,16 @@ public class InitializerProducerBuilder {
 		return new MapInitializerProducer( attributeMapping, indexFetch, elementFetch );
 	}
 
+	/**
+	 * @deprecated Use {@link #createInitializerProducer(PluralAttributeMapping, Fetch, Fetch, Fetch)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static CollectionInitializerProducer createSetInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
-			Fetch elementFetch,
+			@Nullable Fetch elementFetch,
 			DomainResultCreationState creationState) {
 		if ( elementFetch == null ) {
 			elementFetch = fetchParent.generateFetchableFetch(
@@ -203,14 +256,18 @@ public class InitializerProducerBuilder {
 		return new SetInitializerProducer( attributeMapping, elementFetch );
 	}
 
+	/**
+	 * @deprecated Use {@link #createInitializerProducer(PluralAttributeMapping, Fetch, Fetch, Fetch)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static CollectionInitializerProducer createCollectionTypeWrapperInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			CollectionClassification classification,
 			FetchParent fetchParent,
 			boolean selected,
-			Fetch indexFetch,
-			Fetch elementFetch,
+			@Nullable Fetch indexFetch,
+			@Nullable Fetch elementFetch,
 			DomainResultCreationState creationState) {
 		return switch ( classification ) {
 			case ARRAY -> createArrayInitializerProducer(

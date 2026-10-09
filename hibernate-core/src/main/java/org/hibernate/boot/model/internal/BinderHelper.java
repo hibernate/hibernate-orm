@@ -723,6 +723,7 @@ public class BinderHelper {
 			PropertyData inferredData,
 			OnDeleteAction onDeleteAction,
 			boolean lazy,
+			FetchMode fetchMode,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			EntityBinder entityBinder,
@@ -732,6 +733,7 @@ public class BinderHelper {
 
 		final var any = new Any( context, keyColumns.getTable(), true );
 		any.setLazy( lazy );
+		any.setFetchMode( fetchMode );
 		any.setOnDeleteAction( onDeleteAction );
 
 		final var discriminatorValueBinder = new BasicValueBinder( ANY_DISCRIMINATOR, context );

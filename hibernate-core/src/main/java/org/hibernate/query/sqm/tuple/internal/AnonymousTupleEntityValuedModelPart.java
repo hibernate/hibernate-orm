@@ -301,34 +301,34 @@ public class AnonymousTupleEntityValuedModelPart
 			targetMappings = arrayList( keyTargetPart.getJdbcTypeCount() );
 			keyTargetPart.forEachSelectable( (selectionIndex, selectableMapping) -> targetMappings.add( selectableMapping ) );
 		}
+		else if ( delegate instanceof EntityAssociationMapping associationMapping
+				&& associationMapping.isReferenceToPrimaryKey()
+				&& associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
+			final ModelPart targetJoinModelPart = associationMapping.getForeignKeyDescriptor()
+					.getPart( associationMapping.getSideNature().inverse() );
+			targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
+			targetJoinModelPart.forEachSelectable(
+					0,
+					(i, selectableMapping) -> targetMappings.add( selectableMapping )
+			);
+			keyMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
+			associationMapping.getForeignKeyDescriptor()
+					.getPart( associationMapping.getSideNature() )
+					.forEachSelectable(
+							0,
+							(i, selectableMapping) -> keyMappings.add( selectableMapping )
+					);
+		}
 		else {
-			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) delegate;
-
-			if ( associationMapping.isReferenceToPrimaryKey() && associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
-				final ModelPart targetJoinModelPart = associationMapping.getForeignKeyDescriptor()
-						.getPart( associationMapping.getSideNature().inverse() );
-				targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-				targetJoinModelPart.forEachSelectable(
-						0,
-						(i, selectableMapping) -> targetMappings.add( selectableMapping )
-				);
-				keyMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-				associationMapping.getForeignKeyDescriptor()
-						.getPart( associationMapping.getSideNature() )
-						.forEachSelectable(
-								0,
-								(i, selectableMapping) -> keyMappings.add( selectableMapping )
-						);
-			}
-			else {
-				final ModelPart targetJoinModelPart = delegate.getEntityMappingType().getIdentifierMapping();
-				targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-				targetJoinModelPart.forEachSelectable(
-						0,
-						(i, selectableMapping) -> targetMappings.add( selectableMapping )
-				);
-				keyMappings = targetMappings;
-			}
+			// Either an association referring to a non-primary key or the target side of an association,
+			// or an entity which is not an association at all, e.g. the root of a derived table or CTE
+			final ModelPart targetJoinModelPart = delegate.getEntityMappingType().getIdentifierMapping();
+			targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
+			targetJoinModelPart.forEachSelectable(
+					0,
+					(i, selectableMapping) -> targetMappings.add( selectableMapping )
+			);
+			keyMappings = targetMappings;
 		}
 
 		final TableReference tableReference = lhs.getPrimaryTableReference();
@@ -494,7 +494,9 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Override
 	public String getSqlAliasStem() {
-		return ((TableGroupJoinProducer) delegate).getSqlAliasStem();
+		// The delegate is either an association, or the entity persister itself
+		// when the derived table or CTE selects the root of its query
+		return ( (TableGroupProducer) delegate ).getSqlAliasStem();
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping" version="8.0">
     <package>org.hibernate.orm.test.idgen.biginteger.sequence</package>
     <entity class="Entity" metadata-complete="true">
         <table name="Entity"/>

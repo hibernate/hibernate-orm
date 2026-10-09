@@ -500,7 +500,7 @@ class SessionFactoryInterceptorConfigurationTest {
 		// "never configured" - it does NOT suppress a settings-based interceptor.
 		final var configuration = new Configuration();
 		configuration.setInterceptor( EmptyInterceptor.INSTANCE );
-		configuration.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" );
+		configuration.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" );
 
 		// Note: the INTERCEPTOR setting must live on the registry, not Configuration#setProperty -
 		// Configuration#buildSessionFactory(ServiceRegistry) never merges Configuration's own
@@ -541,7 +541,7 @@ class SessionFactoryInterceptorConfigurationTest {
 				.build();
 		try {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" );
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" );
 			final Metadata metadata = metadataSources.buildMetadata();
 			final SessionFactoryBuilder sfBuilder = metadata.getSessionFactoryBuilder();
 			builderCustomizer.accept( sfBuilder );

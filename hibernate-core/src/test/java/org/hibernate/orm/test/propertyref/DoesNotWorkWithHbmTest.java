@@ -21,13 +21,13 @@ import static org.junit.Assert.assertNotNull;
  */
 @RequiresDialect(H2Dialect.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/propertyref/Mapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/propertyref/Mapping.orm.xml"
 )
 @SessionFactory
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false"),
-				@Setting(name = AvailableSettings.HBM2DDL_IMPORT_FILES, value = "/org/hibernate/orm/test/propertyref/import.sql")
+				@Setting(name = AvailableSettings.HBM2DDL_IMPORT_FILES, value = "/org/hibernate/orm/test/propertyref/import.sql"),
 		}
 )
 public class DoesNotWorkWithHbmTest {
@@ -50,7 +50,7 @@ public class DoesNotWorkWithHbmTest {
 
 		scope.inTransaction(
 				session -> {
-					DoesNotWork entity = (DoesNotWork) session.get( DoesNotWork.class, pk );
+					DoesNotWork entity =  session.get( DoesNotWork.class, pk );
 					assertNotNull( entity );
 					List<String> notes = entity.getGlobalNotes();
 					assertNotNull( notes );

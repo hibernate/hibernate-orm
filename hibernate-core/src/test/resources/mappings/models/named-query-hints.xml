@@ -1,4 +1,4 @@
-<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  version="8.0">
     <named-query name="global.findAll">

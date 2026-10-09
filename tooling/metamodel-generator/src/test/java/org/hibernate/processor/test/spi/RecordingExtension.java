@@ -70,9 +70,19 @@ public class RecordingExtension implements HibernateProcessorExtension {
 	}
 
 	@Override
-	public @Nullable String qualifierAnnotation() {
-		record( "qualifierAnnotation" );
-		return isArmed() ? QUALIFIER : fallback.qualifierAnnotation();
+	public @Nullable String sessionQualifier(@Nullable String dataStore, AnnotationMetaEntityContext context) {
+		record( "sessionQualifier:" + context.getConstructorName() + ":dataStore=" + dataStore );
+		if ( isArmed() ) {
+			// the context is used to choose the qualifier, here by repository
+			return '@' + context.metamodel().importType( QUALIFIER ) + "(\"" + context.getConstructorName() + "\")";
+		}
+		return fallback.sessionQualifier( dataStore, context );
+	}
+
+	@Override
+	public boolean usesConstructorInjection(AnnotationMetaEntityContext context) {
+		record( "usesConstructorInjection:" + context.getConstructorName() );
+		return fallback.usesConstructorInjection( context );
 	}
 
 	@Override

@@ -57,7 +57,7 @@ class ProcessorExtensionTest {
 		// consulted for the repository, which gets its session from the extension
 		assertTrue( events.contains( "isExtensionRepository:SpiRepository" ), events.toString() );
 		assertTrue( events.contains( "setupRepositorySession:SpiRepository:getter=null" ), events.toString() );
-		assertTrue( events.contains( "qualifierAnnotation" ), events.toString() );
+		assertTrue( events.contains( "sessionQualifier:_SpiRepository:dataStore=null" ), events.toString() );
 
 		// what the extension returned shows in the generated code
 		assertMetamodelClassGeneratedFor( SpiBook.class );
@@ -70,6 +70,8 @@ class ProcessorExtensionTest {
 		System.out.println( repository );
 		assertTrue( repository.contains( "public class _SpiRepository implements SpiRepository" ), repository );
 		assertTrue( repository.contains( "public @Nonnull Session getSpiSession()" ), repository );
+		// the qualifier chosen by the extension for this repository goes on the injected session
+		assertTrue( repository.contains( "@SpiQualifier(\"_SpiRepository\") Session session" ), repository );
 
 		// a repository for which the extension declares a session getter expression: no injected session
 		assertTrue( events.contains( "isExtensionRepository:SpiGetterRepository" ), events.toString() );

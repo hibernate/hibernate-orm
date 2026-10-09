@@ -21,8 +21,13 @@ public class DefaultHibernateProcessorExtension implements HibernateProcessorExt
 	}
 
 	@Override
-	public @Nullable String qualifierAnnotation() {
+	public @Nullable String sessionQualifier(@Nullable String dataStore, AnnotationMetaEntityContext context) {
 		return null;
+	}
+
+	@Override
+	public boolean usesConstructorInjection(AnnotationMetaEntityContext context) {
+		return false;
 	}
 
 	@Override

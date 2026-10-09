@@ -34,7 +34,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	private final JaxbHbmHibernateMapping documentRoot;
 	private final Origin origin;
 	private final MetadataBuildingContext rootBuildingContext;
-	private final EffectiveMappingDefaults mappingDefaults;
+	private final OverriddenMappingDefaults mappingDefaults;
 
 	private final ToolingHintContext toolingHintContext;
 
@@ -60,7 +60,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 						.setImplicitCatalogName( documentRoot.getCatalog() )
 						.setImplicitPackageName( documentRoot.getPackage() )
 						.setImplicitPropertyAccessorName( documentRoot.getDefaultAccess() )
-//						.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
+						.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
 						.setEntitiesImplicitlyLazy( documentRoot.isDefaultLazy() )
 						.setAutoImportEnabled( documentRoot.isAutoImport() )
 						.setPluralAttributesImplicitlyLazy( documentRoot.isDefaultLazy() )
@@ -132,7 +132,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	}
 
 	@Override
-	public EffectiveMappingDefaults getEffectiveDefaults() {
+	public OverriddenMappingDefaults getEffectiveDefaults() {
 		return mappingDefaults;
 	}
 

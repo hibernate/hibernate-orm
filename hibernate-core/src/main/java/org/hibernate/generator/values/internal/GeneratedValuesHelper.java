@@ -79,7 +79,7 @@ public class GeneratedValuesHelper {
 	 * @param persister The entity type which we're reading the generated values for
 	 * @param session The session
 	 *
-	 * @return The generated values
+	 * @return The generated values, or {@code null} if an update affected no row
 	 *
 	 * @throws SQLException Can be thrown while accessing the result set
 	 * @throws HibernateException Indicates a problem reading back a generated value
@@ -105,7 +105,14 @@ public class GeneratedValuesHelper {
 		}
 
 		final var generatedValues = new GeneratedValuesImpl( generatedProperties );
-		final var results = readGeneratedValues( resultSet, statement, persister, mappingProducer, session );
+		final var results = readGeneratedValues( resultSet, statement, mappingProducer, session );
+		if ( results == null ) {
+			if ( timing == EventType.UPDATE ) {
+				return null;
+			}
+			throw new HibernateException( "The database returned no natively generated values : "
+											+ persister.getNavigableRole().getFullPath() );
+		}
 
 		if ( CORE_LOGGER.isDebugEnabled() ) {
 			CORE_LOGGER.extractedGeneratedValues(
@@ -127,16 +134,15 @@ public class GeneratedValuesHelper {
 	 *
 	 * @param resultSet the result set containing the generated values
 	 * @param statement The prepared statement the result set was generated from
-	 * @param persister the current entity persister
 	 * @param mappingProducer the mapping producer to use when reading generated values
 	 * @param session the current session
 	 *
-	 * @return an object array containing the generated values, order is consistent with the generated model parts list
+	 * @return an object array containing the generated values, order is consistent with the generated model parts list,
+	 * or {@code null} if the result set has no row
 	 */
 	private static Object[] readGeneratedValues(
 			ResultSet resultSet,
 			PreparedStatement statement,
-			EntityPersister persister,
 			JdbcValuesMappingProducer mappingProducer,
 			SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
@@ -167,11 +173,7 @@ public class GeneratedValuesHelper {
 		final List<Object[]> results =
 				ListResultsConsumer.<Object[]>instance( ListResultsConsumer.UniqueSemantic.NONE )
 						.consume( jdbcValues, session, NO_OPTIONS, valuesProcessingState, rowProcessingState, rowReader );
-		if ( results.isEmpty() ) {
-			throw new HibernateException( "The database returned no natively generated values : "
-											+ persister.getNavigableRole().getFullPath() );
-		}
-		return results.get( 0 );
+		return results.isEmpty() ? null : results.get( 0 );
 	}
 
 	/**

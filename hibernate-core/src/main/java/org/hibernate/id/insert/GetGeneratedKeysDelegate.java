@@ -131,11 +131,21 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			operation.getBindPlan().bindValues( valueBindings, operation, session );
 			valueBindings.beforeStatement( preparedStatement, session );
 
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			final int rowCount = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			if ( getTiming() == EventType.UPDATE ) {
+				operation.checkResult( rowCount, preparedStatement, -1, sql, session.getFactory() );
+			}
 			return extractGeneratedValues( session, preparedStatement, sql,
 					() -> String.format( Locale.ROOT,
 							"Unable to extract generated key for '%s'",
 							persister.getNavigableRole().getFullPath() ) );
+		}
+		catch (SQLException e) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"Unable to check the result of an update returning generated values",
+					sql
+			);
 		}
 		finally {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );

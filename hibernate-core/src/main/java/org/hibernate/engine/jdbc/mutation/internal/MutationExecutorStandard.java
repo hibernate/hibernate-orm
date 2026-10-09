@@ -270,6 +270,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 					modelReference,
 					session
 			);
+			checkUnmatchedUpdate( generatedValuesDelegate, generatedValues, details, resultChecker, session );
 
 			final Object id =
 					entityGroup.getMutationType() == MutationType.INSERT

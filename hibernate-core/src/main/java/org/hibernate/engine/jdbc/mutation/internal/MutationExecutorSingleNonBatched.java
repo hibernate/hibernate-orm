@@ -38,12 +38,15 @@ public class MutationExecutorSingleNonBatched extends AbstractSingleMutationExec
 			OperationResultChecker resultChecker,
 			SharedSessionContractImplementor session) {
 		if ( generatedValuesDelegate != null ) {
-			return generatedValuesDelegate.performMutation(
-					statementGroup.getSingleStatementDetails(),
+			final var statementDetails = statementGroup.getSingleStatementDetails();
+			final var generatedValues = generatedValuesDelegate.performMutation(
+					statementDetails,
 					getJdbcValueBindings(),
 					modelReference,
 					session
 			);
+			checkUnmatchedUpdate( generatedValuesDelegate, generatedValues, statementDetails, resultChecker, session );
+			return generatedValues;
 		}
 		else {
 			performNonBatchedMutation(

@@ -2,7 +2,6 @@ package org.hibernate.boot.spi;
 
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -14,7 +13,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.cfg.CheckHandling;
 import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
-import org.hibernate.Interceptor;
+import org.hibernate.callback.spi.ConfiguredInterceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
@@ -131,9 +130,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	@Nullable
-	public Interceptor getInterceptor() {
-		return delegate.getInterceptor();
+	@Nonnull
+	public ConfiguredInterceptor getConfiguredInterceptor() {
+		return delegate.getConfiguredInterceptor();
 	}
 
 	@Override
@@ -397,12 +396,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isPreferUserTransaction() {
 		return delegate.isPreferUserTransaction();
-	}
-
-	@Override
-	@Nullable
-	public Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
-		return delegate.getStatelessInterceptorImplementorSupplier();
 	}
 
 	@Override

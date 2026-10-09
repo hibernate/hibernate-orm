@@ -45,6 +45,8 @@ public class CommonOptions {
 	protected Interceptor interceptor;
 	protected boolean allowInterceptor = true;
 	protected boolean allowSessionInterceptorCreation = true;
+	protected boolean interceptorShared;
+	protected boolean shouldReleaseInterceptor = true;
 	protected Connection connection;
 	protected PhysicalConnectionHandlingMode connectionHandlingMode;
 	protected Object tenantIdentifier;
@@ -141,17 +143,42 @@ public class CommonOptions {
 		else {
 			this.interceptor = interceptor;
 			this.allowInterceptor = true;
+			this.interceptorShared = false;
+			this.shouldReleaseInterceptor = false;
 		}
 	}
 
 	public void useInterceptor(Interceptor interceptor) {
-		this.interceptor = interceptor;
-		this.allowInterceptor = true;
+		this.interceptor = interceptor == EmptyInterceptor.INSTANCE ? null : interceptor;
+		this.allowInterceptor = this.interceptor != null;
+		this.interceptorShared = true;
+		this.shouldReleaseInterceptor = true;
+	}
+
+	public boolean isInterceptorShared() {
+		return interceptorShared;
+	}
+
+	/// Whether the interceptor resolved for this session should be released
+	/// (via [org.hibernate.callback.spi.InterceptorStrategy#releaseInterceptor])
+	/// when the session closes.
+	///
+	/// This is distinct from [#isInterceptorShared], which only controls
+	/// whether an additional reference is registered. An interceptor acquired
+	/// fresh from the [org.hibernate.callback.spi.InterceptorStrategy], or
+	/// shared from a parent via the no-arg sharing method, is owned by this
+	/// session (possibly jointly) and should be released. An interceptor
+	/// explicitly supplied as an instance is merely borrowed and must not be
+	/// released by this session.
+	public boolean shouldReleaseInterceptor() {
+		return shouldReleaseInterceptor;
 	}
 
 	public void noInterceptor() {
 		this.interceptor = null;
 		this.allowInterceptor = false;
+		this.interceptorShared = false;
+		this.shouldReleaseInterceptor = false;
 	}
 
 	public void noSessionInterceptorCreation() {
@@ -254,18 +281,11 @@ public class CommonOptions {
 			return interceptor;
 		}
 
-		final var options = sessionFactory.getSessionFactoryOptions();
-
-		final var optionsInterceptor = options.getInterceptor();
-		if ( optionsInterceptor != null && optionsInterceptor != EmptyInterceptor.INSTANCE ) {
-			return optionsInterceptor;
-		}
-
-		if ( allowSessionInterceptorCreation ) {
-			final var statelessInterceptorImplementorSupplier =
-					options.getStatelessInterceptorImplementorSupplier();
-			if ( statelessInterceptorImplementorSupplier != null ) {
-				return statelessInterceptorImplementorSupplier.get();
+		final var strategy = sessionFactory.getInterceptorStrategy();
+		if ( !strategy.isScoped() || allowSessionInterceptorCreation ) {
+			final var strategyInterceptor = strategy.getInterceptorForSession( sessionFactory );
+			if ( strategyInterceptor != null && strategyInterceptor != EmptyInterceptor.INSTANCE ) {
+				return strategyInterceptor;
 			}
 		}
 

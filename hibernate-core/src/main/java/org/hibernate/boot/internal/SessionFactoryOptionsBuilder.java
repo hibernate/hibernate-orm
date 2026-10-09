@@ -31,6 +31,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
+import org.hibernate.boot.ConflictingInterceptorSettingsException;
 import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
@@ -60,7 +61,8 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
-import org.hibernate.internal.EmptyInterceptor;
+import org.hibernate.callback.internal.ConfiguredInterceptorImpl;
+import org.hibernate.callback.spi.ConfiguredInterceptor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernateHints;
@@ -166,12 +168,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	// Statistics/Interceptor/observers
 	private boolean statisticsEnabled;
-	@Nullable
-	private Interceptor interceptor;
+	@Nonnull
+	private ConfiguredInterceptor configuredInterceptor;
 	@Nullable
 	private StatementObserver statementObserver;
-	@Nullable
-	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	@Nullable
 	private StatementInspector statementInspector;
 	@Nullable
@@ -404,8 +404,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		statisticsEnabled =
 				configurationService.getSetting( GENERATE_STATISTICS, BOOLEAN, false );
 
-		interceptor = determineInterceptor( settings, strategySelector );
-		statelessInterceptorSupplier = determineStatelessInterceptor( settings, strategySelector );
+		if ( settings.get( INTERCEPTOR ) != null && settings.get( SESSION_SCOPED_INTERCEPTOR ) != null ) {
+			throw new ConflictingInterceptorSettingsException();
+		}
+		configuredInterceptor = determineConfiguredInterceptor( settings, strategySelector );
 
 		statementObserver = interpretStatementObserver( settings );
 
@@ -918,55 +920,36 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 	}
 
-	@Nullable
-	private static Interceptor determineInterceptor(
-			Map<String, Object> configurationSettings,
-			StrategySelector strategySelector) {
-		return strategySelector.resolveStrategy(
-				Interceptor.class,
-				configurationSettings.get( INTERCEPTOR )
-		);
-	}
-
 	@SuppressWarnings("unchecked")
-	@Nullable
-	private static Supplier<? extends Interceptor> determineStatelessInterceptor(
+	@Nonnull
+	private static ConfiguredInterceptor determineConfiguredInterceptor(
 			Map<String, Object> configurationSettings,
 			StrategySelector strategySelector) {
-		final Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
-		if ( setting == null ) {
-			return null;
+		final Object interceptorSetting = configurationSettings.get( INTERCEPTOR );
+		if ( interceptorSetting instanceof Interceptor instance ) {
+			return ConfiguredInterceptorImpl.ofInstance( instance );
 		}
-		else if ( setting instanceof Supplier ) {
-			return (Supplier<? extends Interceptor>) setting;
+		else if ( interceptorSetting != null ) {
+			final Class<? extends Interceptor> clazz =
+					interceptorSetting instanceof Class
+							? (Class<? extends Interceptor>) interceptorSetting
+							: strategySelector.selectStrategyImplementor( Interceptor.class, interceptorSetting.toString() );
+			return ConfiguredInterceptorImpl.ofGlobal( clazz );
 		}
-		else if ( setting instanceof Class ) {
-			return interceptorSupplier( (Class<? extends Interceptor>) setting );
-		}
-		else {
-			return interceptorSupplier(
-					strategySelector.selectStrategyImplementor(
-							Interceptor.class,
-							setting.toString()
-					)
-			);
-		}
-	}
 
-	@Nonnull
-	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> clazz) {
-		return () -> {
-			try {
-				return clazz.newInstance();
-			}
-			catch (InstantiationException | IllegalAccessException e) {
-				throw new org.hibernate.InstantiationException(
-						"Could not instantiate session-scoped Interceptor",
-						clazz,
-						e
-				);
-			}
-		};
+		final Object sessionScopedSetting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
+		if ( sessionScopedSetting instanceof Supplier ) {
+			return ConfiguredInterceptorImpl.ofSupplied( (Supplier<? extends Interceptor>) sessionScopedSetting );
+		}
+		else if ( sessionScopedSetting != null ) {
+			final Class<? extends Interceptor> clazz =
+					sessionScopedSetting instanceof Class
+							? (Class<? extends Interceptor>) sessionScopedSetting
+							: strategySelector.selectStrategyImplementor( Interceptor.class, sessionScopedSetting.toString() );
+			return ConfiguredInterceptorImpl.ofScoped( clazz );
+		}
+
+		return ConfiguredInterceptorImpl.none();
 	}
 
 	@Nonnull
@@ -1144,20 +1127,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	@Nonnull
-	public Interceptor getInterceptor() {
-		return interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
+	public ConfiguredInterceptor getConfiguredInterceptor() {
+		return configuredInterceptor;
 	}
 
 	@Override
 	@Nullable
 	public StatementObserver getStatementObserver() {
 		return statementObserver;
-	}
-
-	@Override
-	@Nullable
-	public Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
-		return statelessInterceptorSupplier;
 	}
 
 	@Override
@@ -1737,27 +1714,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public void applyInterceptor(@Nullable Interceptor interceptor) {
-		this.interceptor = interceptor;
+		this.configuredInterceptor = interceptor == null
+				? ConfiguredInterceptorImpl.none()
+				: ConfiguredInterceptorImpl.ofInstance( interceptor );
 	}
 
 	public void applyStatelessInterceptor(@Nonnull Class<? extends Interceptor> statelessInterceptorClass) {
-		applyStatelessInterceptorSupplier(
-				() -> {
-					try {
-						return statelessInterceptorClass.newInstance();
-					}
-					catch (InstantiationException | IllegalAccessException e) {
-						throw new HibernateException(
-								"Could not supply stateless Interceptor of class '"
-								+ statelessInterceptorClass.getName() + "'", e
-						);
-					}
-				}
-		);
+		this.configuredInterceptor = ConfiguredInterceptorImpl.ofScoped( statelessInterceptorClass );
 	}
 
 	public void applyStatelessInterceptorSupplier(@Nullable Supplier<? extends Interceptor> statelessInterceptorSupplier) {
-		this.statelessInterceptorSupplier = statelessInterceptorSupplier;
+		this.configuredInterceptor = statelessInterceptorSupplier == null
+				? ConfiguredInterceptorImpl.none()
+				: ConfiguredInterceptorImpl.ofSupplied( statelessInterceptorSupplier );
 	}
 
 	public void applySqmFunctionRegistry(@Nullable SqmFunctionRegistry sqmFunctionRegistry) {

@@ -5217,7 +5217,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( parameters.size() == itemCount ) {
 			for ( int i = 0; i < itemCount; i++ ) {
 				final var item = selectionItems.get( i );
-				if ( item != null && item.getJavaType() != null ) {
+				if ( item != null && item.getJavaTypeIfKnown() != null ) {
 					if ( !parameterMatches( parameters.get( i ), item ) ) {
 						return false;
 					}

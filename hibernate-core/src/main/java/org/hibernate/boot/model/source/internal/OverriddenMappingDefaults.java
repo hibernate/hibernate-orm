@@ -9,6 +9,9 @@ import org.hibernate.metamodel.CollectionClassification;
 
 import jakarta.persistence.CascadeType;
 
+import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+
 /**
  * Represents a "nested level" in the mapping defaults stack.
  *
@@ -135,7 +138,6 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 		return cascadeTypes;
 	}
 
-	@Override
 	public String getDefaultCascadeStyleName() {
 		return implicitCascadeStyleName;
 	}
@@ -198,12 +200,16 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 			this.implicitPackageName = parentDefaults.getDefaultPackageName();
 			this.autoImportEnabled = parentDefaults.isDefaultAutoImport();
 
-			this.implicitCascadeStyleName = parentDefaults.getDefaultCascadeStyleName();
+			this.implicitCascadeStyleName = toCascadeString( parentDefaults.getDefaultCascadeTypes() );
 			this.implicitPropertyAccessType = parentDefaults.getDefaultPropertyAccessType();
 			this.implicitPropertyAccessorName = parentDefaults.getDefaultAccessStrategyName();
 			this.entitiesImplicitlyLazy = parentDefaults.isDefaultEntityLaziness();
 			this.pluralAttributesImplicitlyLazy = parentDefaults.isDefaultCollectionLaziness();
 			this.implicitCacheAccessType = parentDefaults.getDefaultCacheAccessType();
+		}
+
+		private static String toCascadeString(EnumSet<CascadeType> defaultCascadeTypes) {
+			return isEmpty( defaultCascadeTypes ) ? "none" : renderCascadeTypeList( defaultCascadeTypes );
 		}
 
 		public Builder setImplicitSchemaName(String implicitSchemaName) {

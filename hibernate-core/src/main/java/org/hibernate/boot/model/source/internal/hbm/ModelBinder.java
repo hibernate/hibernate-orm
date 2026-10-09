@@ -132,7 +132,6 @@ import org.hibernate.usertype.UserType;
 import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -140,10 +139,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
-import jakarta.persistence.CascadeType;
 
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.source.internal.hbm.Helper.reflectedPropertyClass;
@@ -2225,10 +2222,6 @@ public class ModelBinder {
 			BOOT_LOGGER.mappedProperty( propertySource.getName(),
 					columns( property.getValue() ) );
 		}
-	}
-
-	private String toCascadeString(EnumSet<CascadeType> defaultCascadeTypes) {
-		return isEmpty( defaultCascadeTypes ) ? "none" : renderCascadeTypeList( defaultCascadeTypes );
 	}
 
 	private static void handleGenerationTiming(

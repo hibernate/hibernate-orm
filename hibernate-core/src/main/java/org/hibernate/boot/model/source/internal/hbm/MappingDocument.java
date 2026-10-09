@@ -34,7 +34,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	private final JaxbHbmHibernateMapping documentRoot;
 	private final Origin origin;
 	private final MetadataBuildingContext rootBuildingContext;
-	private final EffectiveMappingDefaults mappingDefaults;
+	private final OverriddenMappingDefaults mappingDefaults;
 
 	private final ToolingHintContext toolingHintContext;
 
@@ -132,7 +132,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	}
 
 	@Override
-	public EffectiveMappingDefaults getEffectiveDefaults() {
+	public OverriddenMappingDefaults getEffectiveDefaults() {
 		return mappingDefaults;
 	}
 

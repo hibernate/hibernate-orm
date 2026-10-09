@@ -502,7 +502,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
 		preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
-		preferLocaleLanguageTagEnabled = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
+		preferLocaleLanguageTagEnabled = MetadataBuildingContext.isPreferLocaleLanguageTagEnabled( configurationService );
 		preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 		preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( serviceRegistry );
 		preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( serviceRegistry );

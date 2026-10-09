@@ -898,6 +898,7 @@ abstract class AbstractSharedSessionContract
 		}
 		catch (Throwable t) {
 			SESSION_LOGGER.exceptionInBeforeTransactionCompletionInterceptor( t );
+			throw t;
 		}
 	}
 

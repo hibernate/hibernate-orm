@@ -2,7 +2,6 @@ package org.hibernate.boot.spi;
 
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -14,7 +13,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
 import org.hibernate.Incubating;
-import org.hibernate.Interceptor;
+import org.hibernate.callback.spi.ConfiguredInterceptor;
 import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
@@ -147,18 +146,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isStatisticsEnabled();
 
 	/**
-	 * An {@linkplain Interceptor interceptor} instance shared between all sessions
-	 * created by this factory. Such an interceptor must be thread-safe and may not
-	 * hold state associated with any given session.
+	 * Describes how an interceptor was configured, without resolving
+	 * any CDI or managed beans.
 	 *
-	 * @return The interceptor instance to use factory-wide by default. May be {@code null}.
-	 *
-	 * @see org.hibernate.cfg.SessionEventSettings#INTERCEPTOR
-	 *
-	 * @see org.hibernate.SessionBuilder#interceptor(Interceptor)
+	 * @since 8.0
 	 */
-	@Nullable
-	Interceptor getInterceptor();
+	@Incubating(since = "8.0")
+	@Nonnull
+	ConfiguredInterceptor getConfiguredInterceptor();
 
 	/**
 	 * The StatementObserver, if one, applied to this SessionFactory.
@@ -167,20 +162,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	@Nullable
 	StatementObserver getStatementObserver();
-
-	/**
-	 * A stateless {@link Supplier} for {@linkplain Interceptor interceptor} instances
-	 * which are not shared between sessions created by this factory. This allows each
-	 * {@code Interceptor} instances itself to hold state associated with its session.
-	 *
-	 * @return The interceptor supplier to use by default. May be {@code null}.
-	 *
-	 * @see org.hibernate.cfg.SessionEventSettings#SESSION_SCOPED_INTERCEPTOR
-	 *
-	 * @see org.hibernate.SessionBuilder#interceptor(Interceptor)
-	 */
-	@Nullable
-	Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier();
 
 	/**
 	 * The default {@link StatementInspector} for this factory.

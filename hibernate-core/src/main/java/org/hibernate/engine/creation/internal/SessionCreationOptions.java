@@ -47,6 +47,10 @@ public interface SessionCreationOptions {
 	@Nullable
 	Interceptor resolveInterceptor(@Nonnull SessionFactoryImplementor sessionFactory);
 
+	boolean isInterceptorShared();
+
+	boolean shouldReleaseInterceptor();
+
 	@Nullable
 	StatementObserver getStatementObserver();
 

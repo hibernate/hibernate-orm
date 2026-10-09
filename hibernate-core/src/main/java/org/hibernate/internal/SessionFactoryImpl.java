@@ -106,6 +106,13 @@ import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.relational.internal.SchemaManagerImpl;
+import org.hibernate.callback.internal.GlobalInterceptorStrategy;
+import org.hibernate.callback.internal.NoInterceptorStrategy;
+import org.hibernate.callback.internal.ProvidedInterceptorStrategy;
+import org.hibernate.callback.internal.ScopedInterceptorStrategy;
+import org.hibernate.callback.internal.SupplierInterceptorStrategy;
+import org.hibernate.callback.spi.ConfiguredInterceptor;
+import org.hibernate.callback.spi.InterceptorStrategy;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
@@ -141,6 +148,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
@@ -219,6 +227,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionBuilderImplementor temporarySessionOpenOptions;
 	private final transient StatelessSessionBuilder defaultStatelessOptions;
 	private final transient EntityNameResolver entityNameResolver;
+	private final transient InterceptorStrategy interceptorStrategy;
 
 	private final transient SchemaManager schemaManager;
 
@@ -289,7 +298,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 		}
 
-		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
+		interceptorStrategy = createInterceptorStrategy( options.getConfiguredInterceptor(), serviceRegistry );
+		final var factoryInterceptorBean = interceptorStrategy.getFactoryInterceptorBean();
+		entityNameResolver = new CoordinatingEntityNameResolver( this, factoryInterceptorBean );
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
 
 		// used for initializing the MappingMetamodelImpl
@@ -1033,8 +1044,25 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return statementObserver;
 	}
 
-	public Interceptor getInterceptor() {
-		return sessionFactoryOptions.getInterceptor();
+	@Override
+	public InterceptorStrategy getInterceptorStrategy() {
+		return interceptorStrategy;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static InterceptorStrategy createInterceptorStrategy(
+			ConfiguredInterceptor configured,
+			ServiceRegistry serviceRegistry) {
+		return switch ( configured.getType() ) {
+			case INSTANCE -> new ProvidedInterceptorStrategy( (Interceptor) configured.getReference() );
+			case GLOBAL -> new GlobalInterceptorStrategy(
+					(Class<? extends Interceptor>) configured.getReference(), serviceRegistry );
+			case SCOPED -> new ScopedInterceptorStrategy(
+					(Class<? extends Interceptor>) configured.getReference(), serviceRegistry );
+			case SUPPLIED -> new SupplierInterceptorStrategy(
+					(Supplier<? extends Interceptor>) configured.getReference() );
+			case NONE -> NoInterceptorStrategy.INSTANCE;
+		};
 	}
 
 	@Override

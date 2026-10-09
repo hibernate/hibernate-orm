@@ -1,12 +1,21 @@
 package org.hibernate.orm.test.tool.schema.scripts;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
  */
+@Entity
+@Table(name = "human")
 public class Human {
+	@Id
 	private Integer id;
+	@Column(name = "fname")
 	private String firstname;
+	@Column(name = "lname")
 	private String lastname;
 
 	public Integer getId() {

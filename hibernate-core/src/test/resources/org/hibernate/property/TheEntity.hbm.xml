@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
-    <class name="org.hibernate.orm.test.property.GetAndIsVariantGetterTest$TheEntity">
-        <id name="id"/>
-    </class>
-</hibernate-mapping>

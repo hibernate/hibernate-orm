@@ -27,7 +27,7 @@ public class NamingStrategyTest extends BaseSessionFactoryFunctionalTest {
 	@Override
 	protected String[] getOrmXmlFiles() {
 		return new String[] {
-				"org/hibernate/orm/test/namingstrategy/Customers.hbm.xml"
+				"org/hibernate/orm/test/namingstrategy/Customers.orm.xml"
 		};
 	}
 

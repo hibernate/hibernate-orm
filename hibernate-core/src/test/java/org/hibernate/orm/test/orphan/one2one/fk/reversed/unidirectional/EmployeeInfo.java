@@ -1,12 +1,16 @@
 package org.hibernate.orm.test.orphan.one2one.fk.reversed.unidirectional;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
+@Entity
 public class EmployeeInfo {
+	@Id
+	@GeneratedValue
 	private Long id;
 
 	public EmployeeInfo() {

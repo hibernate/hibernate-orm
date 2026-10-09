@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.sql.check</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="ExceptionCheckingEntity" metadata-complete="true">
+        <table name="ENTITY_E"/>
+        <sql-insert callable="true" result-check="NONE">{call createEntityE(?,?)}</sql-insert>
+        <sql-update callable="true" result-check="NONE">{call updateEntityE(?,?)}</sql-update>
+        <sql-delete callable="true" result-check="NONE">{call deleteEntityE(?)}</sql-delete>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="ID" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="increment"/>
+                <unsaved-value>0</unsaved-value>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="name" fetch="EAGER" optional="false" optimistic-lock="true">
+                <column unique="false" nullable="false"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ParamCheckingEntity" metadata-complete="true">
+        <table name="ENTITY_P"/>
+        <sql-insert callable="true" result-check="PARAM">{call createEntityP(?,?,?)}</sql-insert>
+        <sql-update callable="true" result-check="PARAM">{? = call updateEntityP(?,?)}</sql-update>
+        <sql-delete callable="true" result-check="PARAM">{? = call deleteEntityP(?)}</sql-delete>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="ID" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="increment"/>
+                <unsaved-value>0</unsaved-value>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="name" fetch="EAGER" optional="false" optimistic-lock="true">
+                <column unique="false" nullable="false"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+    <database-object>
+        <create>
+            CREATE OR REPLACE PROCEDURE createEntityE(p_name ENTITY_E.NAME%TYPE, p_id ENTITY_E.ID%TYPE)
+            AS BEGIN
+                RAISE_APPLICATION_ERROR( -20001, 'Insert failure checking' );
+            END;
+        </create>
+        <drop>
+            DROP PROCEDURE createEntityE;
+        </drop>
+    </database-object>
+    <database-object>
+        <create>
+            CREATE OR REPLACE PROCEDURE updateEntityE(p_name ENTITY_E.NAME%TYPE, p_id ENTITY_E.ID%TYPE)
+            AS BEGIN
+                RAISE_APPLICATION_ERROR( -20001, 'Update failure checking' );
+            END;
+        </create>
+        <drop>
+            DROP PROCEDURE updateEntityE;
+        </drop>
+    </database-object>
+    <database-object>
+        <create>
+            CREATE OR REPLACE PROCEDURE deleteEntityE(p_id ENTITY_E.ID%TYPE)
+            AS BEGIN
+                RAISE_APPLICATION_ERROR( -20001, 'Update failure checking' );
+            END;
+        </create>
+        <drop>
+            DROP PROCEDURE deleteEntityE;
+        </drop>
+    </database-object>
+    <database-object>
+        <create>
+            CREATE OR REPLACE PROCEDURE createEntityP(result OUT INTEGER, p_name ENTITY_E.NAME%TYPE, p_id ENTITY_E.ID%TYPE)
+            AS BEGIN
+                /* force a failure by returning a non-1 result */
+                result := 2;
+            END;
+        </create>
+        <drop>
+            DROP PROCEDURE createEntityP;
+        </drop>
+    </database-object>
+    <database-object>
+        <create>
+            CREATE OR REPLACE FUNCTION updateEntityP(p_name ENTITY_E.NAME%TYPE, p_id ENTITY_E.ID%TYPE)
+            RETURN INTEGER IS BEGIN
+                RETURN 2;
+            END;
+        </create>
+        <drop>
+            DROP PROCEDURE updateEntityP;
+        </drop>
+    </database-object>
+    <database-object>
+        <create>
+            CREATE OR REPLACE FUNCTION deleteEntityP(p_id ENTITY_E.ID%TYPE)
+            RETURN INTEGER IS BEGIN
+                RETURN 2;
+            END;
+        </create>
+        <drop>
+            DROP PROCEDURE deleteEntityE;
+        </drop>
+    </database-object>
+</entity-mappings>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.lazyonetoone</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="Person" metadata-complete="true">
+        <table name="Person"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="name">
+                <column name="name" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </id>
+            <one-to-one name="employee" fetch="EAGER" fetch-mode="JOIN" optional="true" orphan-removal="false">
+                <primary-key-join-column/>
+                <foreign-key/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-remove/>
+                </cascade>
+            </one-to-one>
+        </attributes>
+    </entity>
+    <entity class="Employee" metadata-complete="true">
+        <table name="Employee"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="personName">
+                <column name="personName" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </id>
+            <one-to-many name="employments" target-entity="Employment" fetch="EAGER" fetch-mode="JOIN" mapped-by="personName" orphan-removal="false" classification="BAG" not-found="EXCEPTION" optimistic-lock="true">
+                <sql-restriction>endDate is null</sql-restriction>
+                <mutable>true</mutable>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-remove/>
+                </cascade>
+            </one-to-many>
+            <one-to-one name="person" fetch="EAGER" fetch-mode="JOIN" optional="true" orphan-removal="false">
+                <primary-key-join-column/>
+                <foreign-key/>
+                <cascade/>
+            </one-to-one>
+        </attributes>
+    </entity>
+    <entity class="Employment" metadata-complete="true">
+        <table name="Employment"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="personName">
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </id>
+            <id name="organizationName">
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </id>
+            <basic name="startDate" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column unique="false" nullable="true" updatable="false"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.DateJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.TimestampJdbcType</jdbc-type>
+            </basic>
+            <basic name="endDate" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.DateJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.TimestampJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

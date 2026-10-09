@@ -1,16 +1,12 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.mapping.attrorder;
 
+import java.util.Set;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.hibernate.annotations.NaturalId;
 
-import java.util.Set;
+import org.hibernate.annotations.NaturalId;
 
 /**
  * @author Steve Ebersole

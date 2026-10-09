@@ -66,6 +66,7 @@ import org.hibernate.query.results.internal.ResultSetMappingImpl;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderInstantiation;
+import org.hibernate.query.results.internal.implicit.ImplicitResultClassBuilder;
 import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -334,9 +335,8 @@ public class NativeQueryImpl<R>
 		else {
 			final Class<?> implicitResultType = resultClass == null ? selectionMemento.getResultType() : resultClass;
 			handleImplicitResultSetMapping( implicitResultType, session );
-			if ( resultClass == null && implicitResultType != null
-					&& ( getMappingMetamodel().isEntityClass( implicitResultType )
-							|| hasJavaTypeDescriptor( implicitResultType ) ) ) {
+			if ( resultClass == null && implicitResultType != null && hasJavaTypeDescriptor( implicitResultType ) ) {
+				// The untyped query has no resultType for the dynamic mapping to use at execution time.
 				resultSetMapping.addResultBuilder( Builders.resultClassBuilder( implicitResultType, getMappingMetamodel() ) );
 			}
 		}
@@ -376,11 +376,12 @@ public class NativeQueryImpl<R>
 				return true;
 			}
 		}
-		else if ( selectionMemento.getResultType() != null
-				&& context.getMappingMetamodel().isEntityClass( selectionMemento.getResultType() ) ) {
-			resultSetMapping.addResultBuilder(
-					Builders.resultClassBuilder( selectionMemento.getResultType(), context )
-			);
+		else if ( selectionMemento.getResultType() != null ) {
+			final var resultBuilder = Builders.resultClassBuilder( selectionMemento.getResultType(), context );
+			if ( resultBuilder instanceof ImplicitResultClassBuilder ) {
+				return false;
+			}
+			resultSetMapping.addResultBuilder( resultBuilder );
 			return true;
 		}
 

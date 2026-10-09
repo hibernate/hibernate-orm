@@ -16,7 +16,8 @@ import org.hibernate.service.JavaServiceLoadable;
  * An implementation is discovered with {@link java.util.ServiceLoader}, using the
  * class loader of this interface, by listing its fully qualified class name in
  * {@code META-INF/services/org.hibernate.processor.spi.HibernateProcessorExtension}.
- * Only the first implementation found is used. When none is found,
+ * At most one implementation may be registered: finding several is reported as a compilation
+ * error, since which one would be used is not deterministic. When none is found,
  * {@link org.hibernate.processor.internal.DefaultHibernateProcessorExtension}, which does nothing, is used instead.
  * <p>
  * A single instance is created each time the processor is initialized, and

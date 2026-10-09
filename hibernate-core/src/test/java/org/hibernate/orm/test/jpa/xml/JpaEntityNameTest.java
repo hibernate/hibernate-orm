@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 		@JiraKey( value = "HHH-6100" )
 } )
 @Jpa(
-		xmlMappings = {"org/hibernate/orm/test/jpa/xml/Qualifier.hbm.xml"}
+		xmlMappings = {"org/hibernate/orm/test/jpa/xml/Qualifier.orm.xml"}
 )
 public class JpaEntityNameTest {
 

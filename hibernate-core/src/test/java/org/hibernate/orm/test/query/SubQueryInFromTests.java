@@ -162,7 +162,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLateralOrSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testBasic(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -249,7 +249,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLateralOrSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testEmbedded(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -332,7 +332,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLateralOrSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -378,7 +378,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLateralOrSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testEntityJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -426,7 +426,7 @@ public class SubQueryInFromTests {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLateralOrSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 	public void testEntityImplicit(SessionFactoryScope scope) {
 		scope.inTransaction(

@@ -41,19 +41,36 @@ public interface HibernateProcessorExtension {
 	void init(ProcessingEnvironment processingEnvironment);
 
 	/**
-	 * A qualifier annotation to place on the injected session parameter of the constructors
-	 * generated for repositories that specify a data store (for example, a persistence unit), with
-	 * the name of the data store as its value, as in {@code @PersistenceUnit("name")}. That name is the one
-	 * given by the {@code dataStore} member of the Jakarta Data {@code @Repository} annotation of the
-	 * repository. The annotation must therefore have a {@code String} element named {@code value}.
+	 * The qualifier annotation to place on the session injected into the constructor of a generated
+	 * repository, for example to select a persistence unit, as in {@code @PersistenceUnit("name")}.
 	 * <p>
-	 * When this is not {@code null}, the processor also stops generating the no-argument
-	 * constructor it would otherwise add to Jakarta Data repositories for CDI proxying,
-	 * since the injecting constructor is then expected to be used by the container.
+	 * The extension is responsible for deciding if there is a qualifier, and which one, with all the
+	 * context it needs about the repository being generated. It returns the whole annotation as source
+	 * code, and should use {@code context.metamodel().importType(...)} to refer to the type of the
+	 * annotation so that it is imported.
 	 *
-	 * @return the fully qualified name of the annotation, or {@code null} for none
+	 * @param dataStore the name of the data store, given by the {@code dataStore} member of the Jakarta
+	 * Data {@code @Repository} annotation of the repository, or {@code null} if there is none
+	 * @param context gives access to the repository being generated
+	 * @return the annotation, for example {@code "@PersistenceUnit(\"name\")"}, or {@code null} for none
 	 */
-	@Nullable String qualifierAnnotation();
+	@Nullable String sessionQualifier(@Nullable String dataStore, AnnotationMetaEntityContext context);
+
+	/**
+	 * Whether the session of a Jakarta Data repository is injected by the container into the constructor
+	 * of the generated class, which is then annotated {@code @Inject}.
+	 * <p>
+	 * When this returns {@code false}, which is the default, the generated class instead gets a no-argument
+	 * constructor, for the container to instantiate it, and the session is obtained with Jakarta Persistence
+	 * resource injection, because that is incompatible with constructor injection. The constructor taking the
+	 * session is then only meant for direct instantiation, for example in tests.
+	 * <p>
+	 * This is independent of {@link #sessionQualifier(String, AnnotationMetaEntityContext)}: a qualifier
+	 * is only used for the constructor which takes the session.
+	 *
+	 * @param context gives access to the repository being generated
+	 */
+	boolean usesConstructorInjection(AnnotationMetaEntityContext context);
 
 	/**
 	 * Whether the given type is an entity, or entity base class, with framework-specific

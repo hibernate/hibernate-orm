@@ -713,8 +713,7 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 						context.addInjectAnnotation(),
 						context.addNonnullAnnotation(),
 						false,
-						false,
-						context.getExtension().qualifierAnnotation()
+						false
 				)
 		);
 		if ( isProvidedSessionAccess( sessionType ) ) {
@@ -1166,10 +1165,17 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 	 * because in Quarkus we can inject a container-managed
 	 * {@code StatelessSession} directly.
 	 */
+	/**
+	 * The qualifier annotation, as source code, to put on the injected session, if the extension wants one.
+	 */
+	public @Nullable String sessionQualifier() {
+		return context.getExtension().sessionQualifier( dataStore(), this );
+	}
+
 	@Override
 	public boolean needsDefaultConstructor() {
 		return jakartaDataRepository
-			&& context.getExtension().qualifierAnnotation() == null
+			&& !context.getExtension().usesConstructorInjection( this )
 			&& !springInjection
 			&& context.isCdiAvailable();
 	}
@@ -1253,8 +1259,7 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 							context.addInjectAnnotation(),
 							context.addNonnullAnnotation(),
 							method != null,
-							jakartaDataRepository,
-							context.getExtension().qualifierAnnotation()
+							jakartaDataRepository
 					)
 			);
 			if ( isProvidedSessionAccess( sessionType ) ) {

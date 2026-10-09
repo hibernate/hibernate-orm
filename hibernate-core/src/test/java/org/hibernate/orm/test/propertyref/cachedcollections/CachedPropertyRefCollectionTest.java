@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @JiraKey(value = "HHH-5853")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/propertyref/cachedcollections/Mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/propertyref/cachedcollections/Mappings.orm.xml"
 )
 @SessionFactory
 public class CachedPropertyRefCollectionTest {

@@ -103,6 +103,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
@@ -619,7 +620,7 @@ public abstract class CollectionBinder {
 			//JPA 2 has priority
 			if ( collectionTable != null ) {
 				catalog = collectionTable.catalog();
-				schema = collectionTable.schema();
+				schema = defaultSchema( collectionTable.schema(), property, buildingContext );
 				tableName = collectionTable.name();
 				uniqueConstraints = collectionTable.uniqueConstraints();
 				joins = collectionTable.joinColumns();
@@ -629,7 +630,7 @@ public abstract class CollectionBinder {
 			}
 			else {
 				catalog = assocTable.catalog();
-				schema = assocTable.schema();
+				schema = defaultSchema( assocTable.schema(), property, buildingContext );
 				tableName = assocTable.name();
 				uniqueConstraints = assocTable.uniqueConstraints();
 				joins = assocTable.joinColumns();

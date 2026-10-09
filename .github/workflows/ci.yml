@@ -45,6 +45,8 @@ jobs:
       contents: read
     name: OpenJDK 25 - ${{matrix.rdbms}}
     runs-on: ubuntu-latest
+    # Default per-job timeout; individual matrix entries can override it via `timeout`.
+    timeout-minutes: ${{ matrix.timeout != '' && matrix.timeout || 60 }}
     strategy:
       fail-fast: false
       matrix:
@@ -61,6 +63,8 @@ jobs:
           - rdbms: db2
           - rdbms: mssql
           - rdbms: sybase
+            # Sybase runs are slower than the others; give them a wider window.
+            timeout: 120
     # Running with CockroachDB requires at least 2-4 vCPUs, which we don't have on GH Actions runners
     #          - rdbms: cockroachdb
     # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
@@ -207,6 +211,7 @@ jobs:
       contents: read
     name: GraalVM 25 - ${{matrix.rdbms}}
     runs-on: [ self-hosted, Linux, X64, OracleTestPilot ]
+    timeout-minutes: 120
     if: github.repository == 'hibernate/hibernate-orm'
     strategy:
       fail-fast: false
@@ -478,6 +483,7 @@ jobs:
       contents: read
     name: OpenJDK 25 - Jakarta Data TCK 1.1
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -604,6 +610,7 @@ jobs:
       contents: read
     name: Static code analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -705,6 +712,7 @@ jobs:
       && always() && !cancelled()
       && needs.build.result != 'cancelled' && needs.otp.result != 'cancelled'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository

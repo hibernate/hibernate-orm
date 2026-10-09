@@ -104,8 +104,10 @@ public interface AnnotationMetaEntityContext {
 
 	/**
 	 * Declare the expression that the generated query methods call to obtain the session, for
-	 * example {@code "SessionOperations.getSession()"}. Use this instead of
-	 * {@link #addRepositoryConstructor(String, String)} when the session is not injected.
+	 * example {@code "SessionOperations.getSession()"}, whatever the
+	 * {@linkplain SessionSetup#sessionType() type of the session}. Use this instead of
+	 * {@link #addRepositoryConstructor(String, String)}, not in addition to it, when the session is
+	 * not injected.
 	 *
 	 * @param getter a Java expression of the session type
 	 */

@@ -171,6 +171,8 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 	 * The field or method call to obtain the session
 	 */
 	private String sessionGetter = "entityManager";
+	/** Whether {@link #sessionGetter} was explicitly provided by an extension, as an expression. */
+	private boolean explicitSessionGetter;
 
 	private final Map<String, String> memberTypes = new HashMap<>();
 
@@ -689,6 +691,7 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 	@Override
 	public void setSessionGetter(String getter) {
 		this.sessionGetter = getter;
+		this.explicitSessionGetter = true;
 	}
 
 	@Override
@@ -3440,7 +3443,11 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 
 	@Override
 	public String getSessionVariableName(String sessionType) {
-		if ( isProvidedSessionAccess( sessionType) ) {
+		if ( explicitSessionGetter ) {
+			// an extension told us how to get the session, whatever its type
+			return sessionGetter;
+		}
+		else if ( isProvidedSessionAccess( sessionType) ) {
 			return switch ( sessionType ) {
 				case SPRING_ENTITY_MANAGER_PROVIDER -> "entityManager";
 				case SPRING_SESSION_PROVIDER, SPRING_STATELESS_SESSION_PROVIDER -> "session";

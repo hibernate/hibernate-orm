@@ -34,13 +34,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.stream.Collectors.joining;
 import static java.lang.Boolean.parseBoolean;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -363,14 +365,31 @@ public class HibernateProcessor extends AbstractProcessor {
 			&& !pack.getEnclosedElements().isEmpty();
 	}
 
-	private static HibernateProcessorExtension loadExtension() {
-		final Iterator<HibernateProcessorExtension> iterator =
-				ServiceLoader.load( HibernateProcessorExtension.class, HibernateProcessorExtension.class.getClassLoader() )
-						.iterator();
-		if ( iterator.hasNext() ) {
-			return iterator.next();
+	private HibernateProcessorExtension loadExtension() {
+		return selectExtension(
+				ServiceLoader.load( HibernateProcessorExtension.class, HibernateProcessorExtension.class.getClassLoader() ),
+				message -> context.logMessage( Diagnostic.Kind.ERROR, message )
+		);
+	}
+
+	/**
+	 * Select the {@link HibernateProcessorExtension} to use among the registered ones: there can only be one,
+	 * so having several is reported as an error, since choosing one of them would not be deterministic.
+	 * The default extension is used if there is none.
+	 */
+	static HibernateProcessorExtension selectExtension(
+			Iterable<HibernateProcessorExtension> candidates,
+			Consumer<String> errorReporter) {
+		final var extensions = new ArrayList<HibernateProcessorExtension>();
+		candidates.forEach( extensions::add );
+		if ( extensions.isEmpty() ) {
+			return new DefaultHibernateProcessorExtension();
 		}
-		return new DefaultHibernateProcessorExtension();
+		if ( extensions.size() > 1 ) {
+			errorReporter.accept( "Only one HibernateProcessorExtension may be registered, but found "
+					+ extensions.stream().map( extension -> extension.getClass().getName() ).collect( joining( ", " ) ) );
+		}
+		return extensions.get( 0 );
 	}
 
 	@Override

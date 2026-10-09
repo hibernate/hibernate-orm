@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.xml.inheritance</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="AnimalReport" metadata-complete="true">
+        <table name="AnimalReport"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <many-to-one name="animal" target-entity="Animal" fetch="LAZY" fetch-mode="SELECT" optional="true" not-found="IGNORE">
+                <join-column name="animal" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+    <entity class="Animal" metadata-complete="true">
+        <abstract>true</abstract>
+        <table name="Animal"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <inheritance strategy="JOINED"/>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+        </attributes>
+    </entity>
+    <entity class="Cat" metadata-complete="true">
+        <extends>org.hibernate.orm.test.xml.inheritance.Animal</extends>
+        <table name="Cat"/>
+        <primary-key-join-column name="ANIMAL_ID"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <attributes>
+            <many-to-one name="name" target-entity="CatName" fetch="LAZY" fetch-mode="SELECT" optional="true" not-found="IGNORE">
+                <join-column name="name" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+    <entity class="Dog" metadata-complete="true">
+        <extends>org.hibernate.orm.test.xml.inheritance.Animal</extends>
+        <table name="Dog"/>
+        <primary-key-join-column name="ANIMAL_ID"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <attributes>
+            <many-to-one name="name" target-entity="DogName" fetch="LAZY" fetch-mode="SELECT" optional="true" not-found="IGNORE">
+                <join-column name="name" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+    <entity class="CatName" metadata-complete="true">
+        <table name="CatName"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="DogName" metadata-complete="true">
+        <table name="DogName"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

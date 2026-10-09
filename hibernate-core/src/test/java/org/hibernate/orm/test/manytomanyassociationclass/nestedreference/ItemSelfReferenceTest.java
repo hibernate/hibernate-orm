@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = { "org/hibernate/orm/test/manytomanyassociationclass/nestedreference/Item.hbm.xml" }
+		xmlMappings = { "org/hibernate/orm/test/manytomanyassociationclass/nestedreference/Item.orm.xml" }
 )
 @SessionFactory
 public class ItemSelfReferenceTest {

@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/onetomany/Parent.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/onetomany/Parent.orm.xml"
 )
 @SessionFactory
 public class OneToManyTest {

@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Gavin King
  */
-public class ComponentTest extends BaseSessionFactoryFunctionalTest {
+public class  ComponentTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
 	public String[] getOrmXmlFiles() {

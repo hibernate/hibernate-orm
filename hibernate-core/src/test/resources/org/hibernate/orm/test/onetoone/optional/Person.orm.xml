@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.onetoone.optional</package>
+    <attribute-accessor>field</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="Entity" metadata-complete="true">
+        <table name="Entity"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <inheritance strategy="JOINED"/>
+        <attributes>
+            <id name="name">
+                <column name="name" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </id>
+        </attributes>
+    </entity>
+    <entity class="Person" metadata-complete="true">
+        <extends>org.hibernate.orm.test.onetoone.optional.Entity</extends>
+        <table name="Person"/>
+        <primary-key-join-column name="entityName"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <attributes>
+            <one-to-one name="address" fetch="EAGER" fetch-mode="JOIN" optional="true" orphan-removal="false">
+                <foreign-key/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-one>
+            <transient name="mailingAddress"/>
+        </attributes>
+    </entity>
+    <entity class="Org" metadata-complete="true">
+        <extends>org.hibernate.orm.test.onetoone.optional.Entity</extends>
+        <table name="Org"/>
+        <primary-key-join-column name="entityName"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <attributes/>
+    </entity>
+    <entity class="Address" metadata-complete="true">
+        <table name="Address"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="entityName">
+                <column name="entityName" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </id>
+            <basic name="street" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <basic name="state" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <basic name="zip" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

@@ -740,6 +740,9 @@ The mapping details are the same between `@Any` and `@ManyToAny` except for:
 2. The use of `@JoinTable`, `@JoinTable#joinColumns` and `@JoinTable#inverseJoinColumns` instead
     of just `@JoinColumn`
 
+A `@ManyToAny` collection may use <<pc-filter-join-table,`@FilterJoinTable`>>
+to filter rows of its association table, including when the declared element type is an interface.
+
 
 In the following example, the `Loan` entity has a collection of `Payments` objects.
 

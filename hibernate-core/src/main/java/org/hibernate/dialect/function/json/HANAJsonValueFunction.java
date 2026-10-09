@@ -1,6 +1,7 @@
 package org.hibernate.dialect.function.json;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
@@ -15,7 +16,13 @@ import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.INSTANT;
+import static org.hibernate.type.SqlTypes.LOCAL_DATE;
+import static org.hibernate.type.SqlTypes.LOCAL_DATE_TIME;
+import static org.hibernate.type.SqlTypes.LOCAL_TIME;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.OFFSET_DATE_TIME;
+import static org.hibernate.type.SqlTypes.OFFSET_TIME;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
@@ -24,6 +31,7 @@ import static org.hibernate.type.SqlTypes.TIME_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.ZONED_DATE_TIME;
 
 /**
  * HANA json_value function.
@@ -87,6 +95,13 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 			case TIMESTAMP_UTC:
 			case TIME:
 			case TIME_UTC:
+			case INSTANT:
+			case LOCAL_DATE_TIME:
+			case LOCAL_DATE:
+			case LOCAL_TIME:
+			case OFFSET_DATE_TIME:
+			case OFFSET_TIME:
+			case ZONED_DATE_TIME:
 				sqlAppender.append( "cast(trim(trailing 'Z' from " );
 				super.render( sqlAppender, arguments, returnType, walker );
 				sqlAppender.append( ") as " );
@@ -100,11 +115,16 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public static String jsonValueReturningType(SqlTypedMapping column, TypeConfiguration typeConfiguration) {
-		return jsonValueReturningType( getCastTypeName( column, typeConfiguration ) );
+	public static String jsonValueReturningType(SqlTypedMapping column, SqlAstTranslator<?> translator) {
+		return jsonValueReturningType( getCastTypeName( column, translator.getSessionFactory().getTypeConfiguration() ), isCloud( translator ) );
 	}
 
-	public static String jsonValueReturningType(String columnDefinition) {
+	private static boolean isCloud(SqlAstTranslator<?> translator) {
+		return translator.getSessionFactory().getJdbcServices().getDialect() instanceof HANADialect hanaDialect
+			&& hanaDialect.isCloud();
+	}
+
+	public static String jsonValueReturningType(String columnDefinition, boolean isCloud) {
 		final int parenthesisIndex = columnDefinition.indexOf( '(' );
 		final String baseName = parenthesisIndex == -1
 				? columnDefinition
@@ -113,8 +133,8 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 			case "real", "float", "double", "decimal" -> "decimal";
 			case "tinyint", "smallint" -> "integer";
 			// Clobs are also not supported, so use the biggest varchar/nvarchar possible
-			case "clob" -> "varchar(" + MEMORY_LIMIT + ")";
-			case "nclob" -> "nvarchar(" + MEMORY_LIMIT + ")";
+			case "clob" -> "varchar(" + (isCloud ? 5000 : MEMORY_LIMIT) + ")";
+			case "nclob" -> "nvarchar(" + (isCloud ? 5000 : MEMORY_LIMIT) + ")";
 			default -> columnDefinition;
 		};
 	}
@@ -125,7 +145,8 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 		if ( arguments.returningType() != null && !requiresSpecialExtraction( arguments.returningType().getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) ) {
 			sqlAppender.appendSql( " returning " );
 			sqlAppender.appendSql( jsonValueReturningType(
-					getCastTypeName( arguments.returningType(), walker.getSessionFactory().getTypeConfiguration() )
+					getCastTypeName( arguments.returningType(), walker.getSessionFactory().getTypeConfiguration() ),
+					isCloud( walker )
 			) );
 		}
 	}
@@ -136,7 +157,9 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 
 	private static boolean requiresSpecialExtraction(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
-			case BOOLEAN, UUID, BINARY, VARBINARY, LONG32VARBINARY, BLOB, TIMESTAMP, TIMESTAMP_WITH_TIMEZONE, TIMESTAMP_UTC, TIME, TIME_UTC -> true;
+			case BOOLEAN, UUID, BINARY, VARBINARY, LONG32VARBINARY, BLOB, TIMESTAMP, TIMESTAMP_WITH_TIMEZONE,
+				TIMESTAMP_UTC, TIME, TIME_UTC, INSTANT, LOCAL_DATE_TIME, LOCAL_DATE, LOCAL_TIME, OFFSET_DATE_TIME,
+				OFFSET_TIME, ZONED_DATE_TIME -> true;
 			default -> false;
 		};
 	}

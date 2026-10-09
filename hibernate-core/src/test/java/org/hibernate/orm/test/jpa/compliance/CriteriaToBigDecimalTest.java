@@ -2,10 +2,8 @@ package org.hibernate.orm.test.jpa.compliance;
 
 import java.math.BigDecimal;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,8 +49,6 @@ public class CriteriaToBigDecimalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = InformixDialect.class,
-			reason = "Informix has needs a CAST here") // TODO: add the CAST automatically
 	public void testToBigDecimal1(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -70,8 +66,6 @@ public class CriteriaToBigDecimalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = InformixDialect.class,
-			reason = "Informix has needs a CAST here") // TODO: add the CAST automatically
 	public void testToBigDecimal2(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

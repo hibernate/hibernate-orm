@@ -853,6 +853,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsListagg implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "listagg" );
+		}
+	}
+
 	public static class SupportsMedian implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "median" );

@@ -1,9 +1,5 @@
 package org.hibernate.community.dialect;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
@@ -143,7 +139,7 @@ public class AltibaseDialect extends Dialect implements CurrentTemporalSupport, 
 	@SPI({ IMPLEMENT, SUPPLY })
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
 		// Altibase JDBC does not support direct access to OffsetTime or OffsetDateTime.
-		return DirectJavaTimeJdbcSupports.of( LocalDate.class, LocalTime.class, LocalDateTime.class );
+		return DirectJavaTimeJdbcSupports.local();
 	}
 
 	@Override
@@ -193,6 +189,7 @@ public class AltibaseDialect extends Dialect implements CurrentTemporalSupport, 
 			LockTimeoutType.QUERY,
 			LockTimeoutType.NONE,
 			OuterJoinLockingType.UNSUPPORTED,
+			false,
 			org.hibernate.community.dialect.lock.internal.AltibaseTransactionConcurrencyResolver.INSTANCE
 	);
 

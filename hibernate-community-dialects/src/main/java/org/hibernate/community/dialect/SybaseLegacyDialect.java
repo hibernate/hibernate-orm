@@ -27,6 +27,8 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.NationalizationSupport;
 import org.hibernate.dialect.jdbc.spi.SybaseDriverKind;
 import org.hibernate.dialect.jdbc.spi.JdbcMetadataOverrides;
@@ -69,6 +71,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -131,7 +134,10 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect implements C
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDdlTypeCode() ) {
+			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
+				? arrayJdbcType.getElementJdbcType()
+				: jdbcType;
+			switch ( elementJdbcType.getDdlTypeCode() ) {
 				case Types.NCLOB:
 				case Types.CLOB:
 				case Types.BLOB:
@@ -172,6 +178,12 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect implements C
 
 	public SybaseDriverKind getDriverKind() {
 		return driverKind;
+	}
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		// Not even the jconnect driver supports this: https://userapps.support.sap.com/sap/support/knowledge/en/3577433
+		return DirectJavaTimeJdbcSupports.none();
 	}
 
 	@Override

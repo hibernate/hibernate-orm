@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.QueryException;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.function.xml.HANAXmlTableFunction;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.json.ExpressionTypeHelper;
 import org.hibernate.dialect.function.json.HANAJsonValueFunction;
@@ -179,10 +181,14 @@ public class HANAUnnestFunction extends UnnestFunction {
 								wrapperExpression = new JsonWrapperExpression( idColumns, tableQualifier, argument );
 							}
 							cteQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( wrapperExpression ) );
-							cteContainer.addCteStatement( new CteStatement(
+							final CteStatement cteStatement = new CteStatement(
 									new CteTable( tableName, cteColumns ),
-									new SelectStatement( cteQuery )
-							) );
+									new SelectStatement( cteQuery ),
+									// We need the CTE to be rendered as such, since we refer to the "table" name,
+									// so we add this hint to prevent inlining
+									CteMaterialization.NOT_MATERIALIZED
+							);
+							cteContainer.addCteStatement( cteStatement );
 							sqlArguments.set( 0, new TableColumnReferenceExpression( argument, tableName, idColumns ) );
 							return querySpec;
 						} );
@@ -456,14 +462,19 @@ public class HANAUnnestFunction extends UnnestFunction {
 	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
 		final String ddlType = super.getDdlType( sqlTypedMapping, containerSqlTypeCode, translator );
 		if ( containerSqlTypeCode == SqlTypes.JSON_ARRAY ) {
-			return HANAJsonValueFunction.jsonValueReturningType( ddlType );
+			return HANAJsonValueFunction.jsonValueReturningType( ddlType, isCloud( translator ) );
 		}
 		else if ( containerSqlTypeCode == SqlTypes.XML_ARRAY ) {
-			return HANAXmlTableFunction.xmlValueReturningType( sqlTypedMapping, ddlType );
+			return HANAXmlTableFunction.xmlValueReturningType( sqlTypedMapping, ddlType, isCloud( translator ) );
 		}
 		else {
 			return ddlType;
 		}
+	}
+
+	private static boolean isCloud(SqlAstTranslator<?> translator) {
+		return translator.getSessionFactory().getJdbcServices().getDialect() instanceof HANADialect hanaDialect
+			&& hanaDialect.isCloud();
 	}
 
 	@Override

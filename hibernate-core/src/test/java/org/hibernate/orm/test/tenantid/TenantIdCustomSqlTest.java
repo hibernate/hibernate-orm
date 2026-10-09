@@ -14,11 +14,14 @@ import jakarta.persistence.Version;
 
 import org.hibernate.MappingException;
 import org.hibernate.LockMode;
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.PartitionKey;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
@@ -168,7 +171,7 @@ class TenantIdCustomSqlTest {
 	}
 
 	private static void assertTenantLast(String sql) {
-		assertTrue( sql.matches( ".*tenant=coalesce\\(\\?,(?:\\w+\\.)?tenant\\)" ), sql );
+		assertTrue( sql.matches( ".*tenant=coalesce\\(.+,(?:\\w+\\.)?tenant\\)" ), sql );
 	}
 
 	@ParameterizedTest
@@ -262,6 +265,16 @@ class TenantIdCustomSqlTest {
 	@Table(name = "tenant_custom_legacy")
 	@SQLUpdate(sql = "update tenant_custom_legacy set item_name=? where id=? and '?'='?' /* ? */", verify = Expectation.RowCount.class)
 	@SQLDelete(sql = "delete from tenant_custom_legacy where id=? -- ?\n", verify = Expectation.RowCount.class)
+	// Sybase ASE jConnect driver interprets a question mark as parameter marker, even if it is placed in a comment.
+	// To avoid an error, we wrap the question mark in single quotes.
+	@DialectOverride.SQLUpdate(dialect = SybaseASEDialect.class, override =
+	@SQLUpdate(
+			sql = "update tenant_custom_legacy set item_name=? where id=? and '?'='?' /* '?' */",
+			verify = Expectation.RowCount.class))
+	@DialectOverride.SQLDelete(dialect = SybaseASEDialect.class, override =
+	@SQLDelete(
+			sql = "delete from tenant_custom_legacy where id=? -- '?'\n",
+			verify = Expectation.RowCount.class))
 	static class Legacy extends Base {
 	}
 
@@ -269,6 +282,14 @@ class TenantIdCustomSqlTest {
 	@Table(name = "tenant_custom_tenant")
 	@SQLUpdate(sql = "update tenant_custom_tenant set item_name=? where id=? and tenant=coalesce(?,tenant)", verify = Expectation.RowCount.class)
 	@SQLDelete(sql = "delete from tenant_custom_tenant where id=? and tenant=coalesce(?,tenant)", verify = Expectation.RowCount.class)
+	@DialectOverride.SQLUpdate(dialect = InformixDialect.class, override =
+	@SQLUpdate(
+			sql = "update tenant_custom_tenant set item_name=? where id=? and tenant=coalesce((select cast(? as varchar(255))),tenant)",
+			verify = Expectation.RowCount.class))
+	@DialectOverride.SQLDelete(dialect = InformixDialect.class, override =
+	@SQLDelete(
+			sql = "delete from tenant_custom_tenant where id=? and tenant=coalesce((select cast(? as varchar(255))),tenant)",
+			verify = Expectation.RowCount.class))
 	static class WithTenant extends Base {
 	}
 
@@ -283,6 +304,14 @@ class TenantIdCustomSqlTest {
 	@Table(name = "tenant_custom_version_tenant")
 	@SQLUpdate(sql = "update tenant_custom_version_tenant set item_name=?,version=? where id=? and version=? and tenant=coalesce(?,tenant)", verify = Expectation.RowCount.class)
 	@SQLDelete(sql = "delete from tenant_custom_version_tenant where id=? and version=? and tenant=coalesce(?,tenant)", verify = Expectation.RowCount.class)
+	@DialectOverride.SQLUpdate(dialect = InformixDialect.class, override =
+	@SQLUpdate(
+			sql = "update tenant_custom_version_tenant set item_name=?,version=? where id=? and version=? and tenant=coalesce((select cast(? as varchar(255))),tenant)",
+			verify = Expectation.RowCount.class))
+	@DialectOverride.SQLDelete(dialect = InformixDialect.class, override =
+	@SQLDelete(
+			sql = "delete from tenant_custom_version_tenant where id=? and version=? and tenant=coalesce((select cast(? as varchar(255))),tenant)",
+			verify = Expectation.RowCount.class))
 	static class VersionedWithTenant extends VersionedBase {
 	}
 

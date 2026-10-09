@@ -168,7 +168,7 @@ class DirectJavaTimeJdbcSupportTests {
 		) );
 		final var jconnect = new SybaseDialect( sybaseInfo( "jConnect (TM) for JDBC (TM)" ) );
 		assertThat( jtds.getDirectJavaTimeJdbcSupport().supports( LocalDate.class ) ).isFalse();
-		assertThat( jconnect.getDirectJavaTimeJdbcSupport().supports( LocalDate.class ) ).isTrue();
+		assertThat( jconnect.getDirectJavaTimeJdbcSupport().supports( LocalDate.class ) ).isFalse();
 	}
 
 	private void assertOnlyLocalTypesSupported(DirectJavaTimeJdbcSupport support) {

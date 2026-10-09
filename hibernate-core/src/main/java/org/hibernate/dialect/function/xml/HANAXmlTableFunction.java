@@ -4,6 +4,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -28,6 +29,7 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmXmlTableFunction;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.ast.internal.ColumnQualifierCollectorSqlAstWalker;
 import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
@@ -183,10 +185,14 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 							// so we must filter them out
 							cteQuery.applyPredicate( new NullnessPredicate( document, true ) );
 							cteQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( wrapperExpression ) );
-							cteContainer.addCteStatement( new CteStatement(
+							final CteStatement cteStatement = new CteStatement(
 									new CteTable( tableName, cteColumns ),
-									new SelectStatement( cteQuery )
-							) );
+									new SelectStatement( cteQuery ),
+									// We need the CTE to be rendered as such, since we refer to the "table" name,
+									// so we add this hint to prevent inlining
+									CteMaterialization.NOT_MATERIALIZED
+							);
+							cteContainer.addCteStatement( cteStatement );
 							sqlArguments.set( 1, new TableColumnReferenceExpression( document, tableName, idColumns ) );
 							return querySpec;
 						} );
@@ -391,11 +397,16 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 
 	@Override
 	protected String determineColumnType(CastTarget castTarget, SqlAstTranslator<?> walker) {
-		return xmlValueReturningType( castTarget, super.determineColumnType( castTarget, walker ) );
+		return xmlValueReturningType( castTarget, super.determineColumnType( castTarget, walker ), isCloud( walker ) );
+	}
+
+	private static boolean isCloud(SqlAstTranslator<?> translator) {
+		return translator.getSessionFactory().getJdbcServices().getDialect() instanceof HANADialect hanaDialect
+			&& hanaDialect.isCloud();
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public static String xmlValueReturningType(SqlTypedMapping column, String columnDefinition) {
+	public static String xmlValueReturningType(SqlTypedMapping column, String columnDefinition, boolean isCloud) {
 		final int parenthesisIndex = columnDefinition.indexOf( '(' );
 		final String baseName = parenthesisIndex == -1
 				? columnDefinition
@@ -410,8 +421,8 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 			// Float is also not supported, but double is
 			case "float" -> "double";
 			// Clobs are also not supported, so use the biggest nvarchar possible
-			case "clob" -> "varchar(" + MEMORY_LIMIT + ")";
-			case "nclob" -> "nvarchar(" + MEMORY_LIMIT + ")";
+			case "clob" -> "varchar(" + (isCloud ? 5000 : MEMORY_LIMIT) + ")";
+			case "nclob" -> "nvarchar(" + (isCloud ? 5000 : MEMORY_LIMIT) + ")";
 			default -> columnDefinition;
 		};
 	}

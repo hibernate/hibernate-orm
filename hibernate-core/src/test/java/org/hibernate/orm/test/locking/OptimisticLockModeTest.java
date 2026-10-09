@@ -64,6 +64,8 @@ public class OptimisticLockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@JiraKey(value = "HHH-19937")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "Cockroach uses SERIALIZABLE by default and seems to fail reading state that was written by a different TX that completed within this TX")
 	public void testRefreshWithOptimisticLockRefresh() {
 		doInHibernate( this::sessionFactory, session -> {
 			C c = session.find( C.class, id, LockModeType.OPTIMISTIC );

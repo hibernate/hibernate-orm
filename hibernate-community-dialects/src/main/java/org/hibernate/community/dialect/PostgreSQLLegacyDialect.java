@@ -19,6 +19,8 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
 
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
@@ -197,6 +199,12 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
  * @author Yoobin Yoon
  */
 public class PostgreSQLLegacyDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.local();
+	}
+
 	private IfExistsSupport ifExistsSupport;
 	private SchemaDropSupport schemaDropSupport;
 

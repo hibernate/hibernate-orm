@@ -81,5 +81,7 @@ class ProcessorExtensionTest {
 				getterRepository );
 		assertFalse( getterRepository.contains( "@Inject" ), getterRepository );
 		assertFalse( getterRepository.contains( "Session session" ), getterRepository );
+		// the query method uses the expression provided by the extension, for a standard session type
+		assertTrue( getterRepository.contains( "SpiSessions.session().find(" ), getterRepository );
 	}
 }

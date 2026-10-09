@@ -2,8 +2,6 @@ package org.hibernate.orm.test.stateless.fetching;
 import java.util.Date;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class Task {

@@ -20,7 +20,7 @@ import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestam
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/version/db/User.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/version/db/User.orm.xml")
 @SessionFactory
 public class DbVersionTest {
 	@AfterEach

@@ -151,7 +151,7 @@ public class ConcreteParentLazyCollectionDiscriminatorTest {
 	@Entity(name = "SomeEntity")
 	public static class SomeEntity {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		private Long id;
 
 		@OneToMany(mappedBy = "someEntity", cascade = CascadeType.ALL, orphanRemoval = true)

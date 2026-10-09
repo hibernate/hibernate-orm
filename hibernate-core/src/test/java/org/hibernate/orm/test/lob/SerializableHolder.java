@@ -1,4 +1,5 @@
 package org.hibernate.orm.test.lob;
+
 import java.io.Serializable;
 
 /**

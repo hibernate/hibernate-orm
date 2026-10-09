@@ -1,0 +1,22 @@
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.idgen.enhanced.forcedtable</package>
+    <entity class="Entity" metadata-complete="true">
+        <table name="ID_SEQ_TBL_BSC_ENTITY"/>
+        <attributes>
+            <id name="id">
+                <column name="ID" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value strategy="SEQUENCE" generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="org.hibernate.id.enhanced.SequenceStyleGenerator">
+                    <parameter name="table_name" value="ID_SEQ_TBL_BSC_SEQ"/>
+                    <parameter name="value_column" value="hi_val"/>
+                    <parameter name="initial_value" value="1"/>
+                    <parameter name="increment_size" value="1"/>
+                    <parameter name="optimizer" value="none"/>
+                    <parameter name="force_table_use" value="true"/>
+                </generic-generator>
+            </id>
+            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

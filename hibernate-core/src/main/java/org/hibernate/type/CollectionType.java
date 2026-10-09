@@ -671,6 +671,9 @@ public abstract class CollectionType extends AbstractType implements Association
 				final var newCollection = instantiate( session, collectionPersister, key );
 				newCollection.initializeEmptyCollection( collectionPersister );
 				newCollection.setSnapshot( key, oldCollection.getRole(), oldCollection.getStoredSnapshot() );
+				if ( !wasClean ) {
+					newCollection.dirty();
+				}
 				session.getPersistenceContextInternal()
 						.replaceCollection( collectionPersister, oldCollection, newCollection );
 				target = newCollection;

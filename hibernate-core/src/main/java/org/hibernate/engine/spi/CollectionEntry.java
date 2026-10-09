@@ -67,6 +67,12 @@ public final class CollectionEntry implements Serializable {
 		collection.setSnapshot( loadedKey, role, snapshot );
 	}
 
+	public CollectionEntry(CollectionPersister persister, PersistentCollection<?> collection, Serializable retainedSnapshot) {
+		this.ignore = false;
+		this.snapshot = retainedSnapshot;
+		this.role = persister.getRole();
+	}
+
 	/**
 	 * For collections just loaded from the database
 	 */

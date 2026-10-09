@@ -1052,8 +1052,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 				oldEntry.getLoadedPersister() != null
 						// This is an already existing/loaded collection so ensure the loadedPersister is initialized
 						? new CollectionEntry( collection, session.getFactory() )
-						// A newly wrapped collection
-						: new CollectionEntry( persister, collection );
+						// A newly wrapped collection with retained snapshot
+						: new CollectionEntry( persister, collection, collection.getStoredSnapshot() );
 		entry.setReadOnly( oldEntry.isReadOnly(), collection );
 		putCollectionEntry( collection, entry );
 		final Object key = collection.getKey();

@@ -11,29 +11,29 @@ public class Contract implements Serializable {
 	private long version;
 	private String customerName;
 	private String type;
-	private List variations;
+	private List<ContractVariation> variations;
 	private Contract parent;
-	private Set subcontracts;
-	private Set plans = new HashSet();
-	private Set parties;
-	private Set infos;
+	private Set<Contract> subcontracts;
+	private Set<Plan> plans = new HashSet<>();
+	private Set<Party> parties;
+	private Set<Info> infos;
 
 	public Contract() {
 		super();
 	}
 
 	public Contract(Plan plan, String customerName, String type) {
-		plans = new HashSet();
+		plans = new HashSet<>();
 		if ( plan != null ) {
 			plans.add( plan );
 			plan.getContracts().add( this );
 		}
 		this.customerName = customerName;
 		this.type = type;
-		variations = new ArrayList();
-		subcontracts = new HashSet();
-		parties = new HashSet();
-		infos = new HashSet();
+		variations = new ArrayList<>();
+		subcontracts = new HashSet<>();
+		parties = new HashSet<>();
+		infos = new HashSet<>();
 	}
 
 	public long getVersion() {
@@ -44,11 +44,11 @@ public class Contract implements Serializable {
 		this.version = version;
 	}
 
-	public Set getPlans() {
+	public Set<Plan> getPlans() {
 		return plans;
 	}
 
-	public void setPlans(Set plans) {
+	public void setPlans(Set<Plan> plans) {
 		this.plans = plans;
 	}
 
@@ -80,7 +80,7 @@ public class Contract implements Serializable {
 		return variations;
 	}
 
-	public void setVariations(List variations) {
+	public void setVariations(List<ContractVariation> variations) {
 		this.variations = variations;
 	}
 
@@ -92,11 +92,11 @@ public class Contract implements Serializable {
 		this.parent = parent;
 	}
 
-	public Set getSubcontracts() {
+	public Set<Contract> getSubcontracts() {
 		return subcontracts;
 	}
 
-	public void setSubcontracts(Set subcontracts) {
+	public void setSubcontracts(Set<Contract> subcontracts) {
 		this.subcontracts = subcontracts;
 	}
 
@@ -109,7 +109,7 @@ public class Contract implements Serializable {
 		return parties;
 	}
 
-	public void setParties(Set parties) {
+	public void setParties(Set<Party> parties) {
 		this.parties = parties;
 	}
 
@@ -123,11 +123,11 @@ public class Contract implements Serializable {
 		party.setContract( null );
 	}
 
-	public Set getInfos() {
+	public Set<Info> getInfos() {
 		return infos;
 	}
 
-	public void setInfos(Set infos) {
+	public void setInfos(Set<Info> infos) {
 		this.infos = infos;
 	}
 }

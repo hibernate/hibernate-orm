@@ -30,7 +30,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 
 	@Override
 	protected String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/onetomany/Node.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/onetomany/Node.orm.xml" };
 	}
 
 	protected abstract CacheMode getSessionCacheMode();

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.jpa.xml.Qualifier"
+            access="PROPERTY" metadata-complete="true">
+        <table name="QUALIFIER"/>
+        <attributes>
+            <id name="qualifierId">
+                <column name="QUALIFIER_ID"/>
+                <generated-value/>
+            </id>
+            <basic name="name">
+                <column name="NAME" length="20" nullable="false"/>
+            </basic>
+            <basic name="value">
+                <column name="`VALUE`" length="1948"/>
+            </basic>
+        </attributes>
+    </entity>
+
+</entity-mappings>

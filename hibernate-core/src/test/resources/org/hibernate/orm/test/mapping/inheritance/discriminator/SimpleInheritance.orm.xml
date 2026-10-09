@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.mapping.inheritance.discriminator</package>
+    <attribute-accessor>field</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="Person" metadata-complete="true">
+        <table name="Person"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <discriminator-value>P</discriminator-value>
+        <discriminator-column name="TYPE" discriminator-type="CHAR" force-selection="false"/>
+        <attributes>
+            <id name="id">
+                <column name="person_id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="name" fetch="EAGER" optional="false" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <basic name="sex" fetch="EAGER" optional="false" optimistic-lock="true">
+                <column unique="false" nullable="false" updatable="false"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.CharacterJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.CharJdbcType</jdbc-type>
+            </basic>
+            <transient name="address"/>
+        </attributes>
+    </entity>
+    <entity class="Employee" metadata-complete="true">
+        <extends>org.hibernate.orm.test.mapping.inheritance.discriminator.Person</extends>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <discriminator-value>E</discriminator-value>
+        <attributes>
+            <basic name="title" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <basic name="salary" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.BigDecimalJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.NumericJdbcType</jdbc-type>
+            </basic>
+            <transient name="manager"/>
+        </attributes>
+    </entity>
+    <entity class="Customer" metadata-complete="true">
+        <extends>org.hibernate.orm.test.mapping.inheritance.discriminator.Person</extends>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <discriminator-value>C</discriminator-value>
+        <attributes>
+            <basic name="comments" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <transient name="salesperson"/>
+        </attributes>
+    </entity>
+</entity-mappings>

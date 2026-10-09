@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <attribute-accessor>property</attribute-accessor>
+    <entity name="ProductLine" metadata-complete="true">
+        <table name="ProductLine"/>
+        <attributes>
+            <id name="id">
+                <column name="productId" unique="false" nullable="false" insertable="true" updatable="false" length="32"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="uuid.hex"/>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </id>
+            <basic name="description" fetch="EAGER" optional="false" optimistic-lock="true">
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <one-to-many name="models" target-entity="Model" fetch="LAZY" mapped-by="productLine" orphan-removal="false" classification="BAG" not-found="EXCEPTION" optimistic-lock="true">
+                <mutable>true</mutable>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+    <entity name="Model" metadata-complete="true">
+        <table name="Model"/>
+        <attributes>
+            <id name="id">
+                <column name="modelId" unique="false" nullable="false" insertable="true" updatable="false" length="32"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="uuid.hex"/>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </id>
+            <basic name="name" fetch="EAGER" optional="false" optimistic-lock="true">
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <basic name="description" fetch="EAGER" optional="false" optimistic-lock="true">
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <many-to-one name="productLine" target-entity="ProductLine" fetch="LAZY" fetch-mode="SELECT" optional="false" not-found="EXCEPTION">
+                <join-column name="productId" unique="false" nullable="false" insertable="true" updatable="true"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

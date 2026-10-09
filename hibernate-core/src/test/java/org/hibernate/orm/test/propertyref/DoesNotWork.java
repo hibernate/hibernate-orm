@@ -37,7 +37,7 @@ public class DoesNotWork implements Serializable {
 	@Column(name = "text_part", insertable = false, updatable = false)
 	@OrderColumn( name = "seq_no" )
 	@ListIndexBase(1)
-	private List<String> globalNotes = new ArrayList<String>();
+	private List<String> globalNotes = new ArrayList<>();
 
 	public DoesNotWork() {
 	}

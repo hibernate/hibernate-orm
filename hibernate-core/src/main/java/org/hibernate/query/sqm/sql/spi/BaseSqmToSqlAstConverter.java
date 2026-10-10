@@ -7861,6 +7861,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Junction visitJunctionPredicate(SqmJunctionPredicate predicate) {
 		final var subpredicates = predicate.getPredicates();
+
+		// The AND path is simple - visit all child predicates and collect their
+		// SQL AST forms into a SQL AST CONJUNCTION
+
 		if ( predicate.getOperator() == BooleanOperator.AND ) {
 			final List<Predicate> predicates = new ArrayList<>( subpredicates.size() );
 			for ( var subpredicate : subpredicates ) {
@@ -7868,6 +7872,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			return new Junction( Junction.Nature.CONJUNCTION, predicates, getBooleanType() );
 		}
+
+		// The OR path builds a SQL AST DISJUNCTION.  It is more complicated because, unlike the AND
+		// case, a restriction defined in one OR branch does not necessarily apply to the whole predicate.
+		//
+		// Consider (pseudo) -
+		//		from Animal where (is Human AND shoeSize = 15) AND name = 'Steve'
+		//
+		// Here, the "is Human" restriction can safely be applied across the entire predicate.  The
+		// restriction on `name` would still need to satisfy the restriction on being Human.
+		//
+		// Versus -
+		//      from Animal where (is Human AND shoeSize = 15) OR name = 'Steve'
+		//
+		// Here, it cannot be safely applied across the entire predicate.  The restriction on `name`
+		// needs to be evaluated independent of the restriction on being Human.
 
 		final var disjunction = new Junction(
 				Junction.Nature.DISJUNCTION,

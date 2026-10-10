@@ -5637,75 +5637,75 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		Predicate predicate = null;
 		for ( var entry : conjunctTreatUsages.entrySet() ) {
-			final var tableGroup = entry.getKey();
-			final var modelPart = tableGroup.getModelPart();
-
-			final Set<String> typeNames;
-			final EntityMappingType entityMapping;
-			final EmbeddableMappingType embeddableMapping;
-			if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
-				entityMapping = (EntityMappingType) pluralAttributeMapping.getElementDescriptor().getPartMappingType();
-				embeddableMapping = null;
-			}
-			else if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
-				entityMapping = entityValuedModelPart.getEntityMappingType();
-				embeddableMapping = null;
-			}
-			else if ( modelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
-				embeddableMapping = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
-				entityMapping = null;
-			}
-			else {
-				throw new IllegalStateException( "Unrecognized model part for treated table group: " + tableGroup );
-			}
-
-			final DiscriminatorPathInterpretation<?> typeExpression;
-			final var usage = entry.getValue();
-			if ( entityMapping != null ) {
-				typeNames = determineEntityNamesForTreatTypeRestriction( entityMapping, usage );
-				if ( typeNames.isEmpty() ) {
-					continue;
-				}
-				typeExpression = new DiscriminatorPathInterpretation<>(
-						tableGroup.getNavigablePath().append( DISCRIMINATOR_ROLE_NAME ),
-						entityMapping,
-						tableGroup,
-						this
-				);
-				registerTypeUsage( tableGroup );
-			}
-			else {
-				assert embeddableMapping != null;
-				typeNames = determineEmbeddableNamesForTreatTypeRestriction( embeddableMapping, usage );
-				if ( typeNames.isEmpty() ) {
-					continue;
-				}
-				typeExpression = new DiscriminatorPathInterpretation<>(
-						tableGroup.getNavigablePath().append( DISCRIMINATOR_ROLE_NAME ),
-						embeddableMapping.getDiscriminatorMapping(),
-						tableGroup,
-						this
-				);
-			}
-
-			// We need to check if this is a treated left or full join, which case we should
-			// allow null discriminator values to maintain correct semantics
-			final var join = getParentTableGroupJoin( tableGroup );
-			final boolean allowNulls = join != null
-					&& ( join.getJoinType() == SqlAstJoinType.LEFT
-							|| join.getJoinType() == SqlAstJoinType.FULL );
 			predicate = combinePredicates(
 					predicate,
-					createTreatTypeRestriction(
-							typeExpression,
-							typeNames,
-							allowNulls,
-							entityMapping != null
-					)
+					consumeConjunctTreatTypeRestriction( entry.getKey(), entry.getValue() )
+			);
+		}
+		return predicate;
+	}
+
+	private Predicate consumeConjunctTreatTypeRestriction(TableGroup tableGroup, Map<String, EntityNameUse> usage) {
+		final var modelPart = tableGroup.getModelPart();
+		final Set<String> typeNames;
+		final EntityMappingType entityMapping;
+		final EmbeddableMappingType embeddableMapping;
+		if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			entityMapping = (EntityMappingType) pluralAttributeMapping.getElementDescriptor().getPartMappingType();
+			embeddableMapping = null;
+		}
+		else if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+			entityMapping = entityValuedModelPart.getEntityMappingType();
+			embeddableMapping = null;
+		}
+		else if ( modelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+			embeddableMapping = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
+			entityMapping = null;
+		}
+		else {
+			throw new IllegalStateException( "Unrecognized model part for treated table group: " + tableGroup );
+		}
+
+		final DiscriminatorPathInterpretation<?> typeExpression;
+		if ( entityMapping != null ) {
+			typeNames = determineEntityNamesForTreatTypeRestriction( entityMapping, usage );
+			if ( typeNames.isEmpty() ) {
+				return null;
+			}
+			typeExpression = new DiscriminatorPathInterpretation<>(
+					tableGroup.getNavigablePath().append( DISCRIMINATOR_ROLE_NAME ),
+					entityMapping,
+					tableGroup,
+					this
+			);
+			registerTypeUsage( tableGroup );
+		}
+		else {
+			assert embeddableMapping != null;
+			typeNames = determineEmbeddableNamesForTreatTypeRestriction( embeddableMapping, usage );
+			if ( typeNames.isEmpty() ) {
+				return null;
+			}
+			typeExpression = new DiscriminatorPathInterpretation<>(
+					tableGroup.getNavigablePath().append( DISCRIMINATOR_ROLE_NAME ),
+					embeddableMapping.getDiscriminatorMapping(),
+					tableGroup,
+					this
 			);
 		}
 
-		return predicate;
+		// We need to check if this is a treated left or full join, which case we should
+		// allow null discriminator values to maintain correct semantics
+		final var join = getParentTableGroupJoin( tableGroup );
+		final boolean allowNulls = join != null
+				&& ( join.getJoinType() == SqlAstJoinType.LEFT
+						|| join.getJoinType() == SqlAstJoinType.FULL );
+		return createTreatTypeRestriction(
+				typeExpression,
+				typeNames,
+				allowNulls,
+				entityMapping != null
+		);
 	}
 
 	private TableGroupJoin getParentTableGroupJoin(TableGroup tableGroup) {
@@ -7845,6 +7845,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new GroupedPredicate( (Predicate) visitWithRequiredResult( predicate.getSubPredicate() ) );
 	}
 
+	/// Translate a junction while preserving the entity-name usages needed for table retention
+	/// and treat/type restrictions.
+	///
+	/// Conjuncts share the current usage context because all of their restrictions apply together.
+	///
+	/// For a disjunction, collect each branch's usages independently, analyze them without
+	/// modifying the snapshots, and then apply branch restrictions and propagate the usage
+	/// summary. Table retention requires the union of entity usages, even when a branch has
+	/// no usages. Restriction propagation additionally requires the corresponding restriction
+	/// kind in every branch. Complete, identical usage maps allow restrictions to be factored
+	/// out; otherwise each branch receives its own complete restriction.
+	///
+	/// Usages from the surrounding context are excluded from branch analysis and merged back
+	/// after the disjunction's summary has been computed, so surrounding conjuncts retain
+	/// their restrictions regardless of visitation order.
 	@Override
 	public Junction visitJunctionPredicate(SqmJunctionPredicate predicate) {
 		final var subpredicates = predicate.getPredicates();
@@ -7855,252 +7870,216 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			return new Junction( Junction.Nature.CONJUNCTION, predicates, getBooleanType() );
 		}
+
 		final var disjunction = new Junction(
 				Junction.Nature.DISJUNCTION,
 				new ArrayList<>( subpredicates.size() ),
 				getBooleanType()
 		);
-		final Map<TableGroup, Map<String, EntityNameUse>> previousTableGroupEntityNameUses =
-				new IdentityHashMap<>( tableGroupEntityNameUses );
-		Map<TableGroup, Map<String, EntityNameUse>>[] disjunctEntityNameUsesArray = null;
-		Map<TableGroup, Map<String, EntityNameUse>> entityNameUsesToPropagate = null;
-		List<TableGroup> treatedTableGroups = null;
-		List<TableGroup> filteredTableGroups = null;
-		for ( int i = 0; i < subpredicates.size(); i++ ) {
+		final var parentUsages = captureEntityNameUses();
+		boolean completed = false;
+		try {
+			// Collection: clearing only the outer map gives each branch independent inner maps.
+			// Keep empty snapshots too: an unrestricted branch affects restriction propagation.
+			final var branchUsages = new EntityNameUsageSnapshot[subpredicates.size()];
+			for ( int i = 0; i < subpredicates.size(); i++ ) {
+				tableGroupEntityNameUses.clear();
+				disjunction.add( (Predicate) visitWithRequiredResult( subpredicates.get( i ) ) );
+				branchUsages[i] = captureEntityNameUses();
+			}
+
+			// Analysis: preserve the snapshots for generating each branch's full restriction.
+			final var analysis = analyzeDisjunctionEntityNameUses( branchUsages );
+			// Application: attach restrictions before merging the summary and parent usages.
+			// Restriction generation may register additional usages. Keep those in the outgoing context.
 			tableGroupEntityNameUses.clear();
-			disjunction.add( (Predicate) visitWithRequiredResult( subpredicates.get( i ) ) );
-			if ( !tableGroupEntityNameUses.isEmpty() ) {
-				if ( disjunctEntityNameUsesArray == null ) {
-					disjunctEntityNameUsesArray = new Map[subpredicates.size()];
-					entityNameUsesToPropagate = new IdentityHashMap<>( previousTableGroupEntityNameUses );
+			if ( analysis != null ) {
+				for ( int i = 0; i < branchUsages.length; i++ ) {
+					final var branch = branchUsages[i];
+					Predicate restriction = null;
+					for ( int j = 0; j < branch.groups.length; j++ ) {
+						final var group = branch.groups[j];
+						final var groupAnalysis = analysis.get( group );
+						if ( groupAnalysis.inScope && !groupAnalysis.canFactorRestrictions( branchUsages.length ) ) {
+							restriction = combinePredicates(
+									restriction,
+									consumeConjunctTreatTypeRestriction( group, branch.usages[j] )
+							);
+						}
+					}
+					disjunction.getPredicates().set(
+							i,
+							combinePredicates( restriction, disjunction.getPredicates().get( i ) )
+					);
 				}
-				if ( i == 0 ) {
-					// Collect the table groups for which filters are registered
-					for ( var entry : tableGroupEntityNameUses.entrySet() ) {
-						final var value = entry.getValue();
-						if ( value.containsValue( EntityNameUse.TREAT )
-							|| value.containsValue( EntityNameUse.OPTIONAL_TREAT ) ) {
-							if ( treatedTableGroups == null ) {
-								treatedTableGroups = new ArrayList<>( 1 );
-							}
-							treatedTableGroups.add( entry.getKey() );
-						}
-						if ( value.containsValue( EntityNameUse.FILTER ) ) {
-							if ( filteredTableGroups == null ) {
-								filteredTableGroups = new ArrayList<>( 1 );
-							}
-							filteredTableGroups.add( entry.getKey() );
-						}
+				analysis.forEach( (group, usages) -> {
+					if ( !usages.propagatedUses.isEmpty() ) {
+						mergeEntityNameUses( group, usages.propagatedUses );
 					}
-				}
-				// Create a copy of the filtered table groups from which we remove
-				final List<TableGroup> missingTableGroupFilters =
-						filteredTableGroups == null || i == 0
-								? emptyList()
-								: new ArrayList<>( filteredTableGroups );
-				final List<TableGroup> missingTableGroupTreats =
-						treatedTableGroups == null || i == 0
-								? emptyList()
-								: new ArrayList<>( treatedTableGroups );
-				// Compute the entity name uses to propagate to the parent context
-				// If every disjunct contains a FILTER, we can merge the filters
-				// If every disjunct contains a TREAT, we can merge the treats
-				// Otherwise, we downgrade the entity name uses to expression uses
-				final var iterator = tableGroupEntityNameUses.entrySet().iterator();
-				while ( iterator.hasNext() ) {
-					final var entry = iterator.next();
-					final var tableGroup = entry.getKey();
-					final var entityNameUses =
-							entityNameUsesToPropagate.computeIfAbsent( tableGroup, k -> new HashMap<>() );
-					final boolean downgradeTreatUses;
-					final boolean downgradeFilterUses;
-					if ( getFromClauseAccess().findTableGroup( tableGroup.getNavigablePath() ) == null ) {
-						// Always preserver name uses for table groups not found in the current from clause index
-						previousTableGroupEntityNameUses.put( tableGroup, entry.getValue() );
-						// Remove from the current junction context since no more processing is required
-						if ( treatedTableGroups != null ) {
-							treatedTableGroups.remove( tableGroup );
-						}
-						if ( filteredTableGroups != null ) {
-							filteredTableGroups.remove( tableGroup );
-						}
-						iterator.remove();
-						continue;
-					}
-					else if ( i == 0 ) {
-						// Never downgrade treat or filter uses of the first disjunct
-						downgradeTreatUses = false;
-						downgradeFilterUses = false;
-					}
-					else {
-						// If the table group is not part of the missingTableGroupTreats, we must downgrade treat uses
-						downgradeTreatUses = !missingTableGroupTreats.contains( tableGroup );
-						// If the table group is not part of the missingTableGroupFilters, we must downgrade filter uses
-						downgradeFilterUses = !missingTableGroupFilters.contains( tableGroup );
-					}
-					for ( var useEntry : entry.getValue().entrySet() ) {
-						final var useKind = useEntry.getValue().getKind();
-						final var currentUseKind = entityNameUses.get( useEntry.getKey() );
-						final EntityNameUse unionEntityNameUse;
-						if ( useKind == EntityNameUse.UseKind.TREAT ) {
-							if ( downgradeTreatUses ) {
-								unionEntityNameUse = EntityNameUse.EXPRESSION;
-							}
-							else {
-								unionEntityNameUse = useEntry.getValue();
-								missingTableGroupTreats.remove( tableGroup );
-							}
-						}
-						else if ( useKind == EntityNameUse.UseKind.FILTER ) {
-							if ( downgradeFilterUses ) {
-								unionEntityNameUse = EntityNameUse.EXPRESSION;
-							}
-							else {
-								unionEntityNameUse = useEntry.getValue();
-								missingTableGroupFilters.remove( tableGroup );
-							}
-						}
-						else {
-							unionEntityNameUse = useEntry.getValue();
-						}
-						entityNameUses.put( useEntry.getKey(),
-								currentUseKind == null
-										? unionEntityNameUse
-										: unionEntityNameUse.stronger( currentUseKind ) );
-					}
-				}
-				// Downgrade entity name uses for table groups that haven't been filtered in this disjunct
-				for ( var missingTableGroupTreat : missingTableGroupTreats ) {
-					treatedTableGroups.remove( missingTableGroupTreat );
-					final var entityNameUses = entityNameUsesToPropagate.get( missingTableGroupTreat );
-					for ( var entry : entityNameUses.entrySet() ) {
-						if ( entry.getValue().getKind() == EntityNameUse.UseKind.TREAT ) {
-							entry.setValue( EntityNameUse.EXPRESSION );
-						}
-					}
-				}
-				for ( var missingTableGroupFilter : missingTableGroupFilters ) {
-					filteredTableGroups.remove( missingTableGroupFilter );
-					final var entityNameUses = entityNameUsesToPropagate.get( missingTableGroupFilter );
-					for ( var entry : entityNameUses.entrySet() ) {
-						if ( entry.getValue() == EntityNameUse.FILTER ) {
-							entry.setValue( EntityNameUse.EXPRESSION );
-						}
-					}
-				}
-				disjunctEntityNameUsesArray[i] = new IdentityHashMap<>( tableGroupEntityNameUses );
+				} );
 			}
-			else {
-				if ( treatedTableGroups != null ) {
-					treatedTableGroups = null;
-					for ( var entityNameUses : entityNameUsesToPropagate.values() ) {
-						for ( var entry : entityNameUses.entrySet() ) {
-							if ( entry.getValue().getKind() == EntityNameUse.UseKind.TREAT ) {
-								entry.setValue( EntityNameUse.EXPRESSION );
-							}
-						}
-					}
-				}
-				if ( filteredTableGroups != null ) {
-					filteredTableGroups = null;
-					for ( var entityNameUses : entityNameUsesToPropagate.values() ) {
-						for ( var entry : entityNameUses.entrySet() ) {
-							if ( entry.getValue() == EntityNameUse.FILTER ) {
-								entry.setValue( EntityNameUse.EXPRESSION );
-							}
-						}
-					}
-				}
+			// Merge after branch-local downgrades, so restrictions from surrounding conjuncts survive.
+			// Merge into the outgoing maps instead of mutating the captured parent maps.
+			for ( int i = 0; i < parentUsages.groups.length; i++ ) {
+				mergeEntityNameUses( parentUsages.groups[i], parentUsages.usages[i] );
 			}
-		}
-		if ( disjunctEntityNameUsesArray == null ) {
-			tableGroupEntityNameUses.putAll( previousTableGroupEntityNameUses );
+			completed = true;
 			return disjunction;
 		}
-
-		if ( !tableGroupEntityNameUses.isEmpty() ) {
-			// Build the intersection of the conjunct treat usages,
-			// so that we can push that up and infer during pruning, which entity subclasses can be omitted
-			final var iterator = tableGroupEntityNameUses.entrySet().iterator();
-			while ( iterator.hasNext() ) {
-				final var entry = iterator.next();
-				final Map<String, EntityNameUse> intersected = new HashMap<>( entry.getValue() );
-				entry.setValue( intersected );
-				boolean remove = false;
-				for ( var conjunctTreatUsages : disjunctEntityNameUsesArray ) {
-					final Map<String, EntityNameUse> entityNames;
-					if ( conjunctTreatUsages == null
-							|| ( entityNames = conjunctTreatUsages.get( entry.getKey() ) ) == null ) {
-						remove = true;
-						break;
-					}
-					// Intersect the two sets and transfer the common elements to the intersection
-					final var intersectedIter = intersected.entrySet().iterator();
-					while ( intersectedIter.hasNext() ) {
-						final var intersectedEntry = intersectedIter.next();
-						final var intersectedUseKind = intersectedEntry.getValue();
-						final var useKind = entityNames.get( intersectedEntry.getKey() );
-						if ( useKind == null ) {
-							intersectedIter.remove();
-						}
-						else {
-							// Possibly downgrade a FILTER use to EXPRESSION if one of the disjunctions does not use FILTER
-							intersectedEntry.setValue( intersectedUseKind.weaker( useKind ) );
-						}
-					}
-					if ( intersected.isEmpty() ) {
-						remove = true;
-						break;
-					}
-					entityNames.keySet().removeAll( intersected.keySet() );
-					if ( entityNames.isEmpty() ) {
-						conjunctTreatUsages.remove( entry.getKey() );
-					}
-				}
-
-				if ( remove ) {
-					entityNameUsesToPropagate.remove( entry.getKey() );
-					iterator.remove();
+		finally {
+			if ( !completed ) {
+				// Restore usage bookkeeping if translation or restriction generation fails.
+				tableGroupEntityNameUses.clear();
+				for ( int i = 0; i < parentUsages.groups.length; i++ ) {
+					tableGroupEntityNameUses.put( parentUsages.groups[i], parentUsages.usages[i] );
 				}
 			}
 		}
-		else {
-			// If there's no baseline to construct the intersection from don't propagate
-			entityNameUsesToPropagate.clear();
-		}
+	}
 
-		// Prepend the treat type usages to the respective conjuncts
-		for ( int i = 0; i < disjunctEntityNameUsesArray.length; i++ ) {
-			final var conjunctTreatUsages = disjunctEntityNameUsesArray[i];
-			if ( conjunctTreatUsages != null && !conjunctTreatUsages.isEmpty() ) {
-				disjunction.getPredicates().set(
-						i,
-						combinePredicates(
-								consumeConjunctTreatTypeRestrictions( conjunctTreatUsages ),
-								disjunction.getPredicates().get( i )
-						)
-				);
+	/// Capture group and inner-map references without copying the entity-name maps.
+	/// The caller clears the outer workspace before further translation; the captured inner
+	/// maps must remain read-only through analysis and restriction generation.
+	private EntityNameUsageSnapshot captureEntityNameUses() {
+		if ( tableGroupEntityNameUses.isEmpty() ) {
+			return EntityNameUsageSnapshot.EMPTY;
+		}
+		final var snapshot = new EntityNameUsageSnapshot( tableGroupEntityNameUses.size() );
+		final int[] index = { 0 };
+		tableGroupEntityNameUses.forEach( (group, usages) -> {
+			snapshot.groups[index[0]] = group;
+			snapshot.usages[index[0]++] = usages;
+		} );
+		return snapshot;
+	}
+
+	/// Build independent summaries keyed by table-group identity, leaving branch snapshots intact.
+	/// Return null when no branch has usages, avoiding an analysis-map allocation in that case.
+	private Map<TableGroup, DisjunctionEntityNameUses> analyzeDisjunctionEntityNameUses(
+			EntityNameUsageSnapshot[] branches) {
+		Map<TableGroup, DisjunctionEntityNameUses> analysis = null;
+		for ( var branch : branches ) {
+			if ( branch.groups.length != 0 && analysis == null ) {
+				// One identity index per disjunction; distinct groups may describe the same entity.
+				analysis = new IdentityHashMap<>( branch.groups.length );
 			}
-		}
-
-		// Restore the parent context entity name uses state
-		tableGroupEntityNameUses.clear();
-		tableGroupEntityNameUses.putAll( previousTableGroupEntityNameUses );
-		// Propagate the union of the entity name uses upwards
-		for ( var entry : entityNameUsesToPropagate.entrySet() ) {
-			final var entityNameUses =
-					tableGroupEntityNameUses.putIfAbsent( entry.getKey(), entry.getValue() );
-			if ( entityNameUses != null && entityNameUses != entry.getValue() ) {
-				for ( var useEntry : entry.getValue().entrySet() ) {
-					final var currentEntityNameUse = entityNameUses.get( useEntry.getKey() );
-					final var value = currentEntityNameUse == null
-							? useEntry.getValue()
-							: useEntry.getValue().stronger( currentEntityNameUse );
-					entityNameUses.put( useEntry.getKey(), value );
+			for ( int i = 0; i < branch.groups.length; i++ ) {
+				final var group = branch.groups[i];
+				var groupAnalysis = analysis.get( group );
+				if ( groupAnalysis == null ) {
+					groupAnalysis = new DisjunctionEntityNameUses(
+							getFromClauseAccess().findTableGroup( group.getNavigablePath() ) != null,
+							group.getModelPart() instanceof EmbeddableValuedModelPart,
+							branch.usages[i]
+					);
+					analysis.put( group, groupAnalysis );
 				}
+				groupAnalysis.addBranch( branch.usages[i] );
 			}
 		}
-		return disjunction;
+		if ( analysis != null ) {
+			for ( var groupAnalysis : analysis.values() ) {
+				groupAnalysis.finish( branches.length );
+			}
+		}
+		return analysis;
+	}
+
+	/// Merge into the outgoing context, adopting the supplied map when no target exists.
+	/// When a target exists, only that target is modified; captured source maps stay intact.
+	private void mergeEntityNameUses(TableGroup group, Map<String, EntityNameUse> usages) {
+		final var target = tableGroupEntityNameUses.putIfAbsent( group, usages );
+		if ( target != null && target != usages ) {
+			usages.forEach( (name, use) -> target.merge( name, use, BaseSqmToSqlAstConverter::strongerEntityNameUse ) );
+		}
+	}
+
+	/// A required treat restriction must survive an optional use, irrespective of visitation order.
+	private static EntityNameUse strongerEntityNameUse(EntityNameUse first, EntityNameUse second) {
+		if ( first.getKind() == EntityNameUse.UseKind.TREAT && second.getKind() == EntityNameUse.UseKind.TREAT ) {
+			if ( first == EntityNameUse.TREAT || second == EntityNameUse.TREAT ) {
+				return EntityNameUse.TREAT;
+			}
+			if ( first == EntityNameUse.OPTIONAL_TREAT || second == EntityNameUse.OPTIONAL_TREAT ) {
+				return EntityNameUse.OPTIONAL_TREAT;
+			}
+		}
+		return first.stronger( second );
+	}
+
+	/// Compact snapshot with corresponding group and usage-map references at each array index.
+	/// Inner maps are owned by the captured context and are not copied or mutated during analysis.
+	private static final class EntityNameUsageSnapshot {
+		private static final EntityNameUsageSnapshot EMPTY = new EntityNameUsageSnapshot( 0 );
+
+		private final TableGroup[] groups;
+		private final Map<String, EntityNameUse>[] usages;
+
+		@SuppressWarnings("unchecked")
+		private EntityNameUsageSnapshot(int size) {
+			groups = new TableGroup[size];
+			usages = new Map[size];
+		}
+	}
+
+	/// Summary for one table group: the union retains required tables, while branch counts
+	/// determine whether treat/filter usages may remain restrictions outside the disjunction.
+	private static final class DisjunctionEntityNameUses {
+		private final boolean inScope;
+		private final boolean embeddable;
+		private final Map<String, EntityNameUse> firstBranchUses;
+		private final Map<String, EntityNameUse> propagatedUses;
+		private boolean identicalBranchUses = true;
+		private int branchCount;
+		private int treatBranchCount;
+		private int filterBranchCount;
+
+		private DisjunctionEntityNameUses(
+				boolean inScope,
+				boolean embeddable,
+				Map<String, EntityNameUse> firstBranchUses) {
+			this.inScope = inScope;
+			this.embeddable = embeddable;
+			this.firstBranchUses = firstBranchUses;
+			propagatedUses = new HashMap<>( firstBranchUses.size() );
+		}
+
+		private void addBranch(Map<String, EntityNameUse> uses) {
+			branchCount++;
+			identicalBranchUses &= firstBranchUses.equals( uses );
+			if ( uses.containsValue( EntityNameUse.TREAT ) || uses.containsValue( EntityNameUse.OPTIONAL_TREAT ) ) {
+				treatBranchCount++;
+			}
+			if ( uses.containsValue( EntityNameUse.FILTER ) ) {
+				filterBranchCount++;
+			}
+			uses.forEach( (name, use) -> propagatedUses.merge( name, use, BaseSqmToSqlAstConverter::strongerEntityNameUse ) );
+		}
+
+		private void finish(int totalBranches) {
+			if ( inScope ) {
+				// Embeddable usages do not drive table pruning, and their restriction consumer
+				// interprets every subtype name as a restriction, even for EXPRESSION usages.
+				if ( embeddable && !canFactorRestrictions( totalBranches ) ) {
+					propagatedUses.clear();
+					return;
+				}
+				// A missing restriction kind in any branch prevents global restriction by that kind.
+				// Retain the entity names as expressions so tables used by another branch are not pruned.
+				propagatedUses.replaceAll( (name, use) -> switch ( use.getKind() ) {
+					case TREAT -> treatBranchCount == totalBranches ? use : EntityNameUse.EXPRESSION;
+					case FILTER -> filterBranchCount == totalBranches ? use : EntityNameUse.EXPRESSION;
+					default -> use;
+				} );
+			}
+		}
+
+		/// Conservatively factor only identical complete maps present in every branch.
+		/// A partial intersection of subtype names does not establish a common restriction:
+		/// subtracting it could change the alternatives allowed by an individual branch.
+		private boolean canFactorRestrictions(int totalBranches) {
+			return branchCount == totalBranches && identicalBranchUses;
+		}
 	}
 
 	@Override

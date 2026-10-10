@@ -33,7 +33,6 @@ public class RepositoryConstructor implements MetaAttribute {
 	private final boolean addNonnullAnnotation;
 	private final boolean addOverrideAnnotation;
 	private final boolean dataRepository;
-	private final boolean quarkusInjection;
 
 	public RepositoryConstructor(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -45,8 +44,7 @@ public class RepositoryConstructor implements MetaAttribute {
 			boolean addInjectAnnotation,
 			boolean addNonnullAnnotation,
 			boolean addOverrideAnnotation,
-			boolean dataRepository,
-			boolean quarkusInjection) {
+			boolean dataRepository) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.constructorName = constructorName;
 		this.methodName = methodName;
@@ -57,7 +55,6 @@ public class RepositoryConstructor implements MetaAttribute {
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.addOverrideAnnotation = addOverrideAnnotation;
 		this.dataRepository = dataRepository;
-		this.quarkusInjection = quarkusInjection;
 	}
 
 	@Override
@@ -203,18 +200,15 @@ public class RepositoryConstructor implements MetaAttribute {
 	}
 
 	/**
-	 * In Quarkus we use the Quarkus-specific {@code @PersistenceUnit}
-	 * CDI qualifier annotation to inject the {@code StatelessSession}
-	 * directly.
+	 * The qualifier of the injected session, if any, as decided by the
+	 * {@linkplain org.hibernate.processor.spi.HibernateProcessorExtension#sessionQualifier extension}.
 	 */
 	private void qualifier(StringBuilder declaration) {
-		if ( addInjectAnnotation && quarkusInjection && dataStore != null ) {
+		final var qualifier = annotationMetaEntity.sessionQualifier();
+		if ( qualifier != null ) {
 			declaration
-					.append('@')
-					.append(annotationMetaEntity.importType("io.quarkus.hibernate.orm.PersistenceUnit"))
-					.append("(\"")
-					.append(dataStore)
-					.append("\") ");
+					.append(qualifier)
+					.append(' ');
 		}
 	}
 

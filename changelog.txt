@@ -1,6 +1,19 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.13.Final (October 11, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40491
+
+
+** Bug
+    * HHH-20906 Bug in combination of @Audited, Joined Inheritance and @SecondaryTable
+    * HHH-17354 HQL queries do not handle quoted identifiers from sub-queries
+
+** Task
+    * HHH-20957 Upgrade ByteBuddy to 1.18.14 (latest micro update) for Java 27
+
 Changes in 7.4.12.Final (October 04, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

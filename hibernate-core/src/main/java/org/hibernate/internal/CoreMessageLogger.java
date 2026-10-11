@@ -186,6 +186,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Could not create proxy factory for:%s", id = 305)
 	void unableToCreateProxyFactory(String entityName, @Cause HibernateException e);
 
+	@LogMessage(level = WARN)
+	@Message(value = "Entity is missing a proxyable (public, protected, package-private) default constructor; runtime proxy creation will not be possible: %s", id = 306)
+	void missingProxyableConstructor(String entityName);
+
 	@LogMessage(level = ERROR)
 	@Message(value = "Problem loading properties from hibernate.properties", id = 329)
 	void unableToLoadProperties();

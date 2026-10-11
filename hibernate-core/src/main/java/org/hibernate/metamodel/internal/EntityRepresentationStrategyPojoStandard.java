@@ -1,6 +1,7 @@
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -348,10 +349,14 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			Method proxySetIdentifierMethod,
 			Class<?> mappedClass,
 			Set<Class<?>> proxyInterfaces) {
+		final String entityName = bootDescriptor.getEntityName();
+		if ( isMissingProxyableConstructor( mappedClass, entityName ) && proxyInterfaces.size() <= 1 ) {
+			return new InaccessibleConstructorProxyFactory( entityName );
+		}
+
 		final var proxyFactory =
 				bytecodeProvider.getProxyFactoryFactory()
 						.buildProxyFactory( creationContext.getSessionFactory() );
-		final String entityName = bootDescriptor.getEntityName();
 		try {
 			proxyFactory.postInstantiate(
 					entityName,
@@ -369,6 +374,27 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			return null;
 		}
 		return proxyFactory;
+	}
+
+	private static boolean isMissingProxyableConstructor(Class<?> mappedClass, String entityName) {
+		// We do not support proxying inner (non-static) classes...
+		if ( mappedClass.getEnclosingClass() != null ) {
+			if ( !Modifier.isStatic(  mappedClass.getModifiers() ) ) {
+				return true;
+			}
+		}
+
+		try {
+			var ctor = mappedClass.getDeclaredConstructor();
+			if ( Modifier.isPrivate( ctor.getModifiers() ) ) {
+				return true;
+			}
+		}
+		catch (NoSuchMethodException e) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private PropertyAccess makePropertyAccess(PropertyAccessorService propertyAccessorService, Property bootAttributeDescriptor, StrategySelector strategySelector) {

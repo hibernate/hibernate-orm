@@ -100,11 +100,11 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 		}
 		catch (NoSuchMethodException e) {
 			throw new HibernateException(
-					"Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity '"
+					"Unable to create a runtime proxy because no public, protected or package-private default constructor was found for entity '"
 							+ entityName + "' (private constructors don't work with runtime proxies)", e );
 		}
 		catch (Throwable t) {
-			throw new HibernateException( "Bytecode enhancement failed for entity '" + entityName + "'", t );
+			throw new HibernateException( "Runtime proxy creation failed for entity '" + entityName + "'", t );
 		}
 	}
 

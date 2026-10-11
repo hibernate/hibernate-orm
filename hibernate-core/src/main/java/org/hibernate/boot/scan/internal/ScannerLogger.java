@@ -31,14 +31,18 @@ public interface ScannerLogger extends BasicLogger {
 	ScannerLogger SCANNER_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ScannerLogger.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = Logger.Level.WARN)
-	@Message(id = 60001, value = "Multiple ScannerFactory services available; using '%s'")
+	@Message(id = 60001, value = "Multiple ScanningProvider services available; using '%s'")
 	void multipleScannerFactoriesAvailable(String scannerClassName);
 
 	@LogMessage(level = Logger.Level.DEBUG)
-	@Message(id = 60002, value = "No ScannerFactory available (to enable scanning add 'hibernate-scan-jandex' dependency or supply a custom ScannerFactory)")
+	@Message(id = 60002, value = "No ScanningProvider available (to enable scanning add 'hibernate-scan-jandex' dependency or supply a custom ScanningProvider)")
 	void noScannerFactoryAvailable();
 
 	@LogMessage(level = Logger.Level.DEBUG)
 	@Message(id = 60003, value = "Unable to resolve class [%s] named in persistence unit [%s]")
 	void unableToResolveClass(String className, URL rootUrl);
+
+	@LogMessage(level = Logger.Level.WARN)
+	@Message(id = 60004, value = "Scanning was triggered, but no ScanningProvider available; did you forget to add 'hibernate-scan-jandex' dependency?")
+	void scanningWithNoScannerFactory();
 }

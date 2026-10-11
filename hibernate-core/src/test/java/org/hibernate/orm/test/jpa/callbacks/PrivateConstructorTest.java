@@ -16,12 +16,11 @@ import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JiraKey(value = "HHH-13020")
 @Jpa(annotatedClasses = {
@@ -50,10 +49,8 @@ public class PrivateConstructorTest {
 						assertEquals( child.getParent().getName(), childReference.getParent().getName() );
 					}
 					catch (Exception expected) {
-						assertEquals( NoSuchMethodException.class, ExceptionUtil.rootCause( expected ).getClass() );
-						assertTrue( expected.getMessage().contains(
-								"Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity"
-						) );
+						assertThat( expected.getMessage() )
+								.startsWith( "Unable to create runtime proxy due to missing public, protected or package-private default constructor" );
 					}
 				}
 		);

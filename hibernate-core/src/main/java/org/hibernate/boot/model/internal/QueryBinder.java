@@ -80,6 +80,7 @@ import static org.hibernate.models.internal.util.StringHelper.isEmpty;
 public abstract class QueryBinder {
 	private static final String JAKARTA_DATA_REPOSITORY = "jakarta.data.repository.Repository";
 	private static final String JAKARTA_DATA_QUERY = "jakarta.data.repository.Query";
+	private static final String MUTINY_UNI = "io.smallrye.mutiny.Uni";
 	private static final String JAKARTA_DATA_PAGE = "jakarta.data.page.Page";
 	private static final String JAKARTA_DATA_CURSORED_PAGE = "jakarta.data.page.CursoredPage";
 
@@ -586,45 +587,54 @@ public abstract class QueryBinder {
 	}
 
 	private static Class<?> staticSelectionResultType(ClassDetails classDetails, MethodDetails methodDetails) {
-		final var returnType = methodDetails.getReturnType();
-		final var returnClass = returnType.toJavaClass();
+		final var returnType = unwrapReactiveType( genericReturnType( classDetails, methodDetails ) );
+		final var returnClass = erasedClass( returnType );
 		if ( returnClass.isArray() ) {
-			return staticArraySelectionResultType( classDetails, methodDetails, returnClass );
+			return staticArraySelectionResultType( returnType, returnClass );
 		}
-		else if ( isStaticQueryContainerType( returnType ) ) {
-			return erasedClass( firstTypeArgument( classDetails, methodDetails ) );
+		else if ( isStaticQueryContainerType( returnClass ) ) {
+			return erasedClass( firstTypeArgument( returnType ) );
 		}
 		else {
-			return boxedType( erasedClass( genericReturnType( classDetails, methodDetails ) ) );
+			return boxedType( returnClass );
 		}
 	}
 
-	private static Class<?> staticArraySelectionResultType(
-			ClassDetails classDetails,
-			MethodDetails methodDetails,
-			Class<?> returnClass) {
+	/**
+	 * Strip the reactive wrapper, Mutiny's {@code Uni<T>}, from the return type
+	 * of a static query method of a reactive repository. The wrapper has no
+	 * bearing on the type of result returned by the query.
+	 * <p>
+	 * Mutiny is not a dependency of Hibernate ORM, so {@code Uni} is recognized by name.
+	 */
+	private static Type unwrapReactiveType(Type returnType) {
+		return erasedClass( returnType ).getName().equals( MUTINY_UNI )
+				? firstTypeArgument( returnType )
+				: returnType;
+	}
+
+	private static Class<?> staticArraySelectionResultType(Type returnType, Class<?> returnClass) {
 		final var componentType = returnClass.getComponentType();
 		if ( componentType != Object.class ) {
 			return boxedType( componentType );
 		}
 		else {
-			return genericReturnType( classDetails, methodDetails )
-						instanceof GenericArrayType genericArrayType
+			return returnType instanceof GenericArrayType genericArrayType
 					? boxedType( erasedClass( genericArrayType.getGenericComponentType() ) )
 					: returnClass;
 		}
 	}
 
-	private static boolean isStaticQueryContainerType(ClassDetails returnType) {
-		return returnType.isImplementor( List.class )
-			|| returnType.isImplementor( Stream.class )
-			|| returnType.isImplementor( Optional.class )
-			|| returnType.isImplementor( jakarta.persistence.Query.class )
-			|| returnType.isImplementor( jakarta.persistence.TypedQuery.class )
-			|| returnType.isImplementor( org.hibernate.query.Query.class )
-			|| returnType.isImplementor( org.hibernate.query.SelectionQuery.class )
-			|| returnType.isImplementor( org.hibernate.query.KeyedResultList.class )
-			|| isJakartaDataQueryContainerType( returnType.toJavaClass().getName() );
+	private static boolean isStaticQueryContainerType(Class<?> returnClass) {
+		return List.class.isAssignableFrom( returnClass )
+			|| Stream.class.isAssignableFrom( returnClass )
+			|| Optional.class.isAssignableFrom( returnClass )
+			|| jakarta.persistence.Query.class.isAssignableFrom( returnClass )
+			|| jakarta.persistence.TypedQuery.class.isAssignableFrom( returnClass )
+			|| org.hibernate.query.Query.class.isAssignableFrom( returnClass )
+			|| org.hibernate.query.SelectionQuery.class.isAssignableFrom( returnClass )
+			|| org.hibernate.query.KeyedResultList.class.isAssignableFrom( returnClass )
+			|| isJakartaDataQueryContainerType( returnClass.getName() );
 	}
 
 	private static boolean isJakartaDataQueryContainerType(String typeName) {
@@ -632,9 +642,8 @@ public abstract class QueryBinder {
 			|| JAKARTA_DATA_CURSORED_PAGE.equals( typeName );
 	}
 
-	private static Type firstTypeArgument(ClassDetails classDetails, MethodDetails methodDetails) {
-		if ( genericReturnType( classDetails, methodDetails )
-				instanceof ParameterizedType parameterizedType ) {
+	private static Type firstTypeArgument(Type type) {
+		if ( type instanceof ParameterizedType parameterizedType ) {
 			var actualTypeArguments = parameterizedType.getActualTypeArguments();
 			if ( actualTypeArguments.length == 1 ) {
 				return actualTypeArguments[0];

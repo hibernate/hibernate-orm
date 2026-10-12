@@ -693,8 +693,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 		declaration
 				.append('\t');
-		if ( isJakartaCursoredPage(containerType)
-				|| isJakartaPage(containerType) && !isReactive() ) {
+		if ( !isReactive()
+				&& ( isJakartaCursoredPage(containerType) || isJakartaPage(containerType) ) ) {
 			if ( isJakartaCursoredPage(containerType) && returnTypeName != null && isUsingEntityHandler() ) {
 				// this is necessary to avoid losing the type
 				// after unwrapping the Query object
@@ -713,7 +713,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					.append(ASSIGNMENT_INDENT);
 		}
 		else {
-			if ( !isReactiveJakartaPage(containerType)
+			if ( !isReactivePaging(containerType)
 					&& ( !returnsVoid() || isReactiveSessionAccess() ) ) {
 				returnResult( declaration );
 			}
@@ -779,8 +779,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
-	private boolean isReactiveJakartaPage(@Nullable String containerType) {
-		return isReactive() && isJakartaPage(containerType);
+	private boolean isReactivePaging(@Nullable String containerType) {
+		return isReactive() && ( isJakartaPage(containerType) || isJakartaCursoredPage(containerType) );
 	}
 
 	void collectOrdering(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
@@ -1275,8 +1275,20 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					}
 					else {
 						unwrapQuery(declaration, unwrapped);
-						declaration
-								.append(".getKeyedResultList(_keyedPage);\n");
+						if ( isReactive() ) {
+							declaration
+									.append(".getReactiveKeyedResultList(_keyedPage)")
+									.append(PAGINATION_INDENT)
+									.append(".<")
+									.append(annotationMetaEntity.importType(JD_CURSORED_PAGE))
+									.append('<')
+									.append(annotationMetaEntity.importType(returnTypeName))
+									.append(">>map(_results -> {\n");
+						}
+						else {
+							declaration
+									.append(".getKeyedResultList(_keyedPage);\n");
+						}
 						annotationMetaEntity.importType(JD_PAGE_REQUEST);
 						annotationMetaEntity.importType(JD_PAGE_REQUEST + ".Cursor");
 						annotationMetaEntity.importType("jakarta.data.page.impl.CursoredPageRecord");
@@ -1294,6 +1306,13 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						}
 						declaration
 								.append(fragment);
+						if ( isReactive() ) {
+							if ( declaration.charAt(declaration.length() - 1) == '\n' ) {
+								declaration.setLength(declaration.length() - 1);
+							}
+							declaration
+									.append(";\n\t\t\t}))");
+						}
 						endReturnResult( declaration );
 					}
 					break;

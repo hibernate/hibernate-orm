@@ -45,6 +45,11 @@ class ReactiveTest {
 		assertTrue( library.contains( "public Uni<KeyedResultList<Book>> keyedBooksByTitle(String title, @Nonnull KeyedPage<Book> page)" ) );
 		assertTrue( library.contains( "_select.getReactiveKeyedResultList(page)" ) );
 		assertFalse( library.contains( "_select.getKeyedResultList(" ) );
+		assertTrue( library.contains( "public Uni<CursoredPage<Book>> cursoredBooks(@Nonnull PageRequest pageRequest)" ) );
+		assertTrue( library.contains( "_select.getReactiveKeyedResultList(_keyedPage)" ) );
+		assertTrue( library.contains( ".<CursoredPage<Book>>map(_results -> {" ) );
+		assertTrue( library.contains( "return new CursoredPageRecord<>(_results.getResultList(), _cursors, _totalResults, pageRequest," ) );
+		assertFalse( library.contains( "var _results =" ) );
 		assertTrue( library.contains( "return (pageRequest.requestTotal()" ) );
 		assertTrue( library.contains( "? _select.getResultCount()" ) );
 		assertTrue( library.contains( ": Uni.createFrom().item(-1L)" ) );

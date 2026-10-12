@@ -587,13 +587,21 @@ public abstract class QueryBinder {
 	}
 
 	private static Class<?> staticSelectionResultType(ClassDetails classDetails, MethodDetails methodDetails) {
-		final var returnType = unwrapReactiveType( genericReturnType( classDetails, methodDetails ) );
+		final var declaredType = genericReturnType( classDetails, methodDetails );
+		final boolean reactive = isReactiveType( declaredType );
+		// the reactive wrapper has no bearing on the type of result returned by the query
+		final var returnType = reactive ? firstTypeArgument( declaredType ) : declaredType;
 		final var returnClass = erasedClass( returnType );
 		if ( returnClass.isArray() ) {
 			return staticArraySelectionResultType( returnType, returnClass );
 		}
-		else if ( isStaticQueryContainerType( returnClass ) ) {
+		else if ( reactive ? isReactiveQueryContainerType( returnClass ) : isStaticQueryContainerType( returnClass ) ) {
 			return erasedClass( firstTypeArgument( returnType ) );
+		}
+		else if ( reactive && isStaticQueryContainerType( returnClass ) ) {
+			throw new AnnotationException( "Static query method '" + methodDetails.getName() + "' of '"
+					+ classDetails.getName() + "' returns '" + returnClass.getSimpleName() + "' wrapped in 'Uni'"
+					+ " (a reactive query method may only return a result, a 'List', a 'KeyedResultList', a 'Page', or a 'CursoredPage')" );
 		}
 		else {
 			return boxedType( returnClass );
@@ -601,16 +609,12 @@ public abstract class QueryBinder {
 	}
 
 	/**
-	 * Strip the reactive wrapper, Mutiny's {@code Uni<T>}, from the return type
-	 * of a static query method of a reactive repository. The wrapper has no
-	 * bearing on the type of result returned by the query.
+	 * Is this Mutiny's {@code Uni}, the return type of the methods of a reactive repository?
 	 * <p>
 	 * Mutiny is not a dependency of Hibernate ORM, so {@code Uni} is recognized by name.
 	 */
-	private static Type unwrapReactiveType(Type returnType) {
-		return erasedClass( returnType ).getName().equals( MUTINY_UNI )
-				? firstTypeArgument( returnType )
-				: returnType;
+	private static boolean isReactiveType(Type type) {
+		return erasedClass( type ).getName().equals( MUTINY_UNI );
 	}
 
 	private static Class<?> staticArraySelectionResultType(Type returnType, Class<?> returnClass) {
@@ -633,6 +637,15 @@ public abstract class QueryBinder {
 			|| jakarta.persistence.TypedQuery.class.isAssignableFrom( returnClass )
 			|| org.hibernate.query.Query.class.isAssignableFrom( returnClass )
 			|| org.hibernate.query.SelectionQuery.class.isAssignableFrom( returnClass )
+			|| org.hibernate.query.KeyedResultList.class.isAssignableFrom( returnClass )
+			|| isJakartaDataQueryContainerType( returnClass.getName() );
+	}
+
+	/**
+	 * The containers of results which may be wrapped in a reactive type.
+	 */
+	private static boolean isReactiveQueryContainerType(Class<?> returnClass) {
+		return List.class.isAssignableFrom( returnClass )
 			|| org.hibernate.query.KeyedResultList.class.isAssignableFrom( returnClass )
 			|| isJakartaDataQueryContainerType( returnClass.getName() );
 	}

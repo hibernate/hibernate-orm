@@ -1,13 +1,11 @@
 [[domain-customizing]]
-=== Customizing the domain model
+==== Mapping annotations and AttributeBinder
 :example-dir-attributebinder: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/attributebinder
-:extrasdir: extras
+:domain-customizing-extrasdir: extras
 
-For cases where Hibernate does not provide a built-in way to configure the domain
-model mapping based on requirements, it provides a very broad and flexible
-way to adjust the mapping model through its "boot-time model" (defined in
-the `org.hibernate.mapping` package) using its `@AttributeBinderType` meta
-annotation and corresponding `AttributeBinder` contract.
+For mapping requirements beyond the built-in annotations, use the `@AttributeBinderType` meta-annotation
+and the `AttributeBinder` contract to customize Hibernate's boot-time mapping model,
+defined in the `org.hibernate.mapping` package.
 
 An example:
 
@@ -22,12 +20,9 @@ include::{example-dir-attributebinder}/YesNoBinder.java[tag=attribute-binder-exa
 ----
 ====
 
-The important thing to take away here is that both `@YesNo` and `YesNoBinder` are custom, user-written
-code.  Hibernate has no inherent understanding of what a `@YesNo` does or is.  It only understands that
-it has the `@AttributeBinderType` meta-annotation and knows how to apply that through the corresponding
-`YesNoBinder`.
+Both `@YesNo` and `YesNoBinder` are application-defined. Hibernate processes `@YesNo`
+through its `@AttributeBinderType` meta-annotation, which identifies `YesNoBinder` as the binder.
 
-Notice also that `@AttributeBinderType` provides a type-safe way to perform configuration because
-the `AttributeBinder` (`YesNoBinder`) is handed the custom annotation (`@YesNo`) to grab its configured
-attributes.  `@YesNo` does not provide any attributes, but it easily could.  Whatever  `YesNoBinder`
-supports.
+The binder receives the custom annotation instance, providing type-safe access to its members.
+Although `@YesNo` has no members in this example, a custom annotation can define configuration
+that its binder reads and applies.

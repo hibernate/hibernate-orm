@@ -1,7 +1,7 @@
 [[entity-inheritance]]
-=== Inheritance
+=== Inheritance and polymorphism
 :example-dir-inheritance: {core-project-dir}/src/test/java/org/hibernate/orm/test/inheritance
-:extrasdir: extras/inheritance
+:domain-inheritance-extrasdir: extras/inheritance
 
 Although relational database systems don't provide support for inheritance, Hibernate provides several strategies to leverage this object-oriented trait onto domain model entities:
 
@@ -9,6 +9,12 @@ MappedSuperclass:: Inheritance is implemented in the domain model only without r
 Single table:: The domain model class hierarchy is materialized into a single table which contains entities belonging to different class types. See <<entity-inheritance-single-table>>.
 Joined table:: The base class and all the subclasses have their own database tables and fetching a subclass entity requires a join with the parent table as well. See <<entity-inheritance-joined-table>>.
 Table per class:: Each subclass has its own table containing both the subclass and the base class properties. See <<entity-inheritance-table-per-class>>.
+
+:domain-entity-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-entity-example-dir-mapping: {domain-entity-core-test-base}/mapping
+:example-dir-proxy: {domain-entity-core-test-base}/proxy
+:example-dir-persister: {domain-entity-core-test-base}/persister
+:domain-entity-extrasdir: extras
 
 [[entity-inheritance-mapped-superclass]]
 ==== MappedSuperclass
@@ -29,7 +35,7 @@ include::{example-dir-inheritance}/MappedSuperclassTest.java[tags=entity-inherit
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-mapped-superclass-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-mapped-superclass-example.sql[]
 ----
 ====
 
@@ -61,7 +67,7 @@ include::{example-dir-inheritance}/SingleTableTest.java[tags=entity-inheritance-
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-single-table-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-single-table-example.sql[]
 ----
 ====
 
@@ -78,7 +84,7 @@ include::{example-dir-inheritance}/SingleTableTest.java[tags=entity-inheritance-
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-single-table-persist-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-single-table-persist-example.sql[]
 ----
 ====
 
@@ -94,7 +100,7 @@ include::{example-dir-inheritance}/SingleTableTest.java[tags=entity-inheritance-
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-single-table-query-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-single-table-query-example.sql[]
 ----
 ====
 
@@ -115,11 +121,11 @@ Use the `@DiscriminatorColumn` to define the discriminator column as well as the
 [NOTE]
 ====
 The enum `DiscriminatorType` used in `jakarta.persistence.DiscriminatorColumn` only contains the values `STRING`, `CHAR` and `INTEGER` which means that not all Hibernate supported types are available via the `@DiscriminatorColumn` annotation.
-You can also use `@DiscriminatorFormula` to express in SQL a virtual discriminator column.
+Use `@DiscriminatorFormula` to define a discriminator as a SQL expression.
 This is particularly useful when the discriminator value can be extracted from one or more columns of the table.
 Both `@DiscriminatorColumn` and `@DiscriminatorFormula` are to be set on the root entity (once per persisted hierarchy).
 
-`@org.hibernate.annotations.DiscriminatorOptions` allows to optionally specify Hibernate-specific discriminator options which are not standardized in Jakarta Persistence.
+`@org.hibernate.annotations.DiscriminatorOptions` specifies Hibernate-specific discriminator options which are not standardized in Jakarta Persistence.
 The available options are `force` and `insert`.
 
 The `force` attribute is useful if the table contains rows with _extra_ discriminator values that are not mapped to a persistent class.
@@ -127,7 +133,7 @@ This could, for example, occur when working with a legacy database.
 If `force` is set to `true`, Hibernate will specify the allowed discriminator values in the SELECT query even when retrieving all instances of the root class.
 
 The second option, `insert`, tells Hibernate whether or not to include the discriminator column in SQL INSERTs.
-Usually, the column should be part of the INSERT statement, but if your discriminator column is also part of a mapped composite identifier you have to set this option to `false`.
+The column is normally included in INSERT statements. Set `insert` to `false` when the discriminator column is also part of a mapped composite identifier.
 ====
 
 [IMPORTANT]
@@ -138,8 +144,8 @@ There used to be a `@org.hibernate.annotations.ForceDiscriminator` annotation wh
 [[entity-inheritance-discriminator-formula]]
 ====== Discriminator formula
 
-Assuming a legacy database schema where the discriminator is based on inspecting a certain column,
-we can take advantage of the Hibernate specific `@DiscriminatorFormula` annotation and map the inheritance model as follows:
+For a legacy schema where the discriminator is derived from existing columns,
+use Hibernate's `@DiscriminatorFormula` as shown below:
 
 [[entity-inheritance-single-table-discriminator-formula-example]]
 .Single Table discriminator formula
@@ -151,7 +157,7 @@ include::{example-dir-inheritance}/SingleTableDiscriminatorFormulaTest.java[tags
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-single-table-discriminator-formula-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-single-table-discriminator-formula-example.sql[]
 ----
 ====
 
@@ -163,7 +169,7 @@ The `@DiscriminatorValue` defines the mapping between the result of the `@Discri
 
 Aside from the usual discriminator values assigned to each individual subclass type, the `@DiscriminatorValue` can take two additional values:
 
-`null`:: If the underlying discriminator column is null, the `null` discriminator mapping is going to be used.
+`null`:: If the underlying discriminator column is null, the `null` discriminator mapping is used.
 `not null`:: If the underlying discriminator column has a not-null value that is not explicitly mapped to any entity, the `not-null` discriminator mapping used.
 
 To understand how these two values work, consider the following entity mapping:
@@ -193,11 +199,11 @@ include::{example-dir-inheritance}/DiscriminatorNotNullSingleTableTest.java[tags
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-single-table-discriminator-value-persist-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-single-table-discriminator-value-persist-example.sql[]
 ----
 ====
 
-As you can see, the `Account` entity row has a value of `NULL` in the `DTYPE` discriminator column,
+The `Account` entity row has a value of `NULL` in the `DTYPE` discriminator column,
 while the `OtherAccount` entity was saved with a `DTYPE` column value of `other` which has not explicit mapping.
 
 [[entity-inheritance-joined-table]]
@@ -220,7 +226,7 @@ include::{example-dir-inheritance}/JoinTableTest.java[tags=entity-inheritance-jo
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-joined-table-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-joined-table-example.sql[]
 ----
 ====
 
@@ -242,7 +248,7 @@ include::{example-dir-inheritance}/JoinTablePrimaryKeyJoinColumnTest.java[tags=e
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-joined-table-primary-key-join-column-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-joined-table-primary-key-join-column-example.sql[]
 ----
 ====
 
@@ -258,7 +264,7 @@ include::{example-dir-inheritance}/JoinTableTest.java[tags=entity-inheritance-jo
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-joined-table-query-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-joined-table-query-example.sql[]
 ----
 ====
 
@@ -275,8 +281,8 @@ This is called the table-per-concrete-class strategy.
 Each table defines all persistent states of the class, including the inherited state.
 
 In Hibernate, it is not necessary to explicitly map such inheritance hierarchies.
-You can map each class as a separate entity root.
-However, if you wish to use polymorphic associations (e.g. an association to the superclass of your hierarchy), you need to use the union subclass mapping.
+Each class can be mapped as a separate entity root.
+For polymorphic associations, such as an association to the hierarchy's superclass, use the union subclass mapping.
 
 [[entity-inheritance-table-per-class-example]]
 .Table per class
@@ -288,7 +294,7 @@ include::{example-dir-inheritance}/TablePerClassTest.java[tags=entity-inheritanc
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-table-per-class-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-table-per-class-example.sql[]
 ----
 ====
 
@@ -303,13 +309,69 @@ include::{example-dir-inheritance}/TablePerClassTest.java[tags=entity-inheritanc
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-table-per-class-query-example.sql[]
+include::{domain-inheritance-extrasdir}/entity-inheritance-table-per-class-query-example.sql[]
 ----
 ====
 
 [IMPORTANT]
 ====
 Polymorphic queries require multiple UNION queries, so be aware of the performance implications of a large class hierarchy.
+====
+
+[[concrete-proxy]]
+==== Concrete proxies and subtype resolution
+
+When working with lazy associations or entity references for types that define and inheritance hierarchy Hibernate often creates proxies starting from the root class, with no information about the actual subtype that's referenced by the lazy instance. This can be a problem when using `instanceof` to check the type of said lazy entity references or when trying to cast to the concrete subtype.
+
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation can be used on an entity hierarchy root mapping to specify that Hibernate should always try to resolve the actual subtype corresponding to the proxy instance created. This effectively means that proxies for that entity hierarchy will always be created from the correct subclass, allowing to preserve laziness and enable using type checks and casts.
+
+[[entity-concrete-proxy-mapping]]
+.Root entity class annotated with `@ConcreteProxy`
+====
+[source,java]
+----
+include::{example-dir-proxy}/concrete/ConcreteProxyTest.java[tag=entity-concrete-proxy-mapping,indent=0]
+----
+====
+
+The following example loads the parent's lazy association as the concrete `SingleSubChild1` type:
+
+[[entity-concrete-proxy-find]]
+.Loading parent entity with lazy association
+====
+[source,java]
+----
+include::{example-dir-proxy}/concrete/ConcreteProxyTest.java[tag=entity-concrete-proxy-find,indent=0]
+----
+
+[source,sql]
+----
+include::{domain-entity-extrasdir}/entity/entity-concrete-proxy-find.sql[]
+----
+====
+
+IMPORTANT: Resolving a concrete proxy type may require Hibernate to query the association target's tables to determine the subtype for the identifier.
+
+The concrete type will be determined:
+
+* With *single table* inheritance, the discriminator column value will be left joined when fetching associations or simply read from the entity table when getting references.
+* When using *joined* inheritance, all subtype tables will need to be left joined to determine the concrete type. Note however that when using an explicit discriminator column, the behavior is the same as for single-table inheritance.
+* Finally, for *table-per-class* inheritance, all subtype tables will need to be (union) queried to determine the concrete type.
+
+The following example shows the query Hibernate uses to resolve the concrete proxy type for an entity reference:
+
+[[entity-concrete-proxy-reference]]
+.Resolving the concrete proxy type for `getReference()`:
+====
+[source,java]
+----
+include::{example-dir-proxy}/concrete/ConcreteProxyTest.java[tag=entity-concrete-proxy-reference,indent=0]
+----
+
+[source,sql]
+----
+include::{domain-entity-extrasdir}/entity/entity-concrete-proxy-reference.sql[]
+----
 ====
 
 [[embeddable-inheritance]]
@@ -337,12 +399,12 @@ classes with `@DiscriminatorValue`.
 
 [IMPORTANT]
 ====
-Embeddable inheritance *IS* also supported for components used in an `@ElementCollection`.
+Embeddable inheritance *IS* also supported for components used in an <<collections-elemental,`@ElementCollection`>>.
 Embeddable inheritance *is NOT* supported for `@EmbeddedId`, embeddable types used as `@IdClass`
 and embedded properties using a custom `@CompositeType`.
 ====
 
-Of course, the `type()` and `treat()` functions are also supported for embeddable inheritance and can serve to explicitly use the embeddable type information in queries, see <<chapters/jndi/QueryLanguage.adoc#hql-functions-typecasts,types and typecasts>>.
+Of course, the `type()` and `treat()` functions are also supported for embeddable inheritance and can serve to explicitly use the embeddable type information in queries, see <<chapters/query/hql/QueryLanguage.adoc#hql-functions-typecasts,types and typecasts>>.
 
 [[embeddable-inheritance-example]]
 .Example mapping of an embeddable inheritance hierarchy
@@ -365,5 +427,5 @@ include::{example-dir-inheritance}/embeddable/BasicEmbeddableInheritanceTest.jav
 This is the resulting table structure:
 [source,sql]
 ----
-include::{extrasdir}/embeddable-inheritance-create-table-example.sql[]
+include::{domain-inheritance-extrasdir}/embeddable-inheritance-create-table-example.sql[]
 ----

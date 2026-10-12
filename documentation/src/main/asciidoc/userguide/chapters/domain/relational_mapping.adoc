@@ -1,0 +1,303 @@
+[[domain-relational-mapping]]
+=== Tables, columns, and naming
+:core-project-dir: {root-project-dir}/hibernate-core
+:domain-entity-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-entity-example-dir-mapping: {domain-entity-core-test-base}/mapping
+:example-dir-proxy: {domain-entity-core-test-base}/proxy
+:example-dir-persister: {domain-entity-core-test-base}/persister
+:domain-entity-extrasdir: extras
+
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:core-project-dir: {root-project-dir}/hibernate-core
+:domain-basic-types-core-test-base: {core-project-dir}/src/test
+:example-dir-basic-mapping: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping
+:example-dir-resources: {domain-basic-types-core-test-base}/resources/org/hibernate/orm/test/
+:example-dir-generated: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/generated
+:example-dir-converter: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/converted/converter
+:domain-basic-types-extrasdir: extras
+
+Entity names identify mapped types in queries; table and column names identify database objects.
+This section covers explicit mappings, default names, and naming strategies.
+
+[[entity-pojo-mapping]]
+==== Entity names and tables
+
+The main piece in mapping the entity is the {jpaJavadocUrlPrefix}Entity.html[`jakarta.persistence.Entity`] annotation.
+
+The `@Entity` annotation defines just the {jpaJavadocUrlPrefix}Entity.html#name()[`name`] attribute which is used to give a specific entity name for use in JPQL queries.
+
+By default, if the name attribute of the `@Entity` annotation is missing, the unqualified name of the entity class itself will be used as the entity name.
+
+[IMPORTANT]
+====
+Because the entity name is given by the unqualified name of the class, Hibernate does not allow registering multiple entities with the same name even if the entity classes reside in different packages.
+
+Without imposing this restriction, Hibernate would not know which entity class is referenced in a JPQL query if the unqualified entity name is associated with more then one entity classes.
+====
+
+In the following example, the entity name (e.g. `Book`) is given by the unqualified name of the entity class name.
+
+[[entity-pojo-mapping-implicit-name-example]]
+.`@Entity` mapping with an implicit name
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/Book.java[tag=entity-pojo-mapping-implicit-name-example, indent=0]
+----
+====
+
+However, the entity name can also be set explicitly as illustrated by the following example.
+
+[[entity-pojo-mapping-example]]
+.`@Entity` mapping with an explicit name
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-mapping-example, indent=0]
+----
+====
+
+An entity models a database table.
+The identifier uniquely identifies each row in that table.
+By default, the name of the table is assumed to be the same as the name of the entity.
+Use `jakarta.persistence.Table` to specify the table name or other table mapping details.
+
+[[entity-pojo-table-mapping-example]]
+.Simple `@Entity` with `@Table`
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-pojo-table-mapping-example, indent=0]
+----
+====
+
+[[mapping-entity-table-catalog]]
+===== Mapping the catalog of the associated table
+
+If the mapping omits the catalog, Hibernate uses the current database connection's default catalog.
+
+For a database with multiple catalogs, specify the table's catalog using the `catalog` attribute of the Jakarta Persistence {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
+
+The following MySQL example maps `Book` to the `book` table in the `public` catalog:
+
+[[mapping-post-table-catalog-mysql-example]]
+.The `book` table located in the `public` catalog
+====
+[source,sql]
+----
+include::{domain-entity-extrasdir}/entity/mapping-post-table-catalog-mysql-example.sql[]
+----
+====
+
+The mapping specifies the catalog using `@Table(catalog = "public")`.
+
+[[mapping-entity-table-catalog-mysql-example]]
+.Specifying the database catalog using the `@Table` annotation
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/EntityTableCatalogTest.java[tag=mapping-entity-table-catalog-mysql-example, indent=0]
+----
+====
+
+[[mapping-entity-table-schema]]
+===== Mapping the schema of the associated table
+
+If the mapping omits the schema, Hibernate uses the current database connection's default schema.
+
+For a database that supports schemas, specify the table's schema using the `schema` attribute of the Jakarta Persistence {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
+
+The following PostgreSQL example maps `Book` to the `book` table in the `library` schema:
+
+[[mapping-post-table-schema-postgresql-example]]
+.The `book` table located in the `library` schema
+====
+[source,sql]
+----
+include::{domain-entity-extrasdir}/entity/mapping-post-table-schema-postgresql-example.sql[]
+----
+====
+
+The mapping specifies the schema using `@Table(schema = "library")`.
+
+[[mapping-entity-table-catalog-postgresql-example]]
+.Specifying the database schema using the `@Table` annotation
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/EntityTableSchemaTest.java[tag=mapping-entity-table-schema-postgresql-example, indent=0]
+----
+====
+
+[IMPORTANT]
+====
+The `schema` attribute of the `@Table` annotation works only if the underlying database supports schemas (e.g. PostgreSQL).
+
+For MySQL or MariaDB, where schema is an alias for catalog, use the
+`catalog` attribute, and not the `schema` one.
+====
+
+[[domain-secondary-tables]]
+===== Mapping secondary tables
+
+`@SecondaryTable` maps additional state of the same entity to another table.
+The entity retains one identifier; the secondary table is joined to the primary table using that identifier.
+This differs from an association to a separate entity with its own lifecycle.
+Use `@Column(table=...)` to place an attribute in a declared secondary table.
+
+[source,java,indent=0]
+----
+include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-columns-secondary]
+----
+
+Here, `title`, `price`, and `createdBy` belong to `guide_entry`, while `summary` belongs to `guide_entry_details`.
+The primary key of `guide_entry_details` is `entry_id`, joining the identifier column of `guide_entry`.
+When `pkJoinColumns` is omitted, the secondary-table primary-key column names default to those of the primary table.
+Composite identifiers require the corresponding join columns when overriding these defaults.
+
+Declare multiple secondary tables using repeated `@SecondaryTable` annotations or `@SecondaryTables`.
+To place an entire embedded value in a secondary table, see <<embeddable-table,`@EmbeddedTable`>>.
+Hibernate's link:{doc-javadoc-url}org/hibernate/annotations/SecondaryRow.html[`@SecondaryRow`] controls optional and owned secondary rows;
+row creation and removal should not be assumed identical for every secondary-table mapping.
+
+[[basic-column-annotation]]
+==== @Column
+
+Jakarta Persistence defines rules for implicitly determining the name of tables and columns.
+For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming strategies>>.
+
+For basic type attributes, the implicit naming rule is that the column name is the same as the attribute name.
+Use `@Column` to override the implicit column name.
+
+[[basic-annotation-explicit-column-example]]
+.Explicit column naming
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/ExplicitColumnNamingTest.java[tags=basic-annotation-explicit-column-example]
+----
+====
+
+Here, `@Column` explicitly maps the `description` attribute to the `NOTES` column, as opposed to the
+implicit column name `description`.  See <<naming>> for additional details.
+
+[[domain-column-options]]
+===== Column options
+
+Besides naming a column, `@Column` describes its schema and participation in writes:
+
+[cols="1,3",options="header"]
+|===
+|Member |Purpose
+|`name` |Overrides the implicit column name.
+|`nullable` |Specifies whether the column permits SQL `NULL`; used when generating the schema.
+|`unique` |Requests a single-column unique constraint in the generated schema.
+|`length` |Specifies the length for column types to which length applies, such as character and binary types.
+|`precision`, `scale` |Specify decimal precision and scale for appropriate numeric types.
+|`insertable`, `updatable` |Control whether this mapping contributes the column to generated INSERT and UPDATE statements.
+|`table` |Selects the table containing the column; the primary table is used by default.
+|`columnDefinition` |Supplies a database-specific SQL fragment for schema generation, reducing portability.
+|===
+
+These options do not alter an existing database schema unless schema-management tooling is used.
+The resulting SQL types and constraints depend on the dialect.
+`nullable=false` is not a substitute for Bean Validation or application validation;
+Hibernate may perform nullability checks, but a database constraint remains necessary to enforce the rule for all writers.
+
+`insertable=false` or `updatable=false` does not make a Java field immutable.
+It excludes that column from the corresponding generated writes through this mapping.
+It does not by itself generate a value or arrange for a database-generated value to be refreshed; see <<mapping-generated>>.
+For constraints, indexes, defaults, and generated columns, see <<schema-generation>>.
+
+The example in <<domain-secondary-tables>> combines length and decimal precision with an attribute excluded from updates.
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[mapping-quoted-identifiers]]
+==== SQL quoted identifiers
+
+To quote an identifier in generated SQL, enclose the table or column name in backticks in the mapping document.
+While traditionally, Hibernate used backticks for escaping SQL reserved keywords, Jakarta Persistence uses double quotes instead.
+
+Once the reserved keywords are escaped, Hibernate will use the correct quotation style for the SQL `Dialect`.
+This is usually double quotes, but SQL Server uses brackets and MySQL uses backticks.
+
+[[basic-quoting-example]]
+.Hibernate quoting
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/QuotingTest.java[tags=basic-quoting-example]
+----
+====
+
+[[basic-jpa-quoting-example]]
+.Jakarta Persistence quoting
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/JpaQuotingTest.java[tags=basic-jpa-quoting-example]
+----
+====
+
+Because `name` and `number` are reserved words, the `Product` entity mapping uses backticks to quote these column names.
+
+When saving the following `Product entity`, Hibernate generates the following SQL insert statement:
+
+[[basic-quoting-persistence-example]]
+.Persisting a quoted column name
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/QuotingTest.java[tags=basic-quoting-persistence-example, indent=0]
+----
+
+[source, sql, indent=0]
+----
+include::{domain-basic-types-extrasdir}/basic/basic-quoting-persistence-example.sql[indent=0]
+----
+====
+
+[[mapping-global-quoted-identifiers]]
+===== Global quoting
+
+Hibernate can also quote all identifiers (e.g. table, columns) using the following configuration property:
+
+====
+[source,xml]
+----
+<property
+    name="hibernate.globally_quoted_identifiers"
+    value="true"
+/>
+----
+====
+
+With this setting, identifiers do not need to be quoted individually in the mapping:
+
+[[basic-auto-quoting-example]]
+.Jakarta Persistence quoting
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/AutoQuotingTest.java[tags=basic-auto-quoting-example]
+----
+====
+
+When persisting a `Product` entity, Hibernate quotes all identifiers as in the following example:
+
+====
+[source, sql, indent=0]
+----
+include::{domain-basic-types-extrasdir}/basic/basic-auto-quoting-persistence-example.sql[indent=0]
+----
+====
+
+Both the table name and all column names are quoted.
+
+For more about quoting-related configuration properties, check out the <<appendices/SettingsReference.adoc#settings-mapping,Mapping configurations>> section as well.
+
+
+include::naming.adoc[]

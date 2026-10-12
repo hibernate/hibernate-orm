@@ -1,17 +1,16 @@
 [[partitioning]]
-=== Partitioning
+=== Partition keys
 :example-dir-partition-key: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/identifier
-:extrasdir: extras
+:domain-partitioning-extrasdir: extras
 
-In data management, it is sometimes necessary to split data of a table into various (physical) partitions,
-based on partition keys and a partitioning scheme.
+A database table may be divided into physical partitions according to partition keys and a partitioning scheme.
 
 Due to the nature of partitioning, it is vital for the database to know the partition key of a row for certain operations,
 like SQL update and delete statements. If a database doesn't know the partition of a row that should be updated or deleted,
 then it must look for the row in all partitions, leading to poor performance.
 
-The `@PartitionKey` annotation is a way to tell Hibernate about the column, such that it can include a column restriction as
-predicate into SQL update and delete statements for entity state changes.
+The `@PartitionKey` annotation identifies a partition key column so Hibernate can include it
+in the predicates of SQL update and delete statements.
 
 [[partition-key-mapping]]
 ==== Partition Key Mapping
@@ -27,7 +26,7 @@ include::{example-dir-partition-key}/SimplePartitionKeyTest.java[tags=partition-
 ----
 ====
 
-When updating or deleting an entity, Hibernate will include a partition key constraint similar to this
+When updating or deleting an entity, Hibernate includes a partition key constraint, as shown below:
 
 [[partition-key-simple-basic-attribute-sql-example]]
 ====

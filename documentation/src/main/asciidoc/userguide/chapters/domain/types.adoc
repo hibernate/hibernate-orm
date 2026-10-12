@@ -1,35 +1,36 @@
 [[mapping-types]]
-=== Mapping types
-:example-dir-mapping: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping
-:extrasdir: extras/types
+=== Domain model overview
+:domain-types-example-dir-mapping: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping
+:domain-types-extrasdir: extras/types
 
-Hibernate understands both the Java and JDBC representations of application data.
-The ability to read/write this data from/to the database is the function of a Hibernate _type_.
-A type, in this usage, is an implementation of the `org.hibernate.type.Type` interface.
-This Hibernate type also describes various behavioral aspects of the Java type such as how to check for equality, how to clone values, etc.
+A https://en.wikipedia.org/wiki/Domain_model[domain model] describes an application's https://en.wikipedia.org/wiki/Problem_domain[problem domain].
+Its persistent classes represent the data mapped by the ORM.
+Hibernate works best when these classes follow the Plain Old Java Object (POJO) / JavaBean programming model,
+but it also supports other representations, such as trees of `java.util.Map` instances.
 
-.Usage of the word _type_
+Hibernate historically used a proprietary XML format to define mappings.
+Jakarta Persistence defines annotations and a standard XML format for mappings that are portable across persistence providers.
+This chapter uses Jakarta Persistence mappings where possible and Hibernate extension annotations for additional features.
+
 [NOTE]
 ====
-The Hibernate type is neither a Java type nor a SQL data type.
-It provides information about mapping a Java type to an SQL type as well as how to persist and fetch a given Java type to and from a relational database.
-
-When you encounter the term type in discussions of Hibernate, it may refer to the Java type, the JDBC type, or the Hibernate type, depending on the context.
+This chapter mostly uses "implicit naming" for table names, column names, etc.  For details on
+adjusting these names see <<naming>>.
 ====
 
-To help understand the type categorizations, let's look at a simple table and domain model that we wish to map.
+The following table and domain model illustrate the type categories.
 
 [[mapping-types-basic-example]]
 .A simple table and domain model
 ====
 [source, sql, indent=0]
 ----
-include::{extrasdir}/mapping-types-basic-example.sql[]
+include::{domain-types-extrasdir}/mapping-types-basic-example.sql[]
 ----
 
 [source, java, indent=0]
 ----
-include::{example-dir-mapping}/basic/TypeCategoryTest.java[tags=mapping-types-basic-example]
+include::{domain-types-example-dir-mapping}/basic/TypeCategoryTest.java[tags=mapping-types-basic-example]
 ----
 ====
 
@@ -44,22 +45,26 @@ In the broadest sense, Hibernate categorizes types into two groups:
 A value type is a piece of data that does not define its own lifecycle.
 It is, in effect, owned by an entity, which defines its lifecycle.
 
-Looked at another way, all the state of an entity is made up entirely of value types.
-These state fields or JavaBean properties are termed __persistent attributes__.
+An entity's state is expressed through fields or JavaBean properties termed __persistent attributes__.
 The persistent attributes of the `Contact` class are value types.
 
-Value types are further classified into three sub-categories:
+An association reference is also a value in the containing entity's state, but the referenced entity has its own identity and lifecycle.
+For example, an `Order.customer` reference belongs to the order's state; the `Customer` it references is an entity.
+Changing or removing the reference does not, by itself, remove the customer.
+<<pc-cascade,Cascade operations>> and <<associations-orphan-removal,orphan removal>> can propagate lifecycle operations to the referenced entity when configured.
 
-Basic types:: in mapping the `Contact` table, all attributes except for name would be basic types. Basic types are discussed in detail in <<chapters/domain/basic_types.adoc#basic,_Basic types_>>
-Embeddable types:: the `name` attribute is an example of an embeddable type, which is discussed in details in <<chapters/domain/embeddables.adoc#embeddables,_Embeddable types_>>
-*Collection* types:: although not featured in the aforementioned example, collection types are also a distinct category among value types. Collection types are further discussed in <<chapters/domain/collections.adoc#collections,_Collections_>>
+In this sense, value types include the following categories:
+
+Basic types:: in the `Contact` mapping, all attributes except `name` are basic types. Basic types are discussed in detail in <<chapters/domain/basic_types.adoc#basic,_Basic types_>>
+Embeddable types:: the `name` attribute is an example of an embeddable type, which is discussed in detail in <<chapters/domain/embeddables.adoc#embeddables,_Embeddable types_>>
+To-one association references:: `@ManyToOne`, `@OneToOne`, and Hibernate's <<associations-any,`@Any`>> attributes hold references to entities. The reference is part of the containing entity's state; its target is an entity type. See <<associations,_Associations_>>.
+*Collection* types:: although not featured in this example, collection types are also a distinct category among value types. A collection may contain values or references to entities. Collection types are further discussed in <<chapters/domain/collections.adoc#collections,_Collections_>>
 
 [[categorization-entity]]
 ==== Entity types
 
 Entities, by nature of their unique identifier, exist independently of other objects whereas values do not.
 Entities are domain model classes which correlate to rows in a database table, using a unique identifier.
-Because of the requirement for a unique identifier, entities exist independently and define their own lifecycle.
-The `Contact` class itself would be an example of an entity.
+The `Contact` class is an entity.
 
 Mapping entities is discussed in detail in <<chapters/domain/entity.adoc#entity,_Entity types_>>.

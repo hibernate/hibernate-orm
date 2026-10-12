@@ -1,7 +1,7 @@
 [[mutability]]
-=== Mutability
+=== Mutability and immutability
 :mutability-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/mutability
-:extrasdir: extras/immutability
+:domain-immutability-extrasdir: extras/immutability
 
 Immutability can be specified for both entities and attributes.
 
@@ -15,6 +15,15 @@ for numerous internal optimizations related to dirty checking and making copies.
 based on this distinction.
 
 
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:domain-basic-types-core-test-base: {core-project-dir}/src/test
+:example-dir-basic-mapping: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping
+:example-dir-resources: {domain-basic-types-core-test-base}/resources/org/hibernate/orm/test/
+:example-dir-generated: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/generated
+:example-dir-converter: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/converted/converter
+:domain-basic-types-extrasdir: extras
+
 [[mutability-immutable]]
 ==== @Immutable
 
@@ -24,8 +33,6 @@ is the implicit condition.
 `@Immutable` is allowed on an <<mutability-entity,entity>>, <<mutability-attribute,attribute>>,
 <<mutability-converter,AttributeConverter>> and <<mutability-usertype,UserType>>.  Unfortunately, it
 has slightly different impacts depending on where it is placed; see the linked sections for details.
-
-
 
 
 [[mutability-entity]]
@@ -41,7 +48,7 @@ include::{mutability-example-dir}/entity/EntityImmutabilityTest.java[tags=entity
 ----
 ====
 
-Internally, Hibernate is going to perform several optimizations, such as:
+Internally, Hibernate performs several optimizations, such as:
 
 - reducing memory footprint since there is no need to retain the loaded state for the dirty checking mechanism
 - speeding-up the Persistence Context flushing phase since immutable entities can skip the dirty checking process
@@ -68,15 +75,12 @@ include::{mutability-example-dir}/entity/EntityImmutabilityTest.java[tags=entity
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/entity-immutability-update-example.sql[]
+include::{domain-immutability-extrasdir}/entity-immutability-update-example.sql[]
 ----
 ====
 
 
 `@Mutability` is not allowed on an entity.
-
-
-
 
 
 [[mutability-attribute]]
@@ -117,18 +121,40 @@ include::{mutability-example-dir}/attribute/BasicAttributeMutabilityTests.java[t
 [[mutability-attribute-embeddable]]
 ===== Attribute immutability - embeddable
 
-To be continued..
+An embedded attribute annotated with `@Immutable` is excluded from updates after the owning entity is inserted.
+This applies both to replacing the embedded value and to changing its component attributes in place.
+The annotation does not prevent changes to the Java object; it prevents those changes from being written through this mapping.
 
-// todo : document the effect of `@Immutable` on `@Embeddable`, `@Embedded` and `@EmbeddedId` mappings
+[source,java,indent=0]
+----
+include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-embedded]
+----
+
+For example, this change does not update the stored city:
+
+[source,java,indent=0]
+----
+include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-embedded-change]
+----
+
+To exclude only one component attribute from updates, place `@Immutable` on that attribute inside the embeddable.
+Other component attributes can remain updateable.
+Annotating the embedded attribute applies to that particular embedding; it is not equivalent to declaring a Java value's internal state immutable using `@Mutability`.
+A type-level `@Immutable` annotation on the embeddable does not exclude its component attributes from updates.
+Configure the embedded attribute or its individual component attributes instead.
+
+An `@EmbeddedId` is already subject to the identifier immutability contract: its value must not change after persistence.
+Neither `@Immutable` nor `@Mutability` makes changing a persistent identifier supported.
+
 
 
 [[mutability-attribute-plural]]
 ===== Attribute immutability - plural
 
-Plural attributes (`@ElementCollection`, @OneToMany`, `@ManyToMany` and `@ManyToAny`) may also
+Plural attributes (`@ElementCollection`, `@OneToMany`, `@ManyToMany` and `@ManyToAny`) may also
 be annotated with `@Immutable`.
 
-TIP:: While most immutable changes are simply discarded, modifying an immutable collection will cause an exception.
+TIP: While most immutable changes are simply discarded, modifying an immutable collection will cause an exception.
 
 
 .Persisting an immutable collection
@@ -141,7 +167,7 @@ include::{mutability-example-dir}/attribute/PluralAttributeMutabilityTest.java[t
 
 The `Batch` entity is mutable. Only the `events` collection is immutable.
 
-For instance, we can still modify the entity name:
+For example, the entity name can still be modified:
 
 .Changing the mutable entity
 ====
@@ -152,7 +178,7 @@ include::{mutability-example-dir}/attribute/PluralAttributeMutabilityTest.java[t
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/collection-entity-update-example.sql[]
+include::{domain-immutability-extrasdir}/collection-entity-update-example.sql[]
 ----
 ====
 
@@ -167,7 +193,7 @@ include::{mutability-example-dir}/attribute/PluralAttributeMutabilityTest.java[t
 
 [source, bash, indent=0]
 ----
-include::{extrasdir}/collection-immutability-update-example.log.txt[]
+include::{domain-immutability-extrasdir}/collection-immutability-update-example.log.txt[]
 ----
 ====
 
@@ -175,39 +201,52 @@ include::{extrasdir}/collection-immutability-update-example.log.txt[]
 [[mutability-attribute-entity]]
 ===== Attribute immutability - entity
 
-To be continued..
+On a to-one attribute, `@Immutable` prevents updates to the association reference through that attribute.
+It does not make the referenced entity immutable or disable cascading.
+The same distinction applies to `@ManyToOne`, `@OneToOne`, and Hibernate's `@Any` mapping.
+For an inverse `mappedBy` attribute, database writes are controlled by the owning side regardless of this annotation.
 
-// todo : document the effect of `@Immutable` on `@OneToOne`, `@ManyToOne` and `@Any` mappings
+[source,java,indent=0]
+----
+include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-association]
+----
 
+In the following example, the existing author's name is updated, but replacing the `author` reference does not update the profile's foreign key:
 
-[[mutability-converter]]
-==== AttributeConverter mutability
+[source,java,indent=0]
+----
+include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-association-change]
+----
 
-Declaring `@Mutability` on an `AttributeConverter` applies the specified `MutabilityPlan` to
-all value mappings (attribute, collection element, etc.) to which the converter is applied.
+To ignore changes to the referenced entity's own state, annotate that entity type with `@Immutable`; see <<mutability-entity>>.
+`@Mutability` describes the internal state of a value and is not a replacement for association updateability.
 
-Declaring `@Immutable` on an `AttributeConverter` is shorthand for declaring `@Mutability` with an
-immutable `MutabilityPlan`.
-
-
-[[mutability-usertype]]
-==== UserType mutability
-
-Similar to <<mutability-converter,AttributeConverter>> both `@Mutability` and `@Immutable` may
-be declared on a `UserType`.
-
-`@Mutability` applies the specified `MutabilityPlan` to all value mappings (attribute, collection element, etc.)
-to which the `UserType` is applied.
-
-
-`@Immutable` applies an immutable `MutabilityPlan` to all value mappings (attribute, collection element, etc.)
-to which the `UserType` is applied.
 
 
 [[mutability-mutability]]
 ==== @Mutability
 
 `MutabilityPlan` is the contract used by Hibernate to abstract mutability concerns, in the sense of internal state changes.
+
+Hibernate uses `MutabilityPlan` to:
+
+1. Check whether a value is considered dirty
+2. Make deep copies
+3. Marshal values to and from the second-level cache
+
+Generally speaking, immutable values perform better in all of these cases
+
+1. The same value instance can be retained as the dirty-checking snapshot, avoiding a defensive copy.
+    Dirty checking still compares values using the mapped equality semantics, such as `Object#equals` or `JavaType#areEqual`.
+2. The same value instance can be used as the deep copy of itself.
+3. Immutable cached values do not need defensive copying when assembled or disassembled.
+
+If a particular Java type is considered mutable (a `Date` e.g.), `@Immutable` or a immutable-specific
+`MutabilityPlan` implementation can be specified to have Hibernate treat the value as immutable.  This
+also acts as a contract from the application that the internal state of these objects is not changed
+by the application. Specifying that a mutable type is immutable and then changing the internal state
+will lead to problems; so only do this if the application unequivocally does not change the internal
+state.
 
 A Java type has an inherent `MutabilityPlan` based on its `JavaType#getMutabilityPlan`.
 
@@ -240,8 +279,8 @@ include::{mutability-example-dir}/MutabilityBaselineEntity.java[tags=mutability-
 During flush, this change will make the entity "dirty" and the changes will be written (UPDATE) to
 the database.
 
-When dealing with mutable values, however, Hibernate must be aware of both ways to change the value.  First, like
-with the immutable value, we can set the new value:
+For mutable values, Hibernate detects both replacement and mutation.
+First, the attribute can be assigned a new value:
 
 .Changing mutable value - setting
 ====
@@ -251,7 +290,7 @@ include::{mutability-example-dir}/MutabilityBaselineEntity.java[tags=mutability-
 ----
 ====
 
-We can also mutate the existing value:
+The existing value can also be mutated:
 
 .Changing mutable value - mutating
 ====
@@ -261,6 +300,74 @@ include::{mutability-example-dir}/MutabilityBaselineEntity.java[tags=mutability-
 ----
 ====
 
-This mutating example has the same effect as the setting example - they each will make the entity dirty.
+Both replacement and mutation mark the entity as dirty.
 
 
+[[mutability-converter]]
+==== AttributeConverter mutability
+
+[[basic-jpa-convert-mutability]]Declaring `@Mutability` on an `AttributeConverter` applies the specified `MutabilityPlan` to
+all value mappings (attribute, collection element, etc.) to which the converter is applied.
+
+Declaring `@Immutable` on an `AttributeConverter` is shorthand for declaring `@Mutability` with an
+immutable `MutabilityPlan`.
+
+
+The following examples illustrate replacement and in-place mutation of converted values.
+
+===== Immutable types
+
+If the entity attribute is a `String`, a primitive wrapper (e.g. `Integer`, `Long`), an Enum type, or any other immutable `Object` type,
+the attribute can change only by assigning it a new value.
+
+Consider the `Period` attribute from <<basic-jpa-convert>>:
+
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-mapping-example]
+----
+
+The only way to change the `span` attribute is to reassign it to a different value:
+
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-immutability-plan-example]
+----
+
+===== Mutable types
+
+The following example uses the mutable `Money` type.
+
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mapping-example]
+----
+
+A mutable value can be changed in place. Hibernate detects the change during dirty checking and propagates it to the database:
+
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mutability-plan-example]
+----
+
+[TIP]
+====
+Although the `AttributeConverter` types can be mutable so that dirty checking, deep copying, and second-level caching work properly,
+treating these as immutable (when they really are) is more efficient.
+
+For this reason, prefer immutable types over mutable ones whenever possible.
+====
+
+
+[[mutability-usertype]]
+==== UserType mutability
+
+Similar to <<mutability-converter,AttributeConverter>> both `@Mutability` and `@Immutable` may
+be declared on a `UserType`.
+
+`@Mutability` applies the specified `MutabilityPlan` to all value mappings (attribute, collection element, etc.)
+to which the `UserType` is applied.
+
+
+`@Immutable` applies an immutable `MutabilityPlan` to all value mappings (attribute, collection element, etc.)
+to which the `UserType` is applied.

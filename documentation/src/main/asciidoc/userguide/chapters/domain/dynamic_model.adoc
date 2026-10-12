@@ -1,24 +1,25 @@
 [[dynamic-model]]
-=== Dynamic Model
+==== Dynamic models
 :example-dir-dynamic: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/dynamic
 :example-dir-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/mapping/dynamic
-:extrasdir: extras
+:domain-dynamic-model-extrasdir: extras
 
 [IMPORTANT]
 ====
-Jakarta Persistence only acknowledges the POJO entity model mapping so, if you are concerned about Jakarta Persistence provider portability, it's best to stick to the strict POJO model.
-On the other hand, Hibernate can work with both POJO entities and dynamic entity models.
+Jakarta Persistence supports only POJO entity models.
+Use POJO entities for portability across Jakarta Persistence providers.
+Hibernate also supports dynamic entity models.
 ====
 
 [[mapping-model-dynamic]]
-==== Dynamic mapping models
+===== Dynamic mapping models
 
 Persistent entities do not necessarily have to be represented as POJO/JavaBean classes.
-Hibernate also supports dynamic models (using `Map` of ``Map``s at runtime).
-With this approach, you do not write persistent classes, only mapping files.
+Hibernate also supports dynamic models represented by nested `Map` instances at runtime.
+These models require mapping files instead of persistent classes.
 
-A given entity has just one entity mode within a given SessionFactory.
-This is a change from previous versions which allowed to define multiple entity modes for an entity and to select which to load.
+An entity has one representation within a given `SessionFactory`.
+This is a change from previous versions which allowed multiple entity modes for an entity and a choice of which mode to load.
 Entity modes can now be mixed within a domain model; a dynamic entity might reference a POJO entity and vice versa.
 
 [[mapping-model-dynamic-example]]
@@ -30,19 +31,12 @@ include::{example-dir-resources}/Book.hbm.xml[tag=mapping-model-dynamic-example,
 ----
 ====
 
-After you defined your entity mapping, you need to instruct Hibernate to use the dynamic mapping mode:
-
 [[mapping-model-dynamic-setting-example]]
-.Dynamic domain model Hibernate mapping
-====
-[source,java]
-----
-include::{example-dir-dynamic}/DynamicEntityTest.java[tag=mapping-model-dynamic-setting-example, indent=0]
-----
-====
+The mapping declares `entity-name="Book"` without a Java class, so Hibernate represents this entity using a `Map`.
+No default entity-mode setting is required.
+Operations on the dynamic entity use its mapped entity name, as shown below.
 
-When you are going to save the following `Book` dynamic entity,
-Hibernate is going to generate the following SQL statement:
+Persisting the following dynamic `Book` entity generates the SQL statement shown below:
 
 [[mapping-model-dynamic-persist-example]]
 .Persist dynamic entity
@@ -54,16 +48,16 @@ include::{example-dir-dynamic}/DynamicEntityTest.java[tag=mapping-model-dynamic-
 
 [source,sql]
 ----
-include::{extrasdir}/dynamic/mapping-model-dynamic-example.sql[indent=0]
+include::{domain-dynamic-model-extrasdir}/dynamic/mapping-model-dynamic-example.sql[indent=0]
 ----
 ====
 
 [NOTE]
 ====
-The main advantage of dynamic models is the quick turnaround time for prototyping without the need for entity class implementation.
-The main downfall is that you lose compile-time type checking and will likely deal with many exceptions at runtime.
-However, as a result of the Hibernate mapping, the database schema can easily be normalized and sound, allowing to add a proper domain model implementation on top later on.
+Dynamic models support rapid prototyping without implementing entity classes.
+They lack compile-time type checking, so type errors are detected at runtime.
+The mappings can still define a normalized database schema, allowing POJO entity classes to be introduced later.
 
-It is also interesting to note that dynamic models are great for certain integration use cases as well.
-Envers, for example, makes extensive use of dynamic models to represent the historical data.
+Dynamic models also support integration use cases.
+For example, Envers uses them to represent historical data.
 ====

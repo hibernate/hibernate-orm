@@ -1,14 +1,13 @@
 [[soft-delete]]
-=== Soft Delete
+=== Soft delete
 :testing-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/softdelete
 
-An occasional requirement seen in the wild is to never physically remove rows from the database, but to
-instead perform a "soft delete" where a column is updated to indicate that the row is no longer active.
-Hibernate offers first-class support for this behavior through its `@SoftDelete` annotation.
+Soft delete retains a database row and updates an indicator column to mark it as deleted.
+Hibernate supports this behavior through `@SoftDelete`.
 
 Hibernate supports soft delete for both <<soft-delete-entity,entities>> and <<soft-delete-collection,collections>>.
 
-Soft delete support is defined by 3 main parts -
+Soft delete is configured using three parts:
 
 1. A <<soft-delete-type,strategy>> for interpreting the stored indicator values.
 2. The <<soft-delete-column,column>> which contains the indicator.
@@ -20,10 +19,10 @@ Soft delete support is defined by 3 main parts -
 
 Hibernate supports timestamp and truth-based soft delete strategies, configured by the `strategy` attribute of the `@SoftDelete` annotation.
 
-The TIMESTAMP strategy tracks the timestamp at which the row was deleted.
+The `TIMESTAMP` strategy tracks the timestamp at which the row was deleted.
 
-For truth-based strategies, there are 2 valid ways to interpret the values stored in the database.  This
-interpretation is defined by the SoftDeleteType enumeration and can be configured per-usage using
+For truth-based strategies, there are two ways to interpret the values stored in the database.  This
+interpretation is defined by `SoftDeleteType` and configured using
 `@SoftDelete(..., strategy=ACTIVE)` or `@SoftDelete(..., strategy=DELETED)` -
 
 ACTIVE::
@@ -37,7 +36,7 @@ a `false` value indicates that the row is non-deleted.
 [[soft-delete-column]]
 ==== Indicator column
 
-The column where the indicator value is stored is defined using `@SoftDelete#columnName` attribute.
+The `columnName` member of `@SoftDelete` specifies the indicator column.
 
 The default column name depends on the <<soft-delete-type,strategy>> being used -
 
@@ -63,8 +62,8 @@ The relational-type can be any type, as defined by the converter; generally `BOO
 NOTE: It is considered an error to specify a conversion with the TIMESTAMP strategy and an exception will be thrown.
 
 An explicit conversion can be specified using `@SoftDelete#converter`.  See <<soft-delete-basic-example>>
-for an example of specifying an explicit conversion.  Explicit conversions can specify a custom converter or leverage
-Hibernate-provided converters for the 3 most common cases -
+for an example of specifying an explicit conversion.  Explicit conversions can specify a custom converter or use
+Hibernate-provided converters for three common cases:
 
 `NumericBooleanConverter`:: Defines conversion using `0` for `false` and `1` for `true`
 `YesNoConverter`:: Defines conversion using `'N'` for `false` and `'Y'` for `true`
@@ -77,13 +76,20 @@ boolean (and bit):: the underlying type is boolean / bit and no conversion is ap
 numeric:: the underlying type is integer and values are converted according to `NumericBooleanConverter`
 character:: the underlying type is char and values are converted according to `TrueFalseConverter`
 
-IMPORTANT: The converter should simply convert the `true` and `false`, irrespective of the <<soft-delete-type,strategy>> used.  Hibernate will handle applying the strategy.
+IMPORTANT: The converter maps `true` and `false` independently of the <<soft-delete-type,strategy>>. Hibernate applies the strategy.
 
 
 [[soft-delete-entity]]
 ==== Entity soft delete
 
 Hibernate supports the soft delete of entities, with the indicator column defined on the primary table.
+
+[IMPORTANT]
+====
+A to-one association targeting a soft-deleted entity cannot use `FetchType.LAZY`.
+Hibernate rejects such a mapping with an `UnsupportedMappingException` at boot.
+Use eager fetching for these associations.
+====
 
 [[soft-delete-basic-example]]
 .Basic entity soft-delete
@@ -112,8 +118,8 @@ See also <<soft-delete-package>>.
 [[soft-delete-collection]]
 ==== Collection soft delete
 
-Soft delete may be applied to collection mapped with a "collection table", aka `@ElementCollection`
-and `@ManyToMany`.  The soft delete applies to the collection table row.
+Soft delete may be applied to collections mapped using `@ElementCollection` or `@ManyToMany`.
+It applies to rows in the collection or join table.
 
 Annotating a `@OneToMany` association with `@SoftDelete` will throw an exception.
 
@@ -150,5 +156,3 @@ See also <<soft-delete-package>>.
 
 The `@SoftDelete` annotation may also be placed at the package level, in which case it applies to all
 entities and collections defined within the package.
-
-

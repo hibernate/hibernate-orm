@@ -15,6 +15,8 @@ import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.time.LocalDate;
@@ -49,6 +51,13 @@ public interface Library {
 	record BookWithAuthor(Book book, Author author) {}
 	@Query("select b, a from Book b join b.authors a order by b.isbn, a.ssn")
 	Uni<List<BookWithAuthor>> booksWithAuthors();
+
+	@Find
+	@OrderBy("isbn")
+	Uni<KeyedResultList<Book>> keyedBooks(KeyedPage<Book> page);
+
+	@Query("where title = :title order by isbn")
+	Uni<KeyedResultList<Book>> keyedBooksByTitle(String title, KeyedPage<Book> page);
 
 	@Insert
 	Uni<Void> create(Book book);

@@ -42,6 +42,9 @@ class ReactiveTest {
 		assertTrue( library.contains( "session.createNamedQuery(Library_.updateAuthorAddress1(id, address).getName())" ) );
 		assertTrue( library.contains( "session.createNamedQuery(Library_.updateAuthorAddress2(id, address).getName())" ) );
 		assertTrue( library.contains( "session.createNamedQuery(Library_.updateAuthorAddress3(id, address).getName())" ) );
+		assertTrue( library.contains( "public Uni<KeyedResultList<Book>> keyedBooksByTitle(String title, @Nonnull KeyedPage<Book> page)" ) );
+		assertTrue( library.contains( "_select.getReactiveKeyedResultList(page)" ) );
+		assertFalse( library.contains( "_select.getKeyedResultList(" ) );
 		assertTrue( library.contains( "return (pageRequest.requestTotal()" ) );
 		assertTrue( library.contains( "? _select.getResultCount()" ) );
 		assertTrue( library.contains( ": Uni.createFrom().item(-1L)" ) );

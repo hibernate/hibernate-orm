@@ -1234,7 +1234,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				case HIB_KEYED_RESULT_LIST:
 					unwrapQuery(declaration, unwrapped);
 					declaration
-							.append(".getKeyedResultList(")
+							.append(isReactive() ? ".getReactiveKeyedResultList(" : ".getKeyedResultList(")
 							.append(parameterName(HIB_KEYED_PAGE, paramTypes, paramNames))
 							.append(")");
 					endReturnResult( declaration );

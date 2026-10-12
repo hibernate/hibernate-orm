@@ -18,8 +18,6 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 
-import org.jboss.logging.Logger;
-
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CHARSET_NAME;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CREATE_SCRIPT_SOURCE;
@@ -47,6 +45,7 @@ import static org.hibernate.tool.schema.Action.interpretJpaSetting;
 import static org.hibernate.tool.schema.internal.Helper.interpretNamespaceHandling;
 import static org.hibernate.tool.schema.internal.Helper.interpretScriptSourceSetting;
 import static org.hibernate.tool.schema.internal.Helper.interpretScriptTargetSetting;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Responsible for coordinating {@link SchemaManagementTool} execution
@@ -59,8 +58,6 @@ import static org.hibernate.tool.schema.internal.Helper.interpretScriptTargetSet
  * @author Steve Ebersole
  */
 public class SchemaManagementToolCoordinator {
-	private static final Logger LOG = Logger.getLogger( SchemaManagementToolCoordinator.class );
-
 	public static void process(
 			final Metadata metadata,
 			final ServiceRegistry serviceRegistry,
@@ -69,7 +66,7 @@ public class SchemaManagementToolCoordinator {
 		final var groupings = ActionGrouping.interpret( metadata, configuration );
 		if ( groupings.isEmpty() ) {
 			// no actions specified
-			LOG.debug( "No schema management actions found" );
+			SCHEMA_LOGGER.noSchemaManagementActions();
 		}
 		else {
 			final var databaseActionMap = collectDatabaseActions( groupings );
@@ -741,7 +738,7 @@ public class SchemaManagementToolCoordinator {
 				final Action databaseActionToUse =
 						databaseActionToUse( configuration, contributor, rootDatabaseAction, scriptActionToUse, rootAutoAction );
 				if ( databaseActionToUse == Action.NONE && scriptActionToUse == Action.NONE ) {
-					LOG.debugf( "No schema actions specified for contributor '%s'", contributor );
+					SCHEMA_LOGGER.noSchemaActionsForContributor( contributor );
 				}
 				else {
 					groupings.add( new ActionGrouping( contributor, databaseActionToUse, scriptActionToUse ) );

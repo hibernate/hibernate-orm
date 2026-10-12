@@ -1,6 +1,5 @@
 package org.hibernate.tool.schema.internal;
 
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
@@ -23,8 +22,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
-import org.jboss.logging.Logger;
-
 import java.util.Objects;
 
 import static java.util.Locale.ROOT;
@@ -33,6 +30,7 @@ import static org.hibernate.cfg.SchemaToolingSettings.INDEX_VALIDATION;
 import static org.hibernate.cfg.SchemaToolingSettings.UNIQUE_KEY_VALIDATION;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingType;
 import static org.hibernate.tool.schema.internal.Helper.buildDatabaseInformation;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Base implementation of {@link SchemaValidator}.
@@ -40,8 +38,6 @@ import static org.hibernate.tool.schema.internal.Helper.buildDatabaseInformation
  * @author Steve Ebersole
  */
 public abstract class AbstractSchemaValidator implements SchemaValidator {
-	private static final Logger LOG = Logger.getLogger( AbstractSchemaValidator.class );
-
 	protected HibernateSchemaManagementTool tool;
 	protected SchemaFilter schemaFilter;
 
@@ -75,7 +71,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 					databaseInformation.cleanup();
 				}
 				catch (Exception e) {
-					LOG.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
+					SCHEMA_LOGGER.problemReleasingDatabaseInformation( e );
 				}
 			}
 		}

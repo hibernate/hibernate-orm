@@ -475,11 +475,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 					+ collectionUpdates.size() + collectionCreations.size() + deletions.size();
 
 			if ( totalActions == 0 ) {
-				ACTION_LOGGER.tracef("executeActions: no pending actions to execute" );
+				ACTION_LOGGER.noPendingActions();
 				// EARLY EXIT!!
 			}
 
-			ACTION_LOGGER.tracef( "GraphBasedActionQueue.executeActions() - %d total actions", totalActions );
+			ACTION_LOGGER.executingActions( totalActions );
 		}
 
 		executeFlushAndPrepareForTransactionCompletion();
@@ -952,7 +952,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 
 		if (removed && ACTION_LOGGER.isDebugEnabled()) {
-			ACTION_LOGGER.debugf("Unschedule deletion for entity %s", entityToMatch);
+			ACTION_LOGGER.unschedulingDeletion( entityToMatch );
 		}
 	}
 
@@ -977,7 +977,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 		});
 
 		if (removed && ACTION_LOGGER.isDebugEnabled()) {
-			ACTION_LOGGER.debugf("Unschedule deletion for entity %s", newEntity);
+			ACTION_LOGGER.unschedulingDeletion( newEntity );
 		}
 	}
 

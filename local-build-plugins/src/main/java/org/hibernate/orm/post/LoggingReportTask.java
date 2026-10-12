@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
@@ -38,6 +39,7 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 
 	public static final DotName MSG_LOGGER_ANN_NAME = createSimple( "org.jboss.logging.annotations.MessageLogger" );
 	public static final DotName ID_RANGE_ANN_NAME = createSimple( "org.jboss.logging.annotations.ValidIdRange" );
+	public static final DotName ID_RANGES_ANN_NAME = createSimple( "org.jboss.logging.annotations.ValidIdRanges" );
 	public static final DotName MSG_ANN_NAME = createSimple( "org.jboss.logging.annotations.Message" );
 
 	private final Property<RegularFile> reportFile;
@@ -85,30 +87,39 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 				subSystem = null;
 			}
 
-			final IdRange idRange;
 			final AnnotationInstance idRangeAnnUsage = loggerClassInfo.declaredAnnotation( ID_RANGE_ANN_NAME );
-			if ( idRangeAnnUsage == null ) {
-				idRange = calculateIdRange( msgLoggerAnnUsage, subSystem );
-			}
-			else {
-				idRange = new IdRange(
-						asIntOrDefault( idRangeAnnUsage, "min" , 1 ),
-						asIntOrDefault( idRangeAnnUsage, "max" , 999999 ),
-						true,
-						loggerClassInfo.simpleName(),
-						subSystem
-				);
-				if ( subSystem != null ) {
-					subSystem.idRange = idRange;
+			final AnnotationInstance idRangesAnnUsage = loggerClassInfo.declaredAnnotation( ID_RANGES_ANN_NAME );
+			if ( idRangesAnnUsage != null ) {
+				for ( AnnotationInstance range : idRangesAnnUsage.value().asNestedArray() ) {
+					idRanges.add( explicitIdRange( range, loggerClassInfo, subSystem ) );
 				}
 			}
-
-			if ( idRange != null ) {
-				idRanges.add( idRange );
+			else if ( idRangeAnnUsage != null ) {
+				idRanges.add( explicitIdRange( idRangeAnnUsage, loggerClassInfo, subSystem ) );
+			}
+			else {
+				final IdRange idRange = calculateIdRange( msgLoggerAnnUsage, subSystem );
+				if ( idRange != null ) {
+					idRanges.add( idRange );
+				}
 			}
 		} );
 
 		generateReport( subSystemByName, idRanges );
+	}
+
+	private IdRange explicitIdRange(AnnotationInstance annotation, ClassInfo loggerClassInfo, SubSystem subSystem) {
+		final IdRange idRange = new IdRange(
+				asIntOrDefault( annotation, "min", 1 ),
+				asIntOrDefault( annotation, "max", 999999 ),
+				true,
+				loggerClassInfo.simpleName(),
+				subSystem
+		);
+		if ( subSystem != null ) {
+			subSystem.idRanges.add( idRange );
+		}
+		return idRange;
 	}
 
 
@@ -167,11 +178,11 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 					fileWriter.write( "`" + subSystem.getName() + "`::\n" );
 					fileWriter.write( "    * Logging class-name = `" + subSystem.getLoggingClassName() + "`\n" );
 					fileWriter.write( "    * Description = " + subSystem.getDescription() + "\n" );
-					if ( subSystem.getIdRange() != null ) {
+					for ( var idRange : subSystem.getIdRanges() ) {
 						fileWriter.write( String.format(
 								"    * ValidIdRange = <<%s,%s>>\n",
-								subSystem.getIdRange().getAnchorName(),
-								subSystem.getIdRange().getLabel()
+								idRange.getAnchorName(),
+								idRange.getLabel()
 						) );
 					}
 				}
@@ -221,7 +232,7 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 
 		private final String anchorName;
 
-		private IdRange idRange;
+		private final List<IdRange> idRanges = new ArrayList<>();
 
 		public SubSystem(String name, String description, String loggingClassName) {
 			this.name = name;
@@ -247,8 +258,8 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 			return anchorName;
 		}
 
-		public IdRange getIdRange() {
-			return idRange;
+		public List<IdRange> getIdRanges() {
+			return idRanges;
 		}
 
 		private static String determineAnchorName(final String name) {

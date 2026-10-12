@@ -7,7 +7,7 @@ import java.net.URL;
 
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * ScriptSourceInput implementation for URL references.
@@ -16,8 +16,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
-	private static final Logger LOG = Logger.getLogger( ScriptSourceInputFromFile.class );
-
 	private final URL url;
 	private final String charsetName;
 
@@ -58,7 +56,7 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
 			reader.close();
 		}
 		catch (IOException e) {
-			LOG.warn( "Unable to close file reader for generation script source" );
+			SCHEMA_LOGGER.unableToCloseSchemaScriptReader( e );
 		}
 	}
 

@@ -36,8 +36,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.jboss.logging.Logger;
-
 import static org.hibernate.cfg.SchemaToolingSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -48,6 +46,7 @@ import static org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy.SKI
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
 import static org.hibernate.tool.schema.internal.SchemaCreatorImpl.createUserDefinedTypes;
 import static org.hibernate.tool.schema.internal.SchemaDropperImpl.dropUserDefinedTypes;
+import static org.hibernate.tool.schema.internal.SchemaManagementLogging.SCHEMA_LOGGER;
 
 /**
  * Base implementation of {@link SchemaMigrator}.
@@ -55,8 +54,6 @@ import static org.hibernate.tool.schema.internal.SchemaDropperImpl.dropUserDefin
  * @author Steve Ebersole
  */
 public abstract class AbstractSchemaMigrator implements SchemaMigrator {
-	private static final Logger LOG = Logger.getLogger( IndividuallySchemaMigratorImpl.class );
-
 	protected HibernateSchemaManagementTool tool;
 	protected SchemaFilter schemaFilter;
 	private UniqueConstraintSchemaUpdateStrategy uniqueConstraintStrategy;
@@ -105,7 +102,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 								target.release();
 							}
 							catch (Exception e) {
-								LOG.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
+								SCHEMA_LOGGER.problemReleasingGenerationTarget( target, e );
 							}
 						}
 					}
@@ -115,7 +112,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						databaseInformation.cleanup();
 					}
 					catch (Exception e) {
-						LOG.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
+						SCHEMA_LOGGER.problemReleasingDatabaseInformation( e );
 					}
 				}
 			}

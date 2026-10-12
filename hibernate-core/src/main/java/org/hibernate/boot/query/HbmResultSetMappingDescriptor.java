@@ -58,7 +58,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Supplier;
 
-import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.query.internal.BootQueryLogging.BOOT_QUERY_LOGGER;
 import static org.hibernate.internal.util.StringHelper.split;
 
 /**
@@ -84,10 +84,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			MetadataBuildingContext context) {
 		this.registrationName = hbmResultSetMapping.getName();
 
-		BOOT_LOGGER.tracef(
-				"Creating explicit HbmResultSetMappingDescriptor: %s",
-				registrationName
-		);
+		BOOT_QUERY_LOGGER.creatingExplicitHbmResultSetMapping( registrationName );
 
 		final List<?> hbmValueMappingsSource = hbmResultSetMapping.getValueMappingSources();
 		final List<ResultDescriptor> localResultDescriptors = CollectionHelper.arrayList( hbmValueMappingsSource.size() );
@@ -253,10 +250,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	@Nonnull
 	@Override
 	public NamedResultSetMappingMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
-		BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-				"Resolving HbmResultSetMappingDescriptor into memento for [%s]",
-				registrationName
-		);
+		BOOT_QUERY_LOGGER.resolvingHbmResultSetMapping( registrationName );
 
 		final List<ResultMemento> resultMementos = new ArrayList<>( resultDescriptors.size() );
 		resultDescriptors.forEach(
@@ -343,12 +337,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				);
 			}
 
-			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-					"Creating EntityResultDescriptor (%s : %s) for ResultSet mapping - %s",
-					tableAlias,
-					entityName,
-					registrationName
-			);
+			BOOT_QUERY_LOGGER.creatingEntityResult( tableAlias, entityName, registrationName );
 
 			discriminatorColumnAlias =
 					hbmEntityReturn.getReturnDiscriminator() == null
@@ -367,12 +356,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Nonnull
 		@Override
 		public ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-					"Resolving HBM EntityResultDescriptor into memento - %s : %s (%s)",
-					tableAlias,
-					entityName,
-					registrationName
-			);
+			BOOT_QUERY_LOGGER.resolvingEntityResult( tableAlias, entityName, registrationName );
 
 			final var entityDescriptor =
 					resolutionContext.getMappingMetamodel()
@@ -519,12 +503,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				}
 			}
 
-			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-					"Creating PropertyFetchDescriptor (%s : %s) for ResultSet mapping - %s",
-					parent,
-					propertyPath,
-					registrationName
-			);
+			BOOT_QUERY_LOGGER.creatingPropertyFetch( parent, propertyPath, registrationName );
 		}
 
 		private static Value getValue(HbmFetchParent parent, String propertyPath, MetadataBuildingContext context) {
@@ -638,11 +617,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Nonnull
 		@Override
 		public FetchMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-					"Resolving HBM PropertyFetchDescriptor into memento - %s : %s",
-					parent,
-					propertyPath
-			);
+			BOOT_QUERY_LOGGER.resolvingPropertyFetch( parent, propertyPath );
 
 			final FetchParentMemento fetchParentMemento = parent.resolveParentMemento( resolutionContext );
 
@@ -753,12 +728,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Nonnull
 		@Override
 		public FetchMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-					"Resolving HBM JoinDescriptor into memento - %s : %s . %s",
-					tableAlias,
-					ownerTableAlias,
-					propertyPath
-			);
+			BOOT_QUERY_LOGGER.resolvingJoin( tableAlias, ownerTableAlias, propertyPath );
 
 			if ( memento == null ) {
 				final var thisAsParentMemento = resolveParentMemento( resolutionContext );
@@ -862,11 +832,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				);
 			}
 
-			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-					"Creating CollectionResultDescriptor (%s : %s)",
-					tableAlias,
-					collectionPath
-			);
+			BOOT_QUERY_LOGGER.creatingCollectionResult( tableAlias, collectionPath );
 
 //			this.lockMode = hbmCollectionReturn.getLockMode();
 			this.joinDescriptorsAccess = joinDescriptorsAccess;
@@ -885,11 +851,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Nonnull
 		@Override
 		public ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-					"Resolving HBM CollectionResultDescriptor into memento - %s : %s",
-					tableAlias,
-					collectionPath
-			);
+			BOOT_QUERY_LOGGER.resolvingCollectionResult( tableAlias, collectionPath );
 
 			if ( memento == null ) {
 				applyFetchJoins( joinDescriptorsAccess, tableAlias, propertyFetchDescriptors );
@@ -931,10 +893,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			this.columnName = columnName;
 			this.hibernateTypeName = hibernateTypeName;
 
-			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-					"Creating ScalarDescriptor (%s)",
-					columnName
-			);
+			BOOT_QUERY_LOGGER.creatingScalarResult( columnName );
 		}
 
 		public ScalarDescriptor(JaxbHbmNativeQueryScalarReturnType hbmScalarReturn) {
@@ -944,10 +903,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Nonnull
 		@Override
 		public ResultMementoBasicStandard resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
-					"Resolving HBM ScalarDescriptor into memento - %s",
-					columnName
-			);
+			BOOT_QUERY_LOGGER.resolvingScalarResult( columnName );
 			if ( hibernateTypeName != null ) {
 				final var namedType =
 						resolutionContext.getTypeConfiguration().getBasicTypeRegistry()

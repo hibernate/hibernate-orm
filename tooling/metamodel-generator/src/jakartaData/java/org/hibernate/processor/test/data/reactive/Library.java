@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.data.Limit;
 import jakarta.data.Order;
 import jakarta.data.Sort;
+import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.By;
@@ -58,6 +59,10 @@ public interface Library {
 
 	@Query("where title = :title order by isbn")
 	Uni<KeyedResultList<Book>> keyedBooksByTitle(String title, KeyedPage<Book> page);
+
+	@Find
+	@OrderBy("isbn")
+	Uni<CursoredPage<Book>> cursoredBooks(PageRequest pageRequest);
 
 	@Insert
 	Uni<Void> create(Book book);

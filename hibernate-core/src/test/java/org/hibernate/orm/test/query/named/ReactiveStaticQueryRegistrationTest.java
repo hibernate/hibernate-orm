@@ -22,7 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ReactiveStaticQueryRegistrationTest {
 
 	static Stream<String> methodNames() {
-		return Stream.of( "uniByTitle", "uniListByTitle" );
+		return Stream.of( "uniByTitle", "uniListByTitle", "uniPageByTitle",
+				"uniCursoredPageByTitle", "uniKeyedResultListByTitle" );
 	}
 
 	@ParameterizedTest
@@ -35,7 +36,7 @@ class ReactiveStaticQueryRegistrationTest {
 		assertThat( memento ).isNotNull();
 		assertThat( memento.getResultType() ).isEqualTo( Book.class );
 		assertThat( memento.getSelectionString() )
-				.isEqualTo( "from Jpa4StaticQueryBook where title = :title" );
+				.startsWith( "from Jpa4StaticQueryBook where title = :title" );
 	}
 
 	@Test
@@ -57,6 +58,11 @@ class ReactiveStaticQueryRegistrationTest {
 	}
 
 	private static String queryName(String methodName) {
-		return ReactiveRepository.class.getCanonicalName() + "#" + methodName + "(java.lang.String)";
+		final String parameters = switch ( methodName ) {
+			case "uniPageByTitle", "uniCursoredPageByTitle" -> "java.lang.String,jakarta.data.page.PageRequest";
+			case "uniKeyedResultListByTitle" -> "java.lang.String,org.hibernate.query.KeyedPage";
+			default -> "java.lang.String";
+		};
+		return ReactiveRepository.class.getCanonicalName() + "#" + methodName + "(" + parameters + ")";
 	}
 }

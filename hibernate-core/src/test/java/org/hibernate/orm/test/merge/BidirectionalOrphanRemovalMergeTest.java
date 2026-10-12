@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
@@ -28,6 +30,12 @@ import jakarta.persistence.OneToMany;
 		}
 )
 @SessionFactory
+@Jpa(
+		annotatedClasses = {
+				BidirectionalOrphanRemovalMergeTest.Parent.class,
+				BidirectionalOrphanRemovalMergeTest.Child.class
+		}
+)
 class BidirectionalOrphanRemovalMergeTest {
 
 	@Test
@@ -255,6 +263,62 @@ class BidirectionalOrphanRemovalMergeTest {
 		scope.inTransaction( session -> {
 			Parent parent = session.find( Parent.class, parentId );
 			assertThat( parent.children ).hasSize(2);
+		} );
+	}
+
+	@JiraKey("HHH-20670")
+	@Test
+	void testPersistCommitClearMergeFlushJpa(EntityManagerFactoryScope scope) {
+		Long parentId = scope.fromEntityManager(entityManager -> {
+			Parent parent = new Parent();
+			Child child = new Child();
+			child.parent = parent;
+			parent.children.add(child);
+
+			entityManager.getTransaction().begin();
+			entityManager.persist(parent);
+			entityManager.getTransaction().commit();
+
+			entityManager.getTransaction().begin();
+			parent.children.clear();
+			entityManager.merge(parent);
+			entityManager.flush();
+			entityManager.getTransaction().commit();
+
+			return parent.id;
+		});
+
+		scope.inTransaction( entityManager -> {
+			Parent parent = entityManager.find( Parent.class, parentId );
+			assertThat( parent.children ).isEmpty();
+		} );
+	}
+
+	@JiraKey("HHH-20670")
+	@Test
+	void testPersistCommitClearMergeFlush(SessionFactoryScope scope) {
+		Long parentId = scope.fromSession(session -> {
+			Parent parent = new Parent();
+			Child child = new Child();
+			child.parent = parent;
+			parent.children.add(child);
+
+			session.getTransaction().begin();
+			session.persist(parent);
+			session.getTransaction().commit();
+
+			session.getTransaction().begin();
+			parent.children.clear();
+			session.merge(parent);
+			session.flush();
+			session.getTransaction().commit();
+
+			return parent.id;
+		});
+
+		scope.inTransaction( entityManager -> {
+			Parent parent = entityManager.find( Parent.class, parentId );
+			assertThat( parent.children ).isEmpty();
 		} );
 	}
 

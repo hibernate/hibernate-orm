@@ -57,7 +57,7 @@ dependencies {
     jakartaDataImplementation "jakarta.data:jakarta.data-api:1.1.0-M3"
 	jakartaDataImplementation "jakarta.data:jakarta.data-stateful:1.1.0-M3"
 	jakartaDataImplementation "jakarta.enterprise.concurrent:jakarta.enterprise.concurrent-api:3.1.1"
-	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:3.0.1.Final"
+	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:5.0.0.Beta1"
 	jakartaDataImplementation libs.jakarta.interceptors
 	jakartaDataImplementation libs.jakarta.inject
 	jakartaDataImplementation libs.jakarta.cdi

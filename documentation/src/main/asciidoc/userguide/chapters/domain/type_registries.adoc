@@ -1,0 +1,70 @@
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:core-project-dir: {root-project-dir}/hibernate-core
+:domain-basic-types-core-test-base: {core-project-dir}/src/test
+:example-dir-basic-mapping: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping
+:example-dir-resources: {domain-basic-types-core-test-base}/resources/org/hibernate/orm/test/
+:example-dir-generated: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/generated
+:example-dir-converter: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/converted/converter
+:domain-basic-types-extrasdir: extras
+
+[[domain-type-registration]]
+==== Registries and TypeContributor
+
+[[basic-mapping-registries]]
+===== Registries
+
+In addition to <<basic-mapping-composition-resolution,mapping resolution>>,
+`JavaTypeRegistry` and `JdbcTypeRegistry` support other type-related operations.
+
+The `JavaTypeRegistry` is a registry of `JavaType` references keyed by Java type.  In addition to mapping resolution,
+this registry is used to handle `Class` references exposed in various APIs such as `Query` parameter types.
+`JavaType` references can be registered through `@JavaTypeRegistration`.
+
+The `JdbcTypeRegistry` is a registry of `JdbcType` references keyed by an integer code.  As discussed in
+<<basic-mapping-composition-jdbc>>, these type-codes typically match the corresponding code from
+`java.sql.Types`, but that is not a requirement - integers other than those defined by `java.sql.Types` can
+be used.  This might be useful for mapping JDBC User Data Types (UDTs) or other specialized database-specific
+types (PostgreSQL's UUID type, e.g.).  In addition to its use in mapping resolution, this registry is also used
+as the primary source for resolving "discovered" values in a JDBC `ResultSet`.  `JdbcType` references can be
+registered through `@JdbcTypeRegistration`.
+
+See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration` for
+registration.
+
+
+[[basic-type-contributor]]
+===== TypeContributor
+
+`org.hibernate.boot.model.TypeContributor` is a contract for overriding or extending parts of the Hibernate type
+system.
+
+Register an implementation as a Java service by listing its class name in
+`META-INF/services/org.hibernate.boot.model.TypeContributor`.
+Alternatively, register it programmatically using `Configuration#registerTypeContributor` or `MetadataBuilder#applyTypes`.
+The legacy Jakarta Persistence bootstrap setting `hibernate.type_contributors` accepts a `TypeContributorList`,
+but both the setting and that interface are deprecated for removal; prefer service discovery.
+
+The `contribute()` method receives a `TypeContributions` callback for registering:
+
+* `JavaType`, `JdbcType`, and `JdbcTypeConstructor` descriptors;
+* `UserType` and `CompositeUserType` implementations as implicit mappings for their returned Java types;
+* `AttributeConverter` classes, using their declared automatic-application policy.
+
+Complete these registrations during the callback. Do not retain the supplied `TypeContributions` or service registry.
+
+Service-loaded contributors are applied in ascending `ordinal()` order, with the implementation class name breaking ties.
+The default ordinal is `1000`. Later contributions can replace earlier registrations under the same key.
+Use distinct ordinals when one service-loaded contributor must run after another.
+This sorting applies to service discovery, not to programmatic registrations.
+
+
+[IMPORTANT]
+====
+The callbacks for contributing `BasicType` instances are deprecated.
+These registrations are not limited to `hbm.xml`: implicit resolution of annotated basic attributes can also consult the `BasicTypeRegistry`.
+For new mappings, prefer <<basic-mapping-custom,custom types>> or <<basic-mapping-composition,compositional mapping descriptors>>.
+====
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

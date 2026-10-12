@@ -1,0 +1,130 @@
+[[domain-advanced-mappings]]
+=== Advanced mappings and customization
+:core-project-dir: {root-project-dir}/hibernate-core
+:domain-entity-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-entity-example-dir-mapping: {domain-entity-core-test-base}/mapping
+:example-dir-proxy: {domain-entity-core-test-base}/proxy
+:example-dir-persister: {domain-entity-core-test-base}/persister
+:domain-entity-extrasdir: extras
+
+:core-project-dir: {root-project-dir}/hibernate-core
+:domain-identifiers-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:example-dir-identifier: {domain-identifiers-core-test-base}/mapping/identifier
+:example-dir-generated: {domain-identifiers-core-test-base}/mapping/generated
+:example-dir-associations: {domain-identifiers-core-test-base}/associations
+:domain-identifiers-extrasdir: extras
+
+The following mappings and extension contracts address requirements beyond ordinary entity and value mappings.
+
+[[domain-advanced-relational-mappings]]
+==== Advanced relational mappings
+
+[[entity-sql-query-mapping]]
+===== Mapping the entity to a SQL query
+
+Map an entity to a SQL query using the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation.
+
+[[mapping-Subselect-example]]
+.`@Subselect` entity mapping
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-example,indent=0]
+----
+====
+
+In this example, `Account` does not store a balance. Each account operation is recorded as an `AccountTransaction`.
+The balance is calculated by the SQL query mapped to `AccountSummary`, which shares the account's identifier.
+The following example loads the summary for an account with a recorded transaction.
+
+[[mapping-Subselect-entity-find-example]]
+.Finding a `@Subselect` entity
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-find-example,indent=0]
+----
+====
+
+[NOTE]
+====
+The underlying `@Subselect` SQL query supports standard Hibernate placeholders ( see <<chapters/query/native/Native.adoc#sql-global-catalog-schema,Catalog and schema in SQL queries>> ).
+Global settings can be overridden using the `schema` or `catalog` attributes of the `@Table` annotation.
+====
+
+Adding an `AccountTransaction` and refreshing the `AccountSummary` updates the balance:
+
+[[mapping-Subselect-refresh-find-example]]
+.Refreshing a `@Subselect` entity
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-refresh-example,indent=0]
+----
+====
+
+[TIP]
+====
+The goal of the `@Synchronize` annotation in the `AccountSummary` entity mapping is to instruct Hibernate which database tables are needed by the
+underlying `@Subselect` SQL query. This is because, unlike JPQL and HQL queries, Hibernate cannot parse the underlying native SQL query.
+
+With the `@Synchronize` annotation in place,
+when executing an HQL or JPQL which selects from the `AccountSummary` entity,
+Hibernate will trigger a Persistence Context flush if there are pending `Account`, `Client` or `AccountTransaction` entity state transitions.
+====
+
+[[identifiers-rowid]]
+===== @RowId
+
+When an entity is annotated with `@RowId` and the database supports access by row id,
+Hibernate can use the row id pseudo-column for CRUD operations from stateful Sessions.
+When the row is loaded Hibernate will track the row id and when CRUD operations on that row is triggered it will use that row id as the restriction.  Row id access is the fastest, most efficient was to refer to rows in the database.
+
+[NOTE]
+====
+Databases known to have row id support include
+
+* Oracle
+* H2
+* PostgreSQL
+* SpannerPostgreSQL
+* Some flavors of DB2
+====
+
+[[identifiers-rowid-mapping]]
+.`@RowId` entity mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-identifier}/RowIdTest.java[tag=identifiers-rowid-mapping]
+----
+====
+
+After fetching and modifying an entity, Hibernate uses the `ROWID` pseudo-column for the UPDATE SQL statement.
+
+[[identifiers-rowid-example]]
+.`@RowId` example
+====
+[source, java, indent=0]
+----
+include::{example-dir-identifier}/RowIdTest.java[tag=identifiers-rowid-example]
+----
+
+[source, sql, indent=0]
+----
+include::{domain-identifiers-extrasdir}/id/identifiers-rowid-example.sql[]
+----
+====
+include::dynamic_model.adoc[]
+
+include::basic_type_customization.adoc[]
+
+include::embeddable_customization.adoc[]
+
+include::collection_customization.adoc[]
+
+include::type_registries.adoc[]
+
+include::customizing.adoc[]
+
+include::bitset.adoc[]

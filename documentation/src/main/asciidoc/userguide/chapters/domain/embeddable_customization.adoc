@@ -1,0 +1,157 @@
+:core-project-dir: {root-project-dir}/hibernate-core
+:domain-embeddables-core-test-base: {root-project-dir}/hibernate-core/src/test/java
+:example-dir-emeddable: {domain-embeddables-core-test-base}/org/hibernate/orm/test/mapping/embeddable
+:example-dir-embeddableinstantiator: {domain-embeddables-core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
+:example-dir-compositeusertype: {domain-embeddables-core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/usertype
+:domain-embeddables-extrasdir: extras
+
+[[embeddable-mapping-custom]]
+===== Custom composite types
+
+Another approach is to supply the implementation of the `org.hibernate.usertype.CompositeUserType` contract using `@CompositeType`,
+which is an extension to the <<embeddable-instantiator,`org.hibernate.metamodel.spi.EmbeddableInstantiator`>> contract.
+
+There are also corresponding, specialized forms of `@CompositeType` for specific model parts:
+
+* When mapping a Map, `@CompositeType` describes the Map value while `@MapKeyCompositeType` describes the Map key
+* For collection mappings, `@CompositeType` describes the elements
+
+For example, consider the following custom type:
+
+[[embeddable-usertype-domain-ex]]
+.`CompositeUserType` - Domain type
+====
+[source, java, indent=0]
+----
+include::{example-dir-compositeusertype}/embedded/Name.java[tags=embeddable-usertype-domain]
+----
+====
+
+`Name` has only a constructor accepting its state.
+The custom user type handles instantiation and state access without requiring JavaBeans conventions.
+
+[[embeddable-usertype-impl-ex]]
+.`CompositeUserType` - Implementation
+====
+[source, java, indent=0]
+----
+include::{example-dir-compositeusertype}/embedded/NameCompositeUserType.java[tags=embeddable-usertype-impl]
+----
+====
+
+A composite user type requires an embeddable mapper class that defines its persistent attributes
+as they would appear in an `@Embeddable` class.
+
+In addition to the instantiation logic, a composite user type also has to provide a way to decompose the returned type
+into the individual components/properties of the embeddable mapper class through `getPropertyValue`.
+The property index, just like in the `instantiate` method, is based on the alphabetical order of the attribute names
+of the embeddable mapper class.
+
+The composite user type also needs to provide methods to handle the mutability, equals, hashCode and the cache
+serialization and deserialization of the returned type.
+
+There are a few ways to specify the composite user type.  The `@org.hibernate.annotations.CompositeType`
+annotation can be used on the embedded and element collection attributes:
+
+[[embeddable-usertype-property-ex]]
+.`@CompositeType` on attribute
+====
+[source, java, indent=0]
+----
+include::{example-dir-compositeusertype}/embedded/Person.java[tags=embeddable-usertype-property]
+----
+====
+
+Or `@org.hibernate.annotations.CompositeTypeRegistration` may be used, which is useful
+when the application developer wants to apply the composite user type for all domain type uses.
+This annotation may also be placed on a `package-info.java` or `module-info.java`.
+
+[[embeddable-usertype-registration-ex]]
+.`@CompositeTypeRegistration`
+====
+[source, java, indent=0]
+----
+include::{example-dir-compositeusertype}/registered/Person.java[tags=embeddable-usertype-registration]
+----
+====
+
+
+[[embeddable-instantiator]]
+==== Custom embeddable instantiation
+
+Jakarta Persistence supports both regular Java classes and Java records as embeddable types.
+A regular embeddable class requires a public or protected no-argument constructor for portable instantiation.
+A record is instantiated through its canonical constructor and does not require a custom instantiator:
+
+[source,java]
+----
+@Embeddable
+public record Name(String firstName, String lastName) {}
+----
+
+Hibernate also supports selecting a constructor of a regular embeddable class using `@Instantiator`.
+Its `value` member lists the persistent attribute names in constructor-parameter order.
+For other instantiation requirements, a custom instantiator may be supplied.
+
+Hibernate allows the use of a custom instantiator for creating the embeddable instances through the
+`org.hibernate.metamodel.spi.EmbeddableInstantiator` contract.  For example, consider the following
+embeddable:
+
+[[embeddable-instantiator-embeddable-ex]]
+.`EmbeddableInstantiator` - Embeddable
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/embedded/Name.java[tags=embeddable-instantiator-embeddable]
+----
+====
+
+`Name` has only a constructor accepting its state, so this example supplies a custom instantiation strategy.
+
+[[embeddable-instantiator-impl-ex]]
+.`EmbeddableInstantiator` - Implementation
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/embedded/NameInstantiator.java[tags=embeddable-instantiator-impl]
+----
+====
+
+There are a few ways to specify the custom instantiator.  The `@org.hibernate.annotations.EmbeddableInstantiator`
+annotation can be used on the embedded attribute:
+
+[[embeddable-instantiator-property-ex]]
+.`@EmbeddableInstantiator` on attribute
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/embedded/Person.java[tags=embeddable-instantiator-property]
+----
+====
+
+`@EmbeddableInstantiator` may also be specified on the embeddable class:
+
+[[embeddable-instantiator-class-ex]]
+.`@EmbeddableInstantiator` on class
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/embeddable/Name.java[tags=embeddable-instantiator-class]
+
+include::{example-dir-embeddableinstantiator}/embeddable/Person.java[tags=embeddable-instantiator-class]
+----
+====
+
+
+Use `@org.hibernate.annotations.EmbeddableInstantiatorRegistration` when the embeddable class cannot be modified
+to apply the instantiator <<embeddable-instantiator-class-ex,directly>>.
+This annotation may also be placed on a `package-info.java` or `module-info.java`.
+
+[[embeddable-instantiator-registration-ex]]
+.`@EmbeddableInstantiatorRegistration`
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/registered/Person.java[tags=embeddable-instantiator-registration]
+----
+====

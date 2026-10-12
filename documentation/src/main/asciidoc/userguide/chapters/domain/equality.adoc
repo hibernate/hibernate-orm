@@ -1,0 +1,192 @@
+:core-project-dir: {root-project-dir}/hibernate-core
+:domain-entity-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-entity-example-dir-mapping: {domain-entity-core-test-base}/mapping
+:example-dir-proxy: {domain-entity-core-test-base}/proxy
+:example-dir-persister: {domain-entity-core-test-base}/persister
+:domain-entity-extrasdir: extras
+
+[[mapping-model-pojo-equalshashcode]]
+==== Implementing `equals()` and `hashCode()`
+
+[NOTE]
+====
+This section discusses managed, transient, and detached entities and their relationship to a Hibernate `Session`.
+These concepts are explained in the <<chapters/pc/PersistenceContext.adoc#pc,Persistence Context>> chapter.
+====
+
+The need for `equals()` and `hashCode()` depends on how the domain model uses entities.
+A user-defined identifier class, such as a composite identifier class, must implement these methods based on its identifier values.
+For entity classes, the choice depends on whether instances representing the same database row need to compare as equal.
+
+The default implementations inherited from `Object` use Java object identity.
+Separate instances therefore compare as unequal even when they represent the same row.
+Within a single `Session`, Hibernate guarantees that persistent identity and Java identity coincide.
+Loading the same `Person` multiple times returns the same instance:
+
+[[entity-pojo-identity-scope-example]]
+.Scope of identity
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identity-scope-example, indent=0]
+----
+====
+
+Consider a `Library` entity containing a `java.util.Set` of `Book` entities:
+
+[[entity-pojo-set-mapping-example]]
+.Library entity mapping
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-mapping-example, indent=0]
+----
+====
+
+[[entity-pojo-set-identity-scope-example]]
+.Set usage with Session-scoped identity
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-identity-scope-example, indent=0]
+----
+====
+
+The behavior differs for instances loaded by different sessions:
+
+[[entity-pojo-multi-session-identity-scope-example]]
+.Mixed Sessions
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-identity-scope-example, indent=0]
+----
+
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-set-identity-scope-example, indent=0]
+----
+====
+
+Specifically, the outcome in this last example will depend on whether the `Book` class
+implemented equals/hashCode, and, if so, how.
+
+If the `Book` class did not override the default equals/hashCode,
+the two `Book` instances compare as unequal because they have different Java identities.
+
+Consider yet another case:
+
+[[entity-pojo-transient-set-identity-scope-example]]
+.Sets with transient entities
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-transient-set-identity-scope-example, indent=0]
+----
+====
+
+Consider implementing `equals()` and `hashCode()` when transient or detached entities are used outside a `Session`,
+especially in Java collections.
+
+A common initial approach is to use the entity's identifier attribute as the basis for equals/hashCode calculations:
+
+[[entity-pojo-naive-equals-hashcode-example]]
+.Naive equals/hashCode implementation
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-example, indent=0]
+----
+====
+
+This approach fails when a transient `Book` is added to a set before its identifier is generated:
+
+[[entity-pojo-naive-equals-hashcode-persist-example]]
+.Auto-generated identifiers with Sets and naive equals/hashCode
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-example, indent=0]
+----
+====
+
+The issue here is a conflict between the use of the generated identifier, the contract of `Set`, and the equals/hashCode implementations.
+`Set` says that the equals/hashCode value for an object should not change while the object is part of the `Set`.
+But that is exactly what happens when `equals()` and `hashCode()` are based on a generated identifier which is assigned after the entity is added to the set.
+The timing of identifier assignment depends on the generation strategy: a sequence-generated identifier may be assigned during `persist()`, while an identity-generated identifier requires execution of the insert.
+
+Note that this is just a concern when using generated identifiers.
+Assigned identifiers avoid this problem if the identifier is set before the entity is added to the `Set`.
+
+Another option is to force the identifier to be generated and set prior to adding to the `Set`:
+
+[[entity-pojo-naive-equals-hashcode-persist-force-flush-example]]
+.Forcing the flush before adding to the Set
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-force-flush-example, indent=0]
+----
+====
+
+But this is often not feasible.
+
+An alternative is to base `equals()` and `hashCode()` on a natural id or business key.
+
+[[entity-pojo-natural-id-equals-hashcode-example]]
+.Natural Id equals/hashCode
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-example, indent=0]
+----
+====
+
+With this implementation, the `Book` remains accessible in the `Library` set after it is persisted:
+
+[[entity-pojo-natural-id-equals-hashcode-persist-example]]
+.Natural Id equals/hashCode persist example
+====
+[source,java]
+----
+include::{domain-entity-example-dir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-persist-example, indent=0]
+----
+====
+
+[[domain-equality-proxies]]
+===== Equality, proxies, and inheritance
+
+An entity reference may be represented by a lazy proxy whose runtime class differs from the entity class.
+An equality implementation using `getClass()` can therefore reject a proxy for the same entity.
+Direct field access on a proxy can also observe uninitialized state; use accessor methods when comparing persistent values.
+Accessing a business key may initialize the proxy and execute a database query, so equality evaluation is not necessarily free of database access.
+An uninitialized detached proxy cannot be assumed to expose those values without an associated session.
+
+The following example uses a non-null, immutable natural id and assumes that `Author` is not part of an entity inheritance hierarchy:
+
+[source,java,indent=0]
+----
+include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-proxy-equality]
+----
+
+`instanceof` accepts subclass proxies. In a mapped inheritance hierarchy, however, accepting every subtype can produce inappropriate equality or violate symmetry if subclasses define different rules.
+Exact-type checks require a deliberate proxy-aware type strategy and may also require initialization.
+See <<concrete-proxy>> for concrete proxies and subtype resolution.
+
+The business key must be assigned before an instance is added to a hashed collection and remain stable while it is a member.
+A database uniqueness constraint does not itself guarantee a stable Java hash code.
+This example deliberately has no natural-id setter; it is not a universal equality implementation for every entity hierarchy.
+
+The appropriate equality strategy depends on the entity's identifier and how the application uses its instances.
+
+[TIP]
+====
+A natural id is a useful basis for `equals()` and `hashCode()`, but some entities have only a generated identifier.
+
+Using a generated identifier for equality requires special handling:
+
+- Return a constant from `hashCode()` so that assigning the identifier does not change the hash code.
+- Compare identifiers for equality only for non-transient entities.
+====
+
+For details on mapping the identifier, see the <<chapters/domain/identifiers.adoc#identifiers,Identifiers>> chapter.

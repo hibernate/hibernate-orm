@@ -8,13 +8,13 @@ select
     p_e.employees_id as employee2_3_0__
 from
     Project p
-inner join
+left join
     Project_Employee p_e
         on p.id=p_e.projects_id
-inner join
+left join
     Employee e
         on p_e.employees_id=e.id
-inner join
+left join
     Department d
         on e.department_id=d.id
 where

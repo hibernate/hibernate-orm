@@ -65,10 +65,12 @@ class ToOneWithSubselectFetchModeTests {
 		inspector.clear();
 
 		scope.inTransaction( session -> {
+			//tag::fetching-to-one-subselect-query[]
 			final var books = session.createQuery(
 					"from ToOneSubselectFetchBook b order by b.id",
 					FetchBook.class
 			).getResultList();
+			//end::fetching-to-one-subselect-query[]
 
 			assertFetchBooks( books );
 		} );
@@ -238,9 +240,11 @@ class ToOneWithSubselectFetchModeTests {
 
 		private String title;
 
+		//tag::fetching-to-one-subselect-mapping[]
 		@ManyToOne(fetch = FetchType.EAGER)
 		@Fetch(FetchMode.SUBSELECT)
 		private Author author;
+		//end::fetching-to-one-subselect-mapping[]
 
 		FetchBook() {
 		}

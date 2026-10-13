@@ -115,7 +115,7 @@ public class Helper {
 			// ClassLoaderService.locateResource() first tries the given resource name as URL form...
 			final URL url = classLoaderService.locateResource( scriptTargetSettingString );
 			return url != null
-					? new ScriptTargetOutputToUrl( url, charsetName )
+					? new ScriptTargetOutputToUrl( url, charsetName, append )
 					// assume it is a File path
 					: new ScriptTargetOutputToFile( new File( scriptTargetSettingString ), charsetName, append );
 		}

@@ -1,228 +1,529 @@
 [[schema-generation]]
-== Schema Generation
+== Schema Tooling
 :example-dir-schemagen: {core-project-dir}/src/test/java/org/hibernate/orm/test/schema
 :example-dir-schemagen-resources: {core-project-dir}/src/test/resources
+:schema-guide-examples: {example-dir-schemagen}/guide
+:schema-guide-resources: {example-dir-schemagen-resources}/org/hibernate/orm/test/schema/guide
 :extrasdir: extras
 
-Hibernate allows you to generate the database from the entity mappings.
+Hibernate's schema tooling can create database objects from mappings, export DDL scripts,
+validate an existing schema, and perform supported schema alterations.
+Mapped objects include tables, columns, constraints, indexes, sequences, and configured auxiliary objects.
+Historically, this tooling has been called _HBM2DDL_.
 
-[TIP]
-====
-Although the automatic schema generation is very useful for testing and prototyping purposes, in a production environment,
-it's much more flexible to manage the schema using incremental migration scripts.
-====
+Generation, validation, and migration serve different purposes.
+Generation creates objects from the current mappings; validation checks supported aspects of existing objects.
+Hibernate can execute schema creation and alteration commands against a database or write them to script files for later execution.
+For schema evolution across application versions, consider dedicated schema versioning tools such as Flyway or Liquibase.
+Versioned migrations record how the schema and its data evolve and can express changes beyond those Hibernate can infer from mapping metadata.
 
-Traditionally, the process of generating  schema from entity mapping has been called `HBM2DDL`.
-To get a list of Hibernate-native and Jakarta Persistence-specific configuration properties consider reading the <<appendices/SettingsReference.adoc#settings-schema,Configurations>> section.
+Generated SQL depends on the dialect, mappings, naming strategies, and configuration.
+The SQL examples in this chapter illustrate H2 output unless another database is identified.
+// suppress inspection "AsciiDocLinkResolve"
+See <<settings-schema>> for schema-tooling settings and <<naming>> for naming strategies.
 
-Considering the following Domain Model:
+[[schema-generation-actions]]
+=== Selecting schema actions
+
+Jakarta Persistence defines separate settings for the database and script targets:
+
+* `jakarta.persistence.schema-generation.database.action` controls operations executed against the database.
+* `jakarta.persistence.schema-generation.scripts.action` controls commands written to DDL scripts.
+
+Both targets default to no action. Configuring a script target does not, by itself, execute its commands against the database.
+Hibernate also supports `hibernate.hbm2ddl.auto`, which selects automatic database operations during factory startup
+and, for `create-drop`, factory shutdown.
+
+[cols="3,2,2",options="header"]
+|===
+|Operation |Jakarta Persistence action value |`hibernate.hbm2ddl.auto` value
+|No action |`none` |`none`
+|Create without an initial drop |`create` |`create-only`
+|Drop |`drop` |`drop`
+|Drop and recreate |`drop-and-create` |`create`
+|Drop and recreate at startup, then drop at shutdown |Not a standard action |`create-drop`
+|Validate existing mapped objects |Not a standard action |`validate`
+|Apply supported schema alterations |Not a standard action |`update`
+|===
+
+The two settings interpret `create` differently.
+Hibernate's `hibernate.hbm2ddl.auto=create` first drops the mapped objects and then creates them.
+The standard Jakarta Persistence `create` action creates objects without first dropping them.
+A drop or recreation operation can destroy data in the affected objects.
+
+Hibernate accepts additional action values through its schema tooling; those values are provider extensions.
+See link:{doc-javadoc-url}org/hibernate/tool/schema/Action.html[Action] for the complete list.
+For example, Hibernate also supports population, truncation, and generator synchronization;
+see <<schema-generation-programmatic>> for explicit operations.
+
+==== Defaults and precedence
+
+An explicit standard database action takes precedence over `hibernate.hbm2ddl.auto`, including an explicit `none`.
+When a standard script action other than `none` is selected and no standard database action is supplied,
+Hibernate does not fall back to `hibernate.hbm2ddl.auto` for database execution.
+Configure both targets explicitly when both are wanted, rather than relying on a mixture of standard and legacy defaults.
+
+Schema-action selection happens after settings from the bootstrap sources are combined.
+See <<bootstrap>> for persistence-unit configuration and property overrides.
+
+==== Validation and update
+
+`validate` checks supported aspects of the mapped database objects, such as tables, columns, compatible column types,
+and sequence definitions. It does not establish complete equivalence between the mappings and the database,
+and does not repair discrepancies. Additional validation of indexes and unique keys is controlled by
+`hibernate.tooling.schema.index_validation` and `hibernate.tooling.schema.unique_key_validation`.
+
+`update` applies supported schema alterations inferred from the current mappings and database metadata.
+It does not infer arbitrary data transformations or reliably interpret a removed column and an added column as a rename.
+It is not a replacement for a versioned migration history. Neither `validate` nor `update` is a portable Jakarta Persistence action.
+Hibernate can also write the inferred alterations to a script without executing them; see <<schema-generation-alteration-scripts>>.
+
+The schema-operation examples below use this model. Later sections also show separate mappings for specific DDL features:
 
 [[schema-generation-domain-model-example]]
-.Schema generation Domain Model
+.Schema-tooling model
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
-include::{example-dir-schemagen}/BaseSchemaGeneratorTest.java[tags=schema-generation-domain-model-example]
+include::{schema-guide-examples}/SchemaGuideBook.java[tag=schema-guide-model]
 ----
 ====
-
-If the `hibernate.hbm2ddl.auto` configuration is set to `create`, Hibernate is going to generate the following database schema:
 
 [[sql-schema-generation-domain-model-example]]
-.Auto-generated database schema
+.Illustrative H2 creation DDL
 ====
-[source, sql, indent=0]
+[source,sql,indent=0]
 ----
 include::{extrasdir}/sql-schema-generation-domain-model-example.sql[]
 ----
 ====
 
+The Java examples use a shared `configuration()` helper to define the model and connection settings with `HibernatePersistenceConfiguration`:
+
+[source,java,indent=0]
+----
+include::{schema-guide-examples}/SchemaGuideTests.java[tags=schema-guide-configuration;!schema-guide-assertions]
+----
+
+Some examples pass this configuration to `Persistence.generateSchema()` to perform schema operations without an application factory.
+Others create a factory and perform explicit operations through its `SchemaManager`; see <<schema-generation-programmatic>>.
+
+See <<bootstrap-standardized-app>> for application bootstrap options.
+
+[[schema-generation-scripts]]
+=== Generating DDL scripts
+
+A script-only operation is useful for reviewing or preparing DDL before executing it separately.
+The following example writes creation and drop commands to `Writer` instances and explicitly disables database execution:
+
+[[schema-generation-script-only-example]]
+.Script-only generation
+====
+[source,java,indent=0]
+----
+var configuration = configuration("jdbc:h2:mem:schema_scripts");
+include::{schema-guide-examples}/SchemaGuideTests.java[tag=schema-guide-scripts]
+----
+====
+
+The standard `scripts.create-target` and `scripts.drop-target` properties accept a `Writer`
+or a string containing a file URL, for example `Path.of("create.sql").toUri().toString()`.
+Use fully qualified property names beginning with `jakarta.persistence.schema-generation.`.
+Hibernate defaults to appending to script files.
+Set `hibernate.hbm2ddl.schema-generation.script.append=false` to overwrite creation and drop script files instead.
+This setting applies to both file-URL targets and Hibernate's filesystem-path target extension.
+A caller-supplied writer uses the truncation or append mode selected when it was opened.
+A caller-supplied writer has its own lifecycle; close it when it is no longer needed.
+
+Generation still needs a target dialect even when commands are written only to scripts.
+Hibernate may obtain database information through a connection.
+For offline generation, explicitly configure the dialect and disable JDBC metadata access using
+`hibernate.boot.allow_jdbc_metadata_access=false`; see <<database-dialect>>.
+The standard `jakarta.persistence.database-product-name` and product-version properties are another way
+to supply database information. Supply enough information to select the intended dialect and version.
+
+[[schema-generation-alteration-scripts]]
+==== Exporting schema alterations
+
+Hibernate also accepts `update` for `jakarta.persistence.schema-generation.scripts.action`.
+This is a Hibernate extension, not a standard Jakarta Persistence action.
+It compares the mappings with the existing database metadata and writes supported alterations to the
+`jakarta.persistence.schema-generation.scripts.create-target`.
+Set the database action to `none` to generate the script without executing the alterations.
+
+For example, suppose the H2 database already has a `schema_book` table with `id`, `title`, and `author` columns,
+but lacks the model's `edition` and `titleLength` columns:
+
+[[schema-generation-alteration-script-example]]
+.Generating an alteration script
+====
+[source,java,indent=0]
+----
+include::{schema-guide-examples}/SchemaGuideTests.java[tag=schema-guide-alterations]
+----
+====
+
+The resulting script includes an alteration to add `edition`, while the existing table and data remain unchanged.
+Unlike creation DDL, an update script requires information about the existing schema;
+Hibernate normally obtains that information through a JDBC connection to the database being compared.
+Selecting a dialect alone does not supply the existing schema metadata.
+Review the script and plan any necessary data transformations separately; see <<schema-generation-actions>> for the scope of `update`.
+
 [[schema-generation-script-files]]
-=== Importing script files
+=== DDL sources and initial data
 
-To customize the schema generation process, the `hibernate.hbm2ddl.import_files` configuration property must be used to provide other scripts files that Hibernate can use when the `SessionFactory` is started.
+==== Choosing creation and drop sources
 
-For instance, considering the following `schema-generation.sql` import file:
+The target specifies where commands go; the source specifies where they come from.
+`jakarta.persistence.schema-generation.create-source` and `jakarta.persistence.schema-generation.drop-source`
+select independently among:
+
+[cols="1,3",options="header"]
+|===
+|Source value |Commands used
+|`metadata` |DDL derived from the ORM mappings.
+|`script` |Commands from the configured source script.
+|`metadata-then-script` |Mapping-derived DDL followed by source-script commands.
+|`script-then-metadata` |Source-script commands followed by mapping-derived DDL.
+|===
+
+Supply the source scripts using `jakarta.persistence.schema-generation.create-script-source`
+and `jakarta.persistence.schema-generation.drop-script-source`.
+Each accepts a `Reader` or a string identifying a script URL.
+Without an explicit source selection, a configured source script implies `script`; otherwise the source is `metadata`.
+Thus, supplying a script alone does not automatically combine it with mapping-derived DDL.
+Choose the combined source explicitly when both are needed, and choose an order that respects object dependencies.
+
+[[schema-generation-source-example]]
+.Combining mapping DDL with additional scripts
+====
+[source,java,indent=0]
+----
+var configuration = configuration("jdbc:h2:mem:schema_sources");
+include::{schema-guide-examples}/SchemaGuideTests.java[tag=schema-guide-sources]
+----
+====
+
+The creation script adds an H2 table alongside the mapped table:
+
+[source,sql,indent=0]
+----
+include::{schema-guide-resources}/extra-create.sql[]
+----
+
+The drop script removes that additional table before mapping-derived drop commands execute:
+
+[source,sql,indent=0]
+----
+include::{schema-guide-resources}/extra-drop.sql[]
+----
+
+==== Loading initial data
+
+Prefer `jakarta.persistence.sql-load-script-source` for SQL that populates the schema.
+It accepts a `Reader` or a string identifying a script URL.
+Hibernate processes the load script after creation commands; explicit population and truncation operations
+can also use the configured load scripts, as described in <<schema-generation-programmatic>>.
+Configuring a load script does not cause it to run on every factory startup, during validation, or during schema update.
 
 [[schema-generation-import-file-example]]
-.Schema generation import file
+.Initial-data script
 ====
-[source, java, indent=0]
+[source,sql,indent=0]
 ----
-include::{example-dir-schemagen-resources}/schema-generation.sql[]
+include::{schema-guide-resources}/load.sql[]
 ----
 ====
-
-If we configure Hibernate to import the script above:
 
 [[schema-generation-import-file-configuration-example]]
-.Enabling schema generation import file
+.Selecting an initial-data script
 ====
-[source, xml, indent=0]
+[source,xml,indent=0]
 ----
-<property
-    name="hibernate.hbm2ddl.import_files"
-    value="schema-generation.sql" />
-----
-====
-
-Hibernate is going to execute the script file after the schema is automatically generated.
-
-[[schema-generation-database-objects]]
-=== Database objects
-
-Hibernate allows you to customize the schema generation process via the HBM `database-object` element.
-
-Considering the following HBM mapping:
-
-[[schema-generation-database-object-example]]
-.Schema generation HBM database-object
-====
-[source, java, indent=0]
-----
-include::{example-dir-schemagen-resources}/org/hibernate/orm/test/schema/SchemaGenerationTest.hbm.xml[]
+<property name="jakarta.persistence.sql-load-script-source"
+          value="file:///path/to/load.sql"/>
 ----
 ====
 
-When the `SessionFactory` is bootstrapped, Hibernate is going to execute the `database-object`, therefore creating the `sp_count_books` function.
+The combined-source example above locates this load script as a resource and supplies its URL.
+Load statements execute after the mapped objects and additional creation-script objects have been created.
+For a script-only creation target, the load commands are written to that target rather than executed against a database.
+
+Hibernate's deprecated `hibernate.hbm2ddl.import_files` setting accepts a comma-separated list of resource names,
+processed in list order. Prefer the standard load-script property for new configuration.
+Hibernate also looks for `/import.sql` on the classpath when no legacy import-file list is supplied.
+Use `hibernate.hbm2ddl.skip_default_import_file=true` to skip this implicit file; explicitly configured scripts still apply.
+The standard and legacy properties can both contribute load commands, so avoid configuring the same data twice.
+
+==== Script parsing and execution options
+
+Hibernate's default script extractor expects one complete SQL statement per line.
+For statements spanning multiple lines, select `hibernate.hbm2ddl.import_files_sql_extractor=multi-line`;
+terminate statements with semicolons. The extractor applies to source scripts as well as load scripts.
+A script is parsed by Hibernate, not by a database command-line client: client-specific commands and delimiter directives
+may require a custom `SqlScriptCommandExtractor` or an external execution tool.
+
+`hibernate.hbm2ddl.charset_name` selects the charset for script files, and `hibernate.hbm2ddl.delimiter`
+selects the delimiter appended to generated script commands.
+Set `hibernate.hbm2ddl.halt_on_error=true` to stop automatic schema tooling on an execution error;
+otherwise Hibernate generally logs command failures and continues.
+Failure does not guarantee that earlier DDL is rolled back. Database transaction and DDL behavior vary.
+
+Mapping a table to a named database schema does not necessarily create the schema itself.
+`jakarta.persistence.create-database-schemas=true` requests namespace creation during applicable database schema operations.
+// suppress inspection "AsciiDocLinkResolve"
+See <<settings-schema>> for these settings and schema-filter options.
+
+[[schema-generation-programmatic]]
+=== Programmatic schema operations
+
+==== Generation without an application factory
+
+`Persistence.generateSchema(configuration)` performs the configured schema operations for a programmatic persistence unit.
+It does not return an application `EntityManagerFactory`.
+The script-only and combined-source examples use this entry point.
+
+For a named persistence unit defined in `META-INF/persistence.xml`, use `Persistence.generateSchema(unitName, settings)`:
+
+[source,java,indent=0]
+----
+include::{schema-guide-examples}/SchemaGuideTests.java[tag=schema-guide-named]
+----
+
+The settings override the named unit's configuration; see <<bootstrap-standardized-app>>.
+The following descriptor registers the model for this example:
+
+[source,xml,indent=0]
+----
+include::{schema-guide-resources}/unit/META-INF/persistence.xml[]
+----
+
+==== Operations through SchemaManager
+
+An existing factory provides `jakarta.persistence.SchemaManager` through `getSchemaManager()`:
+
+[source,java,indent=0]
+----
+include::{schema-guide-examples}/SchemaGuideTests.java[tag=schema-guide-manager]
+----
+
+`create(false)` creates the mapped objects without first dropping them, using the configured creation sources and load scripts.
+The boolean controls whether database schemas are created too. `drop(false)` drops mapped objects without dropping their schemas:
+
+[source,java,indent=0]
+----
+include::{schema-guide-examples}/SchemaGuideTests.java[tag=schema-guide-drop]
+----
+
+`validate()` checks the existing mapped objects. It does not change them.
+`populate()` executes the configured initial-data scripts against an existing schema without first clearing its tables.
+Repeated population may fail if the data already exists.
+Hibernate's `truncate()` clears mapped tables, resets associated generators, and reloads configured initial data.
+This differs from dropping and recreating the schema.
+
+`SessionFactory.getSchemaManager()` returns Hibernate's extended `org.hibernate.relational.SchemaManager` contract.
+Additional operations include `truncateTable()`, which does not repopulate the table,
+`resynchronizeGenerators()`, which aligns supported sequence and table generators with imported identifier values,
+and schema/catalog targeting through `forSchema()` and `forCatalog()`.
+Population does not automatically resynchronize generators; request that separately when externally inserted identifiers require it.
+See link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[the Hibernate SchemaManager API].
+
+These operations do not update objects already held in an entity manager or automatically invalidate all cached entity data.
+Run them at a deliberate lifecycle boundary, close or clear affected persistence contexts, and evict affected cache regions when needed.
+See <<pc>> and <<caching>>.
+For integrations requiring lower-level control, see link:{doc-javadoc-url}org/hibernate/tool/schema/spi/SchemaManagementTool.html[SchemaManagementTool].
+
+[[schema-generation-ddl-mappings]]
+=== Constraints, defaults, generated columns, and indexes
+
+These mapping declarations contribute to generated DDL.
+They do not retrofit an existing database merely because an entity is mapped differently.
+Use a schema operation or a migration to apply changes.
+See <<basic-column-annotation>> for column mapping options and <<naming>> for generated names.
 
 [[schema-generation-database-checks]]
-=== Database-level checks
+==== Database-level checks
 
-Hibernate offers the `@Check` annotation so that you can specify an arbitrary SQL CHECK constraint which can be defined as follows:
+Jakarta Persistence defines `@CheckConstraint` for SQL check constraints, supplied through
+`@Table(check=...)`, `@SecondaryTable(check=...)`, `@Column(check=...)`, and related table or column annotations.
+The SQL expression is interpreted by the database and must be suitable for the target dialect.
+The model above declares a positive-edition check along with its unique constraint and index:
 
 [[schema-generation-database-checks-example]]
-.Database check entity mapping example
+.Table constraints and index
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
-include::{example-dir-schemagen}/CheckTest.java[tag=schema-generation-database-checks-example]
+include::{schema-guide-examples}/SchemaGuideBook.java[tag=schema-guide-table]
 ----
 ====
 
-Now, if you try to add a `Book` entity with an `isbn` attribute whose length is not 13 characters,
-a `ConstraintViolationException` is going to be thrown.
+Hibernate's `@Check` annotation remains available for legacy mappings but is deprecated in favor of the standard annotations.
+[[stag::schema-generation-database-checks-persist-example]]The database enforces the check when the relevant SQL executes,
+which may be during `flush()` or transaction commit rather than at the `persist()` call.
 
-[[stag::schema-generation-database-checks-persist-example]]
-.Database check failure example
+[[schema-generation-database-checks-persist-example]]
+.Check-constraint failure and rollback
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
-include::{example-dir-schemagen}/CheckTest.java[tag=schema-generation-database-checks-persist-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/schema-generation-database-checks-persist-example.sql[]
+include::{schema-guide-examples}/SchemaGuideTests.java[tags=schema-guide-check-failure;!schema-guide-assertions]
 ----
 ====
+
+A recognized database constraint failure is translated to `org.hibernate.exception.ConstraintViolationException`,
+possibly wrapped by another persistence exception.
+This is distinct from `jakarta.validation.ConstraintViolationException`, which reports Jakarta Validation failures.
+Jakarta Validation constraints can also contribute to generated DDL.
+// suppress inspection "AsciiDocLinkResolve"
+See <<settings-hibernate.tooling.schema.apply_validation_constraints,`hibernate.tooling.schema.apply_validation_constraints`>>
+// suppress inspection "AsciiDocLinkResolve"
+and <<settings-validation>> for validation settings.
 
 [[schema-generation-column-default-value]]
-=== Default value for a database column
+==== Database defaults and generated values
 
-With Hibernate, you can specify a default value for a given database column using the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnDefault.html[`@ColumnDefault`] annotation.
+`@ColumnDefault` specifies a database default expression in generated DDL.
+A default normally applies when an insert omits the column; explicitly inserting SQL `NULL` generally does not select the default.
+In the following example, `@DynamicInsert` omits null-valued attributes from each insert:
 
 [[schema-generation-column-default-value-mapping-example]]
-.`@ColumnDefault` mapping example
+.Defaults with dynamic insert
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-schemagen}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-mapping-example]
 ----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/schema-generation-column-default-value-mapping-example.sql[]
-----
 ====
 
-In the mapping above, both the `name` and `clientId` table columns have a `DEFAULT` value.
-
-[NOTE]
-====
-The `Person` entity above is annotated with the `@DynamicInsert` annotation so that the `INSERT` statement does not include any entity attribute which is null.
-====
-
-This way, when the `name` and or `clientId` attribute is null, the database will set them according to their declared default values.
+`@ColumnDefault` does not by itself assign the default to the Java attribute or fetch it after insertion.
+The original entity may still contain null even though the database stores its default.
+The following example observes the defaults after loading the entity in a new persistence context:
 
 [[schema-generation-column-default-value-persist-example]]
-.`@ColumnDefault` mapping example
+.Loading database defaults
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-schemagen}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-persist-example]
 ----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/schema-generation-column-default-value-persist-example.sql[]
-----
 ====
 
-[TIP]
-====
-If the column value should be generated not only when a row is inserted, but also when it's updated, the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratedColumn.html[`@GeneratedColumn`] annotation should be used.
-====
+To retrieve the database-generated value after inserting the entity, combine the default with `@Generated`:
+
+[source,java,indent=0]
+----
+include::{schema-guide-examples}/SchemaGuideBook.java[tag=schema-guide-default]
+----
+
+`@Generated` tells Hibernate that the database supplies the value and that it must be retrieved.
+It does not define the database expression that generates it.
+Configure its events to match the database behavior when the value is also generated on update.
+See <<mapping-generated>> for generated-attribute mappings.
+
+[[schema-generation-generated-columns]]
+==== Generated-column expressions
+
+`@GeneratedColumn` defines a DDL generated-column expression and tells Hibernate to retrieve its value after inserts and updates.
+For example, H2 computes the title length from the stored title:
+
+[source,java,indent=0]
+----
+include::{schema-guide-examples}/SchemaGuideBook.java[tag=schema-guide-generated-column]
+----
+
+[source,java,indent=0]
+----
+include::{schema-guide-examples}/SchemaGuideTests.java[tags=schema-guide-generated;!schema-guide-assertions]
+----
+
+After the first flush, the database default supplies `edition=1` and the generated expression supplies `titleLength=9`.
+Changing the title to `Hibernate User Guide` makes the next flush retrieve `titleLength=20`.
+Generated-column expressions and capabilities vary by database.
+Use `@Generated` for values supplied by mechanisms such as triggers; do not substitute `@GeneratedColumn` unless a generated-column expression is intended.
 
 [[schema-generation-columns-unique-constraint]]
-=== Columns unique constraint
+==== Unique constraints
 
-The {jpaJavadocUrlPrefix}UniqueConstraint.html[`@UniqueConstraint`] annotation is used to specify a unique constraint to be included by the automated schema generator for the primary or secondary table associated with the current annotated entity.
-
-Considering the following entity mapping, Hibernate generates the unique constraint DDL when creating the database schema:
+`@UniqueConstraint` declares a unique column combination on a primary, secondary, or collection/join table.
+`@Column(unique=true)` is a convenience for a single-column unique constraint.
+The column names identify database columns, not Java attribute names.
 
 [[schema-generation-columns-unique-constraint-mapping-example]]
-.`@UniqueConstraint` mapping example
+.Unique title and author
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-schemagen}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-mapping-example]
 ----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/schema-generation-columns-unique-constraint-mapping-example.sql[]
-----
 ====
-
-With the `uk_book_title_author` unique constraint in place,
-it's no longer possible to add two books with the same title and for the same author.
 
 [[schema-generation-columns-unique-constraint-persist-example]]
-.`@UniqueConstraintTest` persist example
+.Attempting to insert a duplicate title and author
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-schemagen}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-persist-example]
 ----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/schema-generation-columns-unique-constraint-persist-example.sql[]
-----
 ====
 
-The second INSERT statement fails because of the unique constraint violation.
+The database rejects a second book with the same non-null title and author.
+Null handling in unique constraints depends on the database.
+Hibernate may implement uniqueness using a constraint or a unique index, depending on the dialect and requested features.
 
 [[schema-generation-columns-index]]
-=== Columns index
+==== Indexes
 
-The {jpaJavadocUrlPrefix}Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
-
-TIP: Creating unique index containing all primary key columns will result in ordering primary key columns specified by `columnList`
-
-Considering the following entity mapping. Hibernate generates the index when creating the database schema:
+`@Index` declares an index through table mapping annotations.
+Its `columnList` specifies database column names and can include `ASC` or `DESC` ordering.
+An index is distinct from a unique constraint; setting `unique=true` requests uniqueness as well.
+Its physical representation depends on the dialect.
 
 [[schema-generation-columns-index-mapping-example]]
-.`@Index` mapping example
+.Index on author names
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-schemagen}/IndexTest.java[tag=schema-generation-columns-index-mapping-example]
 ----
+====
 
-[source, sql, indent=0]
+Hibernate can use the ordering of a redundant unique key matching all primary-key columns to influence primary-key column order.
+This depends on the unique-key representation and Hibernate's column-ordering strategy;
+it is not a portable guarantee that any unique `@Index` will reorder the primary key.
+
+[[schema-generation-database-objects]]
+=== Custom database objects
+
+Hibernate's mapping XML extends standard ORM mappings with `database-object` declarations for auxiliary objects
+such as views, functions, and procedures.
+The following Hibernate mapping document adds an H2 view over the mapped table:
+
+[[schema-generation-database-object-example]]
+.Auxiliary object in Hibernate mapping XML
+====
+[source,xml,indent=0]
 ----
-include::{extrasdir}/schema-generation-columns-index-mapping-example.sql[]
+include::{schema-guide-resources}/objects.orm.xml[]
 ----
 ====
+
+Register the mapping document alongside the entity classes:
+
+[source,java,indent=0]
+----
+var configuration = configuration("jdbc:h2:mem:schema_objects");
+include::{schema-guide-examples}/SchemaGuideTests.java[tags=schema-guide-objects;!schema-guide-assertions]
+----
+
+Registration alone does not execute the object's creation SQL.
+The example disables automatic database actions, then creates and drops the mapped objects explicitly.
+Auxiliary objects participate in applicable schema creation/drop operations when their dialect scope matches the active dialect.
+For the view shown here, creation follows table creation and dropping precedes table dropping.
+Provide drop SQL that reverses the creation operation.
+
+Legacy HBM mappings also provide a `database-object` element, but Hibernate mapping XML is preferred for new XML configuration.
+For programmatic registration, use `MetadataBuilder.applyAuxiliaryDatabaseObject()` or `Configuration.addAuxiliaryDatabaseObject()`
+with an implementation of link:{doc-javadoc-url}org/hibernate/boot/model/relational/AuxiliaryDatabaseObject.html[AuxiliaryDatabaseObject].
+The contract controls dialect applicability and ordering relative to table creation.
+See <<bootstrap-native-builders>> for the metadata-builder pipeline.

@@ -89,8 +89,9 @@ include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-from-fetch-examp
 
 [NOTE]
 ====
-Technically speaking, embedded attributes are always fetched with their owner.
-However, in order to define the fetching of _Phone#addresses_ we needed a `jakarta.persistence.criteria.Fetch` because element collections are `LAZY` by default.
+The example first fetches `Phone.person`, then fetches the `Person.addresses` element collection from that association.
+Each `fetch()` call produces a `jakarta.persistence.criteria.Fetch`.
+The collection fetch requests that the addresses be loaded by this query, even though element collections are lazy by default.
 ====
 
 [[criteria-path]]

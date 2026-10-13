@@ -175,7 +175,7 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=euclidean-squared-distan
 ==== `taxicab_distance()` and `l1_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Taxicab_geometry[taxicab distance] between two vectors,
-which is `vector_norm(v1) - vector_norm(v2)`. Maps to the `<``+``>` pgvector operator.
+which is `sum( abs(v1_i - v2_i) )`. Maps to the `<``+``>` pgvector operator.
 The `l1_distance()` function is an alias.
 
 [[vector-module-functions-taxicab-distance-example]]

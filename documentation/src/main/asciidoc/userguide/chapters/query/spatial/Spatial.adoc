@@ -205,11 +205,13 @@ In may cases, this strategy will suffice.
 If not, you can provide your own implementation of this interface on the classpath, and configure it in the `hibernate.spatial.connection_finder` property.
 Note that implementations must be thread-safe and have a default no-args constructor.
 SQL Server::
-The `GEOGRAPHY` type is not currently supported.
+Hibernate Spatial supports both `GEOMETRY` and `GEOGRAPHY`.
+Use `@JdbcTypeCode(SqlTypes.GEOGRAPHY)` on a geometry-valued attribute to select geography storage instead of the default geometry mapping.
 
 
 CockroachDB::
-The dialect `CockroachDialect` supports the `GEOMETRY` type in CockroachDB v20.2 and later. The `GEOGRAPHY` type is currently not supported.
+Hibernate Spatial contributes both `GEOMETRY` and `GEOGRAPHY` mappings for `CockroachDialect`.
+Use `@JdbcTypeCode(SqlTypes.GEOGRAPHY)` when the attribute is stored in a geography column.
 
 H2GIS::
 The `H2Dialect` supports H2GIS, a spatial extension of the H2 in-memory database. This dialect can be used as a replacement for the `GeoDB` dialect that was supported in previous versions. The major difference with `GeoDB` is that the  `GEOGRAPHY` column type is currently not present in `H2GIS`.

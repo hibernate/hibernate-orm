@@ -92,8 +92,8 @@ include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-na
 [[hql-MutationQuery]]
 ==== MutationQuery
 
-Alongg the same lines as `SelectionQuery`, `MutationQuery` is similar to `Query` but only exposes methods which are relevant to mutation queries.
-For example, in terms of execution, it only exposes `#executeUpdate` method.  This allows for earlier validation of the query as a mutation.
+`MutationQuery` exposes operations relevant to mutation statements and validates the query as a mutation when it is created.
+Execute it using `execute()`; the older `executeUpdate()` method is deprecated.
 
 [[hql-examples-mutation-query]]
 .Mutation query validation
@@ -134,7 +134,7 @@ A query may be provided to Hibernate as either:
 
 A `Query` object is obtained from the `EntityManager` or Hibernate `Session` by calling `createQuery()` or `createNamedQuery()`.
 
-The API for actually executing the query is the same in both cases, as we're about to see <<query-execution,below>>.
+Inline and named selections use the same execution methods; see <<jpql-query-execution>>.
 
 [[named-queries]]
 ==== Declaring named queries
@@ -151,7 +151,7 @@ include::{example-dir-model}/Person.java[tags=jpa-read-only-entities-native-exam
 ====
 
 Alternatively, Hibernate offers an extended
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
+link:{doc-javadoc-url}org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
 which allows the specification of additional properties of the query, including flush mode, cacheability, and timeout interval, in a more typesafe way.
 
 [[jpql-api-hibernate-named-query-example]]
@@ -295,7 +295,7 @@ See link:{doc-query-language-url}#select-new[HQL instantiation], <<criteria-type
 
 A program may hook into the process of building the query results by providing a `org.hibernate.query.ResultListTransformer` or `org.hibernate.query.TupleTransformer`.
 
-See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TupleTransformer.html[TupleTransformer] and https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/ResultListTransformer.html[ResultListTransformer] Javadocs for additional details.
+See the link:{doc-javadoc-url}org/hibernate/query/TupleTransformer.html[TupleTransformer] and link:{doc-javadoc-url}org/hibernate/query/ResultListTransformer.html[ResultListTransformer] Javadocs for additional details.
 
 A `TupleTransformer` transforms each row; a `ResultListTransformer` transforms the assembled result list.
 These provider-specific hooks are also available to native SQL queries.
@@ -447,8 +447,11 @@ Usually, Hibernate will make use of local or global temporary tables to remember
 For some databases, currently only PostgreSQL and DB2, a more advanced strategy (`CteMutationStrategy`) is used,
 which makes use of DML in CTE support to execute the whole operation in one SQL statement.
 
-The chosen strategy, unless overridden through the `hibernate.query.mutation_strategy` setting, is based on the
-Dialect support through `org.hibernate.dialect.Dialect.getFallbackSqmMutationStrategy`.
+The dialect selects fallback strategy families through `Dialect.getMultiTableMutationSupport()`.
+This profile distinguishes update/delete operations from insert operations.
+Override these defaults using `hibernate.query.mutation_strategy` for updates and deletes,
+or `hibernate.query.insert_strategy` for inserts.
+See link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html#getMultiTableMutationSupport()[the dialect API] for the fallback contract.
 
 [[batch-bulk-hql-strategies-class-diagram]]
 ===== Class diagram
@@ -502,16 +505,21 @@ include::{batch-extras-dir}/batch-bulk-hql-temp-table-delete-query-example.sql[]
 The temporary table can be either global or local, depending on the underlying database capabilities.
 
 [[batch-bulk-hql-strategies-non-temporary-table]]
-===== Non-temporary table bulk mutation strategies
+===== Managing bulk-operation tables
 
-The strategies outlined above depend on the creation of temporary tables, which Hibernate creates on startup if they don't already exist. At present this process is not integrated in the schema management tooling, and this requires that the user have the required permissions to alter the database schema.
+Table-based strategies require staging tables whose creation and cleanup are managed separately from ordinary schema tooling.
+Their lifecycle depends on the selected strategy: global temporary and persistent tables may be prepared at factory startup,
+while local temporary tables may be created for an operation.
 
-If the Hibernate session user lacks these permissions, you will need to either:
+For strategies using global temporary or persistent tables, a schema owner may create the required tables before deployment
+when the application account lacks DDL permissions. Update/delete strategies use identifier tables, normally named `HT_<base name>`,
+which hold the identifiers of affected entities. Insert strategies use entity staging tables, normally named `HTE_<base name>`,
+which hold the values needed for insertion. Creating an `HTE_` table alone does not supply the identifier table needed by updates and deletes.
+The exact names, columns, and table semantics depend on the mappings, dialect, and selected strategy;
+use the definitions expected by those strategies, including any required row or session identifiers.
 
- * alter your schema through a different user with more permissions, to add a global temporary table named HTE_<root entity table name>, which contains all columns of all tables involved in the entity hierarchy. +
-This will allow insert, update and delete in HQL for multi-table entities.
-
-* OR configure Hibernate ORM to use the (badly-performing) inline strategy (for _mutations_ only!):
+For updates and deletes, an alternative is the inline strategy, which selects affected identifiers into memory
+and uses them in subsequent mutation statements:
 
 [source,xml]
 ----
@@ -522,9 +530,10 @@ This will allow insert, update and delete in HQL for multi-table entities.
 
 [IMPORTANT]
 ====
-We strongly recommend the use of the first option, i.e. manually adding the temporary tables, because the inline strategy is set to be removed in a future release. Also, there is no equivalent strategy for inserts.
+Prefer the appropriate table-based strategy when many entities may be affected: the inline strategy can produce large identifier lists and SQL statements.
+There is no equivalent inline strategy for inserts.
 
-Additionally, automatic creation of temporary tables should be deactivated. This is done by setting the
+When global temporary or persistent staging tables are created outside Hibernate, disable Hibernate's automatic creation and dropping by setting the
 
 `hibernate.query.mutation_strategy.global_temporary.create_tables` and `hibernate.query.mutation_strategy.global_temporary.drop_tables`
 
@@ -627,7 +636,7 @@ On the other hand, `setHint()` refers to the Jakarta Persistence notion of a que
 This is a completely different concept.
 ====
 
-For complete details, see the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/Query.html[Query] Javadocs.
+For complete details, see the link:{doc-javadoc-url}org/hibernate/query/Query.html[Query] Javadocs.
 
 [[hql-api-basic-usage-example]]
 .Advanced query control

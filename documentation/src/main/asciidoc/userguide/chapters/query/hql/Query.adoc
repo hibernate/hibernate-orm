@@ -329,7 +329,7 @@ Whereas we needed to specify some information using query hints when working wit
 | `Query#setFetchSize()` | Sets the JDBC-level fetch size.
 | `Query#setCacheable()` and `setCacheRegion()` | Control query caching.
 | `Query#setCacheMode()` | Overrides the session-level cache mode.
-| `Query#setFlushMode()` | Overrides the session-level flush mode. Flushing is covered in detail in <<chapters/flushing/Flushing.adoc#flushing,Flushing>>.
+| `Query#setFlushMode()` | Overrides the session-level flush mode. Flushing is covered in detail in <<chapters/pc/PersistenceContext.adoc#flushing,Flushing>>.
 | `Query#setLockMode()` | Overrides the session-level flush mode. Locking is covered in detail in <<chapters/locking/Locking.adoc#locking,Locking>>.
 | `Query#setReadOnly()` | Overrides the session-level default for read-only state. The concept of read-only state is covered in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>.
 | `Query#setComment()` | Adds a comment to the generated SQL.

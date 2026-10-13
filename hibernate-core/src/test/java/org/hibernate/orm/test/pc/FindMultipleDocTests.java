@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
 import static org.hibernate.FindMultipleOption.OrderingMode.ORDERED;
 
@@ -56,6 +57,7 @@ public class FindMultipleDocTests {
 					new FindMultipleOption.BatchSize( 2 )
 			);
 			//end::pc-find-multiple-example[]
+			assertThat( persons ).extracting( Person::getId ).containsExactly( 1, 2, 3 );
 		} );
 	}
 
@@ -63,18 +65,14 @@ public class FindMultipleDocTests {
 	void testBasicGetMultiple(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			//tag::pc-get-multiple-example[]
-			try {
-				List<Person> persons = session.getMultiple(
-						Person.class,
-						List.of( 1, 2, 3 ),
-						PESSIMISTIC_WRITE,
-						ORDERED
-				);
-			}
-			catch (EntityNotFoundException e) {
-				// handle it
-			}
+			List<Person> persons = session.getMultiple(
+					Person.class,
+					List.of( 1, 2, 3 ),
+					PESSIMISTIC_WRITE,
+					ORDERED
+			);
 			//end::pc-get-multiple-example[]
+			assertThat( persons ).extracting( Person::getId ).containsExactly( 1, 2, 3 );
 		} );
 	}
 
@@ -84,12 +82,25 @@ public class FindMultipleDocTests {
 			//tag::pc-find-multiple-natural-id-example[]
 			List<Person> persons = session.findMultiple(
 					Person.class,
-					List.of(1,2,3),
+					List.of( "Paul", "John", "Ringo" ),
 					KeyType.NATURAL,
 					PESSIMISTIC_WRITE,
 					ORDERED
 			);
 			//end::pc-find-multiple-natural-id-example[]
+			assertThat( persons ).extracting( Person::getName ).containsExactly( "Paul", "John", "Ringo" );
+		} );
+	}
+
+	@Test
+	void testMissingIdentifiers(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			assertThat( session.findMultiple( Person.class, List.of( 1, 99 ) ) )
+					.containsExactly( session.find( Person.class, 1 ), null );
+		} );
+		factoryScope.inTransaction( session -> {
+			assertThatThrownBy( () -> session.getMultiple( Person.class, List.of( 1, 99 ) ) )
+					.isInstanceOf( EntityNotFoundException.class );
 		} );
 	}
 

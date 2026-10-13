@@ -1,40 +1,87 @@
 [[flushing]]
-== Flushing
+=== Flushing
 :example-dir-flushing: {core-project-dir}/src/test/java/org/hibernate/orm/test/flush
-:extrasdir: extras
+:flushing-extrasdir: extras
 
-Flushing is the process of synchronizing the state of the persistence context with the underlying database.
-The `EntityManager` and the Hibernate `Session` expose a set of methods, through which the application developer can change the persistent state of an entity.
+Flushing synchronizes pending persistence-context changes with the database using SQL inserts, updates, deletes, and collection operations.
+It does not commit the transaction: flushed changes may still be rolled back. Conversely, committing a transaction does not synchronize pending state when automatic flushing is disabled.
+See <<transactions,transactions>> for transaction boundaries and <<batch-jdbcbatch,batching>> for JDBC statement grouping.
 
-The persistence context acts as a transactional write-behind cache, queuing any entity state change.
-Like any write-behind cache, changes are first applied in-memory and synchronized with the database during the flush time.
-The flush operation takes every entity state change and translates it to an `INSERT`, `UPDATE` or `DELETE` statement.
+[[flushing-explicit]]
+==== Explicit synchronization
 
-[NOTE]
-====
-Because DML statements are grouped together, Hibernate can apply batching transparently.
-See the <<chapters/batch/Batching.adoc#batch,Batching chapter>> for more information.
-====
+Call `EntityManager.flush()` or `Session.flush()` to synchronize pending state explicitly.
+A transaction must be active, and a JPA context must be joined to it. An unsynchronized context must first join using `joinTransaction()`.
+Outside an active transaction, or before joining it, automatic query flushing does not occur.
+Calling `flush()` does not initialize every lazy association or reload managed objects.
 
-The flushing strategy is given by the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#getFlushMode--[`flushMode`] of the current running Hibernate `Session`.
-Although Jakarta Persistence defines only two flushing strategies ({jpaJavadocUrlPrefix}FlushModeType.html#AUTO[`AUTO`] and {jpaJavadocUrlPrefix}FlushModeType.html#COMMIT[`COMMIT`]),
-Hibernate has a much broader spectrum of flush types:
+[source,java,indent=0]
+----
+include::{example-dir-flushing}/PersistenceContextFlushTests.java[tags=pc-explicit-flush]
+----
 
-ALWAYS:: Flushes the `Session` before every query.
-AUTO:: This is the default mode, and it flushes the `Session` only if necessary.
-COMMIT:: The `Session` tries to delay the flush until the current `Transaction` is committed, although it might flush prematurely too.
-MANUAL:: The `Session` flushing is delegated to the application, which must call `Session.flush()` explicitly in order to apply the persistence context changes.
+[[flushing-modes]]
+==== Context and query flush modes
+
+Use `EntityManager.setFlushMode()` for Jakarta Persistence modes or `Session.setHibernateFlushMode()` for Hibernate modes.
+
+[cols="1,1,3",options="header"]
+|===
+|Jakarta Persistence |Hibernate |Automatic synchronization
+|`AUTO` |`AUTO` |Flushes on commit and before queries when needed to make relevant pending changes visible.
+|`COMMIT` |`COMMIT` |Flushes on commit; Hibernate does not normally flush before queries with this effective mode.
+|`EXPLICIT` |`MANUAL` |Requires explicit synchronization; pending state is not automatically flushed on commit.
+|— |`ALWAYS` |Flushes on commit and before every query executed within an active transaction.
+|===
+
+Jakarta Persistence leaves query visibility under `COMMIT` unspecified. Do not rely on pending changes being visible to such a query.
+These modes control flushing; they do not suppress inserts needed to obtain generated identifiers.
+See <<identifiers-generators,identifier generation>> and <<flushing-settings,deferred identity inserts>>.
+
+`Query.setQueryFlushMode()` controls synchronization before a particular query:
+
+`DEFAULT`:: Uses the current context mode.
+`FLUSH`:: Requests a flush before the query, even if the context normally defers synchronization.
+`NO_FLUSH`:: Suppresses automatic flushing for that query, even if the context normally uses `AUTO` or `ALWAYS`.
+
+A query override does not change the context mode or whether commit triggers flushing.
+The older query-level `setFlushMode()` API is also supported; prefer `setQueryFlushMode()` when expressing a query-specific synchronization requirement.
+For Hibernate query configuration, see <<hql,queries>>.
+
+[source,java,indent=0]
+----
+include::{example-dir-flushing}/PersistenceContextFlushTests.java[tags=pc-query-flush-override]
+----
+
+[[flushing-auto-triggers]]
+==== Automatic query flushing at a glance
+
+The following table assumes an active transaction, a joined context, and `QueryFlushMode.DEFAULT`:
+
+[cols="2,2,2",options="header"]
+|===
+|Query |Context `AUTO` |Context `COMMIT`, `EXPLICIT`, or Hibernate `MANUAL`
+|HQL/JPQL |Flushes when query spaces overlap pending changes. |Does not automatically flush before the query.
+|Native SQL without synchronized spaces, JPA bootstrap |Flushes before execution. |Does not automatically flush before the query.
+|Native SQL without synchronized spaces, native bootstrap |Does not automatically flush before the query. |Does not automatically flush before the query.
+|Native SQL with synchronized spaces |Flushes when those spaces overlap pending changes. |Does not automatically flush before the query.
+|===
+
+Hibernate `ALWAYS`, or the query override `FLUSH`, requests flushing before query execution regardless of overlap.
+`NO_FLUSH` suppresses query-triggered flushing. These distinctions depend on bootstrap and query configuration,
+not on whether the same session is accessed through an `EntityManager` or `Session` variable.
 
 [[flushing-auto]]
-=== `AUTO` flush
+==== `AUTO` flush
 
-By default, Hibernate uses the `AUTO` flush mode which triggers a flush in the following circumstances:
+`AUTO` is the default context mode. It synchronizes pending work before transaction commit and before queries according to the rules above.
 
-* prior to committing a `Transaction`
-* prior to executing a JPQL/HQL query that overlaps with the queued entity actions
-* before executing any native SQL query that has no registered synchronization
+* <<flushing-auto-commit,Commit>>
+* <<flushing-auto-queries,HQL/JPQL queries>>
+* <<flushing-auto-native,Native SQL queries>>
 
-==== `AUTO` flush on commit
+[[flushing-auto-commit]]
+===== `AUTO` flush on commit
 
 In the following example, an entity is persisted, and then the transaction is committed.
 
@@ -48,7 +95,7 @@ include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-comm
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/flushing-auto-flush-commit-example.sql[]
+include::{flushing-extrasdir}/flushing-auto-flush-commit-example.sql[]
 ----
 ====
 
@@ -57,11 +104,13 @@ Hibernate logs the message prior to inserting the entity because the flush only 
 [NOTE]
 ====
 This is valid for the `SEQUENCE` and `TABLE` identifier generators.
-The `IDENTITY` generator must execute the insert right after calling `persist()`.
+The `IDENTITY` generator normally executes insertion to obtain the identifier during `persist()`,
+unless insertion is delayed. The graph queue can also defer identity inserts using the <<flushing-settings,deferred-identity setting>>.
 For more details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>.
 ====
 
-==== `AUTO` flush on JPQL/HQL query
+[[flushing-auto-queries]]
+===== `AUTO` flush on JPQL/HQL query
 
 A flush may also be triggered when executing an entity query.
 
@@ -75,11 +124,11 @@ include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/flushing-auto-flush-jpql-example.sql[]
+include::{flushing-extrasdir}/flushing-auto-flush-jpql-example.sql[]
 ----
 ====
 
-The reason why the `Advertisement` entity query didn't trigger a flush is that there's no overlapping between the `Advertisement` and the `Person` tables:
+The query for `Advertisement` does not overlap the pending changes to `Person`, so no flush is needed:
 
 [[flushing-auto-flush-jpql-entity-example]]
 .Automatic flushing on JPQL/HQL entities
@@ -102,15 +151,17 @@ include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/flushing-auto-flush-jpql-overlap-example.sql[]
+include::{flushing-extrasdir}/flushing-auto-flush-jpql-overlap-example.sql[]
 ----
 ====
 
-This time, the flush was triggered by a JPQL query because the pending entity persisting action overlaps with the query being executed.
+The query for `Person` overlaps the pending insertion and triggers synchronization before execution.
 
-==== `AUTO` flush on native SQL query
+[[flushing-auto-native]]
+===== `AUTO` flush on native SQL query [[flushing-auto-flush-sql]]
 
-When executing a native SQL query, a flush is always triggered when using the `EntityManager` API.
+With JPA bootstrap, an `AUTO` context flushes before a native SQL query without registered query spaces.
+The following example uses an `EntityManager` obtained from a JPA-bootstrapped factory:
 
 [[flushing-auto-flush-sql-example]]
 .Automatic flushing on native SQL using `EntityManager`
@@ -121,11 +172,11 @@ include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-sql-
 ----
 ====
 
-If you bootstrap Hibernate natively, and not through Jakarta Persistence, by default,
-the `Session` API will trigger a flush automatically when executing a native query.
+With native bootstrap, an `AUTO` context does not flush automatically before a native SQL query without registered spaces.
+In the following example, the count remains zero until pending work is synchronized:
 
 [[flushing-auto-flush-sql-native-example]]
-.Automatic flushing on native SQL using `Session`
+.Native SQL without automatic flushing after native bootstrap
 ====
 [source, java, indent=0]
 ----
@@ -133,7 +184,12 @@ include::{example-dir-flushing}/HibernateAutoFlushTest.java[tags=flushing-auto-f
 ----
 ====
 
-To flush the `Session`, the query must use a synchronization:
+Register the tables or entity classes read by the native query using `addSynchronizedQuerySpace()` or `addSynchronizedEntityClass()`.
+Hibernate can then check overlap, as it does for HQL. Alternatively, use `QueryFlushMode.FLUSH` or explicitly call `flush()`:
+
+[[pc-unwrap]]
+Most persistence-context operations are available directly through `EntityManager`.
+[[pc-unwrap-example]]When an operation requires a Hibernate-specific API, use `unwrap(Session.class)` to access the same persistence context through `Session`, as the following synchronization example demonstrates.
 
 [[flushing-auto-flush-sql-synchronization-example]]
 .Automatic flushing on native SQL with `Session` synchronization
@@ -145,16 +201,11 @@ include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-sql-
 ====
 
 [[flushing-commit]]
-=== `COMMIT` flush
+==== `COMMIT` flush
 
-Jakarta Persistence also defines a COMMIT flush mode, which is described as follows:
-
-[quote, Section 3.10.8 of the Java Persistence 2.1 Specification]
-____
-If `FlushModeType.COMMIT` is set, the effect of updates made to entities in the persistence context upon queries is unspecified.
-____
-
-When executing a JPQL query, the persistence context is only flushed when the current running transaction is committed.
+Under `COMMIT`, Hibernate normally postpones synchronization until commit or an explicit `flush()`.
+A query-level override may request earlier synchronization. Jakarta Persistence does not guarantee that pending changes are visible to queries under this mode.
+The following queries do not trigger synchronization:
 
 [[flushing-commit-flush-jpql-example]]
 .`COMMIT` flushing on JPQL
@@ -166,11 +217,12 @@ include::{example-dir-flushing}/CommitFlushTest.java[tags=flushing-commit-flush-
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/flushing-commit-flush-jpql-example.sql[]
+include::{flushing-extrasdir}/flushing-commit-flush-jpql-example.sql[]
 ----
 ====
 
-Because the Jakarta Persistence doesn't impose a strict rule on delaying flushing, when executing a native SQL query, the persistence context is going to be flushed.
+A native query with effective `COMMIT` mode also executes without flushing pending work in Hibernate.
+Its count is zero here; insertion occurs when the transaction commits:
 
 [[flushing-commit-flush-sql-example]]
 .`COMMIT` flushing on native SQL
@@ -182,22 +234,18 @@ include::{example-dir-flushing}/CommitFlushTest.java[tags=flushing-commit-flush-
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/flushing-commit-flush-sql-example.sql[]
+include::{flushing-extrasdir}/flushing-commit-flush-sql-example.sql[]
 ----
 ====
 
 [[flushing-always]]
-=== `ALWAYS` flush
+==== `ALWAYS` flush
 
-[NOTE]
-====
-The `ALWAYS` is only available with the native `Session` API.
-====
-
-The `ALWAYS` flush mode triggers a persistence context flush even when executing a native SQL query against the `Session` API.
+Hibernate's context mode `ALWAYS` requests synchronization before each query in an active transaction, including native SQL without registered spaces.
+Use `Session.setHibernateFlushMode(FlushMode.ALWAYS)` for this context mode; use `QueryFlushMode.FLUSH` to request equivalent synchronization for just one query.
 
 [[flushing-always-flush-sql-example]]
-.`COMMIT` flushing on native SQL
+.`ALWAYS` flushing on native SQL
 ====
 [source, java, indent=0]
 ----
@@ -206,18 +254,18 @@ include::{example-dir-flushing}/AlwaysFlushTest.java[tags=flushing-always-flush-
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/flushing-always-flush-sql-example.sql[]
+include::{flushing-extrasdir}/flushing-always-flush-sql-example.sql[]
 ----
 ====
 
 [[flushing-manual]]
-=== `MANUAL` flush
+==== `EXPLICIT` and `MANUAL` flush
 
-Both the `EntityManager` and the Hibernate `Session` define a `flush()` method that, when called, triggers a manual flush.
-Hibernate also provides a `MANUAL` flush mode so the persistence context can only be flushed manually.
+Jakarta Persistence `EXPLICIT` and Hibernate `MANUAL` disable automatic context synchronization.
+Use `flush()` explicitly when pending changes should be written; a query-level `FLUSH` override can also request synchronization before that query.
 
 [[flushing-manual-flush-example]]
-.`MANUAL` flushing
+.`EXPLICIT` flushing using the standard API
 ====
 [source, java, indent=0]
 ----
@@ -226,7 +274,7 @@ include::{example-dir-flushing}/ManualFlushTest.java[tags=flushing-manual-flush-
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/flushing-manual-flush-example.sql[]
+include::{flushing-extrasdir}/flushing-manual-flush-example.sql[]
 ----
 ====
 
@@ -234,35 +282,39 @@ The `INSERT` statement was not executed because there was no manual `flush()` ca
 
 [NOTE]
 ====
-The `MANUAL` flush mode is useful when using multi-request logical transactions, and only the last request should flush the persistence context.
+These modes can be useful for <<long-conversations,long conversations>> with explicit synchronization boundaries.
+Unflushed state can be lost when the context is closed or <<pc-detach,cleared>>; committing alone is insufficient.
 ====
 
 [[flushing-settings]]
-=== Flush configuration settings
+==== Execution planning and flush configuration
 
-Flush processing in Hibernate is managed by an internal component called the `ActionQueue`.  As of 8.0, Hibernate
-offers 2 different `ActionQueue` implementations; which is used is indicated by the `hibernate.flush.queue.type` setting -
+SQL execution order is determined by the action queue, not by the order of `persist()`, attribute changes, and `remove()` calls.
+Hibernate provides two queue implementations, selected by the {doc-javadoc-url}org/hibernate/cfg/FlushSettings.html#FLUSH_QUEUE_TYPE[`hibernate.flush.queue.type`] setting:
 
 * `graph` (the default) uses the graph-based action queue, which plans execution using dependency information such as foreign keys and unique keys.
 * `legacy` is the traditional action queue implementation with fixed action ordering and legacy sorting behavior
 
-If using the `graph` queue, there are some toggles you can you use to control various aspects of behavior -
+The graph queue plans work using dependencies. Constraint cycles and the database's deferral capabilities can affect execution; the planner does not make every otherwise-invalid constraint change possible.
+The following settings control batching and graph planning. See also the <<settings,configuration reference>>:
 
-`hibernate.jdbc.batch_size`::
+{doc-javadoc-url}org/hibernate/cfg/BatchSettings.html#STATEMENT_BATCH_SIZE[`hibernate.jdbc.batch_size`]::
 	Specifies the maximum number of statements Hibernate will add to a JDBC batch before executing that batch.
-	By default, this is defined by the Dialect but may be overridden at either the SessionFactory or Session level.
+	Set it at the factory level or override it for an individual `Session`. Values greater than one enable useful batching; see <<batch-jdbcbatch,JDBC batching>>.
 
-`hibernate.flush.plan.foreignkey.order`::
+{doc-javadoc-url}org/hibernate/cfg/FlushSettings.html#ORDER_BY_FOREIGN_KEY[`hibernate.flush.plan.foreignkey.order`]::
 	Controls whether the graph-based flush planner orders operations using foreign-key dependencies.
 	This setting defaults to `true`.
 	Disabling it reduces the dependency information available to the planner and should generally only be useful for isolating planner behavior.
 
-`hibernate.flush.plan.uniquekey.order`::
+{doc-javadoc-url}org/hibernate/cfg/FlushSettings.html#ORDER_BY_UNIQUE_KEY[`hibernate.flush.plan.uniquekey.order`]::
 	Controls whether the graph-based flush planner orders operations using unique-key dependencies.
 	This setting defaults to `true`.
 	Unique-key ordering helps avoid transient constraint violations when rows exchange or reuse unique values during the same flush.
 
-`hibernate.flush.queue.graph.defer_identity_inserts`::
+{doc-javadoc-url}org/hibernate/cfg/FlushSettings.html#GRAPH_DEFER_IDENTITY_INSERTS[`hibernate.flush.queue.graph.defer_identity_inserts`]::
 	Controls whether the graph-based action queue defers `IDENTITY` inserts into the normal flush plan.
 	This setting defaults to `false`, preserving the legacy behavior where non-delayed `IDENTITY` inserts execute immediately so generated identifiers are available after `persist()`.
-	When set to `true`, `IDENTITY` inserts are planned with the rest of the flush work and generated identifiers are resolved through graph-generated value handles.
+	When set to `true`, `IDENTITY` inserts are planned with the rest of the flush work and identifiers become available when the planned insertions execute.
+
+See <<batch-jdbcbatch,JDBC batching>> for batch sizing and <<identifiers-generators,identifier generators>> for insertion and identifier availability.

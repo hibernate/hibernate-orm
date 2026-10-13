@@ -1,6 +1,5 @@
 [[BytecodeEnhancement]]
 === Bytecode Enhancement
-:core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-enhancement: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
 
 Hibernate "grew up" not supporting bytecode enhancement at all.

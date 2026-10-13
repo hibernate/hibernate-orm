@@ -1,6 +1,5 @@
 [[collections]]
 === Collections
-:core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java
 :example-dir-collection: {core-test-base}/org/hibernate/orm/test/mapping/collections
 :docs-base: https://docs.hibernate.org/orm/{majorMinorVersion}

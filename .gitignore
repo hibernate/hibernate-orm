@@ -15,6 +15,7 @@ testdb
 lib
 
 # IntelliJ specific files/directories
+/.asciidoctorconfig.generated.adoc
 out
 # See .idea/.gitignore for more precise rules in that directory
 *.ipr

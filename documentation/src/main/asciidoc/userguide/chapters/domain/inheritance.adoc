@@ -1,6 +1,5 @@
 [[entity-inheritance]]
 === Inheritance
-:core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-inheritance: {core-project-dir}/src/test/java/org/hibernate/orm/test/inheritance
 :extrasdir: extras/inheritance
 

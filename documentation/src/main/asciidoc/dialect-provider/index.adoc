@@ -1,13 +1,11 @@
-:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+include::{root-project-dir}/.asciidoctorconfig.adoc[]
+:doctype: book
+:icons: font
 :html-meta-canonical-link: https://docs.hibernate.org/stable/orm/dialect-provider/
 :provider-fixture-dir: {root-project-dir}/tooling/hibernate-dialect-provider/src/providerFixtureTest/java/org/example/orm/dialect
 :provider-fixture-main-dir: {root-project-dir}/tooling/hibernate-dialect-provider/src/providerFixture/java/org/example/orm/dialect
 :provider-fixture-resources-dir: {root-project-dir}/tooling/hibernate-dialect-provider/src/providerFixture/resources
 
-include::{shared-attributes-dir}/common-attributes.adoc[]
-include::{shared-attributes-dir}/url-attributes.adoc[]
-include::{shared-attributes-dir}/filesystem-attributes.adoc[]
-include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 = Dialect Provider Guide
 :toc2:
@@ -32,11 +30,11 @@ For Gradle builds, apply the provider tooling plugin alongside the Java plugin:
 ----
 plugins {
     id("java-library")
-    id("org.hibernate.orm.dialect-provider") version "{hibernate-version}"
+    id("org.hibernate.orm.dialect-provider") version "{fullVersion}"
 }
 
 dependencies {
-    compileOnly("org.hibernate.orm:hibernate-core:{hibernate-version}")
+    compileOnly("org.hibernate.orm:hibernate-core:{fullVersion}")
 }
 
 hibernateDialectProvider {

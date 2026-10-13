@@ -1,6 +1,5 @@
 [[naming]]
 === Naming strategies
-:core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-naming: {core-project-dir}/src/test/java/org/hibernate/orm/test/naming
 
 Part of the mapping of an object model to the relational database is

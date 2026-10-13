@@ -1,5 +1,8 @@
 package org.hibernate.processor.test.integ.repository;
 
+import jakarta.annotation.Nullable;
+import jakarta.data.page.Page;
+import jakarta.data.page.PageRequest;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.Insert;
@@ -47,6 +50,10 @@ public interface BookRepository {
 
 	@Query("from Book where pages > :minPages order by title")
 	List<Book> booksWithMorePages(int minPages);
+
+	@Query("from Book where (:title is null or title = :title) "
+			+ "and (:pages is null or pages = :pages) order by isbn")
+	Page<Book> search(@Nullable String title, @Nullable Integer pages, PageRequest pageRequest);
 
 	@Query("select count(*) from Book")
 	long countAll();

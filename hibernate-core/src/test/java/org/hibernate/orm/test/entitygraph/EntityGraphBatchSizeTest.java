@@ -64,6 +64,7 @@ class EntityGraphBatchSizeTest {
 		final var inspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( session -> {
+			//tag::fetching-graph-batch-options[]
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.batchedAuthor )
 					.addOption( FetchType.EAGER )
@@ -71,6 +72,7 @@ class EntityGraphBatchSizeTest {
 			graph.addAttributeNode( Book_.singleAuthor )
 					.addOption( FetchType.EAGER )
 					.addOption( new BatchFetch( 1 ) );
+			//end::fetching-graph-batch-options[]
 			graph.addAttributeNode( Book_.batchedTags )
 					.addOption( FetchType.EAGER )
 					.addOption( new BatchFetch( 3 ) );

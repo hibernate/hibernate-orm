@@ -41,6 +41,7 @@ public class CommitFlushTest {
 		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushJPQL");
 			//tag::flushing-commit-flush-jpql-example[]
+			entityManager.setFlushMode( FlushModeType.COMMIT );
 			Person person = new Person("John Doe");
 			entityManager.persist(person);
 
@@ -48,9 +49,9 @@ public class CommitFlushTest {
 				.setFlushMode(FlushModeType.COMMIT)
 				.getResultList();
 
-			entityManager.createQuery("select p from Person p")
+			assertEquals( 0, entityManager.createQuery("select p from Person p")
 				.setFlushMode(FlushModeType.COMMIT)
-				.getResultList();
+				.getResultList().size() );
 			//end::flushing-commit-flush-jpql-example[]
 		});
 	}
@@ -60,10 +61,11 @@ public class CommitFlushTest {
 		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushSQL");
 			//tag::flushing-commit-flush-sql-example[]
+			entityManager.setFlushMode( FlushModeType.COMMIT );
 			Person person = new Person("John Doe");
 			entityManager.persist(person);
 
-			assertEquals( 1, ((Number) entityManager
+			assertEquals( 0, ((Number) entityManager
 					.createNativeQuery( "select count(*) from Person" )
 					.getSingleResult()).intValue() );
 			//end::flushing-commit-flush-sql-example[]

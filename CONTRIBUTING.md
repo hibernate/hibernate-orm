@@ -56,6 +56,14 @@ to the use of tabs - as mentioned above, code style templates are available for 
 IDEs.  Ideally, these contributions would also have a corresponding JIRA issue, although this 
 is less necessary for documentation contributions.
 
+The repository-root `.asciidoctorconfig.adoc` supplies shared attributes for documentation
+builds and IntelliJ AsciiDoc previews. After checkout, switching branches, or changing version
+configuration, run `./gradlew :documentation:generateAsciiDocEditorAttributes` to refresh
+IntelliJ's version values. Documentation rendering also runs this task automatically.
+The generated repository-root `.asciidoctorconfig.generated.adoc` is ignored by Git and is not an input to
+published documentation. Source-example paths still resolve without it, but version-dependent
+preview links require generation. Documentation cleanup removes the generated file.
+
 
 ## Getting Started
 

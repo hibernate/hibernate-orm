@@ -1,6 +1,5 @@
 [[soft-delete]]
 === Soft Delete
-:core-project-dir: {root-project-dir}/hibernate-core
 :testing-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/softdelete
 
 An occasional requirement seen in the wild is to never physically remove rows from the database, but to

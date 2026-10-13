@@ -1,10 +1,7 @@
 [[bootstrap]]
 == Bootstrap
 
-:asciidoc-dir: ../../..
-include::{asciidoc-dir}/shared/common-attributes.adoc[]
 
-:core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
 :example-dir-boot: {core-test-base}/bootstrap
 :example-dir-boot-spi: {core-test-base}/bootstrap/spi

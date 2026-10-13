@@ -1,9 +1,7 @@
 [[tooling-modelgen]]
 === Static metamodel and repositories
-:testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :example-dir-metamodelgen-generated: {testing-project-dir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/testing/orm/domain/userguide
-:core-project-dir: {root-project-dir}/hibernate-core
 :toolingTestsDir: {core-project-dir}/src/test/java/org/hibernate/orm/test/tooling
 :ann-proc: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-082C33A5-CBCA-471A-845E-E77F79B7B049__GUID-3FA757C8-B67B-46BC-AEF9-7C3FFB126A93
 :ann-proc-path: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-214E175F-0F06-4CDC-B511-5BA469955F5A

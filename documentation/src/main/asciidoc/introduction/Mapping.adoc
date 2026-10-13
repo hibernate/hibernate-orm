@@ -909,7 +909,7 @@ class Person {
 We also need to add Jackson or an implementation of JSONB--for example, Yasson--to our runtime classpath.
 To use Jackson we could add this line to our Gradle build:
 
-[source,groovy]
+[source,groovy,subs="attributes+"]
 ----
 runtimeOnly 'tools.jackson.core:jackson-databind:{jackson3Version}'
 ----

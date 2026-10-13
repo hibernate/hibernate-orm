@@ -1,6 +1,5 @@
 [[fetching]]
 == Fetching
-:core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-fetching: {core-project-dir}/src/test/java/org/hibernate/orm/test/fetching
 :extrasdir: extras
 

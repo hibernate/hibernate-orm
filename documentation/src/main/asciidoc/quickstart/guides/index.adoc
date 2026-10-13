@@ -1,10 +1,8 @@
-:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+include::{root-project-dir}/.asciidoctorconfig.adoc[]
+:doctype: book
+:icons: font
 :html-meta-canonical-link: https://docs.hibernate.org/stable/orm/quickstart/html_single/
 
-include::{shared-attributes-dir}/common-attributes.adoc[]
-include::{shared-attributes-dir}/url-attributes.adoc[]
-include::{shared-attributes-dir}/filesystem-attributes.adoc[]
-include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 = Getting Started with Hibernate
 :description: Quick start guide for Hibernate ORM

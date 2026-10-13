@@ -1,5 +1,4 @@
 :shared-attributes-dir: {doc-main-dir}/asciidoc/shared
-include::{shared-attributes-dir}/url-attributes.adoc[]
 
 [[preface]]
 == Preface

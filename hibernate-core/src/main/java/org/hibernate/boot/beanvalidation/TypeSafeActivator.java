@@ -245,6 +245,7 @@ class TypeSafeActivator {
 					findPropertyByName( persistentClass,
 							prefix + propertyDescriptor.getPropertyName() );
 			if ( property != null ) {
+				final var maxLength = new MaxLength();
 				final boolean hasNotNull = applyConstraints(
 						propertyDescriptor.getConstraintDescriptors(),
 						property,
@@ -253,8 +254,10 @@ class TypeSafeActivator {
 						activateNotNull,
 						false,
 						dialect,
-						constraintCompositionTypeCache
+						constraintCompositionTypeCache,
+						maxLength
 				);
+				maxLength.apply( property );
 				if ( property.isComposite() && propertyDescriptor.isCascaded() ) {
 					final var component = (Component) property.getValue();
 					applyDDL(
@@ -283,7 +286,8 @@ class TypeSafeActivator {
 			boolean canApplyNotNull,
 			boolean useOrLogicForComposedConstraint,
 			Dialect dialect,
-			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache) {
+			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache,
+			MaxLength maxLength) {
 
 		boolean firstItem = true;
 		boolean composedResultHasNotNull = false;
@@ -297,14 +301,14 @@ class TypeSafeActivator {
 
 				// apply bean validation specific constraints
 				applyDigits( property, constraintDescriptor );
-				applySize( property, constraintDescriptor, propertyDesc );
+				applySize( maxLength, constraintDescriptor, propertyDesc );
 				applyMin( property, constraintDescriptor, dialect );
 				applyMax( property, constraintDescriptor, dialect );
 
 				// Apply Hibernate Validator specific constraints - we cannot import any HV specific classes though!
 				// No need to check explicitly for @Range. @Range is a composed constraint using @Min and @Max which
 				// will be taken care of later.
-				applyLength( property, constraintDescriptor, propertyDesc );
+				applyLength( maxLength, constraintDescriptor, propertyDesc );
 
 				// Composing constraints
 				if ( !constraintDescriptor.getComposingConstraints().isEmpty() ) {
@@ -315,7 +319,8 @@ class TypeSafeActivator {
 							canApplyNotNull,
 							isConstraintCompositionOfTypeOr( constraintDescriptor, constraintCompositionTypeCache ),
 							dialect,
-							constraintCompositionTypeCache
+							constraintCompositionTypeCache,
+							maxLength
 					);
 					hasNotNull |= hasNotNullFromComposingConstraints;
 				}
@@ -450,31 +455,44 @@ class TypeSafeActivator {
 		}
 	}
 
-	private static void applySize(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
-		if ( Size.class.equals( descriptor.getAnnotation().annotationType() )
-				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
-			@SuppressWarnings("unchecked")
-			final var sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
-			final int max = sizeConstraint.getAnnotation().max();
-			for ( var column : property.getColumns() ) {
-				if ( max < Integer.MAX_VALUE ) {
-					column.setLength( max );
+	/**
+	 * Several constraints may limit the length of the same property (e.g. an overridden getter inheriting
+	 * {@code @Size}), and the order in which the constraint descriptors are returned is not defined.
+	 * All of them are enforced, so the most restrictive one is used to size the column.
+	 */
+	private static final class MaxLength {
+		private int value = Integer.MAX_VALUE;
+
+		void record(int max) {
+			if ( max < value ) {
+				value = max;
+			}
+		}
+
+		void apply(Property property) {
+			if ( value < Integer.MAX_VALUE ) {
+				for ( var selectable : property.getSelectables() ) {
+					if ( selectable instanceof Column column ) {
+						column.setLength( value );
+					}
 				}
 			}
 		}
 	}
 
-	private static void applyLength(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
+	private static void applySize(MaxLength maxLength, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
+		if ( Size.class.equals( descriptor.getAnnotation().annotationType() )
+				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
+			@SuppressWarnings("unchecked")
+			final var sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
+			maxLength.record( sizeConstraint.getAnnotation().max() );
+		}
+	}
+
+	private static void applyLength(MaxLength maxLength, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
 		if ( isValidatorLengthAnnotation( descriptor )
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
-			final int max = (Integer) descriptor.getAttributes().get( "max" );
-			for ( var selectable : property.getSelectables() ) {
-				if ( selectable instanceof Column column ) {
-					if ( max < Integer.MAX_VALUE ) {
-						column.setLength( max );
-					}
-				}
-			}
+			maxLength.record( (Integer) descriptor.getAttributes().get( "max" ) );
 		}
 	}
 

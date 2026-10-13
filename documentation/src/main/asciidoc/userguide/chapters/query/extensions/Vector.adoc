@@ -11,28 +11,6 @@ The Hibernate ORM Vector module contains support for mathematical vector types a
 This is useful for AI/ML topics like vector similarity search and Retrieval-Augmented Generation (RAG).
 The module comes with support for a special `vector` data type that essentially represents an array of bytes, floats, or doubles.
 
-Currently, the following databases are supported:
-
-* PostgreSQL 13+ through the https://github.com/pgvector/pgvector#querying[`pgvector` extension]
-* https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle database 23ai+]
-* https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview[MariaDB 11.7+]
-* https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html[MySQL 9.0+]
-* https://www.cockroachlabs.com/docs/stable/vector[CockroachDB 24.2+]
-* https://www.ibm.com/docs/en/db2/12.1.0?topic=list-vector-values[DB2 12.1+]
-* https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/sap-hana-cloud-sap-hana-database-vector-engine-guide[SAP HANA Cloud QRC 4/2024+]
-* https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type?view=sql-server-ver17[SQL Server 2025+]
-
-In theory, the vector-specific functions could be implemented to work with every database that supports arrays.
-Since the performance strongly depends on the existence of a vector index and the search is potentially probabilistic,
-no emulation has been implemented yet.
-
-[WARNING]
-====
-Per the https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html#function_distance[MySQL documentation],
-the various vector distance functions for MySQL only work on MySQL cloud offerings like
-https://dev.mysql.com/doc/heatwave/en/mys-hw-about-heatwave.html[HeatWave MySQL on OCI].
-====
-
 [[vector-module-setup]]
 === Setup
 
@@ -56,7 +34,7 @@ The module contains service implementations that are picked up by the Java `Serv
 so no further configuration is necessary to make the features available.
 
 [[vector-module-usage]]
-==== Usage
+=== Mapped vector types
 
 Annotate a persistent attribute with one of the various vector type codes `@JdbcTypeCode` and specify the vector length with `@Array(length = ...)`.
 Possible vector type codes and the compatible Java types are:
@@ -76,7 +54,8 @@ Hibernate ORM also provides support for sparse vectors through dedicated Java ty
 
 [WARNING]
 ====
-Vector data type support depends on native support of the underlying database.
+Vector type and function support depends on the database and dialect; the available
+representations and operations vary between integrations. See <<vector-module-database-support>>.
 ====
 
 [[vector-module-usage-example]]
@@ -89,8 +68,16 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=usage-example]
 
 To cast the string representation of a vector to the vector data type, simply use an HQL cast i.e. `cast('[1,2,3]' as vector)`.
 
+[[vector-module-similarity-queries]]
+=== Similarity queries
+
+Order by a distance expression and limit the results to find nearby vectors.
+Choose a distance function that matches the vector representation and the database index operator.
+Index support and approximate search behavior are database-specific; see <<vector-module-database-support>>.
+For execution and pagination, see <<hql>>.
+
 [[vector-module-functions]]
-==== Functions
+=== Function reference
 
 Expressions of the vector type can be used with various vector functions.
 
@@ -142,7 +129,7 @@ In addition to these special vector functions, it is also possible to use vector
 `avg(<vector1>) = <vector2>`:: Aggregate function support for element-wise average of vectors.
 
 [[vector-module-functions-cosine-distance]]
-===== `cosine_distance()`
+==== `cosine_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Cosine_similarity[cosine distance] between two vectors,
 which is `1 - inner_product( v1, v2 ) / ( vector_norm( v1 ) * vector_norm( v2 ) )`. Maps to the `<``=``>` pgvector operator.
@@ -156,7 +143,7 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=cosine-distance-example]
 ====
 
 [[vector-module-functions-euclidean-distance]]
-===== `euclidean_distance()` and `l2_distance()`
+==== `euclidean_distance()` and `l2_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Euclidean_distance[euclidean distance] between two vectors,
 which is `sqrt( sum( (v1_i - v2_i)^2 ) )`. Maps to the `<``-``>` pgvector operator.
@@ -171,7 +158,7 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=euclidean-distance-examp
 ====
 
 [[vector-module-functions-euclidean-squared-distance]]
-===== `euclidean_squared_distance()` and `l2_squared_distance()`
+==== `euclidean_squared_distance()` and `l2_squared_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance[squared euclidean distance] between two vectors,
 which is `sum( (v1_i - v2_i)^2 )`, just like the regular `euclidean_distance`, but without the `sqrt`.
@@ -186,10 +173,10 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=euclidean-squared-distan
 ====
 
 [[vector-module-functions-taxicab-distance]]
-===== `taxicab_distance()` and `l1_distance()`
+==== `taxicab_distance()` and `l1_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Taxicab_geometry[taxicab distance] between two vectors,
-which is `vector_norm(v1) - vector_norm(v2)`. Maps to the `<``+``>` pgvector operator.
+which is `sum( abs(v1_i - v2_i) )`. Maps to the `<``+``>` pgvector operator.
 The `l1_distance()` function is an alias.
 
 [[vector-module-functions-taxicab-distance-example]]
@@ -201,13 +188,13 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=taxicab-distance-example
 ====
 
 [[vector-module-functions-hamming-distance]]
-===== `hamming_distance()`
+==== `hamming_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Hamming_distance[hamming distance] between two binary vectors,
 which is `bit_count(v1 ^ v2)` i.e. the amount of bits where two vectors differ.
 Maps to the `<``~``>` operator for `pgvector`.
 
-[[vector-module-functions-taxicab-distance-example]]
+[[vector-module-functions-hamming-distance-example]]
 ====
 [source, java, indent=0]
 ----
@@ -216,13 +203,13 @@ include::{example-dir-vector}/BinaryVectorTest.java[tags=hamming-distance-exampl
 ====
 
 [[vector-module-functions-jaccard-distance]]
-===== `jaccard_distance()`
+==== `jaccard_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Jaccard_index[jaccard distance] between two binary vectors,
 which is `1 - bit_count(v1 & v2) / bit_count(v1 | v2)`.
 Maps to the `<``%``>` operator for `pgvector`.
 
-[[vector-module-functions-taxicab-distance-example]]
+[[vector-module-functions-jaccard-distance-example]]
 ====
 [source, java, indent=0]
 ----
@@ -231,7 +218,7 @@ include::{example-dir-vector}/BinaryVectorTest.java[tags=jaccard-distance-exampl
 ====
 
 [[vector-module-functions-inner-product]]
-===== `inner_product()` and `negative_inner_product()`
+==== `inner_product()` and `negative_inner_product()`
 
 Computes the https://en.wikipedia.org/wiki/Inner_product_space[inner product] between two vectors,
 which is `sum( v1_i * v2_i )`. The `negative_inner_product()` function maps to the `<``#``>` pgvector operator,
@@ -246,7 +233,7 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=inner-product-example]
 ====
 
 [[vector-module-functions-vector-dims]]
-===== `vector_dims()`
+==== `vector_dims()`
 
 Determines the dimensions of a vector.
 
@@ -259,7 +246,7 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=vector-dims-example]
 ====
 
 [[vector-module-functions-vector-norm]]
-===== `vector_norm()` and `l2_norm()`
+==== `vector_norm()` and `l2_norm()`
 
 Computes the https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] of a vector,
 which is `sqrt( sum( v_i^2 ) )`.
@@ -274,7 +261,7 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=vector-norm-example]
 ====
 
 [[vector-module-functions-l2-normalize]]
-===== `l2_normalize()`
+==== `l2_normalize()`
 
 Normalizes each component of a vector by dividing it with the https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] of the vector.
 
@@ -287,7 +274,7 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=l2-normalize-example]
 ====
 
 [[vector-module-functions-binary-quantize]]
-===== `binary_quantize()`
+==== `binary_quantize()`
 
 Reduces a vector of size N to a binary vector with N bits, using 0 for values <= 0 and 1 for values > 0.
 
@@ -300,7 +287,7 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=binary-quantize-example]
 ====
 
 [[vector-module-functions-subvector]]
-===== `subvector()`
+==== `subvector()`
 
 Creates a subvector from a given vector, a 1-based start index and a count.
 
@@ -313,4 +300,36 @@ include::{example-dir-vector}/FloatVectorTest.java[tags=subvector-example]
 ====
 
 
+
+[[vector-module-database-support]]
+=== Database capabilities and limitations
+
+Currently, the following databases are supported:
+
+* PostgreSQL 13+ through the https://github.com/pgvector/pgvector#querying[`pgvector` extension]
+* https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle database 23ai+]
+* https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview[MariaDB 11.7+]
+* https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html[MySQL 9.0+]
+* https://www.cockroachlabs.com/docs/stable/vector[CockroachDB 24.2+]
+* https://www.ibm.com/docs/en/db2/12.1.0?topic=list-vector-values[DB2 12.1.2+]
+* https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/sap-hana-cloud-sap-hana-database-vector-engine-guide[SAP HANA Cloud QRC 4/2024+]
+* https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type?view=sql-server-ver17[SQL Server 2025+]
+* Cloud Spanner, using either the GoogleSQL or PostgreSQL dialect.
+
+This list identifies integrations, not support for every vector type code or function listed above.
+For example, the Spanner integrations map `VECTOR`, `VECTOR_FLOAT32`, and `VECTOR_FLOAT64`
+to floating-point arrays. They provide distance and utility functions for those representations,
+but do not provide the binary or sparse vector mappings listed in <<vector-module-usage>>.
+Check the chosen representation, operations, and indexing requirements on the target database.
+
+In theory, the vector-specific functions could be implemented to work with every database that supports arrays.
+Since the performance strongly depends on the existence of a vector index and the search is potentially probabilistic,
+no emulation has been implemented yet.
+
+[WARNING]
+====
+Per the https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html#function_distance[MySQL documentation],
+the various vector distance functions for MySQL only work on MySQL cloud offerings like
+https://dev.mysql.com/doc/heatwave/en/mys-hw-about-heatwave.html[HeatWave MySQL on OCI].
+====
 

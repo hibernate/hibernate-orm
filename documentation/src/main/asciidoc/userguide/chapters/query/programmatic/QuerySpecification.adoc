@@ -1,124 +1,105 @@
 [[QuerySpecification]]
-== Programmatic Query Specification
+== Programmatic query specifications
+:example-dir-query-guide: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
 
-Hibernate offers an API for creating a representation of a query, adjusting that representation programmatically, and then creating an executable form of the query.  The idea is similar in concept to <<chapters/query/criteria/Criteria.adoc#criteria,criteria queries>>, but focused on ease-of-use and less verbosity.
+The `org.hibernate.query.specification` package supports iterative customization of a base query.
+Use a specification to add restrictions, sorting, fetching, or projections before creating an executable query.
+Unlike an executable query, a specification is not tied to a particular session.
+These APIs are incubating; consult the link:{doc-javadoc-url}org/hibernate/query/specification/QuerySpecification.html[Javadocs] for their contracts.
 
-There is support for both <<SelectionSpecification,selection>> and <<MutationSpecification,mutation>> queries via the `SelectionSpecification` and `MutationSpecification` contracts, respectively.  These can be obtained from both `Session` and `StatelessSession`.
+[[query-specification-sources]]
+=== Starting a specification
 
-[NOTE]
-====
-These APIs are new in 7.0 and considered incubating.
-====
+|===
+| Base | Selection factory | Mutation factory
+
+| Root entity | `SelectionSpecification.create(Entity.class)` | `UpdateSpecification.create(Entity.class)`, `DeleteSpecification.create(Entity.class)`
+| HQL | `SelectionSpecification.create(Entity.class, hql)` | `MutationSpecification.create(Entity.class, hql)`
+| Criteria | `SelectionSpecification.create(criteriaQuery)` | `MutationSpecification.create(criteriaUpdate)` or `create(criteriaDelete)`
+| Typed reference | `SelectionSpecification.create(typedQueryReference)` | `MutationSpecification.create(statementReference)`
+|===
+
+A selection specification returns a single root entity, possibly with fetched associations.
+Additional restrictions and ordering apply to that root.
+Use <<query-specification-projections,projection specifications>> for other result shapes.
+The HQL factory for mutation specifications accepts update and delete statements, not insert statements.
+These facilities complement <<criteria,Criteria queries>>; they do not replace the full Criteria API.
 
 [[SelectionSpecification]]
-=== SelectionSpecification
+=== Selection specifications
 
-A `SelectionSpecification` allows to iteratively build a query from a "base", adjust the query by adding sorting and restrictions and finally creating an executable <<hql-SelectionQuery,`SelectionQuery`>>.  We can use HQL as the base -
+`restrict()` adds a restriction expressed using `Restriction` and the static metamodel.
+`sort()` appends ordering, while `resort()` replaces the existing ordering.
+After customization, `createQuery(EntityHandler)` obtains an executable `SelectionQuery` associated with the given `Session` or `StatelessSession`.
 
-.SelectionSpecification from HQL
+.Selection specification
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
-SelectionSpecification<Book> spec = SelectionSpecification.create(
-    Book.class,
-    "from Book"
-);
-----
-====
-
-or a root entity as the base -
-
-.SelectionSpecification from root entity
-====
-[source, java, indent=0]
-----
-SelectionSpecification<Book> spec = SelectionSpecification.create(Book.class);
+include::{example-dir-query-guide}/QueryGuideTests.java[tags=query-specification]
 ----
 ====
 
-Once we have the `SelectionSpecification` we can adjust the query adding restrictions and sorting -
+[[query-specification-augmentation]]
+=== Fetching and augmentation
 
-.Adjusting the SelectionSpecification
-====
-[source, java, indent=0]
-----
-// from here we can augment the base query "from Book",
-// with either restrictions
-spec.restrict(
-    Restriction.restrict(
-        Book_.suggestedCost,
-        Range.closed(10.00, 19.99)
-    )
-);
-
-// or here with some sorting
-spec.sort(
-    Order.asc(Book_.suggestedCost)
-)
-----
-====
-
-[NOTE]
-====
-Notice that generally the JPA static metamodel is a convenient and type-safe way to help build these sorting and restriction references.
-====
-
-After adjusting the query, we can obtain the executable `SelectionQuery`:
-
-.Using the SelectionSpecification
-====
-[source, java, indent=0]
-----
-SelectionQuery<Book> qry = ds.createQuery(session);
-List<Book> books = qry.getResultList();
-----
-====
-
-These calls can even be chained, e.g.
-
-.Example of chained calls
-====
-[source, java, indent=0]
-----
-SelectionQuery<Book> qry = SelectionSpecification.create(
-    Book.class,
-    "from Book"
-).restrict(
-    Restriction.restrict(
-        Book_.suggestedCost,
-        Range.closed(10.00, 19.99)
-    )
-).sort(
-    Order.asc(Book_.suggestedCost)
-).createQuery(session);
-----
-====
-
-[NOTE]
-====
-We expect, in future releases, to add the ability to handle pagination.
-
-We also expect to add the ability to use <<criteria,Criteria>> references as the base.  Possibly even `TypedQueryReference` references.
-====
+`fetch()` adds an association path represented by `org.hibernate.query.restriction.Path`.
+`augment()` accepts a callback with the builder, Criteria query, and root for additional Criteria customization.
+When changing `where()` or `orderBy()` inside the callback, remember that these Criteria methods replace the existing clause.
+See <<fetching>> for fetching behavior and <<criteria-extensions>> for `CriteriaDefinition`.
 
 [[MutationSpecification]]
-=== MutationSpecification
+=== Mutation specifications
 
-There is also support for mutation queries through `MutationSpecification`.
-At the moment, only update and delete queries are supported.  E.g.
+A mutation specification restricts the target of an update or delete.
+`UpdateSpecification` also supports assigning attribute values; `DeleteSpecification` constructs a delete directly from an entity type.
+Execution uses a `MutationQuery` and follows the transaction and managed-state rules in <<query-mutations>>.
 
-.MutationQuery example
+.Mutation specification
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
-MutationQuery<Book> qry = MutationSpecification.create(
-    Book.class,
-    "delete Book"
-).restrict(
-    Restriction.restrict(
-        Book_.suggestedCost,
-        Range.closed(10.00, 19.99)
-    )
-).createQuery(session);
+include::{example-dir-query-guide}/QueryGuideTests.java[tags=query-specification-mutation]
 ----
 ====
+
+[[query-specification-projections]]
+=== Projections, counts, and existence tests
+
+`createProjection()` creates a projected selection based on the specification.
+Each selected attribute produces an `Element` for typed access to the corresponding item of an `Object[]` result.
+The projection retains a reference to the base specification, so later customization of the base also affects the projection.
+`createCountProjection()` and `createExistsProjection()` provide scalar count and existence results.
+Remove unnecessary ordering from a specification used for a count projection, since ordering by a non-aggregated attribute can produce invalid SQL.
+The example clears ordering before counting and restores it before projecting the titles.
+
+.Projecting query specifications
+====
+[source,java,indent=0]
+----
+include::{example-dir-query-guide}/QueryGuideTests.java[tags=query-specification-projections]
+----
+====
+
+[[query-specification-validation]]
+=== Validation, Criteria conversion, and references
+
+`validate(CriteriaBuilder)` checks a specification without executing it.
+`buildCriteria(CriteriaBuilder)` produces a Criteria object; subsequent changes to that object are not reflected in the specification.
+`reference()` exposes a typed query or statement reference that can be used as the base of another specification or passed to the standard query-creation API.
+
+.Criteria and reference sources
+====
+[source,java,indent=0]
+----
+include::{example-dir-query-guide}/QueryGuideTests.java[tags=query-specification-sources]
+----
+====
+
+[[query-specification-execution]]
+=== Execution and pagination
+
+Set execution options and parameter values on the executable query returned by `createQuery()`.
+For offset pagination, a `SelectionQuery` accepts a `Page` through `setPage()`.
+See <<jpql-pagination>> and <<query-key-pagination>> for offset and key-based pagination,
+and <<query-options>> for other execution controls.

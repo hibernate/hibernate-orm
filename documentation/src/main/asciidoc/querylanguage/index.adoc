@@ -21,5 +21,8 @@ include::Concepts.adoc[]
 include::Expressions.adoc[]
 include::From.adoc[]
 include::Relational.adoc[]
+include::appendices/ArrayFunctions.adoc[]
+include::appendices/JsonFunctions.adoc[]
+include::appendices/XmlFunctions.adoc[]
 include::Credits.adoc[]
 

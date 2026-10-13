@@ -401,7 +401,8 @@ For HQL and Criteria mutations, `Statement.execute()` and Hibernate's `MutationQ
 legacy `Query.executeUpdate()` serves the same purpose. Native SQL mutations return database row counts.
 With multi-table inheritance, affected-entity counts need not equal the number of affected database rows.
 
-Bulk HQL and Criteria mutations do not update entity instances already held in the persistence context or invoke entity lifecycle callbacks.
+Bulk HQL and Criteria mutations do not update entity instances already held in the persistence context or invoke entity lifecycle callbacks or per-entity cascades.
+Database-side cascades and triggers are separate mechanisms.
 Flush pending changes when appropriate before the mutation, and clear or refresh affected managed state afterward.
 Clearing also detaches other managed entities; do not discard unflushed changes.
 See <<pc>> and <<flushing>> for persistence-context synchronization.
@@ -419,144 +420,210 @@ link:{doc-query-language-url}#statement-types[Statement types].
 This execution is distinct from <<batch,JDBC batching>>, which batches individual SQL statements produced by entity operations.
 
 [[batch-bulk-hql-update-delete]]
-==== Update and delete execution
+==== Updates and deletes
 
-Updates and deletes are polymorphic and may affect multiple tables.
-A bulk update does not increment the entity version by default; HQL's `update versioned` form requests a version change.
-See link:{doc-query-language-url}#update[Update statements] and link:{doc-query-language-url}#delete[Delete statements].
+Jakarta Persistence 4 exposes `createStatement()` and `Statement.execute()` for mutation execution:
+
+[[batch-bulk-jpql-update-example]]
+.Executing a bulk update with the standard API
+====
+[source,java,indent=0]
+----
+include::{example-dir-batch}/BatchingGuideTests.java[tags=batch-guide-bulk-update]
+----
+====
+
+[[batch-bulk-hql-update-example]]
+Hibernate's equivalent is `createMutationQuery()` followed by `execute()`.
+Older query APIs use `executeUpdate()`, which is deprecated in the current API.
+
+[[batch-bulk-hql-update-delete-example]]
+HQL update/delete statements may contain implicit joins, while direct explicit joins are restricted.
+Refer to link:{doc-query-language-url}#update[update statements] and
+link:{doc-query-language-url}#delete[delete statements] for language syntax and restrictions.
+
+[[batch-bulk-jpql-delete-example]]
+.Executing a bulk delete
+====
+[source,java,indent=0]
+----
+include::{example-dir-batch}/BatchingGuideTests.java[tags=batch-guide-bulk-delete]
+----
+====
+
+[[batch-bulk-hql-delete-example]]
+Both standard and Hibernate mutation execution return an affected-entity count.
+That count may differ from the number of SQL rows changed, especially for joined inheritance.
+Update/delete statements are polymorphic and may require several SQL statements across an entity hierarchy.
+
+==== Versioned updates
+
+Ordinary bulk updates do not automatically increment an entity's `@Version`.
+HQL `update versioned` increments numeric versions or updates version timestamps:
+
+[[batch-bulk-hql-update-version-example]]
+.Incrementing the version in a bulk update
+====
+[source,java,indent=0]
+----
+include::{example-dir-batch}/BatchingGuideTests.java[tags=batch-guide-versioned]
+----
+====
+
+This is an HQL extension, not standard JPQL, and does not support custom `UserVersionType` versions.
+It does not automatically add a per-entity optimistic version predicate.
+When a workload requires checking an expected version, express that requirement explicitly or use ordinary entity updates.
 
 [[batch-bulk-hql-insert]]
-==== Insert execution and conflict handling
+==== Inserts
 
-HQL supports both insert-values and insert-select statements.
-These are database mutations, rather than calls to `persist()` for individual entities.
-See link:{doc-query-language-url}#insert[Insert statements] for assignment and id-generation rules.
+HQL INSERT-SELECT can copy or transform a set of rows without materializing each source entity in the application.
+This example supplies explicit target identifiers by adding an offset to the source identifiers:
 
-On MySQL and MariaDB, conflict handling uses `on duplicate key`, which cannot select a particular conflict constraint.
-With multiple unique constraints, results may differ from those on databases with an explicit conflict target.
-Their JDBC affected-row counts also distinguish inserted and updated rows; consult the driver and database documentation when interpreting them.
+[[batch-bulk-hql-insert-example]]
+.Executing INSERT-SELECT with explicit identifiers
+====
+[source,java,indent=0]
+----
+include::{example-dir-batch}/BatchingGuideTests.java[tags=batch-guide-bulk-insert]
+----
+====
+
+The offset is only suitable for this controlled fixture; real applications must ensure identifier uniqueness.
+HQL INSERT-VALUES is another insertion form. Omitting target identifiers depends on the insert form,
+generator capabilities, and dialect. INSERT-SELECT and INSERT-VALUES do not have identical generation paths.
+See link:{doc-query-language-url}#insert[insert statements] for syntax, target typing, and generation rules.
 
 [[batch-bulk-hql-strategies]]
-==== Bulk mutation strategies
+==== Multi-table mutation and insert strategies
 
-When a bulk mutation involves multiple tables, Hibernate has to issue individual DML statements to the respective tables.
-Since the mutation itself could have an effect on the conditions used in the statement, it's generally not possible
-to simply execute parts of the DML statement against the respective tables. Instead, Hibernate has to temporarily remember
-which rows will be affected, and execute the DML statements based on these rows.
+A logical operation on an entity mapped to several tables may require multiple SQL statements.
+For update/delete operations, Hibernate may preserve matching identifiers before changing any affected tables,
+so that later statements still target the originally selected entities.
+Insert staging stores the values needed to populate the target tables and has different requirements.
 
-Usually, Hibernate will make use of local or global temporary tables to remember the primary keys of the rows.
-For some databases, currently only PostgreSQL and DB2, a more advanced strategy (`CteMutationStrategy`) is used,
-which makes use of DML in CTE support to execute the whole operation in one SQL statement.
+The dialect selects fallback families through
+link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html#getMultiTableMutationSupport()[`Dialect.getMultiTableMutationSupport()`].
+Its `MultiTableMutationSupport` profile selects update/delete and insert strategies independently.
+Configured global or entity-specific strategies take precedence over the fallback.
 
-The dialect selects fallback strategy families through `Dialect.getMultiTableMutationSupport()`.
-This profile distinguishes update/delete operations from insert operations.
-Override these defaults using `hibernate.query.mutation_strategy` for updates and deletes,
-or `hibernate.query.insert_strategy` for inserts.
-See link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html#getMultiTableMutationSupport()[the dialect API] for the fallback contract.
+// suppress inspection "AsciiDocLinkResolve"
+The <<settings-hibernate.query.mutation_strategy,`hibernate.query.mutation_strategy`>> setting selects an update/delete strategy;
+// suppress inspection "AsciiDocLinkResolve"
+<<settings-hibernate.query.insert_strategy,`hibernate.query.insert_strategy`>> selects an insert strategy.
+Defaults depend on the dialect and its capabilities, not just the database product name.
+
+[cols="1,3",options="header"]
+|===
+|Family |Approach
+|CTE |Uses data-modifying common-table expressions when supported by the dialect.
+|Local temporary table |Uses staging local to a database connection, with dialect-specific creation/use actions.
+|Global temporary table |Uses a globally defined table whose contents have database-specific temporary scope.
+|Persistent table |Uses an ordinary auxiliary table and separates concurrent session work using a session discriminator.
+|===
 
 [[batch-bulk-hql-strategies-class-diagram]]
-===== Class diagram
+===== A composite-identifier inheritance model
 
-Considering we have the following entities:
+The next examples consistently use this joined inheritance model with a composite identifier:
 
 image::images/domain/bulkid/temp_table_class_diagram.png[Entity class diagram,align="center"]
 
-The `Person` entity is the base class of this entity inheritance model, and is mapped as follows:
-
 [[batch-bulk-hql-temp-table-base-class-example]]
-.Bulk mutation base class entity
+.Base entity with a composite identifier
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
 ----
 ====
 
-Both the `Doctor` and `Engineer` entity classes extend the `Person` base class:
-
 [[batch-bulk-hql-temp-table-sub-classes-example]]
-.Bulk mutation subclass entities
+.Subclasses of the same composite-identifier entity
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
-include::{example-dir-bulkid}/AbstractMutationStrategyIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
+include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
 ----
 ====
 
 [[batch-bulk-hql-strategies-inheritance-tree]]
-===== Inheritance tree bulk processing
-
-Now, when you try to execute a bulk entity delete query:
+===== Executing a hierarchy delete
 
 [[batch-bulk-hql-temp-table-delete-query-example]]
-.Bulk mutation delete query example
+.Deleting matching entities across the hierarchy
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
 ----
 
-[source, sql, indent=0]
+[source,sql,indent=0]
 ----
 include::{batch-extras-dir}/batch-bulk-hql-temp-table-delete-query-example.sql[]
 ----
 ====
 
-`HT_Person` is a temporary table that Hibernate creates to hold all the entity identifiers that are to be updated or deleted by the bulk operation.
-The temporary table can be either global or local, depending on the underlying database capabilities.
+The SQL illustrates the H2 test's execution with the local temporary-table strategy selected.
+This particular delete does not need an identifier staging table: the root-table predicate remains valid
+while subclass rows are deleted, and the root rows are deleted last.
+More complex operations may require identifier staging. Selecting a table-based strategy does not mean
+that every mutation creates or uses a staging table.
+The illustration is not a guarantee of exact names, statement ordering, or syntax for every dialect.
+
+===== Auxiliary tables and database permissions
+
+Identifier tables conventionally use an `HT_` prefix; insert staging tables conventionally use `HTE_`.
+Their exact names and schemas depend on mapping, naming adjustments, strategy, and dialect.
+Insert staging may require generated-key, row-number, or session-discriminator columns in addition to mapped attributes.
+Creating one generic `HTE_<root>` table does not provision every update/delete and insert strategy.
+
+Global temporary and persistent table implementations normally prepare their auxiliary tables during factory
+initialization. Their `create_tables` settings default to `true`, and `drop_tables` defaults to `false`:
+
+* `hibernate.query.mutation_strategy.global_temporary.create_tables`
+* `hibernate.query.mutation_strategy.global_temporary.drop_tables`
+* `hibernate.query.mutation_strategy.persistent.create_tables`
+* `hibernate.query.mutation_strategy.persistent.drop_tables`
+
+The corresponding insert strategies share these setting names in the current implementation.
+Local temporary-table creation follows the dialect's before-use action during execution.
+`hibernate.query.mutation_strategy.local_temporary.drop_tables`, defaulting to `false`, controls forced
+post-use dropping; the dialect's own after-use action also matters.
+Disabling global/persistent startup creation does not disable local execution-time creation.
+
+For restricted database permissions, arrange for the exact auxiliary tables required by the selected strategy
+to be provisioned by an authorized schema-management process, then configure Hibernate's creation/drop behavior
+accordingly. Inspect the strategy's actual dialect-specific DDL rather than inferring columns from a prefix.
+See <<schema-generation>> for ordinary schema tooling; do not assume its regular create/export scripts
+include every mutation strategy's auxiliary table.
 
 [[batch-bulk-hql-strategies-non-temporary-table]]
-===== Managing bulk-operation tables
+===== Inline update/delete alternative
 
-Table-based strategies require staging tables whose creation and cleanup are managed separately from ordinary schema tooling.
-Their lifecycle depends on the selected strategy: global temporary and persistent tables may be prepared at factory startup,
-while local temporary tables may be created for an operation.
-
-For strategies using global temporary or persistent tables, a schema owner may create the required tables before deployment
-when the application account lacks DDL permissions. Update/delete strategies use identifier tables, normally named `HT_<base name>`,
-which hold the identifiers of affected entities. Insert strategies use entity staging tables, normally named `HTE_<base name>`,
-which hold the values needed for insertion. Creating an `HTE_` table alone does not supply the identifier table needed by updates and deletes.
-The exact names, columns, and table semantics depend on the mappings, dialect, and selected strategy;
-use the definitions expected by those strategies, including any required row or session identifiers.
-
-For updates and deletes, an alternative is the inline strategy, which selects affected identifiers into memory
-and uses them in subsequent mutation statements:
+`InlineMutationStrategy` selects matching identifiers into application memory and uses those values
+in subsequent update/delete predicates, avoiding identifier staging tables for those mutations:
 
 [source,xml]
 ----
 <property name="hibernate.query.mutation_strategy"
-          value="org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy"
-/>
+          value="org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy"/>
 ----
 
-[IMPORTANT]
-====
-Prefer the appropriate table-based strategy when many entities may be affected: the inline strategy can produce large identifier lists and SQL statements.
-There is no equivalent inline strategy for inserts.
-
-When global temporary or persistent staging tables are created outside Hibernate, disable Hibernate's automatic creation and dropping by setting the
-
-`hibernate.query.mutation_strategy.global_temporary.create_tables` and `hibernate.query.mutation_strategy.global_temporary.drop_tables`
-
-*or*
-
-`hibernate.query.mutation_strategy.persistent.create_tables` and `hibernate.query.mutation_strategy.persistent.drop_tables`
-
-properties (depending on the default strategy for the dialect) to `false`
-====
-
-With the inline strategy, when running the previous test case, Hibernate generates the following SQL statements:
+This can increase memory consumption and SQL size and is subject to database statement-size limits.
+Evaluate it for the expected affected set. It is an update/delete strategy, not an equivalent inline insert strategy;
+selecting it does not eliminate tables needed by an independently configured insert strategy.
 
 [[batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example]]
-.`InlineMutationStrategy` delete entity query example
+.Representative InlineMutationStrategy delete SQL
 ====
-[source, sql, indent=0]
+[source,sql,indent=0]
 ----
 include::{batch-extras-dir}/batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example.sql[]
 ----
 ====
 
-So, the entity identifiers are selected first and used for each particular update or delete statement.
+The illustration uses the same composite identifiers, first selected from `Person`, in each table's delete predicate.
 
 [[query-options]]
 === Execution options

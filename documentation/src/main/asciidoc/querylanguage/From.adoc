@@ -596,3 +596,5 @@ from Publisher as publisher
     join publisher.books as book
 where book.authors[0].name like :namePattern
 ----
+
+include::SetReturningFunctions.adoc[]

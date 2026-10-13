@@ -22,5 +22,5 @@ WHERE
         FROM
             Department fetchmodes0_
         WHERE
-            d.name like 'Department%'
+            fetchmodes0_.name like 'Department%'
     )

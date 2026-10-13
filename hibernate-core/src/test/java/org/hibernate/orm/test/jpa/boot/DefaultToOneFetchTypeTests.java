@@ -83,14 +83,20 @@ public class DefaultToOneFetchTypeTests {
 			var postDescriptor = emf.unwrap( SessionFactoryImplementor.class ).getMappingMetamodel().getEntityDescriptor( Post.class );
 			final AttributeMapping authorAttribute = postDescriptor.findAttributeMapping( "author" );
 			assertThat( authorAttribute.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.DELAYED );
+			assertThat( postDescriptor.findAttributeMapping( "eagerAuthor" ).getMappedFetchOptions().getTiming() )
+					.isEqualTo( FetchTiming.IMMEDIATE );
+			assertThat( postDescriptor.findAttributeMapping( "lazyAuthor" ).getMappedFetchOptions().getTiming() )
+					.isEqualTo( FetchTiming.DELAYED );
 		}
 	}
 
 	@Test
 	void testCovariantPersistenceConfiguration() {
+		//tag::fetching-default-to-one[]
 		final HibernatePersistenceConfiguration configuration = new HibernatePersistenceConfiguration( "unit" )
 				.defaultToOneFetchType( FetchType.LAZY )
 				.jdbcUrl( "jdbc:h2:mem:db_covariant_persistence_configuration" );
+		//end::fetching-default-to-one[]
 
 		assertThat( configuration.defaultToOneFetchType() ).isEqualTo( FetchType.LAZY );
 	}
@@ -125,5 +131,9 @@ public class DefaultToOneFetchTypeTests {
 		@ManyToOne
 		@JoinColumn(name="author_fk")
 		private User author;
+		@ManyToOne(fetch = FetchType.EAGER)
+		private User eagerAuthor;
+		@ManyToOne(fetch = FetchType.LAZY)
+		private User lazyAuthor;
 	}
 }

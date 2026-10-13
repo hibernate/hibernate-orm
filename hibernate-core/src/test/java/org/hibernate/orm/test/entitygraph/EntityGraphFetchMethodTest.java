@@ -56,10 +56,12 @@ class EntityGraphFetchMethodTest {
 		final var inspector = scope.getCollectingStatementInspector();
 
 		scope.inTransaction( session -> {
+			//tag::fetching-graph-method-select[]
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.author )
 					.addOption( FetchMethod.BY_ID );
 			final var book = session.find( graph, 1L );
+			//end::fetching-graph-method-select[]
 
 			assertThat( book ).isNotNull();
 			assertThat( Hibernate.isInitialized( book.author ) ).isTrue();
@@ -95,10 +97,12 @@ class EntityGraphFetchMethodTest {
 		final var inspector = scope.getCollectingStatementInspector();
 
 		scope.inTransaction( session -> {
+			//tag::fetching-graph-method-join[]
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.author )
 					.addOption( FetchMethod.JOIN );
 			final var book = session.find( graph, 1L );
+			//end::fetching-graph-method-join[]
 
 			assertThat( book ).isNotNull();
 			assertThat( Hibernate.isInitialized( book.author ) ).isTrue();
@@ -262,6 +266,7 @@ class EntityGraphFetchMethodTest {
 		final var inspector = scope.getCollectingStatementInspector();
 
 		scope.inTransaction( session -> {
+			//tag::fetching-graph-method-subquery[]
 			final var graph = session.createEntityGraph( Author.class );
 			graph.addAttributeNode( Author_.books )
 					.addOption( FetchMethod.BY_SUBQUERY );
@@ -269,6 +274,7 @@ class EntityGraphFetchMethodTest {
 					session.createQuery("from GraphFetchMethodAuthor a order by a.id")
 							.withEntityGraph( graph )
 							.getResultList();
+			//end::fetching-graph-method-subquery[]
 
 			assertAuthors( authors );
 		} );

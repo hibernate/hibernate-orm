@@ -314,10 +314,10 @@ Adding the keyword `versioned`—writing `update versioned`—specifies that Hib
 update versioned Book set title = :newTitle where ssn = :ssn
 ----
 
-An `update` statement may not directly `join` other entities, but it may:
-
-- have an <<implicit-join,implicit join>>, or
-- have subqueries in its `set` clause, or in its `where` clause, and the subqueries may contain joins.
+An HQL `update` statement may use implicit or explicit joins, or subqueries in its `set` and `where` clauses.
+Explicit joins in mutation statements are HQL extensions, not JPQL syntax.
+If a join produces multiple matching rows for a target row, the result of the update is database-dependent;
+avoid assignments whose value is ambiguous because of duplicate join matches.
 
 [[delete]]
 ==== Delete statements
@@ -346,10 +346,8 @@ A `delete` statement is executed by calling `Query.executeUpdate()`.
 
 The integer value returned by `executeUpdate()` indicates the number of entity instances affected by the operation.
 
-A `delete` statement may not directly `join` other entities, but it may:
-
-- have an <<implicit-join,implicit join>>, or
-- have subqueries in its `where` clause, and the subqueries may contain joins.
+An HQL `delete` statement may use implicit or explicit joins, and subqueries in its `where` clause.
+Explicit joins in mutation statements are HQL extensions, not JPQL syntax.
 
 [[insert]]
 ==== Insert statements
@@ -451,6 +449,8 @@ insert Person (ssn, name, phone)
         set phone = excluded.phone
 ----
 
+
+In the conflict action, `excluded` refers to the values proposed for insertion, rather than the values already stored in the conflicting row.
 
 Like `update` and `delete` statements, an `insert` statement must be executed by calling `Query.executeUpdate()`.
 

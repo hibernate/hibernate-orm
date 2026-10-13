@@ -572,7 +572,7 @@ include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found
 ----
 ====
 
-See <<hql-model-functions>>.
+See link:{doc-query-language-url}#model-functions[functions for ids and versions].
 
 
 [[associations-any]]

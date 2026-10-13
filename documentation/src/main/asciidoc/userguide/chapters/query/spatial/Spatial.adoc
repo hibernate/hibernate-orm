@@ -61,6 +61,53 @@ For Maven, you need to add the following dependency:
 ====
 
 
+[[spatial-types]]
+=== Types
+
+It suffices to declare a property as either a JTS or a Geolatte-geom `Geometry` and Hibernate Spatial will map it using the
+relevant type.
+
+Here is an example using JTS:
+[[spatial-types-mapping-example]]
+.Type mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-mapping-example, indent=0]
+----
+====
+
+We can now treat spatial geometries like any other type.
+
+[[spatial-types-point-creation-example]]
+.Creating a Point
+====
+[source, java, indent=0]
+----
+include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-point-creation-example]
+----
+====
+
+Spatial Dialects defines many query functions that are available both in HQL and JPQL queries. Below we show how we
+could use the `within` function to find all objects within a given spatial extent or window.
+
+[[spatial-types-query-example]]
+.Querying the geometry
+====
+[source, sql, indent=0]
+----
+include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-query-example]
+----
+====
+
+
+[[spatial-querying]]
+=== Queries and functions
+
+Spatial functions operate on mapped geometry attributes and geometry parameters.
+Use the geometry model associated with the mapped type when binding parameters.
+The same execution and parameter-binding rules apply as for other queries; see <<hql>>.
+
 Hibernate defines common spatial functions uniformly over all databases. These
 functions largely correspond to those specified in the https://portal.opengeospatial.org/files/?artifact_id=829[Simple Feature Specification]. Not all databases are capable of supporting every function, however. The table below details which functions are supported by various database systems.
 
@@ -110,6 +157,7 @@ functions largely correspond to those specified in the https://portal.opengeospa
 
 Note that beyond the common spatial functions mentioned above, Hibernate may define additional spatial functions for each database dialect. These will be documented in the
 Database notes below.
+
 
 === Database notes
 [[spatial-configuration-dialect-postgresql]]
@@ -207,43 +255,3 @@ create transform for db2gse.st_geometry db2_program (
  from sql with function db2gse.asewkt(db2gse.st_geometry), 
  to   sql with function db2gse.geomfromewkt(varchar(32000)) );
 ----
-
-[[spatial-types]]
-=== Types
-
-It suffices to declare a property as either a JTS or a Geolatte-geom `Geometry` and Hibernate Spatial will map it using the
-relevant type.
-
-Here is an example using JTS:
-[[spatial-types-mapping-example]]
-.Type mapping
-====
-[source, java, indent=0]
-----
-include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-mapping-example, indent=0]
-----
-====
-
-We can now treat spatial geometries like any other type.
-
-[[spatial-types-point-creation-example]]
-.Creating a Point
-====
-[source, java, indent=0]
-----
-include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-point-creation-example]
-----
-====
-
-Spatial Dialects defines many query functions that are available both in HQL and JPQL queries. Below we show how we
-could use the `within` function to find all objects within a given spatial extent or window.
-
-[[spatial-types-query-example]]
-.Querying the geometry
-====
-[source, sql, indent=0]
-----
-include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-query-example]
-----
-====
-

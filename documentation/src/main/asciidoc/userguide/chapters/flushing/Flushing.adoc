@@ -108,6 +108,7 @@ include::{extrasdir}/flushing-auto-flush-jpql-overlap-example.sql[]
 
 This time, the flush was triggered by a JPQL query because the pending entity persisting action overlaps with the query being executed.
 
+[[flushing-auto-flush-sql]]
 ==== `AUTO` flush on native SQL query
 
 When executing a native SQL query, a flush is always triggered when using the `EntityManager` API.

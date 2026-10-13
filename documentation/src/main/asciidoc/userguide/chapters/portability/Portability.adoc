@@ -86,8 +86,8 @@ For example, the `org.hibernate.id.enhanced.SequenceStyleGenerator` mimics the b
 === Database functions
 
 HQL now provides a large set of functions which are portable between databases.
-You can find them listed in <<hql-exp-functions,the chapter describing the query language>>.
-There's even a way for a program to contribute its own <<hql-user-defined-functions,function definitions>>.
+You can find them listed in link:{doc-query-language-url}#exp-functions[the chapter describing the query language].
+There's even a way for a program to contribute its own link:{doc-query-language-url}#user-defined-functions[function definitions].
 
 [WARNING]
 Of course, SQL functions occurring in handwritten SQL fragments or queries usually aren't very portable.

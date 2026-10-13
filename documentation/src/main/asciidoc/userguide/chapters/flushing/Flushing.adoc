@@ -158,7 +158,7 @@ include::{flushing-extrasdir}/flushing-auto-flush-jpql-overlap-example.sql[]
 The query for `Person` overlaps the pending insertion and triggers synchronization before execution.
 
 [[flushing-auto-native]]
-===== `AUTO` flush on native SQL query
+===== `AUTO` flush on native SQL query [[flushing-auto-flush-sql]]
 
 With JPA bootstrap, an `AUTO` context flushes before a native SQL query without registered query spaces.
 The following example uses an `EntityManager` obtained from a JPA-bootstrapped factory:

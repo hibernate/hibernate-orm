@@ -1,36 +1,187 @@
 [[hql]]
-== Java API for HQL and JPQL
-:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+== Query APIs and execution
 :example-dir-query: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
-:extrasdir: extras
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:example-dir-query-guide: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
+:query-extras-dir: {doc-main-asciidoc-dir}/userguide/chapters/query/hql/extras
+:example-dir-batch: {core-project-dir}/src/test/java/org/hibernate/orm/test/batch
+:example-dir-bulkid: {core-project-dir}/src/test/java/org/hibernate/orm/test/bulkid
+:batch-extras-dir: {doc-main-asciidoc-dir}/userguide/chapters/batch/extras
 
-The Hibernate Query Language (HQL) and the Java Persistence Query Language (JPQL) are object-oriented query languages based on SQL and very similar in flavor to SQL.
+[[query-execution]]This chapter describes the common APIs for executing selections and mutations.
+Use HQL or JPQL for query strings, <<criteria,Criteria>> for Java-based construction,
+<<QuerySpecification,query specifications>> for iterative composition, or <<sql,native SQL>> for handwritten database SQL.
+<<stored-procedures,Procedure calls>> have their own execution model.
+The link:{doc-query-language-url}[Query Language guide] describes general language syntax and semantics.
+The language guide's link:{doc-query-language-url}#hql-functions-arrays[array], link:{doc-query-language-url}#hql-functions-json[JSON], and link:{doc-query-language-url}#hql-functions-xml[XML] appendices describe specialized built-in functions.
+See <<query-language,Function integration>> for registering custom database functions.
+For an introductory walkthrough, see link:{doc-introduction-url}#queries[Executing queries].
 
-[NOTE]
+[[query-api]]
+=== Selection and mutation contracts
+
+The standard `EntityHandler` contract, shared by `EntityManager` and `EntityAgent`, creates executable queries and statements.
+`EntityManager` executes operations in a persistence context; `EntityAgent` operates on detached entities.
+Hibernate implements these contracts using `Session` and `StatelessSession` respectively.
+Execution options involving managed state, such as read-only loading and automatic flushing, apply to a persistence context.
+
+|===
+| Operation | Standard contract | Hibernate contract | Execution
+
+| Selection | `TypedQuery<T>` | `SelectionQuery<T>` | `getResultList()`, `getSingleResult()`, `getSingleResultOrNull()`
+| Mutation | `Statement` | `MutationQuery` | `execute()`
+| Mixed or legacy usage | `Query` | `Query<T>` | Selection methods or `executeUpdate()`
+|===
+
+Prefer typed selections and dedicated mutation statements.
+The older `Query` contract combines selections and mutations; use it when an existing API requires it.
+Hibernate's `Query<T>` extends the standard typed-query API and exposes provider-specific controls.
+
+[[jpa-query-api]]
+==== Standard query APIs
+
+`createQuery(hql, Result.class)` creates a `TypedQuery<Result>`.
+`createStatement(hql)` creates a `Statement` for an insert, update, or delete.
+Pass Criteria objects to the corresponding methods for Java-based construction.
+
+.Standard selection [[jpql-api-example]]
 ====
-When we use the term "HQL" here, we usually mean both modern HQL, along with the standard subset defined by the specification.
+[source,java,indent=0]
+----
+include::{example-dir-query-guide}/QueryGuideTests.java[tags=query-selection]
+----
 ====
 
-HQL is not the only way to write queries in Hibernate:
+[[hql-query-api]]
+==== Hibernate query APIs
 
-- <<chapters/query/criteria/Criteria.adoc#criteria,criteria queries>> offer a Java-based API with greater compile-time typesafety, and
-- <<chapters/query/native/Native.adoc#criteria,native SQL queries>> are also possible.
+[[hql-api-example]]A `Session` refines standard query return types and also provides `createSelectionQuery()` and `createMutationQuery()`.
+Provider-specific operations are described in link:{doc-javadoc-url}org/hibernate/query/Query.html[`Query`]
+and link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html[`SelectionQuery`].
 
-However, HQL is the most convenient option for most people most of the time.
+[[hql-SelectionQuery]]
+==== SelectionQuery
 
-The actual query language itself is discussed the <<chapters/query/hql/QueryLanguage.adoc#query-language,next chapter>>.
-This chapter describes the Java APIs for executing HQL and JPQL queries.
+Hibernate's `SelectionQuery` contract is similar to `Query` but only exposes methods which are relevant to selection queries.  For example,
+it does not expose a `#executeUpdate` method.  This allows for earlier validation of the query as a selection.
 
-Most of this chapter is dedicated to discussing `org.hibernate.query.Query`, `jakarta.persistence.Query` and
-`jakarta.persistence.TypedQuery`.  These `Query` contracts mix the ability to perform selections as well mutations.
-Hibernate additionally offers the more targeted `SelectionQuery` and `MutationQuery` contracts.  See
-<<hql-SelectionQuery>> and <<hql-MutationQuery>> for additional details.
 
+[[hql-examples-selection-query]]
+.Selection query validation
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-selection-query]
+
+include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-selection-query-query]
+----
+====
+
+`SelectionQuery` may also be used with named-queries
+
+[[hql-examples-named-selection-query]]
+.NamedQuery selection validation
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-named-selection-query]
+
+include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-named-selection-query-query]
+----
+====
+
+[[hql-MutationQuery]]
+==== MutationQuery
+
+`MutationQuery` exposes operations relevant to mutation statements and validates the query as a mutation when it is created.
+Execute it using `execute()`; the older `executeUpdate()` method is deprecated.
+
+[[hql-examples-mutation-query]]
+.Mutation query validation
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-mutation-query]
+
+include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-mutation-query-query]
+----
+====
+
+
+`MutationQuery` may also be used with named-queries
+
+[[hql-examples-named-mutation-query]]
+.NamedQuery mutation validation
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-named-mutation-query]
+
+include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-named-mutation-query-query]
+----
+====
+
+[[hql-getting-started]]
+=== Creating queries and statements
+
+HQL and Criteria selections use the same execution API. [[jpql-api-named-query-example]]Named queries may be declared using annotations or registered with the factory.
+[[hql-api-named-query-example]]Hibernate provides corresponding typed creation methods for named selections and mutations.
+
+
+A query may be provided to Hibernate as either:
+
+* an _inline query_: the text of the query is passed as a string to the session at runtime, or
+* a _named query_: the query is specified in an annotation or XML file, and identified by name at runtime.
+
+A `Query` object is obtained from the `EntityManager` or Hibernate `Session` by calling `createQuery()` or `createNamedQuery()`.
+
+Inline and named selections use the same execution methods; see <<jpql-query-execution>>.
+
+[[named-queries]]
+==== Declaring named queries
+
+Named queries may be defined using the Jakarta Persistence annotation `@NamedQuery`.
+
+[[jpa-read-only-entities-native-example]]
+.Declaring a named query with a query hint
+====
+[source, java, indent=0]
+----
+include::{example-dir-model}/Person.java[tags=jpa-read-only-entities-native-example]
+----
+====
+
+Alternatively, Hibernate offers an extended
+link:{doc-javadoc-url}org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
+which allows the specification of additional properties of the query, including flush mode, cacheability, and timeout interval, in a more typesafe way.
+
+[[jpql-api-hibernate-named-query-example]]
+.Declaring a named query using the typesafe annotation
+====
+[source, java, indent=0]
+----
+include::{example-dir-model}/Phone.java[tags=jpql-api-hibernate-named-query-example, indent=0]
+----
+//include::{sourcedir}/HQLTest.java[tags=jpql-api-hibernate-named-query-example, indent=0]
+====
+
+[TIP]
+====
+One big advantage to named queries is that they are parsed by Hibernate at startup time, and so some sorts of errors are reported much earlier.
+====
+
+[[query-typed-references]]
+==== Typed query references
+
+A `TypedQueryReference<T>` associates a query with its result type and may be passed to `createQuery()`.
+A `StatementReference` represents a mutation and may be passed to `createStatement()`.
+References generated by the static metamodel avoid repeating a named query's name and result type.
+See <<tooling>> for generation and <<QuerySpecification>> for references produced from specifications.
 
 [[hql-examples-domain-model]]
-=== Example domain model
+==== Example domain model
 
-The code examples featured in this chapter, and the next, make use of the following annotated domain model.
+Several examples below use the following annotated domain model.
 
 [[hql-examples-domain-model-example]]
 .Examples domain model
@@ -57,130 +208,8 @@ include::{example-dir-model}/WireTransferPayment.java[tags=hql-examples-domain-m
 ----
 ====
 
-[[hql-getting-started]]
-=== Obtaining a `Query` object
-
-A query may be provided to Hibernate as either:
-
-* an _inline query_: the text of the query is passed as a string to the session at runtime, or
-* a _named query_: the query is specified in an annotation or XML file, and identified by name at runtime.
-
-A `Query` object is obtained from the `EntityManager` or Hibernate `Session` by calling `createQuery()` or `createNamedQuery()`.
-
-The API for actually executing the query is the same in both cases, as we're about to see <<query-execution,below>>.
-
-[[named-queries]]
-==== Declaring named queries
-
-Named queries may be defined using the Jakarta Persistence annotation `@NamedQuery`.
-
-[[jpa-read-only-entities-native-example]]
-.Declaring a named query with a query hint
-====
-[source, java, indent=0]
-----
-include::{example-dir-model}/Person.java[tags=jpa-read-only-entities-native-example]
-----
-====
-
-Alternatively, Hibernate offers an extended
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
-which allows the specification of additional properties of the query, including flush mode, cacheability, and timeout interval, in a more typesafe way.
-
-[[jpql-api-hibernate-named-query-example]]
-.Declaring a named query using the typesafe annotation
-====
-[source, java, indent=0]
-----
-include::{example-dir-model}/Phone.java[tags=jpql-api-hibernate-named-query-example, indent=0]
-----
-//include::{sourcedir}/HQLTest.java[tags=jpql-api-hibernate-named-query-example, indent=0]
-====
-
-[TIP]
-====
-One big advantage to named queries is that they are parsed by Hibernate at startup time, and so some sorts of errors are reported much earlier.
-====
-
-[[query-api]]
-==== Flavors of the Query API
-
-To execute a query, you'll need an instance of the Jakarta Persistence `Query` interface, or, even better, of its subinterface `TypedQuery`.
-
-[[jpa-query-api]]
-===== Jakarta Persistence `Query` and `TypedQuery`
-
-The `EntityManager` offers various operations that return `Query` or `TypedQuery<T>`, including:
-
-- `EntityManager#createQuery()`, which accepts a query written in HQL, and
-- `EntityManager#createNamedQuery()`, which accepts the name of a named query.
-
-[TIP]
-====
-It's better to explicitly pass the query result type as a Java `Class<T>`.
-That way, you'll obtain a `TypedQuery<T>`, and avoid some later typecasting.
-====
-
-[[jpql-api-example]]
-.Obtaining a Jakarta Persistence `Query` or `TypedQuery` reference
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/HQLTest.java[tags=jpql-api-example]
-----
-====
-
-[[jpql-api-named-query-example]]
-.Obtaining a Jakarta Persistence `Query` or `TypedQuery` reference for a named query
-====
-[source, java, indent=0]
-----
-include::{example-dir-model}/Person.java[tags=jpql-api-named-query-example, indent=0]
-
-include::{example-dir-query}/HQLTest.java[tags=jpql-api-named-query-example, indent=0]
-----
-====
-
-[[hql-query-api]]
-===== Hibernate `Query`
-
-Hibernate's `Session` interface refines the return types of the operations of `EntityManager` which create query objects.
-
-`Session#createQuery()`,  `Session#createNamedQuery()`, and other similar operations all return an instance of the extension `org.hibernate.query.Query`.
-
-[IMPORTANT]
-====
-Some overloaded forms of these operations return a raw type, but in Hibernate 6 all of these have been deprecated, and the use of the raw type `Query` is now strongly discouraged.
-Programs should migrate to the use of the typesafe overloads which accept a `Class<T>` object and return a typed `Query<T>`.
-====
-
-Hibernate's `Query` interface offers additional operations not available via `TypedQuery`, as we'll see below.
-
-[[hql-api-example]]
-.Obtaining a Hibernate `Query`
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/HQLTest.java[tags=hql-api-example]
-----
-====
-
-[[hql-api-named-query-example]]
-.Obtaining a Hibernate `Query` for a named query
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/HQLTest.java[tags=hql-api-named-query-example]
-----
-====
-
-[[query-execution]]
-=== Executing HQL and JPQL queries
-
-Since `org.hibernate.query.Query` inherits `TypedQuery`, which in turn inherits `Query`, usage of the three interfaces is almost identical.
-
 [[jpql-query-parameters]]
-==== Binding arguments to query parameters
+=== Binding arguments to query parameters
 
 A query may have named parameters or ordinal parameters:
 
@@ -199,7 +228,7 @@ include::{example-dir-query}/HQLTest.java[tags=jpql-api-parameter-example]
 ====
 
 JPQL-style ordinal parameters are numbered from `1`.
-Just like with named parameters, a ordinal parameter may appear multiple times in a query.
+Just like with named parameters, an ordinal parameter may appear multiple times in a query.
 
 [[jpql-api-ordinal-parameter-example]]
 .Ordinal parameter binding
@@ -212,18 +241,19 @@ include::{example-dir-query}/HQLTest.java[tags=jpql-api-ordinal-parameter-exampl
 
 [NOTE]
 ====
-It's not a good idea to mix named and ordinal parameters in a single query.
+Do not mix named and ordinal parameters in a query. Bind user input as parameters instead of concatenating it into a query string.
 ====
 
 [[jpql-query-execution]]
-==== Executing the query
+=== Retrieving results
 
-The `Query` interface is used to control the execution of the query.
+The result methods do not change according to whether a selection was written in HQL, Criteria, or SQL.
 
 * `Query#getResultList()` is useful when the query might return zero, or more than one result.
 * `Query#getSingleResult()` is only for cases where the query always returns exactly one result.
   It throws an exception when zero or many results are returned by the database.
-* `Query#getResultStream()` allows results to be retrieved incrementally, using a database cursor.
+* `TypedQuery#getSingleResultOrNull()` returns `null` when there is no result and throws `NonUniqueResultException` for multiple results.
+* `Query#getResultStream()` exposes a stream; see <<hql-api-incremental>> for Hibernate resource handling.
 
 [[jpql-api-list-example]]
 .Executing a query using `getResultList()`
@@ -252,14 +282,28 @@ include::{example-dir-query}/HQLTest.java[tags=jpql-api-stream-example]
 ----
 ====
 
-[NOTE]
-====
-The `getResultStream()` method isn't usually useful.
-It's almost always a bad idea to hold open a database cursor.
-====
+[[query-result-shapes]]
+==== Entities, scalar values, tuples, and DTOs
+
+The result class describes what each result represents.
+An entity selection returns entity instances, managed when loaded through an `EntityManager`.
+A scalar selection returns a value; multiple selections may be represented by `Object[]`, `Tuple`, or a DTO with a matching constructor.
+DTO instances are not managed entities.
+See link:{doc-query-language-url}#select-new[HQL instantiation], <<criteria-typedquery>>, and <<sql-dto-query>> for construction and mapping details.
+
+[[hql-api-result-transformers]]
+=== Query result transformers
+
+A program may hook into the process of building the query results by providing a `org.hibernate.query.ResultListTransformer` or `org.hibernate.query.TupleTransformer`.
+
+See the link:{doc-javadoc-url}org/hibernate/query/TupleTransformer.html[TupleTransformer] and link:{doc-javadoc-url}org/hibernate/query/ResultListTransformer.html[ResultListTransformer] Javadocs for additional details.
+
+A `TupleTransformer` transforms each row; a `ResultListTransformer` transforms the assembled result list.
+These provider-specific hooks are also available to native SQL queries.
+Use standard constructor or programmatic result mappings where they express the required result shape.
 
 [[jpql-pagination]]
-==== Pagination and limits
+=== Limits and pagination
 
 The very important methods `Query#setMaxResults()` and `Query#setFirstResult()` are used to limit the number of results and control pagination.
 
@@ -271,6 +315,256 @@ The very important methods `Query#setMaxResults()` and `Query#setFirstResult()` 
 include::{example-dir-query}/HQLTest.java[tags=jpql-api-basic-usage-example]
 ----
 ====
+
+[[query-key-pagination]]
+==== Key-based pagination
+
+For repeated traversal of a large result set, `SelectionQuery.getKeyedResultList()` uses ordering keys instead of a growing offset.
+The key must define a total order, normally by including a unique identifier as the final component.
+A `KeyedResultList` carries references to the next and previous page.
+Key-based pagination does not provide a snapshot: concurrent changes may affect which results appear on subsequent pages.
+
+.Key-based traversal
+====
+[source,java,indent=0]
+----
+include::{example-dir-query-guide}/QueryGuideTests.java[tags=query-key-pagination]
+----
+====
+
+[[hql-api-incremental]]
+=== Scrolling and streaming results
+
+Hibernate supports incremental result retrieval through `SelectionQuery.scroll()` and `getResultStream()`.
+Both keep JDBC resources open; buffering and cursor behavior depend on the driver and fetch-size configuration.
+
+[IMPORTANT]
+====
+Close each `ScrollableResults` or `Stream` promptly, preferably using try-with-resources.
+Hibernate also releases open result resources at transaction completion, but applications should not rely on that for timely cleanup.
+====
+
+[[hql-api-scroll]]
+==== Scrollable result sets
+
+`Query#scroll()` returns a `org.hibernate.ScrollableResults` which wraps an underlying JDBC scrollable `ResultSet`.
+Depending on the specified `ScrollMode`, and on the capabilities of the JDBC driver, the `ScrollableResults` may allow navigation of the `ResultSet` in either direction.
+
+[[hql-api-scroll-example]]
+.Scrolling through a `ResultSet` containing entities
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-api-scroll-example]
+----
+====
+
+[NOTE]
+====
+Avoid collection fetch joins when streaming or scrolling. See link:{doc-query-language-url}#explicit-fetch-join[fetch joins] for their restrictions.
+====
+
+[[jpql-api-stream]]
+==== Streamed result sets
+
+`getResultStream()` exposes query results as a stream backed by JDBC resources.
+
+[IMPORTANT]
+====
+The `getResultStream()` method is not just a convenient way to obtain a Java `Stream`.
+For that, use `getResultList().stream()`.
+====
+
+[[hql-api-stream-projection-example]]
+.Hibernate `getResultStream()` with a projection result type
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-api-stream-projection-example]
+----
+====
+
+[[hql-api-stream-example]]
+.Hibernate `getResultStream()` with an entity result type
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-api-stream-example]
+----
+====
+
+[[query-mutations]]
+=== Executing mutations
+
+A mutation statement executes an insert, update, or delete against the database and requires an active transaction.
+For HQL and Criteria mutations, `Statement.execute()` and Hibernate's `MutationQuery.execute()` return the affected-entity count;
+legacy `Query.executeUpdate()` serves the same purpose. Native SQL mutations return database row counts.
+With multi-table inheritance, affected-entity counts need not equal the number of affected database rows.
+
+Bulk HQL and Criteria mutations do not update entity instances already held in the persistence context or invoke entity lifecycle callbacks.
+Flush pending changes when appropriate before the mutation, and clear or refresh affected managed state afterward.
+Clearing also detaches other managed entities; do not discard unflushed changes.
+See <<pc>> and <<flushing>> for persistence-context synchronization.
+
+.Standard mutation and managed-state synchronization
+====
+[source,java,indent=0]
+----
+include::{example-dir-query-guide}/QueryGuideTests.java[tags=query-mutation]
+----
+====
+
+[[batch-bulk-hql-dml]]For HQL statement syntax, including versioned updates and insert conflict handling, see
+link:{doc-query-language-url}#statement-types[Statement types].
+This execution is distinct from <<batch,JDBC batching>>, which batches individual SQL statements produced by entity operations.
+
+[[batch-bulk-hql-update-delete]]
+==== Update and delete execution
+
+Updates and deletes are polymorphic and may affect multiple tables.
+A bulk update does not increment the entity version by default; HQL's `update versioned` form requests a version change.
+See link:{doc-query-language-url}#update[Update statements] and link:{doc-query-language-url}#delete[Delete statements].
+
+[[batch-bulk-hql-insert]]
+==== Insert execution and conflict handling
+
+HQL supports both insert-values and insert-select statements.
+These are database mutations, rather than calls to `persist()` for individual entities.
+See link:{doc-query-language-url}#insert[Insert statements] for assignment and id-generation rules.
+
+On MySQL and MariaDB, conflict handling uses `on duplicate key`, which cannot select a particular conflict constraint.
+With multiple unique constraints, results may differ from those on databases with an explicit conflict target.
+Their JDBC affected-row counts also distinguish inserted and updated rows; consult the driver and database documentation when interpreting them.
+
+[[batch-bulk-hql-strategies]]
+==== Bulk mutation strategies
+
+When a bulk mutation involves multiple tables, Hibernate has to issue individual DML statements to the respective tables.
+Since the mutation itself could have an effect on the conditions used in the statement, it's generally not possible
+to simply execute parts of the DML statement against the respective tables. Instead, Hibernate has to temporarily remember
+which rows will be affected, and execute the DML statements based on these rows.
+
+Usually, Hibernate will make use of local or global temporary tables to remember the primary keys of the rows.
+For some databases, currently only PostgreSQL and DB2, a more advanced strategy (`CteMutationStrategy`) is used,
+which makes use of DML in CTE support to execute the whole operation in one SQL statement.
+
+The dialect selects fallback strategy families through `Dialect.getMultiTableMutationSupport()`.
+This profile distinguishes update/delete operations from insert operations.
+Override these defaults using `hibernate.query.mutation_strategy` for updates and deletes,
+or `hibernate.query.insert_strategy` for inserts.
+See link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html#getMultiTableMutationSupport()[the dialect API] for the fallback contract.
+
+[[batch-bulk-hql-strategies-class-diagram]]
+===== Class diagram
+
+Considering we have the following entities:
+
+image::images/domain/bulkid/temp_table_class_diagram.png[Entity class diagram,align="center"]
+
+The `Person` entity is the base class of this entity inheritance model, and is mapped as follows:
+
+[[batch-bulk-hql-temp-table-base-class-example]]
+.Bulk mutation base class entity
+====
+[source, java, indent=0]
+----
+include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
+----
+====
+
+Both the `Doctor` and `Engineer` entity classes extend the `Person` base class:
+
+[[batch-bulk-hql-temp-table-sub-classes-example]]
+.Bulk mutation subclass entities
+====
+[source, java, indent=0]
+----
+include::{example-dir-bulkid}/AbstractMutationStrategyIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
+----
+====
+
+[[batch-bulk-hql-strategies-inheritance-tree]]
+===== Inheritance tree bulk processing
+
+Now, when you try to execute a bulk entity delete query:
+
+[[batch-bulk-hql-temp-table-delete-query-example]]
+.Bulk mutation delete query example
+====
+[source, java, indent=0]
+----
+include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
+----
+
+[source, sql, indent=0]
+----
+include::{batch-extras-dir}/batch-bulk-hql-temp-table-delete-query-example.sql[]
+----
+====
+
+`HT_Person` is a temporary table that Hibernate creates to hold all the entity identifiers that are to be updated or deleted by the bulk operation.
+The temporary table can be either global or local, depending on the underlying database capabilities.
+
+[[batch-bulk-hql-strategies-non-temporary-table]]
+===== Managing bulk-operation tables
+
+Table-based strategies require staging tables whose creation and cleanup are managed separately from ordinary schema tooling.
+Their lifecycle depends on the selected strategy: global temporary and persistent tables may be prepared at factory startup,
+while local temporary tables may be created for an operation.
+
+For strategies using global temporary or persistent tables, a schema owner may create the required tables before deployment
+when the application account lacks DDL permissions. Update/delete strategies use identifier tables, normally named `HT_<base name>`,
+which hold the identifiers of affected entities. Insert strategies use entity staging tables, normally named `HTE_<base name>`,
+which hold the values needed for insertion. Creating an `HTE_` table alone does not supply the identifier table needed by updates and deletes.
+The exact names, columns, and table semantics depend on the mappings, dialect, and selected strategy;
+use the definitions expected by those strategies, including any required row or session identifiers.
+
+For updates and deletes, an alternative is the inline strategy, which selects affected identifiers into memory
+and uses them in subsequent mutation statements:
+
+[source,xml]
+----
+<property name="hibernate.query.mutation_strategy"
+          value="org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy"
+/>
+----
+
+[IMPORTANT]
+====
+Prefer the appropriate table-based strategy when many entities may be affected: the inline strategy can produce large identifier lists and SQL statements.
+There is no equivalent inline strategy for inserts.
+
+When global temporary or persistent staging tables are created outside Hibernate, disable Hibernate's automatic creation and dropping by setting the
+
+`hibernate.query.mutation_strategy.global_temporary.create_tables` and `hibernate.query.mutation_strategy.global_temporary.drop_tables`
+
+*or*
+
+`hibernate.query.mutation_strategy.persistent.create_tables` and `hibernate.query.mutation_strategy.persistent.drop_tables`
+
+properties (depending on the default strategy for the dialect) to `false`
+====
+
+With the inline strategy, when running the previous test case, Hibernate generates the following SQL statements:
+
+[[batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example]]
+.`InlineMutationStrategy` delete entity query example
+====
+[source, sql, indent=0]
+----
+include::{batch-extras-dir}/batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example.sql[]
+----
+====
+
+So, the entity identifiers are selected first and used for each particular update or delete statement.
+
+[[query-options]]
+=== Execution options
+
+Options may be supplied through standard APIs, provider-specific setters, or query hints.
+Timeout and fetch-size units differ: the standard `jakarta.persistence.query.timeout` hint is in milliseconds,
+while Hibernate's `setTimeout(int)` uses seconds; JDBC fetch size is a driver hint measured in rows.
+Typed standard options such as `Timeout`, `QueryFlushMode`, and `ReadOnlyMode` avoid string hints where supported.
 
 [[jpql-query-hints]]
 ==== Using query hints to control query execution
@@ -303,12 +597,10 @@ Using provider-specific hints limits your program's portability to only a small 
 | `org.hibernate.cacheRegion` | For a cacheable query, the name of a cache region to use. | `Query#setCacheRegion()`
 | `org.hibernate.comment` | A comment to apply to the generated SQL. | `Query#setComment()`
 | `org.hibernate.fetchSize` | The JDBC fetch size to use. | `Query#setFetchSize()`
-| `org.hibernate.flushMode` | The Hibernate-specific `FlushMode` to use.
-
-(Where possible, prefer `jakarta.persistence.Query#setFlushMode()`.)
-
-| `Query#setFlushMode()`
-| `org.hibernate.readOnly` | `true` if entities and collections loaded by this query should be marked as read-only.
+| `org.hibernate.flushMode` | The query's `QueryFlushMode`. Hibernate also accepts legacy `FlushMode` and `FlushModeType` values and converts them to a query flush mode.
+Prefer the typed standard query flush controls where applicable.
+| `Query#setQueryFlushMode()`
+| `org.hibernate.readOnly` | `true` if newly loaded entities should be marked as read-only.
 | `Query#setReadOnly()`
 |===
 
@@ -320,17 +612,19 @@ For named queries, query hints may be specified using the `@QueryHint` annotatio
 [[hql-api-execution]]
 ==== Advanced control over query execution
 
-When working directly with a Hibernate `Session`, the interface `org.hibernate.Query` is used to control the execution of the query.
+When working directly with a Hibernate `Session`, the interface `org.hibernate.query.Query` is used to control the execution of the query.
 
-Whereas we needed to specify some information using query hints when working with the Jakarta Persistence API, here we have typesafe setters:
+Jakarta Persistence 4 also provides typed execution controls, including timeout, flush mode, read-only mode, and locking.
+Hibernate adds provider-specific setters for controls such as query caching, JDBC fetch size, SQL comments, and database query hints.
+The following table lists the Hibernate setters for both shared and provider-specific controls:
 
 |===
 | `Query#setTimeout()` | Sets the JDBC-level query timeout.
 | `Query#setFetchSize()` | Sets the JDBC-level fetch size.
 | `Query#setCacheable()` and `setCacheRegion()` | Control query caching.
 | `Query#setCacheMode()` | Overrides the session-level cache mode.
-| `Query#setFlushMode()` | Overrides the session-level flush mode. Flushing is covered in detail in <<chapters/pc/PersistenceContext.adoc#flushing,Flushing>>.
-| `Query#setLockMode()` | Overrides the session-level flush mode. Locking is covered in detail in <<chapters/locking/Locking.adoc#locking,Locking>>.
+| `Query#setQueryFlushMode()` | Controls whether this query triggers flushing. Flushing is covered in detail in <<chapters/pc/PersistenceContext.adoc#flushing,Flushing>>.
+| `Query#setLockMode()` | Sets the requested lock mode. Locking is covered in detail in <<chapters/locking/Locking.adoc#locking,Locking>>.
 | `Query#setReadOnly()` | Overrides the session-level default for read-only state. The concept of read-only state is covered in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>.
 | `Query#setComment()` | Adds a comment to the generated SQL.
 | `Query#addQueryHint()` | Add a hint to the generated SQL.
@@ -345,7 +639,7 @@ On the other hand, `setHint()` refers to the Jakarta Persistence notion of a que
 This is a completely different concept.
 ====
 
-For complete details, see the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Query.html[Query] Javadocs.
+For complete details, see the link:{doc-javadoc-url}org/hibernate/query/Query.html[Query] Javadocs.
 
 [[hql-api-basic-usage-example]]
 .Advanced query control
@@ -356,103 +650,14 @@ include::{example-dir-query}/HQLTest.java[tags=hql-api-basic-usage-example]
 ----
 ====
 
-[[hql-api-result-transformers]]
-==== Query result transformers
-
-A program may hook into the process of building the query results by providing a `org.hibernate.query.ResultListTransformer` or `org.hibernate.query.TupleTransformer`.
-
-See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TupleTransformer.html[TupleTransformer] and https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/ResultListTransformer.html[ResultListTransformer] Javadocs for additional details.
-
-//[[hql-api-parameters]]
-//==== Binding arguments to parameters
-//
-//The last thing that needs to happen before we can execute the query is to bind the values for any parameters defined in the query.
-//`Query` defines many overloaded methods for this purpose.
-//The most generic form takes the value as well as the Hibernate Type.
-//
-//[[hql-api-parameter-example]]
-//.Hibernate name parameter binding
-//====
-//[source, java, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-example]
-//----
-//====
-//
-//Hibernate generally understands the expected type of the parameter given its context in the query.
-//In the previous example since we are using the parameter in a `LIKE` comparison against a String-typed attribute Hibernate would automatically infer the type; so the above could be simplified.
-//
-//[[hql-api-parameter-inferred-type-example]]
-//.Hibernate name parameter binding (inferred type)
-//====
-//[source, java, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-inferred-type-example]
-//----
-//====
-//
-//There are also short hand forms for binding common types such as strings, booleans, integers, etc.
-//
-//[[hql-api-parameter-short-form-example]]
-//.Hibernate name parameter binding (short forms)
-//====
-//[source, java, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-short-form-example]
-//----
-//====
-//
-//[IMPORTANT]
-//====
-//Traditionally, Hibernate used to support a JDBC ordinal parameter syntax form via a `?` symbol without a following ordinal.
-//
-//There was no way to relate two such ordinal parameters as being "the same" aside from binding the same value to each and, for this reason, this form is no longer supported.
-//
-//[source, java, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-api-ordinal-parameter-example]
-//----
-//====
-//
-//In terms of execution, Hibernate offers 4 different methods. The 2 most commonly used are
-//
-//* `Query#list` - executes the select query and returns back the list of results.
-//* `Query#uniqueResult` - executes the select query and returns the single result. If there were more than one result an exception is thrown.
-//
-//[[hql-api-list-example]]
-//.Hibernate `list()` result
-//====
-//[source, java, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-api-list-example]
-//----
-//====
-//
-//It is also possible to extract a single result from a `Query`.
-//
-//[[hql-api-unique-result-example]]
-//.Hibernate `uniqueResult()`
-//====
-//[source, java, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-api-unique-result-example]
-//----
-//====
-//
-//[NOTE]
-//====
-//If the unique result is used often and the attributes upon which it is based are unique, you may want to consider mapping a natural-id and using the natural-id loading API.
-//See the <<chapters/domain/natural_id.adoc#naturalid,Natural Ids>> for more information on this topic.
-//====
-//
-
 [[hql-read-only-entities]]
 ==== Querying for read-only entities
 
-As explained in <<chapters/domain/immutability.adoc#entity-immutability,entity immutability>>, fetching entities in read-only mode is more efficient than fetching entities whose state changes might need to be written to the database.
+As explained in <<chapters/domain/immutability.adoc#mutability-entity,entity immutability>>, fetching entities in read-only mode is more efficient than fetching entities whose state changes might need to be written to the database.
 Fortunately, even mutable entities may be fetched in read-only mode, with the benefit of reduced memory footprint and of a faster flushing process.
 
-Read-only entities are skipped by the dirty checking mechanism as illustrated by the following example:
+Dirty checking of simple properties of read-only entities is skipped, as illustrated below.
+Read-only loading does not make objects immutable or disable collection operations, and does not change the state of entities already managed by the persistence context.
 
 [[hql-read-only-entities-example]]
 .Read-only entities query example
@@ -464,7 +669,7 @@ include::{example-dir-query}/HQLTest.java[tags=hql-read-only-entities-example]
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/hql-read-only-entities-example.sql[]
+include::{query-extras-dir}/hql-read-only-entities-example.sql[]
 ----
 ====
 
@@ -481,158 +686,18 @@ include::{example-dir-query}/HQLTest.java[tags=hql-read-only-entities-native-exa
 ----
 ====
 
-[[hql-api-incremental]]
-=== Scrolling and streaming results
-
-The `org.hibernate.Query` interface offers two specialized operations for reading query results incrementally, while maintaining an open JDBC `ResultSet` mapped to a server-side cursor.
-
-[[hql-api-scroll]]
-==== Scrollable result sets
-
-`Query#scroll()` returns a `org.hibernate.ScrollableResults` which wraps an underlying JDBC scrollable `ResultSet`.
-Depending on the specified `ScrollMode`, and on the capabilities of the JDBC driver, the `ScrollableResults` may allow navigation of the `ResultSet` in either direction.
-
-[[hql-api-scroll-example]]
-.Scrolling through a `ResultSet` containing entities
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/HQLTest.java[tags=hql-api-scroll-example]
-----
-====
-
-If a `ScrollableResults` is left unclosed by the application, Hibernate will automatically close the underlying resources when the transaction ends.
-However, it's much better to close the `ResultSet` as soon as possible.
-
-[IMPORTANT]
-====
-Since this method holds the JDBC `ResultSet` open, the program should always close a `ScrollableResults` either explicitly, by calling `close()`, or using a https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
-====
-
-[NOTE]
-====
-If you plan to use `Query#scroll` with collection fetching, it's important that your query explicitly order the results so that the JDBC results contain the related rows sequentially.
-====
-
-[[jpql-api-stream]]
-==== Streamed result sets
-
-Similarly, `getResultStream()` is a specialized operation for reading query results incrementally, while maintaining an open JDBC `ResultSet` mapped to a server-side cursor.
-
-[IMPORTANT]
-====
-The `getResultStream()` method is not just a convenient way to obtain a Java `Stream`.
-For that, use `getResultList().stream()`.
-====
-
-[[hql-api-stream-projection-example]]
-.Hibernate `getResultStream()` with a projection result type
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/HQLTest.java[tags=hql-api-stream-projection-example]
-----
-====
-
-[[hql-api-stream-example]]
-.Hibernate `getResultStream()` with an entity result type
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/HQLTest.java[tags=hql-api-stream-example]
-----
-====
-
-Hibernate will automatically close the underlying resources (the JDBC `ResultSet`) when the transaction ends.
-However, it's much better to close the `ResultSet` as soon as possible.
-
-[IMPORTANT]
-====
-The program should always close a `Stream` either explicitly, by calling `close()`, or using a https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
-====
-
 [[hql-query-plan-cache]]
-=== Entity query plan cache
+=== Query compilation and plan caching
 
-Any entity query, be it JPQL or Criteria API, has to be parsed into an AST (Abstract Syntax Tree) so that Hibernate can generate the proper SQL statement. The entity query compilation takes time, and for this reason, Hibernate offers a query plan cache.
+Hibernate caches HQL interpretations and reusable execution plans to avoid repeating compilation work.
+Criteria queries already represent a query tree; they are not parsed as HQL strings.
+Criteria plan caching and query-tree copying have separate controls.
 
-When executing an entity query, Hibernate first checks the plan cache, and only if there's no plan available, a new one will be computed right away.
+See the generated settings for <<settings-hibernate.query.plan_cache_enabled,`hibernate.query.plan_cache_enabled`>>,
+<<settings-hibernate.query.plan_cache_max_size,`hibernate.query.plan_cache_max_size`>>,
+<<settings-hibernate.criteria.plan_cache_enabled,`hibernate.criteria.plan_cache_enabled`>>, and
+<<settings-hibernate.criteria.copy_tree,`hibernate.criteria.copy_tree`>>.
+The older `hibernate.query.plan_parameter_metadata_max_size` setting no longer controls a separate parameter-metadata cache.
 
-The query plan cache can be configured via the following configuration properties:
-
-`hibernate.query.plan_cache_max_size`::
-This setting gives the maximum number of entries of the plan cache. The default value is 2048.
-`hibernate.query.plan_parameter_metadata_max_size`::
-The setting gives the maximum number of `ParameterMetadataImpl` instances maintained by the query plan cache. The `ParameterMetadataImpl` object encapsulates metadata about parameters encountered within a query. The default value is 128.
-
-Now, if you have many JPQL or Criteria API queries, it's a good idea to increase the query plan cache size so that the vast majority of executing entity queries can skip the compilation phase, therefore reducing execution time.
-
-To get a better understanding of the query plan cache effectiveness, Hibernate offers several statistics you can use. For more details, check out the <<chapters/statistics/Statistics.adoc#statistics-query-plan-cache,Query plan cache statistics>> section.
-
-
-[[hql-SelectionQuery]]
-=== SelectionQuery
-
-Hibernate's `SelectionQuery` contract is similar to `Query` but only exposes methods which are relevant to selection queries.  For example,
-it does not expose a `#executeUpdate` method.  This allows for earlier validation of the query as a selection.
-
-
-[[hql-examples-selection-query]]
-.Selection query validation
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-selection-query]
-
-include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-selection-query-query]
-----
-====
-
-`SelectionQuery` may also be used with named-queries
-
-[[hql-examples-named-selection-query]]
-.NamedQuery selection validation
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-named-selection-query]
-
-include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-named-selection-query-query]
-----
-====
-
-
-
-
-[[hql-MutationQuery]]
-=== MutationQuery
-
-Along the same lines as `SelectionQuery`, `MutationQuery` is similar to `Query` but only exposes methods which are relevant to mutation queries.
-For example, in terms of execution, it only exposes `#executeUpdate` method.  This allows for earlier validation of the query as a mutation.
-
-[[hql-examples-mutation-query]]
-.Mutation query validation
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-mutation-query]
-
-include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-mutation-query-query]
-----
-====
-
-
-`MutationQuery` may also be used with named-queries
-
-[[hql-examples-named-mutation-query]]
-.NamedQuery mutation validation
-====
-[source, java, indent=0]
-----
-include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-named-mutation-query]
-
-include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-named-mutation-query-query]
-----
-====
-
-
+Plan caching does not cache query results. See <<caching-query>> for result caching and
+<<statistics-query-plan-cache>> for plan-cache measurements.

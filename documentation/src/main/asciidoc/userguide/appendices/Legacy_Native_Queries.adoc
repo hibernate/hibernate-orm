@@ -2,6 +2,12 @@
 [[appendix-legacy-native-queries]]
 == Legacy Hibernate Native Queries
 
+This appendix describes legacy `hbm.xml` mapping declarations and older native-query APIs.
+For current APIs and mappings, see <<sql>> and <<stored-procedures>>.
+Examples using legacy `Session` methods are historical and may require adaptation;
+prefer the current methods described in <<hql>>.
+
+
 [[legacy-sql-named-queries]]
 === Legacy named SQL queries
 

@@ -1277,6 +1277,52 @@ include::{pc-extrasdir}/pc-filter-join-table-collection-query-example.sql[]
 ====
 
 include::BytecodeEnhancement.adoc[]
+:example-dir-custom-sql: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
+
+[[sql-crud]]
+=== Custom SQL for entity and collection operations
+
+Hibernate can use custom SQL for CRUD operations.
+The SQL can be overridden at the statement level or individual column level.
+This section describes statement overrides.
+For columns, see <<chapters/domain/basic_types.adoc#mapping-column-read-and-write,Column transformers: read and write expressions>>.
+
+The following example shows how to define custom SQL operations using annotations.
+`@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` override the INSERT, UPDATE, DELETE statements of a given entity.
+Similarly, `@SQLSelect` specifies a custom SELECT query used for loading the underlying table record.
+
+For collections, Hibernate allows defining a custom `@SQLDeleteAll` which is used for removing all child records associated with a given parent entity.
+To filter collections, the `@SQLRestriction` annotation allows customizing the underlying SQL WHERE clause.
+
+[[sql-custom-crud-example]]
+.Custom CRUD
+====
+[source, java, indent=0]
+----
+include::{example-dir-custom-sql}/CustomSQLTest.java[tags=sql-custom-crud-example]
+----
+====
+
+In the example above, the entity is mapped so that entries are soft-deleted (the records are not removed from the database, but instead, a flag marks the row validity).
+The `Person` entity benefits from custom INSERT, UPDATE, and DELETE statements which update the `valid` column accordingly.
+The custom `@SQLSelect` is used to retrieve only `Person` rows that are valid.
+
+The same is done for the `phones` collection. The `@SQLDeleteAll` and the `SQLInsert` queries are used whenever the collection is modified.
+
+[NOTE]
+====
+You can also call a stored procedure using the custom CRUD statements.
+The only requirement is to set the `callable` attribute to `true`.
+====
+
+Use the annotation's `verify` member to select an `Expectation` implementation for checking the outcome,
+for example `Expectation.RowCount.class` when exactly one row should be affected.
+The older `check` member is deprecated.
+For callable SQL, parameter order, output parameters, and verification must match the stored procedure contract.
+See <<stored-procedures>> for procedure calls issued directly by the application.
+
+Custom SQL implements mapped entity and collection operations; it does not change the behavior of bulk HQL statements.
+Prefer <<soft-delete,soft-delete mappings>> when their semantics meet the application's requirements.
 
 [[pc-exception-handling]]
 === Exception handling

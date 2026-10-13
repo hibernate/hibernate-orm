@@ -1610,7 +1610,7 @@ This does not imply that every application-defined object graph supports the sam
 Custom objects need suitable equality and copying behavior; see <<basic-mapping-composition-java>> and <<mutability-mutability>>.
 An immutable value declaration tells Hibernate not to expect internal changes and must match how the application uses the value.
 
-For document query functions, see <<hql-json-functions,JSON functions>> and <<hql-xml-functions,XML functions>>.
+For document query functions, see link:{doc-query-language-url}#hql-json-functions[JSON functions] and link:{doc-query-language-url}#hql-xml-functions[XML functions].
 
 [[basic-single-column-collections]]
 ==== Arrays and collections stored in a single column

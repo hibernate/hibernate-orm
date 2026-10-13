@@ -1,38 +1,11 @@
-<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
-             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
-             version="2.1">
-
-    <persistence-unit name="CRM">
-        <description>
-            Persistence unit for Hibernate User Guide
-        </description>
-
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_4_0.xsd"
+             version="4.0">
+    <persistence-unit name="CRM" transaction-type="JTA">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-
-        <class>org.hibernate.documentation.userguide.Document</class>
-
-        <properties>
-            <property name="jakarta.persistence.jdbc.driver"
-                      value="org.h2.Driver" />
-
-            <property name="jakarta.persistence.jdbc.url"
-                      value="jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1" />
-
-            <property name="jakarta.persistence.jdbc.user"
-                      value="sa" />
-
-            <property name="jakarta.persistence.jdbc.password"
-                      value="" />
-
-            <property name="hibernate.show_sql"
-                      value="true" />
-
-            <property name="hibernate.hbm2ddl.auto"
-                      value="update" />
-        </properties>
-
+        <jta-data-source>java:comp/env/jdbc/CRM</jta-data-source>
+        <class>org.hibernate.orm.test.bootstrap.guide.Document</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
     </persistence-unit>
-
 </persistence>

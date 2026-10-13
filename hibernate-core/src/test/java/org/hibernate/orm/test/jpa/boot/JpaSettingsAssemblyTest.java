@@ -28,11 +28,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_METADATA_ON_BOOT;
 import static org.hibernate.cfg.AvailableSettings.CLASS_CACHE_PREFIX;
+import static org.hibernate.cfg.AvailableSettings.CFG_XML_FILE;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER;
 import static org.hibernate.cfg.AvailableSettings.DATASOURCE;
 import static org.hibernate.cfg.AvailableSettings.DIALECT;
 import static org.hibernate.cfg.AvailableSettings.DRIVER;
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
+import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_JDBC_URL;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_JDBC_USER;
@@ -110,7 +112,8 @@ class JpaSettingsAssemblyTest {
 
 	@Test
 	void baselineCustomizerPrecedesUnitPropertiesAndIntegrationOverrides() {
-		final var configuration = configuration( false ).property( "test.unit", "unit" );
+		final var configuration = configuration( false ).property( "test.unit", "unit" )
+				.property( "test.integration", "unit" );
 		final var builder = new EntityManagerFactoryBuilderImpl(
 				new PersistenceConfigurationDescriptor( configuration ), Map.of( "test.integration", "integration" ),
 				baseline -> {
@@ -121,6 +124,36 @@ class JpaSettingsAssemblyTest {
 		try {
 			assertThat( builder.getConfigurationValues() ).containsEntry( "test.unit", "unit" )
 					.containsEntry( "test.integration", "integration" ).containsEntry( "test.baseline", "baseline" );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void selectedHibernateXmlOverridesUnitProperties(boolean hibernateConfiguration) {
+		final var configuration = configuration( hibernateConfiguration )
+				.property( GENERATE_STATISTICS, false )
+				.property( CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/guide/settings.cfg.xml" );
+		final var builder = builder( configuration );
+		try {
+			assertThat( builder.getConfigurationValues() ).containsEntry( GENERATE_STATISTICS, "true" );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+		}
+	}
+
+	@Test
+	void integrationOverridesSelectedHibernateXml() {
+		final var configuration = configuration( false )
+				.property( GENERATE_STATISTICS, false )
+				.property( CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/guide/settings.cfg.xml" );
+		final var builder = new EntityManagerFactoryBuilderImpl(
+				new PersistenceConfigurationDescriptor( configuration ), Map.of( GENERATE_STATISTICS, false ) );
+		try {
+			assertThat( builder.getConfigurationValues() ).containsEntry( GENERATE_STATISTICS, false );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );

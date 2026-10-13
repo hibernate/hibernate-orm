@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-configuration xmlns="http://www.hibernate.org/xsd/orm/cfg">
+    <session-factory>
+        <property name="hibernate.generate_statistics">true</property>
+    </session-factory>
+</hibernate-configuration>

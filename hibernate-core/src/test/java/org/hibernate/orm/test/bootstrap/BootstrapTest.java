@@ -54,7 +54,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
-import jakarta.persistence.Persistence;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceProperty;
 import jakarta.persistence.PersistenceUnit;
@@ -430,15 +429,6 @@ public class BootstrapTest {
 		}
 	}
 
-	@Test
-	public void test_bootstrap_bootstrap_jpa_compliant_EntityManagerFactory_example() {
-		try {
-			//tag::bootstrap-jpa-compliant-EntityManagerFactory-example[]
-			// Create an EMF for our CRM persistence-unit.
-			EntityManagerFactory emf = Persistence.createEntityManagerFactory("CRM");
-			//end::bootstrap-jpa-compliant-EntityManagerFactory-example[]
-		} catch (Exception ignore) {}
-	}
 
 	@Test
 	public void test_bootstrap_bootstrap_native_EntityManagerFactory_example() {

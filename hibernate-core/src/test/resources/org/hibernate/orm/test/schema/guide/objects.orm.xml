@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <database-object>
+        <create>create view schema_book_titles as select id, title from schema_book</create>
+        <drop>drop view schema_book_titles</drop>
+        <dialect-scope name="org.hibernate.dialect.H2Dialect"/>
+    </database-object>
+</entity-mappings>

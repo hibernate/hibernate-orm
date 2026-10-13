@@ -314,6 +314,7 @@ class TypeSafeActivator {
 						bounds
 				);
 				bounds.apply( property, dialect );
+				bounds.applyLength( property );
 				if ( property.isComposite() && propertyDescriptor.isCascaded() ) {
 					final var component = (Component) property.getValue();
 					applyDDL(
@@ -357,7 +358,7 @@ class TypeSafeActivator {
 
 				// apply bean validation specific constraints
 				applyDigits( property, constraintDescriptor );
-				applySize( property, constraintDescriptor, propertyDesc );
+				applySize( bounds, constraintDescriptor, propertyDesc );
 
 				// collect range bounds - only the most restrictive will be applied
 				bounds.lower( extractLowerBound( constraintDescriptor ) );
@@ -366,7 +367,7 @@ class TypeSafeActivator {
 				// Apply Hibernate Validator specific constraints - we cannot import any HV specific classes though!
 				// No need to check explicitly for @Range. @Range is a composed constraint using @Min and @Max which
 				// will be taken care of later.
-				applyLength( property, constraintDescriptor, propertyDesc );
+				applyLength( bounds, constraintDescriptor, propertyDesc );
 
 				// Composing constraints
 				if ( !constraintDescriptor.getComposingConstraints().isEmpty() ) {
@@ -456,6 +457,7 @@ class TypeSafeActivator {
 		private Bound lower;
 		private Bound upper;
 		private final boolean orComposition;
+		private Integer maxLength;
 
 		Bounds() {
 			this( false );
@@ -475,6 +477,26 @@ class TypeSafeActivator {
 			upper = orComposition
 					? leastRestrictiveUpperBound( upper, bound )
 					: moreRestrictiveUpperBound( upper, bound );
+		}
+
+		// Multiple constraints may apply to one property (e.g. an overridden getter inheriting @Size),
+		// and all of them are enforced, so only the most restrictive length is used
+		public void maxLength(int max) {
+			if ( max < Integer.MAX_VALUE ) {
+				maxLength = maxLength == null
+						? max
+						: orComposition ? Math.max( maxLength, max ) : Math.min( maxLength, max );
+			}
+		}
+
+		public void applyLength(Property property) {
+			if ( maxLength != null ) {
+				for ( var selectable : property.getSelectables() ) {
+					if ( selectable instanceof Column column ) {
+						column.setLength( maxLength );
+					}
+				}
+			}
 		}
 
 		public void apply(Property property, Dialect dialect) {
@@ -521,6 +543,9 @@ class TypeSafeActivator {
 		}
 
 		public void mergeInto(Bounds parent, Property property, Dialect dialect) {
+			if ( maxLength != null ) {
+				parent.maxLength( maxLength );
+			}
 			if ( lower != null && upper != null ) {
 				// both sides present - can't reduce to a single bound, apply an OR expression
 				apply( property, dialect );
@@ -649,31 +674,19 @@ class TypeSafeActivator {
 		}
 	}
 
-	private static void applySize(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
+	private static void applySize(Bounds bounds, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
 		if ( Size.class.equals( descriptor.getAnnotation().annotationType() )
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			@SuppressWarnings("unchecked")
 			final var sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
-			final int max = sizeConstraint.getAnnotation().max();
-			for ( var column : property.getColumns() ) {
-				if ( max < Integer.MAX_VALUE ) {
-					column.setLength( max );
-				}
-			}
+			bounds.maxLength( sizeConstraint.getAnnotation().max() );
 		}
 	}
 
-	private static void applyLength(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
+	private static void applyLength(Bounds bounds, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
 		if ( isValidatorLengthAnnotation( descriptor )
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
-			final int max = (Integer) descriptor.getAttributes().get( "max" );
-			for ( var selectable : property.getSelectables() ) {
-				if ( selectable instanceof Column column ) {
-					if ( max < Integer.MAX_VALUE ) {
-						column.setLength( max );
-					}
-				}
-			}
+			bounds.maxLength( (Integer) descriptor.getAttributes().get( "max" ) );
 		}
 	}
 

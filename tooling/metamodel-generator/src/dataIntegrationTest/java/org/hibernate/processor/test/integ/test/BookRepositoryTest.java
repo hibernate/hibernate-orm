@@ -1,6 +1,7 @@
 package org.hibernate.processor.test.integ.test;
 
 import jakarta.data.exceptions.DataException;
+import jakarta.data.page.PageRequest;
 import org.hibernate.processor.test.integ.model.Book;
 import org.hibernate.processor.test.integ.repository.BookRepository;
 import org.hibernate.processor.test.integ.repository._BookRepository;
@@ -9,9 +10,13 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -151,6 +156,35 @@ class BookRepositoryTest {
 			repo.deleteByIsbn( "isbn-dc" );
 			assertThrows( DataException.class, () -> repo.byIsbn( "isbn-dc" ) );
 		} );
+	}
+
+	@ParameterizedTest(name = "title={0}, pages={1}, page={2}")
+	@MethodSource("nullableQueryArguments")
+	void testQueryWithNullableParameters(String title, Integer pages, long page,
+			List<String> expectedIsbns, long expectedTotal, SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var repo = new _BookRepository( session );
+			repo.insertAll( List.of(
+					new Book( "isbn-1", "Java", 100 ),
+					new Book( "isbn-2", "Java", 200 ),
+					new Book( "isbn-3", "Python", 200 )
+			) );
+
+			var result = repo.search( title, pages, PageRequest.ofPage( page ).size( 2 ) );
+			assertEquals( expectedIsbns, result.content().stream().map( Book::getIsbn ).toList() );
+			assertEquals( expectedTotal, result.totalElements() );
+		} );
+	}
+
+	static Stream<Arguments> nullableQueryArguments() {
+		return Stream.of(
+				Arguments.of( "Java", 100, 1L, List.of( "isbn-1" ), 1L ),
+				Arguments.of( null, 200, 1L, List.of( "isbn-2", "isbn-3" ), 2L ),
+				Arguments.of( "Java", null, 1L, List.of( "isbn-1", "isbn-2" ), 2L ),
+				Arguments.of( null, null, 1L, List.of( "isbn-1", "isbn-2" ), 3L ),
+				Arguments.of( null, null, 2L, List.of( "isbn-3" ), 3L ),
+				Arguments.of( "Missing", null, 1L, List.of(), 0L )
+		);
 	}
 
 	@Test

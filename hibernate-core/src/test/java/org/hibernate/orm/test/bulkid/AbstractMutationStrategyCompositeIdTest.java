@@ -80,7 +80,7 @@ public abstract class AbstractMutationStrategyCompositeIdTest {
 			int updateCount = session.createMutationQuery(
 							"delete from Person where employed = :employed" )
 					.setParameter( "employed", false )
-					.executeUpdate();
+					.execute();
 			//end::batch-bulk-hql-temp-table-delete-query-example[]
 			assertThat( updateCount ).isEqualTo( entityCount() );
 		} );

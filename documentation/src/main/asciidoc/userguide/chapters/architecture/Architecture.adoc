@@ -4,6 +4,7 @@
 [[architecture-overview]]
 === Overview
 
+.Data Access Layers
 image::images/architecture/data_access_layers.svg[Data Access Layers,align="center"]
 
 Hibernate, as an ORM solution, effectively "sits between" the Java application data access layer and the Relational Database, as can be seen in the diagram above.
@@ -11,21 +12,42 @@ The Java application makes use of the Hibernate APIs to load, store, query, etc.
 Here we will introduce the essential Hibernate APIs.
 This will be a brief introduction; we will discuss these contracts in detail later.
 
-As a Jakarta Persistence provider, Hibernate implements the Java Persistence API specifications and the association between Jakarta Persistence interfaces and Hibernate specific implementations can be visualized in the following diagram:
+As a Jakarta Persistence provider, Hibernate implements the Jakarta Persistence specification.
+The following diagram shows the relationships between Jakarta Persistence interfaces, Hibernate interfaces, and their implementations:
 
-image::images/architecture/JPA_Hibernate.svg[image,align="center"]
+.Jakarta Persistence and Hibernate API relationships
+image::images/architecture/JPA_Hibernate.svg[Jakarta Persistence and Hibernate API relationships,align="center"]
 
 SessionFactory (`org.hibernate.SessionFactory`):: A thread-safe (and immutable) representation of the mapping of the application domain model to a database.
-Acts as a factory for `org.hibernate.Session` instances. The `EntityManagerFactory` is the Jakarta Persistence equivalent of a `SessionFactory` and basically, those two converge into the same `SessionFactory` implementation.
+Acts as a factory for `org.hibernate.Session` and `org.hibernate.StatelessSession` instances.
+`SessionFactory` extends Jakarta Persistence's `EntityManagerFactory`, so a Hibernate factory implements both interfaces.
 +
-A `SessionFactory` is very expensive to create, so, for any given database, the application should have only one associated `SessionFactory`.
+A `SessionFactory` is very expensive to create, so the application should reuse a long-lived factory for a given domain mapping and configuration.
+Separate persistence units may use the same database with different mappings or configurations, while a multitenant factory may serve multiple databases.
 The `SessionFactory` maintains services that Hibernate uses across all `Session(s)` such as second level caches, connection pools, transaction system integrations, etc.
 
-Session (`org.hibernate.Session`):: A single-threaded, short-lived object conceptually modeling a "Unit of Work" (<<Bibliography.adoc#PoEAA,PoEAA>>).
-In Jakarta Persistence nomenclature, the `Session` is represented by an `EntityManager`.
+SharedSessionContract (`org.hibernate.SharedSessionContract`):: The common contract for `Session` and `StatelessSession`, including query execution, transaction access, and JDBC work.
+`SharedSessionContract` extends Jakarta Persistence's `EntityHandler`, the common contract for `EntityManager` and `EntityAgent`.
+Whether entities returned by these operations are managed or detached depends on the session type.
+
+Session (`org.hibernate.Session`):: A single-threaded, short-lived object conceptually modeling a "Unit of Work" (<<PoEAA,PoEAA>>).
+`Session` extends both `SharedSessionContract` and Jakarta Persistence's `EntityManager`, so a Hibernate session implements both interfaces.
 +
-Behind the scenes, the Hibernate `Session` wraps a JDBC `java.sql.Connection` and acts as a factory for `org.hibernate.Transaction` instances.
-It maintains a generally "repeatable read" persistence context (first level cache) of the application domain model.
+Behind the scenes, the Hibernate `Session` obtains JDBC `java.sql.Connection` instances as needed and provides access to `org.hibernate.Transaction` instances.
+Connection acquisition and release depend on the configured <<database-connection-handling,connection handling mode>>; a session need not hold a single connection throughout its lifetime.
++
+The session maintains a persistence context (first-level cache) of the application domain model, reusing managed entity instances for a given persistent identity.
+This provides repeatable reads of managed entity state, but does not change database transaction isolation or guarantee identical results from repeated queries.
+See <<chapters/transactions/Transactions.adoc#transactions-physical,Physical Transactions>> for details.
+
+StatelessSession (`org.hibernate.StatelessSession`):: A single-threaded, short-lived object providing explicit, command-oriented operations on detached entity instances, with no persistence context or first-level cache.
+`StatelessSession` extends both `SharedSessionContract` and Jakarta Persistence's `EntityAgent`, so a Hibernate stateless session implements both interfaces.
++
+A stateless session does not perform automatic dirty checking or transactional write-behind, and its entity operations do not cascade to associated entities.
+Changes to entity state must be persisted explicitly.
+See <<chapters/batch/Batching.adoc#batch,Batching>> for further discussion of stateless sessions.
 
 Transaction (`org.hibernate.Transaction`):: A single-threaded, short-lived object used by the application to demarcate individual physical transaction boundaries.
-`EntityTransaction` is the Jakarta Persistence equivalent and both act as an abstraction API to isolate the application from the underlying transaction system in use (JDBC or JTA).
+`Transaction` extends Jakarta Persistence's `EntityTransaction`, which controls resource-local transactions.
+Hibernate's `Transaction` API abstracts the underlying transaction system (JDBC or JTA), but access to a JTA transaction through this API depends on Hibernate's transaction compliance settings.
+In portable Jakarta Persistence applications, JTA transactions are demarcated using Jakarta Transactions APIs or managed by the container, rather than using `EntityTransaction`.

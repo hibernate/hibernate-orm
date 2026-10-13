@@ -107,7 +107,7 @@ jsoup = "1.22.2"
 slf4j = "2.0.18"
 
 # Asciidocs
-hibernate-asciidoctor-theme = "6.1.2.Final"
+hibernate-asciidoctor-theme = "6.1.5.Final"
 hibernate-extensions = "3.2.1.Final"
 asciidoctorj = "3.0.0"
 

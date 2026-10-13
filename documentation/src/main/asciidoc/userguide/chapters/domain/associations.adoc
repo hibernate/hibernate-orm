@@ -325,7 +325,7 @@ Since the other side might be referenced by other entities on the parent-side, t
 For example, if `@ManyToMany(cascade = CascadeType.ALL)` was defined and the first person would be deleted,
 Hibernate would throw an exception because another person is still associated with the address that's being deleted.
 
-[source,java]
+[source,java,opts=novalidate]
 ----
 Person person1 = entityManager.find(Person.class, personId);
 entityManager.remove(person1);

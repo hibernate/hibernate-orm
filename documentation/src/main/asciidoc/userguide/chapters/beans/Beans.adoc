@@ -64,7 +64,10 @@ or <<beans-cdi-extended,extended>> access should be used
 Rather than accessing the CDI managed beans immediately, Hibernate can be configured
 to delay accessing the beans until first needed using `hibernate.delay_cdi_access`.
 
-Note however that this has some limitations{fn-cdi-availability}
+The CDI container must be ready when a bean is first needed.
+Delaying access also means that bean configuration problems may be discovered at runtime instead of during bootstrap.
+When the container can notify Hibernate that the `BeanManager` is ready, prefer
+<<beans-cdi-extended,extended access>>, which provides an explicit initialization callback.
 
 
 [[beans-cdi-extended]]

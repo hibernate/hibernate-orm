@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.Session;
-import jakarta.persistence.QueryFlushMode;
+import org.hibernate.FlushMode;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -46,9 +46,9 @@ public class AlwaysFlushTest {
 			entityManager.persist(person);
 
 			Session session = entityManager.unwrap(Session.class);
+			session.setHibernateFlushMode( FlushMode.ALWAYS );
 			assertEquals( 1, session
 					.createNativeQuery( "select count(*) from Person", Integer.class )
-					.setQueryFlushMode( QueryFlushMode.FLUSH )
 					.uniqueResult().intValue() );
 			//end::flushing-always-flush-sql-example[]
 		});

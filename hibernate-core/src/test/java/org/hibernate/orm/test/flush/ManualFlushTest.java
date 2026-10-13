@@ -3,12 +3,11 @@ package org.hibernate.orm.test.flush;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FlushModeType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import org.hibernate.FlushMode;
-import org.hibernate.Session;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -46,15 +45,14 @@ public class ManualFlushTest {
 			Person person = new Person("John Doe");
 			entityManager.persist(person);
 
-			Session session = entityManager.unwrap(Session.class);
-			session.setHibernateFlushMode(FlushMode.MANUAL);
+			entityManager.setFlushMode( FlushModeType.EXPLICIT );
 
-			Assertions.assertEquals( 0, ((Number) entityManager
-					.createQuery( "select count(id) from Person" )
-					.getSingleResult()).intValue() );
+			Assertions.assertEquals( 0L, entityManager
+					.createQuery( "select count(p) from Person p", Long.class )
+					.getSingleResult() );
 
-			Assertions.assertEquals( 0, (int) session.createNativeQuery( "select count(*) from Person", Integer.class )
-					.uniqueResult() );
+			Assertions.assertEquals( 0L, entityManager.createNativeQuery( "select count(*) from Person", Long.class )
+					.getSingleResult() );
 			//end::flushing-manual-flush-example[]
 		});
 	}

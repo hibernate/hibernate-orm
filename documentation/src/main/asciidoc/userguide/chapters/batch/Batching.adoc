@@ -169,7 +169,7 @@ Both the Hibernate native Query Language and JPQL (Java Persistence Query Langua
 [[batch-bulk-hql-update-delete-example]]
 .Pseudo-syntax for UPDATE and DELETE statements using HQL
 ====
-[source, sql, indent=0]
+[source,sql,indent=0,opts=novalidate]
 ----
 UPDATE FROM EntityName e WHERE e.name = ?
 
@@ -256,7 +256,7 @@ In the example of joined-subclass, a `DELETE` against one of the subclasses may 
 
 .Pseudo-syntax for INSERT-SELECT statements
 ====
-[source, sql, indent=0]
+[source,sql,indent=0,opts=novalidate]
 ----
 INSERT INTO EntityName
 	properties_list
@@ -269,7 +269,7 @@ Alternatively one can also declare individual values
 
 .Pseudo-syntax for INSERT-VALUES statements
 ====
-[source, sql, indent=0]
+[source,sql,indent=0,opts=novalidate]
 ----
 INSERT INTO EntityName
 	properties_list

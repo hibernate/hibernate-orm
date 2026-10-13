@@ -3,7 +3,6 @@ package org.hibernate.orm.test.caching;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -64,20 +63,19 @@ public class FirstLevelCacheTest {
 		scope.inTransaction( entityManager -> {
 			List<Object> dtos = new ArrayList<>();
 			//tag::caching-management-native-evict-example[]
-			Session session = entityManager.unwrap(Session.class);
-			for(Person person : session.createSelectionQuery("select p from Person p",Person.class).list()) {
+			for(Person person : entityManager.createQuery("select p from Person p",Person.class).getResultList()) {
 				dtos.add(toDTO(person));
-				session.evict(person);
+				entityManager.detach(person);
 			}
 			//end::caching-management-native-evict-example[]
 			//tag::caching-management-clear-example[]
-			session.clear();
+			entityManager.clear();
 			//end::caching-management-clear-example[]
 
 			Person person = aPerson;
 
 			//tag::caching-management-contains-example[]
-			session.contains(person);
+			entityManager.contains(person);
 			//end::caching-management-contains-example[]
 		});
 	}

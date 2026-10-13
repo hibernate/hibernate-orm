@@ -869,14 +869,14 @@ One alternative would be to configure all JVMs to use the reference time zone:
 
 Declaratively::
 +
-[source,java]
+[source,shell]
 ----
 java -Duser.timezone=UTC ...
 ----
 
 Programmatically::
 +
-[source,java]
+[source,java,opts=novalidate]
 ----
 TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
 ----
@@ -886,7 +886,7 @@ For this reason, Hibernate offers the `hibernate.jdbc.time_zone` configuration p
 
 Declaratively, at the `SessionFactory` level::
 +
-[source,java]
+[source,java,opts=novalidate]
 ----
 settings.put(
     AvailableSettings.JDBC_TIME_ZONE,
@@ -915,7 +915,7 @@ For `OffsetDateTime` and `ZonedDateTime`, it uses `NATIVE` when the dialect supp
 This preserves the instant, but does not guarantee preservation of the original offset or zone.
 The strategy can be configured using `hibernate.timezone.default_storage`:
 
-[source,java]
+[source,java,opts=novalidate]
 ----
 settings.put(
     AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
@@ -1539,7 +1539,8 @@ include::{example-dir-basic-mapping}/basic/NationalizedTest.java[tags=basic-nati
 [[basic-mapping-json]]Hibernate will only use the `JSON` type if explicitly configured through `@JdbcTypeCode( SqlTypes.JSON )`.
 The JSON library used for serialization/deserialization is detected automatically,
 but can be overridden by setting `hibernate.type.json_format_mapper`
-as can be read in the <<appendices/SettingsReference.adoc#settings-hibernate.type.json_format_mapper,Configurations>> section.
+// suppress inspection "AsciiDocLinkResolve"
+as can be read in the <<settings-hibernate.type.json_format_mapper,Configurations>> section.
 
 [[basic-json-example]]
 .Mapping JSON
@@ -1556,7 +1557,8 @@ include::{example-dir-basic-mapping}/basic/JsonMappingTests.java[tags=basic-json
 [[basic-mapping-xml]]Hibernate will only use the `XML` type if explicitly configured through `@JdbcTypeCode( SqlTypes.SQLXML )`.
 The XML library used for serialization/deserialization is detected automatically,
 but can be overridden by setting `hibernate.type.xml_format_mapper`
-as can be read in the <<appendices/SettingsReference.adoc#settings-hibernate.type.xml_format_mapper,Configurations>> section.
+// suppress inspection "AsciiDocLinkResolve"
+as can be read in the <<settings-hibernate.type.xml_format_mapper,Configurations>> section.
 
 [[basic-xml-example]]
 .Mapping XML

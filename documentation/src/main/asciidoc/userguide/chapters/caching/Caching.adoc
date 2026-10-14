@@ -394,7 +394,7 @@ and <<settings-jakarta.persistence.cache.storeMode,`jakarta.persistence.cache.st
 Context-level modes and operation-specific options can override defaults.
 An operation's cache bypass also does not ordinarily bypass managed entity identity in the persistence context.
 An entity graph can supply these standard cache modes for individual attribute nodes;
-see <<fetching-strategies-dynamic-fetching-entity-graph>>. These options govern cache interaction for that fetch,
+see <<fetching-graph-options>>. These options govern cache interaction for that fetch,
 not whether the mapping is eligible for caching.
 
 [[caching-management-cache-mode-entity-jpa-example]]

@@ -1093,7 +1093,7 @@ select title, element(tags) from Book
 
 On the other hand, this very similar-looking query returns pairs of form `(title, tags)`, where the tags for a given `Book` are packaged as a detached collection:
 
-[[elements-join-example]]
+[[elements-projection-example]]
 [source, hql]
 ----
 select title, elements(tags) from Book

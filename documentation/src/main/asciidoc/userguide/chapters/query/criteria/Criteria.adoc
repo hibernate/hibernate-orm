@@ -76,7 +76,8 @@ include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-from-join-exampl
 ==== Fetches
 
 Just like in HQL and JPQL, criteria queries can specify that associated data be fetched along with the owner.
-Fetches are created by the numerous overloaded __fetch__ methods of the `jakarta.persistence.criteria.From` interface.
+Fetches are created by the overloaded `fetch()` methods of `jakarta.persistence.criteria.From`.
+See <<fetching-strategies-dynamic-fetching>> for fetch-plan behavior and <<fetching-query-limitations>> for collection-fetch limitations.
 
 [[criteria-from-fetch-example]]
 .Join fetch example

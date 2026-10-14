@@ -4,6 +4,8 @@
 :example-dir-fetching-graphs: {core-project-dir}/src/test/java/org/hibernate/orm/test/entitygraph
 :example-dir-fetching-boot: {core-project-dir}/src/test/java/org/hibernate/orm/test/jpa/boot
 :example-dir-fetching-toone: {core-project-dir}/src/test/java/org/hibernate/orm/test/fetchmode/toone
+:example-dir-fetching-pc: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
+:example-dir-fetching-associations: {core-project-dir}/src/test/java/org/hibernate/orm/test/associations
 :fetching-extras-dir: extras
 
 Fetching loads persistent state so the application can use it.
@@ -63,7 +65,7 @@ include::{example-dir-fetching-boot}/DefaultToOneFetchTypeTests.java[tags=fetchi
 
 An explicit `fetch=EAGER` or `fetch=LAZY` on an attribute overrides the unit default.
 Collections default to lazy loading. Prefer lazy association defaults and request the state needed by each operation.
-See <<bootstrap>> for configuring a persistence unit.
+See <<bootstrap-hibernate-persistence-configuration>> for the programmatic configuration entry point.
 
 [[fetching-fetch-annotation]]
 ==== Hibernate mapping fetch methods
@@ -138,6 +140,61 @@ include::{example-dir-fetching}/FetchModeJoinTest.java[tags=fetching-strategies-
 include::{fetching-extras-dir}/fetching-strategies-fetch-mode-join-example.sql[]
 ----
 ====
+
+[[fetching-lazy-basic]]
+==== Lazy basic attributes and groups
+
+Enhancement allows individual attributes or groups of attributes to be loaded on access.
+Unlike an entity proxy, which delays loading the entity itself, attribute loading can defer selected state after the entity is initialized.
+A lazy basic mapping needs enhancement for Hibernate to defer that attribute's loading.
+
+Lazy basic attributes may be loaded together as a "lazy group".
+By default, lazy basic attributes belong to the same group: accessing one loads the other basic attributes in that group.
+Use `@LazyGroup` to assign them to separate groups.
+To-one associations follow separate proxy and enhanced-reference loading rules; `@LazyGroup` is not a general way to control their initialization.
+Lazy collections normally initialize independently.
+
+[[BytecodeEnhancement-lazy-loading-example]]
+.`@LazyGroup` example
+====
+[source, java, indent=0]
+----
+include::{example-dir-fetching-pc}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-lazy-loading-example]
+----
+====
+
+The example maps two lazy attributes: `accountsPayableXrefId` and `image`.
+Each is part of a different fetch group (accountsPayableXrefId is part of the default fetch group),
+which means that accessing `accountsPayableXrefId` will not force the loading of the `image` attribute, and vice versa.
+
+See <<BytecodeEnhancement>> for enhancement mechanisms and <<tooling-enhancement>> for setup.
+
+[[fetching-association-constraints]]
+==== Association-specific loading constraints
+
+For an optional inverse `@OneToOne`, the owner's row does not contain the associated entity's foreign key.
+Without enhanced lazy attribute loading, Hibernate may need a secondary query to determine whether the association
+is absent or to obtain its state. This can produce an N+1 pattern when many owners are loaded.
+Enhancement permits deferring access to the inverse attribute in a suitable lazy mapping.
+The association's optionality and identifier mapping also matter; declaring `fetch=LAZY` alone does not establish the loading behavior.
+
+The following example declares a lazy inverse association; enable enhancement to defer its attribute loading:
+
+[[associations-one-to-one-bidirectional-lazy-example]]
+.Bidirectional `@OneToOne` lazy parent-side association
+====
+[source,java]
+----
+include::{example-dir-fetching-associations}/OneToOneBidirectionalLazyTest.java[tags=associations-one-to-one-bidirectional-lazy-example,indent=0]
+----
+====
+
+Keep the owning side and inverse side consistent as described in <<associations-one-to-one-bidirectional>>.
+`@MapsId` changes the association's identifier mapping; it is not a universal replacement for choosing a fetch plan.
+
+Some mappings impose additional loading requirements.
+To-one associations with `@NotFound` use eager loading to handle missing referenced rows; see <<associations-not-found>>.
+Hibernate rejects a lazy to-one mapping targeting a soft-deleted entity; see <<soft-delete-entity>> for that mapping restriction.
 
 [[fetching-direct-vs-query]]
 === Direct loading versus queries
@@ -733,6 +790,7 @@ see <<fetching-graph-options>>.
 
 For an entity load with a non-`NONE` lock mode, Hibernate may bypass entity batching to honor the requested lock.
 The requested entity still loads through an individual operation; its proxy is not left permanently uninitialized.
+See <<locking-LockMode>> for lock requests and <<fetching-locking-interaction>> for their interaction with fetch plans.
 
 [[fetching-fetchmode-subselect]]
 ==== Subselect fetching
@@ -815,6 +873,23 @@ One very large joined result may cost more than several smaller queries; batchin
 The <<settings-hibernate.max_fetch_depth,`hibernate.max_fetch_depth`>> setting bounds nested outer-join fetching,
 but does not replace a deliberate operation-specific plan.
 
+[[fetching-locking-interaction]]
+==== Fetch plans and lock requests
+
+A fetch plan selects state to retrieve; a lock request governs concurrency protection.
+Applying an entity graph does not by itself lock the object graph.
+`PessimisticLockScope.FETCHED` relates protection to state fetched by the locking operation;
+see <<locking-jpa-query-hints,lock scope>> for the contract and examples. It is not a recursive lock of every reachable entity.
+
+Lock requests can affect the available fetching methods and SQL statement count.
+See <<fetching-batch>> for entity batch fetching and <<locking-LockMode>> for requesting locks.
+<<locking-follow-on,Follow-on locking>> may issue acquisition statements after selection;
+these statements acquire protection rather than initialize associations, so their count is distinct from an association-loading N+1 pattern.
+
+An agreed <<locking-graph-root,graph-root coordination protocol>> is separate from an entity graph used for loading.
+Choose the required state without assuming that eager loading or follow-on acquisition automatically provides the protocol's read/lock ordering.
+A lock request does not refresh objects already held in the persistence context; see <<pc-refresh>> for reloading them.
+
 ==== Lazy state and explicit initialization
 [[fetching-initialization]]
 
@@ -825,6 +900,30 @@ Choose the required plan before leaving the context, or explicitly load the stat
 See <<pc-detach>> for detachment and <<BytecodeEnhancement-lazy-loading>> for enhancement mechanisms.
 
 Use `PersistenceUnitUtil.isLoaded(entity, attribute)` to inspect an attribute without deliberately initializing it.
+The factory utility and Hibernate helpers offer the following checks; attribute-name checks avoid accessing an attribute merely to inspect its loading state.
+
+[[pc-verify-lazy-jpa-example]]
+.Verifying laziness with Jakarta Persistence
+====
+[source, java, indent=0]
+----
+include::{example-dir-fetching-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-example]
+----
+====
+
+[[pc-verify-lazy-native-example]]
+.Verifying laziness with Hibernate API
+====
+[source, java, indent=0]
+----
+include::{example-dir-fetching-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-native-example]
+----
+====
+
+[[pc-verify-lazy-jpa-alternative-example]]
+For a factory-independent alternative to the <<pc-verify-lazy-jpa-example,factory utility checks>>,
+`Persistence.getPersistenceUtil()` provides the same `isLoaded()` overloads through `PersistenceUtil`.
+
 `PersistenceUnitUtil.load(entity)` explicitly initializes the entity or proxy passed to it.
 The next example passes the associated author proxy to that overload:
 

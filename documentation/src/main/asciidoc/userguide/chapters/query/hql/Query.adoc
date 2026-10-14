@@ -361,7 +361,7 @@ include::{example-dir-query}/HQLTest.java[tags=hql-api-scroll-example]
 
 [NOTE]
 ====
-Avoid collection fetch joins when streaming or scrolling. See link:{doc-query-language-url}#explicit-fetch-join[fetch joins] for their restrictions.
+Avoid collection fetch joins when streaming or scrolling. See <<fetching-query-limitations>> for loading consequences and link:{doc-query-language-url}#explicit-fetch-join[fetch joins] for language restrictions.
 ====
 
 [[jpql-api-stream]]
@@ -656,9 +656,9 @@ Using provider-specific hints limits your program's portability to only a small 
 
 | `jakarta.persistence.query.timeout` | The query timeout, in milliseconds. | `Query#setTimeout()`
 | `jakarta.persistence.fetchgraph` | An `EntityGraph` to be interpreted as a _fetchgraph_, as defined by the Jakarta Persistence specification.
-| See <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
+| See <<fetching-graph-application,Applying graphs>>.
 | `jakarta.persistence.loadgraph` | An `EntityGraph` to be interpreted as a _loadgraph_, as defined by the Jakarta Persistence specification.
-| See <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
+| See <<fetching-graph-application,Applying graphs>>.
 | `org.hibernate.cacheMode` | The `CacheMode` to use. | `Query#setCacheMode()`
 | `org.hibernate.cacheable` | `true` if the query is cacheable. | `Query#setCacheable()`
 | `org.hibernate.cacheRegion` | For a cacheable query, the name of a cache region to use. | `Query#setCacheRegion()`

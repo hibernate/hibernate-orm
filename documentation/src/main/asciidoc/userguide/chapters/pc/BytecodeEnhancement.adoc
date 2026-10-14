@@ -9,34 +9,10 @@ See <<tooling-enhancement,enhancement tooling>> for build-time and runtime confi
 [[BytecodeEnhancement-lazy-loading]]
 ==== Lazy attribute loading
 
-Enhancement allows individual attributes or groups of attributes to be loaded on access.
-Unlike an entity proxy, which delays loading the entity itself, attribute loading can defer selected state after the entity is initialized.
-A lazy basic mapping needs enhancement for Hibernate to defer that attribute's loading.
-
-Lazy basic attributes may be loaded together as a "lazy group".
-By default, lazy basic attributes belong to the same group: accessing one loads the other basic attributes in that group.
-Use `@LazyGroup` to assign them to separate groups.
-To-one associations follow separate proxy and enhanced-reference loading rules; `@LazyGroup` is not a general way to control their initialization.
-Lazy collections normally initialize independently. See <<fetching,fetching>> for association and collection loading.
-
-[[BytecodeEnhancement-lazy-loading-example]]
-.`@LazyGroup` example
-====
-[source, java, indent=0]
-----
-include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-lazy-loading-example]
-----
-====
-
-The example maps two lazy attributes: `accountsPayableXrefId` and `image`.
-Each is part of a different fetch group (accountsPayableXrefId is part of the default fetch group),
-which means that accessing `accountsPayableXrefId` will not force the loading of the `image` attribute, and vice versa.
-
-[NOTE]
-====
-Use current association mappings such as `@ManyToOne(fetch = FetchType.LAZY)` and `@OneToOne(fetch = FetchType.LAZY)`.
-The removed `@LazyToOne` annotation is not needed. See <<fetching,fetching>> for association-specific requirements.
-====
+Enhancement intercepts access to deferred persistent state.
+See <<fetching-lazy-basic,lazy basic attributes and groups>> for loading behavior and the `@LazyGroup` example,
+and <<fetching-association-constraints,association-specific loading constraints>> for to-one mappings.
+Use <<tooling-enhancement,enhancement tooling>> to configure enhancement.
 
 [[BytecodeEnhancement-dirty-tracking]]
 ==== In-line dirty tracking
@@ -119,4 +95,3 @@ Manage both sides explicitly in new code, or use the <<auto-bidir-mgmt,non-enhan
 
 Enhancement also supplies hooks for maintaining persistence-context state efficiently.
 These internal optimizations do not change entity identity, transaction boundaries, or the need to synchronize pending changes.
-

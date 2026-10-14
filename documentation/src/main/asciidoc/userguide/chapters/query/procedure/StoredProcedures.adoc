@@ -204,4 +204,3 @@ Processing is complete when there is no result set and `getUpdateCount()` return
 
 For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
 ====
-

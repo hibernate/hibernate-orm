@@ -742,7 +742,7 @@ WHERE  age(hired_on) < '30 days'
 Hibernate cannot generally infer the tables affected by an arbitrary SQL string.
 `NativeQuery.addSynchronizedEntityClass()`, `addSynchronizedEntityName()`, and `addSynchronizedQuerySpace()` declare the affected query spaces.
 These declarations help Hibernate determine whether pending changes require flushing and which spaces are relevant to query caching.
-For the flush behavior of native queries, see <<flushing-auto-flush-sql>>.
+For the flush behavior of native queries, see <<flushing-auto-native,automatic flushing of native SQL queries>>.
 For caching, see <<caching-query>>.
 
 [[sql-native-mutations]]

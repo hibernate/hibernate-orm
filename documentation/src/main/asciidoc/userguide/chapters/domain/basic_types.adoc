@@ -116,12 +116,10 @@ The `@Basic` annotation defines two attributes.
     this as "a hint", which means the provider is free to ignore it.  Jakarta Persistence also says that it will be
     ignored if the type is primitive.  As long as the type is not primitive, Hibernate will honor this
     value.  Works in conjunction with `@Column#nullable` - see <<basic-column-annotation>>.
-`fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
-    `EAGER` indicates that the value will be fetched as part of loading the owner.  `LAZY` values are
-    fetched only when the value is accessed.  Jakarta Persistence requires providers to support `EAGER`, while support for
-    `LAZY` is optional meaning that a provider is free to not support it.  Hibernate supports lazy loading
-    of basic values when using its <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancement>>
-    support.
+`fetch` - FetchType (defaults to EAGER):: Defines eager or lazy timing for the basic attribute.
+    `EAGER` requires the value to be available when the owner is loaded. `LAZY` is a hint permitting deferred loading,
+    not a guarantee that the value is loaded only upon access. Hibernate needs enhancement to defer basic state;
+    see <<fetching-lazy-basic,lazy basic attributes and groups>> and <<fetching-basics,fetch timing>>.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -2,7 +2,7 @@
 == Compatibility
 
 [[compatibility-dependencies]]
-=== [[system-requirements]] Dependencies
+=== Dependencies
 
 Hibernate {fullVersion} requires the following dependencies (among others):
 

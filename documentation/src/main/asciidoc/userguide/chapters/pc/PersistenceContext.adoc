@@ -4,6 +4,7 @@
 :jcache-project-dir: {root-project-dir}/hibernate-jcache
 :example-dir-caching: {jcache-project-dir}/src/test/java/org/hibernate/orm/test/caching
 :pc-extrasdir: extras
+:example-dir-custom-sql: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
 
 [[pc-fundamentals]]
 === Persistence-context fundamentals
@@ -168,35 +169,9 @@ include::{example-dir-pc}/FindMultipleDocTests.java[tags=pc-find-multiple-natura
 [[pc-initialization]]
 ==== Checking initialization
 
-[[pc-verify-lazy-jpa-example]]
-.Verifying laziness with Jakarta Persistence
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-example]
-----
-====
-
-[[pc-verify-lazy-native-example]]
-.Verifying laziness with Hibernate API
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-native-example]
-----
-====
-
-`PersistenceUtil.isLoaded()` provides a portable initialization check; Hibernate also provides `Hibernate.isInitialized()`.
-Checking initialization does not initialize the value. Uninitialized detached state cannot normally be loaded without a context.
-
-[[pc-verify-lazy-jpa-alternative-example]]
-.Alternative Jakarta Persistence means to verify laziness
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-alternative-example]
-----
-====
+A managed reference or attribute may still contain unloaded state.
+See <<fetching-initialization,initialization checks and explicit loading>> for the standard and Hibernate APIs.
+For state used after detachment, choose the required <<fetching-plan-selection,fetch plan>> before leaving the context.
 
 [[pc-operations]]
 === Persisting, modifying, and removing entities
@@ -1277,7 +1252,6 @@ include::{pc-extrasdir}/pc-filter-join-table-collection-query-example.sql[]
 ====
 
 include::BytecodeEnhancement.adoc[]
-:example-dir-custom-sql: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
 
 [[sql-crud]]
 === Custom SQL for entity and collection operations

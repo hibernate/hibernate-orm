@@ -134,7 +134,7 @@ For a numeric version, an update may use `where id = ? and version = ?` while as
 A second transaction trying to write with the earlier version fails instead of silently overwriting the first transaction's changes.
 Version checks do not reserve exclusive access throughout user think time; see <<long-conversations,conversations spanning multiple transactions>>.
 
-Bulk <<hql-update,update>> and <<hql-delete,delete>> statements bypass these per-entity optimistic checks.
+Bulk link:{doc-query-language-url}#update[update] and link:{doc-query-language-url}#delete[delete] statements bypass these per-entity optimistic checks.
 An ordinary bulk update does not increment versions automatically.
 HQL `update versioned` increments the affected entities' versions, but does not automatically compare them with versions previously loaded by the application.
 If a bulk mutation requires conflict detection, express the required conditions in its predicate and check the affected-entity count.
@@ -276,7 +276,7 @@ Unsupported combinations may fail; there is no universal guarantee of silent fal
 
 Normal scope is the default.
 Extended scope does not promise protection against every phantom insertion into a collection or join table.
-Fetched scope follows the <<fetching,fetch plan>> of the locking operation; it is not a recursive lock of everything reachable from the entity.
+Fetched scope follows the <<fetching-locking-interaction,fetch plan>> of the locking operation; it is not a recursive lock of everything reachable from the entity.
 Dialect capabilities and mapping/query shape can require additional statements or limit support.
 
 [[locking-scope-example]]
@@ -384,6 +384,7 @@ Acquisition can reread database state, but does not universally refresh already 
 Hibernate can group locking reads by entity type and table instead of issuing one additional select for every entity.
 The statement count depends on mappings, query shape, result processing, and dialect; incremental processing can acquire protection differently from materializing a result list.
 An application-issued secondary query is not an always-needed workaround for an N+1 pattern.
+Distinguish lock-acquisition statements from association-loading statements when <<fetching-plan-selection,verifying a fetch plan>>.
 
 [cols="1,3",options="header"]
 |===
@@ -418,6 +419,10 @@ Applications can coordinate access to a graph of objects through an agreed graph
 With optimistic locking, participating transactions capture the root's version before reading the graph state it protects and validate that version before successful transaction completion.
 Graph writers advance the root's version even when the root's own attributes are unchanged.
 With pessimistic locking, participating transactions acquire a lock on the root before reading the graph state it protects: a shared lock for readers or an exclusive lock for writers, held until transaction completion.
+
+Choose the <<fetching-locking-interaction,loading operation and fetch plan>> so that protected state is not read before the required coordination step.
+Eager association loading and the selection phase of follow-on locking can retrieve that state before lock acquisition;
+do not assume that requesting a root lock automatically establishes the protocol's required ordering.
 
 This coordination requires all participating transactions to follow the same root-locking protocol.
 Locking the root does not automatically lock, version, or validate every associated entity; the agreement makes the root the coordination point for graph access.

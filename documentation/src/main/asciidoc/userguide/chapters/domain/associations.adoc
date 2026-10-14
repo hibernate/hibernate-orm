@@ -254,25 +254,11 @@ include::{example-dir-association}/OneToOneBidirectionalTest.java[tags=associati
 [[associations-one-to-one-bidirectional-lazy]]
 ====== Bidirectional `@OneToOne` lazy association
 
-Even when the parent-side association is marked for lazy fetching,
-Hibernate cannot honor this request since it cannot know whether the association is `null` or not.
-
-The only way to figure out whether there is an associated record on the child side is to fetch the child association using a secondary query.
-Because this can lead to N+1 query issues, it's much more efficient to use unidirectional `@OneToOne` associations with the `@MapsId` annotation in place.
-
-For lazy fetching of the parent side of a bidirectional association, enable bytecode enhancement for lazy state initialization.
-
-[[associations-one-to-one-bidirectional-lazy-example]]
-.Bidirectional `@OneToOne` lazy parent-side association
-====
-[source,java]
-----
-include::{example-dir-association}/OneToOneBidirectionalLazyTest.java[tags=associations-one-to-one-bidirectional-lazy-example,indent=0]
-----
-====
-
-For more about how to enable Bytecode enhancement,
-see the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement, Bytecode Enhancement chapter>>.
+The inverse side does not hold the foreign key, so determining whether an optional association exists
+can affect when it loads. See <<fetching-association-constraints,association-specific loading constraints>>
+for enhancement requirements and the lazy mapping example.
+A shared-primary-key mapping using `@MapsId` is a separate identifier and association design choice;
+see <<associations-one-to-one-unidirectional>>.
 
 [[associations-many-to-many]]
 ==== `@ManyToMany`
@@ -463,6 +449,7 @@ no physical foreign-key.
 
 `@ManyToOne` and `@OneToOne` associations annotated with `@NotFound` are always fetched eagerly even
 if the `fetch` strategy is set to `FetchType.LAZY`.
+See <<fetching-association-constraints>> for how such mapping requirements affect fetch plans.
 
 
 [TIP]

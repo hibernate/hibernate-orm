@@ -24,7 +24,7 @@ then measure the batching and resource-management controls appropriate to it.
 
 _JDBC batching_ groups compatible SQL statement executions. It is an optimization of entity operations,
 not the same operation as an HQL bulk update or delete.
-It is also distinct from <<fetching,association batch fetching>>, multiple-id loading,
+It is also distinct from <<fetching-batch,association batch fetching>>, multiple-id loading,
 and JDBC _fetch size_, which concerns retrieving result rows.
 
 Three independent controls matter for a stateful workload:

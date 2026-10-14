@@ -7,18 +7,12 @@ Hibernate comes with a great variety of features that can help you tune the data
 [[best-practices-schema]]
 === Schema management
 
-Although Hibernate provides the `update` option for the `hibernate.hbm2ddl.auto` configuration property,
-this feature is not suitable for a production environment.
+Hibernate can execute supported schema creation and alteration commands against a database or export them as scripts.
+See <<schema-generation>> for the available operations and <<schema-generation-alteration-scripts>> for alteration scripts.
 
-An automated schema migration tool (e.g. https://flywaydb.org/[Flyway], https://www.liquibase.org/[Liquibase]) allows you to use any database-specific DDL feature (e.g. Rules, Triggers, Partitioned Tables).
-Every migration should have an associated script, which is stored on the Version Control System, along with the application source code.
-
-When the application is deployed on a production-like QA environment, and the deployment worked as expected, then pushing the deployment to a production environment should be straightforward since the latest schema migration was already tested.
-
-[TIP]
-====
-You should always use an automatic schema migration tool and have all the migration scripts stored in the Version Control System.
-====
+For evolution across application versions, consider dedicated schema versioning tools such as Flyway or Liquibase.
+Keep reviewed migration scripts with the application source and test them against a representative existing schema and data.
+Versioned migrations record the intended evolution, including data transformations that cannot be inferred from mappings.
 
 [[best-practices-logging]]
 === Logging
@@ -58,16 +52,13 @@ While simple statement logging is fine, using https://github.com/ttddyy/datasour
 [[best-practices-jdbc-batching]]
 === JDBC batching
 
-JDBC allows us to batch multiple SQL statements and to send them to the database server into a single request.
-This saves database round trips, and so it https://leanpub.com/high-performance-java-persistence/read#jdbc-batch-updates[reduces response time significantly].
+JDBC batching groups compatible statement executions and can reduce database round trips.
+Its effectiveness depends on mappings, driver behavior, statement compatibility, and the workload.
+See <<batch-jdbcbatch>> for configuration and eligibility, and <<flushing-settings>> for dependency planning.
 
-Not only `INSERT` and `UPDATE` statements, but even `DELETE` statements can be batched as well.
-For `INSERT` and `UPDATE` statements, make sure that you have all the right configuration properties in place, like ordering inserts and updates and activating batching for versioned data.
-Check out https://vladmihalcea.com/how-to-batch-insert-and-update-statements-with-hibernate/[this article] for more details on this topic.
-
-For `DELETE` statements, there is no option to order parent and child statements, so cascading can interfere with the JDBC batching process.
-
-Unlike any other framework which doesn't automate SQL statement generation, Hibernate makes it very easy to activate JDBC-level batching as indicated in the <<chapters/batch/Batching.adoc#batch,Batching chapter>>.
+Choose JDBC batch size, flush/clear interval, and transaction chunk size independently.
+Measure batch additions and executions as well as statement and row counts; SQL logging alone does not establish that batching occurred.
+See <<batch-verification>> for a controlled measurement approach.
 
 [[best-practices-mapping]]
 === Mapping
@@ -127,11 +118,9 @@ On the other hand, the more exotic the association mapping, the better the chanc
 
 Therefore, the `@ManyToOne` and the `@OneToOne` child-side association are best to represent a `FOREIGN KEY` relationship.
 
-The parent-side `@OneToOne` association requires bytecode enhancement
-so that the association can be loaded lazily. Otherwise, the parent-side association is always fetched even if the association is marked with `FetchType.LAZY`.
-
-For this reason, it's best to map `@OneToOne` association using `@MapsId` so that the `PRIMARY KEY` is shared between the child and the parent entities.
-When using `@MapsId`, the parent-side association becomes redundant since the child-entity can be easily fetched using the parent entity identifier.
+Inverse `@OneToOne` loading depends on the mapping and enhancement; see <<fetching-association-constraints>>.
+A shared-primary-key association using `@MapsId` is useful when that identifier design fits the domain;
+see <<associations-one-to-one-unidirectional>> for the mapping.
 
 For collections, the association can be either:
 
@@ -172,89 +161,33 @@ Jakarta Persistence offers `SINGLE_TABLE`, `JOINED`, and `TABLE_PER_CLASS` to de
 [[best-practices-fetching]]
 === Fetching
 
-[TIP]
-====
-Fetching too much data is the number one performance issue for the vast majority of Jakarta Persistence applications.
-====
-
-Hibernate supports both entity queries (JPQL/HQL and Criteria API) and native SQL statements.
-Entity queries are useful only if you need to modify the fetched entities, therefore benefiting from the automatic dirty checking mechanism.
-
-For read-only transactions, you should fetch DTO projections because they allow you to select just as many columns as you need to fulfill a certain business use case.
-This has many benefits like reducing the load on the currently running Persistence Context because DTO projections don't need to be managed.
+Request the state needed by the operation and measure both SQL statements and rows transferred.
+Managed entities and scalar or DTO projections can both be useful for read-only work; choose according to the required state and lifecycle semantics.
+See <<fetching-plan-selection>> for the tradeoffs.
 
 [[best-practices-fetching-associations]]
 ==== Fetching associations
 
-Related to associations, there are two major fetch strategies:
+Prefer lazy association defaults and use operation-specific plans for required state.
+See <<fetching-basics>> for timing versus method, <<fetching-mapping-defaults>> for defaults and overrides,
+and <<fetching-query-limitations>> for row multiplication and collection-fetch pagination.
 
-- `EAGER`
-- `LAZY`
-
-`EAGER` fetching is almost always a bad choice.
-
-[TIP]
-====
-Prior to Jakarta Persistence, Hibernate used to have all associations as `LAZY` by default.
-However, when Java Persistence 1.0 specification emerged, it was thought that not all providers would use Proxies. Hence, the `@ManyToOne` and the `@OneToOne` associations are now `EAGER` by default.
-
-The `EAGER` fetching strategy cannot be overwritten on a per query basis, so the association is always going to be retrieved even if you don't need it.
-Moreover, if you forget to `JOIN FETCH` an `EAGER` association in a JPQL query, Hibernate will initialize it with a secondary statement, which in turn can lead to N+1 query issues.
-====
-
-So, `EAGER` fetching is to be avoided. For this reason, it's better if all associations are marked as `LAZY` by default.
-
-However, `LAZY` associations must be initialized prior to being accessed. Otherwise, a `LazyInitializationException` is thrown.
-There are good and bad ways to treat the `LazyInitializationException`.
-
-The best way to deal with `LazyInitializationException` is to fetch all the required associations prior to closing the Persistence Context.
-The `JOIN FETCH` directive is good for `@ManyToOne` and `OneToOne` associations, and for at most one collection (e.g. `@OneToMany` or `@ManyToMany`).
-If you need to fetch multiple collections, to avoid a Cartesian Product, you should use secondary queries which are triggered either by navigating the `LAZY` association or by calling `Hibernate#initialize(Object proxy)` method.
+Load the state needed outside the persistence context before detaching it or closing the context.
+See <<fetching-initialization>> for initialization checks and explicit loading, and <<pc-detach>> for detachment.
 
 [[best-practices-caching]]
 === Caching
 
-Hibernate has two caching layers:
+The persistence context maintains managed identity and state; it does not establish the database's isolation level.
+Its lifetime can span transactions. See <<pc-fundamentals>> and <<transactions>> for context and transaction boundaries.
 
-- the first-level cache (Persistence Context) which provides application-level repeatable reads.
-- the second-level cache which, unlike application-level caches, doesn't store entity aggregates but normalized dehydrated entity entries.
+A second-level cache can reduce database work when state is reused across contexts.
+Its value depends on hit rates, mutation frequency, entry size, and consistency costs; caching is not a mandatory next step after database tuning.
+See <<caching-scopes>> for the cache scopes and <<caching-mappings>> for eligibility and concurrency strategies.
 
-The first-level cache is not a caching solution "per se", being more useful for ensuring `READ COMMITTED` isolation level.
+Choose a strategy compatible with the application's consistency requirements and the cache provider's capabilities.
+A cache strategy does not replace database isolation or optimistic locking, and stronger coordination can have a throughput cost.
+Distributed cache topology and transactional integration depend on the provider.
 
-While the first-level cache is short-lived, being cleared when the underlying `EntityManager` is closed, the second-level cache is tied to an `EntityManagerFactory`.
-Some second-level caching providers offer support for clusters. Therefore, a node needs only to store a subset of the whole cached data.
-
-Although the second-level cache can reduce transaction response time since entities are retrieved from the cache rather than from the database,
-there are other options to achieve the same goal,
-and you should consider these alternatives prior to jumping to a second-level cache layer:
-
-- tuning the underlying database cache so that the working set fits into memory, therefore reducing Disk I/O traffic.
-- optimizing database statements through JDBC batching, statement caching, indexing can reduce the average response time, therefore increasing throughput as well.
-- database replication is also a very valuable option to increase read-only transaction throughput.
-
-After properly tuning the database, to further reduce the average response time and increase the system throughput, application-level caching becomes inevitable.
-
-Typically, a key-value application-level cache like https://memcached.org/[Memcached] or https://redis.io/[Redis] is a common choice to store data aggregates.
-If you can duplicate all data in the key-value store, you have the option of taking down the database system for maintenance without completely losing availability since read-only traffic can still be served from the cache.
-
-One of the main challenges of using an application-level cache is ensuring data consistency across entity aggregates.
-That's where the second-level cache comes to the rescue.
-Being tightly integrated with Hibernate, the second-level cache can provide better data consistency since entries are cached in a normalized fashion, just like in a relational database.
-Changing a parent entity only requires a single entry cache update, as opposed to cache entry invalidation cascading in key-value stores.
-
-The second-level cache provides four cache concurrency strategies:
-
-- `READ_ONLY`
-- `NONSTRICT_READ_WRITE`
-- `READ_WRITE`
-- `TRANSACTIONAL`
-
-`READ_WRITE` is a very good default concurrency strategy since it provides strong consistency guarantees without compromising throughput.
-The `TRANSACTIONAL` concurrency strategy uses JTA. Hence, it's more suitable when entities are frequently modified.
-
-Both `READ_WRITE` and `TRANSACTIONAL` use write-through caching, while `NONSTRICT_READ_WRITE` is a read-through caching strategy.
-For this reason, `NONSTRICT_READ_WRITE` is not very suitable if entities are changed frequently.
-
-When using clustering, the second-level cache entries are spread across multiple nodes.
-When using https://infinispan.org/blog/2015/10/01/hibernate-second-level-cache/[Infinispan distributed cache], only `READ_WRITE` and `NONSTRICT_READ_WRITE` are available for read-write caches.
-Bear in mind that `NONSTRICT_READ_WRITE` offers a weaker consistency guarantee since stale updates are possible.
+Direct JDBC, external writers, and trigger side effects need deliberate invalidation or eviction.
+See <<caching-invalidation>> for those boundaries, and measure representative workloads with <<caching-statistics>>.

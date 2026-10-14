@@ -41,6 +41,38 @@ import static org.hibernate.jpa.boot.spi.JpaSettings.METADATA_BUILDER_CONTRIBUTO
 /// @author Steve Ebersole
 @BaseUnitTest
 class BootstrapLifecycleTest {
+	@Test
+	void configurationCreatesExactlyOneFactory() {
+		final var created = new java.util.ArrayList<org.hibernate.SessionFactory>();
+		final var closed = new java.util.ArrayList<org.hibernate.SessionFactory>();
+		final var provider = new CountingProvider();
+		final var configuration = (HibernatePersistenceConfiguration) configuration( true, provider );
+		configuration.property( SESSION_FACTORY_OBSERVER, new org.hibernate.SessionFactoryObserver() {
+			@Override
+			public void sessionFactoryCreated(org.hibernate.SessionFactory factory) {
+				created.add( factory );
+			}
+
+			@Override
+			public void sessionFactoryClosed(org.hibernate.SessionFactory factory) {
+				closed.add( factory );
+			}
+		} );
+		try {
+			try ( var factory = configuration.createEntityManagerFactory() ) {
+				assertThat( factory.isOpen() ).isTrue();
+				assertThat( created ).containsExactly( factory );
+				assertThat( closed ).isEmpty();
+			}
+			assertThat( closed ).containsExactlyElementsOf( created );
+			assertThat( provider.stops ).isEqualTo( 1 );
+		}
+		finally {
+			// Also clean up an accidentally discarded factory if the regression returns.
+			created.stream().filter( org.hibernate.SessionFactory::isOpen ).forEach( org.hibernate.SessionFactory::close );
+		}
+	}
+
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
 	void cancellationClosesRegistriesExactlyOnce(boolean hibernate) {

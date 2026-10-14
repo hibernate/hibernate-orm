@@ -1,59 +1,16 @@
-create temporary table
-    HT_Person
-(
-    id int4 not null,
-    companyName varchar(255) not null
-)
+delete from Engineer to_delete_
+where (to_delete_.id, to_delete_.companyName) in (
+    select p.id, p.companyName
+    from Person p
+    where p.employed = ?
+);
 
-insert
-into
-    HT_Person
-    select
-        p.id as id,
-        p.companyName as companyName
-    from
-        Person p
-    where
-        p.employed = ?
+delete from Doctor to_delete_
+where (to_delete_.id, to_delete_.companyName) in (
+    select p.id, p.companyName
+    from Person p
+    where p.employed = ?
+);
 
-delete
-from
-    Engineer
-where
-    (
-        id, companyName
-    ) IN (
-        select
-            id,
-            companyName
-        from
-            HT_Person
-    )
-
-delete
-from
-    Doctor
-where
-    (
-        id, companyName
-    ) IN (
-        select
-            id,
-            companyName
-        from
-            HT_Person
-    )
-
-delete
-from
-    Person
-where
-    (
-        id, companyName
-    ) IN (
-        select
-            id,
-            companyName
-        from
-            HT_Person
-    )
+delete from Person p
+where p.employed = ?;

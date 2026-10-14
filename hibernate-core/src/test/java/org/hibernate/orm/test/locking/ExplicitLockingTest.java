@@ -10,12 +10,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
-import org.hibernate.LockMode;
+import jakarta.persistence.Timeout;
 import org.hibernate.Locking;
-import org.hibernate.Session;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.Query;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -70,7 +68,7 @@ public class ExplicitLockingTest {
 			//tag::locking-jpa-query-hints-timeout-example[]
 			entityManager.find(
 				Person.class, id, LockModeType.PESSIMISTIC_WRITE,
-				Collections.singletonMap("jakarta.persistence.lock.timeout", 200)
+				Timeout.milliseconds( 200 )
 			);
 			//end::locking-jpa-query-hints-timeout-example[]
 		});
@@ -123,8 +121,7 @@ public class ExplicitLockingTest {
 			Long id = p.getId();
 			//tag::locking-session-lock-example[]
 			Person person = entityManager.find(Person.class, id);
-			Session session = entityManager.unwrap(Session.class);
-			session.lock( person, LockMode.PESSIMISTIC_READ, Timeouts.NO_WAIT );
+			entityManager.lock( person, LockModeType.PESSIMISTIC_READ, Timeouts.NO_WAIT );
 			//end::locking-session-lock-example[]
 		});
 
@@ -133,8 +130,7 @@ public class ExplicitLockingTest {
 			Long id = p.getId();
 			//tag::locking-session-lock-scope-example[]
 			Person person = entityManager.find(Person.class, id);
-			Session session = entityManager.unwrap(Session.class);
-			session.lock(person, LockMode.PESSIMISTIC_READ, Timeouts.NO_WAIT, PessimisticLockScope.EXTENDED);
+			entityManager.lock(person, LockModeType.PESSIMISTIC_READ, Timeouts.NO_WAIT, PessimisticLockScope.EXTENDED);
 			//end::locking-session-lock-scope-example[]
 			// find, lock persons, lock phones
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
@@ -183,8 +179,7 @@ public class ExplicitLockingTest {
 			List<Person> persons = entityManager.createQuery( "select p from Person p", Person.class )
 					.setMaxResults( 10 )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-					.unwrap( Query.class )
-					.setFollowOnStrategy( Locking.FollowOn.DISALLOW )
+					.setHint( org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY, Locking.FollowOn.DISALLOW )
 					.getResultList();
 			//end::locking-follow-on-explicit-example[]
 		});

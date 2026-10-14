@@ -354,13 +354,16 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public void afterCompletion(boolean successful, boolean delayed) {
+		afterCompletion( successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN, delayed );
+	}
+
+	@Override
+	public void afterCompletion(int status, boolean delayed) {
+		final boolean successful = status == Status.STATUS_COMMITTED;
 		if ( transactionCoordinatorOwner.isActive() ) {
 			JTA_LOGGER.notifyingJtaObserversAfterCompletion();
 
-			final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
-			synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
-
-//			afterCompletionAction.doAction( this, statusToSend );
+			synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( status );
 
 			transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
 

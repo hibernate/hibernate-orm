@@ -28,7 +28,7 @@ See <<bootstrap>> for factory creation and <<schema-generation>> for schema oper
 Use a datasource supplied by your environment, or a supported pool integration, for production connection pooling.
 The <<database-connectionprovider-drivermanager,built-in pool>> is intended for development and testing.
 Advanced integrations can supply a <<database-connectionprovider,custom provider>>.
-Tenant-specific connection access has a separate <<multitenacy-hibernate-MultiTenantConnectionProvider,multitenancy integration>>.
+For tenant-specific schema and credentials selection, see <<multitenancy-mappers>>; for datasource routing, see <<multitenacy-hibernate-MultiTenantConnectionProvider>>.
 
 [[database-connectionprovider]]
 === Provider selection and explicit configuration

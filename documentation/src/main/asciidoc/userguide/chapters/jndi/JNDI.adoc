@@ -15,7 +15,13 @@ The standard `JndiService` accepts a number of configuration settings:
 * <<settings-hibernate.jndi.class, hibernate.jndi.class>>
 * <<settings-hibernate.jndi.url, hibernate.jndi.url>>
 
-Any other settings prefixed with `hibernate.jndi.` will be collected and passed along to the JNDI provider.
+For other settings prefixed with `hibernate.jndi.`, Hibernate removes that prefix before passing
+the property to the JNDI provider. For example, `hibernate.jndi.java.naming.security.principal`
+becomes `java.naming.security.principal` in the initial-context environment.
+
+The standard service accepts names without an explicit URI scheme and names using `java:` or
+`osgi:`. It rejects other explicit URI schemes. This restriction applies to the JNDI names
+Hibernate looks up or binds, not to the provider URL used to configure the initial context.
 
 [NOTE]
 ====

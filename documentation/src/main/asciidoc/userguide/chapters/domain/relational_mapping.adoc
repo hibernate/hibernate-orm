@@ -297,7 +297,8 @@ include::{domain-basic-types-extrasdir}/basic/basic-auto-quoting-persistence-exa
 
 Both the table name and all column names are quoted.
 
-For more about quoting-related configuration properties, check out the <<appendices/SettingsReference.adoc#settings-mapping,Mapping configurations>> section as well.
+// suppress inspection "AsciiDocLinkResolve"
+For more about quoting-related configuration properties, check out the <<settings-mapping,Mapping configurations>> section as well.
 
 
 include::naming.adoc[]

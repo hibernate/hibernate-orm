@@ -116,12 +116,10 @@ The `@Basic` annotation defines two attributes.
     this as "a hint", which means the provider is free to ignore it.  Jakarta Persistence also says that it will be
     ignored if the type is primitive.  As long as the type is not primitive, Hibernate will honor this
     value.  Works in conjunction with `@Column#nullable` - see <<basic-column-annotation>>.
-`fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
-    `EAGER` indicates that the value will be fetched as part of loading the owner.  `LAZY` values are
-    fetched only when the value is accessed.  Jakarta Persistence requires providers to support `EAGER`, while support for
-    `LAZY` is optional meaning that a provider is free to not support it.  Hibernate supports lazy loading
-    of basic values when using its <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancement>>
-    support.
+`fetch` - FetchType (defaults to EAGER):: Defines eager or lazy timing for the basic attribute.
+    `EAGER` requires the value to be available when the owner is loaded. `LAZY` is a hint permitting deferred loading,
+    not a guarantee that the value is loaded only upon access. Hibernate needs enhancement to defer basic state;
+    see <<fetching-lazy-basic,lazy basic attributes and groups>> and <<fetching-basics,fetch timing>>.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -869,14 +867,14 @@ One alternative would be to configure all JVMs to use the reference time zone:
 
 Declaratively::
 +
-[source,java]
+[source,shell]
 ----
 java -Duser.timezone=UTC ...
 ----
 
 Programmatically::
 +
-[source,java]
+[source,java,opts=novalidate]
 ----
 TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
 ----
@@ -886,7 +884,7 @@ For this reason, Hibernate offers the `hibernate.jdbc.time_zone` configuration p
 
 Declaratively, at the `SessionFactory` level::
 +
-[source,java]
+[source,java,opts=novalidate]
 ----
 settings.put(
     AvailableSettings.JDBC_TIME_ZONE,
@@ -915,7 +913,7 @@ For `OffsetDateTime` and `ZonedDateTime`, it uses `NATIVE` when the dialect supp
 This preserves the instant, but does not guarantee preservation of the original offset or zone.
 The strategy can be configured using `hibernate.timezone.default_storage`:
 
-[source,java]
+[source,java,opts=novalidate]
 ----
 settings.put(
     AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
@@ -1539,7 +1537,8 @@ include::{example-dir-basic-mapping}/basic/NationalizedTest.java[tags=basic-nati
 [[basic-mapping-json]]Hibernate will only use the `JSON` type if explicitly configured through `@JdbcTypeCode( SqlTypes.JSON )`.
 The JSON library used for serialization/deserialization is detected automatically,
 but can be overridden by setting `hibernate.type.json_format_mapper`
-as can be read in the <<appendices/SettingsReference.adoc#settings-hibernate.type.json_format_mapper,Configurations>> section.
+// suppress inspection "AsciiDocLinkResolve"
+as can be read in the <<settings-hibernate.type.json_format_mapper,Configurations>> section.
 
 [[basic-json-example]]
 .Mapping JSON
@@ -1556,7 +1555,8 @@ include::{example-dir-basic-mapping}/basic/JsonMappingTests.java[tags=basic-json
 [[basic-mapping-xml]]Hibernate will only use the `XML` type if explicitly configured through `@JdbcTypeCode( SqlTypes.SQLXML )`.
 The XML library used for serialization/deserialization is detected automatically,
 but can be overridden by setting `hibernate.type.xml_format_mapper`
-as can be read in the <<appendices/SettingsReference.adoc#settings-hibernate.type.xml_format_mapper,Configurations>> section.
+// suppress inspection "AsciiDocLinkResolve"
+as can be read in the <<settings-hibernate.type.xml_format_mapper,Configurations>> section.
 
 [[basic-xml-example]]
 .Mapping XML
@@ -1608,7 +1608,7 @@ This does not imply that every application-defined object graph supports the sam
 Custom objects need suitable equality and copying behavior; see <<basic-mapping-composition-java>> and <<mutability-mutability>>.
 An immutable value declaration tells Hibernate not to expect internal changes and must match how the application uses the value.
 
-For document query functions, see <<hql-json-functions,JSON functions>> and <<hql-xml-functions,XML functions>>.
+For document query functions, see link:{doc-query-language-url}#hql-json-functions[JSON functions] and link:{doc-query-language-url}#hql-xml-functions[XML functions].
 
 [[basic-single-column-collections]]
 ==== Arrays and collections stored in a single column

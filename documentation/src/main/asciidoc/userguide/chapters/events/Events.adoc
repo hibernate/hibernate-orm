@@ -2,261 +2,481 @@
 == Interceptors and Events
 :example-dir-event: {core-project-dir}/src/test/java/org/hibernate/orm/test/events
 :example-dir-event-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/events
-:extrasdir: extras
 
-It is useful for the application to react to certain events that occur inside Hibernate.
-This allows for the implementation of generic functionality and the extension of Hibernate functionality.
+Callbacks let an application react to entity lifecycle changes and database operations, inspect or adjust state, and integrate with Hibernate's event processing.
+Choose the mechanism according to the information and control the application needs.
 
-[[events-interceptors]]
-=== Interceptors
+[[events-choosing]]
+=== Choosing a callback mechanism
 
-The `org.hibernate.Interceptor` interface provides callbacks from the session to the application,
-allowing the application to inspect and/or manipulate properties of a persistent object before it is saved, updated, deleted or loaded.
+[cols="1,2,2",options="header"]
+|===
+|Mechanism |Use it for |Contract and scope
+|Jakarta Persistence callbacks |Entity initialization, state validation, and lifecycle notifications |Standard annotations and listener registration; entity callbacks receive an entity, not Hibernate's previous-state arrays
+|Hibernate `Interceptor` |Inspecting or adjusting entity state and observing collection changes |Hibernate callbacks with state arrays; shared across sessions or selected/created per session
+|Native event listeners |Integrating with or extending Hibernate's event processing |Hibernate SPI; listeners participate in ordered event groups and may replace essential default behavior
+|===
 
-One possible use for this is to track auditing information.
-The following example shows an `Interceptor` implementation that automatically logs when an entity is updated.
+Start with persistence callbacks when they provide the required information.
+An interceptor can also inspect the previous state supplied for dirty checking and observe collection changes.
+Native listeners offer more control over Hibernate processing and require more knowledge of its internals.
 
-[[events-interceptors-example]]
-====
-[source, java, indent=0]
-----
-include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-example]
-----
-====
-
-An Interceptor can be either `Session`-scoped or `SessionFactory`-scoped.
-
-A Session-scoped interceptor is specified when a session is opened.
-
-[[events-interceptors-session-scope-example]]
-====
-[source, java, indent=0]
-----
-include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-session-scope-example]
-----
-====
-
-A `SessionFactory`-scoped interceptor is registered with the `Configuration` object prior to building the `SessionFactory`.
-Unless a session is opened explicitly specifying the interceptor to use, the `SessionFactory`-scoped interceptor will be applied to all sessions opened from that `SessionFactory`.
-`SessionFactory`-scoped interceptors must be thread-safe.
-Ensure that you do not store session-specific states since multiple sessions will use this interceptor potentially concurrently.
-
-[[events-interceptors-session-factory-scope-example]]
-====
-[source, java, indent=0]
-----
-include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-session-factory-scope-example]
-----
-====
-
-[[events-events]]
-=== Native Event system
-
-If you have to react to particular events in the persistence layer, you can also use the Hibernate _event_ architecture.
-The event system can be used in place of or in addition to interceptors.
-
-Many methods of the `Session` interface correlate to an event type.
-The full range of defined event types is declared as enum values on `org.hibernate.event.spi.EventType`.
-When a request is made of one of these methods, the Session generates an appropriate event and passes it to the configured event listener(s) for that type.
-
-Applications can customize the listener interfaces (i.e., the `LoadEvent` is processed by the registered implementation of the `LoadEventListener` interface), in which case their implementations would
-be responsible for processing the `load()` requests made of the `Session`.
-
-[NOTE]
-====
-The listeners should be considered stateless. They are shared between requests, and should not save any state as instance variables.
-====
-
-A custom listener implements the appropriate interface for the event it wants to process and/or extend one of the convenience base classes
-(or even the default event listeners used by Hibernate out-of-the-box as these are declared non-final for this purpose).
-
-Here is an example of a custom load event listener:
-
-[[events-interceptors-load-listener-example]]
-.Custom `LoadListener` example
-====
-[source, java, indent=0]
-----
-include::{example-dir-event}/ListenerTest.java[tags=events-interceptors-load-listener-example-part1]
-----
-
-[source, java, indent=0]
-----
-include::{example-dir-event}/ListenerTest.java[tags=events-interceptors-load-listener-example-part2]
-----
-====
-
-[[events-mixing-events-and-interceptors]]
-=== Mixing Events and Interceptors
-
-When you want to customize the entity state transition behavior, you have two options:
-
-. you provide a custom `Interceptor`, which is taken into consideration by the default Hibernate event listeners.
-For example, the `Interceptor#onSave()` method is invoked by Hibernate `AbstractSaveEventListener`.
-Or, the `Interceptor#onLoad()` is called by the `DefaultPreLoadEventListener`.
-. you can replace any given default event listener with your own implementation.
-When doing this, you should probably extend the default listeners because otherwise, you'd have to take care of all the low-level entity state transition logic.
-For example, if you replace the `DefaultPreLoadEventListener` with your own implementation, then, only if you call the `Interceptor#onLoad()` method explicitly, you can mix the custom load event listener with a custom Hibernate interceptor.
-
+A notification after an insert or delete does not establish that the transaction committed.
+Logging changes is different from maintaining persistent revision history; see <<envers>> for revision auditing and <<transactions-completion>> for transaction completion and failures.
 
 [[events-jpa-callbacks]]
-=== Jakarta Persistence Callbacks
+=== Jakarta Persistence callbacks
 
-Jakarta Persistence also defines a more limited set of callbacks through annotations.
+Jakarta Persistence supports callbacks declared on entities and mapped superclasses, separate listener classes, and listeners registered programmatically.
+The following groups distinguish managed-entity lifecycle operations from database operations.
 
-.Callback annotations
-[cols=",",options="header",]
-|=======================================================================
-|Type |Description
-|@PrePersist |Executed before the entity manager persist operation is actually executed or cascaded. This call is synchronous with the persist operation.
-|@PreRemove |Executed before the entity manager remove operation is actually executed or cascaded. This call is synchronous with the remove operation.
-|@PostPersist |Executed after the entity manager persist operation is actually executed or cascaded. This call is invoked after the database INSERT is executed.
-|@PostRemove |Executed after the entity manager remove operation is actually executed or cascaded. This call is synchronous with the remove operation.
-|@PreUpdate |Executed before the database UPDATE operation.
-|@PostUpdate |Executed after the database UPDATE operation.
-|@PostLoad |Executed after an entity has been loaded into the current persistence context or an entity has been refreshed.
-|=======================================================================
+[[events-callback-types]]
+==== Callback events and timing
 
-There are two available approaches defined for specifying callback handling:
+[cols="1,3",options="header"]
+|===
+|Callback |When it applies
+|`@PrePersist` |Before an entity becomes persistent through `persist()` or creation during `merge()`
+|`@PostPersist` |After the entity's database insertion; it may be deferred until flush
+|`@PreRemove` |Before an entity is marked for removal
+|`@PostRemove` |After the entity's database deletion; it may be deferred until flush
+|`@PreMerge` |Before state is copied from the object supplied to `merge()`; the callback receives that object, not the managed result
+|`@PreInsert`, `@PostInsert` |Before and after inserting entity data
+|`@PreUpdate`, `@PostUpdate` |Before and after updating entity data
+|`@PreDelete`, `@PostDelete` |Before and after deleting entity data
+|`@PreUpsert`, `@PostUpsert` |Before and after the upsert operation, rather than separate insert/update notifications for its database outcome
+|`@PostLoad` |After loaded or refreshed state has been assigned to the entity instance
+|===
 
-* The first approach is to annotate methods on the entity itself to receive notifications of a particular entity lifecycle event(s).
-* The second is to use a separate entity listener class.
-An entity listener is a stateless class with a no-arg constructor.
-The callback annotations are placed on a method of this class instead of the entity class.
-The entity listener class is then associated with the entity using the `jakarta.persistence.EntityListeners` annotation
+The insert/delete/upsert pairs and `@PreMerge` are additions in Jakarta Persistence 4.0.
+Database-operation callbacks also apply to the corresponding stateless operations; they do not require a managed entity in a persistence context.
+Hibernate also invokes the older persist/remove callback annotations for stateless insert/delete operations.
+Use the operation-specific annotations when expressing database-operation intent, and see <<batch-stateless>> for stateless processing.
+
+For a stateful persistence context, `@PrePersist` and `@PreRemove` run during the lifecycle operation, while SQL and its post-operation callbacks may run later during <<flushing,flushing>>.
+Primary keys generated with `SEQUENCE`, `TABLE`, or `UUID` are available to `@PrePersist`; an `IDENTITY` key is available after insertion.
+Do not depend on a universal ordering of callbacks relative to cascades to other entities.
+See <<pc-persist>>, <<pc-remove>>, and <<pc-merge>> for those operations.
 
 [[events-jpa-callbacks-example]]
-.Example of specifying Jakarta Persistence callbacks
+.An entity listener normalizing state and recording callback order
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
-include::{example-dir-event}/ListenerTest.java[tags=events-jpa-callbacks-example]
+include::{example-dir-event}/EventsGuideTests.java[tags=events-jpa-callbacks-example]
 ----
 ====
 
-These approaches can be mixed, meaning you can use both together.
+Here `events` is the test's invocation log.
+The assigned identifier lets this example demonstrate an insertion deferred until an explicit flush:
 
-Regardless of whether the callback method is defined on the entity or on an entity listener, it must have a void-return signature.
-The name of the method is irrelevant as it is the placement of the callback annotations that makes the method a callback.
-In the case of callback methods defined on the entity class, the method must additionally have a no-argument signature.
-For callback methods defined on an entity listener class, the method must have a single argument signature; the type of that argument can be either `java.lang.Object` (to facilitate attachment to multiple entities) or the specific entity type.
+[[events-callback-timing-example]]
+.Flushing does not imply commit
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/EventsGuideTests.java[tags=events-callback-timing]
+----
+====
 
-A callback method can throw a `RuntimeException`.
-If the callback method does throw a `RuntimeException`, then the current transaction, if any, must be rolled back.
+The test verifies in a fresh entity manager that the rolled-back row does not exist.
+It also verifies that `@PostRemove` follows deletion at flush and that rolling back restores the row.
+Do not treat post-operation callbacks as a place to announce an irrevocable external outcome.
 
-A callback method must not invoke `EntityManager` or `Query` methods!
+[[events-listener-registration]]
+==== Declaring and registering listeners
 
-It is possible that multiple callback methods are defined for a particular lifecycle event.
-When that is the case, the defined order of execution is well defined by the Jakarta Persistence spec (specifically section 3.5.4):
+Use `@EntityListeners` on an entity or mapped superclass to associate listener classes with that hierarchy.
+It may also appear on `package-info.java` or `module-info.java` to declare default listeners for entities in that package or module.
+XML mapping files can declare persistence-unit defaults and entity-specific listeners.
 
-* Any default listeners associated with the entity are invoked first, in the order they were specified in the XML. See the `jakarta.persistence.ExcludeDefaultListeners` annotation.
-* Next, module-level listeners declared via `@EntityListeners` on `module-info.java` are invoked, followed by package-level listeners declared on `package-info.java`. These are _not_ affected by `@ExcludeDefaultListeners`.
-* Next, entity listener class callbacks associated with the entity hierarchy are invoked, in the order they are defined in the `EntityListeners`.
-If multiple classes in the entity hierarchy define entity listeners, the listeners defined for a superclass are invoked before the listeners defined for its subclasses.
-See the ``jakarta.persistence.ExcludeSuperclassListener``'s annotation.
-* Lastly, callback methods defined on the entity hierarchy are invoked.
-If a callback type is annotated on both an entity and one or more of its superclasses without method overriding, both would be called, the most general superclass first.
-An entity class is also allowed to override a callback method defined in a superclass in which case the super callback would not get invoked; the overriding method would get invoked provided it is annotated.
+Jakarta Persistence 4.0 also discovers classes annotated with {jpaJavadocUrlPrefix}EntityListener.html[`@EntityListener`].
+Such a listener applies to compatible entity types according to its callback parameter types, without a separate `@EntityListeners` declaration on every entity:
+
+[[events-discovered-listener-example]]
+.A discovered listener and its managed-class registration
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/EventsGuideTests.java[tags=events-discovered-listener]
+----
+[source,java,indent=0]
+----
+include::{example-dir-event}/EventsGuideTests.java[tags=events-discovered-registration]
+----
+====
+
+`PlainRecord` is a simple entity with assigned `id` and `name` attributes and no `@EntityListeners` declaration.
+The example registers the listener class explicitly in the persistence unit's managed classes; archive discovery is another way to make it available.
+See <<bootstrap>> for registration and discovery.
+
+Use the standard `EntityManagerFactory.addListener()` API for runtime registration:
+
+[[events-runtime-listener-example]]
+.Registering a callback and cancelling its registration
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/EventsGuideTests.java[tags=events-runtime-registration]
+----
+[source,java,indent=0]
+----
+include::{example-dir-event}/EventsGuideTests.java[tags=events-runtime-cancellation]
+----
+====
+
+Registration can target an entity class or a supertype of mapped entities.
+The callback runs for compatible entities until the returned registration is cancelled; cancellation affects subsequent notifications.
+The example's test persists one row before and another after cancellation and verifies that the counter advances only once.
+
+[[events-callback-contracts]]
+==== Entity callback contracts
+
+A callback method returns `void` and may have public, protected, package, or private access, but must not be static or final.
+An entity or mapped-superclass method has no arguments.
+A listener method has one argument whose type is the entity class or a compatible supertype, including `Object`.
+Listener classes have a public no-argument constructor and can receive CDI injection when the container is configured; see <<beans>>.
+This support does not make the entity instances themselves CDI-managed objects.
+
+A callback may modify the entity's nonrelationship state, as the normalization example does.
+Portable callbacks should not execute entity-manager or query operations, access other entities, or modify relationships within the same persistence context.
+A runtime exception stops further callback processing and marks a joined transaction for rollback.
+Catching it does not restore the transaction or persistence context to a usable state; see <<pc-exception-handling>>.
+
+Listener instances can serve multiple entities and concurrent sessions.
+Keep mutable operation-specific state out of shared listeners; immutable configuration and thread-safe injected dependencies are appropriate fields.
+The invocation logs in these tests are fixtures, not examples of concurrent application storage.
+
+Bulk HQL/Criteria mutations and direct SQL bypass ordinary per-entity lifecycle callbacks.
+The database-operation callback annotations do not turn a listener into a database trigger.
+See <<query-mutations>>, <<sql>>, and <<database-jdbc-work>> for these execution boundaries.
+
+[[events-callback-ordering]]
+==== Ordering and inheritance
+
+For a given entity callback event, Hibernate invokes the following groups in order:
+
+. XML persistence-unit default listeners, in declaration order.
+. Discovered `@EntityListener` listeners; do not depend on a relative order among these listeners.
+. Module-level listeners, followed by package-level listeners, in each declaration's order.
+. Listeners associated with the entity hierarchy, with superclass registrations before subclass registrations and declaration order within each registration.
+. Callback methods on the entity hierarchy, with superclass callbacks before subclass callbacks.
+. Runtime callbacks registered through <<events-runtime-listener-example,`EntityManagerFactory.addListener()`>>, in registration order, after the declared callbacks above.
+
+Overriding a callback method changes which inherited method is eligible; annotate the overriding method for the callback event it is intended to handle.
+XML mappings may override annotation-based callback declarations and ordering.
+See the Jakarta Persistence specification's
+https://jakarta.ee/specifications/persistence/4.0/jakarta-persistence-spec-4.0-M4.html#a2251[callback ordering rules].
 
 [[events-default-listener]]
-=== Default entity listeners
+==== Default entity listeners
 
-The Jakarta Persistence specification allows you to define a default entity listener which is going to be applied for every entity in that particular system.
-Default entity listeners can only be defined in XML mapping files.
+An XML default listener applies throughout the persistence unit unless excluded.
+The following mapping registers a listener that assigns creation and update timestamps to entities extending `BaseEntity`:
 
 [[events-default-listener-mapping-example]]
-.Default event listener mapping
+.An XML default listener and its mapping
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListener.java[tags=events-default-listener-mapping-example]
 ----
-
-[source, xml, indent=0]
+[source,xml,indent=0]
 ----
 include::{example-dir-event-resources}/DefaultEntityListener-orm.xml[tags=events-default-listener-mapping-example]
 ----
 ====
 
-Considering that all entities extend the `BaseEntity` class:
+The shared attributes and entities are mapped as follows:
 
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-event}/BaseEntity.java[tags=events-default-listener-mapping-example]
 ----
-
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-mapping-example]
 ----
 
-When persisting a `Person` or `Book` entity, the `createdOn` is going to be set by the `onPersist` method of the `DefaultEntityListener`.
+The listener assigns `createdOn` during persistence:
 
 [[events-default-listener-persist-example]]
-.Default event listener persist event
+.Default listener on persistence
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-persist-example]
 ----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/events-default-listener-persist-example.sql[]
-----
 ====
 
-When updating a `Person` or `Book` entity, the `updatedOn` is going to be set by the `onUpdate` method of the `DefaultEntityListener`.
+Updating these entities invokes the listener's `onUpdate()` method during flush and assigns `updatedOn`:
 
 [[events-default-listener-update-example]]
-.Default event listener update event
+.Default listener on update
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-update-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/events-default-listener-update-example.sql[]
 ----
 ====
 
 [[events-exclude-default-listener]]
-==== Exclude default entity listeners
+===== Excluding listeners
 
-If you already registered a default entity listener, but you don't want to apply it to a particular entity,
-you can use the
-{jpaJavadocUrlPrefix}ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] and
-{jpaJavadocUrlPrefix}ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`] Jakarta Persistence annotations.
+{jpaJavadocUrlPrefix}ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] excludes default listeners declared in XML and on package/module descriptors.
+It may be declared on an entity or mapped superclass, and the exclusion applies to its subclasses.
+The equivalent XML element is `<exclude-default-listeners/>`.
+Discovered `@EntityListener` registrations are separate from these defaults and are not suppressed by this exclusion.
 
-`@ExcludeDefaultListeners` instructs the current class to ignore the default entity listeners for the current entity
-while `@ExcludeSuperclassListeners` is used to ignore the default entity listeners propagated to the `BaseEntity` super-class.
+{jpaJavadocUrlPrefix}ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`] excludes listeners associated with superclasses.
+It does not exclude package/module or XML default listeners, or callback methods declared on the entity hierarchy itself.
+Neither annotation removes the entity's own explicitly associated listeners or callback methods.
 
 [[events-exclude-default-listener-mapping-example]]
-.Exclude default event listener mapping
+.Excluding defaults for one entity hierarchy
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-mapping-example]
 ----
 ====
 
-When persisting a `Publisher` entity,
-the `createdOn` is not going to be set by the `onPersist` method of the `DefaultEntityListener`
-because the `Publisher` entity was marked with the `@ExcludeDefaultListeners` and `@ExcludeSuperclassListeners` annotations.
+The `Publisher` still inherits the mapped timestamp attributes, but its default listener is excluded:
 
 [[events-exclude-default-listener-persist-example]]
-.Excluding default event listener events
+.Persistence without the default listener
 ====
-[source, java, indent=0]
+[source,java,indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-persist-example]
 ----
+====
 
-[source, sql, indent=0]
+The test verifies that `createdOn` remains null after persistence.
+
+[[events-unit-lifecycle]]
+==== Persistence-unit lifecycle callbacks
+
+Jakarta Persistence 4.0 also provides `@PostCreate` and `@PreClose` callbacks for the creation and closing of an `EntityManagerFactory`, `EntityManager`, or `EntityAgent`.
+Declare these methods on a discovered `@EntityListener` class.
+Each method returns `void` and takes one parameter of the specific type whose lifecycle it observes: `EntityManagerFactory`, `EntityManager`, or `EntityAgent`.
+These callbacks observe persistence infrastructure, rather than changes to an entity or the completion of a transaction.
+
+[[events-unit-lifecycle-example]]
+.Observing creation and closing
+====
+[source,java,indent=0]
 ----
-include::{extrasdir}/events-exclude-default-listener-persist-example.sql[]
+include::{example-dir-event}/EventsGuideTests.java[tags=events-unit-lifecycle]
 ----
 ====
 
+Here `events` is the test's invocation log, and the listener is registered among the persistence unit's managed classes, as in <<events-discovered-listener-example>>.
+The test verifies creation/closing notifications for the factory and separately created entity manager and agent.
+
+These annotations are different from CDI's `@PostConstruct` and `@PreDestroy`.
+The CDI annotations describe the initialization and destruction of the listener or interceptor bean itself; `@PostCreate` and `@PreClose` describe the persistence object passed to the callback.
+See <<events-interceptor-cdi>> for managed interceptor lifetimes and <<bootstrap>> and <<pc>> for factory and persistence-context lifetimes.
+
+[[events-interceptors]]
+=== Hibernate interceptors
+
+link:{doc-javadoc-url}org/hibernate/Interceptor.html[`Interceptor`] provides stateful callbacks such as `onLoad()`, `onPersist()`, `onRemove()`, and `onFlushDirty()`, plus collection callbacks for recreation, removal, and updates.
+Stateless operations use `onLoad()`, `onInsert()`, `onUpdate()`, `onUpsert()`, and the stateless `onDelete()` overload.
+Use the current `onPersist()`/`onRemove()` methods instead of the deprecated stateful `onSave()`/`onDelete()` callbacks.
+
+[[events-interceptor-contracts]]
+==== Inspecting and adjusting state
+
+The indexes of an interceptor's state, property-name, and type arrays correspond.
+For callbacks returning a boolean, return `true` if the callback changes the mutable state array and `false` when it only observes state.
+Do not modify `previousState`, and do not assume a previous-state snapshot is always available.
+
+[[events-interceptor-state-example]]
+.Normalizing a property through the insertion state
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/EventsGuideTests.java[tags=events-interceptor-state]
+----
+====
+
+The test verifies both the entity's name and the value loaded in a fresh session.
+A purely observational interceptor can instead log a dirty entity without exposing all of its property values:
+
+[[events-interceptors-example]]
+.Observing dirty checking
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-example]
+----
+====
+
+`onFlushDirty()` participates in dirty checking during flush; it is not a commit notification or a guaranteed single notification for each changed row.
+An interceptor callback must not invoke operations on the session or cause lazy proxy/collection initialization.
+These are interceptor restrictions, separate from the portability rules for persistence callbacks.
+
+[[events-interceptor-registration]]
+==== Registration, scope, and ownership
+
+[cols="2,2,3",options="header"]
+|===
+|Registration |Values |Behavior
+|`hibernate.session_factory.interceptor` |Instance, class, or class name |One shared interceptor; classes are resolved through managed-bean support
+|`hibernate.session_factory.session_scoped_interceptor` |Class, class name, or `Supplier<Interceptor>` |Automatic per-session acquisition or a supplier call for each session; an instance is not accepted here
+|Session/stateless-session builder `interceptor(instance)` |Instance |Explicit selection for that session, replacing the configured interceptor
+|===
+
+Both settings being nonnull causes `ConflictingInterceptorSettingsException`; they do not compose two interceptors.
+Shared interceptors must be thread-safe and must not store mutable session-specific state.
+A supplier should return appropriately separate instances when those instances hold session-specific state.
+
+[[events-interceptors-session-factory-scope-example]]
+.Configuring a shared interceptor
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-session-factory-scope-example]
+----
+====
+
+Build the factory with `configuration.createEntityManagerFactory()` after supplying the usual connection and schema settings; see <<bootstrap>> and <<database>>.
+The examples' test helpers supply those settings.
+`SessionFactoryBuilder.applyInterceptor(instance)` is the native builder equivalent.
+The historically named `applyStatelessInterceptor(Class)` and `applyStatelessInterceptor(Supplier)` methods configure automatic per-session acquisition; they are not limited to stateless sessions.
+
+[[events-interceptors-session-scope-example]]
+.Selecting an interceptor explicitly for a session
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-session-scope-example]
+----
+====
+
+Here `interceptor` is a `LoggingInterceptor` instance.
+An `Interceptor` is also a Jakarta Persistence `EntityManager.CreationOption` and `EntityAgent.CreationOption`, so an instance can be passed to their factory creation methods without unwrapping.
+
+`noInterceptor()` disables interception for that session.
+`noSessionInterceptorCreation()` only suppresses automatic session-scoped acquisition: a configured shared interceptor or an explicit instance still applies.
+Apply these options deliberately; subsequent explicit selections can change an earlier choice.
+
+An explicitly supplied instance is borrowed: Hibernate does not inject or destroy it merely because it is supplied as a setting or creation option.
+The application owns supplier-created instances as well; using a supplier does not automatically make its results container-managed.
+For automatically resolved classes, the lifecycle depends on the registration scope described below.
+
+[[events-interceptor-cdi]]
+==== CDI and managed interceptor lifecycles
+
+Class and class-name registrations use Hibernate's managed-bean infrastructure.
+With a configured CDI `BeanManager` or custom `BeanContainer`, this supports dependency injection and lifecycle callbacks.
+Without an external container, Hibernate constructs the class itself; that fallback does not supply CDI injection.
+Register the interceptor class explicitly: enabling CDI does not automatically select an `Interceptor` implementation.
+
+[[events-interceptor-cdi-example]]
+.An interceptor receiving an injected dependency
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/CdiInterceptorGuideTests.java[tags=events-cdi-interceptor]
+----
+====
+
+`AuditService` is the example's `@Dependent` CDI bean with a thread-safe counter; the flags let the tests verify initialization and destruction.
+This example counts notifications, not committed revisions.
+Hibernate's shared/session-scoped registrations determine reuse of the managed instance.
+They are not CDI request/session scopes, and do not imply reuse of an existing CDI contextual instance of the same class.
+
+[[events-interceptor-cdi-shared-example]]
+.A shared class-based interceptor
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/CdiInterceptorGuideTests.java[tags=events-cdi-shared-configuration]
+----
+====
+
+Here `beanManager` is the supplied CDI manager, or an `ExtendedBeanManager` as described in <<beans-cdi>>.
+The class is resolved once and shared by sessions.
+Its managed bean is released through registry/container shutdown, not at each session close.
+
+[[events-interceptor-cdi-session-example]]
+.Automatic managed acquisition per session
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/CdiInterceptorGuideTests.java[tags=events-cdi-session-configuration]
+----
+====
+
+With this registration, each session obtains a distinct managed interceptor, and closing the session releases that bean, including its `@PreDestroy` callback.
+This applies to stateful and stateless sessions; committing a transaction does not close the session or release its interceptor.
+When the parent-session sharing API shares an automatically acquired interceptor, it stays alive until the last sharing session closes.
+Explicitly passing an existing instance is borrowing; closing the borrower does not release the original owner's bean.
+
+[[events-interceptor-cdi-readiness]]
+===== CDI readiness
+
+See <<beans-cdi>> for `jakarta.persistence.bean.manager`, `hibernate.delay_cdi_access`, and extended access, or <<beans-custom-container>> for `hibernate.resource.beans.container`.
+Class-based interceptor acquisition does not require `hibernate.cdi.extensions=true`.
+The factory can retain a bootstrap-safe bean reference without immediately obtaining its interceptor instance.
+This does not mean every access mode initializes all beans at the same time: extended access can initialize registered references when the manager signals readiness.
+
+CDI must be usable before an interceptor instance is needed for reliable injection.
+Do not depend on opening sessions before CDI readiness or on fallback construction producing an injected object.
+The tests exercise immediate, delayed, and extended access with a real CDI container, verify shared and per-session identities, and check destruction at the appropriate lifecycle boundary.
+
+[[events-events]]
+=== Native event listeners
+
+Native listeners implement interfaces such as `LoadEventListener` and participate in Hibernate's event processing.
+`org.hibernate.event.spi.EventType` is a class exposing typed constants such as `LOAD`, `PERSIST`, `PRE_INSERT`, and `POST_LOAD`.
+These include both requests, such as loading an entity, and notifications around database operations; they are not a one-to-one list of public session methods.
+
+[[events-native-registration]]
+==== Registration and ordering
+
+Register listeners during bootstrap using an `Integrator` and the `EventListenerRegistry`.
+`prependListeners()` adds listeners before the existing group, `appendListeners()` adds them after it, and `setListeners()` replaces the group.
+If an integration may register a listener repeatedly, use the registry's duplication handling to define whether duplicate registrations are rejected, retained, or replaced.
+
+[[events-interceptors-load-listener-example]]
+.Observing load requests while preserving default processing
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/ListenerTest.java[tags=events-interceptors-load-listener-example-part1]
+----
+[source,java,indent=0]
+----
+include::{example-dir-event}/ListenerTest.java[tags=events-interceptors-load-listener-example-part2]
+----
+====
+
+The observer must be safe for concurrent use because the factory shares these listeners.
+Its test uses an invocation list to verify `load-request`, the interceptor's `onLoad()`, and `post-load`, in that order, while `find()` successfully returns the entity.
+This is an observation hook; it is not a complete data-authorization mechanism.
+
+[[events-native-configuration-example]]
+.Supplying the integrator at bootstrap
+====
+[source,java,indent=0]
+----
+include::{example-dir-event}/ListenerTest.java[tags=events-native-registration]
+----
+====
+
+An integrator may also be discovered through `ServiceLoader` using `META-INF/services/org.hibernate.integrator.spi.Integrator`.
+During `integrate()`, the factory is still being initialized: register the integration rather than opening sessions or executing application work.
+
+[[events-mixing-events-and-interceptors]]
+==== Preserving default event processing
+
+Hibernate's default listeners implement persistence behavior and invoke interceptors and persistence callbacks where appropriate.
+For example, save processing calls `Interceptor.onPersist()`, and `DefaultPreLoadEventListener` calls `Interceptor.onLoad()` before assigning loaded state.
+
+Prefer adding listeners around the defaults when observing an event.
+Replacing a group can remove loading, state-transition processing, and callback invocation.
+A replacement must preserve every required contract; extending or delegating a default implementation can help, but does not automatically make arbitrary replacement behavior equivalent.
+Do not manually invoke interceptor callbacks as an application notification API.

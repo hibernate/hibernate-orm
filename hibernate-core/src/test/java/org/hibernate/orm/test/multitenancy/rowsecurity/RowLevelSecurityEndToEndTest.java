@@ -265,11 +265,12 @@ class RowLevelSecurityEndToEndTest {
 				.getResultList();
 	}
 
+	// tag::multitenancy-rls-native[]
 	private static Long countRowsDirectly(org.hibernate.Session session) {
-		final Number count = (Number) session.createNativeQuery( "select count(*) from rls_document" )
-				.getSingleResult();
-		return count.longValue();
+		return session.createNativeQuery( "select count(*) from rls_document", Long.class ).uniqueResult();
 	}
+
+	// end::multitenancy-rls-native[]
 
 	@Entity( name = "RlsDocument" )
 	@Table( name = "rls_document" )

@@ -10,6 +10,7 @@ Hibernate's schema tooling can create database objects from mappings, export DDL
 validate an existing schema, and perform supported schema alterations.
 Mapped objects include tables, columns, constraints, indexes, sequences, and configured auxiliary objects.
 Historically, this tooling has been called _HBM2DDL_.
+For explicit tenant-schema targeting and provisioning responsibilities, see <<multitenancy-provisioning>>.
 
 Generation, validation, and migration serve different purposes.
 Generation creates objects from the current mappings; validation checks supported aspects of existing objects.

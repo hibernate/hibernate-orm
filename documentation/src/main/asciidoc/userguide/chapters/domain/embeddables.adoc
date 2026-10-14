@@ -338,10 +338,10 @@ A custom naming strategy can implement other implicit naming rules.
 ==== Embeddables in identifiers and collections
 
 [[embeddable-collections]][[embeddable-mapkey]]Collections of embeddable types are specifically valued collections (as embeddable types are value types).
-Value collections are covered in detail in <<chapters/domain/collections.adoc#collections-elemental,Collections of value types>>.
+Value collections are covered in detail in <<collections-elemental,Collections of value types>>.
 
 Embeddable types can also be used as `Map` keys.
-This topic is covered in detail in <<chapters/domain/collections.adoc#collections-map,Map mappings>>.
+This topic is covered in detail in <<collections-map,Map mappings>>.
 
 Embeddable types can also be used as entity type identifiers.
 This usage is covered in detail in <<chapters/domain/identifiers.adoc#identifiers-composite,Composite identifiers>>.
@@ -354,9 +354,9 @@ Embeddable types that are used as collection entries, map keys or entity type id
 [[embeddable-mapping-aggregate-collections]]
 ==== Embeddable mappings containing collections
 
-Mapping <<chapters/domain/collections.adoc#collections,collections>> inside an `@Embeddable` value is supported in most cases. There are a couple exceptions:
+Mapping <<collections,collections>> inside an `@Embeddable` value is supported in most cases. There are a couple exceptions:
 
-* If the values of an <<chapters/domain/collections.adoc#collections-elemental,@ElementCollection>> is of embeddable type, that embeddable cannot contain nested collections;
+* If the values of an <<collections-elemental,@ElementCollection>> is of embeddable type, that embeddable cannot contain nested collections;
 * Explicitly selecting an embeddable that contains collections in a query is currently not supported (Hibernate cannot initialize the collection correctly without its owning entity in the persistence context).
 
 [[embeddable-Target]]
@@ -526,7 +526,7 @@ include::{example-dir-emeddable}/StructEmbeddableTest.java[tag=embeddable-struct
 By default, schema generation emits DDL for the object type, as shown below:
 
 ====
-[source,sql]
+[source,sql,opts=novalidate]
 ----
 create type structType as (
     ...
@@ -618,7 +618,7 @@ include::{example-dir-emeddable}/JsonEmbeddableTest.java[tag=embeddable-json-typ
 By default, schema generation emits DDL that preserves the embeddable type's constraints, as shown below:
 
 ====
-[source,sql]
+[source,sql,opts=novalidate]
 ----
 create table JsonHolder as (
     id bigint not null primary key,

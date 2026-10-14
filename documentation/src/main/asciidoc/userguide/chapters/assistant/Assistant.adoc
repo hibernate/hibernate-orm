@@ -17,15 +17,19 @@ This module contains:
 1. The `HibernateAssistant` interface: to provide a simple, provider-agnostic, natural-language focused API to Hibernate ORM's persistence capabilities.
 2. Serialization utilities: to ease the use of Hibernate ORM in the context of generative AI, for example when implementing the above.
 
-No implementation is included, but the above provides the building blocks for integration with generative AI services/APIs.
+No implementation of `HibernateAssistant` or integration with a particular LLM service is included.
+The module does include JSON implementations of the serializer interfaces described below.
 
 [[assistant-serialization]]
 === Serialization Components
 
 To facilitate communication between Hibernate and LLM providers, the module includes two key Service Provider Interfaces (SPIs):
 
-`MetamodelSerializer`:: Generates a structured textual representation of your Hibernate mapping model, including entity classes, relationships, properties, and constraints. This allows the LLM to understand your domain model's structure and semantics.
+`MetamodelSerializer`:: Serializes the Jakarta Persistence metamodel. The included JSON implementation
+reports managed type names, Java types, inheritance, identifier attribute information where available,
+and attribute names and types, including collection key and element types. It does not provide
+a complete relational schema or database constraint model.
 
 `ResultsSerializer`:: Converts query results and data into a structured textual format suitable for LLM consumption and interpretation. This enables the AI to reason about actual data from your database.
 
-Default JSON-based implementations of both serializers are provided, offering a ready-to-use foundation for most integration scenarios.
+The JSON serializer implementations provide building blocks for an application-supplied assistant integration.

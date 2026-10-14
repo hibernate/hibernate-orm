@@ -2,9 +2,9 @@
 == Compatibility
 
 [[compatibility-dependencies]]
-=== [[system-requirements]] Dependencies
+=== Dependencies
 
-Hibernate {fullVersion} requires the following dependencies (among others):
+Hibernate {majorMinorVersion} requires the following dependencies (among others):
 
 .Compatible versions of dependencies
 [cols="h,^1", stripes=none]
@@ -38,7 +38,7 @@ for full details and examples.
 [[compatibility-database]]
 === Database
 
-Hibernate {fullVersion}'s compatibility with a given database and version
+Hibernate {majorMinorVersion}'s compatibility with a given database and version
 depends on the dialect being used.
 
 Refer to the link:{doc-dialect-url}[Dialects] guide for details about both dialects and supported databases.

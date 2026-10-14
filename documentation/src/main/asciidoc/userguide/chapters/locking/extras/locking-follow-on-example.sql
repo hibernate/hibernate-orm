@@ -1,10 +1,10 @@
-SELECT DISTINCT p.id as id1_0_, p."name" as name2_0_
-FROM Person p
+-- Initial selection (aliases and column order omitted for clarity)
+select id, title, version
+from GuideBook
+order by id;
 
-SELECT id
-FROM Person
-WHERE id = 1 FOR UPDATE
-
-SELECT id
-FROM Person
-WHERE id = 2 FOR UPDATE
+-- Grouped acquisition for the selected identifiers
+select id, title, version
+from GuideBook
+where id in (?, ?)
+for update;

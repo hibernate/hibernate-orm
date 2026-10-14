@@ -11,6 +11,16 @@ import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -24,8 +34,8 @@ public class OptimisticLockTypeDirtyTest {
 		factoryScope.dropData();
 	}
 
-	@Test
-	public void test(EntityManagerFactoryScope factoryScope) {
+	@BeforeEach
+	public void prepareData(EntityManagerFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			var person = new Person();
 			person.setId(1L);
@@ -36,12 +46,62 @@ public class OptimisticLockTypeDirtyTest {
 			entityManager.persist(person);
 		});
 
+	}
+
+	@Test
+	public void test(EntityManagerFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::locking-optimistic-lock-type-dirty-update-example[]
 			var person = entityManager.find(Person.class, 1L);
 			person.setCity("Washington D.C.");
 			//end::locking-optimistic-lock-type-dirty-update-example[]
 		});
+	}
+
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Concurrent changes can instead fail at SERIALIZABLE isolation")
+	public void testNonoverlappingChangesSucceed(EntityManagerFactoryScope factoryScope) {
+		try (EntityManager entityManager = factoryScope.getEntityManagerFactory().createEntityManager()) {
+			entityManager.getTransaction().begin();
+			try {
+				Person person = entityManager.find( Person.class, 1L );
+				factoryScope.inTransaction( writer -> writer.find( Person.class, 1L ).setName( "Concurrent" ) );
+				person.setCity( "Washington D.C." );
+				entityManager.getTransaction().commit();
+			}
+			finally {
+				if ( entityManager.getTransaction().isActive() ) {
+					entityManager.getTransaction().rollback();
+				}
+			}
+		}
+		factoryScope.inTransaction( entityManager -> {
+			Person person = entityManager.find( Person.class, 1L );
+			assertEquals( "Concurrent", person.getName() );
+			assertEquals( "Washington D.C.", person.getCity() );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Concurrent changes can instead fail at SERIALIZABLE isolation")
+	public void testOverlappingChangesConflict(EntityManagerFactoryScope factoryScope) {
+		try (EntityManager entityManager = factoryScope.getEntityManagerFactory().createEntityManager()) {
+			entityManager.getTransaction().begin();
+			try {
+				Person person = entityManager.find( Person.class, 1L );
+				factoryScope.inTransaction( writer -> writer.find( Person.class, 1L ).setCity( "Concurrent" ) );
+				person.setCity( "Stale" );
+				assertThrows( OptimisticLockException.class, entityManager::flush );
+			}
+			finally {
+				entityManager.getTransaction().rollback();
+			}
+		}
+		factoryScope.inTransaction( entityManager ->
+				assertEquals( "Concurrent", entityManager.find( Person.class, 1L ).getCity() ) );
 	}
 
 	//tag::locking-optimistic-lock-type-dirty-example[]

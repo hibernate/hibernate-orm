@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.generator.EventType;
@@ -19,6 +20,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
@@ -84,11 +86,43 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 			String sql,
 			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session) {
+		return executeAndExtractReturning( sql, preparedStatement, session, (Runnable) null );
+	}
+
+	@Override
+	protected GeneratedValues executeAndExtractReturning(
+			String sql,
+			PreparedStatement preparedStatement,
+			SharedSessionContractImplementor session,
+			FlushOperation operation) {
+		return executeAndExtractReturning( sql, preparedStatement, session,
+				getTiming() == EventType.UPDATE ? () -> {
+					try {
+						final var checker = operation.getOperationResultChecker();
+						if ( checker != null ) {
+							checker.checkResult( 0, preparedStatement, -1, sql, session.getFactory() );
+						}
+						else {
+							((PreparableMutationOperation) operation.getJdbcOperation()).getExpectation()
+									.verifyOutcome( 0, preparedStatement, -1, sql );
+						}
+					}
+					catch (SQLException e) {
+						throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to check update outcome", sql );
+					}
+				} : null );
+	}
+
+	private GeneratedValues executeAndExtractReturning(
+			String sql,
+			PreparedStatement preparedStatement,
+			SharedSessionContractImplementor session,
+			Runnable emptyResultHandler) {
 		final var resultSet =
 				session.getJdbcCoordinator().getResultSetReturn()
 						.execute( preparedStatement, sql );
 		try {
-			return getGeneratedValues( resultSet, preparedStatement, persister, getTiming(), session );
+			return getGeneratedValues( resultSet, preparedStatement, persister, getTiming(), session, emptyResultHandler );
 		}
 		catch (SQLException sqle) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(

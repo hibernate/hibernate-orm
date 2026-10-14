@@ -199,14 +199,6 @@ tasks.forbiddenApisJakartaData {
 	enabled = false
 }
 
-tasks.forbiddenApisQuarkusOrmPanache {
-	enabled = false
-}
-
-tasks.forbiddenApisQuarkusHrPanache {
-	enabled = false
-}
-
 tasks.forbiddenApisIntegrationTest {
 	enabled = false
 }

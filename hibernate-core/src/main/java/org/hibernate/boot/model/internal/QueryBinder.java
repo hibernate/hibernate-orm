@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -591,8 +592,8 @@ public abstract class QueryBinder {
 			MethodDetails methodDetails,
 			ModelsContext modelsContext) {
 		final var returnType = methodDetails.getReturnType();
-		if ( isReactiveType( returnType ) ) {
-			return reactiveSelectionResultType( classDetails, methodDetails, modelsContext );
+		if ( isReactiveType( returnType ) || isAsynchronousType( returnType ) ) {
+			return wrappedSelectionResultType( classDetails, methodDetails, modelsContext );
 		}
 		final var returnClass = returnType.toJavaClass();
 		if ( returnClass.isArray() ) {
@@ -607,15 +608,19 @@ public abstract class QueryBinder {
 	}
 
 	/**
-	 * The result type of a static query method of a reactive repository, which returns
-	 * Mutiny's {@code Uni}. The wrapper has no bearing on the type of result returned by
-	 * the query, but only a result, a {@code List}, a {@code KeyedResultList}, a {@code Page},
-	 * or a {@code CursoredPage} may be wrapped.
+	 * The result type of a static query method which returns Mutiny's {@code Uni}
+	 * (a reactive repository) or a {@code CompletionStage} (an asynchronous repository).
+	 * The wrapper has no bearing on the type of result returned by the query.
+	 * <p>
+	 * Hibernate Reactive supports only a result, a {@code List}, a {@code KeyedResultList},
+	 * a {@code Page}, or a {@code CursoredPage} in a {@code Uni}, while the result of an
+	 * asynchronous method may be anything that a method of a blocking repository can return.
 	 */
-	private static Class<?> reactiveSelectionResultType(
+	private static Class<?> wrappedSelectionResultType(
 			ClassDetails classDetails,
 			MethodDetails methodDetails,
 			ModelsContext modelsContext) {
+		final boolean reactive = isReactiveType( methodDetails.getReturnType() );
 		final var wrappedType = firstTypeArgument( classDetails, methodDetails );
 		final var wrappedClass = erasedClass( wrappedType );
 		if ( wrappedClass.isArray() ) {
@@ -623,10 +628,10 @@ public abstract class QueryBinder {
 		}
 		final var wrappedDetails =
 				modelsContext.getClassDetailsRegistry().resolveClassDetails( wrappedClass.getName() );
-		if ( isReactiveQueryContainerType( wrappedDetails ) ) {
+		if ( reactive ? isReactiveQueryContainerType( wrappedDetails ) : isStaticQueryContainerType( wrappedDetails ) ) {
 			return erasedClass( firstTypeArgument( wrappedType ) );
 		}
-		else if ( isStaticQueryContainerType( wrappedDetails ) ) {
+		else if ( reactive && isStaticQueryContainerType( wrappedDetails ) ) {
 			throw new AnnotationException( "Static query method '" + methodDetails.getName() + "' of '"
 					+ classDetails.getName() + "' returns '" + wrappedClass.getSimpleName() + "' wrapped in 'Uni'"
 					+ " (a reactive query method may only return a result, a 'List', a 'KeyedResultList',"
@@ -643,6 +648,10 @@ public abstract class QueryBinder {
 	 */
 	private static boolean isReactiveType(ClassDetails returnType) {
 		return MUTINY_UNI.equals( returnType.getName() );
+	}
+
+	private static boolean isAsynchronousType(ClassDetails returnType) {
+		return CompletionStage.class.getName().equals( returnType.getName() );
 	}
 
 	private static boolean isReactiveQueryContainerType(ClassDetails returnType) {

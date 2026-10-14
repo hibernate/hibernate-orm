@@ -12,6 +12,7 @@ import org.hibernate.processor.ImportContextImpl;
 import org.hibernate.processor.ProcessLaterException;
 import org.hibernate.processor.model.ImportContext;
 import org.hibernate.processor.model.MetaAttribute;
+import org.hibernate.processor.internal.DeclarationMetaAttribute;
 import org.hibernate.processor.spi.AnnotationMetaEntityContext;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.AccessTypeInformation;
@@ -309,8 +310,7 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 		return removeDollar( element.getSimpleName().toString() );
 	}
 
-	@Override
-	public String getConstructorName() {
+	private String getConstructorName() {
 		return repository ? '_' + getSimpleName() : getSimpleName() + '_';
 	}
 
@@ -679,18 +679,13 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 	}
 
 	@Override
-	public boolean addInjectAnnotation() {
-		return context.addInjectAnnotation();
+	public void addMember(String name, String declaration) {
+		members.put( name, new DeclarationMetaAttribute( this, name, declaration ) );
 	}
 
 	@Override
-	public boolean addNonnullAnnotation() {
-		return context.addNonnullAnnotation();
-	}
-
-	@Override
-	public void setSessionGetter(String getter) {
-		this.sessionGetter = getter;
+	public void setSessionExpression(String expression) {
+		this.sessionGetter = expression;
 		this.explicitSessionGetter = true;
 	}
 
@@ -1065,7 +1060,6 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 		) );
 	}
 
-	@Override
 	public @Nullable String dataStore() {
 		final var repo = getAnnotationMirror( element, JD_REPOSITORY );
 		if ( repo != null ) {
@@ -1172,7 +1166,6 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 		return context.getExtension().sessionQualifier( dataStore(), this );
 	}
 
-	@Override
 	public boolean needsDefaultConstructor() {
 		return jakartaDataRepository
 			// when an extension gives the session as an expression, we must not acquire or release one
@@ -3448,7 +3441,6 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 		return getSessionVariableName( sessionType );
 	}
 
-	@Override
 	public String getSessionVariableName(String sessionType) {
 		if ( explicitSessionGetter ) {
 			// an extension told us how to get the session, whatever its type

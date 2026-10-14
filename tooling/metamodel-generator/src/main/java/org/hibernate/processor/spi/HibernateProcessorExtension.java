@@ -16,6 +16,9 @@ import org.hibernate.service.JavaServiceLoadable;
  * An implementation is discovered with {@link java.util.ServiceLoader}, using the
  * class loader of this interface, by listing its fully qualified class name in
  * {@code META-INF/services/org.hibernate.processor.spi.HibernateProcessorExtension}.
+ * Every method has a default implementation which does nothing, so that an implementation only
+ * needs to override what it uses, and methods can be added to this interface compatibly.
+ * <p>
  * At most one implementation may be registered: finding several is reported as a compilation
  * error, since which one would be used is not deterministic. When none is found,
  * {@link org.hibernate.processor.internal.DefaultHibernateProcessorExtension}, which does nothing, is used instead.
@@ -38,7 +41,8 @@ public interface HibernateProcessorExtension {
 	 *
 	 * @param processingEnvironment the environment of the running annotation processor
 	 */
-	void init(ProcessingEnvironment processingEnvironment);
+	default void init(ProcessingEnvironment processingEnvironment) {
+	}
 
 	/**
 	 * The qualifier annotation to place on the session injected into the constructor of a generated
@@ -54,7 +58,9 @@ public interface HibernateProcessorExtension {
 	 * @param context gives access to the repository being generated
 	 * @return the annotation, for example {@code "@PersistenceUnit(\"name\")"}, or {@code null} for none
 	 */
-	@Nullable String sessionQualifier(@Nullable String dataStore, AnnotationMetaEntityContext context);
+	default @Nullable String sessionQualifier(@Nullable String dataStore, AnnotationMetaEntityContext context) {
+		return null;
+	}
 
 	/**
 	 * Whether the session of a Jakarta Data repository is injected by the container into the constructor
@@ -70,7 +76,9 @@ public interface HibernateProcessorExtension {
 	 *
 	 * @param context gives access to the repository being generated
 	 */
-	boolean usesConstructorInjection(AnnotationMetaEntityContext context);
+	default boolean usesConstructorInjection(AnnotationMetaEntityContext context) {
+		return false;
+	}
 
 	/**
 	 * Whether the given type is an entity, or entity base class, with framework-specific
@@ -84,7 +92,9 @@ public interface HibernateProcessorExtension {
 	 * @param type the type being processed
 	 * @return {@code true} if the type is handled by this extension
 	 */
-	boolean isExtensionEntity(TypeElement type);
+	default boolean isExtensionEntity(TypeElement type) {
+		return false;
+	}
 
 	/**
 	 * Whether the given type is a framework-specific repository, such as a Panache repository.
@@ -95,7 +105,9 @@ public interface HibernateProcessorExtension {
 	 * @param type the type being processed
 	 * @return {@code true} if the type is a repository handled by this extension
 	 */
-	boolean isExtensionRepository(TypeElement type);
+	default boolean isExtensionRepository(TypeElement type) {
+		return false;
+	}
 
 	/**
 	 * Called while the metamodel of an {@code @Entity} for which
@@ -107,7 +119,8 @@ public interface HibernateProcessorExtension {
 	 * @param element the entity type
 	 * @param context gives access to the metamodel being built
 	 */
-	void addRepositoryMembers(TypeElement element, AnnotationMetaEntityContext context);
+	default void addRepositoryMembers(TypeElement element, AnnotationMetaEntityContext context) {
+	}
 
 	/**
 	 * Called for each type for which a repository implementation may be generated, to let the
@@ -118,7 +131,7 @@ public interface HibernateProcessorExtension {
 	 * repositories. Returning a {@link SessionSetup} overrides that behavior. In that case the
 	 * extension is responsible for registering whatever is needed to get the session, typically
 	 * with {@link AnnotationMetaEntityContext#addRepositoryConstructor(String, String)} or
-	 * {@link AnnotationMetaEntityContext#setSessionGetter(String)}.
+	 * {@link AnnotationMetaEntityContext#setSessionExpression(String)}.
 	 *
 	 * @param element the repository or entity type being processed
 	 * @param getter the session getter method declared by the type or its supertypes,
@@ -126,8 +139,10 @@ public interface HibernateProcessorExtension {
 	 * @param context gives access to the metamodel being built
 	 * @return how the session is obtained, or {@code null} to use the default behavior
 	 */
-	@Nullable SessionSetup setupRepositorySession(
+	default @Nullable SessionSetup setupRepositorySession(
 			TypeElement element,
 			@Nullable ExecutableElement getter,
-			AnnotationMetaEntityContext context);
+			AnnotationMetaEntityContext context) {
+		return null;
+	}
 }

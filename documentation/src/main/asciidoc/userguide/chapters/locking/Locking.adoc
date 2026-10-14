@@ -415,11 +415,14 @@ See link:{doc-javadoc-url}org/hibernate/Locking.FollowOn.html[`Locking.FollowOn`
 === Coordinating access through a graph root
 
 Applications can coordinate access to a graph of objects through an agreed graph root using either optimistic or pessimistic locking.
-With optimistic locking, participating transactions validate the root's version, and graph writers advance it even when the root's own attributes are unchanged.
-With pessimistic locking, participating transactions acquire a lock on the root before accessing the graph: a shared lock for readers or an exclusive lock for writers, held until transaction completion.
+With optimistic locking, participating transactions capture the root's version before reading the graph state it protects and validate that version before successful transaction completion.
+Graph writers advance the root's version even when the root's own attributes are unchanged.
+With pessimistic locking, participating transactions acquire a lock on the root before reading the graph state it protects: a shared lock for readers or an exclusive lock for writers, held until transaction completion.
 
 This coordination requires all participating transactions to follow the same root-locking protocol.
 Locking the root does not automatically lock, version, or validate every associated entity; the agreement makes the root the coordination point for graph access.
+Neither approach automatically refreshes graph objects already loaded into the persistence context.
+When existing managed state must be reloaded, see <<pc-refresh,refreshing entity state>>; acquiring or validating the root's lock does not make that state current.
 
 [[locking-concurrency-baseline]]
 === Concurrency baseline and optimistic validation

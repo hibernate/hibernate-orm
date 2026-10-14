@@ -66,7 +66,7 @@ public abstract class AbstractReturningDelegate
 
 			operation.getBindPlan().bindValues( valueBindings, operation, session );
 			valueBindings.beforeStatement( preparedStatement, session );
-			return executeAndExtractReturning( sql, preparedStatement, session );
+			return executeAndExtractReturning( sql, preparedStatement, session, operation );
 		}
 		finally {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );
@@ -124,4 +124,13 @@ public abstract class AbstractReturningDelegate
 			String sql,
 			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session);
+
+	/// Graph mutations may use their operation-specific result checker while extracting values.
+	protected GeneratedValues executeAndExtractReturning(
+			String sql,
+			PreparedStatement preparedStatement,
+			SharedSessionContractImplementor session,
+			FlushOperation operation) {
+		return executeAndExtractReturning( sql, preparedStatement, session );
+	}
 }

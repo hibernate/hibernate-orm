@@ -1047,14 +1047,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 											+ oldCollection.getRole() );
 		}
 		assert !collection.isDirectlyAccessible();
-		final var oldEntry = collectionEntries.remove( oldCollection.$$_hibernate_getInstanceId(), oldCollection );
-		final var entry =
-				oldEntry.getLoadedPersister() != null
-						// This is an already existing/loaded collection so ensure the loadedPersister is initialized
-						? new CollectionEntry( collection, session.getFactory() )
-						// A newly wrapped collection
-						: new CollectionEntry( persister, collection );
-		entry.setReadOnly( oldEntry.isReadOnly(), collection );
+		// This is the same collection with a different wrapper, not a new collection.
+		// Retain its snapshot, loaded key, read-only status, and merge/flush bookkeeping.
+		final var entry = collectionEntries.remove( oldCollection.$$_hibernate_getInstanceId(), oldCollection );
 		putCollectionEntry( collection, entry );
 		final Object key = collection.getKey();
 		if ( key != null ) {

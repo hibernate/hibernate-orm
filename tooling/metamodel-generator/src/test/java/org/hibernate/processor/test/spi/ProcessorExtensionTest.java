@@ -50,14 +50,12 @@ class ProcessorExtensionTest {
 		assertTrue( events.contains( "context.hasMember(before)=false" ), events.toString() );
 		assertTrue( events.contains( "context.hasMember(after)=true" ), events.toString() );
 		assertTrue( events.contains( "context.primaryEntity=SpiBook" ), events.toString() );
-		assertTrue( events.contains( "context.addInjectAnnotation=true" ), events.toString() );
-		assertTrue( events.contains( "context.addNonnullAnnotation=true" ), events.toString() );
 		assertTrue( events.contains( "context.getAllMembers.size>0=true" ), events.toString() );
 
 		// consulted for the repository, which gets its session from the extension
 		assertTrue( events.contains( "isExtensionRepository:SpiRepository" ), events.toString() );
 		assertTrue( events.contains( "setupRepositorySession:SpiRepository:getter=null" ), events.toString() );
-		assertTrue( events.contains( "sessionQualifier:_SpiRepository:dataStore=null" ), events.toString() );
+		assertTrue( events.contains( "sessionQualifier:SpiRepository:dataStore=null" ), events.toString() );
 
 		// what the extension returned shows in the generated code
 		assertMetamodelClassGeneratedFor( SpiBook.class );
@@ -71,7 +69,7 @@ class ProcessorExtensionTest {
 		assertTrue( repository.contains( "public class _SpiRepository implements SpiRepository" ), repository );
 		assertTrue( repository.contains( "public @Nonnull Session getSpiSession()" ), repository );
 		// the qualifier chosen by the extension for this repository goes on the injected session
-		assertTrue( repository.contains( "@SpiQualifier(\"_SpiRepository\") Session session" ), repository );
+		assertTrue( repository.contains( "@SpiQualifier(\"SpiRepository\") Session session" ), repository );
 
 		// a repository for which the extension declares a session getter expression: no injected session
 		assertTrue( events.contains( "isExtensionRepository:SpiGetterRepository" ), events.toString() );

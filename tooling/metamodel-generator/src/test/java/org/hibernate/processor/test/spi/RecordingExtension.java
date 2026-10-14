@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.processor.internal.DefaultHibernateProcessorExtension;
-import org.hibernate.processor.model.MetaAttribute;
-import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.spi.AnnotationMetaEntityContext;
 import org.hibernate.processor.spi.HibernateProcessorExtension;
 import org.hibernate.processor.spi.SessionSetup;
@@ -71,17 +69,17 @@ public class RecordingExtension implements HibernateProcessorExtension {
 
 	@Override
 	public @Nullable String sessionQualifier(@Nullable String dataStore, AnnotationMetaEntityContext context) {
-		record( "sessionQualifier:" + context.getConstructorName() + ":dataStore=" + dataStore );
+		record( "sessionQualifier:" + context.metamodel().getSimpleName() + ":dataStore=" + dataStore );
 		if ( isArmed() ) {
 			// the context is used to choose the qualifier, here by repository
-			return '@' + context.metamodel().importType( QUALIFIER ) + "(\"" + context.getConstructorName() + "\")";
+			return '@' + context.metamodel().importType( QUALIFIER ) + "(\"" + context.metamodel().getSimpleName() + "\")";
 		}
 		return fallback.sessionQualifier( dataStore, context );
 	}
 
 	@Override
 	public boolean usesConstructorInjection(AnnotationMetaEntityContext context) {
-		record( "usesConstructorInjection:" + context.getConstructorName() );
+		record( "usesConstructorInjection:" + context.metamodel().getSimpleName() );
 		return fallback.usesConstructorInjection( context );
 	}
 
@@ -106,12 +104,10 @@ public class RecordingExtension implements HibernateProcessorExtension {
 		}
 		// exercise the context
 		record( "context.hasMember(before)=" + context.hasMember( "spiMember" ) );
-		context.addMember( "spiMember", new SpiMember( context.metamodel() ) );
+		context.addMember( "spiMember", "public static String spiMember() { return \"added by the extension\"; }" );
 		record( "context.hasMember(after)=" + context.hasMember( "spiMember" ) );
 		final var primary = context.primaryEntity();
 		record( "context.primaryEntity=" + ( primary == null ? null : primary.getSimpleName() ) );
-		record( "context.addInjectAnnotation=" + context.addInjectAnnotation() );
-		record( "context.addNonnullAnnotation=" + context.addNonnullAnnotation() );
 		record( "context.getAllMembers.size>0=" + !context.getAllMembers( element ).isEmpty() );
 	}
 
@@ -124,7 +120,7 @@ public class RecordingExtension implements HibernateProcessorExtension {
 		if ( isMarked( element ) && element.getKind() == ElementKind.INTERFACE ) {
 			if ( element.getSimpleName().toString().startsWith( "SpiGetter" ) ) {
 				// the session is not injected, but obtained with an expression
-				context.setSessionGetter( SpiSessions.class.getName() + ".session()" );
+				context.setSessionExpression( SpiSessions.class.getName() + ".session()" );
 			}
 			else {
 				context.addRepositoryConstructor( "getSpiSession", "org.hibernate.Session" );
@@ -132,55 +128,5 @@ public class RecordingExtension implements HibernateProcessorExtension {
 			return new SessionSetup( "org.hibernate.Session", true );
 		}
 		return fallback.setupRepositorySession( element, getter, context );
-	}
-
-	/** A static method added to the metamodel class by {@link #addRepositoryMembers}. */
-	// not a record, whose hashCode and toString would recurse into the metamodel holding this member
-	private static final class SpiMember implements MetaAttribute {
-		private final Metamodel metamodel;
-
-		private SpiMember(Metamodel metamodel) {
-			this.metamodel = metamodel;
-		}
-
-		@Override
-		public boolean hasTypedAttribute() {
-			return true;
-		}
-
-		@Override
-		public boolean hasStringAttribute() {
-			return false;
-		}
-
-		@Override
-		public String getAttributeDeclarationString() {
-			return "public static String spiMember() { return \"added by the extension\"; }";
-		}
-
-		@Override
-		public String getAttributeNameDeclarationString() {
-			return "";
-		}
-
-		@Override
-		public String getMetaType() {
-			return "java.lang.String";
-		}
-
-		@Override
-		public String getPropertyName() {
-			return "spiMember";
-		}
-
-		@Override
-		public String getTypeDeclaration() {
-			return "java.lang.String";
-		}
-
-		@Override
-		public Metamodel getHostingEntity() {
-			return metamodel;
-		}
 	}
 }

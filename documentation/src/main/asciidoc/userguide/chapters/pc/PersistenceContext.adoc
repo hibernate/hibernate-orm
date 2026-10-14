@@ -107,7 +107,8 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-reference-jpa-
 Hibernate may return an existing managed instance, a runtime proxy, or an enhanced entity with unloaded state.
 A reference is not a guarantee that the row exists: an `EntityNotFoundException` may be raised when its state is initialized.
 Runtime subclass proxies require a proxyable entity class; a final class does not automatically gain an interface proxy.
-See <<BytecodeEnhancement-lazy-loading,lazy attribute loading>> and <<fetching,fetching>> for enhancement and initialization behavior.
+See <<fetching-lazy-basic>> for lazy attribute loading, <<fetching-initialization>> for initialization checks and explicit loading,
+and <<BytecodeEnhancement>> for enhancement mechanisms.
 
 [[pc-by-multiple-ids]]
 ==== Finding multiple entities

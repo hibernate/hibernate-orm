@@ -897,7 +897,7 @@ Hibernate represents unloaded associations using proxies, persistent collection 
 Navigating that state may issue SQL using the associated open persistence context.
 After detachment or context closure, accessing still-unloaded state can raise `LazyInitializationException`.
 Choose the required plan before leaving the context, or explicitly load the state while the context is available.
-See <<pc-detach>> for detachment and <<BytecodeEnhancement-lazy-loading>> for enhancement mechanisms.
+See <<pc-detach>> for detachment and <<BytecodeEnhancement>> for enhancement mechanisms.
 
 Use `PersistenceUnitUtil.isLoaded(entity, attribute)` to inspect an attribute without deliberately initializing it.
 The factory utility and Hibernate helpers offer the following checks; attribute-name checks avoid accessing an attribute merely to inspect its loading state.

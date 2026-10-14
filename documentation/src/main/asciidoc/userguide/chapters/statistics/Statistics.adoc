@@ -3,6 +3,9 @@
 
 Hibernate can gather all sorts of statistics which can help you get a better insight into what Hibernate does behind the scenes.
 
+For event-based monitoring, see <<appendix-monitoring-with-JFR>>.
+That integration is enabled separately from statistics collection.
+
 By default, the statistics are not collected because this incurs an additional processing and memory overhead. To instruct Hibernate to start collecting statistics, you need to set the `hibernate.generate_statistics` configuration property to `true`:
 
 ====

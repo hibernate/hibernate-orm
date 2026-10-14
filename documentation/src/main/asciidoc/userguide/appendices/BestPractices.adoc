@@ -120,7 +120,7 @@ Therefore, the `@ManyToOne` and the `@OneToOne` child-side association are best 
 
 Inverse `@OneToOne` loading depends on the mapping and enhancement; see <<fetching-association-constraints>>.
 A shared-primary-key association using `@MapsId` is useful when that identifier design fits the domain;
-see <<associations-one-to-one-unidirectional>> for the mapping.
+see <<identifiers-derived-mapsid,derived identifier mapping with `@MapsId`>>.
 
 For collections, the association can be either:
 

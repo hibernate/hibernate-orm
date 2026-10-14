@@ -15,6 +15,7 @@ Use HQL or JPQL for query strings, <<criteria,Criteria>> for Java-based construc
 The link:{doc-query-language-url}[Query Language guide] describes general language syntax and semantics.
 The language guide's link:{doc-query-language-url}#hql-functions-arrays[array], link:{doc-query-language-url}#hql-functions-json[JSON], and link:{doc-query-language-url}#hql-functions-xml[XML] appendices describe specialized built-in functions.
 See <<query-language,Function integration>> for registering custom database functions.
+See <<spatial>> and <<vector-module>> for queries using the optional spatial and vector modules.
 For an introductory walkthrough, see link:{doc-introduction-url}#queries[Executing queries].
 
 [[query-api]]

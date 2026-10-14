@@ -1,3 +1,4 @@
+[colophon]
 [[credits]]
 == Credits
 

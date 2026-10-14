@@ -82,8 +82,8 @@ If both <<maven-enhance-classesDirectory-parameter, classesDirectory>> and `file
 [[maven-enhance-enableLazyInitialization-parameter]]
 ===== `*enableLazyInitialization*` =====
 This parameter has a default value of `true`. It indicates whether the enhance goal should perform the changes
-to enable <<BytecodeEnhancement-lazy-loading,lazy loading>>.
-The parameter has been deprecated for removal. After this removal, <<BytecodeEnhancement-lazy-loading,lazy loading>>
+to enable <<fetching-lazy-basic,lazy attribute loading>>.
+The parameter has been deprecated for removal. After this removal, <<fetching-lazy-basic,lazy attribute loading>>
 will always be enabled.
 
 ====

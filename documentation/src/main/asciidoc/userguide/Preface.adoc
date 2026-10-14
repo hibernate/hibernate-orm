@@ -37,6 +37,43 @@ There is also a series of link:{doc-topical-url}[topical guides] providing deep 
 ====
 
 
+[[user-guide-reading-map]]
+=== Finding your way through this guide
+
+Use this reference guide by task, or follow the chapter order from mapping and setup through runtime operations, querying, and performance.
+The following links provide starting points for common tasks.
+
+[cols="1,3",options="header"]
+|===
+|Task |Start here
+
+|Understand requirements and the main APIs
+|<<compatibility>> and <<architecture>>.
+
+|Map application data
+|<<domain-model>>.
+
+|Configure and start Hibernate
+|<<bootstrap>> and <<database>>.
+See <<schema-generation>> for schema operations and DDL scripts, and <<tooling>> for build-time enhancement, metamodel generation, and other build services.
+
+|Manage entity state and transactions
+|<<pc,Persistence Context>>, <<transactions>>, and <<locking>>.
+
+|Construct and execute queries
+|<<hql,Query APIs and execution>>, <<criteria>>, <<QuerySpecification,Programmatic query specifications>>, <<sql,Native SQL Queries>>, and <<stored-procedures>>.
+See the link:{doc-query-language-url}[Query Language guide] for HQL syntax and built-in functions.
+
+|Plan loading and tune performance
+|<<fetching>>, <<batch,Batching>>, <<caching>>, <<statistics>>, and <<best-practices>>.
+
+|Use integrations and specialized features
+|<<multitenacy,Multitenancy>>, <<events>>, <<beans>>, <<spatial>>, and <<vector-module>>.
+
+|Look up settings and diagnostic events
+|<<settings,Configuration Settings>> and <<appendix-monitoring-with-JFR>>.
+|===
+
 === Get Involved
 
 * Use Hibernate and report any bugs or issues you find. See https://hibernate.org/issuetracker[Issue Tracker] for details.

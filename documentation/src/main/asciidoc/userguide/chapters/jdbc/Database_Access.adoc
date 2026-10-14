@@ -1,6 +1,8 @@
 [[database]]
 == Database Access
 
+See <<bootstrap>> for factory creation and <<schema-generation>> for schema operations and DDL scripts.
+
 [[database-connectionprovider]]
 === ConnectionProvider
 

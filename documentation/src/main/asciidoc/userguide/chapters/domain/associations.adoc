@@ -258,7 +258,7 @@ The inverse side does not hold the foreign key, so determining whether an option
 can affect when it loads. See <<fetching-association-constraints,association-specific loading constraints>>
 for enhancement requirements and the lazy mapping example.
 A shared-primary-key mapping using `@MapsId` is a separate identifier and association design choice;
-see <<associations-one-to-one-unidirectional>>.
+see <<identifiers-derived-mapsid,derived identifier mapping with `@MapsId`>>.
 
 [[associations-many-to-many]]
 ==== `@ManyToMany`

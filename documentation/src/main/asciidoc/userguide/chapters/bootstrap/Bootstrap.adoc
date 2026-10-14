@@ -10,6 +10,9 @@ When Hibernate is the persistence provider, the factory implements both `EntityM
 Creating a factory is expensive. Usually, an application reuses one factory for each persistence unit until shutdown.
 
 For individual configuration properties, see <<settings>>.
+See <<database>> for datasource, JDBC connection, and pooling configuration.
+See <<schema-generation>> for creating or validating schemas and exporting schema creation or supported alteration commands to scripts.
+Build-time enhancement, metamodel generation, and other build services are covered in <<tooling>>.
 
 [[bootstrap-standardized]]
 === Choosing a bootstrap approach

@@ -2498,6 +2498,9 @@ public class SessionImpl
 				else if ( option instanceof Timeout timeout ) {
 					lockOptions.setTimeOut( timeout.milliseconds() );
 				}
+				else if ( option instanceof Locking.FollowOn followOn ) {
+					lockOptions.setFollowOnStrategy( followOn );
+				}
 			}
 		}
 		return lockOptions;
@@ -2570,6 +2573,9 @@ public class SessionImpl
 				}
 				else if ( option instanceof Timeout timeout ) {
 					lockOptions.setTimeOut( timeout.milliseconds() );
+				}
+				else if ( option instanceof Locking.FollowOn followOn ) {
+					lockOptions.setFollowOnStrategy( followOn );
 				}
 			}
 		}

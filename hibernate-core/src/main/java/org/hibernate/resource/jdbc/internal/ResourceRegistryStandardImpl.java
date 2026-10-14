@@ -3,6 +3,7 @@ package org.hibernate.resource.jdbc.internal;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -135,7 +136,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	private static void releaseXref(Statement statement, ResultSetsSet resultSetsSet) {
+	private void releaseXref(Statement statement, ResultSetsSet resultSetsSet) {
 		closeAll( resultSetsSet );
 		close( statement );
 	}
@@ -159,7 +160,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	private static void close(Statement statement) {
+	private void close(Statement statement) {
 		if ( IS_TRACE_ENABLED ) {
 			RESOURCE_REGISTRY_LOGGER.closingPreparedStatement(statement);
 		}
@@ -184,6 +185,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 				return;
 			}
 			statement.close();
+			if ( jdbcEventHandler != null && statement instanceof PreparedStatement ) {
+				jdbcEventHandler.jdbcReleaseStatementEnd();
+			}
 		}
 		catch (SQLException e) {
 			RESOURCE_REGISTRY_LOGGER.unableToReleaseStatement( e.getMessage() );
@@ -297,7 +301,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			jdbcEventHandler.jdbcReleaseRegistryResourcesStart();
 		}
 
-		xref.forEach( ResourceRegistryStandardImpl::releaseXref );
+		xref.forEach( this::releaseXref );
 		xref.clear();
 
 		if ( ext != null ) {

@@ -6,6 +6,7 @@ package org.hibernate.orm.test.query;
 
 import java.util.List;
 
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -21,8 +22,9 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -55,7 +57,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JiraKey("HHH-20225")
 public class EntityValuedSelectionInDerivedTableAndCteTest {
 
-	@BeforeAll
+	@BeforeEach
 	public void createData(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			for ( long id = 1; id <= 5; id++ ) {
@@ -69,7 +71,7 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.dropData();
 	}
@@ -109,7 +111,7 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 		scope.inTransaction( session -> {
 			final List<Named> result = session.createQuery(
 					"select m from " + entityName + " m"
-							+ " join (select p as e from " + entityName + " p order by p.id offset 1 rows fetch first 2 rows only) d"
+							+ " join (select p as e from " + entityName + " p where p.id between 2 and 3) d"
 							+ " on m = d.e order by m.id",
 					Named.class
 			).getResultList();
@@ -172,6 +174,31 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 	}
 
 	// Criteria: the paging query shape that cuts the page in a derived join, then joins the entity back to it
+
+	@ParameterizedTest
+	@ValueSource(classes = {Movement.class, JoinedMovement.class})
+	@JiraKey("HHH-20646")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class)
+	@SuppressWarnings("unchecked")
+	public void criteriaJoinEntityOnPagedDerivedJoin(Class<? extends Named> entityClass, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			final JpaCriteriaQuery<Named> query = cb.createQuery( Named.class );
+			final JpaSubQuery<Named> page = (JpaSubQuery<Named>) query.subquery( entityClass );
+			final Root<? extends Named> pageRoot = page.from( entityClass );
+			pageRoot.alias( "pageMovement" );
+			page.select( (Root<Named>) pageRoot )
+					.orderBy( cb.asc( pageRoot.get( "id" ) ) )
+					.offset( 1 )
+					.fetch( 2 );
+			final JpaRoot<? extends Named> root = query.from( entityClass );
+			final JpaDerivedJoin<Named> pageJoin = root.join( page );
+			pageJoin.on( cb.equal( root, pageJoin.get( "pageMovement" ) ) );
+			query.select( root ).orderBy( cb.asc( root.get( "id" ) ) );
+			assertThat( session.createQuery( query ).getResultList() )
+					.extracting( Named::getName ).containsExactly( "m2", "m3" );
+		} );
+	}
 
 	@ParameterizedTest
 	@ValueSource(classes = {Movement.class, JoinedMovement.class})
@@ -243,6 +270,9 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 	@ParameterizedTest
 	@ValueSource(classes = {Movement.class, JoinedMovement.class})
 	@JiraKey("HHH-20646")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class,
+			reason = "Criteria in( Expression... ) renders an in-list holding the subquery, which Sybase ASE"
+					+ " treats as a scalar subquery, with or without a derived table")
 	public void criteriaInSubqueryOverDerivedRoot(Class<? extends Named> entityClass, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -316,7 +346,7 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 		scope.inTransaction( session -> {
 			final List<Named> result = session.createQuery(
 					"select m from EmbeddedIdMovement m"
-							+ " join (select p as e from EmbeddedIdMovement p order by p.id.num offset 1 rows fetch first 2 rows only) d"
+							+ " join (select p as e from EmbeddedIdMovement p where p.id.num between 2 and 3) d"
 							+ " on m = d.e order by m.id.num",
 					Named.class
 			).getResultList();
@@ -362,10 +392,7 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 			final JpaSubQuery<EmbeddedIdMovement> page = query.subquery( EmbeddedIdMovement.class );
 			final Root<EmbeddedIdMovement> pageRoot = page.from( EmbeddedIdMovement.class );
 			pageRoot.alias( "pageMovement" );
-			page.select( pageRoot )
-					.orderBy( cb.asc( pageRoot.get( "id" ).get( "num" ) ) )
-					.offset( 1 )
-					.fetch( 2 );
+			page.select( pageRoot ).where( cb.between( pageRoot.get( "id" ).get( "num" ), 2L, 3L ) );
 			final JpaRoot<EmbeddedIdMovement> root = query.from( EmbeddedIdMovement.class );
 			final JpaDerivedJoin<EmbeddedIdMovement> pageJoin = root.join( page );
 			pageJoin.on( cb.equal( root, pageJoin.get( "pageMovement" ) ) );
@@ -376,8 +403,8 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 	}
 
 	/**
-	 * A subquery selecting the root entity, aliased {@code pageMovement}, restricted to the
-	 * second and third rows by id.
+	 * A subquery selecting the root entity, aliased {@code pageMovement}, restricted to ids 2 and 3.
+	 * It filters rather than pages, so that it also works on dialects which cannot limit a subquery.
 	 */
 	@SuppressWarnings("unchecked")
 	private static <T> JpaSubQuery<T> pageSubquery(
@@ -387,10 +414,7 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 		final JpaSubQuery<T> page = (JpaSubQuery<T>) parent.subquery( entityClass );
 		final Root<? extends T> pageRoot = page.from( entityClass );
 		pageRoot.alias( "pageMovement" );
-		page.select( (Root<T>) pageRoot )
-				.orderBy( cb.asc( pageRoot.get( "id" ) ) )
-				.offset( 1 )
-				.fetch( 2 );
+		page.select( (Root<T>) pageRoot ).where( cb.between( pageRoot.get( "id" ), 2L, 3L ) );
 		return page;
 	}
 
@@ -399,10 +423,7 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 		final JpaCriteriaQuery<T> page = (JpaCriteriaQuery<T>) cb.createQuery( entityClass );
 		final JpaRoot<? extends T> pageRoot = page.from( entityClass );
 		pageRoot.alias( "pageMovement" );
-		page.select( (Root<T>) pageRoot )
-				.orderBy( cb.asc( pageRoot.get( "id" ) ) )
-				.offset( 1 )
-				.fetch( 2 );
+		page.select( (Root<T>) pageRoot ).where( cb.between( pageRoot.get( "id" ), 2L, 3L ) );
 		return page;
 	}
 

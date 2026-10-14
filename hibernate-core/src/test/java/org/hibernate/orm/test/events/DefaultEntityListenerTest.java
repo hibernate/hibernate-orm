@@ -2,7 +2,6 @@ package org.hibernate.orm.test.events;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ExcludeDefaultListeners;
-import jakarta.persistence.ExcludeSuperclassListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -11,6 +10,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
@@ -42,6 +42,8 @@ public class DefaultEntityListenerTest {
 			book.setAuthor( author );
 
 			entityManager.persist( book );
+			assertNotNull( author.getCreatedOn() );
+			assertNotNull( book.getCreatedOn() );
 			//end::events-default-listener-persist-example[]
 		} );
 
@@ -53,6 +55,10 @@ public class DefaultEntityListenerTest {
 			Book book = entityManager.find( Book.class, 1L );
 			book.setTitle( "High-Performance Java Persistence 2nd Edition" );
 			//end::events-default-listener-update-example[]
+		} );
+		scope.inTransaction( entityManager -> {
+			assertNotNull( entityManager.find( Person.class, 1L ).getUpdatedOn() );
+			assertNotNull( entityManager.find( Book.class, 1L ).getUpdatedOn() );
 		} );
 	}
 
@@ -147,7 +153,6 @@ public class DefaultEntityListenerTest {
 	//tag::events-exclude-default-listener-mapping-example[]
 	@Entity(name = "Publisher")
 	@ExcludeDefaultListeners
-	@ExcludeSuperclassListeners
 	public static class Publisher extends BaseEntity {
 
 		@Id

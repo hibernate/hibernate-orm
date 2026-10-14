@@ -1,8 +1,7 @@
 package org.hibernate.orm.test.events;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 
 /**
  * @author Vlad Mihalcea
@@ -25,9 +24,7 @@ public class DefaultEntityListener {
 	}
 
 	private Timestamp now() {
-		return Timestamp.from(
-			LocalDateTime.now().toInstant(ZoneOffset.UTC)
-	);
+		return Timestamp.from( Instant.now() );
 	}
 }
 //end::events-default-listener-mapping-example[]

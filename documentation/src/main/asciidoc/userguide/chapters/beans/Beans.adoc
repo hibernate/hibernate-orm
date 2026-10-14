@@ -12,8 +12,9 @@ Often these beans are managed by an external service, such as CDI.  The contract
 external container. `ManagedBeanRegistry` integrates support for a `BeanContainer`
 if one is specified.
 
-By default, Hibernate creates references to the beans and links their lifecycle to
-the SessionFactory.  It supports a number of ways to influence how this process works.
+Hibernate manages bean references according to the extension's acquisition and lifecycle policy.
+Many references live until registry/container shutdown, while automatically acquired
+<<events-interceptor-cdi,session-scoped interceptor beans>> are released when their sessions close.
 
 
 [[beans-manageable]]
@@ -32,9 +33,13 @@ Additionally, Hibernate supports resolving the following integrations as managed
 * `org.hibernate.metamodel.EmbeddableInstantiator`
 * `org.hibernate.envers.RevisionListener`
 * `org.hibernate.id.IdentifierGenerator`
+* Class-registered `org.hibernate.Interceptor`; see <<events-interceptor-cdi>> for shared and per-session lifecycles
 
-NOTE: At the moment, when using either <<beans-cdi-delayed,delayed>> or <<beans-cdi-extended,extended>>
-CDI access, resolving these Hibernate integrations as managed beans is disabled.
+Class-based interceptor registrations support <<beans-cdi-delayed,delayed>> and
+<<beans-cdi-extended,extended>> CDI access through bootstrap-safe bean references.
+Their CDI integration does not require `hibernate.cdi.extensions=true`.
+Other Hibernate extensions may require that setting and may obtain their beans during
+bootstrap; do not assume they all have the interceptor's readiness or release behavior.
 
 
 [[beans-cdi]]
@@ -51,7 +56,9 @@ CDI `BeanManager` to use, so Hibernate follows that approach.
 
 By default, Hibernate follows the Jakarta Persistence requirements for using
 CDI `BeanManager`.  Most importantly, this means accessing beans from the `BeanManager`
-immediately during bootstrap.
+immediately when ordinary bean acquisition occurs during bootstrap.
+Extensions using bootstrap-safe references, including class-registered interceptors,
+can defer instance acquisition even with this access mode.
 
 In many cases this can cause circularity problems as CDI is often a consumer of
 persistence as well.  In such cases, <<beans-cdi-delayed,delayed>>

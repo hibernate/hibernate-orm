@@ -713,7 +713,7 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 						context.addInjectAnnotation(),
 						context.addNonnullAnnotation(),
 						false,
-						false
+						jakartaDataRepository
 				)
 		);
 		if ( isProvidedSessionAccess( sessionType ) ) {
@@ -1175,6 +1175,8 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 	@Override
 	public boolean needsDefaultConstructor() {
 		return jakartaDataRepository
+			// when an extension gives the session as an expression, we must not acquire or release one
+			&& !explicitSessionGetter
 			&& !context.getExtension().usesConstructorInjection( this )
 			&& !springInjection
 			&& context.isCdiAvailable();

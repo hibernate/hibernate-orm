@@ -1,42 +1,15 @@
 [[query-language]]
-== Specialized HQL functions
-:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
-:example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
-:array-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/array
-:json-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/json
-:xml-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/xml
+== Function integration
 :srf-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/srf
-:extrasdir: extras
 
-This chapter documents specialized HQL functions for arrays, JSON, XML, and row-producing functions.
-For general HQL and JPQL syntax and semantics, see the link:{doc-query-language-url}[Query Language guide], including
-link:{doc-query-language-url}#statement-types[statement types],
-link:{doc-query-language-url}#expressions[expressions],
-link:{doc-query-language-url}#from-clause[roots and joins], and
-link:{doc-query-language-url}#select-clause[projection and aggregation].
-For query creation, parameter binding, and execution, see <<hql,Query APIs and execution>>.
-Database support for specialized functions varies; consult each function's portability notes.
+The Query Language guide describes built-in syntax and functions, including its
+link:{doc-query-language-url}#hql-functions-arrays[array], link:{doc-query-language-url}#hql-functions-json[JSON], and link:{doc-query-language-url}#hql-functions-xml[XML] appendices and their dialect support tables.
+See link:{doc-query-language-url}#hql-from-set-returning-functions[set-returning functions] for root/join syntax and ordinality.
+For execution, see <<hql,Query APIs and execution>>; for value mappings, see <<basic,Domain Model basic values>>.
 
-[[hql-from-set-returning-functions]]
-=== Set-returning functions
+=== Registering custom set-returning functions
 
-A set-returning function is a function that produces rows instead of a single scalar value
-and is exclusively used in the `from` clause, either as root node or join target.
-
-The `index()` function can be used to access the 1-based index of a returned row.
-
-The following set-returning functions are available on many platforms:
-
-|===
-| Function | purpose
-
-| <<hql-array-unnest,`unnest()`>> | Turns an array into rows
-| <<hql-from-set-returning-functions-generate-series,`generate_series()`>> | Creates a series of values as rows
-| <<hql-json-table-function,`json_table()`>> | Turns a JSON document into rows
-| <<hql-xmltable-function,`xmltable()`>> | Turns an XML document into rows
-|===
-
-To use set returning functions defined in the database, it is required to register them in a `FunctionContributor`:
+Register database-defined set-returning functions using a `FunctionContributor`:
 
 [[hql-from-set-returning-functions-contributor-example]]
 ====
@@ -46,7 +19,7 @@ include::{srf-example-dir-hql}/CustomSetReturningFunctionTest.java[tags=hql-set-
 ----
 ====
 
-After that, the function can be used in the `from` clause:
+The registered function can then be used in the `from` clause:
 
 [[hql-from-set-returning-functions-custom-example]]
 ====
@@ -61,1419 +34,207 @@ which is not supported on some databases for user defined functions.
 Hibernate ORM tries to emulate this feature by wrapping invocations as lateral subqueries and using `row_number()`,
 which may lead to worse performance.
 
-[[hql-from-set-returning-functions-generate-series]]
-==== `generate_series()`
+[discrete]
+=== Moved language reference links
 
-A <<hql-from-set-returning-functions,set-returning function>>, which generates rows from a given start value (inclusive)
-up to a given stop value (inclusive). The function has 2 variants:
+The following links preserve earlier User Guide section and example URLs.
+The full descriptions are now in the Query Language guide.
 
-* `generate_series(numeric, numeric [,numeric])` - Arguments are `start`, `stop` and `step` with a default of `1` for the optional `step` argument
-* `generate_series(temporal, temporal, duration)` - Like the numeric variant, but for temporal types and `step` is required
-
-[[hql-generate-series-example]]
+.Set-returning functions reference links
+[%collapsible]
 ====
-[source, java, indent=0]
-----
-include::{srf-example-dir-hql}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-example]
-----
-====
-
-To obtain the "row number" of a generated value i.e. ordinality, it is possible to use the `index()` function.
-
-[[hql-generate-series-ordinality-example]]
-====
-[source, java, indent=0]
-----
-include::{srf-example-dir-hql}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-ordinality-example]
-----
-====
-
-The `step` argument can be a negative value and progress from a higher `start` value to a lower `stop` value.
-
-[[hql-generate-series-temporal-example]]
-====
-[source, java, indent=0]
-----
-include::{srf-example-dir-hql}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-temporal-example]
-----
-====
-
-[[hql-join-set-returning-function]]
-==== Set-returning functions in joins
-
-A `join` clause may contain a set-returning function, either:
-
-- an uncorrelated set-returning function, which is almost the same as a <<hql-from-set-returning-functions,set-returning function in the `from` clause>>, except that it may have an `on` restriction, or
-- a _lateral join_, which is a correlated set-returning function, and may refer to other roots declared earlier in the same `from` clause.
-
-The `lateral` keyword just distinguishes the two cases.
-A lateral join may be an inner or left outer join, but not a right join, nor a full join.
-
-[[hql-functions-arrays]]
-=== Array functions and predicates
-
-The following functions deal with SQL array types, which are not supported on every database.
-
-[[hql-array-functions]]
+[cols="1,2",options="header"]
 |===
-| Function | Purpose
-
-| <<hql-array-constructor-functions,`array()`>> | Creates an array based on the passed arguments
-| <<hql-array-constructor-functions,`array_list()`>> | Like `array`, but returns the result as `List<?>`
-| <<hql-array-aggregate-functions,`array_agg()`>> | Aggregates row values into an array
-| <<hql-array-position-functions,`array_position()`>> | Determines the position of an element in an array
-| <<hql-array-positions-functions,`array_positions()`>> | Determines all positions of an element in an array
-| <<hql-array-positions-functions,`array_positions_list()`>> | Like `array_positions`, but returns the result as `List<Integer>`
-| <<hql-array-length-functions,`array_length()`>> | Determines the length of an array
-| <<hql-array-concat-functions,`array_concat()`>> | Concatenates array with each other in order
-| <<hql-array-prepend-functions,`array_prepend()`>> | Prepends element to array
-| <<hql-array-append-functions,`array_append()`>> | Appends element to array
-| <<hql-array-contains-functions,`array_contains()`>> | Whether an array contains an element
-| <<hql-array-contains-functions,`array_contains_nullable()`>> | Whether an array contains an element, supporting `null` element
-| <<hql-array-includes-example,`array_includes()`>> | Whether an array contains another array
-| <<hql-array-includes-example,`array_includes_nullable()`>> | Whether an array contains another array, supporting `null` elements
-| <<hql-array-intersects-functions,`array_intersects()`>> | Whether an array holds at least one element of another array
-| <<hql-array-intersects-functions,`array_intersects_nullable()`>> | Whether an array holds at least one element of another array, supporting `null` elements
-| <<hql-array-get-functions,`array_get()`>> | Accesses the element of an array by index
-| <<hql-array-set-functions,`array_set()`>> | Creates array copy with given element at given index
-| <<hql-array-remove-functions,`array_remove()`>> | Creates array copy with given element removed
-| <<hql-array-remove-index-functions,`array_remove_index()`>> | Creates array copy with the element at the given index removed
-| <<hql-array-slice-functions,`array_slice()`>> | Creates a sub-array of the based on lower and upper index
-| <<hql-array-replace-functions,`array_replace()`>> | Creates array copy replacing a given element with another
-| <<hql-array-trim-functions,`array_trim()`>> | Creates array copy trimming the last _N_ elements
-| <<hql-array-reverse-functions,`array_reverse()`>> | Returns a copy of the array with elements in reverse order
-| <<hql-array-sort-functions,`array_sort()`>> | Returns a sorted copy of the array
-| <<hql-array-fill-functions,`array_fill()`>> | Creates array filled with the same element _N_ times
-| <<hql-array-fill-functions,`array_fill_list()`>> | Like `array_fill`, but returns the result as `List<?>`
-| <<hql-array-to-string-functions,`array_to_string()`>> | String representation of array
-| <<hql-array-unnest,`unnest()`>> | Turns an array into rows
+|Earlier target |Current reference
+|[[hql-from-set-returning-functions]]Set returning |link:{doc-query-language-url}#hql-from-set-returning-functions[Set returning]
+|[[hql-from-set-returning-functions-generate-series]]Set returning generate series |link:{doc-query-language-url}#hql-from-set-returning-functions-generate-series[Set returning generate series]
+|[[hql-generate-series-example]]Generate series example |link:{doc-query-language-url}#hql-generate-series-example[Generate series example]
+|[[hql-generate-series-ordinality-example]]Generate series ordinality example |link:{doc-query-language-url}#hql-generate-series-ordinality-example[Generate series ordinality example]
+|[[hql-generate-series-temporal-example]]Generate series temporal example |link:{doc-query-language-url}#hql-generate-series-temporal-example[Generate series temporal example]
+|[[hql-join-set-returning-function]]Join set returning function |link:{doc-query-language-url}#hql-join-set-returning-function[Join set returning function]
 |===
-
-[[hql-array-constructor-functions]]
-==== `array()` and `array_list()`
-
-Creates an array based on the passed arguments, and infers the array type from the context if possible.
-To retrieve the result as `List<?>`, use the `array_list()` function.
-
-[[hql-array-constructor-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-example]
-----
-====
-
-Alternatively, it's also possible to construct an array with the shorthand bracket syntax `[` and `]`,
-which is syntax sugar that translates to the array constructor function.
-
-[[hql-array-constructor-hql-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-hql-example]
-----
-====
-
-[[hql-array-aggregate-functions]]
-==== `array_agg()`
-
-An link:{doc-query-language-url}#aggregate-functions-orderedset[ordered set aggregate function] that aggregates values to an array.
-
-[[hql-array-agg-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayAggregateTest.java[tags=hql-array-agg-example]
-----
-====
-
-[[hql-array-position-functions]]
-==== `array_position()` or `position()`
-
-Returns the 1-based position of an element in the array. Returns 0 if the element is not found and `null` if the array is `null`.
-
-[[hql-array-position-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-example]
-----
-====
-
-Alternatively, it is also possible to use the `position()` function,
-which is overloaded to also accept an array argument.
-
-[[hql-array-position-hql-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-hql-example]
-----
-====
-
-[[hql-array-positions-functions]]
-==== `array_positions()` and `array_positions_list()`
-
-Returns an `int[]` of 1-based positions of matching elements in the array. Returns an empty array if the element is not found and `null` if the array is `null`.
-To retrieve the result as `List<Integer>`, use the `array_positions_list()` function.
-
-[[hql-array-positions-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayPositionsTest.java[tags=hql-array-positions-example]
-----
-====
-
-[[hql-array-length-functions]]
-==== `array_length()` or `length()`
-
-Returns size of the passed array. Returns `null` if the array is `null`.
-
-[[hql-array-length-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-example]
-----
-====
-
-Alternatively, it is also possible to use the `length()` function,
-which is overloaded to also accept an array argument.
-
-[[hql-array-length-hql-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-hql-example]
-----
-====
-
-[[hql-array-concat-functions]]
-==== `array_concat()` or `||`
-
-Concatenates arrays with each other in order. Returns `null` if one of the arguments is `null`.
-
-[[hql-array-concat-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-example]
-----
-====
-
-Arrays can also be concatenated with the `||` (double-pipe) operator.
-
-[[hql-array-concat-pipe-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-pipe-example]
-----
-====
-
-In addition, the `||` (double-pipe) operator also support concatenating single elements to arrays.
-
-[[hql-array-concat-pipe-element-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-pipe-element-example]
-----
-====
-
-[[hql-array-prepend-functions]]
-==== `array_prepend()`
-
-Prepends element to array. Returns `null` if the array argument is `null`.
-
-[[hql-array-prepend-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayPrependTest.java[tags=hql-array-prepend-example]
-----
-====
-
-[[hql-array-append-functions]]
-==== `array_append()`
-
-Appends element to array. Returns `null` if the array argument is `null`.
-
-[[hql-array-append-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayAppendTest.java[tags=hql-array-append-example]
-----
-====
-
-[[hql-array-contains-functions]]
-==== `array_contains()` and `array_contains_nullable()`
-
-Checks if the first array argument contains the element represented by the second argument.
-Returns `null` if the first argument is `null`. The result of the `array_contains` function
-is undefined when the second argument, the element to search, is `null`.
-
-[[hql-array-contains-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-example]
-----
-====
-
-Alternatively, it's also possible to check for containment with the `contains` predicate,
-where the left hand side of the predicate is the array and the right hand side the value to check.
-This is syntax sugar that translates to the `array_contains` function.
-
-[[hql-array-contains-hql-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-hql-example]
-----
-====
-
-[[hql-array-includes-functions]]
-==== `array_includes()` and `array_includes_nullable()`
-
-Checks if the first array argument contains the elements of the second array argument.
-Returns `null` if the first argument is `null`. The result of the `array_includes` function
-is undefined when the second argument contains a `null`.
-
-[[hql-array-includes-example]]
-.Array inclusion [[hql-array-contains-array-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-example]
-----
-====
-
-To search for `null` elements, the `array_includes_nullable` function must be used.
-
-[[hql-array-includes-nullable-example]]
-.Array inclusion with null elements [[hql-array-contains-array-nullable-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-nullable-example]
-----
-====
-
-Alternatively, it's also possible to use the `includes` predicate,
-where the left hand side of the predicate is the array and the right hand side the array of values to check.
-This is syntax sugar that translates to the `array_includes` function.
-
-[[hql-array-includes-hql-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-hql-example]
-----
-====
-
-[[hql-array-intersects-functions]]
-==== `array_intersects()` and `array_intersects_nullable()` [[hql-array-overlaps-functions]]
-
-Checks if the first array argument any of the elements of the second array argument.
-Returns `null` if either of the arguments is `null`. The result of `array_intersects`
-is undefined when the second array argument contains a `null` array element.
-Only `array_intersects_nullable` is guaranteed to produce correct results for `null` array elements.
-
-[[hql-array-intersects-example]]
-.Array intersection [[hql-array-overlaps-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-example]
-----
-====
-
-[[hql-array-intersects-nullable-example]]
-.Array intersection with null elements [[hql-array-overlaps-nullable-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-nullable-example]
-----
 ====
 
-Alternatively, it's also possible to check for intersection with the `intersects` predicate.
-This is syntax sugar that translates to the `array_intersects` function.
-
-[[hql-array-intersects-hql-example]]
-.Array intersection using HQL syntax [[hql-array-overlaps-hql-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-hql-example]
-----
-====
-
-[[hql-array-get-functions]]
-==== `array_get()`
-
-Returns the element of an array at the given 1-based index. Returns `null` if either of the arguments is `null`,
-and also if the index is bigger than the array length.
-
-[[hql-array-get-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayGetTest.java[tags=hql-array-get-example]
-----
-====
-
-[[hql-array-set-functions]]
-==== `array_set()`
-
-Returns an array copy with the given element placed at the given 1-based index, filling up prior slots with `null` if necessary.
-
-[[hql-array-set-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArraySetTest.java[tags=hql-array-set-example]
-----
-====
-
-[[hql-array-remove-functions]]
-==== `array_remove()`
-
-Returns an array copy with the given element removed from the array. Allows removal of `null` elements.
-
-[[hql-array-remove-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayRemoveTest.java[tags=hql-array-remove-example]
-----
-====
-
-[[hql-array-remove-index-functions]]
-==== `array_remove_index()`
-
-Returns an array copy with the element at the given index removed from the array.
-
-[[hql-array-remove-index-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayRemoveIndexTest.java[tags=hql-array-remove-index-example]
-----
-====
-
-[[hql-array-slice-functions]]
-==== `array_slice()`
-
-Returns the sub-array as specified by the given 1-based inclusive start and end index. Returns `null` if any of the arguments is `null`
-and also if the index is out of bounds.
-
-[[hql-array-slice-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArraySliceTest.java[tags=hql-array-slice-example]
-----
-====
-
-Alternatively, it's also possible to slice an array by specifying the lower and upper bound,
-separated by a colon, as index in the bracket array index syntax `array[lowerIndex:upperIndex]`.
-This is syntax sugar that translates to the `array_slice` function.
-
-[[hql-array-slice-hql-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArraySliceTest.java[tags=hql-array-slice-hql-example]
-----
-====
-
-[[hql-array-replace-functions]]
-==== `array_replace()`
-
-Returns an array copy which has elements matching the second argument replaced by the third argument.
-
-[[hql-array-replace-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayReplaceTest.java[tags=hql-array-replace-example]
-----
-====
-
-[[hql-array-trim-functions]]
-==== `array_trim()`
-
-Returns an array copy without the last _N_ elements, specified by the second argument.
-It is an error if any array has a length smaller than the second argument.
-
-[[hql-array-trim-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayTrimTest.java[tags=hql-array-trim-example]
-----
-====
-
-[[hql-array-reverse-functions]]
-==== `array_reverse()`
-
-Returns a copy of the array with elements in reverse order. Returns `null` if the argument is `null`.
-
-[[hql-array-reverse-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayReverseTest.java[tags=hql-array-reverse-example]
-----
-====
-
-[[hql-array-sort-functions]]
-==== `array_sort()`
-
-Returns a sorted copy of the array. When called with no optional arguments, elements are sorted in ascending order with `null` elements placed last.
-The optional second argument allows specifying descending order, and the optional third argument controls the position of `null` elements.
-Returns `null` if the first argument is `null`.
-
-[[hql-array-sort-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArraySortTest.java[tags=hql-array-sort-example]
-----
-====
-
-The second argument controls sort direction: `false` for ascending (default), `true` for descending.
-The third argument controls `null` placement: `false` for nulls last, `true` for nulls first.
-When the third argument is omitted, it defaults to the value of the second argument.
-
-[[hql-array-sort-descending-nulls-last-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArraySortTest.java[tags=hql-array-sort-descending-nulls-last-example]
-----
-====
-
-[[hql-array-fill-functions]]
-==== `array_fill()` and `array_fill_list()`
-
-Creates an array filled with the same element _N_ times as specified by the arguments.
-It is an error to supply an array length smaller than 0.
-To retrieve the result as `List<?>`, use the `array_fill_list()` function.
-
-[[hql-array-fill-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayFillTest.java[tags=hql-array-fill-example]
-----
-====
-
-[[hql-array-to-string-functions]]
-==== `array_to_string()` or `cast(array as String)`
-
-Concatenates the array elements with a separator, as specified by the arguments.
-Null values are filtered, but the optional third argument can be specified to define a default value to use
-when a `null` array element is encountered.
-Returns `null` if the first argument is `null`.
-
-[[hql-array-to-string-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-example]
-----
-====
-
-Alternatively, it is also possible to use `cast(array as String)`,
-which is a short version of `concat('[', array_to_string(array, ',', 'null'), ']')`.
-
-[[hql-array-to-string-hql-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-hql-example]
-----
-====
-
-[[hql-array-unnest]]
-==== `unnest()`
-
-A <<hql-from-set-returning-functions,set-returning function>>, which turns the single array argument into rows.
-Returns no rows if the array argument is `null` or an empty array.
-The `index()` function can be used to access the 1-based array index of an array element.
-
-[[hql-array-unnest-struct-example]]
-====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayUnnestStructTest.java[tags=hql-array-unnest-aggregate-with-ordinality-example]
-----
-====
-
-The `lateral` keyword is mandatory if the argument refers to a from node item of the same query level.
-Basic plural attributes can also be joined directly, which is syntax sugar for `lateral unnest(...)`.
-
-[[hql-array-unnest-example]]
+.Arrays reference links
+[%collapsible]
 ====
-[source, java, indent=0]
-----
-include::{array-example-dir-hql}/ArrayUnnestTest.java[tags=hql-array-unnest-example]
-----
-====
-
-[[hql-contains-predicate]]
-==== `contains`
-
-The `contains` predicates evaluates to true if the value to its right is contained in the value to its left.
-Currently, this predicate only works with an array typed expression on the left side.
-
-[[hql-contains-predicate-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/predicate_contains_bnf.txt[]
-----
-
-For further details, refer to the <<hql-array-contains-example,`array_contains` section>>.
-
-[[hql-intersects-predicate]]
-==== `intersects`
-
-The `intersects` predicates evaluates to true if the value to its left has at least one element common with the value to its right.
-Currently, this predicate only works with an array typed expressions.
-
-[[hql-intersects-predicate-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/predicate_intersects_bnf.txt[]
-----
-
-For further details, refer to the <<hql-array-intersects-example,`array_intersects` section>>.
-
-[[hql-functions-json]]
-=== JSON functions
-
-The following functions deal with SQL JSON types, which are not supported on every database.
-
-[[hql-json-functions]]
+[cols="1,2",options="header"]
 |===
-| Function | Purpose
-
-| <<hql-json-object-function,`json_object()`>> | Constructs a JSON object from pairs of key and value arguments
-| <<hql-json-array-function,`json_array()`>> | Constructs a JSON array from arguments
-| <<hql-json-value-function,`json_value()`>> | Extracts a value from a JSON document by JSON path
-| <<hql-json-exists-function,`json_exists()`>> | Checks if a JSON path exists in a JSON document
-| <<hql-json-query-function,`json_query()`>> | Queries non-scalar values by JSON path in a JSON document
-| <<hql-json-arrayagg-function,`json_arrayagg()`>> | Creates a JSON array by aggregating values
-| <<hql-json-objectagg-function,`json_objectagg()`>> | Creates a JSON object by aggregating values
-| <<hql-json-set-function,`json_set()`>> | Inserts/Replaces a value by JSON path within a JSON document
-| <<hql-json-remove-function,`json_remove()`>> | Removes a value by JSON path within a JSON document
-| <<hql-json-mergepatch-function,`json_mergepatch()`>> | Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge
-| <<hql-json-array-append-function,`json_array_append()`>> | Appends to a JSON array of a JSON document by JSON path
-| <<hql-json-array-insert-function,`json_array_insert()`>> | Inserts a value by JSON path to a JSON array within a JSON document
-| <<hql-json-table-function,`json_table()`>> | Turns a JSON document into rows
+|Earlier target |Current reference
+|[[hql-functions-arrays]]Arrays |link:{doc-query-language-url}#hql-functions-arrays[Arrays]
+|[[hql-array-functions]]Array |link:{doc-query-language-url}#hql-array-functions[Array]
+|[[hql-array-constructor-functions]]Array constructor |link:{doc-query-language-url}#hql-array-constructor-functions[Array constructor]
+|[[hql-array-constructor-example]]Array constructor example |link:{doc-query-language-url}#hql-array-constructor-example[Array constructor example]
+|[[hql-array-constructor-hql-example]]Array constructor HQL example |link:{doc-query-language-url}#hql-array-constructor-hql-example[Array constructor HQL example]
+|[[hql-array-aggregate-functions]]Array aggregate |link:{doc-query-language-url}#hql-array-aggregate-functions[Array aggregate]
+|[[hql-array-agg-example]]Array agg example |link:{doc-query-language-url}#hql-array-agg-example[Array agg example]
+|[[hql-array-position-functions]]Array position |link:{doc-query-language-url}#hql-array-position-functions[Array position]
+|[[hql-array-position-example]]Array position example |link:{doc-query-language-url}#hql-array-position-example[Array position example]
+|[[hql-array-position-hql-example]]Array position HQL example |link:{doc-query-language-url}#hql-array-position-hql-example[Array position HQL example]
+|[[hql-array-positions-functions]]Array positions |link:{doc-query-language-url}#hql-array-positions-functions[Array positions]
+|[[hql-array-positions-example]]Array positions example |link:{doc-query-language-url}#hql-array-positions-example[Array positions example]
+|[[hql-array-length-functions]]Array length |link:{doc-query-language-url}#hql-array-length-functions[Array length]
+|[[hql-array-length-example]]Array length example |link:{doc-query-language-url}#hql-array-length-example[Array length example]
+|[[hql-array-length-hql-example]]Array length HQL example |link:{doc-query-language-url}#hql-array-length-hql-example[Array length HQL example]
+|[[hql-array-concat-functions]]Array concat |link:{doc-query-language-url}#hql-array-concat-functions[Array concat]
+|[[hql-array-concat-example]]Array concat example |link:{doc-query-language-url}#hql-array-concat-example[Array concat example]
+|[[hql-array-concat-pipe-example]]Array concat pipe example |link:{doc-query-language-url}#hql-array-concat-pipe-example[Array concat pipe example]
+|[[hql-array-concat-pipe-element-example]]Array concat pipe element example |link:{doc-query-language-url}#hql-array-concat-pipe-element-example[Array concat pipe element example]
+|[[hql-array-prepend-functions]]Array prepend |link:{doc-query-language-url}#hql-array-prepend-functions[Array prepend]
+|[[hql-array-prepend-example]]Array prepend example |link:{doc-query-language-url}#hql-array-prepend-example[Array prepend example]
+|[[hql-array-append-functions]]Array append |link:{doc-query-language-url}#hql-array-append-functions[Array append]
+|[[hql-array-append-example]]Array append example |link:{doc-query-language-url}#hql-array-append-example[Array append example]
+|[[hql-array-contains-functions]]Array contains |link:{doc-query-language-url}#hql-array-contains-functions[Array contains]
+|[[hql-array-contains-example]]Array contains example |link:{doc-query-language-url}#hql-array-contains-example[Array contains example]
+|[[hql-array-contains-hql-example]]Array contains HQL example |link:{doc-query-language-url}#hql-array-contains-hql-example[Array contains HQL example]
+|[[hql-array-includes-functions]]Array includes |link:{doc-query-language-url}#hql-array-includes-functions[Array includes]
+|[[hql-array-includes-example]]Array includes example |link:{doc-query-language-url}#hql-array-includes-example[Array includes example]
+|[[hql-array-contains-array-example]]Array contains array example |link:{doc-query-language-url}#hql-array-contains-array-example[Array contains array example]
+|[[hql-array-includes-nullable-example]]Array includes nullable example |link:{doc-query-language-url}#hql-array-includes-nullable-example[Array includes nullable example]
+|[[hql-array-contains-array-nullable-example]]Array contains array nullable example |link:{doc-query-language-url}#hql-array-contains-array-nullable-example[Array contains array nullable example]
+|[[hql-array-includes-hql-example]]Array includes HQL example |link:{doc-query-language-url}#hql-array-includes-hql-example[Array includes HQL example]
+|[[hql-array-intersects-functions]]Array intersects |link:{doc-query-language-url}#hql-array-intersects-functions[Array intersects]
+|[[hql-array-overlaps-functions]]Array overlaps |link:{doc-query-language-url}#hql-array-overlaps-functions[Array overlaps]
+|[[hql-array-intersects-example]]Array intersects example |link:{doc-query-language-url}#hql-array-intersects-example[Array intersects example]
+|[[hql-array-overlaps-example]]Array overlaps example |link:{doc-query-language-url}#hql-array-overlaps-example[Array overlaps example]
+|[[hql-array-intersects-nullable-example]]Array intersects nullable example |link:{doc-query-language-url}#hql-array-intersects-nullable-example[Array intersects nullable example]
+|[[hql-array-overlaps-nullable-example]]Array overlaps nullable example |link:{doc-query-language-url}#hql-array-overlaps-nullable-example[Array overlaps nullable example]
+|[[hql-array-intersects-hql-example]]Array intersects HQL example |link:{doc-query-language-url}#hql-array-intersects-hql-example[Array intersects HQL example]
+|[[hql-array-overlaps-hql-example]]Array overlaps HQL example |link:{doc-query-language-url}#hql-array-overlaps-hql-example[Array overlaps HQL example]
+|[[hql-array-get-functions]]Array get |link:{doc-query-language-url}#hql-array-get-functions[Array get]
+|[[hql-array-get-example]]Array get example |link:{doc-query-language-url}#hql-array-get-example[Array get example]
+|[[hql-array-set-functions]]Array set |link:{doc-query-language-url}#hql-array-set-functions[Array set]
+|[[hql-array-set-example]]Array set example |link:{doc-query-language-url}#hql-array-set-example[Array set example]
+|[[hql-array-remove-functions]]Array remove |link:{doc-query-language-url}#hql-array-remove-functions[Array remove]
+|[[hql-array-remove-example]]Array remove example |link:{doc-query-language-url}#hql-array-remove-example[Array remove example]
+|[[hql-array-remove-index-functions]]Array remove index |link:{doc-query-language-url}#hql-array-remove-index-functions[Array remove index]
+|[[hql-array-remove-index-example]]Array remove index example |link:{doc-query-language-url}#hql-array-remove-index-example[Array remove index example]
+|[[hql-array-slice-functions]]Array slice |link:{doc-query-language-url}#hql-array-slice-functions[Array slice]
+|[[hql-array-slice-example]]Array slice example |link:{doc-query-language-url}#hql-array-slice-example[Array slice example]
+|[[hql-array-slice-hql-example]]Array slice HQL example |link:{doc-query-language-url}#hql-array-slice-hql-example[Array slice HQL example]
+|[[hql-array-replace-functions]]Array replace |link:{doc-query-language-url}#hql-array-replace-functions[Array replace]
+|[[hql-array-replace-example]]Array replace example |link:{doc-query-language-url}#hql-array-replace-example[Array replace example]
+|[[hql-array-trim-functions]]Array trim |link:{doc-query-language-url}#hql-array-trim-functions[Array trim]
+|[[hql-array-trim-example]]Array trim example |link:{doc-query-language-url}#hql-array-trim-example[Array trim example]
+|[[hql-array-reverse-functions]]Array reverse |link:{doc-query-language-url}#hql-array-reverse-functions[Array reverse]
+|[[hql-array-reverse-example]]Array reverse example |link:{doc-query-language-url}#hql-array-reverse-example[Array reverse example]
+|[[hql-array-sort-functions]]Array sort |link:{doc-query-language-url}#hql-array-sort-functions[Array sort]
+|[[hql-array-sort-example]]Array sort example |link:{doc-query-language-url}#hql-array-sort-example[Array sort example]
+|[[hql-array-sort-descending-nulls-last-example]]Array sort descending nulls last example |link:{doc-query-language-url}#hql-array-sort-descending-nulls-last-example[Array sort descending nulls last example]
+|[[hql-array-fill-functions]]Array fill |link:{doc-query-language-url}#hql-array-fill-functions[Array fill]
+|[[hql-array-fill-example]]Array fill example |link:{doc-query-language-url}#hql-array-fill-example[Array fill example]
+|[[hql-array-to-string-functions]]Array to string |link:{doc-query-language-url}#hql-array-to-string-functions[Array to string]
+|[[hql-array-to-string-example]]Array to string example |link:{doc-query-language-url}#hql-array-to-string-example[Array to string example]
+|[[hql-array-to-string-hql-example]]Array to string HQL example |link:{doc-query-language-url}#hql-array-to-string-hql-example[Array to string HQL example]
+|[[hql-array-unnest]]Array unnest |link:{doc-query-language-url}#hql-array-unnest[Array unnest]
+|[[hql-array-unnest-struct-example]]Array unnest struct example |link:{doc-query-language-url}#hql-array-unnest-struct-example[Array unnest struct example]
+|[[hql-array-unnest-example]]Array unnest example |link:{doc-query-language-url}#hql-array-unnest-example[Array unnest example]
+|[[hql-contains-predicate]]Contains predicate |link:{doc-query-language-url}#hql-contains-predicate[Contains predicate]
+|[[hql-contains-predicate-bnf]]Contains predicate bnf |link:{doc-query-language-url}#hql-contains-predicate-bnf[Contains predicate bnf]
+|[[hql-intersects-predicate]]Intersects predicate |link:{doc-query-language-url}#hql-intersects-predicate[Intersects predicate]
+|[[hql-intersects-predicate-bnf]]Intersects predicate bnf |link:{doc-query-language-url}#hql-intersects-predicate-bnf[Intersects predicate bnf]
 |===
-
-
-[[hql-json-object-function]]
-==== `json_object()`
-
-Constructs a JSON object from pairs of key and value arguments.
-
-[[hql-json-object-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/json_object_bnf.txt[]
-----
-
-Argument count must be even and expressions alternate between keys and values i.e. `key1, value1, key2, value2, ...`.
-Alternatively, it is also possible to use a `:` (colon) to separate keys from values or the `value` keyword.
-
-[[hql-json-object-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonObjectTest.java[tags=hql-json-object-example]
-----
 ====
 
-Although database dependent, usually `null` values are present in the resulting JSON object.
-To remove `null` value entries, use the `absent on null` clause.
-
-[[hql-json-object-on-null-example]]
+.JSON reference links
+[%collapsible]
 ====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonObjectTest.java[tags=hql-json-object-on-null-example]
-----
-====
-
-[[hql-json-array-function]]
-==== `json_array()`
-
-Constructs a JSON array from arguments.
-
-[[hql-json-array-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/json_array_bnf.txt[]
-----
-
-[[hql-json-array-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonArrayTest.java[tags=hql-json-array-example]
-----
-====
-
-Although database dependent, usually `null` values are `absent` in the resulting JSON array.
-To retain `null` elements, use the `null on null` clause.
-
-[[hql-json-array-on-null-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonArrayTest.java[tags=hql-json-array-on-null-example]
-----
-====
-
-[[hql-json-value-function]]
-==== `json_value()`
-
-Extracts a scalar value by https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path] from a JSON document.
-
-[[hql-json-value-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/json_value_bnf.txt[]
-----
-
-The first argument is an expression to a JSON document. The second argument is a JSON path as a string expression.
-
-WARNING: Some databases might also allow extracting non-scalar values. Beware that this behavior is not portable.
-
-NOTE: It is recommended to use the dot notation for JSON paths instead of the bracket notation,
-since most databases support only that.
-
-[[hql-json-value-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-example]
-----
-====
-
-The `passing` clause allows to reuse the same JSON path but pass different values for evaluation.
-
-[[hql-json-value-passing-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-passing-example]
-----
-====
-
-The `returning` clause allows to specify the link:{doc-query-language-url}#function-cast[cast target] i.e. the type of value to extract.
-
-[[hql-json-value-returning-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-returning-example]
-----
-====
-
-The `on error` clause defines the behavior when an error occurs while resolving the value for the JSON path.
-Conditions that classify as errors are database dependent, but usual errors which can be handled with this clause are:
-
-* First argument is not a valid JSON document
-* Second argument is not a valid JSON path
-* JSON path does not resolve to a scalar value
-
-The default behavior of `on error` is database specific, but usually, `null` is returned on an error.
-It is recommended to specify this clause when the exact error behavior is important.
-
-[[hql-json-value-on-error-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-on-error-example]
-----
-====
-
-The `on empty` clause defines the behavior when the JSON path does not match the JSON document.
-By default, `null` is returned on empty.
-
-[[hql-json-value-on-empty-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-on-empty-example]
-----
-====
-
-To actually receive an error `on empty`, it is necessary to also specify `error on error`.
-Depending on the database, an error might still be thrown even without that, but that is not portable.
-
-NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
-
-[[hql-json-exists-function]]
-==== `json_exists()`
-
-Checks if a JSON document contains a https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path].
-
-[[hql-json-exists-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/json_exists_bnf.txt[]
-----
-
-The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
-
-NOTE: It is recommended to only us the dot notation for JSON paths instead of the bracket notation,
-since most databases support only that.
-
-[[hql-json-exists-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonExistsTest.java[tags=hql-json-exists-example]
-----
-====
-
-The `passing` clause allows to reuse the same JSON path but pass different values for evaluation.
-
-[[hql-json-exists-passing-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonExistsTest.java[tags=hql-json-exists-passing-example]
-----
-====
-
-The `on error` clause defines the behavior when an error occurs while checking for existence with the JSON path.
-Conditions that classify as errors are database dependent, but usual errors which can be handled with this clause are:
-
-* First argument is not a valid JSON document
-* Second argument is not a valid JSON path
-
-The default behavior of `on error` is database specific, but usually, `false` is returned on an error.
-It is recommended to specify this clause when the exact error behavior is important.
-
-[[hql-json-exists-on-error-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonExistsTest.java[tags=hql-json-exists-on-error-example]
-----
-====
-
-NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
-
-[[hql-json-query-function]]
-==== `json_query()`
-
-Queries non-scalar values from a JSON document by a https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path].
-
-[[hql-json-query-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/json_query_bnf.txt[]
-----
-
-The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
-
-WARNING: Some databases might also allow querying scalar values. Beware that this behavior is not portable.
-
-NOTE: It is recommended to only us the dot notation for JSON paths instead of the bracket notation,
-since most databases support only that.
-
-[[hql-json-query-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-example]
-----
-====
-
-The `passing` clause allows to reuse the same JSON path but pass different values for evaluation.
-
-[[hql-json-query-passing-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-passing-example]
-----
-====
-
-The `wrapper` clause allows to specify whether results of a query should be wrapped in brackets `[]` i.e. an array.
-The default behavior is to omit an array wrapper i.e. `without wrapper`.
-It is an error when a `json_query` returns more than a single result and `without wrapper` is used.
-How an error like this should be handled can be controlled with the `on error` clause.
-
-WARNING: Since the default behavior of `on error` is database dependent,
-some databases might return a comma separated list of values even when using `without wrapper`. This is not portable.
-
-[[hql-json-query-wrapper-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-with-wrapper-example]
-----
-====
-
-The `on error` clause defines the behavior when an error occurs while querying with the JSON path.
-Conditions that classify as errors are database dependent, but usual errors which can be handled with this clause are:
-
-* First argument is not a valid JSON document
-* Second argument is not a valid JSON path
-* Multiple `json_query` results when `without wrapper` is used
-
-The default behavior of `on error` is database specific, but usually, `null` is returned on an error.
-It is recommended to specify this clause when the exact error behavior is important.
-
-[[hql-json-query-on-error-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-on-error-example]
-----
-====
-
-The `on empty` clause defines the behavior when the JSON path does not match the JSON document.
-By default, `null` is returned on empty.
-
-[[hql-json-query-on-empty-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-on-empty-example]
-----
-====
-
-To actually receive an error `on empty`, it is necessary to also specify `error on error`.
-Depending on the database, an error might still be thrown even without that, but that is not portable.
-
-NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
-
-[[hql-json-arrayagg-function]]
-==== `json_arrayagg()`
-
-Creates a JSON array by aggregating values.
-
-[[hql-json-arrayagg-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/json_arrayagg_bnf.txt[]
-----
-
-This aggregate function is similar to an link:{doc-query-language-url}#aggregate-functions-orderedset[_ordered set aggregate function_]
-since it allows to specify the order in which elements are aggregated, but uses a special syntax.
-
-[[hql-json-arrayagg-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-example]
-----
-====
-
-Although database dependent, usually `null` values are `absent` in the resulting JSON array.
-To retain `null` elements, use the `null on null` clause.
-
-[[hql-json-arrayagg-null-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-null-example]
-----
-====
-
-The order in which elements are aggregated can be defined by specifying an order by clause.
-
-[[hql-json-arrayagg-order-by-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-order-by-example]
-----
-====
-
-[[hql-json-objectagg-function]]
-==== `json_objectagg()`
-
-Creates a JSON object by aggregating values.
-
-[[hql-json-objectagg-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/json_objectagg_bnf.txt[]
-----
-
-The arguments represent the key and the value to be aggregated to the JSON object,
-separated by the `value` keyword or a `:` (colon).
-
-[[hql-json-objectagg-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objectagg-example]
-----
-====
-
-Although database dependent, usually `null` values are `absent` in the resulting JSON array.
-To retain `null` elements, use the `null on null` clause.
-
-[[hql-json-objectagg-null-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objectagg-null-example]
-----
-====
-
-Duplicate keys usually are retained in the resulting string.
-Use `with unique keys` to specify that the encounter of a duplicate key should cause an error.
-
-[[hql-json-objectagg-unique-keys-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objectagg-unique-keys-example]
-----
-====
-
-WARNING: Some databases like e.g. MySQL, SAP HANA, DB2 and SQL Server do not support raising an error on duplicate keys.
-
-[[hql-json-set-function]]
-==== `json_set()`
-
-Inserts/Replaces a value by JSON path within a JSON document.
-The function takes 3 arguments, the json document, the json path and the new value to set/insert.
-
-[[hql-json-set-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonSetTest.java[tags=hql-json-set-example]
-----
-====
-
-WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
-
-[[hql-json-remove-function]]
-==== `json_remove()`
-
-Removes a value by JSON path within a JSON document.
-The function takes 2 arguments, the json document and the json path representing what to remove.
-
-[[hql-json-remove-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonRemoveTest.java[tags=hql-json-remove-example]
-----
-====
-
-WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
-
-[[hql-json-replace-function]]
-==== `json_replace()`
-
-Replaces a value by JSON path within a JSON document.
-The function takes 3 arguments, the json document, the json path and the new value to set.
-A value will not be inserted if the key is missing, only the values of existing keys are replaced.
-
-[[hql-json-replace-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonReplaceTest.java[tags=hql-json-replace-example]
-----
-====
-
-WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
-
-[[hql-json-insert-function]]
-==== `json_insert()`
-
-Inserts a value by JSON path in a JSON document.
-The function takes 3 arguments, the json document, the json path and the value to insert.
-When the JSON document contains a value for a JSON path, no insertion happens,
-unless the value is an array, in which case the value will be appended to that array.
-If no value exists for a JSON path, the value will be inserted under the key as specified through the JSON path.
-
-[[hql-json-insert-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonInsertTest.java[tags=hql-json-insert-example]
-----
-====
-
-WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
-
-[[hql-json-mergepatch-function]]
-==== `json_mergepatch()`
-
-Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge, which is
-
-* When the first JSON value is not an object, the result is as if the first argument was an empty object
-* When the second JSON value is not an object, the result is the second argument
-* When both JSON values are objects, members are merged
-** Retain first JSON object members when the second JSON object has no members with matching keys
-** Retain second JSON object members when the first JSON object has no members with matching keys and the value is not equal to the JSON `null` literal
-** Recursively merge values that exist in both JSON objects, except if the second JSON object member is a JSON `null`
-
-In simple terms this means
-
-* The second JSON overrides members of the first, with JSON `null` values causing members to be removed
-* JSON objects are merged recursively
-
-NOTE: Arrays and hence objects within arrays are not merged, but replaced.
-
-[[hql-json-mergepatch-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonMergepatchTest.java[tags=hql-json-mergepatch-example]
-----
-====
-
-WARNING: SAP HANA, DB2, SQL Server, H2 and HSQLDB do not support this function. On PostgreSQL, this function is emulated.
-
-[[hql-json-array-append-function]]
-==== `json_array_append()`
-
-Appends a value by JSON path to a JSON array within a JSON document.
-The function takes 3 arguments, the json document, the json path and the value to append.
-
-If the value within the JSON document as identified by the JSON path is not a JSON array,
-it is auto-wrapped into an array.
-When no value exists for a JSON path, the document is not changed.
-
-[[hql-json-array-append-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonArrayAppendTest.java[tags=hql-json-array-append-example]
-----
-====
-
-WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
-
-[[hql-json-array-insert-function]]
-==== `json_array_insert()`
-
-Inserts a value by JSON path to a JSON array within a JSON document.
-The function takes 3 arguments, the json document, the json path and the value to append.
-
-Although the exact behavior is database dependent, usually an error will be triggered if
-the JSON path does not end with an array index access i.e. `$.a[0]`.
-The zero based array index represents the position at which an element should be inserted in an array.
-
-If the JSON path without the index does not resolve to a JSON array within the JSON document,
-the document is not changed.
-
-[[hql-json-array-insert-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonArrayInsertTest.java[tags=hql-json-array-insert-example]
-----
-====
-
-WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
-
-[[hql-json-table-function]]
-==== `json_table()`
-
-A <<hql-from-set-returning-functions,set-returning function>>, which turns a JSON document argument into rows.
-Returns no rows if the document is `null` or an empty JSON array.
-
-[[hql-json-table-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/json_table_bnf.txt[]
-----
-
-The first argument is the JSON document. The second optional argument represents the JSON path expression to use
-in order to obtain JSON nodes for further processing. The default for the optional second argument is `$[*]`
-i.e. access of root array elements.
-
-NOTE: If the root of the JSON document is an object, it is recommended to pass `$` as JSON path for portability.
-
-The `passing` clause can be used to pass values for variables in the JSON path.
-
-Attributes/columns that ought to be accessible via the `from` node alias are defined in the `columns` clause,
-which can be of varying forms:
-
-* Value attributes - denoted by a `castTarget` after the name, behaves like <<hql-json-value-function,`json_value()`>>
-* Query attributes - denoted by the `json` type after the name, behaves like <<hql-json-query-function,`json_query()`>>
-* Exists attributes - denoted by the `exists` keyword after the name, behaves like <<hql-json-exists-function,`json_exists()`>>
-* Ordinal attributes - denoted by the `for ordinality` syntax after the name, gives access to the 1-based index of the currently processed array element
-* Nested paths - declare a JSON path for processing of a nested `columns` clause
-
-[[hql-json-table-simple-example]]
-====
-[source, java, indent=0]
-----
-include::{json-example-dir-hql}/JsonTableTest.java[tags=hql-json-table-example]
-----
-====
-
-The `lateral` keyword is mandatory if one of the arguments refer to a from node item of the same query level.
-
-WARNING: H2 support is limited and HSQLDB as well as Sybase ASE do not support this function.
-
-[[hql-functions-xml]]
-=== XML functions
-
-The following functions deal with SQL XML types, which are not supported on every database.
-
-[[hql-xml-functions]]
+[cols="1,2",options="header"]
 |===
-| Function | Purpose
-
-| <<hql-xmlelement-function,`xmlelement()`>> | Constructs an XML element from arguments
-| <<hql-xmlcomment-function,`xmlcomment()`>> | Constructs an XML comment from the single argument
-| <<hql-xmlforest-function,`xmlforest()`>> | Constructs an XML forest from the arguments
-| <<hql-xmlconcat-function,`xmlconcat()`>> | Concatenates multiple XML fragments to each other
-| <<hql-xmlpi-function,`xmlpi()`>> | Constructs an XML processing instruction
-| <<hql-xmlquery-function,`xmlquery()`>> | Extracts content from XML document using XQuery or XPath
-| <<hql-xmlexists-function,`xmlexists()`>> | Checks if an XQuery or XPath expression exists in an XML document
-| <<hql-xmlagg-function,`xmlagg()`>> | Aggregates XML elements by concatenation
-| <<hql-xmltable-function,`xmltable()`>> | Turns an XML document into rows
+|Earlier target |Current reference
+|[[hql-functions-json]]JSON |link:{doc-query-language-url}#hql-functions-json[JSON]
+|[[hql-json-functions]]JSON |link:{doc-query-language-url}#hql-json-functions[JSON]
+|[[hql-json-object-function]]JSON object function |link:{doc-query-language-url}#hql-json-object-function[JSON object function]
+|[[hql-json-object-bnf]]JSON object bnf |link:{doc-query-language-url}#hql-json-object-bnf[JSON object bnf]
+|[[hql-json-object-example]]JSON object example |link:{doc-query-language-url}#hql-json-object-example[JSON object example]
+|[[hql-json-object-on-null-example]]JSON object on null example |link:{doc-query-language-url}#hql-json-object-on-null-example[JSON object on null example]
+|[[hql-json-array-function]]JSON array function |link:{doc-query-language-url}#hql-json-array-function[JSON array function]
+|[[hql-json-array-bnf]]JSON array bnf |link:{doc-query-language-url}#hql-json-array-bnf[JSON array bnf]
+|[[hql-json-array-example]]JSON array example |link:{doc-query-language-url}#hql-json-array-example[JSON array example]
+|[[hql-json-array-on-null-example]]JSON array on null example |link:{doc-query-language-url}#hql-json-array-on-null-example[JSON array on null example]
+|[[hql-json-value-function]]JSON value function |link:{doc-query-language-url}#hql-json-value-function[JSON value function]
+|[[hql-json-value-bnf]]JSON value bnf |link:{doc-query-language-url}#hql-json-value-bnf[JSON value bnf]
+|[[hql-json-value-example]]JSON value example |link:{doc-query-language-url}#hql-json-value-example[JSON value example]
+|[[hql-json-value-passing-example]]JSON value passing example |link:{doc-query-language-url}#hql-json-value-passing-example[JSON value passing example]
+|[[hql-json-value-returning-example]]JSON value returning example |link:{doc-query-language-url}#hql-json-value-returning-example[JSON value returning example]
+|[[hql-json-value-on-error-example]]JSON value on error example |link:{doc-query-language-url}#hql-json-value-on-error-example[JSON value on error example]
+|[[hql-json-value-on-empty-example]]JSON value on empty example |link:{doc-query-language-url}#hql-json-value-on-empty-example[JSON value on empty example]
+|[[hql-json-exists-function]]JSON exists function |link:{doc-query-language-url}#hql-json-exists-function[JSON exists function]
+|[[hql-json-exists-bnf]]JSON exists bnf |link:{doc-query-language-url}#hql-json-exists-bnf[JSON exists bnf]
+|[[hql-json-exists-example]]JSON exists example |link:{doc-query-language-url}#hql-json-exists-example[JSON exists example]
+|[[hql-json-exists-passing-example]]JSON exists passing example |link:{doc-query-language-url}#hql-json-exists-passing-example[JSON exists passing example]
+|[[hql-json-exists-on-error-example]]JSON exists on error example |link:{doc-query-language-url}#hql-json-exists-on-error-example[JSON exists on error example]
+|[[hql-json-query-function]]JSON query function |link:{doc-query-language-url}#hql-json-query-function[JSON query function]
+|[[hql-json-query-bnf]]JSON query bnf |link:{doc-query-language-url}#hql-json-query-bnf[JSON query bnf]
+|[[hql-json-query-example]]JSON query example |link:{doc-query-language-url}#hql-json-query-example[JSON query example]
+|[[hql-json-query-passing-example]]JSON query passing example |link:{doc-query-language-url}#hql-json-query-passing-example[JSON query passing example]
+|[[hql-json-query-wrapper-example]]JSON query wrapper example |link:{doc-query-language-url}#hql-json-query-wrapper-example[JSON query wrapper example]
+|[[hql-json-query-on-error-example]]JSON query on error example |link:{doc-query-language-url}#hql-json-query-on-error-example[JSON query on error example]
+|[[hql-json-query-on-empty-example]]JSON query on empty example |link:{doc-query-language-url}#hql-json-query-on-empty-example[JSON query on empty example]
+|[[hql-json-arrayagg-function]]JSON arrayagg function |link:{doc-query-language-url}#hql-json-arrayagg-function[JSON arrayagg function]
+|[[hql-json-arrayagg-bnf]]JSON arrayagg bnf |link:{doc-query-language-url}#hql-json-arrayagg-bnf[JSON arrayagg bnf]
+|[[hql-json-arrayagg-example]]JSON arrayagg example |link:{doc-query-language-url}#hql-json-arrayagg-example[JSON arrayagg example]
+|[[hql-json-arrayagg-null-example]]JSON arrayagg null example |link:{doc-query-language-url}#hql-json-arrayagg-null-example[JSON arrayagg null example]
+|[[hql-json-arrayagg-order-by-example]]JSON arrayagg order by example |link:{doc-query-language-url}#hql-json-arrayagg-order-by-example[JSON arrayagg order by example]
+|[[hql-json-objectagg-function]]JSON objectagg function |link:{doc-query-language-url}#hql-json-objectagg-function[JSON objectagg function]
+|[[hql-json-objectagg-bnf]]JSON objectagg bnf |link:{doc-query-language-url}#hql-json-objectagg-bnf[JSON objectagg bnf]
+|[[hql-json-objectagg-example]]JSON objectagg example |link:{doc-query-language-url}#hql-json-objectagg-example[JSON objectagg example]
+|[[hql-json-objectagg-null-example]]JSON objectagg null example |link:{doc-query-language-url}#hql-json-objectagg-null-example[JSON objectagg null example]
+|[[hql-json-objectagg-unique-keys-example]]JSON objectagg unique keys example |link:{doc-query-language-url}#hql-json-objectagg-unique-keys-example[JSON objectagg unique keys example]
+|[[hql-json-set-function]]JSON set function |link:{doc-query-language-url}#hql-json-set-function[JSON set function]
+|[[hql-json-set-example]]JSON set example |link:{doc-query-language-url}#hql-json-set-example[JSON set example]
+|[[hql-json-remove-function]]JSON remove function |link:{doc-query-language-url}#hql-json-remove-function[JSON remove function]
+|[[hql-json-remove-example]]JSON remove example |link:{doc-query-language-url}#hql-json-remove-example[JSON remove example]
+|[[hql-json-replace-function]]JSON replace function |link:{doc-query-language-url}#hql-json-replace-function[JSON replace function]
+|[[hql-json-replace-example]]JSON replace example |link:{doc-query-language-url}#hql-json-replace-example[JSON replace example]
+|[[hql-json-insert-function]]JSON insert function |link:{doc-query-language-url}#hql-json-insert-function[JSON insert function]
+|[[hql-json-insert-example]]JSON insert example |link:{doc-query-language-url}#hql-json-insert-example[JSON insert example]
+|[[hql-json-mergepatch-function]]JSON mergepatch function |link:{doc-query-language-url}#hql-json-mergepatch-function[JSON mergepatch function]
+|[[hql-json-mergepatch-example]]JSON mergepatch example |link:{doc-query-language-url}#hql-json-mergepatch-example[JSON mergepatch example]
+|[[hql-json-array-append-function]]JSON array append function |link:{doc-query-language-url}#hql-json-array-append-function[JSON array append function]
+|[[hql-json-array-append-example]]JSON array append example |link:{doc-query-language-url}#hql-json-array-append-example[JSON array append example]
+|[[hql-json-array-insert-function]]JSON array insert function |link:{doc-query-language-url}#hql-json-array-insert-function[JSON array insert function]
+|[[hql-json-array-insert-example]]JSON array insert example |link:{doc-query-language-url}#hql-json-array-insert-example[JSON array insert example]
+|[[hql-json-table-function]]JSON table function |link:{doc-query-language-url}#hql-json-table-function[JSON table function]
+|[[hql-json-table-bnf]]JSON table bnf |link:{doc-query-language-url}#hql-json-table-bnf[JSON table bnf]
+|[[hql-json-table-simple-example]]JSON table simple example |link:{doc-query-language-url}#hql-json-table-simple-example[JSON table simple example]
 |===
-
-
-[[hql-xmlelement-function]]
-==== `xmlelement()`
-
-Constructs an XML element from the arguments.
-
-[[hql-xmlelement-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/xmlelement_bnf.txt[]
-----
-
-The identifier represents the XML element name and can be quoted by using backticks.
-
-[[hql-xmlelement-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlElementTest.java[tags=hql-xmlelement-example]
-----
 ====
 
-XML element attributes can be defined by using the `xmlattributes` function as second argument.
-All following arguments represent the XML content.
-
-[[hql-xmlelement-attributes-content-example]]
+.XML reference links
+[%collapsible]
 ====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlElementTest.java[tags=hql-xmlelement-attributes-content-example]
-----
+[cols="1,2",options="header"]
+|===
+|Earlier target |Current reference
+|[[hql-functions-xml]]XML |link:{doc-query-language-url}#hql-functions-xml[XML]
+|[[hql-xml-functions]]XML |link:{doc-query-language-url}#hql-xml-functions[XML]
+|[[hql-xmlelement-function]]XMLelement function |link:{doc-query-language-url}#hql-xmlelement-function[XMLelement function]
+|[[hql-xmlelement-bnf]]XMLelement bnf |link:{doc-query-language-url}#hql-xmlelement-bnf[XMLelement bnf]
+|[[hql-xmlelement-example]]XMLelement example |link:{doc-query-language-url}#hql-xmlelement-example[XMLelement example]
+|[[hql-xmlelement-attributes-content-example]]XMLelement attributes content example |link:{doc-query-language-url}#hql-xmlelement-attributes-content-example[XMLelement attributes content example]
+|[[hql-xmlcomment-function]]XMLcomment function |link:{doc-query-language-url}#hql-xmlcomment-function[XMLcomment function]
+|[[hql-xmlcomment-example]]XMLcomment example |link:{doc-query-language-url}#hql-xmlcomment-example[XMLcomment example]
+|[[hql-xmlforest-function]]XMLforest function |link:{doc-query-language-url}#hql-xmlforest-function[XMLforest function]
+|[[hql-xmlforest-bnf]]XMLforest bnf |link:{doc-query-language-url}#hql-xmlforest-bnf[XMLforest bnf]
+|[[hql-xmlforest-example]]XMLforest example |link:{doc-query-language-url}#hql-xmlforest-example[XMLforest example]
+|[[hql-xmlconcat-function]]XMLconcat function |link:{doc-query-language-url}#hql-xmlconcat-function[XMLconcat function]
+|[[hql-xmlconcat-example]]XMLconcat example |link:{doc-query-language-url}#hql-xmlconcat-example[XMLconcat example]
+|[[hql-xmlpi-function]]XMLpi function |link:{doc-query-language-url}#hql-xmlpi-function[XMLpi function]
+|[[hql-xmlpi-bnf]]XMLpi bnf |link:{doc-query-language-url}#hql-xmlpi-bnf[XMLpi bnf]
+|[[hql-xmlpi-example]]XMLpi example |link:{doc-query-language-url}#hql-xmlpi-example[XMLpi example]
+|[[hql-xmlpi-content-example]]XMLpi content example |link:{doc-query-language-url}#hql-xmlpi-content-example[XMLpi content example]
+|[[hql-xmlquery-function]]XMLquery function |link:{doc-query-language-url}#hql-xmlquery-function[XMLquery function]
+|[[hql-xmlquery-bnf]]XMLquery bnf |link:{doc-query-language-url}#hql-xmlquery-bnf[XMLquery bnf]
+|[[hql-xmlquery-example]]XMLquery example |link:{doc-query-language-url}#hql-xmlquery-example[XMLquery example]
+|[[hql-xmlexists-function]]XMLexists function |link:{doc-query-language-url}#hql-xmlexists-function[XMLexists function]
+|[[hql-xmlexists-bnf]]XMLexists bnf |link:{doc-query-language-url}#hql-xmlexists-bnf[XMLexists bnf]
+|[[hql-xmlexists-example]]XMLexists example |link:{doc-query-language-url}#hql-xmlexists-example[XMLexists example]
+|[[hql-xmlagg-function]]XMLagg function |link:{doc-query-language-url}#hql-xmlagg-function[XMLagg function]
+|[[hql-xmlagg-bnf]]XMLagg bnf |link:{doc-query-language-url}#hql-xmlagg-bnf[XMLagg bnf]
+|[[hql-xmlagg-example]]XMLagg example |link:{doc-query-language-url}#hql-xmlagg-example[XMLagg example]
+|[[hql-xmltable-function]]XMLtable function |link:{doc-query-language-url}#hql-xmltable-function[XMLtable function]
+|[[hql-xmltable-bnf]]XMLtable bnf |link:{doc-query-language-url}#hql-xmltable-bnf[XMLtable bnf]
+|[[hql-xmltable-simple-example]]XMLtable simple example |link:{doc-query-language-url}#hql-xmltable-simple-example[XMLtable simple example]
+|===
 ====
-
-WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
-
-[[hql-xmlcomment-function]]
-==== `xmlcomment()`
-
-Constructs an XML comment from the single string argument.
-
-[[hql-xmlcomment-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlCommentTest.java[tags=hql-xmlcomment-example]
-----
-====
-
-WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
-
-[[hql-xmlforest-function]]
-==== `xmlforest()`
-
-Constructs an XML forest from the arguments. A forest is a sequence of XML elements.
-
-[[hql-xmlforest-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/xmlforest_bnf.txt[]
-----
-
-The optional name specifies the XML element name to use for the content as produced by the expression.
-The name can be omitted if a path expression is passed, in which case the last attribute name is used as element name.
-
-[[hql-xmlforest-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlForestTest.java[tags=hql-xmlforest-example]
-----
-====
-
-WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
-
-[[hql-xmlconcat-function]]
-==== `xmlconcat()`
-
-Concatenates multiple XML fragments to each other.
-
-[[hql-xmlconcat-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlConcatTest.java[tags=hql-xmlconcat-example]
-----
-====
-
-WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
-
-[[hql-xmlpi-function]]
-==== `xmlpi()`
-
-Constructs an XML processing instruction from the arguments.
-
-[[hql-xmlpi-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/xmlpi_bnf.txt[]
-----
-
-The identifier represents the XML processing instruction name and can be quoted by using backticks.
-
-[[hql-xmlpi-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlPiTest.java[tags=hql-xmlpi-example]
-----
-====
-
-The optional second argument represents the processing instruction content.
-
-[[hql-xmlpi-content-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlPiTest.java[tags=hql-xmlpi-content-example]
-----
-====
-
-WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
-
-[[hql-xmlquery-function]]
-==== `xmlquery()`
-
-Extracts content from an XML document using XQuery or XPath.
-
-[[hql-xmlquery-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/xmlquery_bnf.txt[]
-----
-
-The first argument represents the XQuery or XPath expression.
-The second argument after the `passing` keyword represents the XML document.
-
-[[hql-xmlquery-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlQueryTest.java[tags=hql-xmlquery-example]
-----
-====
-
-WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
-
-[[hql-xmlexists-function]]
-==== `xmlexists()`
-
-Checks if an XQuery or XPath expression exists in an XML document.
-
-[[hql-xmlexists-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/xmlexists_bnf.txt[]
-----
-
-The first argument represents the XQuery or XPath expression.
-The second argument after the `passing` keyword represents the XML document.
-
-[[hql-xmlexists-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlExistsTest.java[tags=hql-xmlexists-example]
-----
-====
-
-WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
-
-[[hql-xmlagg-function]]
-==== `xmlagg()`
-
-Aggregates XML elements by concatenation.
-
-[[hql-xmlagg-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/xmlagg_bnf.txt[]
-----
-
-This aggregate function is similar to an link:{doc-query-language-url}#aggregate-functions-orderedset[_ordered set aggregate function_]
-since it allows to specify the order in which elements are aggregated, but uses a special syntax.
-
-[[hql-xmlagg-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlAggTest.java[tags=hql-xmlagg-example]
-----
-====
-
-WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
-
-[[hql-xmltable-function]]
-==== `xmltable()`
-
-A <<hql-from-set-returning-functions,set-returning function>>, which turns an XML document argument into rows.
-Returns no rows if the document is `null` or the XPath expression resolves to no nodes.
-
-[[hql-xmltable-bnf]]
-[source, antlrv4, indent=0]
-----
-include::{extrasdir}/xmltable_bnf.txt[]
-----
-
-The first argument is the XPath expression. The second argument represents the XML document expression.
-
-Columns that ought to be accessible via the `from` node alias are defined in the `columns` clause,
-which can be of varying forms:
-
-* Value attributes - denoted by a `castTarget` after the name, will cast the content of the XML node matching the XPath expression of the column
-* Query attributes - denoted by the `xml` type after the name, returns the XML node matching the XPath expression of the column
-* Ordinal attributes - denoted by the `for ordinality` syntax after the name, gives access to the 1-based index of the currently processed XML node
-
-[[hql-xmltable-simple-example]]
-====
-[source, java, indent=0]
-----
-include::{xml-example-dir-hql}/XmlTableTest.java[tags=hql-xml-table-example]
-----
-====
-
-The `lateral` keyword is mandatory if one of the arguments refer to a from node item of the same query level.
-
-WARNING: H2, MySQL, MariaDB and HSQLDB do not support this function.

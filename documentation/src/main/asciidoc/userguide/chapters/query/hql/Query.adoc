@@ -12,8 +12,9 @@
 Use HQL or JPQL for query strings, <<criteria,Criteria>> for Java-based construction,
 <<QuerySpecification,query specifications>> for iterative composition, or <<sql,native SQL>> for handwritten database SQL.
 <<stored-procedures,Procedure calls>> have their own execution model.
-The link:{doc-query-language-url}[Query Language guide] describes general language syntax and semantics;
-<<query-language>> covers specialized functions.
+The link:{doc-query-language-url}[Query Language guide] describes general language syntax and semantics.
+The language guide's link:{doc-query-language-url}#hql-functions-arrays[array], link:{doc-query-language-url}#hql-functions-json[JSON], and link:{doc-query-language-url}#hql-functions-xml[XML] appendices describe specialized built-in functions.
+See <<query-language,Function integration>> for registering custom database functions.
 For an introductory walkthrough, see link:{doc-introduction-url}#queries[Executing queries].
 
 [[query-api]]
@@ -613,7 +614,9 @@ For named queries, query hints may be specified using the `@QueryHint` annotatio
 
 When working directly with a Hibernate `Session`, the interface `org.hibernate.query.Query` is used to control the execution of the query.
 
-Whereas we needed to specify some information using query hints when working with the Jakarta Persistence API, here we have typesafe setters:
+Jakarta Persistence 4 also provides typed execution controls, including timeout, flush mode, read-only mode, and locking.
+Hibernate adds provider-specific setters for controls such as query caching, JDBC fetch size, SQL comments, and database query hints.
+The following table lists the Hibernate setters for both shared and provider-specific controls:
 
 |===
 | `Query#setTimeout()` | Sets the JDBC-level query timeout.

@@ -443,7 +443,8 @@ Both annotations may be placed on a `package-info.java` or `module-info.java`, w
 `cacheRegion()`::
 	If the query results are cacheable, name the query cache region to use.
 `fetchSize()`::
-	The number of rows fetched by the JDBC Driver per database trip. The default value is given by the JDBC driver.
+	A JDBC driver hint for the number of rows to fetch at a time. The driver determines buffering and whether the hint changes database round trips.
+	When no fetch size is specified, the driver default applies.
 `timeout()`::
 	The query timeout (in seconds). By default, there's no timeout.
 `comment()`::
@@ -452,7 +453,9 @@ Both annotations may be placed on a `package-info.java` or `module-info.java`, w
 	The cache mode used for this query. This refers to entities/collections returned by the query.
 	The default value is `CacheMode.NORMAL`.
 `readOnly()`::
-	Whether the results should be read-only. By default, queries are not read-only so entities are stored in the Persistence Context.
+	Whether newly loaded entities should be marked as read-only. The default is `false`.
+	Read-only entities remain managed in the persistence context; dirty checking of their simple properties is skipped.
+	This option does not change entities already managed by the context. See <<hql-read-only-entities,read-only query results>>.
 
 For named procedure calls, use `@NamedStoredProcedureQuery`; see <<sql-sp-named-query>>.
 

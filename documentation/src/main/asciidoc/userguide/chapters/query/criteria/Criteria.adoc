@@ -191,8 +191,8 @@ include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-typedquery-multi
 ----
 ====
 
-Technically this is classified as a typed query, but you can see from handling the results that this is sort of misleading.
-Anyway, the expected result type here is an array.
+The query is typed as `Object[]`, so each result row is an array.
+Its components are accessed by position and returned as `Object`; use a <<criteria-tuple,tuple>> or <<criteria-typedquery-wrapper,DTO constructor selection>> when those result shapes are more convenient.
 
 The example then uses the array method of `jakarta.persistence.criteria.CriteriaBuilder` which explicitly combines individual selections into a `jakarta.persistence.criteria.CompoundSelection`.
 

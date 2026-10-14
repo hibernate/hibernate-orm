@@ -1,0 +1,596 @@
+[[hql-functions-arrays]]
+[appendix]
+== Array functions and predicates
+
+:ql-array-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/array
+:ql-function-extras-dir: {doc-main-asciidoc-dir}/querylanguage/extras
+
+The following functions deal with SQL array types, which are not supported on every database.
+See <<ql-array-dialect-support,dialect support>> for availability and version profiles,
+including <<ql-array-h2-emulation-limits,H2 emulation limits>>.
+For Java attribute mappings, see link:{doc-user-guide-url}#basic-single-column-collections[Array and collection mappings] in the User Guide.
+
+[[hql-array-functions]]
+|===
+| Function | Purpose
+
+| <<hql-array-constructor-functions,`array()`>> | Creates an array based on the passed arguments
+| <<hql-array-constructor-functions,`array_list()`>> | Like `array`, but returns the result as `List<?>`
+| <<hql-array-aggregate-functions,`array_agg()`>> | Aggregates row values into an array
+| <<hql-array-position-functions,`array_position()`>> | Determines the position of an element in an array
+| <<hql-array-positions-functions,`array_positions()`>> | Determines all positions of an element in an array
+| <<hql-array-positions-functions,`array_positions_list()`>> | Like `array_positions`, but returns the result as `List<Integer>`
+| <<hql-array-length-functions,`array_length()`>> | Determines the length of an array
+| <<hql-array-concat-functions,`array_concat()`>> | Concatenates array with each other in order
+| <<hql-array-prepend-functions,`array_prepend()`>> | Prepends element to array
+| <<hql-array-append-functions,`array_append()`>> | Appends element to array
+| <<hql-array-contains-functions,`array_contains()`>> | Whether an array contains an element
+| <<hql-array-contains-functions,`array_contains_nullable()`>> | Whether an array contains an element, supporting `null` element
+| <<hql-array-includes-functions,`array_includes()`>> | Whether an array contains another array
+| <<hql-array-includes-functions,`array_includes_nullable()`>> | Whether an array contains another array, supporting `null` elements
+| <<hql-array-intersects-functions,`array_intersects()`>> | Whether an array holds at least one element of another array
+| <<hql-array-intersects-functions,`array_intersects_nullable()`>> | Whether an array holds at least one element of another array, supporting `null` elements
+| <<hql-array-get-functions,`array_get()`>> | Accesses the element of an array by index
+| <<hql-array-set-functions,`array_set()`>> | Creates array copy with given element at given index
+| <<hql-array-remove-functions,`array_remove()`>> | Creates array copy with given element removed
+| <<hql-array-remove-index-functions,`array_remove_index()`>> | Creates array copy with the element at the given index removed
+| <<hql-array-slice-functions,`array_slice()`>> | Selects a sub-array between inclusive lower and upper indexes
+| <<hql-array-replace-functions,`array_replace()`>> | Creates array copy replacing a given element with another
+| <<hql-array-trim-functions,`array_trim()`>> | Creates array copy trimming the last _N_ elements
+| <<hql-array-reverse-functions,`array_reverse()`>> | Returns a copy of the array with elements in reverse order
+| <<hql-array-sort-functions,`array_sort()`>> | Returns a sorted copy of the array
+| <<hql-array-fill-functions,`array_fill()`>> | Creates array filled with the same element _N_ times
+| <<hql-array-fill-functions,`array_fill_list()`>> | Like `array_fill`, but returns the result as `List<?>`
+| <<hql-array-to-string-functions,`array_to_string()`>> | String representation of array
+| <<hql-array-unnest,`unnest()`>> | Turns an array into rows
+|===
+
+[[hql-array-constructor-functions]]
+=== `array()` and `array_list()`
+
+Creates an array based on the passed arguments, and infers the array type from the context if possible.
+To retrieve the result as `List<?>`, use the `array_list()` function.
+
+[[hql-array-constructor-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayConstructorTest.java[tags=hql-array-example]
+----
+====
+
+Alternatively, it's also possible to construct an array with the shorthand bracket syntax `[` and `]`,
+which is syntax sugar that translates to the array constructor function.
+
+[[hql-array-constructor-hql-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayConstructorTest.java[tags=hql-array-hql-example]
+----
+====
+
+[[hql-array-aggregate-functions]]
+=== `array_agg()`
+
+An <<aggregate-functions-orderedset,ordered set aggregate function>> that aggregates values to an array.
+
+[[hql-array-agg-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayAggregateTest.java[tags=hql-array-agg-example]
+----
+====
+
+[[hql-array-position-functions]]
+=== `array_position()` or `position()`
+
+Returns the 1-based position of an element in the array. Returns 0 if the element is not found and `null` if the array is `null`.
+
+[[hql-array-position-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayPositionTest.java[tags=hql-array-position-example]
+----
+====
+
+Alternatively, it is also possible to use the `position()` function,
+which is overloaded to also accept an array argument.
+
+[[hql-array-position-hql-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayPositionTest.java[tags=hql-array-position-hql-example]
+----
+====
+
+[[hql-array-positions-functions]]
+=== `array_positions()` and `array_positions_list()`
+
+Returns an `int[]` of 1-based positions of matching elements in the array. Returns an empty array if the element is not found and `null` if the array is `null`.
+To retrieve the result as `List<Integer>`, use the `array_positions_list()` function.
+
+[[hql-array-positions-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayPositionsTest.java[tags=hql-array-positions-example]
+----
+====
+
+[[hql-array-length-functions]]
+=== `array_length()` or `length()`
+
+Returns size of the passed array. Returns `null` if the array is `null`.
+
+[[hql-array-length-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayLengthTest.java[tags=hql-array-length-example]
+----
+====
+
+Alternatively, it is also possible to use the `length()` function,
+which is overloaded to also accept an array argument.
+
+[[hql-array-length-hql-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayLengthTest.java[tags=hql-array-length-hql-example]
+----
+====
+
+[[hql-array-concat-functions]]
+=== `array_concat()` or `||`
+
+Concatenates arrays with each other in order. Returns `null` if one of the arguments is `null`.
+
+[[hql-array-concat-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayConcatTest.java[tags=hql-array-concat-example]
+----
+====
+
+Arrays can also be concatenated with the `||` (double-pipe) operator.
+
+[[hql-array-concat-pipe-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayConcatTest.java[tags=hql-array-concat-pipe-example]
+----
+====
+
+In addition, the `||` (double-pipe) operator also supports concatenating single elements to arrays.
+
+[[hql-array-concat-pipe-element-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayConcatTest.java[tags=hql-array-concat-pipe-element-example]
+----
+====
+
+[[hql-array-prepend-functions]]
+=== `array_prepend()`
+
+Prepends element to array. Returns `null` if the array argument is `null`.
+
+[[hql-array-prepend-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayPrependTest.java[tags=hql-array-prepend-example]
+----
+====
+
+[[hql-array-append-functions]]
+=== `array_append()`
+
+Appends element to array. Returns `null` if the array argument is `null`.
+
+[[hql-array-append-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayAppendTest.java[tags=hql-array-append-example]
+----
+====
+
+[[hql-array-contains-functions]]
+=== `array_contains()` and `array_contains_nullable()`
+
+Checks if the first array argument contains the element represented by the second argument.
+Returns `null` if the first argument is `null`. The result of the `array_contains` function
+is undefined when the second argument, the element to search, is `null`.
+Use `array_contains_nullable()` to search for a `null` element.
+
+[[hql-array-contains-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayContainsTest.java[tags=hql-array-contains-example]
+----
+====
+
+Alternatively, it's also possible to check for containment with the `contains` predicate,
+where the left hand side of the predicate is the array and the right hand side the value to check.
+This is syntax sugar that translates to the `array_contains` function.
+
+[[hql-array-contains-hql-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayContainsTest.java[tags=hql-array-contains-hql-example]
+----
+====
+
+[[hql-array-includes-functions]]
+=== `array_includes()` and `array_includes_nullable()`
+
+Checks if the first array argument contains the elements of the second array argument.
+Returns `null` if the first argument is `null`. The result of the `array_includes` function
+is undefined when the second argument contains a `null`.
+
+[[hql-array-includes-example]]
+.Array inclusion [[hql-array-contains-array-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayIncludesTest.java[tags=hql-array-includes-example]
+----
+====
+
+To search for `null` elements, the `array_includes_nullable` function must be used.
+
+[[hql-array-includes-nullable-example]]
+.Array inclusion with null elements [[hql-array-contains-array-nullable-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayIncludesTest.java[tags=hql-array-includes-nullable-example]
+----
+====
+
+The <<hql-includes-predicate,`includes` predicate>> is syntax sugar for this function.
+
+[[hql-array-includes-hql-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayIncludesTest.java[tags=hql-array-includes-hql-example]
+----
+====
+
+[[hql-array-intersects-functions]]
+=== `array_intersects()` and `array_intersects_nullable()` [[hql-array-overlaps-functions]]
+
+Checks whether the two arrays have any elements in common.
+Returns `null` if either of the arguments is `null`. The result of `array_intersects`
+is undefined when the second array argument contains a `null` array element.
+Only `array_intersects_nullable` is guaranteed to produce correct results for `null` array elements.
+
+[[hql-array-intersects-example]]
+.Array intersection [[hql-array-overlaps-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayIntersectsTest.java[tags=hql-array-intersects-example]
+----
+====
+
+[[hql-array-intersects-nullable-example]]
+.Array intersection with null elements [[hql-array-overlaps-nullable-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayIntersectsTest.java[tags=hql-array-intersects-nullable-example]
+----
+====
+
+Alternatively, it's also possible to check for intersection with the `intersects` predicate.
+This is syntax sugar that translates to the `array_intersects` function.
+
+[[hql-array-intersects-hql-example]]
+.Array intersection using HQL syntax [[hql-array-overlaps-hql-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayIntersectsTest.java[tags=hql-array-intersects-hql-example]
+----
+====
+
+[[hql-array-get-functions]]
+=== `array_get()`
+
+Returns the element of an array at the given 1-based index. Returns `null` if either of the arguments is `null`,
+and also if the index is bigger than the array length.
+
+[[hql-array-get-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayGetTest.java[tags=hql-array-get-example]
+----
+====
+
+[[hql-array-set-functions]]
+=== `array_set()`
+
+Returns an array copy with the given element placed at the given 1-based index, filling up prior slots with `null` if necessary.
+
+[[hql-array-set-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArraySetTest.java[tags=hql-array-set-example]
+----
+====
+
+[[hql-array-remove-functions]]
+=== `array_remove()`
+
+Returns an array copy with the given element removed from the array. Allows removal of `null` elements.
+
+[[hql-array-remove-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayRemoveTest.java[tags=hql-array-remove-example]
+----
+====
+
+[[hql-array-remove-index-functions]]
+=== `array_remove_index()`
+
+Returns an array copy with the element at the given index removed from the array.
+
+[[hql-array-remove-index-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayRemoveIndexTest.java[tags=hql-array-remove-index-example]
+----
+====
+
+[[hql-array-slice-functions]]
+=== `array_slice()`
+
+Returns the sub-array between the given 1-based inclusive start and end indexes.
+Returns `null` if the array is `null`. Bounds outside the array select only the elements within the requested range;
+if the range contains no elements, the result is an empty array.
+
+[[hql-array-slice-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArraySliceTest.java[tags=hql-array-slice-example]
+----
+====
+
+Alternatively, it's also possible to slice an array by specifying the lower and upper bound,
+separated by a colon, as index in the bracket array index syntax `array[lowerIndex:upperIndex]`.
+This is syntax sugar that translates to the `array_slice` function.
+
+[[hql-array-slice-hql-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArraySliceTest.java[tags=hql-array-slice-hql-example]
+----
+====
+
+[[hql-array-replace-functions]]
+=== `array_replace()`
+
+Returns an array copy which has elements matching the second argument replaced by the third argument.
+
+[[hql-array-replace-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayReplaceTest.java[tags=hql-array-replace-example]
+----
+====
+
+[[hql-array-trim-functions]]
+=== `array_trim()`
+
+Returns an array copy without the last _N_ elements, specified by the second argument.
+It is an error if any array has a length smaller than the second argument.
+
+[[hql-array-trim-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayTrimTest.java[tags=hql-array-trim-example]
+----
+====
+
+[[hql-array-reverse-functions]]
+=== `array_reverse()`
+
+Returns a copy of the array with elements in reverse order. Returns `null` if the argument is `null`.
+
+[[hql-array-reverse-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayReverseTest.java[tags=hql-array-reverse-example]
+----
+====
+
+[[hql-array-sort-functions]]
+=== `array_sort()`
+
+Returns a sorted copy of the array. When called with no optional arguments, elements are sorted in ascending order with `null` elements placed last.
+The optional second argument allows specifying descending order, and the optional third argument controls the position of `null` elements.
+Returns `null` if the first argument is `null`.
+
+[[hql-array-sort-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArraySortTest.java[tags=hql-array-sort-example]
+----
+====
+
+The second argument controls sort direction: `false` for ascending (default), `true` for descending.
+The third argument controls `null` placement: `false` for nulls last, `true` for nulls first.
+When the third argument is omitted, it defaults to the value of the second argument.
+
+[[hql-array-sort-descending-nulls-last-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArraySortTest.java[tags=hql-array-sort-descending-nulls-last-example]
+----
+====
+
+[[hql-array-fill-functions]]
+=== `array_fill()` and `array_fill_list()`
+
+Creates an array filled with the same element _N_ times as specified by the arguments.
+It is an error to supply an array length smaller than 0.
+To retrieve the result as `List<?>`, use the `array_fill_list()` function.
+
+[[hql-array-fill-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayFillTest.java[tags=hql-array-fill-example]
+----
+====
+
+[[hql-array-to-string-functions]]
+=== `array_to_string()` or `cast(array as String)`
+
+Concatenates the array elements with a separator, as specified by the arguments.
+Null values are filtered, but the optional third argument can be specified to define a default value to use
+when a `null` array element is encountered.
+Returns `null` if the first argument is `null`.
+
+[[hql-array-to-string-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayToStringTest.java[tags=hql-array-to-string-example]
+----
+====
+
+Alternatively, it is also possible to use `cast(array as String)`,
+which is a short version of `concat('[', array_to_string(array, ',', 'null'), ']')`.
+
+[[hql-array-to-string-hql-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayToStringTest.java[tags=hql-array-to-string-hql-example]
+----
+====
+
+[[hql-array-unnest]]
+=== `unnest()`
+
+A <<hql-from-set-returning-functions,set-returning function>>, which turns the single array argument into rows.
+Returns no rows if the array argument is `null` or an empty array.
+The `index()` function can be used to access the 1-based array index of an array element.
+
+NOTE: On H2, correlated unnesting of an array column uses an index-range emulation with a default bound of 1,000 elements.
+Elements beyond this bound are omitted; see <<ql-array-h2-emulation-limits,H2 emulation limits>>.
+
+[[hql-array-unnest-struct-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayUnnestStructTest.java[tags=hql-array-unnest-aggregate-with-ordinality-example]
+----
+====
+
+The `lateral` keyword is mandatory if the argument refers to a from node item of the same query level.
+Basic plural attributes can also be joined directly, which is syntax sugar for `lateral unnest(...)`.
+
+[[hql-array-unnest-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-array-example-dir}/ArrayUnnestTest.java[tags=hql-array-unnest-example]
+----
+====
+
+[[hql-contains-predicate]]
+=== `contains`
+
+The `contains` predicate evaluates to true if the value to its right is contained in the value to its left.
+Currently, this predicate only works with an array typed expression on the left side.
+
+[[hql-contains-predicate-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{ql-function-extras-dir}/predicate_contains_bnf.txt[]
+----
+
+For further details, refer to the <<hql-array-contains-example,`array_contains` section>>.
+
+[[hql-includes-predicate]]
+=== `includes`
+
+The `includes` predicate tests whether the array on its left contains every element of the array on its right.
+It is syntax sugar for <<hql-array-includes-functions,`array_includes()`>> and has the same membership and null semantics.
+For example, `tags includes ['hibernate', 'orm']` tests for both values.
+
+[[hql-intersects-predicate]]
+=== `intersects`
+
+The `intersects` predicate evaluates to true if the value to its left has at least one element common with the value to its right.
+Currently, this predicate only works with array-typed expressions.
+
+[[hql-intersects-predicate-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{ql-function-extras-dir}/predicate_intersects_bnf.txt[]
+----
+
+For further details, refer to the <<hql-array-intersects-example,`array_intersects` section>>.
+
+
+[[ql-array-dialect-support]]
+=== Dialect support
+
+The following tables describe registered Hibernate implementations, including native SQL and emulation.
+A registered function may still have restrictions on clauses, argument types, paths, or null/error behavior; see its description in this appendix.
+These tables are an implementation inventory, not the result of executing every function on every database.
+
+The inventory contains 29 functions: `array()`, `array_agg()`, `array_append()`, `array_concat()`, `array_contains()`, `array_contains_nullable()`, `array_fill()`, `array_fill_list()`, `array_get()`, `array_includes()`, `array_includes_nullable()`, `array_intersects()`, `array_intersects_nullable()`, `array_length()`, `array_list()`, `array_position()`, `array_positions()`, `array_positions_list()`, `array_prepend()`, `array_remove()`, `array_remove_index()`, `array_replace()`, `array_reverse()`, `array_set()`, `array_slice()`, `array_sort()`, `array_to_string()`, `array_trim()`, `unnest()`.
+`All` and `All other functions` refer to this inventory.
+Version profiles without an explicit threshold use the dialect constructor's default; they do not necessarily identify the latest server version.
+Azure SQL uses a cloud capability profile rather than a numbered SQL Server release.
+
+==== Core dialects
+
+[cols="3,4,4",options="header"]
+|===
+|Dialect / version profile |Available functions |Unavailable functions
+|`AzureSQLServerDialect` (cloud profile), `DB2Dialect` (11.1), `DB2iDialect` (7.2), `DB2zDialect` (12.1), `HANADialect` (2.0.50), `MariaDBDialect` (10.6), `MySQLDialect` (8.0), `SQLServerDialect` (12.0), `SybaseASEDialect` (16.0), `SQLServerDialect` (13.0), `SQLServerDialect` (14.0), `SQLServerDialect` (16.0), `SQLServerDialect` (17.0), `MySQLDialect` (8.0.11), `MySQLDialect` (8.4), `MariaDBDialect` (11.7) |`unnest()` |All other functions
+|`CockroachDialect` (23.2), `H2Dialect` (2.1.214), `HSQLDialect` (2.6.1), `OracleDialect` (19.0), `PostgreSQLDialect` (14.0), `PostgresPlusDialect` (14.0), `PostgreSQLDialect` (16.0), `PostgreSQLDialect` (17.0), `PostgreSQLDialect` (18.0), `H2Dialect` (2.2.220), `OracleDialect` (21.0), `OracleDialect` (23.0) |All |None
+|`SpannerDialect` (unversioned default) |`array()`, `array_agg()`, `array_append()`, `array_concat()`, `array_length()`, `array_list()`, `array_prepend()`, `array_reverse()`, `array_to_string()` |All other functions
+|`SpannerPostgreSQLDialect` (14.0) |All except the functions in the next column |`array_contains_nullable()`, `array_fill()`, `array_fill_list()`, `array_position()`, `array_positions()`, `array_positions_list()`, `array_set()`
+|`SybaseDialect` (16.0) |None |All
+|===
+
+An `unnest()`-only profile does not provide the other array functions: Hibernate may emulate unnesting over the JSON/XML representation of a basic plural value.
+Oracle array operations depend on mapped SQL array types and generated helper infrastructure.
+
+
+[[ql-array-h2-emulation-limits]]
+H2 emulates several array operations using an index range with a default maximum of 1,000 elements.
+This bound affects correlated `unnest()` over an array column and operations such as `array_position()` and `array_reverse()`.
+Longer arrays can produce incomplete results. Registration of these functions does not imply support for arrays of arbitrary length;
+this limit applies to the affected emulations, rather than every H2 array operation.

@@ -86,7 +86,10 @@ public class JdbcEventHandler {
 		if ( sessionListener != null ) {
 			sessionListener.jdbcPrepareStatementEnd();
 		}
+	}
 
+	/// Called after a prepared statement has been successfully closed.
+	public void jdbcReleaseStatementEnd() {
 		if ( statistics != null && statistics.isStatisticsEnabled() ) {
 			statistics.closeStatement();
 		}

@@ -127,9 +127,12 @@ include::{example-dir-locking}/ExplicitLockingTest.java[tags=locking-session-loc
 [[locking-optimistic]]
 === Versioned optimistic locking
 
-`@Version` enables automatic checks when Hibernate updates or deletes an entity.
+A <<domain-version-attributes,version attribute>> enables automatic checks when Hibernate updates or deletes an entity.
+See that Domain Model discussion for mapping rules, supported types, initialization, and generation.
 The previous version is included in the SQL predicate; a missing matching row indicates a stale version or a deleted entity.
-The application must not modify the provider-managed version itself.
+For a numeric version, an update may use `where id = ? and version = ?` while assigning the next version.
+A second transaction trying to write with the earlier version fails instead of silently overwriting the first transaction's changes.
+Version checks do not reserve exclusive access throughout user think time; see <<long-conversations,conversations spanning multiple transactions>>.
 
 Bulk <<hql-update,update>> and <<hql-delete,delete>> statements bypass these per-entity optimistic checks.
 An ordinary bulk update does not increment versions automatically.
@@ -149,106 +152,14 @@ include::{example-dir-locking}/LockingGuideTests.java[tags=locking-explicit-opti
 ====
 
 `OPTIMISTIC_FORCE_INCREMENT` also advances the version to signal a change to concurrent optimistic readers, even when the entity's attributes were not modified.
-This is useful when a change to related application state must invalidate an entity's version.
-It does not automatically version every associated entity or validate an entire graph.
-
-[[locking-optimistic-mapping]]
-==== Mapping versions
-
-Declare one `@Version` attribute in the root entity or a mapped superclass, mapped to the entity's primary table.
-Standard version types are `int`/`Integer`, `short`/`Short`, `long`/`Long`, `java.sql.Timestamp`, `Instant`, and `LocalDateTime`.
-The java.time types are standard Jakarta Persistence version types.
-Hibernate also supports additional types where suitable version semantics are available; custom types require an appropriate link:{doc-javadoc-url}org/hibernate/usertype/UserVersionType.html[`UserVersionType`].
-
-[[locking-optimistic-version-example]]
-.Numeric and temporal version mappings
-====
-[source,java,indent=0]
-----
-include::{example-dir-locking}/LockingGuideTests.java[tags=locking-guide-version-mapping]
-----
-
-[source,java,indent=0]
-----
-include::{example-dir-locking}/OptimisticLockingInstantTest.java[tags=locking-optimistic-version-number-example]
-----
-====
-
-[[locking-optimistic-version-number]]
-==== Numeric versions
-
-[[locking-optimistic-version-number-example]]
-A numeric version advances when a version-affecting change is written.
-For example, an update may use `where id = ? and version = ?` while assigning the next version.
-A second transaction trying to write with the earlier version fails instead of silently overwriting the first transaction's changes.
-Version checks do not reserve exclusive access throughout user think time; see <<long-conversations,conversations spanning multiple transactions>>.
-
-A null initial wrapper version can serve as an unsaved-state marker, especially with assigned identifiers.
-It is not a way to reattach a detached entity: preserve its version when transferring state.
-Hibernate may reject an entity with a generated identifier and an uninitialized version as inconsistent detached state.
-See <<pc-merge,merge>> for applying detached changes.
-
-[[locking-optimistic-timestamp]]
-==== Temporal versions and generation
-
-[[locking-optimistic-version-timestamp-example]]
-A temporal version, such as the `Instant` mapping above, uses timestamps instead of a sequence of revision numbers.
-Numeric versions are generally preferable for conflict detection: finite timestamp precision or repeated clock values can produce the same version for separate changes.
-Database timestamps also depend on the database's clock and timestamp semantics; they are not guaranteed unique revisions.
-
-Hibernate normally generates a temporal version in the VM.
-`@CurrentTimestamp(source = SourceType.DB)` uses the database clock, while `source = SourceType.VM` uses the VM clock.
-The default source of `@CurrentTimestamp` is `DB`.
-For a version attribute, obtaining the database timestamp can occur before the write; do not assume that every database-generated value uses identical SQL or retrieval behavior.
-
-[[locking-optimistic-version-timestamp-source-mapping-example]]
-.Database-clock version mapping
-====
-[source,java,indent=0]
-----
-include::{example-dir-locking}/VersionSourceTest.java[tags=locking-optimistic-version-timestamp-source-mapping-example]
-----
-====
-
-[[locking-optimistic-version-timestamp-source-persist-example]]
-.Persisting an entity with a database-clock version
-====
-[source,java,indent=0]
-----
-include::{example-dir-locking}/VersionSourceTest.java[tags=locking-optimistic-version-timestamp-source-persist-example]
-----
-
-[source,sql,indent=0]
-----
-include::{extrasdir}/locking-optimistic-version-timestamp-source-persist-example.sql[]
-----
-====
-
-The SQL illustrates timestamp retrieval followed by an insert for this version mapping.
-For trigger-generated values, Hibernate also provides `@Generated(event = {INSERT, UPDATE})` and custom generation annotations using `OnExecutionGenerator`.
-The generator must match the database's actual generation events and version semantics.
-Force-increment requests need compatible generation behavior; automatic update generation alone does not establish that support.
-See link:{doc-javadoc-url}org/hibernate/annotations/Generated.html[`@Generated`] and link:{doc-javadoc-url}org/hibernate/annotations/CurrentTimestamp.html[`@CurrentTimestamp`] for the contracts.
+One common use is the <<locking-graph-root,graph-root coordination protocol>>: a transaction changing part of the graph requests `OPTIMISTIC_FORCE_INCREMENT` on the versioned root even when the root's own attributes are unchanged.
+The root's version then acts as a shared conflict-detection marker for participating transactions.
 
 [[locking-optimistic-exclude-attribute]]
-==== Excluding attributes from versioning
+==== Concurrent changes to excluded attributes
 
-Use standard `@ExcludedFromVersioning` for an attribute whose changes should not increment the version.
-
-[NOTE]
-Prefer `@ExcludedFromVersioning` to Hibernate's pre-existing though now deprecated `@OptimisticLock(excluded=true)`
-
-Exclusion also removes the attribute from column-value comparisons for versionless `ALL`/`DIRTY` locking.
-For relationships, version effects depend on ownership and mapping; not every change visible through an entity necessarily increments that entity's version.
-
-[[locking-optimistic-exclude-attribute-mapping-example]]
-.Excluding an attribute
-====
-[source,java,indent=0]
-----
-include::{example-dir-locking}/LockingGuideTests.java[tags=locking-guide-exclusion-mapping]
-----
-====
+An attribute mapped with <<domain-version-exclusions,`@ExcludedFromVersioning`>> does not itself trigger a version increment when changed.
+The following example shows how another transaction can consequently overwrite that excluded value.
 
 [[locking-optimistic-exclude-attribute-example]]
 .Concurrent changes involving an excluded attribute
@@ -274,8 +185,8 @@ The example asserts the final values and version to make this tradeoff observabl
 `ALL`:: Compare eligible previously loaded column values in update/delete predicates.
 `DIRTY`:: Compare eligible previously loaded values of dirty attributes for updates.
 
-ALL and DIRTY require dynamic updates, normally enabled with `@DynamicUpdate`, and cannot be combined with a `@Version` attribute.
-Excluded attributes do not participate in their comparisons.
+ALL and DIRTY require dynamic updates, normally enabled with <<pc-managed-state-dynamic-update,`@DynamicUpdate`>>, and cannot be combined with a `@Version` attribute.
+Attributes mapped with <<domain-version-exclusions,`@ExcludedFromVersioning`>> do not participate in their comparisons.
 These strategies compare row values rather than maintaining a separate version number.
 
 [[locking-optimistic-versionless-all]]
@@ -499,6 +410,16 @@ Disallowing follow-on acquisition does not force the database to accept an other
 Incompatible operations can throw instead of silently weakening the request.
 Some result shapes and options, including skip-locked requests, restrict follow-on acquisition; do not assume every policy is supported for every query.
 See link:{doc-javadoc-url}org/hibernate/Locking.FollowOn.html[`Locking.FollowOn`] for the policy API.
+
+[[locking-graph-root]]
+=== Coordinating access through a graph root
+
+Applications can coordinate access to a graph of objects through an agreed graph root using either optimistic or pessimistic locking.
+With optimistic locking, participating transactions validate the root's version, and graph writers advance it even when the root's own attributes are unchanged.
+With pessimistic locking, participating transactions acquire a lock on the root before accessing the graph: a shared lock for readers or an exclusive lock for writers, held until transaction completion.
+
+This coordination requires all participating transactions to follow the same root-locking protocol.
+Locking the root does not automatically lock, version, or validate every associated entity; the agreement makes the root the coordination point for graph access.
 
 [[locking-concurrency-baseline]]
 === Concurrency baseline and optimistic validation

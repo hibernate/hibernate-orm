@@ -40,6 +40,16 @@ class ReactiveStaticQueryRegistrationTest {
 	}
 
 	@Test
+	void infersElementTypeOfArrayWrappedInUni(SessionFactoryScope scope) {
+		final var memento = scope.getSessionFactory()
+				.getQueryEngine()
+				.getNamedObjectRepository()
+				.getSelectionQueryMemento( queryName( "uniTitlesByTitle" ) );
+		assertThat( memento ).isNotNull();
+		assertThat( memento.getResultType() ).isEqualTo( String.class );
+	}
+
+	@Test
 	void executesQueryByStaticReference(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.persist( new Book( 1, "Async" ) ) );
 		scope.inTransaction( session -> {

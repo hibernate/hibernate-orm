@@ -24,6 +24,9 @@ public interface ReactiveRepository {
 	@JakartaQuery( "where title = :title" )
 	Uni<Page<Book>> uniPageByTitle(String title, PageRequest pageRequest);
 
+	@JakartaQuery( "select title from Jpa4StaticQueryBook where title = :title" )
+	Uni<String[]> uniTitlesByTitle(String title);
+
 	@JakartaQuery( "where title = :title order by id" )
 	Uni<CursoredPage<Book>> uniCursoredPageByTitle(String title, PageRequest pageRequest);
 

@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hibernate.boot.models.spi.LifecycleEventHandler.listenersForTarget;
-import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 
@@ -44,7 +43,7 @@ public final class CallbackDefinitionResolver {
 		final List<LifecycleEventHandler> orderedPackageListeners = new ArrayList<>();
 		final List<LifecycleEventHandler> orderedModuleListeners = new ArrayList<>();
 		final List<LifecycleEventHandler> orderedListeners = new ArrayList<>();
-		final List<LifecycleEventHandler> orderedDefaultListeners = new ArrayList<>();
+		final List<LifecycleEventHandler> orderedGlobalListeners = new ArrayList<>();
 
 		ClassDetails currentClazz = entityClass;
 		boolean stopListeners = false;
@@ -62,10 +61,10 @@ public final class CallbackDefinitionResolver {
 				callbacksMethodNames.add( 0, callbackMethod.getName() );
 			}
 
+			stopDefaultListeners |= currentClazz.hasDirectAnnotationUsage( ExcludeDefaultListeners.class );
 			if ( !stopListeners ) {
 				applyListeners( currentClazz, entityClass, orderedListeners, modelsContext );
 				stopListeners = currentClazz.hasDirectAnnotationUsage( ExcludeSuperclassListeners.class );
-				stopDefaultListeners = currentClazz.hasDirectAnnotationUsage( ExcludeDefaultListeners.class );
 			}
 
 			do {
@@ -77,21 +76,18 @@ public final class CallbackDefinitionResolver {
 		}
 		while ( currentClazz != null );
 
-		applyPackageListeners( entityClass, orderedPackageListeners, modelsContext );
-		applyModuleListeners( entityClass, orderedModuleListeners, modelsContext );
-
-		//handle default listeners
+		// XML defaults and discovered listeners precede module/package listeners.
+		final List<LifecycleEventHandler> globalListenerRegistrations = new ArrayList<>();
 		if ( !stopDefaultListeners ) {
-			final var globalListenerRegistrations = new ArrayList<>(
-					metadataCollector.getGlobalRegistrations().getEntityListenerRegistrations()
-			);
-			collectTargetedListenerRegistrations( metadataCollector, entityClass, globalListenerRegistrations );
-			if ( isNotEmpty( globalListenerRegistrations ) ) {
-				int defaultListenerSize = globalListenerRegistrations.size();
-				for ( int i = defaultListenerSize - 1; i >= 0; i-- ) {
-					orderedDefaultListeners.add( globalListenerRegistrations.get( i ) );
-				}
-			}
+			applyPackageListeners( entityClass, orderedPackageListeners, modelsContext );
+			applyModuleListeners( entityClass, orderedModuleListeners, modelsContext );
+
+			globalListenerRegistrations.addAll(
+					metadataCollector.getGlobalRegistrations().getEntityListenerRegistrations() );
+		}
+		collectTargetedListenerRegistrations( metadataCollector, entityClass, globalListenerRegistrations );
+		for ( int i = globalListenerRegistrations.size() - 1; i >= 0; i-- ) {
+			orderedGlobalListeners.add( globalListenerRegistrations.get( i ) );
 		}
 
 		for ( var listenerRegistration : orderedListeners ) {
@@ -115,7 +111,7 @@ public final class CallbackDefinitionResolver {
 				callbackDefinitions.add( 0, callbackDefinition );
 			}
 		}
-		for ( var listenerRegistration : orderedDefaultListeners ) {
+		for ( var listenerRegistration : orderedGlobalListeners ) {
 			final var callbackDefinition =
 					resolveListenerCallback( listenerRegistration, entityClass, callbackType );
 			if ( callbackDefinition != null ) {

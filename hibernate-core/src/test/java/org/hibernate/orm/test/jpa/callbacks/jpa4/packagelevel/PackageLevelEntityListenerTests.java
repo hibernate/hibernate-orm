@@ -50,11 +50,10 @@ public class PackageLevelEntityListenerTests {
 	}
 
 	@Test
-	void excludeDefaultListenersDoesNotExcludePackageLevelEntityListeners(SessionFactoryScope scope) {
+	void excludeDefaultListenersExcludesPackageLevelEntityListeners(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.persist( new ExcludingDefaultListenersEntity( 1 ) ) );
 
 		assertThat( Events.names ).containsExactly(
-				"package:ExcludingDefaultListenersEntity",
 				"entity-callback:ExcludingDefaultListenersEntity"
 		);
 	}

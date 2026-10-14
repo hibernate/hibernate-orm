@@ -10,10 +10,13 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -657,8 +660,13 @@ public abstract class CollectionType extends AbstractType implements Association
 						instantiateResultIfNecessary( original, target ),
 						owner, copyCache, session );
 		if ( original == target ) {
+			// Cascading merge may replace detached or transient elements with managed copies.
+			// If it did not, retain the wrapper and all its persistence-context state.
+			if ( hasSameElements( original, result ) ) {
+				return original;
+			}
 			// get the elements back into the target making sure to handle dirty flag
-			final boolean wasClean =
+			boolean wasClean =
 					target instanceof PersistentCollection<?> collection
 							&& !collection.isDirty();
 			if ( target instanceof PersistentCollection<?> oldCollection
@@ -667,10 +675,20 @@ public abstract class CollectionType extends AbstractType implements Association
 				// use a new persistent collection, to avoid potential issues like the underlying collection being
 				// unmodifiable and hence failing the element replacement
 				final var collectionPersister = getPersister( session );
+				// Changes made through the backing collection do not set the dirty flag.
+				// Detect them before replacing the directly accessible wrapper.
+				if ( wasClean && oldCollection.getStoredSnapshot() != null
+						&& !oldCollection.equalsSnapshot( collectionPersister ) ) {
+					wasClean = false;
+				}
 				final Object key = oldCollection.getKey();
 				final var newCollection = instantiate( session, collectionPersister, key );
 				newCollection.initializeEmptyCollection( collectionPersister );
 				newCollection.setSnapshot( key, oldCollection.getRole(), oldCollection.getStoredSnapshot() );
+				newCollection.setOwner( oldCollection.getOwner() );
+				if ( !wasClean ) {
+					newCollection.dirty();
+				}
 				session.getPersistenceContextInternal()
 						.replaceCollection( collectionPersister, oldCollection, newCollection );
 				target = newCollection;
@@ -686,6 +704,47 @@ public abstract class CollectionType extends AbstractType implements Association
 		else {
 			return result;
 		}
+	}
+
+	private static boolean hasSameElements(Object original, Object replacement) {
+		if ( original instanceof Map<?, ?> originalMap && replacement instanceof Map<?, ?> replacementMap ) {
+			if ( originalMap.size() != replacementMap.size() ) {
+				return false;
+			}
+			// Both keys and values may have been replaced by cascading merge.
+			final var entries = new IdentityHashMap<>( originalMap );
+			for ( var entry : replacementMap.entrySet() ) {
+				if ( !entries.containsKey( entry.getKey() ) || entries.get( entry.getKey() ) != entry.getValue() ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		else if ( original instanceof Collection<?> originalCollection
+				&& replacement instanceof Collection<?> replacementCollection ) {
+			if ( originalCollection.size() != replacementCollection.size() ) {
+				return false;
+			}
+			if ( originalCollection instanceof Set<?> ) {
+				final var elements = Collections.newSetFromMap( new IdentityHashMap<>() );
+				elements.addAll( originalCollection );
+				for ( Object element : replacementCollection ) {
+					if ( !elements.remove( element ) ) {
+						return false;
+					}
+				}
+			}
+			else {
+				final var originalIterator = originalCollection.iterator();
+				for ( Object element : replacementCollection ) {
+					if ( originalIterator.next() != element ) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 
 	private Object instantiateResultIfNecessary(Object original, Object target) {

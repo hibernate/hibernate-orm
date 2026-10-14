@@ -1,5 +1,7 @@
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isCommitted;
+
 /**
  * Defines "inflow" for JTA transactions from the perspective of Hibernate's registered JTA Synchronization
  * back into the TransactionCoordinator by means of the SynchronizationCallbackCoordinator.
@@ -50,4 +52,13 @@ public interface SynchronizationCallbackTarget {
 	 * @see jakarta.transaction.Synchronization#afterCompletion
 	 */
 	void afterCompletion(boolean successful, boolean delayed);
+
+	/// Receives the original JTA completion status. The default preserves compatibility
+	/// with targets which only consume the successful/unsuccessful distinction.
+	///
+	/// @param status the status supplied to [jakarta.transaction.Synchronization#afterCompletion]
+	/// @param delayed whether completion handling was deferred to the application thread
+	default void afterCompletion(int status, boolean delayed) {
+		afterCompletion( isCommitted( status ), delayed );
+	}
 }

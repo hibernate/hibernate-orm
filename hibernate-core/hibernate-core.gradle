@@ -112,12 +112,49 @@ ext {
 }
 
 sourceSets {
+    instrumentationTest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
     test {
         resources {
             srcDir 'src/test/resources'
             srcDir 'src/test/bundles'
         }
     }
+}
+
+dependencies {
+    instrumentationTestImplementation libs.test.junitJupiterApi
+    instrumentationTestRuntimeOnly libs.test.junitJupiterEngine
+    instrumentationTestRuntimeOnly libs.test.junitJupiterLauncher
+}
+
+def instrumentationTestAgent = tasks.register('instrumentationTestAgent', Jar) {
+    archiveClassifier = 'instrumentation-test-agent'
+    from sourceSets.instrumentationTest.output
+    include 'org/hibernate/orm/test/instrumentation/InstrumentationAgent.class'
+    manifest {
+        attributes 'Premain-Class': 'org.hibernate.orm.test.instrumentation.InstrumentationAgent'
+    }
+}
+
+def instrumentationTest = tasks.register('instrumentationTest', Test) {
+    description = 'Tests load-time enhancement in a fresh JVM with a startup agent.'
+    group = 'verification'
+    dependsOn instrumentationTestAgent
+    testClassesDirs = sourceSets.instrumentationTest.output.classesDirs
+    classpath = sourceSets.instrumentationTest.runtimeClasspath
+    useJUnitPlatform {
+        includeEngines 'junit-jupiter'
+    }
+    doFirst {
+        jvmArgs "-javaagent:${instrumentationTestAgent.get().archiveFile.get().asFile.absolutePath}"
+    }
+}
+
+tasks.named('check') {
+    dependsOn instrumentationTest
 }
 
 jmh {
@@ -317,6 +354,11 @@ tasks.withType( Test.class ).configureEach { test ->
         // To reduce the JVM metaspace pressure, reduce the amount of classes that can run in one fork
         test.forkEvery = 8096
     }
+}
+
+instrumentationTest.configure {
+    // Preserve cold Byte Buddy loading even if more instrumentation tests are added.
+    forkEvery = 1
 }
 
 tasks.named( "javadoc", Javadoc ) {

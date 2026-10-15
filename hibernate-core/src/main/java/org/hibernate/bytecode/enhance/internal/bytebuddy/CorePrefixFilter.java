@@ -33,12 +33,14 @@ public final class CorePrefixFilter {
 	CorePrefixFilter() {
 		// By default, optimize for Jakarta annotations,
 		// java util collections,
-		// and Hibernate marker interfaces
+		// and Hibernate marker interfaces.
+		// Exclude Byte Buddy itself to avoid recursive class loading during instrumentation (HHH-20753).
 		this("jakarta.",
 				"java.",
 				"org.hibernate.annotations.",
 				"org.hibernate.bytecode.enhance.spi.",
-				"org.hibernate.engine.spi.");
+				"org.hibernate.engine.spi.",
+				"net.bytebuddy.");
 	}
 
 	public CorePrefixFilter(final String... acceptedPrefixes) {

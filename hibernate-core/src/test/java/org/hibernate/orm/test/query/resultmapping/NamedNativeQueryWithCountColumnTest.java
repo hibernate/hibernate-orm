@@ -21,6 +21,7 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Nathan Xu
@@ -85,6 +86,26 @@ class NamedNativeQueryWithCountColumnTest {
 			Object count = entityManager.createNamedQuery( "sample.countAsInteger" ).getSingleResult();
 			assertThat( count, is( 3 ) );
 		} );
+	}
+
+	@Test
+	@RequiresDialect(H2Dialect.class)
+	@JiraKey("HHH-20970")
+	void testNamedNativeQueryWithScalarResultSupertype(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Object count = entityManager.createNamedQuery( "sample.countAsInteger", Object.class ).getSingleResult();
+			assertThat( count, is( 3 ) );
+			Number number = entityManager.createNamedQuery( "sample.countAsInteger", Number.class ).getSingleResult();
+			assertThat( number, is( 3 ) );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-20970")
+	void testNamedNativeQueryWithIncompatibleScalarResultType(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager ->
+				assertThrows( IllegalArgumentException.class,
+						() -> entityManager.createNamedQuery( "sample.countAsInteger", String.class ) ) );
 	}
 
 	@SqlResultSetMapping(

@@ -95,6 +95,7 @@ import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -135,7 +136,10 @@ public class NativeQueryImpl<R>
 	private final List<ParameterOccurrence> parameterOccurrences;
 	private final QueryParameterBindings parameterBindings;
 
+	/// The requested result type, exposed by the query API and used for compatibility checks.
 	private final Class<R> resultType;
+	/// The type used to construct implicit results, which may be more specific than the requested result type.
+	private final Class<?> resultMappingType;
 	private final ResultSetMapping resultSetMapping;
 	private final boolean resultMappingSuppliedToCtor;
 	private final HashMap<String, EntityMappingType> entityMappingTypeByTableAlias = new HashMap<>();
@@ -167,6 +171,7 @@ public class NativeQueryImpl<R>
 
 		// We don't know (yet).  Create an "implicit" ResultSetMapping...
 		resultType = null;
+		resultMappingType = null;
 		var resultSetMappingProducer = factory.getJdbcValuesMappingProducerProvider();
 		resultSetMapping = resultSetMappingProducer.buildResultSetMapping( sqlString, true, factory );
 		resultMappingSuppliedToCtor = false;
@@ -194,6 +199,7 @@ public class NativeQueryImpl<R>
 		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		resultType = null;
+		resultMappingType = null;
 		resultSetMapping = MutationResultSetMapping.INSTANCE;
 		resultMappingSuppliedToCtor = false;
 	}
@@ -328,17 +334,23 @@ public class NativeQueryImpl<R>
 		resultMappingSuppliedToCtor =
 				resultSetMappingHandler.resolveResultSetMapping( resultSetMapping, querySpaces::add, this );
 
+		// There are three types to distinguish here:
+		// - resultClass (stored as resultType) is the type requested by the caller;
+		// - selectionMemento.getResultType() is the type declared by the named query;
+		// - resultMappingType is the type used to construct implicit results.
+		// If builders already describe the results, they determine their construction.
+		// Otherwise, prefer the declared type, so requesting Object for a declared record
+		// still constructs that record. Use the requested type only when no type was declared.
 		resultType = resultClass;
+		resultMappingType = !resultMappingSuppliedToCtor && selectionMemento.getResultType() != null
+				? selectionMemento.getResultType()
+				: resultClass;
 		if ( resultMappingSuppliedToCtor ) {
 			handleExplicitResultSetMapping();
 		}
 		else {
-			final Class<?> implicitResultType = resultClass == null ? selectionMemento.getResultType() : resultClass;
-			handleImplicitResultSetMapping( implicitResultType, session );
-			if ( resultClass == null && implicitResultType != null && hasJavaTypeDescriptor( implicitResultType ) ) {
-				// The untyped query has no resultType for the dynamic mapping to use at execution time.
-				resultSetMapping.addResultBuilder( Builders.resultClassBuilder( implicitResultType, getMappingMetamodel() ) );
-			}
+			checkResultType( resultClass, selectionMemento.getResultType() );
+			handleImplicitResultSetMapping( session );
 		}
 
 		checkResultType( resultClass, resultSetMapping );
@@ -362,6 +374,8 @@ public class NativeQueryImpl<R>
 		mappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );
 	}
 
+	/// Returns true when result builders describe the mapping, including builders inferred
+	/// from a declared entity or scalar type. False leaves implicit tuple handling to the caller.
 	private static boolean populateResultSetMappingFromQueryMemento(
 			NativeSelectionMementoImpl<?> selectionMemento,
 			ResultSetMapping resultSetMapping,
@@ -377,10 +391,19 @@ public class NativeQueryImpl<R>
 			}
 		}
 		else if ( selectionMemento.getResultType() != null ) {
-			final var resultBuilder = Builders.resultClassBuilder( selectionMemento.getResultType(), context );
-			if ( resultBuilder instanceof ImplicitResultClassBuilder ) {
+			final var resultClass = selectionMemento.getResultType();
+			// The factory returns an entity builder for entities, but uses ImplicitResultClassBuilder
+			// for every other class. That builder can map a basic scalar; it cannot construct a DTO
+			// from several columns or package a tuple as Object[], Tuple, List, or Map.
+			final var resultBuilder = Builders.resultClassBuilder( resultClass, context );
+			if ( resultBuilder instanceof ImplicitResultClassBuilder
+					&& ( isResultTypeAlwaysAllowed( resultClass )
+							|| isConstructorResultType( resultClass, context.getTypeConfiguration() ) ) ) {
+				// Leave the columns implicit and let the declared type select the tuple transformer.
 				return false;
 			}
+			// Retain entity and scalar builders: they preserve the declared mapping and scalar
+			// conversion even when the caller requests a supertype such as Object or Number.
 			resultSetMapping.addResultBuilder( resultBuilder );
 			return true;
 		}
@@ -421,6 +444,7 @@ public class NativeQueryImpl<R>
 		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		resultType = null;
+		resultMappingType = null;
 		resultSetMapping = MutationResultSetMapping.INSTANCE;
 		resultMappingSuppliedToCtor = false;
 		super.applyMementoOptions( mutationMemento );
@@ -453,6 +477,7 @@ public class NativeQueryImpl<R>
 		this.resultSetMapping = toHibernateMapping( resultSetMapping, factory );
 		resultMappingSuppliedToCtor = true;
 		resultType = resultSetMapping.type();
+		resultMappingType = resultType;
 	}
 
 	private NativeQueryImpl(
@@ -473,6 +498,7 @@ public class NativeQueryImpl<R>
 		this.resultSetMapping = toHibernateMapping( resultSetMapping, factory );
 		resultMappingSuppliedToCtor = true;
 		resultType = resultSetMapping.type();
+		resultMappingType = resultType;
 	}
 
 	public NativeQueryImpl(
@@ -493,6 +519,7 @@ public class NativeQueryImpl<R>
 		parameterBindings = parameterMetadata.createBindings( factory );
 
 		resultType = resultClass;
+		resultMappingType = resultClass;
 		if ( resultSetMappingMemento != null ) {
 			resultSetMapping = factory.getJdbcValuesMappingProducerProvider()
 					.buildResultSetMapping( null, true, factory );
@@ -554,7 +581,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("removal")
+	@SuppressWarnings({"removal", "unchecked"})
 	@Nonnull
 	public NativeSelectionMementoImpl<R> toSelectionMemento(@Nonnull String name) {
 		errorIfNotSelectForSure();
@@ -562,7 +589,7 @@ public class NativeQueryImpl<R>
 		return new NativeSelectionMementoImpl<>(
 				name,
 				originalSqlString,
-				resultType,
+				(Class<R>) resultMappingType,
 				// todo (jpa4) : we need a "resolvable reference" to result-set-mappings
 				//		think about the case of an applied j.p.sql.ResultSetMapping
 				null,
@@ -1169,20 +1196,22 @@ public class NativeQueryImpl<R>
 	}
 
 	private ResultSetMapping resultSetMapping() {
-		if ( resultType != null
+		// Resolve implicit JDBC results using the construction type, which may differ from
+		// the caller's requested type. Constructor projections keep the columns implicit.
+		if ( resultMappingType != null
 				&& resultSetMapping.isDynamic()
 				&& resultSetMapping.getNumberOfResultBuilders() == 0 ) {
 			final var sessionFactory = getSessionFactory();
 			final var mapping = resolveResultSetMapping( originalSqlString, true, sessionFactory );
 			final var metamodel = getMappingMetamodel();
-			if ( metamodel.isEntityClass( resultType ) ) {
+			if ( metamodel.isEntityClass( resultMappingType ) ) {
 				mapping.addResultBuilder(
-						Builders.entityCalculated( unqualify( resultType.getName() ), resultType.getName(),
+						Builders.entityCalculated( unqualify( resultMappingType.getName() ), resultMappingType.getName(),
 								LockMode.READ, sessionFactory ) );
 			}
-			else if ( !isResultTypeAlwaysAllowed( resultType )
-					&& (!isClass( resultType ) || hasJavaTypeDescriptor( resultType )) ) {
-				mapping.addResultBuilder( Builders.resultClassBuilder( resultType, metamodel ) );
+			else if ( !isResultTypeAlwaysAllowed( resultMappingType )
+					&& (!isClass( resultMappingType ) || hasJavaTypeDescriptor( resultMappingType )) ) {
+				mapping.addResultBuilder( Builders.resultClassBuilder( resultMappingType, metamodel ) );
 			}
 			return mapping;
 		}
@@ -2107,15 +2136,11 @@ public class NativeQueryImpl<R>
 	}
 
 	/// Called for cases where a ResultSetMapping was not explicitly provided by the application.
-	/// If there was an explicit resultType (which is not an entity class), apply a "tuple transformation"
-	/// to handle construction of the specified resultType.
+	/// If the implicit result type is not an entity class, apply a "tuple transformation"
+	/// to handle construction of that type.
 	private void handleImplicitResultSetMapping(SharedSessionContractImplementor session) {
-		handleImplicitResultSetMapping( resultType, session );
-	}
-
-	private void handleImplicitResultSetMapping(Class<?> implicitResultType, SharedSessionContractImplementor session) {
-		if ( implicitResultType != null && !session.getFactory().getMappingMetamodel().isEntityClass( implicitResultType ) ) {
-			setTupleTransformerForResultType( implicitResultType );
+		if ( resultMappingType != null && !session.getFactory().getMappingMetamodel().isEntityClass( resultMappingType ) ) {
+			setTupleTransformerForResultType( resultMappingType );
 		}
 	}
 
@@ -2144,10 +2169,7 @@ public class NativeQueryImpl<R>
 					break;
 				case 1:
 					final var actualResultJavaType = resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
-					if ( actualResultJavaType != null
-							&& !boxedType( resultType ).isAssignableFrom( boxedType( actualResultJavaType ) ) ) {
-						throw buildIncompatibleException( resultType, actualResultJavaType );
-					}
+					checkResultType( resultType, actualResultJavaType );
 					break;
 				default:
 					// The return type has to be a class with an appropriate constructor,
@@ -2160,6 +2182,13 @@ public class NativeQueryImpl<R>
 						);
 					}
 			}
+		}
+	}
+
+	private void checkResultType(Class<?> expectedResultType, Class<?> actualResultType) {
+		if ( expectedResultType != null && actualResultType != null
+				&& !boxedType( expectedResultType ).isAssignableFrom( boxedType( actualResultType ) ) ) {
+			throw buildIncompatibleException( expectedResultType, actualResultType );
 		}
 	}
 
@@ -2241,19 +2270,27 @@ public class NativeQueryImpl<R>
 		else if ( Object[].class.equals( resultClass ) ) {
 			return NativeQueryArrayTransformer.INSTANCE;
 		}
-		else if ( resultClass != Object.class ) {
-			// TODO: this is extremely fragile and probably a bug
-			if ( isClass( resultClass ) && !hasJavaTypeDescriptor( resultClass ) ) {
-				// not a basic type, so something we can attempt
-				// to instantiate to repackage the results
-				return new NativeQueryConstructorTransformer<>( resultClass );
-			}
+		else if ( isConstructorResultType( resultClass, getTypeConfiguration() ) ) {
+			// not a basic type, so something we can attempt
+			// to instantiate to repackage the results
+			return new NativeQueryConstructorTransformer<>( resultClass );
 		}
 		return null;
 	}
 
+	private static boolean isConstructorResultType(Class<?> resultClass, TypeConfiguration typeConfiguration) {
+		// TODO: this is extremely fragile and probably a bug
+		return resultClass != Object.class
+				&& isClass( resultClass )
+				&& !hasJavaTypeDescriptor( resultClass, typeConfiguration );
+	}
+
 	private <T> boolean hasJavaTypeDescriptor(Class<T> resultClass) {
-		final JavaType<?> descriptor = getTypeConfiguration().getJavaTypeRegistry().findDescriptor( resultClass );
+		return hasJavaTypeDescriptor( resultClass, getTypeConfiguration() );
+	}
+
+	private static boolean hasJavaTypeDescriptor(Class<?> resultClass, TypeConfiguration typeConfiguration) {
+		final JavaType<?> descriptor = typeConfiguration.getJavaTypeRegistry().findDescriptor( resultClass );
 		return descriptor != null && descriptor.getClass() != UnknownBasicJavaType.class;
 	}
 

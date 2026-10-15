@@ -1,117 +1,268 @@
 [[portability]]
 == Database Portability Considerations
-:sourcedir: extras
 
 [[portability-basics]]
-=== Portability Basics
+=== Portability goals and limits
 
-One of the selling points of Hibernate (and really Object/Relational Mapping as a whole) is the notion of database portability.
-This could mean an internal IT user migrating from one database vendor to another, or it could mean a framework or deployable application consuming Hibernate to simultaneously target multiple database products by their users.
-Regardless of the exact scenario, the basic idea is that you want Hibernate to help you run against any number of databases without changes to your code, and ideally without any changes to the mapping metadata.
+Database portability can mean moving an application to another database, or supporting several
+database products and versions. Portability between Jakarta Persistence providers is a separate
+goal: a Hibernate extension might work across several databases while requiring changes when
+moving to another persistence provider.
+
+Hibernate adapts SQL generation and supported operations to database capabilities. It does not
+eliminate differences in available features, JDBC drivers, schema constraints, comparison and
+collation rules, temporal precision, or transaction and locking behavior. The same mapping or
+query can also have different performance characteristics on different databases.
+Define the target environments and required behavior before choosing portable abstractions.
 
 [[portability-dialect]]
-=== Dialect
+=== Dialects and database capabilities
 
-The first line of portability for Hibernate is the dialect, which is a specialization of the `org.hibernate.dialect.Dialect` contract.
-A dialect encapsulates all the differences in how Hibernate must communicate with a particular database to accomplish some task like getting a sequence value or structuring a SELECT query.
+A link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html[`Dialect`] describes database capabilities
+and how Hibernate uses them, including SQL syntax, type representations, and identifier generation.
+Database-version information helps Hibernate choose the appropriate capabilities.
+Selecting a dialect does not add features to the database or establish compatibility with an
+unsupported database version.
 
-Hibernate bundles a wide range of dialects for many of the most popular databases: see the link:{doc-dialect-url}[dialect guide] for details.
-If you find that your particular database is not among them,
-you can check link:{doc-dialect-url}#third-party-dialects[dialects implemented by third parties],
-and as a last resort it is not terribly difficult to write your own.
+For supported databases, Hibernate normally selects the dialect automatically; an explicit
+`hibernate.dialect` setting is usually unnecessary. Custom integrations may require explicit
+selection or a resolver. See <<database-dialect-discovery>> for selection and
+<<database-bootstrap-metadata>> for bootstrap with or without JDBC metadata access.
+When supplying database information explicitly, make it match the deployment, including its version.
+
+The link:{doc-dialect-url}[Dialect guide] lists supported databases and versions,
+link:{doc-dialect-url}#community-dialects[community dialects requiring a separate dependency],
+and link:{doc-dialect-url}#third-party-dialects[third-party implementations].
+For implementation guidance, see the link:{doc-dialect-provider-url}[Dialect Provider Guide].
 
 [[portability-dialectresolver]]
-=== Dialect resolution
+==== Resolution and custom resolvers
 
-Originally, Hibernate would always require that users specify which dialect to use. In the case of users looking to simultaneously target multiple databases with their build that was problematic.
-Generally, this required their users to configure the Hibernate dialect or defining their own method of setting that value.
-
-Starting with version 3.2, Hibernate introduced the notion of automatically detecting the dialect to use based on the `java.sql.DatabaseMetaData` obtained from a `java.sql.Connection` to that database.
-This was much better, except that this resolution was limited to databases Hibernate know about ahead of time and was in no way configurable or overrideable.
-
-Starting with version 3.3, Hibernate has a far more powerful way to automatically determine which dialect to be used by relying on a series of delegates which implement the `org.hibernate.dialect.resolver.DialectResolver` which defines only a single method:
+During automatic resolution, Hibernate asks implementations of
+link:{doc-javadoc-url}org/hibernate/engine/jdbc/dialect/spi/DialectResolver.html[`DialectResolver`]
+to select a dialect using database and driver information:
 
 [source,java]
 ----
-public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException
+Dialect resolveDialect(DialectResolutionInfo info);
 ----
 
-The basic contract here is that if the resolver 'understands' the given database metadata then it returns the corresponding Dialect; if not it returns null and the process continues to the next resolver.
-The signature also identifies `org.hibernate.exception.JDBCConnectionException` as possibly being thrown.
-A `JDBCConnectionException` here is interpreted to imply a __non-transient__ (aka non-recoverable) connection problem and is used to indicate an immediate stop to resolution attempts.
-All other exceptions result in a warning and continuing on to the next resolver.
+Both interfaces are in `org.hibernate.engine.jdbc.dialect.spi`.
+link:{doc-javadoc-url}org/hibernate/engine/jdbc/dialect/spi/DialectResolutionInfo.html[`DialectResolutionInfo`]
+provides product and version information; its optional JDBC metadata handle may be absent.
+Return `null` when the resolver does not recognize the supplied information.
+The first non-null result wins. If no resolver selects a dialect, automatic resolution fails.
 
-The cool part about these resolvers is that users can also register their own custom resolvers which will be processed ahead of the built-in Hibernate ones.
-This might be useful in a number of different situations:
+Resolvers are consulted in this order:
 
-* it allows easy integration for auto-detection of dialects beyond those shipped with Hibernate itself.
-* it allows you to specify to use a custom dialect when a particular database is recognized.
+. Implementations named in `hibernate.dialect_resolvers`, in configured order.
+. Implementations discovered through Java's `ServiceLoader`.
+. Hibernate's standard resolver.
 
-To register one or more resolvers, simply specify them (separated by commas, tabs or spaces) using the 'hibernate.dialect_resolvers' configuration setting (see the `DIALECT_RESOLVERS` constant on `org.hibernate.cfg.Environment`).
+// suppress inspection "AsciiDocLinkResolve"
+Configure <<settings-hibernate.dialect_resolvers,`hibernate.dialect_resolvers`>> with implementation
+class names separated by commas or whitespace; see
+link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings.html#DIALECT_RESOLVERS[`JdbcSettings.DIALECT_RESOLVERS`].
+For service discovery, place implementation class names in
+`META-INF/services/org.hibernate.engine.jdbc.dialect.spi.DialectResolver`.
+Do not depend on a particular ordering among independently discovered service providers.
+An explicitly selected dialect bypasses this automatic resolver chain.
+
+A `JDBCConnectionException` thrown by a resolver stops processing of the chain.
+That exception type alone does not establish whether the underlying connection failure is
+transient or whether retrying could succeed. Other exceptions caught by the chain are logged
+at INFO, and resolution continues with the next resolver. Continuing does not guarantee that
+a later resolver will succeed or that bootstrap will complete.
 
 [[portability-idgen]]
 === Identifier generation
 
-When considering portability between databases, another important decision is selecting the identifier generation strategy you want to use.
-Originally, Hibernate provided the _native_ generator for this purpose, which was intended to select between a __sequence__, __identity__, or _table_ strategy depending on the capability of the underlying database.
+Choose an identifier strategy with its availability, allocation, and insert behavior in mind.
+Jakarta Persistence leaves `AUTO` interpretation to the provider, so it does not promise the
+same physical generator across providers. See <<identifiers-generators-auto>> for Hibernate's
+interpretation based on identifier type and database capabilities.
 
-However, an insidious implication of this approach comes about when targeting some databases which support _identity_ generation and some which do not.
-_identity_ generation relies on the SQL definition of an IDENTITY (or auto-increment) column to manage the identifier value.
-It is what is known as a _post-insert_ generation strategy because the insert must actually happen before we can know the identifier value.
+Hibernate implements the `SEQUENCE` strategy using `SequenceStyleGenerator`, as described in
+<<identifiers-generators-sequence>>. It can use a database sequence or a table-backed structure
+when sequences are unavailable. This preserves allocation before the entity insert, but does
+not make database work, locking, or performance identical.
+Table-based allocation has coordination costs, and pooled allocation requires compatible
+mapping and database configuration; see <<identifiers-generators-table>> and
+<<identifiers-generators-optimizer>>.
 
-Because Hibernate relies on this identifier value to uniquely reference entities within a persistence context,
-it must then issue the insert immediately when the user requests that the entity be associated with the session (e.g. like via `save()` or `persist()`), regardless of current transactional semantics.
+With `IDENTITY`, the entity insert must execute before Hibernate can obtain the generated
+identifier. This does not mean that every `persist()` call immediately executes an insert:
+Hibernate can defer it where transaction state and identifier-access requirements permit.
+See <<identifiers-generators-identity>> and <<pc-persist>>.
+For ordinary entity inserts, insert-generated identifiers prevent JDBC batching for the affected
+inserts, rather than disabling batching for every statement or processing API; see <<batch-jdbcbatch>>.
 
-[NOTE]
-====
-Hibernate was changed slightly, once the implications of this were better understood, so now the insert could be delayed in cases where this is feasible.
-
-The underlying issue is that the actual semantics of the application itself changes in these cases.
-====
-
-Starting with version 3.2.3, Hibernate comes with a set of https://in.relation.to/2082.lace[enhanced] identifier generators targeting portability in a much different way.
-
-[NOTE]
-====
-There are specifically 2 bundled __enhanced__ generators:
-
-* `org.hibernate.id.enhanced.SequenceStyleGenerator`
-* `org.hibernate.id.enhanced.TableGenerator`
-====
-
-The idea behind these generators is to port the actual semantics of the identifier value generation to the different databases.
-For example, the `org.hibernate.id.enhanced.SequenceStyleGenerator` mimics the behavior of a sequence on databases which do not support sequences by using a table.
-
-[[portability-functions]]
-=== Database functions
-
-HQL now provides a large set of functions which are portable between databases.
-You can find them listed in <<hql-exp-functions,the chapter describing the query language>>.
-There's even a way for a program to contribute its own <<hql-user-defined-functions,function definitions>>.
-
-[WARNING]
-Of course, SQL functions occurring in handwritten SQL fragments or queries usually aren't very portable.
+UUID generation provides another option, with its own generation and storage choices;
+see <<identifiers-generators-uuid>>. Test the chosen representation and allocation behavior
+on the target databases instead of assuming one strategy performs best everywhere.
 
 [[portability-types]]
 === Type mappings
 
-TODO
+A Java attribute type, its JDBC representation, and its database column type are related but
+distinct choices. The same Java type may use different SQL types on different databases.
+Matching DDL type names does not establish equivalent runtime behavior; see <<mapping-types>>
+and <<basic>> for the mapping model and basic values.
+
+Vendor-specific `columnDefinition` fragments and explicit vendor type selections can restrict
+portability. An <<basic-jpa-convert,attribute converter>> can adapt values to an existing
+representation, but cannot create an unsupported database feature or remove JDBC-driver requirements.
+Verify both schema compatibility and the reads, writes, and predicates used by the application.
+
+[[portability-types-bool]]
+==== Boolean representations
+
+A Boolean attribute may use native Boolean storage or a dialect-selected alternative.
+For an existing schema, converters can represent Boolean values using numeric or character
+values. See <<basic-boolean>> for the mapping and converter examples.
+Verify storage, null handling, query predicates, and generated constraints on each target.
+Hibernate can derive check constraints for converted Boolean values where supported;
+verify that an existing schema enforces the intended restrictions.
 
 [[portability-types-lobs]]
 ==== BLOB/CLOB mappings
 
-TODO
+LOB mappings can expose JDBC locator types, such as `Blob` and `Clob`, or materialized values,
+such as `String` and `byte[]`. JDBC handling varies between drivers. Access to a locator after
+the transaction in which it was obtained is not portable, while materializing a large value
+has memory and transfer costs. See <<basic-lob>> for representations and driver limitations.
 
-[[portability-types-bool]]
-==== Boolean mappings
+A large character or binary column does not necessarily require `@Lob`.
+The annotation selects special LOB handling; column size or its DDL type alone does not determine
+the appropriate JDBC access path. Test the mapping with the deployed driver and database.
 
-==== Jakarta Persistence portability
+[[portability-types-temporal]]
+==== Temporal values and JDBC boundaries
 
-* HQL/JPQL differences
-* naming strategies
-* basic types
-* simple id types
-* generated id types
-* composite ids and many-to-one
-* "embedded composite identifiers"
+Databases differ in temporal precision and time-zone storage and interpretation.
+Verify round-trip behavior for the values and comparisons the application requires;
+see <<basic-timezone>> for storage choices.
 
+The setting `hibernate.type.java_time_use_direct_jdbc` controls direct use of supported Java-time
+types at the JDBC boundary. Some drivers do not correctly implement the required support.
+A database's temporal column support does not by itself establish that a driver's direct
+Java-time access works; see <<basic-java-time-direct-jdbc>> for the setting and affected types.
+
+[[portability-types-specialized]]
+==== Database-specific representations
+
+Mappings for <<basic-mapping-array,arrays>>, <<basic-json,JSON>>, and <<basic-xml,XML>> depend on
+database and driver capabilities and Hibernate's supported representations.
+Storage or mapping support is distinct from support for query operations over that state.
+Successful bootstrap alone does not establish equivalent predicate, indexing, mutation, or
+function behavior on every target. Check the operations the application actually uses.
+
+[[portability-functions]]
+=== Queries and database functions
+
+HQL and JPQL abstract many differences in SQL syntax, and Hibernate can emulate some operations
+when a database lacks a corresponding native function. Support and behavior still depend on
+the dialect and database version. An HQL extension can be portable across databases without
+being portable to another Jakarta Persistence provider.
+
+See link:{doc-query-language-url}#exp-functions[functions in the Query Language guide] for the
+general language. Its appendices describe
+link:{doc-query-language-url}#hql-functions-arrays[array],
+link:{doc-query-language-url}#hql-functions-json[JSON], and
+link:{doc-query-language-url}#hql-functions-xml[XML] operations and dialect support.
+See also link:{doc-query-language-url}#hql-from-set-returning-functions[set-returning functions].
+The <<spatial>> and <<vector-module>> chapters cover those specialized integrations.
+
+Calling a native function with the standard `function()` syntax does not make the function's
+availability or semantics portable. Registering a function does not create it in the database.
+A custom translation can provide an abstraction across selected targets when its translations
+are implemented and verified; see <<query-language>> for function integration.
+Handwritten SQL and SQL fragments retain their database-specific requirements; see <<sql>>.
+
+[[portability-providers]]
+=== Portability between Jakarta Persistence providers
+
+Provider portability requires identifying where an application relies on Hibernate extensions
+or provider-selected behavior. Standard APIs and annotations help, but do not guarantee
+identical behavior across databases or providers.
+
+[cols="1,3",options="header"]
+|===
+|Area |Choice to review
+|Queries
+|Distinguish JPQL from HQL extensions and native SQL. Check required functions and result behavior;
+see <<hql>> and <<sql>>.
+|Types and conversions
+|Distinguish standard basic/converter mappings from Hibernate-specific mappings and JDBC type
+selections; see <<basic>> and <<basic-jpa-convert>>.
+|Generated identifiers
+|Check provider interpretation of `AUTO` and the availability of the selected strategy;
+see <<identifiers-generators>>.
+|Naming
+|Hibernate naming strategies are provider-specific. Review defaults and explicit mappings
+against the target schema; see <<naming>>.
+|Composite and derived identifiers
+|Use standard `@IdClass` or `@EmbeddedId` mappings and the derived-identity rules where identity
+depends on a relationship; see <<identifiers-composite>> and <<identifiers-derived-mapsid>>.
+Hibernate's support for associations directly inside a primary key class is an extension,
+distinct from a standard entity relationship mapped using `@Id` or `@MapsId`.
+|===
+
+[[portability-compliance]]
+==== Jakarta Persistence compliance settings
+
+Hibernate's Jakarta Persistence compliance settings constrain specific behaviors; they are
+not a portability certification or a substitute for testing with the intended providers.
+The following links lead to their entries in the <<settings,Configuration Settings appendix>>.
+
+// suppress inspection "AsciiDocLinkResolve"
+The <<settings-hibernate.jpa.compliance,`hibernate.jpa.compliance`>> setting supplies the default for the
+individual compliance flags and defaults to `false`. An explicitly configured individual
+flag overrides that shared default.
+
+[cols="2,3",options="header"]
+|===
+|Setting |Behavior when enabled
+// suppress inspection "AsciiDocLinkResolve"
+|<<settings-hibernate.jpa.compliance.query,`hibernate.jpa.compliance.query`>>
+|Applies Jakarta Persistence query validation and API behavior, restricting HQL extensions.
+// suppress inspection "AsciiDocLinkResolve"
+|<<settings-hibernate.jpa.compliance.transaction,`hibernate.jpa.compliance.transaction`>>
+|Applies `EntityTransaction` rules to Hibernate's `Transaction`; see <<transactions-compliance>>.
+// suppress inspection "AsciiDocLinkResolve"
+|<<settings-hibernate.jpa.compliance.orderby,`hibernate.jpa.compliance.orderby`>>
+|Restricts `@OrderBy` items to entity attribute references instead of Hibernate's extended expressions.
+// suppress inspection "AsciiDocLinkResolve"
+|<<settings-hibernate.jpa.compliance.closed,`hibernate.jpa.compliance.closed`>>
+|Throws `IllegalStateException` when an already closed entity manager or factory is closed again.
+// suppress inspection "AsciiDocLinkResolve"
+|<<settings-hibernate.jpa.compliance.proxy,`hibernate.jpa.compliance.proxy`>>
+|Initializes an entity proxy when its identifier is accessed, allowing a missing row to be detected.
+// suppress inspection "AsciiDocLinkResolve"
+|<<settings-hibernate.jpa.compliance.caching,`hibernate.jpa.compliance.caching`>>
+|Allows caching entity state instead of invalidating it solely because an unversioned entity
+has secondary tables. Other reasons for invalidation still apply.
+// suppress inspection "AsciiDocLinkResolve"
+|<<settings-hibernate.jpa.compliance.global_id_generators,`hibernate.jpa.compliance.global_id_generators`>>
+|Treats identifier generator names as persistence-unit-wide, rejecting conflicting definitions with the same name.
+Disabling this flag permits legacy scoping as a temporary compatibility measure; the setting
+is scheduled for removal in Hibernate 9.0.
+// suppress inspection "AsciiDocLinkResolve"
+|<<settings-hibernate.jpa.compliance.load_by_id,`hibernate.jpa.compliance.load_by_id`>>
+|Disallows coercion of identifier arguments to the mapped identifier type during lookup.
+|===
+
+[[portability-verification]]
+=== Verify the target environments
+
+* Define the supported database versions, JDBC drivers, and persistence providers, if provider
+  portability is required.
+* Test actual schema creation or reviewed migration scripts, not just metadata bootstrap;
+  see <<schema-generation>>.
+* Exercise identifier generation, representative reads and writes, conversions, LOB and temporal
+  values, and the specialized mappings and functions used by the application.
+* Verify required ordering and comparison rules, precision, constraints, transaction behavior,
+  and locking behavior; see <<transactions>> and <<locking>>.
+* Measure representative workloads on each target; see <<best-practices>>.
+  Successful translation or a passing H2 test does not establish equivalent behavior or
+  performance on another database.

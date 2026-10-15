@@ -15,12 +15,12 @@ public class ParentEntity {
 	private Long id;
 
 	@OneToOne(targetEntity = ChildEntity.class, optional = false)
-	@JoinColumnOrFormula(column = @JoinColumn(name = "ID", referencedColumnName = "PARENT_ID", insertable = false, updatable = false))
+	@JoinColumnOrFormula(column = @JoinColumn(name = "id", referencedColumnName = "PARENT_ID", insertable = false, updatable = false))
 	@JoinColumnOrFormula(formula = @JoinFormula(referencedColumnName = "NAME", value = "'Tom'"))
 	private ChildEntity tom;
 
 	@OneToOne(targetEntity = ChildEntity.class, optional = false)
-	@JoinColumnOrFormula(column = @JoinColumn(name = "ID", referencedColumnName = "PARENT_ID", insertable = false, updatable = false))
+	@JoinColumnOrFormula(column = @JoinColumn(name = "id", referencedColumnName = "PARENT_ID", insertable = false, updatable = false))
 	@JoinColumnOrFormula(formula = @JoinFormula(referencedColumnName = "NAME", value = "'Ben'"))
 	private ChildEntity ben;
 

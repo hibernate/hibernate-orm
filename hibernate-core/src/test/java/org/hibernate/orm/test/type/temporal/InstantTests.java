@@ -5,9 +5,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
@@ -101,17 +105,25 @@ public class InstantTests extends AbstractJavaTimeTypeTests<Instant, InstantTest
 				.add( 1905, 1, 1, 0, 0, 0, 0, Timezones.ZONE_PARIS )
 				.add( 1905, 1, 1, 1, 0, 0, 0, Timezones.ZONE_PARIS )
 				// HHH-14256 / JDK-8249280: Confirm workaround for broken LocalDate/LocalDateTime conversion for BCE dates
-				.withForcedJdbcTimezone( "UTC", b -> b
-						.add( 0, 3, 15, 22, 3, 47, 999_999_999, Timezones.ZONE_GMT )
-						.add( -1, 11, 3, 8, 45, 12, 500_000_000, Timezones.ZONE_GMT )
-						.add( -100, 6, 20, 14, 27, 53, 123_456_789, Timezones.ZONE_GMT )
+				.skippedForDialects(
+						// Only test on databases that can store BCE dates
+						List.of( HSQLDialect.class, MySQLDialect.class, DB2Dialect.class, SQLServerDialect.class, SybaseDialect.class, SpannerPostgreSQLDialect.class ),
+						b -> b.withForcedJdbcTimezone( "UTC", c -> c
+								.add( 0, 3, 15, 22, 3, 47, 999_999_999, Timezones.ZONE_GMT )
+								.add( -1, 11, 3, 8, 45, 12, 500_000_000, Timezones.ZONE_GMT )
+								.add( -100, 6, 20, 14, 27, 53, 123_456_789, Timezones.ZONE_GMT )
+						)
 				)
 				// Ensure behaviour for 2 AD fast path cutoff in SqlDateTimeHelper
-				.withForcedJdbcTimezone( "UTC", b -> b
-						.add( 1, 12, 1, 0, 0, 0, 0, Timezones.ZONE_GMT )
-						.add( 1, 12, 31, 23, 58, 30, 250_000_000, Timezones.ZONE_GMT )
-						.add( 2, 1, 1, 0, 1, 15, 750_000_000, Timezones.ZONE_GMT )
-						.add( 1, 1, 31, 0, 0, 0, 0, Timezones.ZONE_GMT )
+				.skippedForDialects(
+						// MySQL and MariaDB cannot store dates before 1000 and Sybase cannot store dates before 1753
+						List.of( MySQLDialect.class, SybaseDialect.class ),
+						b -> b.withForcedJdbcTimezone( "UTC", c -> c
+								.add( 1, 12, 1, 0, 0, 0, 0, Timezones.ZONE_GMT )
+								.add( 1, 12, 31, 23, 58, 30, 250_000_000, Timezones.ZONE_GMT )
+								.add( 2, 1, 1, 0, 1, 15, 750_000_000, Timezones.ZONE_GMT )
+								.add( 1, 1, 31, 0, 0, 0, 0, Timezones.ZONE_GMT )
+						)
 				)
 				.build();
 	}

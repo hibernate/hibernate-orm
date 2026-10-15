@@ -150,10 +150,11 @@ public class DefaultPersistEventListener
 		final var source = event.getSession();
 		final Object entity = assertInitialized( event.getObject() );
 		final var persister = source.getEntityPersister( event.getEntityName(), entity );
-		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
-			EVENT_LISTENER_LOGGER.unschedulingEntityDeletion(
-					infoString( persister, persister.getIdentifier( entity, source ), source.getFactory() ) );
-		}
+		UnscheduledDeletionLogging.unschedulingEntityDeletion(
+				persister,
+				persister.getIdentifier( entity, source ),
+				source.getFactory()
+		);
 		if ( createCache.add( entity ) ) {
 			justCascade( createCache, source, entity, persister );
 		}

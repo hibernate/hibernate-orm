@@ -15,6 +15,8 @@ import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -55,6 +57,11 @@ public abstract class AbstractMutationStrategyGeneratedIdentityTest {
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true,
 			reason = "T-SQL complains IDENTITY_INSERT is off when a value for an identity column is provided")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix counts from 1 like a normal person")
+	// Same root cause as the MySQLDialect skip above, but GaussDBDialect is not a MySQLDialect subtype:
+	// M mode (MySQL kernel) ignores the explicitly-provided id=0 for an IDENTITY (auto_increment) column
+	// and generates its own value, so the joined-subclass inserts end up with mismatched ids -> FK
+	// violation. A mode (PG kernel) accepts an explicit id for IDENTITY/SERIAL.
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class)
 	public void testInsertStatic(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.createMutationQuery(

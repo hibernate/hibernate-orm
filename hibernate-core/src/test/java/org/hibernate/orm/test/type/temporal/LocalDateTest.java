@@ -17,13 +17,17 @@ import jakarta.persistence.Id;
 
 import jakarta.persistence.Table;
 import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -106,17 +110,25 @@ public class LocalDateTest extends AbstractJavaTimeTypeTests<LocalDate, LocalDat
 				.add( 2018, 9, 30, ZONE_AUCKLAND )
 				.add( 2018, 8, 12, ZONE_SANTIAGO ) // DST start: 00:00 => 01:00
 				// HHH-14256 / JDK-8249280: Confirm workaround for broken LocalDate/LocalDateTime conversion for BCE dates
-				.withForcedJdbcTimezone( "UTC", b -> b
-						.add( 0, 3, 15, ZONE_GMT )
-						.add( -1, 11, 3, ZONE_GMT )
-						.add( -100, 6, 20, ZONE_GMT )
+				.skippedForDialects(
+						// Only test on databases that can store BCE dates
+						List.of( HSQLDialect.class, MySQLDialect.class, DB2Dialect.class, SQLServerDialect.class, SybaseDialect.class, SpannerPostgreSQLDialect.class ),
+						b -> b.withForcedJdbcTimezone( "UTC", c -> c
+								.add( 0, 3, 15, ZONE_GMT )
+								.add( -1, 11, 3, ZONE_GMT )
+								.add( -100, 6, 20, ZONE_GMT )
+						)
 				)
 				// Ensure behaviour for 2 AD fast path cutoff in SqlDateTimeHelper
-				.withForcedJdbcTimezone( "UTC", b -> b
-						.add( 1, 12, 1, ZONE_GMT )
-						.add( 1, 12, 31, ZONE_GMT )
-						.add( 2, 1, 1, ZONE_GMT )
-						.add( 1, 1, 31, ZONE_GMT )
+				.skippedForDialects(
+						// MySQL and MariaDB cannot store dates before 1000 and Sybase cannot store dates before 1753
+						List.of( MySQLDialect.class, SybaseDialect.class ),
+						b -> b.withForcedJdbcTimezone( "UTC", c -> c
+								.add( 1, 12, 1, ZONE_GMT )
+								.add( 1, 12, 31, ZONE_GMT )
+								.add( 2, 1, 1, ZONE_GMT )
+								.add( 1, 1, 31, ZONE_GMT )
+						)
 				)
 				.build();
 	}

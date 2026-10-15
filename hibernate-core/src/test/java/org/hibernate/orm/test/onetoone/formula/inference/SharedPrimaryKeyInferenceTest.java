@@ -20,6 +20,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
@@ -69,13 +70,14 @@ public class SharedPrimaryKeyInferenceTest {
 	@ValueSource(strings = { "7.0", "8.0" })
 	void associationInsertWriterMigration(String version) {
 		boolean legacy = version.equals( "7.0" );
-		String owner = simpleOwner( "", "id", "", "<property-ref name=\"lookup\"/>" );
+		String owner = simpleOwner( "", "id", "", "<property-ref name=\"lookup\"/>" )
+				.replace( "<attributes>", "<table name=\"InferenceXmlOwner\"/><attributes>" );
 		if ( !legacy ) {
 			owner = owner.replace( "<column name=\"id\" insertable=\"false\" updatable=\"false\"/>", "<column name=\"id\"/>" );
 		}
 		String target = """
 				<entity class="%sXmlTarget" access="FIELD" metadata-complete="true">
-				<table><unique-constraint><column-name>personName</column-name><column-name>addressType</column-name></unique-constraint></table>
+				<table name="InferenceXmlTarget"><unique-constraint><column-name>personName</column-name><column-name>addressType</column-name></unique-constraint></table>
 				<attributes><embedded-id name="key">
 				<attribute-override name="id"><column name="primaryId"/></attribute-override>
 				<attribute-override name="kind"><column name="primaryKind"/></attribute-override>
@@ -381,6 +383,7 @@ public class SharedPrimaryKeyInferenceTest {
 	public record ExtendedKey(Long id, Long other, Long tenant) implements Serializable {}
 
 	@Entity
+	@Table(name = "InferenceAnnotatedTarget")
 	@IdClass(TargetKey.class)
 	public static class AnnotatedTarget {
 		@Id @Column(name="personName") Long id;

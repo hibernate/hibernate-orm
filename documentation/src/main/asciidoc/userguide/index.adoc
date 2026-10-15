@@ -65,6 +65,8 @@ include::chapters/query/extensions/Vector.adoc[]
 
 include::chapters/schema/Schema.adoc[]
 
+include::chapters/enhancement/BytecodeEnhancement.adoc[]
+
 include::chapters/tooling/Tooling.adoc[]
 
 include::chapters/assistant/Assistant.adoc[]

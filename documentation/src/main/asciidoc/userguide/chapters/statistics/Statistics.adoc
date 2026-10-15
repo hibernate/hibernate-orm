@@ -15,6 +15,7 @@ That integration is enabled separately from statistics collection.
 === Enabling and accessing statistics
 
 Statistics collection is disabled by default because it adds processing and memory overhead.
+// suppress inspection "AsciiDocLinkResolve"
 Enable it with <<settings-hibernate.generate_statistics,`hibernate.generate_statistics`>>:
 
 [[statistics-access-example]]
@@ -243,6 +244,7 @@ Do not interpret absent samples or a zero-millisecond duration as proof that no 
 [[statistics-slow-queries]]
 ==== Slow SQL
 
+// suppress inspection "AsciiDocLinkResolve"
 Enable <<settings-hibernate.log_slow_query,`hibernate.log_slow_query`>> with a positive threshold
 in milliseconds to log SQL operations exceeding that threshold.
 When statistics collection is also enabled, `getSlowQueries()` exposes a map from SQL strings
@@ -359,7 +361,8 @@ See <<caching-query>> for the role of timestamps in query-result validity.
 [[statistics-query-max-size]]
 === Retention, overhead, and practical verification
 
-<<settings-hibernate.statistics.query_max_size,`hibernate.statistics.query_max_size`>> bounds
+// suppress inspection "AsciiDocLinkResolve"
+The <<settings-hibernate.statistics.query_max_size,`hibernate.statistics.query_max_size`>> setting bounds
 the number of retained `QueryStatistics` entries. Its default is *5000*, with LRU-based
 eviction to make room for new entries. This capacity is independent of query-plan-cache
 capacity and does not bound every kind of statistics storage.
@@ -385,8 +388,6 @@ For useful comparisons:
 * Use JDBC instrumentation for batch execution and provider tools for provider-specific cache
   behavior. See <<batch-verification>> and <<caching-statistics>>.
 
-For integrations requiring a different statistics collector,
-<<settings-hibernate.stats.factory,`hibernate.stats.factory`>> selects a
-{doc-javadoc-url}org/hibernate/stat/spi/StatisticsFactory.html[`StatisticsFactory`].
-This is an extension point; applications reading the standard metrics normally use
-`SessionFactory.getStatistics()`.
+// suppress inspection "AsciiDocLinkResolve"
+For integrations requiring a different statistics collector, <<settings-hibernate.stats.factory,`hibernate.stats.factory`>> selects a {doc-javadoc-url}org/hibernate/stat/spi/StatisticsFactory.html[`StatisticsFactory`].
+This is an extension point; applications reading the standard metrics normally use `SessionFactory.getStatistics()`.

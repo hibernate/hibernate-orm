@@ -39,7 +39,7 @@ Hibernate, however, is not as strict in its requirements. Differences from the l
 
 - Fields may be declared `final` in many cases; see <<entity-pojo-final-fields>> below.
 
-- The constructor with no parameters may be declared with package visibility, or, when the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancer>> is used, it may be omitted completely.
+- The constructor with no parameters may be declared with package visibility, or, when the <<BytecodeEnhancement,bytecode enhancer>> is used, it may be omitted completely.
 
 - Final classes and classes with final methods are tolerated but not recommended unless the bytecode enhancer is used.
 
@@ -69,7 +69,7 @@ Hibernate typically instantiates entities using a no-argument constructor and th
 Setting a `final` field through reflection is deprecated starting with JDK 26 and will be denied in a future JDK version.
 When Hibernate detects `final` persistent fields that will need to be set through reflection, it logs a warning on boot.
 
-The <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancer>> automatically removes the `final` modifier from persistent fields,
+The <<BytecodeEnhancement,bytecode enhancer>> automatically removes the `final` modifier from persistent fields,
 resolving these warnings.
 Alternatively, remove the `final` modifier from the persistent field declarations.
 

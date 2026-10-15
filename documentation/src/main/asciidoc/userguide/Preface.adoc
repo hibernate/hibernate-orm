@@ -55,7 +55,8 @@ The following links provide starting points for common tasks.
 
 |Configure and start Hibernate
 |<<bootstrap>> and <<database>>.
-See <<schema-generation>> for schema operations and DDL scripts, and <<tooling>> for build-time enhancement, metamodel generation, and other build services.
+See <<schema-generation>> for schema operations and DDL scripts, <<BytecodeEnhancement>> for enhancement capabilities and build-time or runtime setup,
+and <<tooling>> for Gradle, Maven, and Ant integration, metamodel generation, and other build services.
 
 |Manage entity state and transactions
 |<<pc,Persistence Context>>, <<transactions>>, and <<locking>>.

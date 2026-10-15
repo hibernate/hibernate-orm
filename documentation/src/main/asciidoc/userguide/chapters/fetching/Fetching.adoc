@@ -167,7 +167,7 @@ The example maps two lazy attributes: `accountsPayableXrefId` and `image`.
 Each is part of a different fetch group (accountsPayableXrefId is part of the default fetch group),
 which means that accessing `accountsPayableXrefId` will not force the loading of the `image` attribute, and vice versa.
 
-See <<BytecodeEnhancement>> for enhancement mechanisms and <<tooling-enhancement>> for setup.
+See <<BytecodeEnhancement>> for enhancement capabilities and build-time or runtime setup.
 
 [[fetching-association-constraints]]
 ==== Association-specific loading constraints

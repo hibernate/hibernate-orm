@@ -1252,8 +1252,6 @@ include::{pc-extrasdir}/pc-filter-join-table-collection-query-example.sql[]
 ----
 ====
 
-include::BytecodeEnhancement.adoc[]
-
 [[sql-crud]]
 === Custom SQL for entity and collection operations
 

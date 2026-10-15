@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+    id 'org.hibernate.orm' version '{fullVersion}'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.h2database:h2:2.5.252'
+}
+
+hibernate {
+    reveng {
+        hibernateProperties = 'hibernate.properties'
+        packageName = 'example'
+        outputFolder = 'build/generated/sources/reveng'
+    }
+}
+
+sourceSets.main.java.srcDir 'build/generated/sources/reveng'
+// Run generateJava explicitly before compilation when regeneration is required.

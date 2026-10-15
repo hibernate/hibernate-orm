@@ -1,0 +1,35 @@
+<project name="enhanced-model" default="enhance">
+    <property name="lib.dir" location="lib"/>
+    <property name="processor.lib.dir" location="processor-lib"/>
+    <property name="src.dir" location="src/main/java"/>
+    <property name="classes.dir" location="target/classes"/>
+    <property name="generated.dir" location="target/generated-sources"/>
+
+    <path id="tooling.path">
+        <fileset dir="${lib.dir}" includes="*.jar"/>
+    </path>
+    <path id="processor.path">
+        <fileset dir="${processor.lib.dir}" includes="*.jar"/>
+    </path>
+
+    <target name="compile">
+        <mkdir dir="${classes.dir}"/>
+        <mkdir dir="${generated.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}"
+               release="17" includeantruntime="false" fork="true">
+            <classpath refid="tooling.path"/>
+            <compilerarg value="-processorpath"/>
+            <compilerarg pathref="processor.path"/>
+            <compilerarg value="-s"/>
+            <compilerarg file="${generated.dir}"/>
+        </javac>
+    </target>
+
+    <target name="enhance" depends="compile">
+        <taskdef name="enhance" classname="org.hibernate.tool.enhance.EnhancementTask"
+                 classpathref="tooling.path"/>
+        <enhance base="${classes.dir}">
+            <fileset dir="${classes.dir}" includes="**/*.class" excludes="**/Excluded.class"/>
+        </enhance>
+    </target>
+</project>

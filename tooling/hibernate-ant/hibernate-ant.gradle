@@ -25,6 +25,14 @@ dependencies {
     api project(':hibernate-reveng')
     testImplementation libs.ant
     testRuntimeOnly project(':hibernate-scan-jandex')
+    testRuntimeOnly project(':hibernate-processor')
+    testRuntimeOnly libs.jdbc.h2
+}
+
+tasks.named('test') {
+    doFirst {
+        systemProperty 'guide.test.classpath', sourceSets.test.runtimeClasspath.asPath
+    }
 }
 
 tasks.register('legacyTest', Test) {

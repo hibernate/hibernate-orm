@@ -97,6 +97,7 @@ integrationTest {
 }
 
 integrationTest.dependsOn project(':hibernate-core').tasks.publishToMavenLocal
+integrationTest.dependsOn ':hibernate-processor:publishToMavenLocal'
 integrationTest.dependsOn ':hibernate-reveng:publishToMavenLocal'
 integrationTest.dependsOn ":hibernate-platform:publishToMavenLocal"
 integrationTest.dependsOn publishToMavenLocal

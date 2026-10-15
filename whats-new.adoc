@@ -464,3 +464,13 @@ A session-scoped interceptor (`hibernate.session_factory.session_scoped_intercep
 A session-scoped interceptor may also still be configured as a plain `java.util.function.Supplier<? extends Interceptor>`, obtaining a new non-CDI-managed instance per session exactly as before.
 
 See the link:{migrationGuide}#interceptor-configuration-behavior[migration guide] for a related behavior change if you configure interceptors today.
+
+[[formula-one-to-one-associations]]
+== Formula-based one-to-one associations
+
+A `@OneToOne` association whose join mixes physical `@JoinColumn`s with `@JoinFormula`s (via
+`@JoinColumnOrFormula`/`@JoinColumnsOrFormulas`, or the equivalent `<one-to-one>` mapping XML) is
+now recognized and bound as a true one-to-one association instead of falling back to a logical
+many-to-one. For each physical join column that is also part of the owner's primary key, Hibernate
+infers `insertable=false, updatable=false`, since the identifier mapping already owns that column's
+value. See the link:{userGuideBase}#associations-one-to-one-formulas[user guide] for details and examples.

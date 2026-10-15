@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+    id 'org.hibernate.orm' version '{fullVersion}'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
+    compileOnly 'jakarta.annotation:jakarta.annotation-api:3.0.0'
+}
+
+hibernate {
+    enhancement {}
+}

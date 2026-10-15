@@ -1,25 +1,41 @@
 [[tooling]]
 == Build Tool Integration
-:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 
-Hibernate provides build-time services available as plugins for
+Hibernate provides build-time enhancement, annotation processing, and reverse engineering
+for Gradle, Maven, and Ant. Choose the service according to its input and required output.
 
-* <<tooling-gradle,Gradle>>
-* <<tooling-maven,Maven>>
-* <<tooling-ant,Ant>>
+[[tooling-services]]
+=== Choosing build-time services
 
-These services include
+[cols="2,3,3",options="header"]
+|===
+|Service |Input and output |Integration
+|<<BytecodeEnhancement,Bytecode enhancement>>
+|Compiled model classes become enhanced classes.
+|The ORM Gradle plugin, Maven `enhance` goal, or Ant enhancement task.
+|<<tooling-modelgen,Annotation processing>>
+|Model and repository sources produce metamodel classes and other generated code.
+|Compiler annotation-processor configuration, independently of the enhancement plugin.
+|<<tooling-reveng,Reverse engineering>>
+|An existing database schema produces entity sources or other exported artifacts.
+|Gradle reverse-engineering tasks, Maven goals, or Ant exporters.
+|<<tooling-schema,Schema management>>
+|Mappings produce schema commands, scripts, or validation results.
+|Schema Tooling APIs and supported Maven/Ant entry points.
+|<<tooling-maven-transformhbm,Mapping transformation>>
+|Legacy `hbm.xml` files produce ORM XML mappings.
+|Maven `transformHbm`.
+|===
 
-* <<tooling-enhancement,Bytecode enhancement>>
-* <<tooling-modelgen,Static Metamodel generation>>
-* <<tooling-schema,Schema management>>
-* <<tooling-reveng,Reverse engineering>>
+The following sections describe <<tooling-gradle,Gradle>>, <<tooling-maven,Maven>>, and
+<<tooling-ant,Ant>> integration. Shared <<tooling-reveng,reverse-engineering customization>>
+follows the build-tool examples.
 
-include::enhancement.adoc[]
 include::modelgen.adoc[]
 include::schema.adoc[]
-include::reveng.adoc[]
 
 include::gradle.adoc[]
 include::maven.adoc[]
 include::ant.adoc[]
+
+include::reveng.adoc[]

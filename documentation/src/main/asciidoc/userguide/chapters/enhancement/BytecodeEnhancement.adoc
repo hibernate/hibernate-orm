@@ -1,0 +1,195 @@
+[[BytecodeEnhancement]]
+== Bytecode Enhancement
+
+:example-dir-enhancement: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
+
+[[tooling-enhancement,Bytecode Enhancement]]
+Bytecode enhancement adds interception and state-tracking code to persistent classes.
+It provides the following capabilities:
+
+[cols="2,4,2",options="header"]
+|===
+|Capability |Effect |Default and status
+|<<BytecodeEnhancement-lazy-loading,Lazy attribute loading>>
+|Intercepts access to deferred persistent attributes so their state can be loaded when needed.
+|Enabled by default for managed-class enhancement.
+|<<BytecodeEnhancement-dirty-tracking,Inline dirty tracking>>
+|Records attribute writes to help identify changed state during dirty checking.
+|Enabled by default for managed-class enhancement.
+|<<BytecodeEnhancement-client,Client enhancement>>
+|Rewrites direct accesses to persistent fields into calls to Hibernate's generated readers and writers.
+|Optional; disabled by default.
+|<<BytecodeEnhancement-dirty-tracking-bidirectional,Bidirectional association management>>
+|Adds code to keep both sides of an association synchronized as it is changed.
+|Disabled by default; deprecated for removal.
+|<<BytecodeEnhancement-constructors-and-modifiers,Constructors and final modifiers>>
+|Supplies missing no-argument constructors and adjusts modifiers for instantiation and persistent-state access.
+|Included in managed-class enhancement.
+|<<BytecodeEnhancement-dirty-tracking-optimizations,Internal performance optimizations>>
+|Supplies hooks for efficiently maintaining persistence-context state.
+|Included in managed-class enhancement.
+|===
+
+These defaults apply when enhancement is enabled; the integration determines when it runs.
+
+[NOTE]
+====
+Hibernate's built-in Gradle, Maven, Ant, and container integrations use annotation-based
+recognition of persistent classes through `@Entity`, `@Embeddable`, and `@MappedSuperclass`.
+Discovery also recognizes otherwise unannotated classes used as `@Embedded` attributes.
+XML mappings alone do not supply persistence metadata to these integrations' enhancers.
+Custom integrations can supply their own persistence metadata through the enhancement SPI's
+`EnhancementModel` interface.
+====
+
+[[BytecodeEnhancement-lazy-loading]]
+=== Lazy attribute loading
+
+Enhancement intercepts access to deferred persistent state.
+See <<fetching-lazy-basic,lazy basic attributes and groups>> for loading behavior and the `@LazyGroup` example,
+and <<fetching-association-constraints,association-specific loading constraints>> for to-one mappings.
+
+[[BytecodeEnhancement-dirty-tracking]]
+=== Inline dirty tracking
+
+Enhanced classes record attribute writes, allowing Hibernate to identify changed attributes without comparing every value.
+Internally mutable values still require comparison against their snapshots: mutation inside a `Date`, array, or mutable document need not call an entity setter.
+Hibernate combines enhanced tracking with these comparisons according to the mapping's mutability information.
+See <<pc-dirty-checking,dirty checking>> and <<basic-mapping-composition-mutability,mutability plans>>.
+
+[[BytecodeEnhancement-client]]
+=== Client enhancement
+
+Client enhancement rewrites direct accesses to persistent fields into calls to Hibernate's generated field readers and writers.
+This allows client writes to participate in dirty tracking and client reads to trigger lazy loading.
+It does not make the client a managed class or add managed-class interfaces or state.
+
+Managed classes may themselves access persistent fields of other managed objects.
+When client enhancement is enabled, it also processes those accesses, after managed enhancement of the class.
+Generated accessor methods are excluded from client rewriting.
+
+Target classes must be selected for managed enhancement in the same build invocation,
+or already have compatible Hibernate enhancement. For runtime transformation, the container
+may instead arrange managed enhancement before defining the target classes.
+Without prior or scheduled managed enhancement of the targets, there is no client enhancement work to perform.
+Unenhanced dependency classes are not automatically enhanced.
+
+Client enhancement uses the mapping recognition described above; listing an XML-only mapped class does not by itself make it eligible.
+It does not intercept reflection or method handles. Identifier accesses, static fields, nonpersistent fields, and final-field writes remain unchanged.
+See <<tooling-enhancement-build-time>> for build-tool activation and <<tooling-enhancement-runtime>> for container integration.
+
+[[BytecodeEnhancement-dirty-tracking-bidirectional]]
+=== Bidirectional association management
+
+Enhancement-based bidirectional association management is deprecated for removal.
+Manage both sides explicitly in new code, or use <<auto-bidir-mgmt,flush-time bidirectional association management>>,
+enabled with `hibernate.bidirectionality_management=true`. That alternative does not require
+association-management enhancement. See its discussion for owning-side responsibilities,
+flush timing, and treatment of lazy inverse collections.
+
+A bidirectional association has two Java references that must be kept consistent. Consider this `Person`/`Book` mapping:
+
+[[BytecodeEnhancement-dirty-tracking-bidirectional-example]]
+.Bidirectional association
+====
+[source, java, indent=0]
+----
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-example]
+----
+====
+
+[[BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example]]
+.Changing only one side
+====
+[source, java, indent=0]
+----
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example]
+----
+====
+
+Changing one side does not, by itself, change the other Java reference. Update both sides:
+
+[[BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example]]
+.Keeping both sides consistent
+====
+[source, java, indent=0]
+----
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example]
+----
+====
+
+When enabled, the deprecated enhancement capability updates the other side automatically.
+
+[[BytecodeEnhancement-constructors-and-modifiers]]
+=== Constructors and final modifiers
+
+Managed enhancement adds a public no-argument constructor when a processed entity,
+embeddable, or mapped superclass has none. For entities and mapped superclasses, it also
+removes `final` from the class and its non-generated methods. It removes `final` from
+enhanced persistent fields so Hibernate can populate their state. Record classes are not enhanced.
+
+These changes affect compiled bytecode; they do not change Java source-language checks.
+For example, a field declared `final` in source still cannot be assigned by ordinary client code.
+See <<entity-pojo-constructor,entity constructors>>, <<entity-pojo-final,final entity classes>>,
+and <<entity-pojo-final-fields,final persistent fields>> for mapping requirements and portability considerations.
+
+[[BytecodeEnhancement-dirty-tracking-optimizations]]
+=== Internal performance optimizations
+
+Enhancement also supplies hooks for maintaining persistence-context state efficiently.
+These internal optimizations do not change entity identity, transaction boundaries, or the need to synchronize pending changes.
+
+[[tooling-enhancement-build-time]]
+=== Build-time enhancement
+
+Build-time enhancement processes compiled classes before they are packaged or executed.
+Enhancement may also run as classes are loaded; see <<tooling-enhancement-runtime>>.
+
+For build configuration and examples, see <<tooling-gradle-enhancement,Gradle>>,
+<<tooling-maven-enhancement,Maven>>, or <<tooling-ant-enhancement,Ant>>.
+Client enhancement is disabled by default; enable it with the build tool's
+`enableClientEnhancement` option and include the client classes in the selected inputs.
+The deprecated `enableExtendedEnhancement` name remains an alias; an explicitly supplied
+`enableClientEnhancement` value takes precedence, including `false`.
+Tool file sets and class-name filters apply to client enhancement too.
+
+[IMPORTANT]
+====
+Keep the enhancement tool and Hibernate runtime versions aligned.
+====
+
+[[tooling-enhancement-runtime]]
+=== Runtime transformation
+
+Container bootstrap can register a `jakarta.persistence.spi.ClassTransformer` to enhance
+classes as the container loads them. Whether transformation is available depends on the
+bootstrap integration and the container's class-loading lifecycle. Ordinary Java SE
+bootstrap does not by itself arrange transformation of already-loaded application classes.
+See <<bootstrap>> and the container's integration documentation.
+
+For runtime client enhancement, a container may obtain a transformer using
+`HibernatePersistenceProvider.getClientClassTransformer(PersistenceUnitInfo, Map)`
+and install it into its class-loading lifecycle. There is no runtime setting to enable
+client enhancement. Obtaining the transformer neither registers it nor consumes the
+managed-class transformer's registration. This Hibernate entry point anticipates the proposed
+Jakarta Persistence client-transformer API.
+
+Targets must already have compatible managed-class enhancement from tooling, or the container
+must arrange it before defining them. A client may still be loaded before another class
+scheduled as its target; generated accessors need not be present in the original class resources.
+A container can therefore use runtime client enhancement with runtime managed enhancement disabled
+when tooling has already enhanced the targets. See <<BytecodeEnhancement-client>> for access limitations.
+
+The runtime capability settings have these defaults:
+
+* {doc-javadoc-url}org/hibernate/cfg/BytecodeSettings.html#ENHANCER_ENABLE_LAZY_INITIALIZATION[`hibernate.enhancer.enableLazyInitialization`]:
+  `true`; disabling this capability is deprecated for removal.
+* {doc-javadoc-url}org/hibernate/cfg/BytecodeSettings.html#ENHANCER_ENABLE_DIRTY_TRACKING[`hibernate.enhancer.enableDirtyTracking`]:
+  `true`; disabling this capability is deprecated for removal.
+// suppress inspection "AsciiDocLinkResolve"
+* <<settings-hibernate.enhancer.enableAssociationManagement,`hibernate.enhancer.enableAssociationManagement`>>:
+  `false`; this setting and enhancement-based association management are deprecated for
+  removal. See <<auto-bidir-mgmt,flush-time bidirectional association management>> instead.
+
+These settings control capabilities when runtime transformation is registered. They are
+separate from the options in <<tooling,Build Tool Integration>> and do not themselves provide an instrumentation agent.

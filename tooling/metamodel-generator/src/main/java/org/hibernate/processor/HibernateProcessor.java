@@ -60,6 +60,8 @@ import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.SUPPRESS_JAKARTA_DATA_METAMODEL;
 import static org.hibernate.processor.HibernateProcessor.SUPPRESS_JAKARTA_DATA_SECURITY_ANNOTATIONS;
+import static org.hibernate.processor.annotation.AnnotationMetaEntity.hasQueryStringAnnotation;
+import static org.hibernate.processor.annotation.AnnotationMetaEntity.hasStaticQueryAnnotation;
 import static org.hibernate.processor.util.Constants.COLUMN_RESULT;
 import static org.hibernate.processor.util.Constants.COLUMN_RESULTS;
 import static org.hibernate.processor.util.Constants.CONSTRUCTOR_RESULT;
@@ -485,13 +487,7 @@ public class HibernateProcessor extends AbstractProcessor {
 								repositoryParentMetadata( parent ),
 								null );
 				if ( metaEntity.isInitialized() ) {
-					if ( hasAnnotation( typeElement, JD_REPOSITORY ) && hasRepositoryQueryReferenceMethods( typeElement ) ) {
-						final AnnotationMetaEntity queryMetaEntity =
-								AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
-										parentMetadata( parent, context::getMetaEntity ),
-										null );
-						context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
-					}
+					addQueryMetamodelIfNeeded( metaEntity, typeElement, parent, null );
 					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				}
 				context.removeElementToRedo( elementName );
@@ -573,13 +569,7 @@ public class HibernateProcessor extends AbstractProcessor {
 									repositoryParentMetadata( parent ),
 									primaryEntity );
 					if ( metaEntity.isInitialized() ) {
-						if ( hasRepositoryQueryReferenceMethods( typeElement ) ) {
-							final var queryMetaEntity =
-									AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
-											parentMetadata( parent, context::getMetaEntity ),
-											primaryEntity );
-							context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
-						}
+						addQueryMetamodelIfNeeded( metaEntity, typeElement, parent, primaryEntity );
 						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 					}
 					// otherwise discard it (assume it has query by magical method name stuff)
@@ -593,13 +583,7 @@ public class HibernateProcessor extends AbstractProcessor {
 									repositoryParentMetadata( parent ),
 									primaryEntity );
 					if ( metaEntity.isInitialized() ) {
-						if ( hasRepositoryQueryReferenceMethods( typeElement ) ) {
-							final var queryMetaEntity =
-									AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
-											parentMetadata( parent, context::getMetaEntity ),
-											primaryEntity );
-							context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
-						}
+						addQueryMetamodelIfNeeded( metaEntity, typeElement, parent, primaryEntity );
 						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 					}
 				}
@@ -609,13 +593,7 @@ public class HibernateProcessor extends AbstractProcessor {
 							AnnotationMetaEntity.create( typeElement, context,
 									parentMetadata( parent, context::getMetaEntity ),
 									primaryEntity );
-					if ( metaEntity.isImplementation() && hasRepositoryQueryReferenceMethods( typeElement ) ) {
-						final var queryMetaEntity =
-								AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
-										parentMetadata( parent, context::getMetaEntity ),
-										primaryEntity );
-						context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
-					}
+					addQueryMetamodelIfNeeded( metaEntity, typeElement, parent, primaryEntity );
 					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				}
 				if ( enclosesEntityOrEmbeddable( element ) ) {
@@ -643,6 +621,20 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 	}
 
+	private void addQueryMetamodelIfNeeded(
+			AnnotationMetaEntity metaEntity,
+			TypeElement typeElement,
+			@Nullable Element parent,
+			@Nullable TypeElement primaryEntity) {
+		if ( metaEntity.isImplementation() && hasRepositoryQueryReferenceMethods( typeElement ) ) {
+			final var queryMetaEntity =
+					AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
+							parentMetadata( parent, context::getMetaEntity ),
+							primaryEntity );
+			context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
+		}
+	}
+
 	private boolean isImplicitRepository(TypeElement typeElement) {
 		if ( AnnotationMetaEntity.isQuarkusDataRepository( typeElement, context.quarkusDataTypeNames() ) ) {
 			return true;
@@ -667,8 +659,8 @@ public class HibernateProcessor extends AbstractProcessor {
 	private boolean hasRepositoryQueryReferenceMethods(TypeElement typeElement) {
 		for ( var member : context.getAllMembers( typeElement ) ) {
 			if ( member instanceof ExecutableElement method
-					&& hasAnnotation( method, HQL, SQL, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY )
-					&& ( method.isDefault() || hasAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY ) ) ) {
+					&& hasQueryStringAnnotation( method )
+					&& ( method.isDefault() || hasStaticQueryAnnotation( method ) ) ) {
 				return true;
 			}
 		}

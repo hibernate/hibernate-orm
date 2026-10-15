@@ -1883,11 +1883,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static boolean hasStaticQueryAnnotation(ExecutableElement method) {
+	public static boolean hasStaticQueryAnnotation(ExecutableElement method) {
 		return containsAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY );
 	}
 
-	private static boolean hasQueryStringAnnotation(ExecutableElement method) {
+	public static boolean hasQueryStringAnnotation(ExecutableElement method) {
 		return containsAnnotation( method, HQL, SQL, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY );
 	}
 

@@ -51,13 +51,17 @@ and <<tooling>> for Gradle, Maven, and Ant integration, metamodel generation, an
 
 |Construct and execute queries
 |<<hql,Query APIs and execution>>, <<criteria>>, <<QuerySpecification,Programmatic query specifications>>, <<sql,Native SQL Queries>>, and <<stored-procedures>>.
-See the link:{doc-query-language-url}[Query Language guide] for HQL syntax and built-in functions.
+See <<query-language,Function integration>> for registering custom functions, and the
+link:{doc-query-language-url}[Query Language guide] for HQL syntax and built-in functions.
 
 |Plan loading and tune performance
 |<<fetching>>, <<batch,Batching>>, <<caching>>, <<statistics>>, and <<best-practices>>.
 
 |Use integrations and specialized features
 |<<multitenacy,Multitenancy>>, <<events>>, <<beans>>, <<spatial>>, and <<vector-module>>.
+
+|Evaluate portability across databases or persistence providers
+|<<portability>> for portability boundaries, mapping and query choices, and target-environment verification.
 
 |Look up settings and diagnostic events
 |<<settings,Configuration Settings>> and <<appendix-monitoring-with-JFR>>.

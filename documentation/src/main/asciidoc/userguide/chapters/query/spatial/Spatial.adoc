@@ -89,13 +89,13 @@ include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-point-creatio
 ----
 ====
 
-Spatial Dialects defines many query functions that are available both in HQL and JPQL queries. Below we show how we
-could use the `within` function to find all objects within a given spatial extent or window.
+Hibernate Spatial registers spatial query functions for the supported dialects.
+The following HQL query uses `within` to find an entity whose location lies within a spatial window.
 
 [[spatial-types-query-example]]
 .Querying the geometry
 ====
-[source, sql, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-query-example]
 ----

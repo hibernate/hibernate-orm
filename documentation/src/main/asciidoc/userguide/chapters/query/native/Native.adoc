@@ -704,8 +704,10 @@ setting a global catalog or schema so that you don't have to declare it explicit
 
 This way, we can imply the global *crm* catalog and *analytics* schema in every JPQL, HQL or Criteria API query.
 
-However, for native queries, the SQL query is passed as is, therefore you need to explicitly set the global catalog and schema whenever you are referencing a database table.
-Fortunately, Hibernate allows you to resolve the current global catalog and schema using the following placeholders:
+Hibernate does not automatically qualify table names in native SQL using these defaults.
+Unqualified names are resolved by the database using the connection's current catalog, schema,
+or search path. When qualification is needed, include it explicitly in the SQL or use the
+following Hibernate placeholders to apply the configured default catalog and schema:
 
 {h-catalog}:: resolves the current `hibernate.default_catalog` configuration property value.
 {h-schema}:: resolves the current `hibernate.default_schema` configuration property value.

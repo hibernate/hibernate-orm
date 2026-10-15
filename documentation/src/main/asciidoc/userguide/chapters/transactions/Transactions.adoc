@@ -235,8 +235,11 @@ With compliance disabled, `getRollbackOnly()` returns `false` and `setRollbackOn
 * Committing a rollback-only JDBC transaction rolls it back and throws `RollbackException`.
 With compliance disabled, it rolls back without throwing that exception; see <<transactions-api,Resource-local transactions and helpers>> for the effect on transaction helpers.
 
-Defaults depend on bootstrap and compliance configuration.
-See link:{doc-javadoc-url}org/hibernate/cfg/JpaComplianceSettings.html[`JpaComplianceSettings`] for configuration, and
+Transaction compliance defaults to `false`, independently of bootstrap style.
+The `hibernate.jpa.compliance` setting supplies its default; an explicit
+`hibernate.jpa.compliance.transaction` value overrides it.
+See <<portability-compliance,Jakarta Persistence compliance settings>> for the shared default
+and individual flags, and
 <<transactions-jta-access,Transaction access and Jakarta Persistence compliance>> for its interaction with JTA transaction access.
 
 After a persistence failure or transaction rollback in stateful work, discard the affected persistence context and assume its entity state may differ from the database.

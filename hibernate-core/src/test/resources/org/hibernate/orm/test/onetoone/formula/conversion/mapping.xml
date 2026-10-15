@@ -5,12 +5,12 @@
         <attributes>
             <id name="name"><column name="name"/></id>
             <one-to-one name="address" target-entity="Address" fetch="EAGER" optional="true">
-                <join-column name="name" insertable="false" updatable="false"/>
+                <join-column name="name"/>
                 <join-formula>'HOME'</join-formula>
                 <cascade><cascade-all/></cascade>
             </one-to-one>
             <one-to-one name="mailingAddress" target-entity="Address" fetch="EAGER" optional="true">
-                <join-column name="name" insertable="false" updatable="false"/>
+                <join-column name="name"/>
                 <join-formula>'MAILING'</join-formula>
             </one-to-one>
         </attributes>

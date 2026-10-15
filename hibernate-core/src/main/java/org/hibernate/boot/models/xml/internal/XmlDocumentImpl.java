@@ -37,6 +37,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 public class XmlDocumentImpl implements XmlDocument {
 	private final Origin origin;
 	private final JaxbEntityMappingsImpl root;
+	private String sourceVersion;
 	private final DefaultsImpl defaults;
 	private final List<JaxbEntityImpl> entityMappings;
 	private final List<JaxbMappedSuperclassImpl> mappedSuperclassMappings;
@@ -77,6 +78,7 @@ public class XmlDocumentImpl implements XmlDocument {
 			Map<String, JaxbHbmNamedNativeQueryType> hibernateNamedNativeQueries) {
 		this.origin = origin;
 		this.root = root;
+		this.sourceVersion = root.getVersion();
 		this.defaults = defaults;
 		this.entityMappings = entityMappings;
 		this.mappedSuperclassMappings = mappedSuperclassMappings;
@@ -99,6 +101,11 @@ public class XmlDocumentImpl implements XmlDocument {
 	@Override
 	public Origin getOrigin() {
 		return origin;
+	}
+
+	@Override
+	public String getSourceVersion() {
+		return sourceVersion;
 	}
 
 	@Override
@@ -267,7 +274,7 @@ public class XmlDocumentImpl implements XmlDocument {
 
 	public static XmlDocumentImpl consume(Binding<JaxbEntityMappingsImpl> xmlBinding, PersistenceUnitMetadata metadata) {
 		final JaxbEntityMappingsImpl jaxbRoot = xmlBinding.getRoot();
-		return new XmlDocumentImpl(
+		var document = new XmlDocumentImpl(
 				xmlBinding.getOrigin(),
 				xmlBinding.getRoot(),
 				DefaultsImpl.consume( jaxbRoot, metadata ),
@@ -289,6 +296,10 @@ public class XmlDocumentImpl implements XmlDocument {
 				Collections.emptyMap(),
 				Collections.emptyMap()
 		);
+		if ( xmlBinding.getSourceVersion() != null ) {
+			document.sourceVersion = xmlBinding.getSourceVersion();
+		}
+		return document;
 	}
 
 	private static Map<String, JaxbNamedHqlQueryImpl> toNamedQueryMap(List<JaxbNamedHqlQueryImpl> namedQueries) {

@@ -2,6 +2,7 @@ package org.hibernate.boot.jaxb.internal;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.StartElement;
@@ -177,7 +178,8 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 				);
 
 				//noinspection unchecked
-				return new Binding<>( (X) bindingRoot, origin );
+				final var version = rootElementStartEvent.getAttributeByName( new QName( "version" ) );
+				return new Binding<>( (X) bindingRoot, origin, version == null ? null : version.getValue() );
 			}
 			catch (AbstractEventReader.BadVersionException e) {
 				throw new UnsupportedOrmXsdVersionException( e.getRequestedVersion(), origin );

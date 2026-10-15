@@ -323,6 +323,13 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
+		resolveDefaultColumnName( columnIndex, referencedColumn, referencedEntity );
+		setReferencedColumn( getBuildingContext().getMetadataCollector()
+				.getLogicalColumnName( referencedEntity.getTable(), referencedColumn.getQuotedName() ) );
+		linkWithValue( value );
+	}
+
+	void resolveDefaultColumnName(int columnIndex, Column referencedColumn, PersistentClass referencedEntity) {
 		// In the case of a reference to a composite primary key,
 		// this instance of AnnotatedJoinColumn actually represents
 		// multiple foreign key columns, and this method will be
@@ -334,7 +341,6 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		// awful side effect on an implicit column
 		setLogicalColumnName( columnName );
 		setImplicit( true );
-		setReferencedColumn( logicalReferencedColumn );
 		final var mappingColumn = getMappingColumn();
 		initMappingColumn(
 				columnName,
@@ -351,7 +357,6 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				mappingColumn != null && mappingColumn.isUnique(),
 				false
 		);
-		linkWithValue( value );
 	}
 
 	public void applyDefaultAnyKeyColumnNaming() {

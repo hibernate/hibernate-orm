@@ -21,13 +21,13 @@ public class Person implements Serializable {
 	private String name;
 	@OneToOne(optional = true, cascade = CascadeType.ALL)
 	@JoinColumnsOrFormulas({
-		@JoinColumnOrFormula(column = @JoinColumn(name = "name", referencedColumnName = "personName", insertable = false, updatable = false)),
+		@JoinColumnOrFormula(column = @JoinColumn(name = "name", referencedColumnName = "personName")),
 		@JoinColumnOrFormula(formula = @JoinFormula(value = "'HOME'", referencedColumnName = "addressType"))
 	})
 	private Address address;
 	@OneToOne(optional = true)
 	@JoinColumnsOrFormulas({
-		@JoinColumnOrFormula(column = @JoinColumn(name = "name", referencedColumnName = "personName", insertable = false, updatable = false)),
+		@JoinColumnOrFormula(column = @JoinColumn(name = "name", referencedColumnName = "personName")),
 		@JoinColumnOrFormula(formula = @JoinFormula(value = "'MAILING'", referencedColumnName = "addressType"))
 	})
 	private Address mailingAddress;

@@ -546,3 +546,31 @@ The registry no longer maintains a second cache or destruction list.
 Custom containers are responsible for honoring `LifecycleOptions`; disabling cached references
 must bypass their caches, while JPA-compliant creation controls independent instance creation.
 Container shutdown must occur after acquisition, instance access, and explicit release have completed.
+
+
+[[formula-one-to-one-shared-identifier-columns]]
+== Shared identifier columns in formula one-to-one associations
+
+For an owning `@OneToOne` association containing a join formula, Hibernate now treats
+physical join columns that belong to the owner's primary key as read-only for that
+association. The same rule applies to Hibernate mapping XML 8.0 and newer.
+It applies even when a shared column explicitly declares `insertable=true` or
+`updatable=true`, and independently of target primary-key or unique-key binding.
+
+Some declarations previously rejected as duplicate writable-column mappings now work
+without explicit `insertable=false, updatable=false`. Conversely, partially shared
+tuples may now fail mapping validation when the inferred read-only identifier columns
+conflict with the remaining physical columns' write flags. Formula placement does not
+hide these conflicts; Hibernate does not silently clear the other columns' write flags.
+
+Mappings that relied on the association to supply an owner identifier column's INSERT
+value lose that behavior, including when the identifier mapping itself is non-insertable.
+Supply the identifier through its identifier mapping or generator, or use an appropriate
+existing identity-defining mapping. Association assignment does not infer `@MapsId`
+semantics or copy an identifier from the associated entity.
+
+Writable non-identifier mixed joins, formula-free associations, declared many-to-ones,
+identity-defining associations, join-table mappings, legacy `hbm.xml`, and Hibernate
+XML 7.0 retain their existing semantics. Explicit `@NotFound` policies and unique-key
+references keep their existing association binding paths while receiving the per-column
+read-only inference where applicable.

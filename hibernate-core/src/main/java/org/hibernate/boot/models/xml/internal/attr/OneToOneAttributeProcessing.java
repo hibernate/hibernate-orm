@@ -5,6 +5,7 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.boot.models.annotations.internal.OneToOneJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.LegacyOneToOneXmlAnnotation;
 import org.hibernate.boot.models.annotations.internal.PropertyRefAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
@@ -83,10 +84,15 @@ public class OneToOneAttributeProcessing {
 			AccessType accessType,
 			JaxbOneToOneImpl jaxbOneToOne,
 			XmlDocumentContext xmlDocumentContext) {
-		final OneToOneJpaAnnotation annotation = (OneToOneJpaAnnotation) memberDetails.applyAnnotationUsage(
+		OneToOneJpaAnnotation annotation = (OneToOneJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ONE_TO_ONE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
+
+		if ( Integer.parseInt( xmlDocumentContext.getXmlDocument().getSourceVersion().split( "\\." )[0] ) < 8 ) {
+			annotation = new LegacyOneToOneXmlAnnotation( annotation, xmlDocumentContext.getModelBuildingContext() );
+			memberDetails.addAnnotationUsage( annotation );
+		}
 
 		applyAccess( accessType, memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbOneToOne, memberDetails, xmlDocumentContext );

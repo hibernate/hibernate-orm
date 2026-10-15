@@ -29,3 +29,13 @@ the link:{migrationGuide}#filtered-to-one-associations[migration guide] for the 
 Schema management DDL now uses `CREATE SCHEMA IF NOT EXISTS` and `DROP SCHEMA IF EXISTS` for dialects which support these clauses, avoiding warnings when a schema already exists or has already been dropped.
 
 Supported dialects: PostgreSQL, CockroachDB, H2, HSQLDB, SAP HANA, and SQL Server (DROP only, version 13+).
+
+[[formula-one-to-one-associations]]
+== Formula-based one-to-one associations
+
+A `@OneToOne` association whose join mixes physical `@JoinColumn`s with `@JoinFormula`s (via
+`@JoinColumnOrFormula`/`@JoinColumnsOrFormulas`, or the equivalent `<one-to-one>` mapping XML) is
+now recognized and bound as a true one-to-one association instead of falling back to a logical
+many-to-one. For each physical join column that is also part of the owner's primary key, Hibernate
+infers `insertable=false, updatable=false`, since the identifier mapping already owns that column's
+value. See the link:{userGuideBase}#associations-one-to-one-formulas[user guide] for details and examples.

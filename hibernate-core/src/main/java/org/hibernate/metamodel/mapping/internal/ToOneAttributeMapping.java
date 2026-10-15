@@ -865,8 +865,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
-		assert identifyingColumnsTableExpression != null;
-		this.foreignKeyDescriptor = foreignKeyDescriptor;
+		final ForeignKeyDescriptor.Nature sideNature;
 		if ( cardinality == ONE_TO_ONE && bidirectionalAttributePath != null ) {
 			// Normally the mappedBy/inverse side of a bidirectional one-to-one is the TARGET side.
 			// But when the key and target tables of the descriptor are genuinely distinct (as opposed
@@ -888,6 +887,19 @@ public class ToOneAttributeMapping
 					? ForeignKeyDescriptor.Nature.KEY
 					: ForeignKeyDescriptor.Nature.TARGET;
 		}
+
+		setForeignKeyDescriptor( foreignKeyDescriptor, sideNature );
+	}
+
+	/**
+	 * Uses the descriptor's known orientation, even when both sides share a table.
+	 */
+	void setForeignKeyDescriptor(
+			ForeignKeyDescriptor foreignKeyDescriptor,
+			ForeignKeyDescriptor.Nature sideNature) {
+		assert identifyingColumnsTableExpression != null;
+		this.foreignKeyDescriptor = foreignKeyDescriptor;
+		this.sideNature = sideNature;
 
 		// We can only use the parent table group if
 		// 		* the FK is located there
@@ -1175,7 +1187,10 @@ public class ToOneAttributeMapping
 		assert !creationState.isResolvingCircularFetch();
 		try {
 			creationState.setResolvingCircularFetch( true );
-			if ( circularFetchModelPart != null ) {
+			if ( isInverseFormulaReference() ) {
+				return createInverseFormulaKeyResult( fetchablePath, parentTableGroup, creationState );
+			}
+			else if ( circularFetchModelPart != null ) {
 				return circularFetchModelPart.createDomainResult(
 						fetchablePath,
 						createTableGroupForDelayedFetch( fetchablePath,
@@ -1806,7 +1821,10 @@ public class ToOneAttributeMapping
 			DomainResultCreationState creationState,
 			ForeignKeyDescriptor.Nature side,
 			TableGroup parentTableGroup) {
-		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
+		if ( isInverseFormulaReference() ) {
+			return createInverseFormulaKeyResult( fetchablePath, parentTableGroup, creationState );
+		}
+		else if ( side == ForeignKeyDescriptor.Nature.KEY ) {
 			final var tableGroup =
 					sideNature == ForeignKeyDescriptor.Nature.KEY
 							? createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState )
@@ -1830,6 +1848,33 @@ public class ToOneAttributeMapping
 					creationState
 			);
 		}
+	}
+
+	private boolean isInverseFormulaReference() {
+		if ( cardinality == ONE_TO_ONE && bidirectionalAttributePath != null
+				&& sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+			final var targetPart = foreignKeyDescriptor.getTargetPart();
+			for ( int i = 0; i < targetPart.getJdbcTypeCount(); i++ ) {
+				if ( targetPart.getSelectable( i ).isFormula() ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private DomainResult<?> createInverseFormulaKeyResult(
+			NavigablePath fetchablePath,
+			TableGroup parentTableGroup,
+			DomainResultCreationState creationState) {
+		// The reversed descriptor's key is the owner's identifier, which does not prove
+		// that an inverse target exists. Read the associated entity's identifier after joining.
+		var tableGroup = createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState );
+		if ( tableGroup instanceof LazyTableGroup lazyTableGroup ) {
+			tableGroup = lazyTableGroup.getTableGroup();
+		}
+		return entityMappingType.getIdentifierMapping().createDomainResult(
+				fetchablePath.append( EntityIdentifierMapping.ID_ROLE_NAME ), tableGroup, null, creationState );
 	}
 
 	private ForeignKeyDescriptor.Nature getSide(DomainResultCreationState creationState) {
@@ -2496,6 +2541,7 @@ public class ToOneAttributeMapping
 			ValuedModelPart valuedModelPart) {
 		return producer == this
 			&& sideNature == ForeignKeyDescriptor.Nature.KEY
+			&& !isInverseFormulaReference()
 			&& foreignKeyDescriptor.isKeyPart( valuedModelPart );
 	}
 

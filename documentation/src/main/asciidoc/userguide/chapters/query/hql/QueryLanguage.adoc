@@ -1,5 +1,6 @@
 [[query-language]]
 == Function integration
+:function-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/hql
 :srf-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/srf
 
 The Query Language guide describes built-in syntax and functions, including its
@@ -7,9 +8,63 @@ link:{doc-query-language-url}#hql-functions-arrays[array], link:{doc-query-langu
 See link:{doc-query-language-url}#hql-from-set-returning-functions[set-returning functions] for root/join syntax and ordinality.
 For execution, see <<hql,Query APIs and execution>>; for value mappings, see <<basic,Domain Model basic values>>.
 
+[[query-language-function-contributors]]
+=== Contributing functions
+
+A link:{doc-javadoc-url}org/hibernate/boot/model/FunctionContributor.html[`FunctionContributor`]
+registers custom HQL functions, including scalar, aggregate, and set-returning functions.
+Its `contributeFunctions()` callback receives `FunctionContributions`, which provides access to
+the link:{doc-javadoc-url}org/hibernate/query/sqm/function/SqmFunctionRegistry.html[`SqmFunctionRegistry`].
+Choose a descriptor appropriate to the function's arguments, result type, and SQL rendering:
+
+* `namedDescriptorBuilder()` creates a builder for a scalar function rendered as a database function call.
+* `namedAggregateDescriptorBuilder()` creates a builder for an aggregate function.
+* `namedSetReturningDescriptorBuilder()` creates a builder for a function that returns rows for use in the `from` clause.
+
+Configure the builder, then call `.register()` to add the descriptor to the registry.
+Obtaining or configuring a builder alone does not register the function.
+
+The registry also supports SQL-pattern descriptors and custom function descriptors.
+Registration describes how Hibernate validates and translates a function call; it does not
+create the function in the database.
+
+Expose a contributor through Java service loading by listing its implementation class in
+`META-INF/services/org.hibernate.boot.model.FunctionContributor`.
+For programmatic registration during native bootstrap, use
+link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html#registerFunctionContributor(org.hibernate.boot.model.FunctionContributor)[`Configuration.registerFunctionContributor()`]
+or link:{doc-javadoc-url}org/hibernate/boot/MetadataBuilder.html#applyFunctions(org.hibernate.boot.model.FunctionContributor)[`MetadataBuilder.applyFunctions()`].
+Complete registration during `contributeFunctions()` and retain neither its supplied
+`FunctionContributions` nor the mutable registry after the callback returns.
+See link:{doc-dialect-provider-url}#dialect-provider-function-contracts[function contribution contracts]
+for lifecycle and descriptor details.
+
+[[query-language-scalar-registration]]
+=== Registering a scalar function
+
+This contributor exposes the HQL name `guide_lower` as a call to the database's `lower` function.
+It requires exactly one string argument and declares a string result type.
+The database must support the rendered function; this example uses an existing database function
+rather than creating a new one.
+
+[source,java,indent=0]
+----
+include::{function-example-dir-hql}/FunctionIntegrationGuideTest.java[tags=function-integration-scalar-contributor]
+----
+
+Here, `STRING` is `FunctionParameterType.STRING`, used to validate argument types;
+`StandardBasicTypes.STRING` supplies the mapped result type.
+Expose this class using the service descriptor described above, or supply an instance
+through one of the programmatic registration APIs. An invocation can then use the HQL name:
+
+[source,java,indent=0]
+----
+include::{function-example-dir-hql}/FunctionIntegrationGuideTest.java[tags=function-integration-scalar-invocation]
+----
+
 === Registering custom set-returning functions
 
-Register database-defined set-returning functions using a `FunctionContributor`:
+For a database-defined set-returning function, register its row structure and SQL rendering
+using a `FunctionContributor`:
 
 [[hql-from-set-returning-functions-contributor-example]]
 ====
@@ -19,7 +74,9 @@ include::{srf-example-dir-hql}/CustomSetReturningFunctionTest.java[tags=hql-set-
 ----
 ====
 
-The registered function can then be used in the `from` clause:
+The database function `mySrf` must already exist and return a column named `v2`.
+The descriptor exposes that column to HQL as `val`, with an integer type.
+The registered function can then be used in the `from` clause, accessing that result as `e.val`:
 
 [[hql-from-set-returning-functions-custom-example]]
 ====
@@ -29,10 +86,12 @@ include::{srf-example-dir-hql}/CustomSetReturningFunctionTest.java[tags=hql-set-
 ----
 ====
 
-NOTE: The `index()` function represents the idea of the `with ordinality` SQL syntax,
-which is not supported on some databases for user defined functions.
-Hibernate ORM tries to emulate this feature by wrapping invocations as lateral subqueries and using `row_number()`,
-which may lead to worse performance.
+NOTE: `index(alias)` accesses a returned row's 1-based ordinal. Support for ordinality on
+user-defined set-returning functions depends on the dialect. Where implemented, Hibernate
+may emulate it using a lateral subquery and `row_number()`, with additional execution cost;
+some dialect/function combinations remain unsupported. See
+link:{doc-query-language-url}#hql-from-set-returning-functions[set-returning functions]
+for ordinality and query syntax.
 
 [discrete]
 === Moved language reference links

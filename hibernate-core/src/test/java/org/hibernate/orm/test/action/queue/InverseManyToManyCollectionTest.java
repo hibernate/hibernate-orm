@@ -21,12 +21,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Tests that changes to the inverse ({@code mappedBy}) side of a bidirectional
- * many-to-many association are not written to the database.
- *
- * @author Thorben Janssen
- */
+/// Tests that changes to the inverse (`mappedBy`) side of a bidirectional
+/// many-to-many association are not written to the database.
+///
+/// @author Thorben Janssen
+/// @author Steve Ebersole
 @JiraKey("HHH-20996")
 @DomainModel(annotatedClasses = {
 		InverseManyToManyCollectionTest.Book.class,
@@ -93,6 +92,36 @@ public class InverseManyToManyCollectionTest {
 		} );
 
 		// one row of the join table gets removed by the owning side Book.authors
+		assertThat( observer.getSqlQueries() ).filteredOn( sql -> sql.startsWith( "delete" ) ).hasSize( 1 );
+		scope.inTransaction( session -> {
+			assertThat( session.find( Book.class, 1L ).authors ).isEmpty();
+			assertThat( session.find( Author.class, 1L ).books ).extracting( b -> b.id ).containsExactly( 2L );
+		} );
+	}
+
+	@Test
+	public void testInverseClearIsIgnored(SessionFactoryScope scope) {
+		final var observer = scope.getCollectingStatementObserver();
+		scope.inTransaction( session -> {
+			final var author = session.find( Author.class, 1L );
+			assertThat( author.books ).hasSize( 2 );
+			observer.clear();
+			author.books.clear();
+		} );
+		assertThat( observer.getSqlQueries() ).filteredOn( sql -> sql.startsWith( "delete" ) ).isEmpty();
+		scope.inTransaction( session ->
+				assertThat( session.find( Author.class, 1L ).books ).hasSize( 2 ) );
+	}
+
+	@Test
+	public void testOwningSideRemovalDeletesOnce(SessionFactoryScope scope) {
+		final var observer = scope.getCollectingStatementObserver();
+		scope.inTransaction( session -> {
+			final var book = session.find( Book.class, 1L );
+			assertThat( book.authors ).hasSize( 1 );
+			observer.clear();
+			book.authors.clear();
+		} );
 		assertThat( observer.getSqlQueries() ).filteredOn( sql -> sql.startsWith( "delete" ) ).hasSize( 1 );
 		scope.inTransaction( session -> {
 			assertThat( session.find( Book.class, 1L ).authors ).isEmpty();

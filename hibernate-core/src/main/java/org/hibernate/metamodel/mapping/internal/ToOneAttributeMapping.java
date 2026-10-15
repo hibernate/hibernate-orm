@@ -868,7 +868,19 @@ public class ToOneAttributeMapping
 		assert identifyingColumnsTableExpression != null;
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
 		if ( cardinality == ONE_TO_ONE && bidirectionalAttributePath != null ) {
-			sideNature = ForeignKeyDescriptor.Nature.TARGET;
+			// Normally the mappedBy/inverse side of a bidirectional one-to-one is the TARGET side.
+			// But when the key and target tables of the descriptor are genuinely distinct (as opposed
+			// to a self-referencing one-to-one, where both sides share the same table and a table-name
+			// comparison can't disambiguate them) and this attribute's own table is actually the key
+			// table (e.g. a reversed-direction/TO_PARENT formula-based one-to-one), this side really is
+			// the KEY side, and forcing TARGET here would have it resolve the wrong table at runtime.
+			final boolean distinctKeyAndTargetTables =
+					!foreignKeyDescriptor.getKeyTable().equals( foreignKeyDescriptor.getTargetTable() );
+			final boolean ownTableIsKeyTable = foreignKeyDescriptor.getAssociationKey().table()
+					.equals( identifyingColumnsTableExpression );
+			sideNature = distinctKeyAndTargetTables && ownTableIsKeyTable
+					? ForeignKeyDescriptor.Nature.KEY
+					: ForeignKeyDescriptor.Nature.TARGET;
 		}
 		else {
 			sideNature = foreignKeyDescriptor.getAssociationKey().table()

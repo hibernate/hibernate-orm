@@ -1258,16 +1258,23 @@ public class MappingModelCreationHelper {
 						creationProcess
 				);
 
-		final var declaringEntityMapping = attributeMapping.findContainingEntityMapping();
+		final var declaringEntityMapping = castNonNull( attributeMapping.findContainingEntityMapping() );
 		final var targetPart = foreignKeyDescriptor.getTargetPart();
+		final var targetEntityMapping = targetPart.findContainingEntityMapping();
 		if ( targetPart instanceof EntityIdentifierMapping
-				&& targetPart != castNonNull( declaringEntityMapping ).getIdentifierMapping() ) {
+				&& targetPart != declaringEntityMapping.getIdentifierMapping()
+				&& targetEntityMapping != null
+				&& targetEntityMapping.getRootEntityDescriptor() == declaringEntityMapping.getRootEntityDescriptor() ) {
 			// If the many-to-one refers to the super type, but the one-to-many is defined in a subtype,
 			// it would be wasteful to reuse the FK descriptor of the many-to-one,
 			// because that refers to the PK column in the root table.
-			// Joining such an association then requires that we join the root table
+			// Joining such an association then requires that we join the root table.
+			// This only applies when the mismatch is due to an entity hierarchy (super/subtype)
+			// relationship sharing the same identifier; for an unrelated target entity (e.g. a
+			// reversed-direction formula-based one-to-one) the original descriptor is already
+			// correctly oriented and must not be reinterpreted against the declaring entity's id.
 			attributeMapping.setForeignKeyDescriptor(
-					foreignKeyDescriptor.withTargetPart( castNonNull( declaringEntityMapping ).getIdentifierMapping() )
+					foreignKeyDescriptor.withTargetPart( declaringEntityMapping.getIdentifierMapping() )
 			);
 		}
 		else {

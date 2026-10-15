@@ -770,31 +770,20 @@ public class TableBinder {
 		( (SortableValue) value ).sortProperties();
 	}
 
-	// This code is good but unnecessary, because BinderHelper.referencedProperty()
-	// automatically marks the referenced property unique (but is this actually good?)
+	// BinderHelper normally establishes uniqueness while resolving column references.
+	// An explicit property-ref may instead rely on a declared constraint or unique index.
 	private static void checkReferenceToUniqueKey(SimpleValue value, Property synthProp) {
 		final var table = synthProp.getValue().getTable();
 		final var columns = synthProp.getValue().getConstraintColumns();
-		if ( columns.size() == 1 ) {
-			final var column = columns.get( 0 );
-			assert column.isUnique();
-//			if ( !column.isUnique() ) {
-//				throw new MappingException( "Referenced column '" + column.getName()
-//											+ "' in table '" + table.getName() + "' is not unique"
-//											+ " ('@JoinColumn' must reference a unique key)" );
-//			}
+		final var uniqueKey = new UniqueKey( table );
+		for ( var column : columns ) {
+			uniqueKey.addColumn( column );
 		}
-		else {
-			final var uniqueKey = new UniqueKey( table );
-			for ( var column : columns ) {
-				uniqueKey.addColumn( column );
-			}
-			assert table.isRedundantUniqueKey( uniqueKey );
-//			if ( !table.isRedundantUniqueKey( uniqueKey ) ) {
-//				throw new MappingException( "Referenced columns in table '" + table.getName() + "' are not unique"
-//						+ " ('@JoinColumn's must reference a unique key" );
-//			}
-		}
+		assert columns.size() == 1 && columns.get( 0 ).isUnique()
+				|| table.isRedundantUniqueKey( uniqueKey )
+				|| table.getIndexes().values().stream().anyMatch( index -> index.isUnique()
+						&& index.getSelectables().size() == columns.size()
+						&& index.getSelectables().containsAll( columns ) );
 	}
 
 	private static void bindImplicitColumns(

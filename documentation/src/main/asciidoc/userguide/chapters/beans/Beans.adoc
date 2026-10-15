@@ -1,95 +1,313 @@
 [[beans]]
 == Managed Beans
-:extrasdir: extras
 
-Hibernate supports consuming many of its extension points as "managed beans".  A bean being
-managed simply means that its creation and lifecycle are managed by a container of some sort.
+:beans-guide-example: {core-project-dir}/src/test/java/org/hibernate/orm/test/cdi/guide/ManagedBeansGuideTests.java
+:beans-guide-resources: {core-project-dir}/src/test/resources/beans-guide
 
-The main contract for managed beans is `org.hibernate.resource.beans.spi.ManagedBeanRegistry`
+Hibernate can obtain extension instances through CDI or another bean container, allowing
+those instances to receive dependency injection and lifecycle callbacks. This support
+applies to specific extension registration and acquisition paths; configuring a container
+does not automatically register every extension implementation or make entities CDI beans.
 
-Often these beans are managed by an external service, such as CDI.  The contract
-`org.hibernate.resource.beans.container.spi.BeanContainer` is used to integrate the
-external container. `ManagedBeanRegistry` integrates support for a `BeanContainer`
-if one is specified.
+The {doc-javadoc-url}org/hibernate/resource/beans/spi/ManagedBeanRegistry.html[`ManagedBeanRegistry`]
+service acquires bean handles. A handle exposes the instance when it is needed.
+The {doc-javadoc-url}org/hibernate/resource/beans/container/spi/BeanContainer.html[`BeanContainer`]
+SPI connects the registry to an external container. When no external container is selected,
+Hibernate uses fallback construction.
 
-By default, Hibernate creates references to the beans and links their lifecycle to
-the SessionFactory.  It supports a number of ways to influence how this process works.
-
+Hibernate's managed-bean abstraction is broader than a CDI contextual bean.
+Injection, instance reuse, and destruction depend on the acquisition policy;
+see <<beans-lifecycle>>.
 
 [[beans-manageable]]
-=== Manageable Beans
+=== Supported extension points
 
-Jakarta Persistence defines support for resolving `AttributeConverter` and
-"entity listener" classes as managed beans.
+The following table describes supported class-based acquisition paths. Supplying an
+already constructed instance can follow a different ownership contract; consult the
+extension's documentation.
 
-Additionally, Hibernate supports resolving the following integrations as managed beans:
+[cols="2,3,1",options="header"]
+|===
+|Extension |Registration and related discussion |Requires `hibernate.cdi.extensions=true`
+|`AttributeConverter`
+|Converters selected by <<basic-converter-selection,mapping and converter registration>>.
+|No
+|Entity listener classes
+|Listeners selected through <<events-listener-registration,listener registration>>.
+|No
+|`Interceptor`
+|<<events-interceptor-cdi,Class and class-name registrations>>; shared and per-session acquisition use bootstrap-safe references.
+|No
+|`JdbcType` and Java type descriptors, including `BasicJavaType`
+|<<basic-mapping-composition-jdbc,JDBC type>> and <<basic-mapping-composition-java,Java type>> classes selected by supported mapping/registration paths.
+|Yes
+|`MutabilityPlan`
+|<<basic-mapping-composition-mutability,Class-based mutability plans>>.
+|Yes
+|`UserType`
+|<<basic-enums-custom-type,Custom types>> selected by class-based type mappings and registrations.
+|Yes
+|`UserCollectionType`
+|<<collection-type-reg-ann,Custom collection types>>.
+|Yes
+|`EmbeddableInstantiator`
+|<<embeddable-instantiator,Custom instantiator classes>>.
+|Yes
+|Identifier generators
+|Supported <<identifiers-generators,generator class registrations>>.
+|Yes
+|Envers `RevisionListener`
+|<<envers-revisionlog,Revision-listener classes>>.
+|Yes
+|`ConnectionProvider`
+|Optional container lookup in <<database-connectionprovider,connection-provider selection>>.
+|Yes
+|`MultiTenantConnectionProvider` and `CurrentTenantIdentifierResolver`
+|Optional container lookups in <<multitenacy-hibernate-MultiTenantConnectionProvider,tenant connection routing>> and <<multitenacy-hibernate-CurrentTenantIdentifierResolver,tenant resolution>>.
+|Yes
+|===
 
-* `org.hibernate.type.descriptor.jdbc.JdbcType`
-* `org.hibernate.type.descriptor.java.BasicJavaType`
-* `org.hibernate.type.descriptor.java.MutabilityPlan`
-* `org.hibernate.usertype.UserType`
-* `org.hibernate.usertype.UserCollectionType`
-* `org.hibernate.metamodel.EmbeddableInstantiator`
-* `org.hibernate.envers.RevisionListener`
-* `org.hibernate.id.IdentifierGenerator`
+`hibernate.cdi.extensions` defaults to `false`. It enables supported additional extension
+lookups, not automatic discovery and registration of arbitrary implementations.
+Despite its name, the flag also gates these additional acquisition paths when using a
+custom non-CDI container. Explicit settings and each extension's default selection rules
+still apply; for example, container lookup does not override an explicitly supplied tenant resolver.
 
-NOTE: At the moment, when using either <<beans-cdi-delayed,delayed>> or <<beans-cdi-extended,extended>>
-CDI access, resolving these Hibernate integrations as managed beans is disabled.
+[[beans-container-selection]]
+=== Container selection and configuration
 
+Hibernate selects its bean container in this order:
+
+. Use an explicit `hibernate.resource.beans.container` value, if supplied.
+. Otherwise, discover `BeanContainer` service implementations. One implementation is
+  selected; multiple implementations cause an error unless a container is selected explicitly.
+. If no service is found, use the CDI manager supplied through `jakarta.persistence.bean.manager`.
+. If no external container is available, use Hibernate's fallback container and instance producer.
+
+The settings are:
+
+[cols="2,2,3",options="header"]
+|===
+|Setting |Default |Value and purpose
+|{doc-javadoc-url}org/hibernate/cfg/ManagedBeanSettings.html#JAKARTA_CDI_BEAN_MANAGER[`jakarta.persistence.bean.manager`]
+|Unset
+|A `BeanManager` instance, or an <<beans-cdi-extended,`ExtendedBeanManager`>>. This is an object reference, not a class name.
+|{doc-javadoc-url}org/hibernate/cfg/ManagedBeanSettings.html#BEAN_CONTAINER[`hibernate.resource.beans.container`]
+|Unset
+|A `BeanContainer` instance, implementation `Class`, or implementation class name. Class-based construction requires an accessible public no-argument constructor.
+|{doc-javadoc-url}org/hibernate/cfg/ManagedBeanSettings.html#DELAY_CDI_ACCESS[`hibernate.delay_cdi_access`]
+|`false`
+|Delay ordinary CDI bean initialization until needed; see <<beans-cdi-delayed>>.
+|{doc-javadoc-url}org/hibernate/cfg/ManagedBeanSettings.html#ALLOW_EXTENSIONS_IN_CDI[`hibernate.cdi.extensions`]
+|`false`
+|Allow the additional extension lookups listed in <<beans-manageable>>.
+|===
+
+Having CDI API classes on the classpath does not start CDI or automatically locate a
+`BeanManager`. When no explicit or discovered `BeanContainer` takes precedence, supplying
+a manager while CDI is unavailable to Hibernate's class loader causes bootstrap to fail.
+The deprecated `javax.persistence.bean.manager` name remains a compatibility
+alias; use the Jakarta name in new configuration.
 
 [[beans-cdi]]
-=== CDI BeanContainer
+=== CDI integration
 
-Hibernate provides built-in support for using a CDI `BeanManager` as the `BeanContainer`.
+Hibernate adapts a supplied CDI `BeanManager` to its `BeanContainer` SPI.
+In <<bootstrap-standardized-container,Jakarta EE bootstrap>>, the container normally
+supplies the manager when CDI is enabled. For application-managed bootstrap, supply a manager
+from the CDI container owned by the application or its environment; Hibernate does not create
+that CDI container.
 
-Jakarta Persistence indicates that the setting `jakarta.persistence.bean.manager` be used to pass along a
-CDI `BeanManager` to use, so Hibernate follows that approach.
+[[beans-cdi-access-modes]]
+==== CDI access modes
 
+[cols="1,2,3",options="header"]
+|===
+|Mode |Selection |When ordinary bean initialization occurs
+|<<beans-cdi-default,Immediate>>
+|A `BeanManager`, with `hibernate.delay_cdi_access=false`.
+|During acquisition, which may happen during bootstrap.
+|<<beans-cdi-delayed,Delayed>>
+|A `BeanManager`, with `hibernate.delay_cdi_access=true`.
+|When the instance is first needed, possibly still during bootstrap.
+|<<beans-cdi-extended,Extended>>
+|An `ExtendedBeanManager` supplied instead of a direct manager.
+|Registered references can be initialized when the integration signals readiness; later acquisitions can initialize on access.
+|===
+
+Access mode and bootstrap-safe acquisition are separate choices. A bootstrap-safe handle
+can be acquired without immediately obtaining its instance, but injection requires CDI to be
+usable when that instance is needed. Not every extension uses bootstrap-safe acquisition.
+See <<events-interceptor-cdi-readiness>> for the interceptor-specific behavior.
 
 [[beans-cdi-default]]
-==== CDI BeanManager - default
+==== Immediate access
 
-By default, Hibernate follows the Jakarta Persistence requirements for using
-CDI `BeanManager`.  Most importantly, this means accessing beans from the `BeanManager`
-immediately during bootstrap.
-
-In many cases this can cause circularity problems as CDI is often a consumer of
-persistence as well.  In such cases, <<beans-cdi-delayed,delayed>>
-or <<beans-cdi-extended,extended>> access should be used
-
+With the default mode, ordinary acquisition initializes beans immediately. This often occurs
+during bootstrap, but does not mean every eligible bean is instantiated when the factory is built.
+Extensions using bootstrap-safe handles, including class-registered interceptors, can defer
+instance acquisition. If CDI and persistence bootstrap depend on each other, consider delayed
+access or an integration supplying extended access.
 
 [[beans-cdi-delayed]]
-==== CDI BeanManager - delayed
+==== Delayed access
 
-Rather than accessing the CDI managed beans immediately, Hibernate can be configured
-to delay accessing the beans until first needed using `hibernate.delay_cdi_access`.
+Set `hibernate.delay_cdi_access=true` to defer ordinary CDI bean initialization until needed.
+The manager must be ready at that point. An extension can need its instance during metadata
+building, so delaying access does not guarantee that CDI will only be accessed after bootstrap.
+Configuration problems may consequently be detected later than with immediate access.
 
-Note however that this has some limitations{fn-cdi-availability}
-
+This mode does not receive a readiness notification. When the integration can provide
+reliable lifecycle callbacks, prefer <<beans-cdi-extended,extended access>>.
 
 [[beans-cdi-extended]]
-==== CDI BeanManager - extended
+==== Extended access
 
-Sometimes the actual `BeanManager` instance is not known until after Hibernate
-has been bootstrapped.
+An integration may supply
+{doc-javadoc-url}org/hibernate/resource/beans/container/spi/ExtendedBeanManager.html[`ExtendedBeanManager`]
+as `jakarta.persistence.bean.manager`. This selects extended access regardless of the delayed flag.
 
-For such cases, Hibernate provides the `org.hibernate.resource.beans.container.spi.ExtendedBeanManager`
-contract, which is basically a promise or future for a `BeanManager` reference.
+Hibernate registers a `LifecycleListener` through `registerLifecycleListener()`.
+The integration calls `beanManagerInitialized()` with the usable manager and
+`beforeBeanManagerDestroyed()` before destroying it. The initialization callback can
+initialize registered bean references; the destruction callback releases Hibernate's tracked references.
+This is a lifecycle callback protocol implemented by the integration, not a CDI container
+that Hibernate starts or a standard `Future`.
 
-An instance of `ExtendedBeanManager` passed as `jakarta.persistence.bean.manager` triggers this behavior.
+Do not depend on using instances before CDI is ready. Some early acquisition paths can fall
+back to direct construction, while others can fail; neither outcome guarantees injection.
+The extension's acquisition and fallback policy determines the result.
 
-The `ExtendedBeanManager` implementation accepts the `LifecycleListener` passed to its
-`#registerLifecycleListener` method.  It will call `LifecycleListener#beanManagerInitialized`
-and `LifecycleListener#beforeBeanManagerDestroyed` as lifecycle callbacks for the real
-`BeanManager`.
+[[beans-cdi-example]]
+==== Example: an injected converter
 
-Hibernate uses the `LifecycleListener#beanManagerInitialized` callback to get access to the
-real `BeanManager`.
+The following converter delegates its work to an injected service. Its `@PostConstruct`
+and `@PreDestroy` callbacks use the service to record initialization and destruction:
 
-NOTE: When used in WildFly, this is all automatically set up by the server
+[source,java,indent=0]
+----
+include::{beans-guide-example}[tags=beans-cdi-converter]
+----
+
+The helper is a CDI singleton. Its counters make injection, conversion calls, and lifecycle
+callbacks observable in the example test:
+
+[source,java,indent=0]
+----
+include::{beans-guide-example}[tags=beans-cdi-service]
+----
+
+The entity explicitly selects the converter:
+
+[source,java,indent=0]
+----
+include::{beans-guide-example}[tags=beans-cdi-model]
+----
+
+Given a usable manager, configure the application-managed factory with
+`HibernatePersistenceConfiguration`:
+
+[source,java,indent=0]
+----
+include::{beans-guide-example}[tags=beans-cdi-configuration]
+----
+
+Add the connection and schema settings appropriate to the application, then call
+`createEntityManagerFactory()`. This example does not require `hibernate.cdi.extensions=true`.
+The test writes and reads an entity in separate persistence contexts, checks injected
+conversion calls, and verifies converter destruction before the application-owned CDI container closes.
+See <<basic-jpa-convert>> for converter mapping semantics and <<bootstrap>> for complete factory setup.
+
+[[beans-lifecycle]]
+=== Lifetimes, caching, and fallback
+
+Bean acquisition, reference caching, and instance lifetime are independent decisions.
+A `ManagedBean` handle can exist before its instance is initialized. The container and
+acquisition policy determine instance reuse and destruction.
+
+[[beans-lifecycle-creation]]
+==== Independent creation and CDI scopes
+
+The built-in registry requests JPA-compliant creation: Hibernate controls independent
+instance lifetimes while CDI supplies injection and lifecycle callbacks. The requested
+class need not be returned as its existing CDI contextual instance. In particular,
+`@ApplicationScoped` or `@Singleton` on that class does not guarantee that Hibernate uses
+the application's existing contextual instance. Injected dependencies still follow their
+own CDI resolution and scope rules.
+
+Integrators calling `BeanContainer` directly can request container-managed creation by
+returning `false` from `LifecycleOptions.useJpaCompliantCreation()`. Returning `true`
+requests independent, Hibernate-managed lifetimes. That policy and the external container's
+scope semantics are distinct from reference caching.
+
+[[beans-lifecycle-caching]]
+==== Caching and release
+
+For integrations using `ManagedBeanRegistry`,
+{doc-javadoc-url}org/hibernate/resource/beans/spi/BeanInstanceCaching.html[`BeanInstanceCaching`]
+controls handle reuse:
+
+* `ALLOW` permits a shared cached reference. Release it only after all its users have finished.
+* `DISALLOW` bypasses Hibernate's reference cache. Release the returned handle with
+  `ManagedBeanRegistry.releaseBean()` when finished. This does not override a custom
+  container's contextual scope or guarantee a different underlying contextual object.
+
+Registry/container shutdown normally releases outstanding owned references. Some consumers
+release them earlier: automatically acquired <<events-interceptor-cdi,per-session interceptors>>
+are released at their session-related boundary. Transaction completion is not a general
+bean-release boundary, and registry shutdown need not coincide with closing one factory
+when the service registry has a different owner.
+
+A custom adapter receives `stop()` from Hibernate's bean infrastructure. It should release
+the references it owns without assuming it owns the entire external container. Supplying
+a `BeanManager` does not transfer ownership of the CDI container to Hibernate.
+
+[[beans-fallback]]
+==== Fallback construction
+
+Without an external container, Hibernate's default producer normally invokes a no-argument
+constructor. It does not provide CDI injection or CDI lifecycle callbacks. An extension
+can supply a specialized fallback producer instead.
+
+Some CDI resolution or creation failures also use the fallback producer. Do not assume
+that successful bootstrap proves injection occurred, or that every CDI problem is converted
+into fallback construction. Failures before the manager is ready can follow different paths.
+Optional service lookups also retain their own absence/default behavior; the fallback registry
+does not automatically supply every optional Hibernate service.
 
 [[beans-custom-container]]
-=== Custom BeanContainer
+=== Custom bean containers
 
-Other containers (Spring, e.g.) can also be used and integrated by implementing `BeanContainer` and
-declaring it using `hibernate.resource.beans.container`.
+Integrate an external container by implementing
+{doc-javadoc-url}org/hibernate/resource/beans/container/spi/BeanContainer.html[`BeanContainer`].
+Supply your adapter instance through `hibernate.resource.beans.container`:
+
+[source,java,indent=0]
+----
+include::{beans-guide-example}[tags=beans-custom-configuration]
+----
+
+Here `beanContainer` is the application's adapter; `PlainEntity` represents its mapped entity.
+The example test supplies an adapter fixture to exercise registration and shutdown, not a
+complete integration with a third-party framework. The adapter implementation depends on
+that framework's acquisition and ownership APIs.
+
+Alternatively, provide a classpath service descriptor named
+`META-INF/services/org.hibernate.resource.beans.container.spi.BeanContainer` containing
+the adapter's fully qualified class name. For example, the tested descriptor contains:
+
+[source,text]
+----
+include::{beans-guide-resources}/bean-container-service.txt[]
+----
+
+The provider needs a public no-argument constructor. An explicit container setting overrides
+service discovery, including an ambiguous set of providers, and takes precedence over CDI.
+See <<beans-container-selection>> for class/class-name registration and selection order.
+
+An adapter must honor the supplied lifecycle options: whether cached references may be reused
+and whether instances have independent or container-managed lifetimes. It must support named
+and class-based lookup, bootstrap-safe handles, release, and shutdown. Use the supplied
+`BeanInstanceProducer` for the acquisition path's fallback behavior. Acquiring a bootstrap-safe
+handle must not require the backing container to be ready; accessing its instance can.
+See <<beans-lifecycle>> and the SPI Javadoc for the full lifecycle contract.

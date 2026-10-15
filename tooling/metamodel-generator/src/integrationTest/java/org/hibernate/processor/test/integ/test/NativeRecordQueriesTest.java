@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @see <a href="https://jakarta.ee/specifications/persistence/4.0/jakarta-persistence-spec-4.0-m4#result-class-native-sql">Jakarta Persistence 4.0-M4, section 3.15.14: Result Classes for SQL Queries</a>
@@ -75,6 +76,37 @@ class NativeRecordQueriesTest {
 		scope.inTransaction( session -> {
 			assertEquals( EXPECTED,
 					session.createNamedQuery( "booksAsRecords", BookRecord.class )
+							.setParameter( 1, "Java" )
+							.getResultList() );
+		} );
+	}
+
+	@Test
+	void namedNativeQueryWithResultSupertype(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			for ( var resultType : List.of( Object.class, Record.class ) ) {
+				assertEquals( EXPECTED,
+						session.createNamedQuery( "booksAsRecords", resultType )
+								.setParameter( 1, "Java" )
+								.getResultList() );
+			}
+		} );
+	}
+
+	@Test
+	void namedNativeQueryWithIncompatibleResultType(SessionFactoryScope scope) {
+		scope.inTransaction( session ->
+				assertThrows( IllegalArgumentException.class,
+						() -> session.createNamedQuery( "booksAsRecords", String.class ) ) );
+	}
+
+	@Test
+	void registeredNamedNativeQueryPreservesResultClass(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			var query = session.createNamedQuery( "booksAsRecords", Object.class );
+			session.getSessionFactory().addNamedQuery( "copiedBooksAsRecords", query );
+			assertEquals( EXPECTED,
+					session.createNamedQuery( "copiedBooksAsRecords", Object.class )
 							.setParameter( 1, "Java" )
 							.getResultList() );
 		} );

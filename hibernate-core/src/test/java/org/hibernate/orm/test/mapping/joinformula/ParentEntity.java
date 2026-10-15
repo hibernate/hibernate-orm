@@ -24,4 +24,19 @@ public class ParentEntity {
 	@JoinColumnOrFormula(formula = @JoinFormula(referencedColumnName = "NAME", value = "'Ben'"))
 	private ChildEntity ben;
 
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public ChildEntity getTom() {
+		return tom;
+	}
+
+	public ChildEntity getBen() {
+		return ben;
+	}
 }

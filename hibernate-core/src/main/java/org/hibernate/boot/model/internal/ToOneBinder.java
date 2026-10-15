@@ -513,7 +513,9 @@ public class ToOneBinder {
 			PropertyBinder propertyBinder,
 			MetadataBuildingContext context) {
 		//column.getTable() => persistentClass.getTable()
-		final boolean formulaOneToOne = mappedBy == null && isFormulaOneToOne( joinColumns );
+		final boolean formulaOneToOne = mappedBy == null
+				&& !inferredData.getAttributeMember().hasDirectAnnotationUsage( NotFound.class )
+				&& isFormulaOneToOne( joinColumns );
 		if ( mappedBy != null || formulaOneToOne || isMappedToPrimaryKey( joinColumns, propertyHolder, trueOneToOne ) ) {
 			bindTrueOneToOne(
 					cascadeStrategy,
@@ -665,16 +667,20 @@ public class ToOneBinder {
 	}
 
 	/**
-	 * A one-to-one is "formula-based" when every join selectable is a SQL formula
+	 * Determines whether a one-to-one join contains one or more SQL formulas
 	 * (via {@code @JoinFormula}/{@code @JoinColumnOrFormula}, or the equivalent
-	 * {@code <join-formula>} XML), as opposed to a physical join column. Such an
-	 * association does not have a foreign key, and is bound to an explicit-selectable
-	 * {@link org.hibernate.mapping.OneToOne} instead of falling through to a
-	 * logical many-to-one.
+	 * {@code <join-formula>} XML) and no writable physical join columns. Both formula-only
+	 * joins and formulas combined with read-only columns are candidates for binding as an
+	 * explicit-selectable {@link org.hibernate.mapping.OneToOne}. Associations with
+	 * explicit {@code @NotFound} handling or non-primary-key references retain their
+	 * logical many-to-one binding, as do mixed joins containing an insertable or updatable
+	 * physical column.
 	 */
 	static boolean isFormulaOneToOne(AnnotatedJoinColumns joinColumns) {
 		final var columns = joinColumns.getJoinColumns();
-		return !columns.isEmpty() && columns.stream().allMatch( AnnotatedJoinColumn::isFormula );
+		return columns.stream().anyMatch( AnnotatedJoinColumn::isFormula )
+				&& columns.stream().allMatch( column -> column.isFormula()
+						|| !column.isInsertable() && !column.isUpdatable() );
 	}
 
 	private static boolean isMappedToPrimaryKey(

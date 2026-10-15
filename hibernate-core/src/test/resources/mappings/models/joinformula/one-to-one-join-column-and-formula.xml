@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="7.0">
+    <package>org.hibernate.orm.test.boot.models.hbm.joinformula</package>
+    <entity class="OneToOneContact">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <one-to-one name="mailingAddress" target-entity="Address">
+                <join-column name="mailing_address_fk"/>
+                <join-formula>'MAILING'</join-formula>
+            </one-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="Address">
+        <attributes>
+            <id name="id"/>
+            <id name="type"/>
+            <basic name="txt"/>
+        </attributes>
+    </entity>
+</entity-mappings>

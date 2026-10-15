@@ -1,6 +1,5 @@
 package org.hibernate.event.internal;
 
-import org.hibernate.Internal;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.internal.log.SubSystemLogging;
 
@@ -27,7 +26,6 @@ import static org.jboss.logging.Logger.Level.WARN;
 )
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 90060001, max = 90070000)
-@Internal
 public interface EventListenerLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".event";
 
@@ -207,9 +205,9 @@ public interface EventListenerLogging extends BasicLogger {
 	@Message(id = 90060040, value = "Persisting transient instance")
 	void persistingTransientInstance();
 
-	@LogMessage(level = TRACE)
-	@Message(id = 90060041, value = "Unscheduling entity deletion %s")
-	void unschedulingEntityDeletion(String infoString);
+//	@LogMessage(level = TRACE)
+//	@Message(id = 90060041, value = "Unscheduling entity deletion %s")
+//	void unschedulingEntityDeletion(String infoString);
 
 	@LogMessage(level = TRACE)
 	@Message(id = 90060076, value ="Generated identifier [%s] using generator '%s'")

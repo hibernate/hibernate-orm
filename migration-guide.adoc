@@ -706,6 +706,13 @@ Both messages retain their existing message IDs and `INFO` level.
 Update any logging configuration or filters targeting these messages to use `org.hibernate.orm.info`.
 This category allows applications and containers to suppress bootstrap information independently of other core and connection-pooling messages.
 
+[[unscheduled-deletion-logging]]
+=== Logging for unscheduled deletions
+
+Persisting an entity currently scheduled for deletion unschedules that deletion per the Jakarta Persistence specification.  Hibernate now logs “Unscheduling entity deletion {details}” at DEBUG level under the `org.hibernate.orm.event.unschedule-deletion` category, isolating it to make it easier to enable logging for that single message.
+
+Persistence behavior is unchanged.
+
 
 [[native-bootstrap-disabled-xml]]
 === Disabling XML mappings during native bootstrap

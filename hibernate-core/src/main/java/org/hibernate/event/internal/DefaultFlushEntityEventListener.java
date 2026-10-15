@@ -28,6 +28,7 @@ import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
@@ -339,7 +340,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		final boolean isDirty =
 				entry.getStatus() != Status.DELETED && callbackRegistry.preUpdate( entity )
-						&& copyState( entity, persister.getPropertyTypes(), values, event.getFactory() );
+						&& copyState( entity, persister.getPropertyTypes(), values, entry.getLoadedState(), event.getFactory() );
 
 		final boolean stateModified =
 				event.getSession().getInterceptor()
@@ -349,12 +350,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		return stateModified || isDirty;
 	}
 
-	private boolean copyState(Object entity, Type[] types, Object[] state, SessionFactoryImplementor factory) {
+	private boolean copyState(Object entity, Type[] types, Object[] state, Object[] loadedState, SessionFactoryImplementor factory) {
 		// copy the entity state into the state array and return true if the state has changed
 		final Object[] newState = currentState( entity, factory );
 		boolean isDirty = false;
 		for ( int index = 0, size = newState.length; index < size; index++ ) {
-			if ( isDirty( types[index], state[index], newState[index] ) ) {
+			final Object compareState = loadedState != null && types[index] instanceof ComponentType
+					? loadedState[index]
+					: state[index];
+			if ( isDirty( types[index], compareState, newState[index] ) ) {
 				isDirty = true;
 				state[index] = newState[index];
 			}

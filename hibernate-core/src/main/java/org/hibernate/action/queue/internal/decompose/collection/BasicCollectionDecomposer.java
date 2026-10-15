@@ -1757,7 +1757,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	}
 
 	private CollectionJdbcOperations.DeleteRowPlan buildDeleteRowPlan(SessionFactoryImplementor factory) {
-		if ( persister.isRowDeleteEnabled() ) {
+		if ( !persister.isInverse() && persister.isRowDeleteEnabled() ) {
 			return mutationPlanContributor.buildDeleteRowPlan(
 					new CollectionMutationPlanContributor.DeleteRowPlanContext(
 							persister,

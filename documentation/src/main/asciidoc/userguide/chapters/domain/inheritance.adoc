@@ -106,8 +106,10 @@ include::{domain-inheritance-extrasdir}/entity-inheritance-single-table-query-ex
 
 [IMPORTANT]
 ====
-Among all other inheritance alternatives, the single table strategy performs the best since it requires access to one table only.
-Because all subclass columns are stored in a single table, it's not possible to use NOT NULL constraints anymore, so integrity checks must be moved either into the data access layer or enforced through `CHECK` or `TRIGGER` constraints.
+The single-table strategy can simplify polymorphic queries by avoiding joins or unions across hierarchy tables.
+Its performance still depends on the workload, row width, and database execution plans.
+Columns required by every entity in the hierarchy can use `NOT NULL` constraints.
+Columns specific to a subtype must accommodate rows of other types; subtype-dependent requirements can be enforced using discriminator-aware `CHECK` constraints or another suitable database mechanism.
 ====
 
 [[entity-inheritance-discriminator]]

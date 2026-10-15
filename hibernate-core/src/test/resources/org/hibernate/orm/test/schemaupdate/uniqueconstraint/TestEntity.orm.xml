@@ -3,6 +3,7 @@
                  version="8.0">
 
     <entity name="TestEntity" metadata-complete="true" access="FIELD">
+        <table name="unique_constraint_drop_entity"/>
         <attributes>
             <id name="id">
                 <target>Long</target>
@@ -14,7 +15,7 @@
             </basic>
             <one-to-many name="children" target-entity="TestEntity" fetch="LAZY"
                          classification="LIST">
-                <order-column name="order"/>
+                <order-column name="child_order"/>
                 <join-table name="test_entity_children">
                     <join-column name="entity_id"/>
                     <foreign-key name="fk_entity"/>

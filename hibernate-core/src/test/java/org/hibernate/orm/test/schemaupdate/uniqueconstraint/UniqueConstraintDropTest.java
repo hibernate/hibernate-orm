@@ -58,10 +58,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		@Setting(name = SHOW_SQL, value = "true")
 })
 @DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.orm.xml")
-@SessionFactory
 public class UniqueConstraintDropTest {
 
 	@Test
+	@SessionFactory
 	public void testIt(SessionFactoryScope scope){
 		scope.inTransaction(
 				session -> {

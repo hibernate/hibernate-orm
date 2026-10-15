@@ -11,7 +11,7 @@ public interface JpaComplianceSettings {
 	 * flags. Each individual flag may still be overridden by explicitly specifying
 	 * its specific configuration property.
 	 *
-	 * @settingDefault {@code true} with JPA bootstrapping; {@code false} otherwise.
+	 * @settingDefault {@code false}
 	 *
 	 * @see #JPA_TRANSACTION_COMPLIANCE
 	 * @see #JPA_QUERY_COMPLIANCE

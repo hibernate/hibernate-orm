@@ -31,6 +31,10 @@ public interface XmlDocument {
 
 	JaxbEntityMappingsImpl getRoot();
 
+	default String getSourceVersion() {
+		return getRoot().getVersion();
+	}
+
 	List<JaxbEntityImpl> getEntityMappings();
 
 	List<JaxbMappedSuperclassImpl> getMappedSuperclassMappings();

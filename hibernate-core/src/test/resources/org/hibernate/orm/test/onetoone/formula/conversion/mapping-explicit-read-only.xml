@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.onetoone.formula.conversion</package>
+    <entity class="Person" name="Person" access="FIELD" metadata-complete="true">
+        <attributes>
+            <id name="name"><column name="name"/></id>
+            <one-to-one name="address" target-entity="Address" fetch="EAGER" optional="true">
+                <join-column name="name" insertable="false" updatable="false"/>
+                <join-formula>'HOME'</join-formula>
+                <cascade><cascade-all/></cascade>
+            </one-to-one>
+            <one-to-one name="mailingAddress" target-entity="Address" fetch="EAGER" optional="true">
+                <join-column name="name" insertable="false" updatable="false"/>
+                <join-formula>'MAILING'</join-formula>
+            </one-to-one>
+        </attributes>
+    </entity>
+    <entity class="Address" name="Address" access="FIELD" metadata-complete="true">
+        <table name="Address">
+            <check-constraint constraint="addressType in ('MAILING', 'HOME', 'BUSINESS')"/>
+        </table>
+        <batch-size>2</batch-size>
+        <id-class class="org.hibernate.orm.test.onetoone.formula.conversion.AddressId"/>
+        <attributes>
+            <id name="type"><column name="addressType"/></id>
+            <basic name="street"/>
+            <basic name="state"/>
+            <basic name="zip"/>
+            <many-to-one name="person" target-entity="Person" id="true" optional="false">
+                <join-column name="personName"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

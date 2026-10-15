@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfileOverride;
@@ -13,6 +14,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.LegacyOneToOneXmlAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.FetchStyle;
@@ -468,6 +470,42 @@ public class ToOneBinder {
 			throw new AnnotationException(
 					"Property '" + getPath( propertyHolder, inferredData )
 							+ "' is the inverse side of a '@OneToOne' association and cannot be used as identifier"
+			);
+		}
+
+		final boolean inferReadOnly = !joinColumns.hasMappedBy()
+				&& joinColumns.getJoinColumns().stream().anyMatch( AnnotatedJoinColumn::isFormula )
+				&& !isIdentifier( propertyHolder, propertyBinder, isIdentifierMapper )
+				&& !memberDetails.hasDirectAnnotationUsage( MapsId.class )
+				&& propertyHolder.getJoinTable( memberDetails ) == null
+				&& !(oneToOne instanceof LegacyOneToOneXmlAnnotation);
+		if ( inferReadOnly ) {
+			if ( !inSecondPass ) {
+				// Identifier components, inherited keys, and implicit source names must be resolved first.
+				context.getMetadataCollector().addSecondPass( persistentClasses -> {
+					try {
+						bindOneToOne( propertyHolder, nullability, inferredData, isIdentifierMapper, true,
+								context, joinColumns, propertyBinder );
+					}
+					catch (MappingException exception) {
+						final String path = getPath( propertyHolder, inferredData );
+						if ( exception.getMessage() != null && exception.getMessage().contains( path ) ) {
+							throw exception;
+						}
+						throw new AnnotationException( "Could not map association '" + path + "': "
+								+ exception.getMessage(), exception );
+					}
+				}, true );
+				return;
+			}
+			final var targetType = getTargetEntity( inferredData, context );
+			FormulaOneToOneHelper.inferReadOnlyColumns(
+					joinColumns,
+					propertyHolder.getPersistentClass(),
+					context.getMetadataCollector().getEntityBinding(
+							getReferenceEntityName( inferredData, targetType ) ),
+					getPath( propertyHolder, inferredData ),
+					context
 			);
 		}
 

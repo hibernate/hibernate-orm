@@ -873,6 +873,67 @@ include::{domain-associations-extrasdir}/associations-JoinColumnOrFormula-fetchi
 Therefore, the `@JoinColumnOrFormula` annotation is used to define a custom join association between the parent-child association.
 
 
+
+[[associations-one-to-one-formulas]]
+==== Formula-based one-to-one associations and shared identifier columns
+
+A `@OneToOne` association may combine physical join columns with SQL formulas.
+For each physical join column that is also part of the owner's primary key,
+Hibernate infers `insertable=false, updatable=false` for the association's use of
+that column. The identifier mapping remains responsible for its value.
+This includes individual columns of an `@IdClass` or `@EmbeddedId`.
+
+For example, when `Person.name` is the identifier and `Address` is identified by
+`(personName, addressType)`, the HOME address association may be declared as:
+
+[source,java]
+----
+@OneToOne(optional = true, cascade = CascadeType.ALL)
+@JoinColumnsOrFormulas({
+    @JoinColumnOrFormula(column = @JoinColumn(
+            name = "name", referencedColumnName = "personName")),
+    @JoinColumnOrFormula(formula = @JoinFormula(
+            value = "'HOME'", referencedColumnName = "addressType"))
+})
+private Address address;
+----
+
+Explicit `insertable=true` or `updatable=true` does not opt out of inference for
+shared owner identifier columns. Other physical join columns retain their declared
+write flags. After inference, conflicting insertability or updatability among the
+physical columns is a mapping error, even when a formula separates those columns.
+
+Read-only inference depends on the source column belonging to the owner's identifier,
+independently of whether the join references a target primary key or unique key.
+Special one-to-one binding is a separate decision: when the tuple references the
+whole target primary key and all physical join columns are effectively read-only,
+Hibernate uses its special one-to-one representation, unless an explicit `@NotFound`
+policy selects the existing logical many-to-one path. An optional special one-to-one
+resolves a missing target to `null` without requiring `@NotFound(IGNORE)`.
+
+Assigning an association does not copy the target's identifier into the owner or
+write the shared identifier column. Declared cascades still apply, and applications
+must set the associated entity's own identifier and back-reference consistently.
+Writable mixed joins without shared owner identifier columns retain their existing
+INSERT and UPDATE behavior.
+
+Hibernate mapping XML versions 8.0 and newer support the same inference. For a
+positional tuple whose resolved target identifier order is `personName, addressType`:
+
+[source,xml]
+----
+<one-to-one name="address" target-entity="Address" optional="true">
+    <join-column name="name"/>
+    <join-formula>'HOME'</join-formula>
+    <cascade><cascade-all/></cascade>
+</one-to-one>
+----
+
+The inference does not apply to Hibernate XML 7.0, legacy `hbm.xml`, associations
+without formulas, declared many-to-one associations, join-table associations, or
+identity-defining associations such as `@MapsId`.
+
+
 [[auto-bidir-mgmt]]
 ==== Automatic Bidirectionality Management
 

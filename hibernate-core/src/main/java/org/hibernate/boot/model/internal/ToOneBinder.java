@@ -513,7 +513,8 @@ public class ToOneBinder {
 			PropertyBinder propertyBinder,
 			MetadataBuildingContext context) {
 		//column.getTable() => persistentClass.getTable()
-		if ( mappedBy != null || isMappedToPrimaryKey( joinColumns, propertyHolder, trueOneToOne ) ) {
+		final boolean formulaOneToOne = mappedBy == null && isFormulaOneToOne( joinColumns );
+		if ( mappedBy != null || formulaOneToOne || isMappedToPrimaryKey( joinColumns, propertyHolder, trueOneToOne ) ) {
 			bindTrueOneToOne(
 					cascadeStrategy,
 					joinColumns,
@@ -523,6 +524,7 @@ public class ToOneBinder {
 					inferredData,
 					mappedBy,
 					orphanRemoval,
+					formulaOneToOne,
 					inSecondPass,
 					context
 			);
@@ -556,6 +558,7 @@ public class ToOneBinder {
 			PropertyData inferredData,
 			String mappedBy,
 			boolean orphanRemoval,
+			boolean formulaBased,
 			boolean inSecondPass,
 			MetadataBuildingContext context) {
 		//is a true one-to-one
@@ -577,8 +580,11 @@ public class ToOneBinder {
 		oneToOne.setOnDeleteAction( onDeleteAction( memberDetails ) );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 
-		oneToOne.setConstrained( !optional );
-		oneToOne.setForeignKeyType( mappedBy == null ? FROM_PARENT : TO_PARENT );
+		final boolean constrained = !optional;
+		oneToOne.setConstrained( constrained );
+		oneToOne.setForeignKeyType( formulaBased
+				? ( constrained ? FROM_PARENT : TO_PARENT )
+				: ( mappedBy == null ? FROM_PARENT : TO_PARENT ) );
 		bindForeignKeyNameAndDefinition( oneToOne, memberDetails,
 				memberDetails.getDirectAnnotationUsage( ForeignKey.class ),
 				context );
@@ -658,6 +664,19 @@ public class ToOneBinder {
 				BinderHelper.toAliasTableMap( filter.aliases() ), BinderHelper.toAliasEntityMap( filter.aliases() ) );
 	}
 
+	/**
+	 * A one-to-one is "formula-based" when every join selectable is a SQL formula
+	 * (via {@code @JoinFormula}/{@code @JoinColumnOrFormula}, or the equivalent
+	 * {@code <join-formula>} XML), as opposed to a physical join column. Such an
+	 * association does not have a foreign key, and is bound to an explicit-selectable
+	 * {@link org.hibernate.mapping.OneToOne} instead of falling through to a
+	 * logical many-to-one.
+	 */
+	static boolean isFormulaOneToOne(AnnotatedJoinColumns joinColumns) {
+		final var columns = joinColumns.getJoinColumns();
+		return !columns.isEmpty() && columns.stream().allMatch( AnnotatedJoinColumn::isFormula );
+	}
+
 	private static boolean isMappedToPrimaryKey(
 			AnnotatedJoinColumns joinColumns,
 			PropertyHolder propertyHolder,
@@ -682,9 +701,11 @@ public class ToOneBinder {
 				else {
 					final var identifierColumns = identifier.getColumns();
 					return columns.stream().noneMatch( column -> {
-						final String name = column.getMappingColumn().getName();
-						return identifierColumns.stream()
-								.noneMatch( idColumn -> idColumn.getName().equals( name ) );
+						// a formula-based join selectable is never a physical identifier column
+						final var mappingColumn = column.getMappingColumn();
+						return mappingColumn == null
+								|| identifierColumns.stream()
+										.noneMatch( idColumn -> idColumn.getName().equals( mappingColumn.getName() ) );
 					} );
 				}
 			}

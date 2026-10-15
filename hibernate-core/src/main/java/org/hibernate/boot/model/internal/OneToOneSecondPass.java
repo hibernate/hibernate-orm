@@ -186,6 +186,9 @@ public class OneToOneSecondPass implements SecondPass {
 			Map<String, PersistentClass> persistentClasses,
 			OneToOne oneToOne,
 			String propertyName) {
+		if ( ToOneBinder.isFormulaOneToOne( joinColumns ) ) {
+			bindFormulaSelectables( persistentClasses, oneToOne, propertyName );
+		}
 		final ToOneFkSecondPass secondPass = new ToOneFkSecondPass(
 				oneToOne,
 				joinColumns,
@@ -197,6 +200,64 @@ public class OneToOneSecondPass implements SecondPass {
 		);
 		secondPass.doSecondPass(persistentClasses);
 		//no column associated since it's a one to one
+	}
+
+	/**
+	 * Attaches the explicit formula selectables of a formula-based one-to-one
+	 * (see {@link ToOneBinder#isFormulaOneToOne}) onto the {@code OneToOne} mapping
+	 * value, in the order of the target entity's identifier. This is what makes
+	 * {@link OneToOne#getType()} select {@code SpecialOneToOneType}, matching the
+	 * legacy {@code hbm.xml} join-formula one-to-one.
+	 */
+	private void bindFormulaSelectables(
+			Map<String, PersistentClass> persistentClasses,
+			OneToOne oneToOne,
+			String propertyName) {
+		final String path = qualify( propertyHolder.getPath(), propertyName );
+		final String targetEntityName = oneToOne.getReferencedEntityName();
+		final var targetEntity = persistentClasses.get( targetEntityName );
+		if ( targetEntity == null ) {
+			final String problem = annotatedEntity
+					? " which does not belong to the same persistence unit"
+					: " which is not an '@Entity' type";
+			throw new MappingException( "Association '" + path
+					+ "' targets the type '" + targetEntityName + "'" + problem );
+		}
+
+		final var columns = joinColumns.getJoinColumns();
+		final var identifierColumns = targetEntity.getIdentifier().getColumns();
+		if ( identifierColumns.size() != columns.size() ) {
+			throw new AnnotationException( "Association '" + path
+					+ "' has " + columns.size() + " join formula(s) but the identifier of '" + targetEntityName
+					+ "' has " + identifierColumns.size() + " column(s)" );
+		}
+
+		final long namedCount = columns.stream().filter( column -> !column.isReferenceImplicit() ).count();
+		if ( namedCount > 0 && namedCount < columns.size() ) {
+			throw new AnnotationException( "Association '" + path
+					+ "' may not mix join formulas with and without an explicit 'referencedColumnName'" );
+		}
+
+		if ( namedCount == 0 ) {
+			// positional resolution: declaration order is reconciled with the
+			// target identifier's resolved order by the subsequent sortProperties() call
+			for ( var column : columns ) {
+				column.linkWithValue( oneToOne );
+			}
+		}
+		else {
+			for ( var idColumn : identifierColumns ) {
+				final var matching = columns.stream()
+						.filter( column -> idColumn.getName().equals( column.getReferencedColumn() ) )
+						.findFirst()
+						.orElseThrow( () -> new AnnotationException( "Association '" + path
+								+ "' has no join formula referencing identifier column '"
+								+ idColumn.getName() + "' of '" + targetEntityName + "'" ) );
+				matching.linkWithValue( oneToOne );
+			}
+			// the selectables are already attached in the target identifier's order
+			oneToOne.setSorted( true );
+		}
 	}
 
 	/**

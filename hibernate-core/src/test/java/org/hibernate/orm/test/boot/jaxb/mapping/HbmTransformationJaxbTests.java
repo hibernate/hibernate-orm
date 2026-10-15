@@ -36,17 +36,27 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularFetchModeImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.mapping.Formula;
+import org.hibernate.mapping.OneToOne;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
+import org.hibernate.orm.test.onetoone.formula.Person;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.FetchType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.ParameterMode;
@@ -1566,6 +1576,81 @@ public class HbmTransformationJaxbTests {
 					.as( "Shared PK one-to-one should produce <primary-key-join-column/>" )
 					.isNotEmpty();
 		} );
+	}
+
+	@Test
+	public void testOneToOneFormulaTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "org/hibernate/orm/test/onetoone/formula/Person.hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl personEntity = transformed.getEntities().stream()
+					.filter( e -> "Person".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( personEntity.getAttributes().getOneToOneAttributes() ).hasSize( 2 );
+
+			final JaxbOneToOneImpl address = oneToOneNamed( personEntity, "address" );
+			assertThat( address.isOptional() )
+					.as( "constrained=\"false\" in hbm.xml must translate to optional=true" )
+					.isTrue();
+			assertThat( address.getFetch() ).isEqualTo( FetchType.EAGER );
+			assertThat( address.getFetchMode() ).isEqualTo( JaxbSingularFetchModeImpl.JOIN );
+			assertThat( address.getJoinColumnOrJoinFormula() ).containsExactly( "name", "'HOME'" );
+			assertThat( address.getCascade() ).isNotNull();
+			assertThat( address.getCascade().getCascadeAll() ).isNotNull();
+
+			final JaxbOneToOneImpl mailingAddress = oneToOneNamed( personEntity, "mailingAddress" );
+			assertThat( mailingAddress.isOptional() ).isTrue();
+			assertThat( mailingAddress.getFetch() ).isEqualTo( FetchType.EAGER );
+			assertThat( mailingAddress.getFetchMode() ).isEqualTo( JaxbSingularFetchModeImpl.JOIN );
+			assertThat( mailingAddress.getJoinColumnOrJoinFormula() ).containsExactly( "name", "'MAILING'" );
+			assertThat( mailingAddress.getCascade() == null || mailingAddress.getCascade().getCascadeAll() == null )
+					.as( "mailingAddress has no cascade in the original hbm.xml" )
+					.isTrue();
+		} );
+	}
+
+	@Test
+	public void testOneToOneFormulaTransformationBootModelParity(ServiceRegistryScope scope) {
+		transformAndVerify( "org/hibernate/orm/test/onetoone/formula/Person.hbm.xml", scope, transformed -> {
+			final MetadataImplementor rebuilt = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
+					.addMappingXmlBinding( new Binding<>(
+							transformed,
+							new Origin( SourceType.RESOURCE, "transformed-Person.hbm.xml" )
+					) )
+					.buildMetadata();
+
+			final PersistentClass personBinding = rebuilt.getEntityBinding( Person.class.getName() );
+			assertSpecialOneToOne( personBinding.getProperty( "address" ), "name", "'HOME'" );
+			assertSpecialOneToOne( personBinding.getProperty( "mailingAddress" ), "name", "'MAILING'" );
+
+			// formula-based one-to-ones must not generate a physical foreign key or unique constraint
+			assertThat( personBinding.getTable().getForeignKeys() ).isEmpty();
+			assertThat( personBinding.getTable().getUniqueKeys() ).isEmpty();
+		} );
+	}
+
+	private JaxbOneToOneImpl oneToOneNamed(JaxbEntityImpl entity, String name) {
+		return entity.getAttributes().getOneToOneAttributes().stream()
+				.filter( oneToOne -> name.equals( oneToOne.getName() ) )
+				.findFirst()
+				.orElseThrow();
+	}
+
+	private void assertSpecialOneToOne(Property property, String firstFormula, String secondFormula) {
+		final ToOne valueMapping = (ToOne) property.getValue();
+		assertThat( valueMapping ).isInstanceOf( OneToOne.class );
+		final OneToOne oneToOne = (OneToOne) valueMapping;
+
+		assertThat( oneToOne.getSelectables() ).hasSize( 2 );
+		assertThat( ( (Formula) oneToOne.getSelectables().get( 0 ) ).getFormula() ).isEqualTo( firstFormula );
+		assertThat( ( (Formula) oneToOne.getSelectables().get( 1 ) ).getFormula() ).isEqualTo( secondFormula );
+
+		assertThat( oneToOne.getColumnInsertability() ).containsOnly( false );
+		assertThat( oneToOne.getColumnUpdateability() ).containsOnly( false );
+
+		assertThat( oneToOne.isReferenceToPrimaryKey() ).isTrue();
+		assertThat( oneToOne.isConstrained() ).isFalse();
+		assertThat( oneToOne.getForeignKeyType() ).isEqualTo( ForeignKeyDirection.TO_PARENT );
+		assertThat( oneToOne.getType() ).isInstanceOf( SpecialOneToOneType.class );
 	}
 
 	@Test

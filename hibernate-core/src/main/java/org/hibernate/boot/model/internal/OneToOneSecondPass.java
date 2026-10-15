@@ -8,6 +8,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
@@ -16,11 +17,14 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SortableValue;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ToOne;
 
 import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.boot.model.internal.ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
 
 /**
  * We have to handle {@link jakarta.persistence.OneToOne} associations
@@ -73,7 +77,7 @@ public class OneToOneSecondPass implements SecondPass {
 			bindUnowned( persistentClasses, oneToOne );
 		}
 		binder.callAttributeBindersInSecondPass( property );
-		oneToOne.sortProperties();
+		((SortableValue) property.getValue()).sortProperties();
 	}
 
 	private void bindUnowned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne) {
@@ -124,7 +128,7 @@ public class OneToOneSecondPass implements SecondPass {
 			final Join mappedByJoin = buildJoinFromMappedBySide(
 					persistentClasses.get( ownerEntity ), targetProperty, otherSideJoin
 			);
-			final var manyToOne = createManyToOne( oneToOne, mappedByJoin );
+			final var manyToOne = createManyToOne( oneToOne, mappedByJoin.getTable() );
 			property.setValue( manyToOne );
 			for ( var column: otherSideJoin.getKey().getColumns() ) {
 				final var copy = column.clone();
@@ -153,8 +157,8 @@ public class OneToOneSecondPass implements SecondPass {
 		}
 	}
 
-	private ManyToOne createManyToOne(OneToOne oneToOne, Join mappedByJoin) {
-		final ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
+	private ManyToOne createManyToOne(OneToOne oneToOne, Table table) {
+		final ManyToOne manyToOne = new ManyToOne( buildingContext, table );
 		manyToOne.setNotFoundAction( notFoundAction );
 		manyToOne.setOnDeleteAction( oneToOne.getOnDeleteAction() );
 		manyToOne.setFetchStyle( oneToOne.getFetchStyle() );
@@ -185,11 +189,17 @@ public class OneToOneSecondPass implements SecondPass {
 			Map<String, PersistentClass> persistentClasses,
 			OneToOne oneToOne,
 			String propertyName) {
-		if ( ToOneBinder.isFormulaOneToOne( joinColumns ) ) {
-			bindFormulaSelectables( persistentClasses, oneToOne, propertyName );
+		ToOne value = oneToOne;
+		if ( ToOneBinder.isFormulaOneToOne( joinColumns )
+				&& !bindFormulaSelectables( persistentClasses, oneToOne, propertyName ) ) {
+			// Preserve the logical many-to-one path for references to a non-primary key.
+			value = createManyToOne( oneToOne, oneToOne.getTable() );
+			value.setUnwrapProxyImplicit( oneToOne.isUnwrapProxyImplicit() );
+			property.setValue( value );
+			binder.setValue( value );
 		}
 		final ToOneFkSecondPass secondPass = new ToOneFkSecondPass(
-				oneToOne,
+				value,
 				joinColumns,
 				true,
 				annotatedEntity,
@@ -198,17 +208,18 @@ public class OneToOneSecondPass implements SecondPass {
 				buildingContext
 		);
 		secondPass.doSecondPass(persistentClasses);
-		//no column associated since it's a one to one
 	}
 
 	/**
-	 * Attaches the explicit formula selectables of a formula-based one-to-one
+	 * Attaches the explicit formula and read-only column selectables of a formula-based one-to-one
 	 * (see {@link ToOneBinder#isFormulaOneToOne}) onto the {@code OneToOne} mapping
 	 * value, in the order of the target entity's identifier. This is what makes
 	 * {@link OneToOne#getType()} select {@code SpecialOneToOneType}, matching the
 	 * legacy {@code hbm.xml} join-formula one-to-one.
+	 *
+	 * @return false if the reference must retain logical many-to-one binding
 	 */
-	private void bindFormulaSelectables(
+	private boolean bindFormulaSelectables(
 			Map<String, PersistentClass> persistentClasses,
 			OneToOne oneToOne,
 			String propertyName) {
@@ -223,18 +234,22 @@ public class OneToOneSecondPass implements SecondPass {
 					+ "' targets the type '" + targetEntityName + "'" + problem );
 		}
 
+		if ( joinColumns.getReferencedColumnsType( targetEntity ) == NON_PRIMARY_KEY_REFERENCE ) {
+			return false;
+		}
+
 		final var columns = joinColumns.getJoinColumns();
 		final var identifierColumns = targetEntity.getIdentifier().getColumns();
 		if ( identifierColumns.size() != columns.size() ) {
 			throw new AnnotationException( "Association '" + path
-					+ "' has " + columns.size() + " join formula(s) but the identifier of '" + targetEntityName
+					+ "' has " + columns.size() + " join selectable(s) but the identifier of '" + targetEntityName
 					+ "' has " + identifierColumns.size() + " column(s)" );
 		}
 
 		final long namedCount = columns.stream().filter( column -> !column.isReferenceImplicit() ).count();
 		if ( namedCount > 0 && namedCount < columns.size() ) {
 			throw new AnnotationException( "Association '" + path
-					+ "' may not mix join formulas with and without an explicit 'referencedColumnName'" );
+					+ "' may not mix join selectables with and without an explicit 'referencedColumnName'" );
 		}
 
 		if ( namedCount == 0 ) {
@@ -245,18 +260,24 @@ public class OneToOneSecondPass implements SecondPass {
 			}
 		}
 		else {
-			for ( var idColumn : identifierColumns ) {
+			if ( targetEntity.getIdentifier() instanceof SortableValue identifier ) {
+				identifier.sortProperties();
+			}
+			final var metadataCollector = buildingContext.getMetadataCollector();
+			for ( var idColumn : targetEntity.getIdentifier().getColumns() ) {
 				final var matching = columns.stream()
-						.filter( column -> idColumn.getName().equals( column.getReferencedColumn() ) )
+						.filter( column -> idColumn.equals( new Column( metadataCollector.getPhysicalColumnName(
+								targetEntity.getTable(), column.getReferencedColumn() ) ) ) )
 						.findFirst()
 						.orElseThrow( () -> new AnnotationException( "Association '" + path
-								+ "' has no join formula referencing identifier column '"
+								+ "' has no join selectable referencing identifier column '"
 								+ idColumn.getName() + "' of '" + targetEntityName + "'" ) );
 				matching.linkWithValue( oneToOne );
 			}
 			// the selectables are already attached in the target identifier's order
 			oneToOne.setSorted( true );
 		}
+		return true;
 	}
 
 	/**

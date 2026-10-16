@@ -10,7 +10,9 @@ public final class JakartaJsonIntegration {
 	// Implementation note: we rely on the following two fields to be folded as constants
 	// when GraalVM native image is initializing them.
 	private static final boolean JAKARTA_JSON_AVAILABLE = ableToLoadJakartaJsonB();
-	private static final JsonBJsonFormatMapper JSON_FORMAT_MAPPER = JAKARTA_JSON_AVAILABLE ? new JsonBJsonFormatMapper() : null;
+	private static final JsonBJsonFormatMapper JSON_FORMAT_MAPPER = JAKARTA_JSON_AVAILABLE
+			? JsonBJsonFormatMapper.createIfAvailable()
+			: null;
 
 	private JakartaJsonIntegration() {
 		//To not be instantiated: static helpers only

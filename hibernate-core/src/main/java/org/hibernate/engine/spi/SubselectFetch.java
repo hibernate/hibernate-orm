@@ -13,8 +13,6 @@ import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-
 /**
  * Encapsulates details related to entities which contain sub-select-fetchable
  * collections and which were loaded in a Session so that those collections may
@@ -134,7 +132,14 @@ public class SubselectFetch {
 		public void addKey(EntityHolder holder) {
 			if ( batchFetchQueue.getSession().getLoadQueryInfluencers()
 					.hasSubselectLoadableAttributes( holder.getDescriptor(), appliedGraph ) ) {
-				final var path = castNonNull( holder.getEntityInitializer() ).getNavigablePath();
+				final var entityInitializer = holder.getEntityInitializer();
+				if ( entityInitializer == null ) {
+					// The entity was not loaded by the query being processed (e.g. it was
+					// already managed in the persistence context), so there is no
+					// table group to base a subselect on
+					return;
+				}
+				final var path = entityInitializer.getNavigablePath();
 				final var querySpec = loadingSqlAst.getQuerySpec();
 				final var subselectFetch = subselectFetches.computeIfAbsent(
 						path,

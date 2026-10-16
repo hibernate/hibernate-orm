@@ -2,6 +2,7 @@ package org.hibernate.orm.test.pc;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -12,9 +13,7 @@ import jakarta.persistence.PersistenceUtil;
 import org.hibernate.Hibernate;
 import org.hibernate.KeyType;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -22,11 +21,12 @@ import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Statement;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
@@ -52,13 +52,22 @@ public class PersistenceContextTest {
 	}
 
 	@Test
+	void missingEntityLookups(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThat( entityManager.find( Person.class, 99L ) ).isNull();
+			assertThat( entityManager.find( Book.class, "missing", KeyType.NATURAL ) ).isNull();
+		} );
+		scope.inTransaction( entityManager -> assertThatThrownBy( () -> entityManager.get( Person.class, 99L ) )
+				.isInstanceOf( EntityNotFoundException.class ) );
+		scope.inTransaction( entityManager -> assertThatThrownBy( () -> entityManager.get( Book.class, "missing", KeyType.NATURAL ) )
+				.isInstanceOf( EntityNotFoundException.class ) );
+	}
+
+	@Test
 	public void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			//tag::pc-unwrap-example[]
 			Session session = entityManager.unwrap( Session.class );
-			SessionImplementor sessionImplementor = entityManager.unwrap( SessionImplementor.class );
-
-			SessionFactory sessionFactory = entityManager.getEntityManagerFactory().unwrap( SessionFactory.class );
 			//end::pc-unwrap-example[]
 		} );
 		Long _personId = scope.fromTransaction( entityManager -> {
@@ -93,6 +102,7 @@ public class PersistenceContextTest {
 			//tag::pc-find-example[]
 			Person person = entityManager.find( Person.class, personId );
 			//end::pc-find-example[]
+			assertThat( person ).isNotNull();
 		} );
 		scope.inTransaction( entityManager -> {
 			Long personId = _personId;
@@ -105,9 +115,9 @@ public class PersistenceContextTest {
 				// handle it
 			}
 			//end::pc-get-example[]
+			assertThat( entityManager.find( Person.class, personId ) ).isNotNull();
 		} );
 		scope.inTransaction( entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
 			entityManager.createQuery( "delete from Book" ).executeUpdate();
 			entityManager.createQuery( "delete from Person" ).executeUpdate();
 
@@ -116,14 +126,14 @@ public class PersistenceContextTest {
 			person.setId( 1L );
 			person.setName( "John Doe" );
 
-			session.persist( person );
+			entityManager.persist( person );
 			//end::pc-persist-native-example[]
 
 			//tag::pc-remove-native-example[]
-			session.remove( person );
+			entityManager.remove( person );
 			//end::pc-remove-native-example[]
 
-			session.persist( person );
+			entityManager.persist( person );
 			Long personId = person.getId();
 
 			//tag::pc-get-reference-native-example[]
@@ -131,7 +141,7 @@ public class PersistenceContextTest {
 			book.setId( 1L );
 			book.setIsbn( "123-456-7890" );
 			entityManager.persist( book );
-			book.setAuthor( session.getReference( Person.class, personId ) );
+			book.setAuthor( entityManager.getReference( Person.class, personId ) );
 			//end::pc-get-reference-native-example[]
 		} );
 		scope.inTransaction( entityManager -> {
@@ -139,40 +149,18 @@ public class PersistenceContextTest {
 
 			//tag::pc-find-by-natural-id-example[]
 			Book book = entityManager.find( Book.class, isbn, KeyType.NATURAL );
-			//end::pc-find-by-simple-natural-id-example[]
+			//end::pc-find-by-natural-id-example[]
 			assertThat(book).isNotNull();
 		} );
 		scope.inTransaction( entityManager -> {
 			String isbn = "123-456-7890";
 
 			//tag::pc-get-by-natural-id-example[]
-			Book book = entityManager.find( Book.class, isbn, KeyType.NATURAL );
-			//end::pc-get-by-simple-natural-id-example[]
+			Book book = entityManager.get( Book.class, isbn, KeyType.NATURAL );
+			//end::pc-get-by-natural-id-example[]
 			assertThat(book).isNotNull();
 		} );
 
-
-
-		// todo (jpa4) : find references to these tags in the doc and drop
-		scope.inTransaction( entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-			String isbn = "123-456-7890";
-
-			//tag::pc-find-by-natural-id-example[]
-			Book book = session
-					.byNaturalId( Book.class )
-					.using( "isbn", isbn )
-					.load();
-			//end::pc-find-by-natural-id-example[]
-			assertThat(book ).isNotNull();
-
-			//tag::pc-find-optional-by-simple-natural-id-example[]
-			Optional<Book> optionalBook = session
-					.byNaturalId( Book.class )
-					.using( "isbn", isbn )
-					.loadOptional();
-			//end::pc-find-optional-by-simple-natural-id-example[]
-		} );
 
 		scope.inTransaction( entityManager -> {
 			Long personId = _personId;
@@ -223,42 +211,39 @@ public class PersistenceContextTest {
 		}
 
 		scope.inTransaction( entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
 			Long personId = _personId;
 
 			//tag::pc-managed-state-native-example[]
-			Person person = session.byId( Person.class ).load( personId );
+			Person person = entityManager.find( Person.class, personId );
 			person.setName( "John Doe" );
-			session.flush();
+			entityManager.flush();
 			//end::pc-managed-state-native-example[]
 		} );
 
 		scope.inTransaction( entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
 			Long personId = _personId;
 
 			//tag::pc-refresh-native-example[]
-			Person person = session.byId( Person.class ).load( personId );
+			Person person = entityManager.find( Person.class, personId );
 
-			session.doWork( connection -> {
+			entityManager.runWithConnection( (Connection connection) -> {
 				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( "UPDATE Person SET name = UPPER(name) where 1=1" );
 				}
 			} );
 
-			session.refresh( person );
+			entityManager.refresh( person );
 			assertThat( person.getName()).isEqualTo("JOHN DOE");
 			//end::pc-refresh-native-example[]
 		} );
 
 		scope.inTransaction( entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
 			Long personId = _personId;
 
-			Person personDetachedReference = session.byId( Person.class ).load( personId );
-			//Clear the Session so the person entity becomes detached
-			session.clear();
-			new MergeVisualizer( session ).merge( personDetachedReference );
+			Person personDetachedReference = entityManager.find( Person.class, personId );
+			//Clear the EntityManager so the person entity becomes detached
+			entityManager.clear();
+			new MergeVisualizer( entityManager ).merge( personDetachedReference );
 		} );
 
 		scope.inTransaction( entityManager -> {
@@ -306,20 +291,19 @@ public class PersistenceContextTest {
 		} );
 
 		scope.inTransaction( entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
 			Long personId = _personId;
 
 			//tag::pc-merge-native-example[]
-			Person person = session.byId( Person.class ).load( personId );
-			//Clear the Session so the person entity becomes detached
-			session.clear();
+			Person person = entityManager.find( Person.class, personId );
+			//Clear the EntityManager so the person entity becomes detached
+			entityManager.clear();
 			person.setName( "Mr. John Doe" );
 
-			person = (Person) session.merge( person );
+			person = entityManager.merge( person );
 			//end::pc-merge-native-example[]
 
 			//tag::pc-contains-native-example[]
-			boolean contained = session.contains( person );
+			boolean contained = entityManager.contains( person );
 			//end::pc-contains-native-example[]
 			assertThat( contained ).isTrue();
 
@@ -334,15 +318,15 @@ public class PersistenceContextTest {
 	}
 
 	public static class MergeVisualizer {
-		private final Session session;
+		private final EntityManager entityManager;
 
-		public MergeVisualizer(Session session) {
-			this.session = session;
+		public MergeVisualizer(EntityManager entityManager) {
+			this.entityManager = entityManager;
 		}
 
 		//tag::pc-merge-visualize-example[]
 		public Person merge(Person detached) {
-			Person newReference = session.byId( Person.class ).load( detached.getId() );
+			Person newReference = entityManager.get( Person.class, detached.getId() );
 			newReference.setName( detached.getName() );
 			return newReference;
 		}

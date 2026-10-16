@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# Resolve compose files relative to this script, even when invoked from a subproject.
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")" || exit 1
+
 ###############################################################################
 # Detect container cli (Docker/Podman)
 # Docker has priority to make CI builds more stable/predictable
@@ -628,6 +631,8 @@ sybase_setup() {
         echo "exec sp_configure 'heap memory per user', 0, '64K'"
         echo "go"
         echo "exec sp_configure 'wait on uncommitted insert', 1"
+        echo "go"
+        echo "exec sp_configure 'select for update', 1"
         echo "go"
         echo "sp_dboption tempdb, 'ddl in tran', true"
         echo "go"

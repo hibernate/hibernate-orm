@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering SYSTEM
+    "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd">
+<hibernate-reverse-engineering>
+    <!-- tag::guide-schema-selection[] -->
+    <schema-selection match-schema="PUBLIC"/>
+    <!-- end::guide-schema-selection[] -->
+    <!-- tag::guide-type-mapping[] -->
+    <type-mapping>
+        <sql-type jdbc-type="VARCHAR" length="1" hibernate-type="character"/>
+        <sql-type jdbc-type="NUMERIC" precision="10" scale="2" hibernate-type="big_decimal"/>
+        <sql-type jdbc-type="NUMERIC" hibernate-type="big_integer"/>
+    </type-mapping>
+    <!-- end::guide-type-mapping[] -->
+    <!-- tag::guide-table-filter[] -->
+    <table-filter match-name=".*_AUD" exclude="true"/>
+    <table-filter match-name="PROD_.*" package="example.product"/>
+    <table-filter match-name=".*" exclude="false"/>
+    <!-- end::guide-table-filter[] -->
+    <!-- tag::guide-table[] -->
+    <table name="CUSTOMER" class="Customer">
+        <primary-key property="id">
+            <generator class="sequence">
+                <param name="sequence_name">CUST_SEQ</param>
+            </generator>
+        </primary-key>
+        <column name="CUST_NAME" property="name" type="string"/>
+        <column name="INTERNAL_CODE" exclude="true"/>
+        <foreign-key constraint-name="FK_CUST_ADDR">
+            <many-to-one property="address"/>
+            <set property="customers" exclude="false"/>
+        </foreign-key>
+    </table>
+    <!-- end::guide-table[] -->
+</hibernate-reverse-engineering>

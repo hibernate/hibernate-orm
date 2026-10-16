@@ -1,4 +1,12 @@
 [[tooling-schema]]
-=== Schema Management
+==== Schema management
 
-Coming soon
+See <<schema-generation>> for creating, validating, and altering schemas, generating scripts,
+and choosing a schema evolution approach. Build-time integration must supply the mappings,
+dependencies, and database information needed by the selected operation.
+
+The ORM Gradle plugin does not register a general-purpose schema-management task.
+A build can invoke the <<schema-generation,Schema Tooling APIs>> through application code.
+Maven provides <<tooling-maven-reveng-hbm2ddl-params,`hbm2ddl`>> for exporting metadata obtained
+by reverse engineering. Ant provides <<tooling-ant-schema,schema tooling tasks and exporters>>.
+Generating DDL from a discovered database is distinct from exporting DDL from application mappings.

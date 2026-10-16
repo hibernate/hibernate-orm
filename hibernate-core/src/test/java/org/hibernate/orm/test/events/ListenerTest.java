@@ -1,184 +1,87 @@
 package org.hibernate.orm.test.events;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
-import jakarta.annotation.Nonnull;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Transient;
-
-import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
+import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
+import org.hibernate.orm.test.events.EventsGuideTests.PlainRecord;
+import org.hibernate.jpa.boot.spi.IntegratorProvider;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.type.Type;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
-@DomainModel(
-		annotatedClasses = {
-				ListenerTest.Person.class,
-				ListenerTest.Customer.class
-		}
-)
-@SessionFactory
+@BaseUnitTest
 public class ListenerTest {
-
-	@AfterEach
-	public void afterEach(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
-	}
-
-	@BeforeEach
-	public void testLoadListener(SessionFactoryScope scope) {
-		Serializable customerId = 1L;
-		assertThatThrownBy( () ->
-				scope.inTransaction( entityManager -> {
-					//tag::events-interceptors-load-listener-example-part1[]
-					EntityManagerFactory entityManagerFactory = /* ... */
-							//end::events-interceptors-load-listener-example-part1[]
-							entityManager.getEntityManagerFactory();
-					//tag::events-interceptors-load-listener-example-part1[]
-					entityManagerFactory.unwrap( SessionFactoryImplementor.class ).getEventListenerRegistry()
-							.prependListeners( EventType.LOAD, new SecuredLoadEntityListener() );
-
-					Customer customer = entityManager.find( Customer.class, customerId );
-					//end::events-interceptors-load-listener-example-part1[]
-				} ) ).isInstanceOf( SecurityException.class );
-	}
-
 	@Test
-	public void testJPACallback(SessionFactoryScope scope) {
-		Long personId = 1L;
-
-		scope.inTransaction( entityManager -> {
-			Person person = new Person();
-			person.id = personId;
-			person.name = "John Doe";
-			person.dateOfBirth = Timestamp.valueOf( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ) );
-			entityManager.persist( person );
-		} );
-
-		assertThatThrownBy( () ->
-				scope.inTransaction( entityManager -> {
-					Person person = entityManager.find( Person.class, personId );
-					assertTrue( person.age > 0 );
-				} ) ).isInstanceOf( SecurityException.class );
-	}
-
-	@Entity(name = "Customer")
-	public static class Customer {
-
-		@Id
-		@GeneratedValue
-		private Long id;
-
-		private String name;
-
-		public Customer() {
-		}
-
-		public Customer(String name) {
-			this.name = name;
-		}
-
-		public Long getId() {
-			return id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-	}
-
-	//tag::events-jpa-callbacks-example[]
-	@Entity(name = "Person")
-	@EntityListeners(LastUpdateListener.class)
-	public static class Person {
-
-		@Id
-		private Long id;
-
-		private String name;
-
-		private Date dateOfBirth;
-
-		@Transient
-		private long age;
-
-		private Date lastUpdate;
-
-		public void setLastUpdate(Date lastUpdate) {
-			this.lastUpdate = lastUpdate;
-		}
-
-		/**
-		 * Set the transient property at load time based on a calculation.
-		 * Note that a native Hibernate formula mapping is better for this purpose.
-		 */
-		@PostLoad
-		public void calculateAge() {
-			age = ChronoUnit.YEARS.between( LocalDateTime.ofInstant(
-							Instant.ofEpochMilli( dateOfBirth.getTime() ), ZoneOffset.UTC ),
-					LocalDateTime.now()
-			);
-		}
-	}
-
-	public static class LastUpdateListener {
-
-		@PreUpdate
-		@PrePersist
-		public void setLastUpdate(Person p) {
-			p.setLastUpdate( new Date() );
-		}
-	}
-	//end::events-jpa-callbacks-example[]
-
-	//tag::events-interceptors-load-listener-example-part2[]
-	public static class SecuredLoadEntityListener implements LoadEventListener {
-		// this is the single method defined by the LoadEventListener interface
-		public void onLoad(@Nonnull LoadEvent event, @Nonnull LoadType loadType)
-				throws HibernateException {
-			if ( !Principal.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {
-				throw new SecurityException( "Unauthorized access" );
+	void nativeListenersPreserveLoadingAndInterceptors() {
+		var observed = new ArrayList<String>();
+		// tag::events-native-registration[]
+		var configuration = new HibernatePersistenceConfiguration( "native-events" )
+				.managedClasses( PlainRecord.class )
+				.property( "hibernate.integrator_provider",
+						(IntegratorProvider) () -> List.of( new LoadIntegrator( observed::add ) ) );
+		// end::events-native-registration[]
+		configuration.properties( ServiceRegistryUtil.createBaseSettingsWithExport() );
+		configuration.property( "hibernate.session_factory.interceptor", new Interceptor() {
+			@Override
+			public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+				observed.add( "interceptor-load" );
+				return false;
 			}
+		} );
+		try ( var factory = configuration.createEntityManagerFactory() ) {
+			factory.inTransaction( session -> session.persist( new PlainRecord( 1, "loaded" ) ) );
+			observed.clear();
+			try ( var session = factory.openSession() ) {
+				assertThat( session.find( PlainRecord.class, 1 ).name ).isEqualTo( "loaded" );
+			}
+			assertThat( observed ).containsExactly( "load-request", "interceptor-load", "post-load" );
 		}
 	}
-	//end::events-interceptors-load-listener-example-part2[]
 
-	public static class Principal {
-		public static boolean isAuthorized(String clazz, Object id) {
-			return false;
+	// tag::events-interceptors-load-listener-example-part1[]
+	public static class LoadIntegrator implements Integrator {
+		private final Consumer<String> observer;
+
+		public LoadIntegrator(Consumer<String> observer) {
+			this.observer = observer;
+		}
+
+		@Override
+		public void integrate(Metadata metadata, Context context, SessionFactoryImplementor factory) {
+			var listeners = factory.getEventListenerRegistry();
+			listeners.prependListeners( EventType.LOAD, new ObservingLoadListener( observer ) );
+			listeners.appendListeners( EventType.POST_LOAD, event -> observer.accept( "post-load" ) );
 		}
 	}
+	// end::events-interceptors-load-listener-example-part1[]
 
+	// tag::events-interceptors-load-listener-example-part2[]
+	public static class ObservingLoadListener implements LoadEventListener {
+		private final Consumer<String> observer;
+
+		public ObservingLoadListener(Consumer<String> observer) {
+			this.observer = observer;
+		}
+
+		@Override
+		public void onLoad(LoadEvent event, LoadType loadType) {
+			observer.accept( "load-request" );
+		}
+	}
+	// end::events-interceptors-load-listener-example-part2[]
 }

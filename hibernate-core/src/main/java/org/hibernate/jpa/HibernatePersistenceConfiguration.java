@@ -158,9 +158,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	@Override
 	@Nonnull
 	public SessionFactory createEntityManagerFactory() {
-		new EntityManagerFactoryBuilderImpl( this ).build();
-
-		return (SessionFactory) super.createEntityManagerFactory();
+		return (SessionFactory) new EntityManagerFactoryBuilderImpl( this ).build();
 	}
 
 	/**

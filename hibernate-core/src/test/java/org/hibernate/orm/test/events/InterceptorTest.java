@@ -1,148 +1,99 @@
 package org.hibernate.orm.test.events;
 
-import java.io.Serializable;
-import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
 import org.hibernate.Interceptor;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
-@DomainModel(
-		annotatedClasses = {
-				InterceptorTest.Customer.class
-		}
-)
-@org.hibernate.testing.orm.junit.SessionFactory
+@BaseUnitTest
 public class InterceptorTest {
-
 	private static final Logger LOGGER = Logger.getLogger( InterceptorTest.class );
 
-	@BeforeEach
-	public void init(SessionFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			entityManager.persist( new Customer( "John Doe" ) );
-			Customer customer = new Customer();
-			entityManager.persist( customer );
-		} );
-	}
-
 	@Test
-	public void testSessionInterceptor(SessionFactoryScope scope) {
-		EntityManagerFactory entityManagerFactory = scope.getSessionFactory();
-		Serializable customerId = 1L;
-		//tag::events-interceptors-session-scope-example[]
-		SessionFactory sessionFactory = entityManagerFactory.unwrap( SessionFactory.class );
-		Session session = sessionFactory
-				.withOptions()
-				.interceptor( new LoggingInterceptor() )
-				.openSession();
-		session.getTransaction().begin();
-
-		Customer customer = session.get( Customer.class, customerId );
-		customer.setName( "Mr. John Doe" );
-		//Entity Customer#1 changed from [John Doe, 0] to [Mr. John Doe, 0]
-
-		session.getTransaction().commit();
-		//end::events-interceptors-session-scope-example[]
-		session.close();
+	public void testSessionInterceptor() {
+		try ( var sessionFactory = configuration().createEntityManagerFactory() ) {
+			sessionFactory.inTransaction( session -> session.persist( new Customer( 1L, "John Doe" ) ) );
+			var interceptor = new LoggingInterceptor();
+			// tag::events-interceptors-session-scope-example[]
+			try ( var session = sessionFactory.withOptions().interceptor( interceptor ).openSession() ) {
+				var transaction = session.beginTransaction();
+				Customer customer = session.find( Customer.class, 1L );
+				customer.name = "Mr. John Doe";
+				transaction.commit();
+			}
+			// end::events-interceptors-session-scope-example[]
+			assertThat( interceptor.changes ).hasValue( 1 );
+			try ( var session = sessionFactory.openSession() ) {
+				assertThat( session.find( Customer.class, 1L ).name ).isEqualTo( "Mr. John Doe" );
+			}
+		}
 	}
 
 	@Test
 	public void testSessionFactoryInterceptor() {
+		// tag::events-interceptors-session-factory-scope-example[]
+		var interceptor = new LoggingInterceptor();
+		var configuration = new HibernatePersistenceConfiguration( "intercepted" )
+				.managedClasses( Customer.class )
+				.property( "hibernate.session_factory.interceptor", interceptor );
+		// end::events-interceptors-session-factory-scope-example[]
+		configuration.properties( ServiceRegistryUtil.createBaseSettingsWithExport() );
+		try ( var factory = configuration.createEntityManagerFactory() ) {
+			factory.inTransaction( session -> session.persist( new Customer( 1L, "John Doe" ) ) );
+			factory.inTransaction( session -> session.find( Customer.class, 1L ).name = "First change" );
+			factory.inTransaction( session -> session.find( Customer.class, 1L ).name = "Second change" );
+			assertThat( interceptor.changes ).hasValue( 2 );
+		}
+	}
 
-		Serializable customerId = 1L;
-		SessionFactory sessionFactory = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-		/*
-		//tag::events-interceptors-session-factory-scope-example[]
-		SessionFactory sessionFactory = new MetadataSources(new StandardServiceRegistryBuilder().build())
-		//end::events-interceptors-session-factory-scope-example[]
-		*/
-		//tag::events-interceptors-session-factory-scope-example[]
-			.addAnnotatedClass(Customer.class)
-			.getMetadataBuilder()
-			.build()
-			.getSessionFactoryBuilder()
-			.applyInterceptor(new LoggingInterceptor())
-			.build();
-		//end::events-interceptors-session-factory-scope-example[]
-		Session session = sessionFactory.openSession();
-		session.getTransaction().begin();
-
-		Customer customer = session.get( Customer.class, customerId );
-		customer.setName( "Mr. John Doe" );
-		//Entity Customer#1 changed from [John Doe, 0] to [Mr. John Doe, 0]
-		session.getTransaction().commit();
-		session.close();
-		sessionFactory.close();
+	private static HibernatePersistenceConfiguration configuration() {
+		return new HibernatePersistenceConfiguration( "interceptor" )
+				.managedClasses( Customer.class )
+				.properties( ServiceRegistryUtil.createBaseSettingsWithExport() );
 	}
 
 	@Entity(name = "Customer")
 	public static class Customer {
-
 		@Id
-		@GeneratedValue
-		private Long id;
+		Long id;
+		String name;
 
-		private String name;
+		public Customer() {}
 
-		public Customer() {
-		}
-
-		public Customer(String name) {
-			this.name = name;
-		}
-
-		public Long getId() {
-			return id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
+		Customer(Long id, String name) {
+			this.id = id;
 			this.name = name;
 		}
 	}
 
-	//tag::events-interceptors-example[]
+	// tag::events-interceptors-example[]
 	public static class LoggingInterceptor implements Interceptor {
+		// end::events-interceptors-example[]
+		final AtomicInteger changes = new AtomicInteger();
+
+		// tag::events-interceptors-example[]
 		@Override
 		public boolean onFlushDirty(
-				Object entity,
-				Object id,
-				Object[] currentState,
-				Object[] previousState,
-				String[] propertyNames,
-				Type[] types) {
-			LOGGER.debugv( "Entity {0}#{1} changed from {2} to {3}",
-					entity.getClass().getSimpleName(),
-					id,
-					Arrays.toString( previousState ),
-					Arrays.toString( currentState )
-			);
-			return Interceptor.super.onFlushDirty( entity, id, currentState,
-					previousState, propertyNames, types
-			);
+				Object entity, Object id, Object[] currentState, Object[] previousState,
+				String[] propertyNames, Type[] types) {
+			LOGGER.debugv( "Dirty entity {0}#{1}", entity.getClass().getSimpleName(), id );
+			// end::events-interceptors-example[]
+			changes.incrementAndGet();
+			// tag::events-interceptors-example[]
+			return false; // observing state, without changing it
 		}
 	}
-	//end::events-interceptors-example[]
+	// end::events-interceptors-example[]
 }

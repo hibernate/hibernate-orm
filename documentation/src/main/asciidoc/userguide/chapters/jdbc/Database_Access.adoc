@@ -1,247 +1,412 @@
 [[database]]
 == Database Access
+:database-guide-examples: {core-project-dir}/src/test/java/org/hibernate/orm/test/jdbc/guide
+:database-hikari-examples: {root-project-dir}/hibernate-hikaricp/src/test/java/org/hibernate/test/hikaricp
+:database-ucp-examples: {root-project-dir}/hibernate-ucp/src/test/java/org/hibernate/test/ucp
+
+Hibernate obtains JDBC connections through a connection provider or uses a connection supplied by the application.
+This chapter explains configuration, ownership, acquisition and release, and database capability discovery.
+See <<bootstrap>> for factory creation and <<schema-generation>> for schema operations and DDL scripts.
+
+[[database-connection-source]]
+=== Choosing a connection source
+
+[cols="1,2,2",options="header"]
+|===
+|Source |Configuration |Ownership
+|Externally managed datasource
+|Supply a `javax.sql.DataSource` instance or a JNDI name through the appropriate datasource setting.
+|The application, framework, or container owns the datasource and any pool behind it. Hibernate obtains and returns connections.
+|Hibernate-managed pool
+|Add a pool integration module and configure its provider and settings.
+|Hibernate's service registry owns the pool and stops it during shutdown, normally when the factory closes.
+|Application-supplied connection
+|Pass a JDBC connection when opening a session.
+|The application owns the connection and closes it after the session's work is complete.
+|===
+
+Use a datasource supplied by your environment, or a supported pool integration, for production connection pooling.
+The <<database-connectionprovider-drivermanager,built-in pool>> is intended for development and testing.
+Advanced integrations can supply a <<database-connectionprovider,custom provider>>.
+For tenant-specific schema and credentials selection, see <<multitenancy-mappers>>; for datasource routing, see <<multitenacy-hibernate-MultiTenantConnectionProvider>>.
 
 [[database-connectionprovider]]
-=== ConnectionProvider
+=== Provider selection and explicit configuration
 
-As an ORM tool, probably the single most important thing you need to tell Hibernate is how to connect to your database so that it may connect on behalf of your application.
-This is ultimately the function of the `org.hibernate.engine.jdbc.connections.spi.ConnectionProvider` interface.
-Hibernate provides some out of the box implementations of this interface.
-`ConnectionProvider` is also an extension point so you can also use custom implementations from third parties or written yourself.
-The `ConnectionProvider` to use is defined by the `hibernate.connection.provider_class` setting. See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/cfg/AvailableSettings.html#CONNECTION_PROVIDER[`org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER`]
+The link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html[`ConnectionProvider`] service obtains connections and releases them after use.
+Select a provider explicitly using <<settings-hibernate.connection.provider_class,`hibernate.connection.provider_class`>>.
+The setting accepts a provider instance, an implementation class, a class name, or a registered strategy name such as `hikaricp`, `agroal`, `c3p0`, or `ucp`.
+See link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings.html#CONNECTION_PROVIDER[`JdbcSettings.CONNECTION_PROVIDER`].
 
-Generally speaking, applications should not have to configure a `ConnectionProvider` explicitly if using one of the Hibernate-provided implementations.
-Hibernate will internally determine which `ConnectionProvider` to use based on the following algorithm:
+For ordinary, nonmultitenant connection access, Hibernate selects a provider from the effective configuration in this order:
 
-1. If `hibernate.connection.provider_class` is set, it takes precedence
-2. else if `hibernate.connection.datasource` is set -> <<database-connectionprovider-datasource>>
-3. else if any setting prefixed by `hibernate.c3p0.` is set -> <<database-connectionprovider-c3p0>>
-4. else if any setting prefixed by `hibernate.hikari.` is set -> <<database-connectionprovider-hikari>>
-5. else if any setting prefixed by `hibernate.agroal.` is set -> <<database-connectionprovider-agroal>>
-6. else if any setting prefixed by `hibernate.ucp.` is set -> <<database-connectionprovider-oracleucp>>
-7. else if `hibernate.connection.url` is set -> <<database-connectionprovider-drivermanager>>
-8. else -> <<database-connectionprovider-provided>>
+. An explicit provider selection, when supplied. A blank provider name does not select a provider.
+. A configured <<database-connectionprovider-datasource,datasource>>.
+. A single registered provider implementation, including implementations registered by integration modules on the classpath.
+. Pool-specific configuration, checked in order: `hibernate.c3p0.`, `hibernate.hikari.`, `hibernate.agroal.`, then `hibernate.ucp.`.
+. A JDBC URL, which selects the <<database-connectionprovider-drivermanager,built-in DriverManager provider>>.
+. A provider resolved through the configured <<beans,managed-bean container>>, if available; otherwise, a fallback that requires the application to <<database-connectionprovider-provided,supply a connection>>.
+
+A sole registered pool integration can therefore be selected without pool-specific properties.
+When several integrations are available, use an explicit provider selection to make the choice clear.
+The module's dependencies must also be present; a configuration prefix cannot install an integration.
+
+The list describes effective settings after bootstrap processing.
+Jakarta Persistence bootstrap resolves standard datasource and JDBC settings into the connection configuration.
+See <<bootstrap-settings-merging>> for aliases and precedence; individual providers do not all resolve aliases in the same way.
+When multitenant connection access is enabled, Hibernate uses the separate `MultiTenantConnectionProvider` path instead of this list.
 
 [[database-connectionprovider-datasource]]
-=== Using DataSources
+=== Datasources
 
-Hibernate can integrate with a `javax.sql.DataSource` for obtaining JDBC Connections.
-Applications would tell Hibernate about the `DataSource` via the (required) `hibernate.connection.datasource` setting which can either specify a JNDI name or would reference the actual `DataSource` instance.
-For cases where a JNDI name is given, be sure to read <<chapters/jndi/JNDI.adoc#jndi,JNDI>>.
+Configure a `javax.sql.DataSource` instance or its JNDI name using `hibernate.connection.datasource`.
+Jakarta Persistence bootstrap also accepts `jakarta.persistence.jtaDataSource` and `jakarta.persistence.nonJtaDataSource`, corresponding to the JTA and non-JTA datasource roles.
+Use the role appropriate to the persistence unit's transaction configuration; see <<transactions>> and <<bootstrap>>.
+For JNDI lookup configuration, see <<jndi>>.
 
-[NOTE]
+The following example uses an application-owned datasource and a resource-local persistence unit.
+`Record` is a mapped entity in the example; `create-drop` is a test schema action, not a requirement for using a datasource.
+
+[[database-datasource-example]]
 ====
-For Jakarta Persistence applications, note that `hibernate.connection.datasource` corresponds to
-`jakarta.persistence.jtaDataSource` or `jakarta.persistence.nonJtaDataSource`.
+[source,java,indent=0]
+----
+include::{database-guide-examples}/DatabaseAccessGuideTests.java[tags=database-datasource]
+----
 ====
 
-The `DataSource` `ConnectionProvider` also (optionally) accepts the `hibernate.connection.username` and `hibernate.connection.password`.
-If specified, the https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html#getConnection-java.lang.String-java.lang.String-[`DataSource#getConnection(String username, String password)`] will be used.
-Otherwise, the no-arg form is used.
+Closing the factory does not close an externally supplied datasource or its pool.
+The owner is responsible for shutting it down when it is no longer needed.
+When configuring a JNDI datasource, supply its name instead of the instance; the naming service and datasource are managed by the environment.
+
+If either `hibernate.connection.username` or `hibernate.connection.password` is supplied to the datasource provider, it calls `DataSource.getConnection(username, password)`.
+Otherwise, it calls `DataSource.getConnection()`.
+The datasource determines how credentials are supported.
+Hibernate's datasource provider does not apply `hibernate.connection.autocommit` or `hibernate.connection.isolation`; configure these defaults on the datasource or its pool.
+
+[[database-managed-pools]]
+=== JDBC settings and Hibernate-managed pools
 
 [[database-connectionprovider-driver]]
-=== Driver Configuration
-`hibernate.connection.driver_class`:: The name of the JDBC Driver class to use
-`hibernate.connection.url`:: The JDBC connection url
-`hibernate.connection.*`:: All such setting names (except the <<appendices/SettingsReference.adoc#settings-hibernate.connection,predefined ones>>) will have the `hibernate.connection.` prefix stripped. The remaining name and the original value will be passed to the driver as a JDBC connection property
+==== Common JDBC settings
 
-NOTE: Not all properties apply to all situations. For example, if you are providing a data source, `hibernate.connection.driver_class` setting will not be used.
+[cols="2,3",options="header"]
+|===
+|Setting |Purpose and applicability
+|`jakarta.persistence.jdbc.url` / `hibernate.connection.url`
+|JDBC URL for creating connections. A configured datasource supplies its own connection configuration.
+|`jakarta.persistence.jdbc.driver` / `hibernate.connection.driver_class`
+|JDBC driver class, when explicit driver configuration is needed. Modern JDBC drivers can often be discovered automatically. This does not configure the driver of an external datasource.
+|`jakarta.persistence.jdbc.user` / `hibernate.connection.username`, and `jakarta.persistence.jdbc.password` / `hibernate.connection.password`
+|Credentials for connections created by the provider. Datasource credentials select the credential-taking overload described above.
+|`hibernate.connection.pool_size`
+|A common pool-size setting interpreted by supporting integrations; pool-specific settings may override it. It does not resize an external datasource's pool.
+|`hibernate.connection.login_timeout`
+|Login timeout in seconds for supporting providers. Pool acquisition timeouts and driver-specific timeouts have separate settings and may use different units.
+|`hibernate.connection.autocommit`
+|Requested autocommit default for supporting providers. Configure external datasource defaults on the datasource itself.
+|`hibernate.connection.isolation`
+|Requested isolation default for supporting providers; see <<database-connectionprovider-isolation>>.
+|===
 
-[[database-connectionprovider-c3p0]]
-=== Using c3p0
+See <<settings-jdbc>> for complete setting definitions, and <<bootstrap-settings-merging>> for standard/Hibernate aliases during JPA bootstrap.
+Avoid supplying conflicting aliases for the same connection option.
 
-[IMPORTANT]
-====
-To use the c3p0 integration, the application must include the `hibernate-c3p0` module jar (as well as its dependencies) on the classpath.
-====
-
-Hibernate also provides support for applications to use https://www.mchange.com/projects/c3p0/[c3p0] connection pooling.
-When c3p0 support is enabled, a number of c3p0-specific configuration settings are recognized in addition to the general ones described in <<database-connectionprovider-driver>>.
-
-Transaction isolation of the Connections is managed by the `ConnectionProvider` itself. See <<database-connectionprovider-isolation>>.
-
-`hibernate.c3p0.min_size` or `c3p0.minPoolSize`:: The minimum size of the c3p0 pool. See https://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 minPoolSize]
-`hibernate.c3p0.max_size` or `c3p0.maxPoolSize`:: The maximum size of the c3p0 pool. See https://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 maxPoolSize]
-`hibernate.c3p0.timeout` or `c3p0.maxIdleTime`:: The Connection idle time. See https://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 maxIdleTime]
-`hibernate.c3p0.max_statements` or `c3p0.maxStatements`:: Controls the c3p0 PreparedStatement cache size (if using). See https://www.mchange.com/projects/c3p0/#maxStatements[c3p0 maxStatements]
-`hibernate.c3p0.acquire_increment` or `c3p0.acquireIncrement`:: Number of connections c3p0 should acquire at a time when the pool is exhausted. See https://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 acquireIncrement]
-`hibernate.c3p0.idle_test_period` or `c3p0.idleConnectionTestPeriod`:: Idle time before a c3p0 pooled connection is validated. See https://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 idleConnectionTestPeriod]
-`hibernate.c3p0.initialPoolSize`:: The initial c3p0 pool size. If not specified, default is to use the min pool size. See https://www.mchange.com/projects/c3p0/#initialPoolSize[c3p0 initialPoolSize]
-Any other settings prefixed with `hibernate.c3p0.`:: Will have the `hibernate.` portion stripped and be passed to c3p0.
-Any other settings prefixed with `c3p0.`:: Get passed to c3p0 as is. See https://www.mchange.com/projects/c3p0/#configuration[c3p0 configuration]
+Driver-property forwarding depends on the provider.
+The built-in and some pool integrations derive driver properties from `hibernate.connection.*` settings, but the translation and exclusions are implementation-specific.
+Do not assume every such setting is forwarded by every pool.
+Use the pool's driver-property mechanism where applicable.
+For HikariCP, configure individual driver properties as `hibernate.hikari.dataSource.<property-name>`; the `dataSource.` prefix directs them into HikariCP's datasource properties.
+Do not supply a string value for `hibernate.hikari.dataSourceProperties`.
+For UCP, use <<database-ucp-properties-example,`hibernate.ucp.connectionProperties`>>.
 
 [[database-connectionprovider-hikari]]
-=== Using HikariCP
+==== HikariCP
 
-[IMPORTANT]
+Include `org.hibernate.orm:hibernate-hikaricp` and its dependencies, with the module version aligned with Hibernate ORM.
+Select `hikaricp` (or `hikari`) explicitly, or let <<database-connectionprovider,provider discovery>> select it.
+See the https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby[HikariCP configuration reference].
+
+Supply HikariCP properties with the `hibernate.hikari.` prefix.
+The integration translates these common properties, and then applies explicit prefixed settings, which take precedence:
+
+[cols="2,2",options="header"]
+|===
+|Common property |HikariCP property
+|Jakarta/Hibernate JDBC driver, URL, user, and password |`driverClassName`, `jdbcUrl`, `username`, and `password`
+|`hibernate.connection.pool_size` |`maximumPoolSize`
+|`hibernate.connection.autocommit` |`autoCommit`
+|`hibernate.connection.isolation` |`transactionIsolation`, translated to a JDBC constant name
+|===
+
+`hibernate.connection.login_timeout` is applied to the created datasource in seconds.
+For isolation values, see <<database-connectionprovider-isolation>>.
+
+This H2 example creates a Hibernate-owned pool and configures the pool to return connections with autocommit disabled.
+The matching `provider_disables_autocommit` setting allows resource-local transaction start to avoid acquiring a connection solely to disable autocommit; see <<database-autocommit>>.
+
+[[database-hikari-example]]
 ====
-To use the HikariCP this integration, the application must include the `hibernate-hikari` module jar (as well as its dependencies) on the classpath.
+[source,java,indent=0]
+----
+include::{database-hikari-examples}/DatabaseAccessHikariTests.java[tags=database-hikari]
+----
 ====
-
-Hibernate also provides support for applications to use https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pool.
-
-Set all of your Hikari settings in Hibernate prefixed by `hibernate.hikari.` and this `ConnectionProvider` will pick them up and pass them along to Hikari.
-Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding Hikari ones (any `hibernate.hikari.` prefixed ones have precedence):
-
-`hibernate.connection.driver_class`:: Mapped to Hikari's `driverClassName` setting
-`hibernate.connection.url`:: Mapped to Hikari's `jdbcUrl` setting
-`hibernate.connection.username`:: Mapped to Hikari's `username` setting
-`hibernate.connection.password`:: Mapped to Hikari's `password` setting
-`hibernate.connection.isolation`:: Mapped to Hikari's `transactionIsolation` setting. See <<ConnectionProvider support for transaction isolation setting>>.
-Note that Hikari only supports JDBC standard isolation levels (apparently).
-`hibernate.connection.autocommit`:: Mapped to Hikari's `autoCommit` setting
 
 [[database-connectionprovider-agroal]]
-=== Using Agroal
+==== Agroal
 
-[IMPORTANT]
-====
-To use the Agroal integration, the application must include the `hibernate-agroal` module jar (as well as its dependencies) on the classpath.
-====
+Include `org.hibernate.orm:hibernate-agroal` and its dependencies.
+Select `agroal` explicitly, or use <<database-connectionprovider,provider discovery>>.
+See the https://agroal.github.io/[Agroal documentation].
 
-Hibernate also provides support for applications to use https://agroal.github.io/[Agroal] connection pool.
+Supply Agroal properties with the `hibernate.agroal.` prefix.
+The integration reads those properties first, then applies supplied common Hibernate connection settings to the connection factory:
 
-Set all of your Agroal settings in Hibernate prefixed by `hibernate.agroal.` and this `ConnectionProvider` will pick them up and pass them along to Agroal connection pool.
-Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding Agroal ones (any `hibernate.agroal.` prefixed ones have precedence):
+[cols="2,2",options="header"]
+|===
+|Common property |Agroal property
+|`hibernate.connection.driver_class` |`providerClassName`
+|`hibernate.connection.url` |`jdbcUrl`
+|`hibernate.connection.username` |`principal`
+|`hibernate.connection.password` |`credential`
+|`hibernate.connection.isolation` |`jdbcTransactionIsolation`
+|`hibernate.connection.autocommit` |`autoCommit`
+|`hibernate.connection.login_timeout` |`loginTimeout`, in seconds
+|===
 
-`hibernate.connection.driver_class`:: Mapped to Agroal's `driverClassName` setting
-`hibernate.connection.url`:: Mapped to Agroal's `jdbcUrl` setting
-`hibernate.connection.username`:: Mapped to Agroal's `principal` setting
-`hibernate.connection.password`:: Mapped to Agroal's `credential` setting
-`hibernate.connection.isolation`:: Mapped to Agroal's `jdbcTransactionIsolation` setting. See <<ConnectionProvider support for transaction isolation setting>>.
-`hibernate.connection.autocommit`:: Mapped to Agroal's `autoCommit` setting
+These supplied common connection settings override the corresponding prefixed connection-factory settings.
+Pool size follows a different rule: `hibernate.agroal.maxSize` takes precedence over `hibernate.connection.pool_size`; if neither is supplied, the integration uses 10.
+Standard Jakarta connection settings are normalized by JPA bootstrap; see <<bootstrap-settings-merging>>.
+See <<database-connectionprovider-isolation>> for isolation values.
+
+[[database-connectionprovider-c3p0]]
+==== c3p0
+
+Include `org.hibernate.orm:hibernate-c3p0` and its dependencies.
+Select `c3p0` explicitly, or use <<database-connectionprovider,provider discovery>>.
+See the https://www.mchange.com/projects/c3p0/#configuration[c3p0 configuration reference].
+
+The integration recognizes the following mappings:
+
+[cols="2,2,3",options="header"]
+|===
+|Hibernate setting |c3p0 setting |Meaning
+|`hibernate.c3p0.min_size` |`c3p0.minPoolSize` |Minimum pool size
+|`hibernate.c3p0.max_size` |`c3p0.maxPoolSize` |Maximum pool size; `hibernate.connection.pool_size` is the fallback for the Hibernate setting
+|`hibernate.c3p0.timeout` |`c3p0.maxIdleTime` |Maximum idle time in seconds
+|`hibernate.c3p0.max_statements` |`c3p0.maxStatements` |Prepared-statement cache size
+|`hibernate.c3p0.acquire_increment` |`c3p0.acquireIncrement` |Number of connections acquired when growing the pool
+|`hibernate.c3p0.idle_test_period` |`c3p0.idleConnectionTestPeriod` |Interval in seconds between tests of idle connections
+|===
+
+Explicit Hibernate mappings take precedence over the corresponding c3p0 settings.
+Other `hibernate.c3p0.*` settings are translated to c3p0 properties, and `c3p0.*` settings are also passed through.
+For an explicit initial pool size, use `c3p0.initialPoolSize`.
+When this setting is absent, a configured Hibernate minimum pool size is used as the initial size and can replace a value supplied only as `hibernate.c3p0.initialPoolSize`.
+
+The integration also accepts common JDBC configuration and applies autocommit and isolation defaults when obtaining connections.
+See <<database-connectionprovider-isolation>> and <<settings-c3p0>> for the Hibernate settings.
 
 [[database-connectionprovider-oracleucp]]
-=== Using Oracle Universal Connection Pool
+==== Oracle Universal Connection Pool
 
-[IMPORTANT]
+Include `org.hibernate.orm:hibernate-ucp` and its dependencies.
+Select `ucp` explicitly, or use <<database-connectionprovider,provider discovery>>.
+See the https://docs.oracle.com/en/database/oracle/oracle-database/26/jjucp/intro.html[Oracle UCP documentation].
+
+Supply UCP datasource properties using the `hibernate.ucp.` prefix, for example `hibernate.ucp.maxPoolSize`.
+The integration maps `hibernate.connection.url`, `hibernate.connection.username`, and `hibernate.connection.password` to UCP's `URL`, `user`, and `password` properties, then applies prefixed settings.
+The corresponding Jakarta JDBC properties are supported through JPA bootstrap normalization; see <<bootstrap-settings-merging>>.
+The integration applies `hibernate.connection.isolation` and `hibernate.connection.autocommit` when obtaining a connection.
+See <<database-connectionprovider-isolation>> for isolation values.
+
+Use the value format required by each UCP property.
+For `hibernate.ucp.connectionProperties`, the current integration expects braces around a comma-space-separated list of driver properties:
+
+[[database-ucp-properties-example]]
 ====
-To use the Oracle Universal Connection Pool (aka UCP) integration, the application must include the `hibernate-ucp` module jar (as well as its dependencies) on the classpath.
-====
-
-Hibernate also provides support for applications using https://docs.oracle.com/en/database/oracle/oracle-database/26/jjucp/intro.html[Oracle Universal Connection Pool].
-
-UCP settings may be supplied by prefixing the setting name with `hibernate.ucp.`.
-Additionally, the UCP `ConnectionProvider` understands the following standard properties:
-
-`jakarta.persistence.jdbc.url` or `hibernate.connection.url`:: Mapped to UCP `URL` setting
-`jakarta.persistence.jdbc.user` or `hibernate.connection.username`:: Mapped to UCP `user` setting
-`jakarta.persistence.jdbc.password` or `hibernate.connection.password`:: Mapped to UCP `password` setting
-`hibernate.connection.isolation`:: Used to initialize the `Connection` retrieved from UCP. See <<ConnectionProvider support for transaction isolation setting>>.
-`hibernate.connection.autocommit`:: Used to initialize the `Connection` retrieved from UCP.
-Any other setting prefixed with `hibernate.ucp.`:: The `hibernate.ucp.` prefix is stripped and the remaining text is passed to UCP (for example, `hibernate.ucp.loginTimeout 5000`).
-
-[IMPORTANT]
-====
-You can pass further properties to the `Connection` provided by UCP by using the `hibernate.ucp.connectionProperties` property in the following manner:
-
-`hibernate.ucp.connectionProperties=oracle.jdbc.thinForceDNSLoadBalancing=true,oracle.jdbc.fanEnabled=true,oracle.jdbc.defaultConnectionValidation=SOCKET,oracle.jdbc.implicitStatementCacheSize=50,oracle.jdbc.loginTimeout=5000`
-
-You can find the exhaustive list of the supported `Connection` properties https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html[here].
-
+[source,java,indent=0]
+----
+include::{database-ucp-examples}/DatabaseAccessUcpTests.java[tags=database-ucp-properties]
+----
 ====
 
-The Hibernate property `hibernate.ucp.connectionFactoryClassName` selects between:
+Assign this string to `hibernate.ucp.connectionProperties`.
+The example enables a statement cache and sets the default row prefetch to 20.
+UCP's `hibernate.ucp.loginTimeout` is a datasource login timeout measured in seconds; driver-specific timeouts have their own names and units.
+See the https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html[Oracle JDBC property reference].
 
-. a standard connection pool: `oracle.jdbc.pool.OracleDataSource`
-. a _replay_ connection pool: `oracle.jdbc.replay.OracleDataSourceImpl` which allows using https://docs.oracle.com/en/database/oracle/oracle-database/26/jjdbc/application-continuity.html[Application Continuity] capabilities to mask planned and unplanned downtimes. Note that the `OracleDialect` knows  if Application Continuity is enabled by using the `isApplicationContinuity()` function.
+`hibernate.ucp.connectionFactoryClassName` can select `oracle.jdbc.pool.OracleDataSource` for ordinary connections or `oracle.jdbc.replay.OracleDataSourceImpl` for replay-capable connections.
+https://docs.oracle.com/en/database/oracle/oracle-database/26/jjdbc/application-continuity.html[Application Continuity] also requires appropriate database/service and application configuration; a connection-factory class alone does not establish replay safety.
 
 [[database-connectionprovider-drivermanager]]
-=== Using Hibernate's built-in (and unsupported) pooling
+==== Hibernate's built-in pool
 
 [IMPORTANT]
 ====
 The built-in connection pool is not supported for use in a production system.
 ====
 
-This section is here just for completeness.
-
-[[database-connectionprovider-provided]]
-=== User-provided Connections
-
-It is possible to use Hibernate by simply passing a Connection to use to the Session when the Session is opened.
-This usage is discouraged and not discussed here.
+With a JDBC URL and no earlier provider selection, Hibernate uses its DriverManager-based pool.
+It supports common URL, driver, credentials, pool-size, autocommit, isolation, and login-timeout settings.
+See <<settings-hibernate.connection>> for connection settings.
+For production pooling, use an externally managed datasource or one of the pool integrations above.
 
 [[database-connectionprovider-isolation]]
-=== ConnectionProvider support for transaction isolation setting
+=== Autocommit and transaction isolation
 
-All the provided `ConnectionProvider` implementations, apart from `DataSourceConnectionProvider`, support consistent setting of transaction isolation for all `Connections` obtained from the underlying pool.
-The value for `hibernate.connection.isolation` can be specified in one of 3 formats:
+[[database-autocommit]]
+==== Autocommit defaults and provider guarantees
 
-* the integer value accepted at the JDBC level.
-* the name of the `java.sql.Connection` constant field representing the isolation you would like to use.
-For example, `TRANSACTION_REPEATABLE_READ` for https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#TRANSACTION_REPEATABLE_READ[`java.sql.Connection#TRANSACTION_REPEATABLE_READ`].
-Note that this is only supported for JDBC standard isolation levels, not for isolation levels specific to a particular JDBC driver.
-* a short-name version of the java.sql.Connection constant field without the `TRANSACTION_` prefix. For example, `REPEATABLE_READ` for https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#TRANSACTION_REPEATABLE_READ[`java.sql.Connection#TRANSACTION_REPEATABLE_READ`].
-Again, this is only supported for JDBC standard isolation levels, not for isolation levels specific to a particular JDBC driver.
+`hibernate.connection.autocommit` requests a connection default from providers that support it.
+It does not configure an externally supplied datasource's pool.
+
+`hibernate.connection.provider_disables_autocommit=true` asserts that every connection returned by the provider already has autocommit disabled.
+It does not disable autocommit itself.
+With this assertion, Hibernate can skip acquiring a connection solely to inspect and disable autocommit at resource-local transaction start.
+Configure the pool consistently before enabling the assertion, as in <<database-hikari-example>>.
+If the assertion is false in practice, SQL may execute in autocommit mode outside the intended transaction boundary.
+
+[[database-isolation-values]]
+==== Isolation defaults
+
+Supporting providers accept `hibernate.connection.isolation` as:
+
+* A JDBC integer value, for example `2` for `Connection.TRANSACTION_READ_COMMITTED`.
+* A JDBC constant name, for example `TRANSACTION_REPEATABLE_READ`.
+* Its short name, for example `REPEATABLE_READ`.
+
+Hibernate's supplied integrations validate both numeric and named values against the standard JDBC isolation levels; unknown numeric values are rejected before reaching the driver.
+The datasource provider does not apply this setting; configure the external datasource or pool instead.
+Custom providers define their own support.
+This is a connection default, not a query lock request or a transaction timeout.
+See <<transactions>> for transaction boundaries and timeouts and <<locking>> for lock requests.
 
 [[database-connection-handling]]
-=== Connection handling
+=== Connection acquisition and release
 
-The connection handling mode is defined by the
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/jdbc/spi/PhysicalConnectionHandlingMode.html[`PhysicalConnectionHandlingMode`] enumeration which provides the following strategies:
+link:{doc-javadoc-url}org/hibernate/resource/jdbc/spi/PhysicalConnectionHandlingMode.html[`PhysicalConnectionHandlingMode`] combines acquisition and release policies.
+Set `hibernate.connection.handling_mode` to a mode name or enum value to override the coordinator default.
 
-`IMMEDIATE_ACQUISITION_AND_HOLD`::
-The `Connection` will be acquired as soon as the `Session` is opened and held until the `Session` is closed.
-`DELAYED_ACQUISITION_AND_HOLD`::
-The `Connection` will be acquired as soon as it is needed and then held until the `Session` is closed.
-`DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT`::
-The `Connection` will be acquired as soon as it is needed and will be released after each statement is executed.
-`DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION`::
-The `Connection` will be acquired as soon as it is needed and will be released after each transaction is completed.
+[cols="2,2,3",options="header"]
+|===
+|Mode |Acquisition |Release
+|`IMMEDIATE_ACQUISITION_AND_HOLD` |When the session opens |When the session closes
+|`DELAYED_ACQUISITION_AND_HOLD` |When needed |When the session closes
+|`DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT` |When needed |After a statement, subject to aggressive-release support and open JDBC resources
+|`DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION` |When needed |During normal before-completion processing; after-completion cleanup handles cases such as rollback that bypass before-completion
+|`DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION` |When needed |After transaction completion
+|===
 
-If you don't want to use the default connection handling mode, you can specify a connection handling mode via the `hibernate.connection.handling_mode` configuration property. For more details, check out the
-<<appendices/SettingsReference.adoc#settings-jdbc,Database connection properties>> section.
+These policies describe release from Hibernate's use. In a pool, releasing a connection normally returns a handle or lease instead of closing the physical database connection.
+Not every provider and transaction configuration supports every policy.
+See <<settings-hibernate.connection.handling_mode>> for the setting.
 
+[[_transaction_type_and_connection_handling]]
 ==== Transaction type and connection handling
 
-By default, the connection handling mode is given by the underlying transaction coordinator. There are two types of transactions: `RESOURCE_LOCAL` (which involves a single database `Connection` and the transaction is controlled via the `commit` and `rollback` `Connection` methods) and `JTA` (which may involve multiple resources including database connections, JMS queues, etc).
+The transaction coordinator supplies the default policy.
+See <<transactions>> for transaction demarcation and JTA integration.
 
-===== RESOURCE_LOCAL transaction connection handling
+[[_resource_local_transaction_connection_handling]]
+===== Resource-local defaults and transaction start
 
-For `RESOURCE_LOCAL` transactions, the connection handling mode is `DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION` meaning that the database connection is acquired when needed and released after the current running transaction is either committed or rolled back.
+The default is `DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION`.
+Normally, starting a resource-local transaction acquires a connection to determine its initial autocommit state and disable autocommit.
+With the <<database-autocommit,provider-disables-autocommit assertion>>, acquisition may be delayed until another operation needs the connection.
+That operation might execute SQL, access metadata, or run a JDBC callback; delayed acquisition does not guarantee a particular first statement or eliminate bootstrap connections.
 
-However, because Hibernate needs to make sure that the default autocommit mode is disabled on the JDBC `Connection`
-when starting a new transaction, the `Connection` is acquired and the autocommit mode is set to `false`.
+[[_jta_transaction_connection_handling]]
+===== JTA defaults and aggressive release
 
-[NOTE]
+The JTA coordinator defaults to `DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT`.
+If the provider does not support aggressive release, Hibernate uses delayed acquisition and after-transaction release instead.
+Registered resources, such as an open result set, can defer after-statement release.
+
+A managed provider must preserve the appropriate transaction association when a connection is reacquired.
+This does not require identical Java `Connection` handle objects or universal thread affinity.
+Releasing a handle is not a transaction commit and does not release the transaction's database locks.
+Choose overrides according to the capabilities and requirements of the datasource and transaction environment, not assumptions about application-server call patterns.
+
+[[database-jdbc-access]]
+=== Application-supplied connections and JDBC work
+
+[[database-connectionprovider-provided]]
+==== Supplied connections
+
+[[_user_provided_connections]]A session opened with link:{doc-javadoc-url}org/hibernate/SessionBuilder.html#connection(java.sql.Connection)[`SessionBuilder.connection()`] uses that connection with `IMMEDIATE_ACQUISITION_AND_HOLD` semantics.
+The application must close the connection after the session is finished; closing the session releases Hibernate's JDBC resources but does not close the supplied connection.
+Resource-local transaction operations on that session can still commit or roll back the connection.
+Supplying it does not make transaction boundaries irrelevant.
+`StatelessSessionBuilder.connection()` also accepts an application-owned connection.
+
+This H2 example uses the same mapped `Record` as the datasource example.
+The connection resource scope encloses the session scope so that the session closes first.
+
+[[database-supplied-example]]
 ====
-If you are using a connection pool `DataSource` that already disabled the autocommit mode for every pooled `Connection`, you should set the `hibernate.connection.provider_disables_autocommit` to `true` and the database connection acquisition will be, indeed, delayed until Hibernate needs to execute the first SQL statement.
+[source,java,indent=0]
+----
+include::{database-guide-examples}/DatabaseAccessGuideTests.java[tags=database-supplied]
+----
 ====
 
-===== JTA transaction connection handling
+[[database-jdbc-work]]
+==== JDBC callbacks
 
-For `JTA` transactions, the connection handling mode is `DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT` meaning that the database connection is acquired when needed and released after each statement execution.
+Use `Session.doWork()` for JDBC work without a returned result, or `doReturningWork()` for a result.
+These callbacks borrow the session's connection and participate in its transaction.
+Close statements and result sets created in a callback, but do not close the borrowed connection or commit or roll back the transaction inside the callback.
 
-The reason for releasing the database connection after statement execution is because some Java EE application servers
-report a connection leak when a method call goes from one EJB to another. However, even if the JDBC `Connection` is released to the pool, the `Connection` is still allocated to the current executing `Thread`, hence when executing a subsequent statement in the current running transaction, the same `Connection` object reference will be obtained from the pool.
+The following example uses H2 and an `AccessRecord` test table, with no previously loaded entities that the JDBC insert could leave stale:
 
-[NOTE]
+[[database-work-example]]
 ====
-If the Java EE application server or JTA transaction manager supports switching from one EJB to another while the transaction gets propagated from the outer EJB to the inner one,
-and no connection leak false positive is being reported, then you should consider switching to `DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION` via the `hibernate.connection.handling_mode` configuration property.
+[source,java,indent=0]
+----
+include::{database-guide-examples}/DatabaseAccessGuideTests.java[tags=database-work]
+----
 ====
 
-==== User-provided connections
-
-If the current `Session` was created using the
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/SessionBuilder.html[`SessionBuilder`] and a JDBC `Connection` was provided via the
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/SessionBuilder.html#connection-java.sql.Connection-[`SessionBuilder#connection`] method, then the user-provided `Connection` is going to be used, and
-the connection handling mode will be `IMMEDIATE_ACQUISITION_AND_HOLD`.
-
-Therefore for user-provided connection, the connection is acquired right away and held until the current `Session` is closed, without being influenced by the Jakarta Persistence or Hibernate transaction context.
+Direct JDBC does not automatically flush pending entity changes, refresh managed state, or maintain ORM cache entries.
+Use an explicit <<flushing-explicit,flush>> when pending ORM changes must be visible to JDBC work, and account for <<pc-refresh,refreshing managed state>> and <<caching-invalidation,cache invalidation>> after direct writes.
+The callbacks are Hibernate APIs; if working from an `EntityManager`, use `unwrap(Session.class)` where this provider-specific access is required.
 
 [[database-dialect]]
-=== Database Dialect
+=== Dialect discovery and bootstrap metadata
 
-Although SQL is now relatively standardized&mdash;much more so than in the past&mdash;it's still the case that each database vendor implements a different dialect of SQL that, while overlapping significantly with ANSI SQL, forms neither a subset, nor a superset, of the standard.
+[[database-dialect-discovery]]
+==== Automatic discovery and custom dialects
 
-Hibernate abstracts over variations between dialects of SQL via the class `org.hibernate.dialect.Dialect`.
+Hibernate uses a link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html[`Dialect`] to adapt SQL and database operations to database capabilities.
+For supported databases it normally determines the dialect from database information, so an explicit `hibernate.dialect` setting is usually unnecessary.
+A custom or link:{doc-dialect-url}#third-party-dialects[third-party dialect] may require explicit selection.
+See the link:{doc-dialect-url}[Dialect guide] for supported databases and versions, and <<portability>> for broader portability considerations.
 
-- There's a subclass of `Dialect` for each supported relational database in the package `org.hibernate.dialect`.
-- Additional community-supported ``Dialect``s are available in the separate module `hibernate-community-dialects`.
+[[database-bootstrap-metadata]]
+==== Bootstrap metadata access
 
-Starting with Hibernate 6, it's no longer necessary to explicitly specify a dialect using the configuration property `hibernate.dialect`, and so setting that property is now discouraged.
-An exception is the case of custom or link:{doc-dialect-url}#third-party-dialects[third-party] ``Dialect``s.
+Bootstrap normally obtains JDBC metadata, which may acquire a connection before any session is opened.
+`hibernate.boot.allow_jdbc_metadata_access` accepts a link:{doc-javadoc-url}org/hibernate/engine/jdbc/env/JdbcMetadataOnBoot.html[`JdbcMetadataOnBoot`] value or a case-insensitive option name:
 
-NOTE: For information about available dialects and compatible database versions, see the link:{doc-dialect-url}[dialect guide].
+`ALLOW` (default):: Attempt metadata access; if it fails, Hibernate may use implicit or explicitly configured information. This does not guarantee successful bootstrap when required database information is missing.
+`REQUIRE`:: Require metadata access and propagate access failures.
+`DISALLOW`:: Skip this metadata access. Supply an explicit dialect or database product information; specifying the database version is recommended so that capability decisions match the deployment.
+
+Legacy boolean values are also accepted: `true` means `ALLOW`, and `false` means `DISALLOW`.
+The following example supplies H2 product information without consulting JDBC metadata:
+
+[[database-metadata-example]]
+====
+[source,java,indent=0]
+----
+include::{database-guide-examples}/DatabaseAccessGuideTests.java[tags=database-metadata]
+----
+====
+
+Supply connection configuration separately if the application needs database access.
+The example disables Hibernate schema actions; it does not configure a pool.
+Database major/minor version settings are also available; see <<settings-jdbc>>.
+Disabling this metadata access does not guarantee an entirely connection-free startup: pool initialization and <<schema-generation,schema tooling>> can still connect.
+Session acquisition/release modes do not control those bootstrap operations.

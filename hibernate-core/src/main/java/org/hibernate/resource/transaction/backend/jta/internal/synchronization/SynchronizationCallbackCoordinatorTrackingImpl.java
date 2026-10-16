@@ -1,8 +1,9 @@
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
+import jakarta.transaction.Status;
+
 import org.hibernate.HibernateException;
 
-import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isCommitted;
 import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isRollback;
 import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
@@ -18,6 +19,8 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 
 	private volatile long registrationThreadId;
 	private volatile boolean delayedCompletionHandling;
+	// Published to the application thread by the volatile delayedCompletionHandling flag.
+	private int delayedCompletionStatus;
 
 	public SynchronizationCallbackCoordinatorTrackingImpl(SynchronizationCallbackTarget target) {
 		// super ctor calls reset() followed by pulse()
@@ -36,6 +39,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		// next Session transaction occurring on a different thread (though that transaction would need to completely
 		// operate on that thread).
 		delayedCompletionHandling = false;
+		delayedCompletionStatus = Status.STATUS_UNKNOWN;
 	}
 
 	@Override
@@ -55,6 +59,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 			if ( ! isRegistrationThread ) {
 				// So we do have the condition of a rollback initiated from a separate thread.
 				// Set the flag here and check for it in SessionImpl. See HHH-7910.
+				delayedCompletionStatus = status;
 				delayedCompletionHandling = true;
 				JTA_LOGGER.rollbackFromBackgroundThread( status );
 				return;
@@ -62,7 +67,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		}
 
 		// otherwise, do the callback immediately
-		doAfterCompletion( isCommitted( status ), false );
+		doAfterCompletion( status, false );
 	}
 
 	@Override
@@ -73,11 +78,10 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 	@Override
 	public void processAnyDelayedAfterCompletion() {
 		if ( delayedCompletionHandling ) {
+			final int status = delayedCompletionStatus;
 			delayedCompletionHandling = false;
 
-			// false here (rather than how we used to keep and check the status) because as discussed above
-			// the delayed logic should only ever occur during rollback
-			doAfterCompletion( false, true );
+			doAfterCompletion( status, true );
 
 			// NOTE: doAfterCompletion calls reset
 			throw new HibernateException( "Transaction was rolled back in a different thread" );

@@ -254,25 +254,11 @@ include::{example-dir-association}/OneToOneBidirectionalTest.java[tags=associati
 [[associations-one-to-one-bidirectional-lazy]]
 ====== Bidirectional `@OneToOne` lazy association
 
-Even when the parent-side association is marked for lazy fetching,
-Hibernate cannot honor this request since it cannot know whether the association is `null` or not.
-
-The only way to figure out whether there is an associated record on the child side is to fetch the child association using a secondary query.
-Because this can lead to N+1 query issues, it's much more efficient to use unidirectional `@OneToOne` associations with the `@MapsId` annotation in place.
-
-For lazy fetching of the parent side of a bidirectional association, enable bytecode enhancement for lazy state initialization.
-
-[[associations-one-to-one-bidirectional-lazy-example]]
-.Bidirectional `@OneToOne` lazy parent-side association
-====
-[source,java]
-----
-include::{example-dir-association}/OneToOneBidirectionalLazyTest.java[tags=associations-one-to-one-bidirectional-lazy-example,indent=0]
-----
-====
-
-For more about how to enable Bytecode enhancement,
-see the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement, Bytecode Enhancement chapter>>.
+The inverse side does not hold the foreign key, so determining whether an optional association exists
+can affect when it loads. See <<fetching-association-constraints,association-specific loading constraints>>
+for enhancement requirements and the lazy mapping example.
+A shared-primary-key mapping using `@MapsId` is a separate identifier and association design choice;
+see <<identifiers-derived-mapsid,derived identifier mapping with `@MapsId`>>.
 
 [[associations-many-to-many]]
 ==== `@ManyToMany`
@@ -325,7 +311,7 @@ Since the other side might be referenced by other entities on the parent-side, t
 For example, if `@ManyToMany(cascade = CascadeType.ALL)` was defined and the first person would be deleted,
 Hibernate would throw an exception because another person is still associated with the address that's being deleted.
 
-[source,java]
+[source,java,opts=novalidate]
 ----
 Person person1 = entityManager.find(Person.class, personId);
 entityManager.remove(person1);
@@ -463,6 +449,7 @@ no physical foreign-key.
 
 `@ManyToOne` and `@OneToOne` associations annotated with `@NotFound` are always fetched eagerly even
 if the `fetch` strategy is set to `FetchType.LAZY`.
+See <<fetching-association-constraints>> for how such mapping requirements affect fetch plans.
 
 
 [TIP]
@@ -572,7 +559,7 @@ include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found
 ----
 ====
 
-See <<hql-model-functions>>.
+See link:{doc-query-language-url}#model-functions[functions for ids and versions].
 
 
 [[associations-any]]
@@ -873,18 +860,16 @@ include::{domain-associations-extrasdir}/associations-JoinColumnOrFormula-fetchi
 Therefore, the `@JoinColumnOrFormula` annotation is used to define a custom join association between the parent-child association.
 
 
-
 [[associations-one-to-one-formulas]]
-==== Formula-based one-to-one associations and shared identifier columns
+==== One-to-one associations using formulas
 
-A `@OneToOne` association may combine physical join columns with SQL formulas.
-For each physical join column that is also part of the owner's primary key,
-Hibernate infers `insertable=false, updatable=false` for the association's use of
-that column. The identifier mapping remains responsible for its value.
-This includes individual columns of an `@IdClass` or `@EmbeddedId`.
+A `@OneToOne` association may use SQL formulas to identify the associated row, including a combination of formulas and read-only physical join columns.
+This supports mappings previously expressed using formulas in an `hbm.xml` `<one-to-one>`.
+The join must contain at least one formula and reference the entire primary key of the target entity for the optional one-to-one behavior described here.
 
-For example, when `Person.name` is the identifier and `Address` is identified by
-`(personName, addressType)`, the HOME address association may be declared as:
+For example, suppose `Person.name` is the identifier of `Person`, and `Address` has a composite identifier consisting of `personName` and `addressType`.
+A person may have one address of each type, such as `HOME` or `MAILING`.
+The following association selects the person's home address:
 
 [source,java]
 ----
@@ -898,40 +883,119 @@ For example, when `Person.name` is the identifier and `Address` is identified by
 private Address address;
 ----
 
-Explicit `insertable=true` or `updatable=true` does not opt out of inference for
-shared owner identifier columns. Other physical join columns retain their declared
-write flags. After inference, conflicting insertability or updatability among the
-physical columns is a mapping error, even when a formula separates those columns.
+The join compares `Person.name` with `Address.personName`, and the SQL literal `'HOME'` with `Address.addressType`.
+A second association using `'MAILING'` may independently select the mailing address.
+Join-column names and `referencedColumnName` values, including those in `@JoinFormula`, identify logical mapping column names, which Hibernate resolves using the <<PhysicalNamingStrategy,physical naming strategy>>.
+Formula expressions are native SQL and must use physical database column names, with the appropriate case and quoting for the database in use.
+Hibernate does not apply the naming strategy to column names embedded in a formula expression.
 
-Read-only inference depends on the source column belonging to the owner's identifier,
-independently of whether the join references a target primary key or unique key.
-Special one-to-one binding is a separate decision: when the tuple references the
-whole target primary key and all physical join columns are effectively read-only,
-Hibernate uses its special one-to-one representation, unless an explicit `@NotFound`
-policy selects the existing logical many-to-one path. An optional special one-to-one
-resolves a missing target to `null` without requiring `@NotFound(IGNORE)`.
+A join may also consist entirely of formulas.
+For the same model, the equivalent declaration is:
 
-Assigning an association does not copy the target's identifier into the owner or
-write the shared identifier column. Declared cascades still apply, and applications
-must set the associated entity's own identifier and back-reference consistently.
-Writable mixed joins without shared owner identifier columns retain their existing
-INSERT and UPDATE behavior.
+[source,java]
+----
+@OneToOne(optional = true, cascade = CascadeType.ALL)
+@JoinColumnsOrFormulas({
+    @JoinColumnOrFormula(formula = @JoinFormula(
+            value = "name", referencedColumnName = "personName")),
+    @JoinColumnOrFormula(formula = @JoinFormula(
+            value = "'HOME'", referencedColumnName = "addressType"))
+})
+private Address address;
+----
 
-Hibernate mapping XML versions 8.0 and newer support the same inference. For a
-positional tuple whose resolved target identifier order is `personName, addressType`:
+===== Missing targets and lifecycle
+
+With `optional = true`, an absent matching address is represented by `null`, without requiring `@NotFound(IGNORE)`.
+The person may exist with a home address, a mailing address, both, or neither.
+Direct loading and left fetch joins preserve the person when an optional address is missing.
+As with other joins, an inner fetch join excludes a person for whom no matching address exists.
+
+[IMPORTANT]
+====
+Without bytecode enhancement, optional formula one-to-one associations are resolved eagerly, including when `FetchType.LAZY` is requested.
+<<BytecodeEnhancement-lazy-loading,Bytecode enhancement>> can allow lazy fetching; declaring `FetchType.LAZY` alone does not guarantee deferred loading.
+====
+
+Formula expressions and read-only join columns do not receive values from association assignments.
+Assigning `person.address` does not copy an identifier from the address into the person or update the discriminator used by the formula.
+The application must initialize the address's identifier and any separately mapped back-reference consistently.
+Declared cascades still apply: in the example, persistence and removal cascade to the home address.
+The read-only join does not make the associated entity itself read-only.
+A formula join does not create a physical foreign-key constraint; a separately mapped `Address.person` association may still define one.
+
+Explicit `@NotFound` declarations retain their existing semantics.
+In particular, `@NotFound(EXCEPTION)` still rejects a missing target, while `@NotFound(IGNORE)` treats it as `null`.
+References to a target unique key instead of the entire primary key retain their existing association semantics; they do not acquire this optional formula one-to-one behavior.
+
+===== Shared owner identifier columns
+
+For an owning formula one-to-one association, Hibernate infers `insertable = false, updatable = false` for each physical join column that is also part of the owner's primary key.
+In the first example, the `name` column is written through the `Person` identifier mapping, and is read-only through `address`.
+There is no need to repeat the read-only flags on `@JoinColumn`.
+Explicit `insertable = true` or `updatable = true` does not opt out of this inference.
+
+Inference applies separately to each column, including individual components of an `@IdClass` or `@EmbeddedId` and inherited identifier columns.
+It uses the resolved source table and column, respecting column overrides, physical naming strategies, and quoting.
+A secondary-table column does not qualify merely because it has the same name as an identifier column.
+The join may reuse any subset of the owner's identifier columns.
+Neither the size of the target identifier nor a reference to a target unique key changes which source columns are inferred read-only.
+Explicit `@NotFound` handling does not disable this inference.
+
+Other physical join columns retain their declared insertability and updatability.
+After inference, the physical columns of the association must agree on these flags, even when formulas separate them in the declaration.
+For example, if a tuple combines a shared identifier column with a non-identifier column, the latter must also be declared `insertable = false, updatable = false`.
+Otherwise, Hibernate rejects the mapping with an error identifying the association and conflicting columns.
+Formulas themselves are always read-only.
+
+The optional formula one-to-one behavior requires all physical join columns to be read-only and the tuple to reference the entire target primary key.
+Mixed joins whose non-identifier columns remain writable retain their existing behavior, subject to the flag consistency requirement.
+
+[IMPORTANT]
+====
+The identifier mapping or generator remains responsible for supplying the owner's identifier value.
+An association sharing an owner identifier column cannot supply that value during an INSERT, even if the identifier mapping itself is declared non-insertable.
+When migrating a mapping that relied on the association to write the identifier column, move that responsibility to the identifier mapping or generator.
+====
+
+The inference is limited to owning, non-identity-defining one-to-one associations containing at least one formula.
+It does not change formula-free associations, declared `@ManyToOne` associations, join-table associations, or associations that themselves define identity using `@Id` or `@MapsId`.
+It does not infer `@MapsId`, propagate identifiers, or change the owner's identifier mapping.
+
+===== Hibernate mapping XML
+
+Hibernate mapping XML version 8.0 and newer supports the same formula one-to-one mapping and shared identifier inference.
+For example, inside an `<entity>` mapping for `Person`:
 
 [source,xml]
 ----
-<one-to-one name="address" target-entity="Address" optional="true">
-    <join-column name="name"/>
-    <join-formula>'HOME'</join-formula>
-    <cascade><cascade-all/></cascade>
-</one-to-one>
+<attributes>
+    <id name="name"><column name="name"/></id>
+    <one-to-one name="address" target-entity="Address" optional="true">
+        <join-column name="name"/>
+        <join-formula>'HOME'</join-formula>
+        <cascade><cascade-all/></cascade>
+    </one-to-one>
+</attributes>
 ----
 
-The inference does not apply to Hibernate XML 7.0, legacy `hbm.xml`, associations
-without formulas, declared many-to-one associations, join-table associations, or
-identity-defining associations such as `@MapsId`.
+This fragment belongs to a document using the Hibernate mapping namespace and version:
+
+[source,xml]
+----
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+    <!-- entity mappings -->
+</entity-mappings>
+----
+
+The example assumes the resolved target identifier column order is `personName, addressType`.
+XML formulas identify target columns positionally, so declare the join tuple in that resolved order.
+No `property-ref` is needed when the tuple references the target primary key.
+To express the formula-only variant, replace `<join-column name="name"/>` with `<join-formula>name</join-formula>`.
+
+These XML extensions are specific to Hibernate mapping XML, not standard Jakarta Persistence XML.
+Shared identifier read-only inference does not apply to Hibernate mapping XML 7.0 or legacy `hbm.xml`; their existing write semantics remain unchanged.
 
 
 [[auto-bidir-mgmt]]

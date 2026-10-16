@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -30,7 +31,7 @@ public class VersionSourceTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
+		LocalDateTime initialVersion = scope.fromTransaction( entityManager -> {
 			//tag::locking-optimistic-version-timestamp-source-persist-example[]
 			Person person = new Person();
 			person.setId(1L);
@@ -41,6 +42,7 @@ public class VersionSourceTest {
 			entityManager.persist(person);
 			assertNotNull( person.getVersion() );
 			//end::locking-optimistic-version-timestamp-source-persist-example[]
+			return person.getVersion();
 		});
 		awaitServerTimestampTick( scope );
 		scope.inTransaction( entityManager -> {
@@ -50,6 +52,7 @@ public class VersionSourceTest {
 		awaitServerTimestampTick( scope );
 		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
+			assertTrue( person.getVersion().isAfter( initialVersion ) );
 			person.setFirstName("John");
 		});
 	}

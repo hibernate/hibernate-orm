@@ -36,6 +36,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SimpleSelect;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -578,7 +579,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			long value)
 					throws SQLException {
 		TABLE_GENERATOR_LOGGER.updatingCurrentValueForSegment( updateValue, segmentValue );
-		try ( var statement = prepareStatement( connection, updateQuery, logger, listener, session ) ) {
+		try ( var resource = prepareStatement( connection, updateQuery, logger, listener, session ) ) {
+			final var statement = resource.statement();
 			bindLong( statement, 1, updateValue );
 			bindLong( statement, 2, value );
 			statement.setString( 3, segmentValue );
@@ -597,13 +599,15 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SharedSessionContractImplementor session)
 					throws SQLException {
 		TABLE_GENERATOR_LOGGER.retrievingCurrentValueForSegment( segmentValue );
-		try ( var prepareStatement = prepareStatement( connection, selectQuery, logger, listener, session ) ) {
+		try ( var resource = prepareStatement( connection, selectQuery, logger, listener, session ) ) {
+			final var prepareStatement = resource.statement();
 			prepareStatement.setString( 1, segmentValue );
 			try ( var resultSet = executeQuery( prepareStatement, listener, selectQuery, session ) ) {
 				if ( !resultSet.next() ) {
 					final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
 					TABLE_GENERATOR_LOGGER.insertingInitialValueForSegment( initializationValue, segmentValue );
-					try ( var statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
+					try ( var insertResource = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
+						final var statement = insertResource.statement();
 						statement.setString( 1, segmentValue );
 						bindLong( statement, 2, initializationValue );
 						executeUpdate( statement, listener, insertQuery, session );
@@ -629,7 +633,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		}
 	}
 
-	private PreparedStatement prepareStatement(
+	private StatementResource prepareStatement(
 			Connection connection,
 			String sql,
 			SqlStatementLogger logger,
@@ -645,11 +649,18 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			if ( statistics != null && statistics.isStatisticsEnabled() ) {
 				statistics.prepareStatement();
 			}
-			return connection.prepareStatement( sql );
+			return new StatementResource( connection.prepareStatement( sql ), statistics );
 		}
 		finally {
 			eventMonitor.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			listener.jdbcPrepareStatementEnd();
+		}
+	}
+
+	private record StatementResource(PreparedStatement statement, StatisticsImplementor statistics) implements AutoCloseable {
+		@Override
+		public void close() throws SQLException {
+			statement.close();
 			if ( statistics != null && statistics.isStatisticsEnabled() ) {
 				statistics.closeStatement();
 			}

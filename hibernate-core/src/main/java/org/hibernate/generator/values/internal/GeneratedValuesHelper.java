@@ -90,6 +90,18 @@ public class GeneratedValuesHelper {
 			EntityPersister persister,
 			EventType timing,
 			SharedSessionContractImplementor session) throws SQLException {
+		return getGeneratedValues( resultSet, statement, persister, timing, session, null );
+	}
+
+	/// Reads generated values, allowing a mutation's result checker to report a more
+	/// specific failure before the generic missing-generated-values diagnostic.
+	public static GeneratedValues getGeneratedValues(
+			ResultSet resultSet,
+			PreparedStatement statement,
+			EntityPersister persister,
+			EventType timing,
+			SharedSessionContractImplementor session,
+			Runnable emptyResultHandler) throws SQLException {
 		if ( resultSet == null ) {
 			return null;
 		}
@@ -105,7 +117,7 @@ public class GeneratedValuesHelper {
 		}
 
 		final var generatedValues = new GeneratedValuesImpl( generatedProperties );
-		final var results = readGeneratedValues( resultSet, statement, persister, mappingProducer, session );
+		final var results = readGeneratedValues( resultSet, statement, persister, mappingProducer, session, emptyResultHandler );
 
 		if ( CORE_LOGGER.isDebugEnabled() ) {
 			CORE_LOGGER.extractedGeneratedValues(
@@ -138,7 +150,8 @@ public class GeneratedValuesHelper {
 			PreparedStatement statement,
 			EntityPersister persister,
 			JdbcValuesMappingProducer mappingProducer,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session,
+			Runnable emptyResultHandler) {
 		final var factory = session.getFactory();
 		final var executionContext = new BaseExecutionContext( session );
 		final var directResultSetAccess =
@@ -168,6 +181,9 @@ public class GeneratedValuesHelper {
 				ListResultsConsumer.<Object[]>instance( ListResultsConsumer.UniqueSemantic.NONE )
 						.consume( jdbcValues, session, NO_OPTIONS, valuesProcessingState, rowProcessingState, rowReader );
 		if ( results.isEmpty() ) {
+			if ( emptyResultHandler != null ) {
+				emptyResultHandler.run();
+			}
 			throw new HibernateException( "The database returned no natively generated values : "
 											+ persister.getNavigableRole().getFullPath() );
 		}

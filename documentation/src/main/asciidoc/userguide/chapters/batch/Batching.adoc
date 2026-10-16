@@ -2,421 +2,215 @@
 == Batching
 :example-dir-doc-batch: {core-project-dir}/src/test/java/org/hibernate/orm/test/batch
 :example-dir-bulkid: {core-project-dir}/src/test/java/org/hibernate/orm/test/bulkid
-:extrasdir: extras
+:batch-extras-dir: extras
+
+Processing many rows involves separate choices about persistence semantics, JDBC execution,
+persistence-context memory, and transaction boundaries. Choose a processing model first,
+then measure the batching and resource-management controls appropriate to it.
+
+[[batch-processing-models]]
+=== Choosing a processing model
+
+[cols="1,3,2",options="header"]
+|===
+|Model |Behavior |Typical use
+|Stateful entity operations |Managed identity, dirty checking, cascades, and lifecycle callbacks
+  |Work requiring ordinary entity lifecycle semantics
+|Stateless commands |Explicit operations on detached objects without a persistent first-level cache
+  |Processing bounded groups with explicit inserts, updates, or deletes
+|Bulk mutations |Set-based changes without loading each matching entity into the application
+  |Applying a common change or predicate-based deletion to many entities
+|===
+
+_JDBC batching_ groups compatible SQL statement executions. It is an optimization of entity operations,
+not the same operation as an HQL bulk update or delete.
+It is also distinct from <<fetching-batch,association batch fetching>>, multiple-id loading,
+and JDBC _fetch size_, which concerns retrieving result rows.
+
+Three independent controls matter for a stateful workload:
+
+* JDBC batch size: how many compatible parameter sets are accumulated before executing a batch.
+* Flush/clear interval: how much managed state is retained before writing pending changes and detaching objects.
+* Transaction chunk size: how much work shares a commit or rollback boundary.
+
+These values need not be equal. A large JDBC batch does not limit persistence-context memory,
+and clearing the context does not commit a transaction.
 
 [[batch-jdbcbatch]]
-=== JDBC batching
-
-JDBC offers support for batching together SQL statements that can be represented as a single PreparedStatement.
-Implementation wise this generally means that drivers will send the batched operation to the server in one call,
-which can save on network calls to the database. Hibernate can leverage JDBC batching.
-The following settings control this behavior.
-
-`hibernate.jdbc.batch_size`::
-	Controls the maximum number of statements Hibernate will batch together before asking the driver to execute the batch.
-	Zero or a negative number disables this feature.
-
-`hibernate.jdbc.batch.builder`::
-	Names the implementation class used to manage batching capabilities.
-	It is almost never a good idea to switch from Hibernate's default implementation.
-	But if you wish to, this setting would name the `org.hibernate.engine.jdbc.batch.spi.BatchBuilder` implementation to use.
-
-`hibernate.order_updates`::
-	Forces Hibernate to order SQL updates by the entity type and the primary key value of the items being updated.
-	This allows for more batching to be used. It will also result in fewer transaction deadlocks in highly concurrent systems.
-	Comes with a performance hit, so benchmark before and after to see if this actually helps or hurts your application.
-
-`hibernate.order_inserts`::
-	Forces Hibernate to order inserts to allow for more batching to be used.
-	Comes with a performance hit, so benchmark before and after to see if this actually helps or hurts your application.
-
-[NOTE]
-====
-Since version 5.2, Hibernate allows overriding the global JDBC batch size given by the `hibernate.jdbc.batch_size` configuration property on a per `Session` basis.
-====
-
-[[batch-session-jdbc-batch-size-example]]
-.Hibernate specific JDBC batch size configuration on a per `Session` basis
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-jdbc-batch-size-example]
-----
-====
-
-[[batch-session-batch]]
-=== Session batching
-
-The following example shows an anti-pattern for batch inserts.
-
-[[batch-session-batch-example]]
-.Naive way to insert 100 000 entities with Hibernate
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-example]
-----
-====
-
-There are several problems associated with this example:
-
-. Hibernate caches all the newly inserted `Person` instances in the session-level cache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
-  If the maximum memory allocated to the JVM is rather low, this example could fail with an `OutOfMemoryException`.
-  The Java 1.8 JVM allocated either 1/4 of available RAM or 1Gb, which can easily accommodate 100 000 objects on the heap.
-. long-running transactions can deplete a connection pool so other transactions don't get a chance to proceed.
-. JDBC batching is not enabled by default, so every insert statement requires a database round trip.
-  To enable JDBC batching, set the `hibernate.jdbc.batch_size` property to an integer between 10 and 50.
-
-[IMPORTANT]
-====
-Hibernate disables insert batching at the JDBC level transparently if you use an identity identifier generator.
-====
-
-[[batch-session-batch-insert]]
-==== Batch inserts
-
-When you make new objects persistent, employ methods `flush()` and `clear()` to the session regularly, to control the size of the first-level cache.
-
-[[batch-session-batch-insert-example]]
-.Flushing and clearing the `Session`
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-insert-example]
-----
-====
-
-[[batch-session-scroll]]
-==== Session scroll
-
-When you retrieve and update data, `flush()` and `clear()` the session regularly.
-In addition, use method `scroll()` to take advantage of server-side cursors for queries that return many rows of data.
-
-[[batch-session-scroll-example]]
-.Using `scroll()`
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-scroll-example]
-----
-====
-
-[IMPORTANT]
-====
-If left unclosed by the application, Hibernate will automatically close the underlying resources (e.g. `ResultSet` and `PreparedStatement`) used internally by the `ScrollableResults` when the current transaction is ended (either commit or rollback).
-
-However, it is good practice to close the `ScrollableResults` explicitly.
-====
-
-==== StatelessSession
-
-`StatelessSession` is an alternative to `Session` and provides:
-
-- a command-oriented API
-- with no associated persistence context.
-
-Thus, a stateless session is a slightly lower-level abstraction that's closer to the underlying JDBC activity:
-
-* there's no first-level cache, and
-* there's no transactional write-behind or automatic dirty checking.
-
-Instead, persistence operations occur synchronously when a method of `StatelessSession` is invoked, and entities returned by a stateless session are always detached.
-
-[TIP]
-====
-A stateless session may be used to stream data to and from the database in the form of detached objects.
-With a stateless session, there's no need to explicitly manage the size of the first-level cache by explicitly clearing the persistence context.
-====
-
-The `StatelessSession` API comes with certain limitations:
-
-* operations performed using a stateless session never cascade to associated instances,
-* lazy loading of associations is not transparent, and is only available via an explicit operation named `fetch()`, and
-* operations performed via a stateless session bypass Hibernate's event model and action queue.
-
-IMPORTANT: Due to the lack of a first-level cache, stateless sessions are vulnerable to data aliasing effects.
-
-[[batch-stateless-session-example]]
-.Using a  `StatelessSession`
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-stateless-session-example]
-----
-====
-
-The `Person` instances returned by the query are immediately detached.
-They are never associated with any persistence context.
-
-[NOTE]
-====
-The `insert()`, `update()`, and `delete()` operations defined by the `StatelessSession` interface operate directly on database rows.
-They cause the corresponding SQL operations to be executed immediately.
-They have different semantics from the `save()`, `saveOrUpdate()`, and `delete()` operations defined by the `Session` interface.
-====
-
-[[batch-bulk-hql]]
-=== Hibernate Query Language for DML
-
-DML, or Data Manipulation Language, refers to SQL statements such as `INSERT`, `UPDATE`, and `DELETE`.
-Hibernate provides methods for bulk SQL-style DML statement execution, in the form of Hibernate Query Language (HQL).
-
-[[batch-bulk-hql-update-delete]]
-==== HQL/JPQL for UPDATE and DELETE
-
-Both the Hibernate native Query Language and JPQL (Java Persistence Query Language) provide support for bulk UPDATE and DELETE.
-
-[[batch-bulk-hql-update-delete-example]]
-.Pseudo-syntax for UPDATE and DELETE statements using HQL
-====
-[source, sql, indent=0]
-----
-UPDATE FROM EntityName e WHERE e.name = ?
-
-DELETE FROM EntityName e WHERE e.name = ?
-----
-====
-
-[NOTE]
-====
-Although the `FROM` and `WHERE` clauses are optional, it is good practice to declare them explicitly.
-====
-
-The `FROM` clause can only refer to a single entity, which can be aliased.
-If the entity name is aliased, any property references must be qualified using that alias.
-If the entity name is not aliased, then it is illegal for any property references to be qualified.
-
-[NOTE]
-====
-Joins, either implicit or explicit, are prohibited in a bulk HQL query.
-You can use sub-queries in the `WHERE` clause, and the sub-queries themselves can contain joins.
-====
-
-[[batch-bulk-jpql-update-example]]
-.Executing a JPQL `UPDATE`, using the `Query.executeUpdate()`
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-update-example]
-----
-====
-
-[[batch-bulk-hql-update-example]]
-.Executing an HQL `UPDATE`, using the `Query.executeUpdate()`
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-example]
-----
-====
-
-In keeping with the EJB3 specification, HQL `UPDATE` statements, by default, do not effect the version or the timestamp property values for the affected entities.
-You can use a versioned update to force Hibernate to reset the version or timestamp property values, by adding the `VERSIONED` keyword after the `UPDATE` keyword.
-
-[[batch-bulk-hql-update-version-example]]
-.Updating the version of timestamp
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-version-example]
-----
-====
-
-[NOTE]
-====
-If you use the `VERSIONED` statement, you cannot use custom version types that implement the `org.hibernate.usertype.UserVersionType`.
-
-This feature is only available in HQL since it's not standardized by Jakarta Persistence.
-====
-
-[[batch-bulk-jpql-delete-example]]
-.A JPQL `DELETE` statement
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-delete-example]
-----
-====
-
-[[batch-bulk-hql-delete-example]]
-.An HQL `DELETE` statement
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-delete-example]
-----
-====
-
-Method `Query.executeUpdate()` returns an `int` value, which indicates the number of entities affected by the operation.
-This may or may not correlate to the number of rows affected in the database.
-A JPQL/HQL bulk operation might result in multiple SQL statements being executed, such as for joined-subclass.
-In the example of joined-subclass, a `DELETE` against one of the subclasses may actually result in deletes in the tables underlying the join, or further down the inheritance hierarchy.
-
-==== HQL syntax for INSERT
-
-.Pseudo-syntax for INSERT-SELECT statements
-====
-[source, sql, indent=0]
-----
-INSERT INTO EntityName
-	properties_list
-SELECT select_list
-FROM ...
-----
-====
-
-Alternatively one can also declare individual values
-
-.Pseudo-syntax for INSERT-VALUES statements
-====
-[source, sql, indent=0]
-----
-INSERT INTO EntityName
-	properties_list
-VALUES values_list
-----
-====
-
-The `properties_list` is analogous to the column specification in the `SQL` `INSERT` statement.
-Note that `INSERT` statements are inherently non-polymorphic, so it is not possible to use an `EntityName`
-which is abstract or refer to subclass properties.
-
-The SELECT statement can be any valid HQL select query, but the return types must match the types expected by the INSERT.
-Hibernate verifies the return types during query compilation, instead of expecting the database to check it.
-Problems might result from Hibernate types which are equivalent, rather than equal.
-One such example is a mismatch between a property defined as an `org.hibernate.type.StandardBasicTypes.DATE` and a property defined as an `org.hibernate.type.StandardBasicTypes.TIMESTAMP`,
-even though the database may not make a distinction, or may be capable of handling the conversion.
-
-If id property is not specified in the `properties_list`, Hibernate generates a value automatically.
-Automatic generation is only available if you use ID generators which operate on the database.
-Otherwise, Hibernate throws an exception during parsing.  Available in-database generators implement
-`org.hibernate.id.PostInsertIdentifierGenerator`.
-
-For properties mapped as either version or timestamp, the insert statement gives you two options.
-You can either specify the property in the properties_list, in which case its value is taken from the corresponding select expressions or omit it from the properties_list,
-in which case the seed value defined by the `org.hibernate.type.descriptor.java.VersionJavaType` is used.
-
-[[batch-bulk-hql-insert-example]]
-.HQL INSERT statement
-====
-[source, java, indent=0]
-----
-include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-insert-example]
-----
-====
-
-This section is only a brief overview of HQL. For more information, see <<chapters/query/hql/QueryLanguage.adoc#query-language,Hibernate Query Language>>.
-
-[[batch-bulk-hql-strategies]]
-==== Bulk mutation strategies
-
-When a bulk mutation involves multiple tables, Hibernate has to issue individual DML statements to the respective tables.
-Since the mutation itself could have an effect on the conditions used in the statement, it's generally not possible
-to simply execute parts of the DML statement against the respective tables. Instead, Hibernate has to temporarily remember
-which rows will be affected, and execute the DML statements based on these rows.
-
-Usually, Hibernate will make use of local or global temporary tables to remember the primary keys of the rows.
-For some databases, currently only PostgreSQL and DB2, a more advanced strategy (`CteMutationStrategy`) is used,
-which makes use of DML in CTE support to execute the whole operation in one SQL statement.
-
-The chosen strategy, unless overridden through the `hibernate.query.mutation_strategy` setting, is based on the
-Dialect support through `org.hibernate.dialect.Dialect.getFallbackSqmMutationStrategy`.
-
-[[batch-bulk-hql-strategies-class-diagram]]
-===== Class diagram
-
-Considering we have the following entities:
-
-image::images/domain/bulkid/temp_table_class_diagram.png[Entity class diagram,align="center"]
-
-The `Person` entity is the base class of this entity inheritance model, and is mapped as follows:
-
-[[batch-bulk-hql-temp-table-base-class-example]]
-.Bulk mutation base class entity
-====
-[source, java, indent=0]
-----
-include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
-----
-====
-
-Both the `Doctor` and `Engineer` entity classes extend the `Person` base class:
-
-[[batch-bulk-hql-temp-table-sub-classes-example]]
-.Bulk mutation subclass entities
-====
-[source, java, indent=0]
-----
-include::{example-dir-bulkid}/AbstractMutationStrategyIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
-----
-====
-
-[[batch-bulk-hql-strategies-inheritance-tree]]
-===== Inheritance tree bulk processing
-
-Now, when you try to execute a bulk entity delete query:
-
-[[batch-bulk-hql-temp-table-delete-query-example]]
-.Bulk mutation delete query example
-====
-[source, java, indent=0]
-----
-include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/batch-bulk-hql-temp-table-delete-query-example.sql[]
-----
-====
-
-`HT_Person` is a temporary table that Hibernate creates to hold all the entity identifiers that are to be updated or deleted by the bulk operation.
-The temporary table can be either global or local, depending on the underlying database capabilities.
-
-[[batch-bulk-hql-strategies-non-temporary-table]]
-===== Non-temporary table bulk mutation strategies
-
-The strategies outlined above depend on the creation of temporary tables, which Hibernate creates on startup if they don't already exist. At present this process is not integrated in the schema management tooling, and this requires that the user have the required permissions to alter the database schema.
-
-If the Hibernate session user lacks these permissions, you will need to either:
-
- * alter your schema through a different user with more permissions, to add a global temporary table named HTE_<root entity table name>, which contains all columns of all tables involved in the entity hierarchy. +
-This will allow insert, update and delete in HQL for multi-table entities.
-
-* OR configure Hibernate ORM to use the (badly-performing) inline strategy (for _mutations_ only!):
+=== JDBC batching configuration and eligibility
+
+A JDBC batch applies several sets of bound values to a compatible `PreparedStatement`.
+It can reduce driver and network overhead, but the number of network round trips depends on the driver
+and database. A batch does not guarantee one server call.
+
+// suppress inspection "AsciiDocLinkResolve"
+The setting <<settings-hibernate.jdbc.batch_size,`hibernate.jdbc.batch_size`>> supplies the stateful-session default.
+Its default is zero; zero or a negative value disables batching. A size greater than one permits grouping
+multiple executions. The configured size is an upper bound, not a promise that every batch is full.
+Choose a starting size and measure representative workloads rather than assuming a universally optimal value.
+
+The examples below use a small factory batch size of two to make full and partial groups easy to verify:
 
 [source,xml]
 ----
-<property name="hibernate.query.mutation_strategy"
-          value="org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy"
-/>
+<property name="hibernate.jdbc.batch_size" value="2"/>
 ----
 
-[IMPORTANT]
+A `Session` can override this default. `setJdbcBatchSize(null)` removes its override.
+When changing the size temporarily, flush the intended work while the override still applies,
+then restore the previous override:
+
+[[batch-session-jdbc-batch-size-example]]
+.Temporarily overriding the JDBC batch size
 ====
-We strongly recommend the use of the first option, i.e. manually adding the temporary tables, because the inline strategy is set to be removed in a future release. Also, there is no equivalent strategy for inserts.
-
-Additionally, automatic creation of temporary tables should be deactivated. This is done by setting the
-
-`hibernate.query.mutation_strategy.global_temporary.create_tables` and `hibernate.query.mutation_strategy.global_temporary.drop_tables`
-
-*or*
-
-`hibernate.query.mutation_strategy.persistent.create_tables` and `hibernate.query.mutation_strategy.persistent.drop_tables`
-
-properties (depending on the default strategy for the dialect) to `false`
-====
-
-With the inline strategy, when running the previous test case, Hibernate generates the following SQL statements:
-
-[[batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example]]
-.`InlineIdsInClauseBulkIdStrategy` delete entity query example
-====
-[source, sql, indent=0]
+[source,java,indent=0]
 ----
-include::{extrasdir}/batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example.sql[]
+include::{example-dir-doc-batch}/BatchingGuideTests.java[tags=batch-guide-override]
 ----
 ====
 
-So, the entity identifiers are selected first and used for each particular update or delete statement.
 
+[[batch-session-batch]]
+=== Stateful inserts and updates
+
+The following examples use a small model with assigned identifiers and an ordinary version attribute:
+
+[source,java,indent=0]
+----
+include::{example-dir-doc-batch}/BatchingGuideTests.java[tags=batch-guide-model]
+----
+
+[[batch-session-batch-example]]
+Persisting a very large number of entities in one context without clearing retains managed objects and
+persistence-context bookkeeping until they are detached or the context closes.
+This increases memory use and dirty-checking work and can eventually cause an `OutOfMemoryError`.
+The memory required depends on entity state, associations, and bookkeeping; an object count alone
+cannot establish a safe heap size.
+
+[[batch-session-batch-insert]]
+==== Inserting with regular flush and clear
+
+Use `flush()` to write pending changes and `clear()` to detach all managed entities.
+Flush before clearing when those changes must be preserved: clearing does not write pending changes.
+The flush interval below bounds context state independently of the JDBC batch size:
+
+[[batch-session-batch-insert-example]]
+.Inserting with regular flush and clear
+====
+[source,java,indent=0]
+----
+include::{example-dir-doc-batch}/BatchingGuideTests.java[tags=batch-guide-inserts]
+----
+====
+
+The final flush handles the incomplete group. Transaction commit also flushes pending state under the
+applicable flush mode. See <<flushing>> for flush behavior and <<pc>> for managed state and detachment.
+
+==== Transaction chunks
+
+Flushing does not commit. Clearing does not release transaction locks, return the transaction's connection,
+or reduce its rollback scope. Long transactions can hold locks and occupy connections for substantial periods.
+
+If the application permits partial completion, process bounded groups in separate transactions.
+This changes atomicity: a later failure does not undo earlier committed groups.
+Define how the application records progress and resumes or handles failed groups before choosing this approach.
+Do not confuse a flush/clear interval with a commit interval.
+
+[[batch-session-scroll]]
+==== Scrolling and updating
+
+A stateful update loop must actually change managed state, and periodically flush and clear it.
+The following Hibernate example uses a forward-only, typed result and closes it with try-with-resources:
+
+[[batch-session-scroll-example]]
+.Scrolling and updating with bounded context state
+====
+[source,java,indent=0]
+----
+include::{example-dir-doc-batch}/BatchingGuideTests.java[tags=batch-guide-scroll]
+----
+====
+
+Here the context is cleared after every two processed entities, and commit retains all five updates.
+The query's fetch size is a JDBC hint, not the JDBC write batch size or the flush interval.
+Forward-only scrolling does not by itself guarantee a server-side cursor or bounded driver buffering;
+those depend on the driver, database, connection settings, and transaction.
+See <<hql-api-incremental>> for scrolling and streaming resources.
+A result stream also requires context memory management when its results are managed entities.
+
+[[batch-stateless]]
+=== Stateless processing and explicit groups
+
+Jakarta Persistence 4 defines `EntityAgent` for explicit commands on detached entities.
+Hibernate implements it through `StatelessSession`.
+There is no persistent first-level cache, automatic dirty checking, or stateful transactional write-behind.
+Repeated loads of the same identifier need not return the same object, so account for data aliasing.
+
+Operations do not cascade to associated entities. Load required associations using a fetching plan
+or an explicit `fetch()` operation; see <<fetching>>.
+Current stateless operations invoke applicable lifecycle callbacks and Hibernate event listeners.
+They do not use the stateful action queue, and are not identical to stateful entity operations.
+See link:{doc-javadoc-url}org/hibernate/StatelessSession.html[`StatelessSession`] for operation-specific contracts.
+
+The standard multiple-operation methods submit a bounded group through one invocation:
+
+[[batch-stateless-session-example]]
+.Explicit groups using EntityAgent
+====
+[source,java,indent=0]
+----
+include::{example-dir-doc-batch}/BatchingGuideTests.java[tags=batch-guide-stateless]
+----
+====
+
+The two objects remain detached after the calls. Updates are explicit; merely changing their fields
+would not persist those changes. The same detached objects can be deleted using `deleteMultiple()`
+through another `EntityAgent` in a separate transaction:
+
+[source,java,indent=0]
+----
+include::{example-dir-doc-batch}/BatchingGuideTests.java[tags=batch-guide-stateless-delete]
+----
+
+`upsertMultiple()` is available for upsert workloads; its SQL and identifier requirements depend on the
+mapping and dialect. See link:{jpaJavadocUrlPrefix}EntityAgent.html[the standard EntityAgent API].
+Multiple-operation methods do not promise a single SQL statement or one network round trip.
+Hibernate's stateless session uses the second-level cache by default; see <<caching>> for cache modes and invalidation.
+
+[[batch-stateless-jdbc]]
+==== Explicit stateless JDBC batching
+
+`hibernate.jdbc.batch_size` has no effect on stateless sessions.
+Ordinary commands normally execute synchronously. Explicitly setting a stateless session's JDBC batch size
+can instead accumulate commands, delaying SQL execution until a batch fills or the transaction completes.
+This is distinct from submitting an explicit group with `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
+
+[source,java,indent=0]
+----
+include::{example-dir-doc-batch}/BatchingGuideTests.java[tags=batch-guide-stateless-jdbc]
+----
+
+The example runs in a transaction. An active transaction is required for this automatic batching path;
+do not assume the same buffering occurs outside it.
+Use explicit groups when their execution boundary better matches the application's processing model.
+
+[[batch-bulk-hql]]
+=== Bulk query execution
+
+Bulk mutation execution is distinct from JDBC batching of entity operations.
+See <<query-mutations>> for affected counts, persistence-context synchronization, and multi-table mutation strategies.
+
+[[batch-verification]]
+=== Measuring and verifying batching
+
+SQL logging and affected-row counts alone do not prove JDBC batch execution.
+Several statements may be added to one batch while still producing a log entry for each set of parameters.
+Inspect batch additions, executions, and how fully batches are populated using suitable JDBC instrumentation.
+Actual network behavior still depends on the driver.
+
+Use <<statistics>> and SQL inspection as complementary evidence, and verify the final persisted values and versions.
+Keep setup and cleanup outside the measured interval. Use known initial cache and context state so that reads
+or cached data do not obscure the operations being measured.
+For this chapter's controlled five-row insert/update examples, batch size two and flush interval two produce
+five JDBC batch additions and three batch executions, including the final one-row group.
+Those counts describe the fixture, not every entity mapping, driver, or workload.

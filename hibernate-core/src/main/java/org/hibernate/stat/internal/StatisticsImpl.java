@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 
 import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -568,7 +569,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public String[] getSecondLevelCacheRegionNames() {
-		return cache.getCacheRegionNames().toArray( new String[0] );
+		return cache.getCacheRegionNames().stream()
+				.filter( name -> cache.getRegion( name ) instanceof DomainDataRegion )
+				.toArray( String[]::new );
 	}
 
 	@Override

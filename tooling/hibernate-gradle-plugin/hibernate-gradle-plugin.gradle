@@ -110,6 +110,13 @@ if ( jdkVersions.test.launcher.asInt() > 21 ) {
     tasks.getByName( "test" ).enabled = false
     tasks.getByName( "functionalTest" ).enabled = false
 }
+else {
+    // The User Guide fixtures consume the matching runtime and annotation processor.
+    functionalTestTask.configure {
+        dependsOn ':hibernate-core:publishToMavenLocal', ':hibernate-processor:publishToMavenLocal',
+                ':hibernate-platform:publishToMavenLocal'
+    }
+}
 
 def releasePrepareTask = tasks.register("releasePrepare") {
 	group ="release-prepare"

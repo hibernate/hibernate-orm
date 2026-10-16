@@ -88,7 +88,7 @@ Hibernate supports the soft delete of entities, with the indicator column define
 ====
 A to-one association targeting a soft-deleted entity cannot use `FetchType.LAZY`.
 Hibernate rejects such a mapping with an `UnsupportedMappingException` at boot.
-Use eager fetching for these associations.
+Use eager fetching for these associations; see <<fetching-association-constraints>> for their effect on fetch plans.
 ====
 
 [[soft-delete-basic-example]]

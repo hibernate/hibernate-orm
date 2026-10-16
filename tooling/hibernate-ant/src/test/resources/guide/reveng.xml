@@ -1,0 +1,23 @@
+<project name="generate-model" default="compile">
+    <path id="tooling.path">
+        <fileset dir="lib" includes="*.jar"/>
+    </path>
+    <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask"
+             classpathref="tooling.path"/>
+    <target name="generate">
+        <hibernatetool destdir="target/generated-sources">
+            <classpath refid="tooling.path"/>
+            <jdbcconfiguration propertyfile="src/main/resources/hibernate.properties"
+                               packagename="example"/>
+            <hbm2java/>
+        </hibernatetool>
+    </target>
+    <target name="compile" depends="generate">
+        <mkdir dir="target/classes"/>
+        <javac srcdir="target/generated-sources" destdir="target/classes"
+               release="17" includeantruntime="false" fork="true">
+            <classpath refid="tooling.path"/>
+            <compilerarg value="-proc:none"/>
+        </javac>
+    </target>
+</project>

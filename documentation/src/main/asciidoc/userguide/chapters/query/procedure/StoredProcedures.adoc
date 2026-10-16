@@ -1,0 +1,206 @@
+[[stored-procedures]]
+== Stored procedures and functions
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:example-dir-procedure: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
+
+Stored procedure calls have a different execution model from <<sql,native SQL queries>>.
+Use the standard `StoredProcedureQuery` API for portable calls, or Hibernate's `ProcedureCall` for provider-specific features.
+The examples below demonstrate database-specific procedure definitions and their invocation.
+
+[[sql-sp]]
+=== Creating calls and registering parameters
+
+`EntityHandler.createStoredProcedureQuery()` creates a procedure call.
+Register input arguments as `IN`, output values as `OUT`, and arguments with both roles as `INOUT`, specifying each argument's Java type.
+Bind input values with `setParameter()` before execution.
+Named procedure declarations may supply the parameter registrations in advance.
+A procedure may return result sets directly or through `REF_CURSOR` parameters, depending on the database and driver.
+Function return values have a separate declaration; see <<procedure-functions>>.
+Calls that modify data require a transaction.
+
+[[sql-sp-named-query]]
+=== Named procedure calls
+
+Just like with SQL statements, you can also use named queries to call stored procedures.
+For this purpose, Jakarta Persistence defines the link:{jpaJavadocUrlPrefix}NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation.
+
+[[sql-sp-ref-cursor-oracle-named-query-example]]
+.Oracle `REF_CURSOR` named query stored procedure
+====
+[source, java, indent=0]
+----
+include::{example-dir-model}/Person.java[tags=sql-sp-ref-cursor-oracle-named-query-example]
+----
+====
+
+Calling this stored procedure is straightforward, as illustrated by the following example.
+
+[[sql-jpa-call-sp-ref-cursor-oracle-named-query-example]]
+.Calling an Oracle `REF_CURSOR` stored procedure using a Jakarta Persistence named query
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/OracleStoredProcedureTest.java[tags=sql-jpa-call-sp-ref-cursor-oracle-named-query-example]
+----
+====
+
+[[procedure-results]]
+=== Processing results and output values
+
+Process result sets and update counts using `getResultList()`, `hasMoreResults()`, and `getUpdateCount()`;
+when processing multiple results, retrieve output parameter values after the results and update counts.
+An update count of `-1` indicates that there is no current update count.
+A procedure may return multiple results, and its first result need not be a result set.
+
+[[procedure-functions]]
+=== Function calls
+
+A database function usually has a return value distinct from its arguments.
+The standard `StoredProcedureQuery.registerResultParameter(ReturnType.class)` declares the return parameter of a function call.
+Hibernate's `ProcedureCall.markAsFunctionCall()` is a provider-specific alternative.
+JDBC call syntax and support for cursor returns depend on the database.
+See link:{doc-javadoc-url}org/hibernate/procedure/ProcedureCall.html[`ProcedureCall`] for the available function-call overloads.
+These calls are distinct from functions used inside HQL expressions.
+
+[[procedure-resources]]
+=== Resource handling
+
+In Jakarta Persistence 4, `StoredProcedureQuery` implements `AutoCloseable`, as does Hibernate's `ProcedureCall`.
+Use try-with-resources to release JDBC resources after processing the results and output values.
+Explicit cleanup does not require unwrapping the standard procedure query.
+
+[[procedure-database-examples]]
+=== Database-specific examples
+
+The following examples show procedure definitions and standard or Hibernate-specific calls for MySQL and Oracle.
+Database syntax, cursor support, and output conventions vary; adapt definitions to the database in use.
+
+[[sql-sp-out-mysql-example]]
+.MySQL stored procedure with `OUT` parameter type
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/MySQLStoredProcedureTest.java[tags=sql-sp-out-mysql-example]
+----
+====
+
+To use this stored procedure, you can execute the following Jakarta Persistence query:
+
+[[sql-jpa-call-sp-out-mysql-example]]
+.Calling a MySQL stored procedure with `OUT` parameter type using Jakarta Persistence
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/MySQLStoredProcedureTest.java[tags=sql-jpa-call-sp-out-mysql-example]
+----
+====
+
+[[sql-hibernate-call-sp-out-mysql-example]]
+.Calling a MySQL stored procedure with `OUT` parameter type using Hibernate
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-out-mysql-example]
+----
+====
+
+If the stored procedure outputs the result directly without an `OUT` parameter type:
+
+[[sql-sp-mysql-return-no-out-example]]
+.MySQL stored procedure without an `OUT` parameter type
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/MySQLStoredProcedureTest.java[tags=sql-sp-no-out-mysql-example]
+----
+====
+
+You can retrieve the results of the aforementioned MySQL stored procedure as follows:
+
+[[sql-jpa-call-sp-no-out-mysql-example]]
+.Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using Jakarta Persistence
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/MySQLStoredProcedureTest.java[tags=sql-jpa-call-sp-no-out-mysql-example]
+----
+====
+
+[[sql-hibernate-call-sp-no-out-mysql-example]]
+.Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using Hibernate
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-no-out-mysql-example]
+----
+====
+
+The following Oracle stored procedure returns a `REF_CURSOR` result set:
+
+[[sql-sp-ref-cursor-oracle-example]]
+.Oracle `REF_CURSOR` stored procedure
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/OracleStoredProcedureTest.java[tags=sql-sp-ref-cursor-oracle-example]
+----
+====
+
+[IMPORTANT]
+====
+`REF_CURSOR` result sets are only supported by some relational databases (e.g. Oracle and PostgreSQL), and other database systems JDBC drivers might not support this feature.
+====
+
+Call this stored procedure using the standard Jakarta Persistence API:
+
+[[sql-jpa-call-sp-ref-cursor-oracle-example]]
+.Calling an Oracle `REF_CURSOR` stored procedure using Jakarta Persistence
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/OracleStoredProcedureTest.java[tags=sql-jpa-call-sp-ref-cursor-oracle-example]
+----
+====
+
+[[sql-hibernate-call-sp-ref-cursor-oracle-example]]
+.Calling an Oracle `REF_CURSOR` stored procedure using Hibernate
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/OracleStoredProcedureTest.java[tags=sql-hibernate-call-sp-ref-cursor-oracle-example]
+----
+====
+
+If the database defines an SQL function:
+
+[[sql-function-mysql-example]]
+.MySQL function
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/MySQLStoredProcedureTest.java[tags=sql-function-mysql-example]
+----
+====
+
+For a function call through the standard API, register its return parameter as described in <<procedure-functions>>.
+The following example demonstrates direct JDBC call syntax as an alternative.
+
+[[sql-call-function-mysql-example]]
+.Calling a MySQL function
+====
+[source, java, indent=0]
+----
+include::{example-dir-procedure}/MySQLStoredProcedureTest.java[tags=sql-call-function-mysql-example]
+----
+====
+
+[NOTE]
+====
+Stored procedure queries cannot be paged with `setFirstResult()/setMaxResults()`.
+
+Calls may return multiple result sets and update counts; process them as described in <<procedure-results>>.
+`hasMoreResults()` returning `false` may indicate an update count rather than the end of the results.
+Processing is complete when there is no result set and `getUpdateCount()` returns `-1`.
+
+For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
+====

@@ -3,486 +3,472 @@
 :example-dir-locking: {core-project-dir}/src/test/java/org/hibernate/orm/test/locking
 :extrasdir: extras
 
-In a relational database, locking refers to actions taken to prevent data from changing between the time it is read and the time it is used.
+[[locking-basics]]
+=== Locking concepts and transaction boundaries
 
-Your locking strategy can be either optimistic or pessimistic.
+Optimistic locking detects conflicting changes; pessimistic locking acquires database locks to prevent conflicting access while a transaction is active.
+Both interact with database isolation, but neither replaces deliberate <<transactions,transaction boundaries>> or validation of application invariants.
+Hibernate uses database concurrency mechanisms and does not lock Java objects in memory.
 
-Optimistic::
-https://en.wikipedia.org/wiki/Optimistic_locking[Optimistic locking] assumes that multiple transactions can complete without affecting each other,
-and that therefore transactions can proceed without locking the data resources that they affect.
-Before committing, each transaction verifies that no other transaction has modified its data.
-If the check reveals conflicting modifications, the committing transaction rolls back.
-Pessimistic::
-Pessimistic locking assumes that concurrent transactions will conflict with each other,
-and requires resources to be locked after they are read and only unlocked after the application has finished using the data.
+Optimistic locking::
+A version or comparison with previously loaded values detects that a row changed after it was read.
+Automatic checks normally protect updates and deletes.
+An entity that was only read (not mutated) is not automatically validated just because it has a version attribute; request an explicit optimistic lock when the operation depends on validating that read.
+A conflict may be reported during flush or transaction completion, depending on the operation.
 
-Hibernate provides mechanisms for implementing both types of locking in your applications.
+Pessimistic locking::
+The database acquires locks that prevent conflicting concurrent updates or deletes to the locked rows until the transaction completes.
+Ending application use of an entity or closing its persistence context does not define the lifetime of those database locks.
+The effect on other readers depends on the database and isolation level; an exclusive write lock does not universally block ordinary snapshot reads.
+
+The three pessimistic modes provide this protection in different ways:
+
+* `PESSIMISTIC_READ` requests shared protection, allowing compatible shared locks from other readers. A stronger lock may be used when the database does not support shared locks.
+* `PESSIMISTIC_WRITE` requests exclusive protection, serializing conflicting writers and locking requests. Ordinary snapshot reads may still proceed.
+* `PESSIMISTIC_FORCE_INCREMENT` provides exclusive protection and immediately increments the version, causing subsequent optimistic checks using an earlier version to fail. It requires a versioned entity.
+
+These guarantees concern the locked rows, not every row in an object graph or every insertion that could violate an application invariant.
+See <<locking-LockMode,lock modes>> for the standard and Hibernate APIs and <<locking-jpa-query-hints,pessimistic lock scope>> for the rows included in a lock request.
+
+[cols="1,2,2",options="header"]
+|===
+|Approach |Advantages |Throughput costs
+|Optimistic locking
+|Transactions can proceed concurrently without reserving access to rows when they are first read. This often provides better throughput when conflicts are uncommon.
+|Conflicts are detected later and may discard substantial work. Frequent conflicts and retries can reduce throughput.
+|Pessimistic locking
+|Protection is acquired before performing dependent work. Under high contention, this can reduce wasted work and retries.
+|Lock waiting and longer lock retention reduce concurrency. Contended rows serialize conflicting work, and deadlocks or lock timeouts may require retries.
+|===
+
+Neither approach always provides better throughput: contention, transaction duration, and the cost of retrying determine the tradeoff.
+Optimistic locking also involves database locks when writing or validating; it is not lock-free.
+
+Explicit transactional lock requests require an active transaction and appropriate persistence-context participation.
+A persistence context reuses managed identity and state, but this is not a database isolation guarantee.
+See <<pc,Persistence Context>> for context lifetime and <<transactions-completion,transaction completion and failure handling>> for rollback and retries.
+
+[[locking-LockMode]]
+=== Lock modes and requesting locks
+
+Jakarta Persistence's link:{jpaJavadocUrlPrefix}LockModeType.html[`LockModeType`] and Hibernate's link:{doc-javadoc-url}org/hibernate/LockMode.html[`LockMode`] provide these application lock modes:
+
+[cols="1,1,3",options="header"]
+|===
+|`LockModeType` |Hibernate `LockMode` |Requested behavior
+|`NONE` |`NONE` |No explicit lock requested.
+|`READ`, `OPTIMISTIC` |`OPTIMISTIC` |Validate the version of an unchanged entity before successful transaction completion.
+|`WRITE`, `OPTIMISTIC_FORCE_INCREMENT` |`OPTIMISTIC_FORCE_INCREMENT` |Validate and increment the version even without an ordinary entity change; the increment may be deferred until completion.
+|`PESSIMISTIC_READ` |`PESSIMISTIC_READ` |Acquire shared database protection against conflicting writes; a stronger lock may be used when shared locks are unavailable.
+|`PESSIMISTIC_WRITE` |`PESSIMISTIC_WRITE` |Acquire exclusive database protection against conflicting writes and locking requests.
+|`PESSIMISTIC_FORCE_INCREMENT` |`PESSIMISTIC_FORCE_INCREMENT` |Acquire exclusive protection by immediately incrementing the version.
+|===
+
+Prefer the descriptive standard names `OPTIMISTIC` and `OPTIMISTIC_FORCE_INCREMENT` over their `READ` and `WRITE` aliases.
+
+
+[NOTE]
+====
+Hibernate's `LockMode.READ` represents an entity read from the database in the current transaction and is accepted by native APIs.
+It is distinct from Jakarta Persistence's `LockModeType.READ`, which requests optimistic version validation.
+Hibernate's `LockMode.WRITE` represents internal state after a write and is not valid for application lock requests.
+
+`LockMode.UPGRADE_NOWAIT` and `LockMode.UPGRADE_SKIPLOCKED` modes remain available for native query lock-mode hints; for find/refresh operations, prefer the pessimistic mode plus the timeout option.
+====
+
+The optimistic modes and `PESSIMISTIC_FORCE_INCREMENT` require a versioned entity.
+Ordinary pessimistic read/write requests can lock unversioned entities.
+Force-increment support also depends on the version generator; do not assume a database-trigger-generated version supports every force-increment operation.
+
+==== Requesting and upgrading locks
+
+Use standard APIs where possible:
+
+* `EntityManager.find()` loads an entity or obtains the requested lock for an already managed entity.
+* `EntityManager.lock()` applies a lock to a managed entity without being a general refresh operation.
+* `EntityManager.refresh()` reloads entity state and can request a lock at the same time.
+* Query locking applies to entity results according to the query's lock mode and scope.
+
+Typed `FindOption`, `LockOption`, and `RefreshOption` arguments carry lock modes, timeout, and scope.
+Queries provide lock-mode controls and property/hint forms for the additional options.
+Hibernate `Session` supports these standard APIs as well as its own lock-mode overloads.
+
+[[locking-api-example]]
+.Requesting locks with standard APIs
+====
+[source,java,indent=0]
+----
+include::{example-dir-locking}/LockingGuideTests.java[tags=locking-api-example]
+----
+====
+
+Requesting a stronger mode can upgrade the lock for an already managed entity.
+Requesting a weaker mode does not downgrade an existing stronger mode.
+In particular, an `OPTIMISTIC_FORCE_INCREMENT` request after a pessimistic lock does not independently force a version increment.
+For a versioned entity, requesting `PESSIMISTIC_FORCE_INCREMENT` after `PESSIMISTIC_READ` or `PESSIMISTIC_WRITE` upgrades the lock and immediately increments the version.
+Repeating `PESSIMISTIC_FORCE_INCREMENT` when that mode is already held does not cause another increment merely because the request is repeated.
+Choose the required mode before relying on its increment behavior.
+
+[[locking-session-lock]]
+==== Locking an already managed entity
+
+A pessimistic read request asks for shared protection; its SQL and whether stronger protection is necessary depend on the dialect.
+This example also requests no waiting for a conflicting lock:
+
+[[locking-session-lock-example]]
+.Locking a managed entity without waiting
+====
+[source,java,indent=0]
+----
+include::{example-dir-locking}/ExplicitLockingTest.java[tags=locking-session-lock-example]
+----
+====
 
 [[locking-optimistic]]
-=== Optimistic
+=== Versioned optimistic locking
 
-Hibernate resolves a transaction concurrency baseline during bootstrap and uses it when selecting the current read needed to verify an optimistic lock's version.
-Resolution considers the bootstrap connection's isolation and database-specific configuration, including SQL Server's `READ_COMMITTED_SNAPSHOT` setting and TiDB's transaction mode.
-It does not change connection isolation.
+A <<domain-version-attributes,version attribute>> enables automatic checks when Hibernate updates or deletes an entity.
+See that Domain Model discussion for mapping rules, supported types, initialization, and generation.
+The previous version is included in the SQL predicate; a missing matching row indicates a stale version or a deleted entity.
+For a numeric version, an update may use `where id = ? and version = ?` while assigning the next version.
+A second transaction trying to write with the earlier version fails instead of silently overwriting the first transaction's changes.
+Version checks do not reserve exclusive access throughout user think time; see <<long-conversations,conversations spanning multiple transactions>>.
 
-The `hibernate.transaction.concurrency` setting declares the baseline when it cannot be observed, especially when `hibernate.boot.allow_jdbc_metadata_access` is `DISALLOW`.
-Its registered names are `READ_UNCOMMITTED`, `READ_COMMITTED`, `LOCKING_READ_COMMITTED`, `READ_COMMITTED_SNAPSHOT`, `REPEATABLE_READ`, `SNAPSHOT`, and `SERIALIZABLE`.
-Names are interpreted by the dialect: for example, `SNAPSHOT` is distinct from statement-level `READ_COMMITTED_SNAPSHOT`.
-Programmatic configuration may instead supply a `TransactionConcurrency` instance, constructed using `TransactionConcurrencies.builder()`.
-An explicitly supplied instance is used as-is, bypassing concurrency resolution, probing, and validation; its accuracy and immutability are the caller's responsibility.
-A known contradiction between a named declaration and observed behavior fails bootstrap.
+Bulk link:{doc-query-language-url}#update[update] and link:{doc-query-language-url}#delete[delete] statements bypass these per-entity optimistic checks.
+An ordinary bulk update does not increment versions automatically.
+HQL `update versioned` increments the affected entities' versions, but does not automatically compare them with versions previously loaded by the application.
+If a bulk mutation requires conflict detection, express the required conditions in its predicate and check the affected-entity count.
 
-With metadata access `ALLOW`, a failed concurrency query leaves the affected facts unresolved without discarding other JDBC metadata.
-With `REQUIRE`, a failure of a supported query fails bootstrap.
-`DISALLOW` performs no JDBC access for concurrency resolution.
-An unsupported query is not an execution failure and may be compensated for by a declaration.
+Explicit `OPTIMISTIC` locking additionally validates an unchanged versioned entity.
+Use it when committing work depends on a read remaining valid, rather than assuming every entity read is checked automatically.
 
-All connections used by a factory must have a consistent concurrency configuration.
-The declaration does not configure a connection pool, does not replace `hibernate.connection.isolation`, and does not support session-specific overrides.
-If neither an ordinary read nor a dialect current-read strategy establishes the required guarantee, Hibernate rejects the affected optimistic version validation instead of relying on a potentially stale snapshot.
-Stateless optimistic locking requires a read that retains row protection through transaction completion.
-Hibernate uses a shared-lock or update-lock read, or an ordinary read when the resolved configuration already guarantees that protection.
-A current read that provides only freshness, or a stable snapshot that permits concurrent modification, is insufficient for this purpose.
-
-When your application uses long transactions or conversations that span several database transactions,
-you can store versioning data so that if the same entity is updated by two conversations, the last to commit changes is informed of the conflict,
-and does not override the other conversation's work.
-This approach guarantees some isolation, but scales well and works particularly well in _read-often-write-sometimes_ situations.
-
-Hibernate provides two different mechanisms for storing versioning information, a dedicated version number or a timestamp.
-
-[NOTE]
+[[locking-explicit-optimistic-example]]
+.Validating an unchanged entity
 ====
-A version or timestamp property can never be null for a detached instance.
-Hibernate detects any instance with a null version or timestamp as transient, regardless of other unsaved-value strategies that you specify.
-Declaring a nullable version or timestamp property is an easy way to avoid problems with transitive reattachment in Hibernate,
-especially useful if you use assigned identifiers or composite keys.
-====
-
-[[locking-optimistic-mapping]]
-==== Mapping optimistic locking
-
-Jakarta Persistence defines support for optimistic locking based on either a version (sequential numeric) or timestamp strategy.
-To enable this style of optimistic locking simply add the `jakarta.persistence.Version` to the persistent attribute that defines the optimistic locking value.
-According to Jakarta Persistence, the valid types for these attributes are limited to:
-
-* `int` or `Integer`
-* `short` or `Short`
-* `long` or `Long`
-* `java.sql.Timestamp`
-
-However, Hibernate allows you to use even Java 8 Date/Time types, such as `Instant`.
-
-[[locking-optimistic-version-example]]
-.`@Version` annotation mapping
-====
-[source,java]
+[source,java,indent=0]
 ----
-include::{example-dir-locking}/OptimisticLockingTest.java[tags=locking-optimistic-entity-mapping-example,indent=0]
-----
-
-[source,java]
-----
-include::{example-dir-locking}/OptimisticLockingTimestampTest.java[tags=locking-optimistic-entity-mapping-example,indent=0]
-----
-
-[source,java]
-----
-include::{example-dir-locking}/OptimisticLockingInstantTest.java[tags=locking-optimistic-entity-mapping-example,indent=0]
+include::{example-dir-locking}/LockingGuideTests.java[tags=locking-explicit-optimistic-example]
 ----
 ====
 
-[[locking-optimistic-version-number]]
-===== Dedicated version number
-
-The version number mechanism for optimistic locking is provided through a `@Version` annotation.
-
-[[locking-optimistic-version-number-example]]
-.@Version annotation
-====
-[source, java,indent=0]
-----
-include::{example-dir-locking}/OptimisticLockingTest.java[tags=locking-optimistic-version-number-example,indent=0]
-----
-====
-
-Here, the version property is mapped to the `version` column, and the entity manager uses it to detect conflicting updates,
-and prevent the loss of updates that would otherwise be overwritten by a last-commit-wins strategy.
-
-The version column can be any kind of type, as long as you define and implement the appropriate `UserVersionType`.
-
-Your application is forbidden from altering the version number set by Hibernate.
-To artificially increase the version number, see the documentation for properties `LockModeType.OPTIMISTIC_FORCE_INCREMENT` or
-`LockModeType.PESSIMISTIC_FORCE_INCREMENT` in the Hibernate Entity Manager reference documentation.
-
-[NOTE]
-====
-If the version number is generated by the database, such as a trigger, implement a custom generator by extending the `OnExecutionGenerator` interface, and apply it to the version attribute using a custom annotation.
-====
-
-[[locking-optimistic-timestamp]]
-===== Timestamp
-
-Timestamps are a less reliable way of optimistic locking than version numbers but can be used by applications for other purposes as well.
-Timestamping is automatically used if you specify the `@Version` annotation on a `Date` or `Calendar` property type.
-
-[[locking-optimistic-version-timestamp-example]]
-.Using timestamps for optimistic locking
-====
-[source, java,indent=0]
-----
-include::{example-dir-locking}/OptimisticLockingTest.java[tags=locking-optimistic-version-timestamp-example,indent=0]
-----
-====
-
-The timestamp can also be generated by the database, instead of by the VM, using the `@CurrentTimestamp` annotation, or even `@Generated(value = ALWAYS, sql = "current_timestamp")`.
-
-[[locking-optimistic-version-timestamp-source-mapping-example]]
-.Database-generated version timestamp mapping
-====
-[source, java,indent=0]
-----
-include::{example-dir-locking}/VersionSourceTest.java[tags=locking-optimistic-version-timestamp-source-mapping-example,indent=0]
-----
-====
-
-Now, when persisting a `Person` entity, Hibernate calls the database-specific current timestamp retrieval function:
-
-[[locking-optimistic-version-timestamp-source-persist-example]]
-.Database-generated version timestamp example
-====
-[source, java,indent=0]
-----
-include::{example-dir-locking}/VersionSourceTest.java[tags=locking-optimistic-version-timestamp-source-persist-example,indent=0]
-----
-
-[source, sql,indent=0]
-----
-include::{extrasdir}/locking-optimistic-version-timestamp-source-persist-example.sql[]
-----
-====
+`OPTIMISTIC_FORCE_INCREMENT` also advances the version to signal a change to concurrent optimistic readers, even when the entity's attributes were not modified.
+One common use is the <<locking-graph-root,graph-root coordination protocol>>: a transaction changing part of the graph requests `OPTIMISTIC_FORCE_INCREMENT` on the versioned root even when the root's own attributes are unchanged.
+The root's version then acts as a shared conflict-detection marker for participating transactions.
 
 [[locking-optimistic-exclude-attribute]]
-===== Excluding attributes
+==== Concurrent changes to excluded attributes
 
-By default, every entity attribute modification is going to trigger a version incrementation.
-If there is an entity property which should not bump up the entity version,
-then you need to annotate it with the Hibernate https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation,
-as illustrated in the following example.
-
-[[locking-optimistic-exclude-attribute-mapping-example]]
-.@OptimisticLock mapping example
-====
-[source, java,indent=0]
-----
-include::{example-dir-locking}/OptimisticLockTest.java[tags=locking-optimistic-exclude-attribute-mapping-example,indent=0]
-----
-====
-
-This way, if one thread modifies the `Phone` number while a second thread increments the `callCount` attribute,
-the two concurrent transactions are not going to conflict as illustrated by the following example.
+An attribute mapped with <<domain-version-exclusions,`@ExcludedFromVersioning`>> does not itself trigger a version increment when changed.
+The following example shows how another transaction can consequently overwrite that excluded value.
 
 [[locking-optimistic-exclude-attribute-example]]
-.@OptimisticLock exlude attribute example
+.Concurrent changes involving an excluded attribute
 ====
-[source, java,indent=0]
+[source,java,indent=0]
 ----
-include::{example-dir-locking}/OptimisticLockTest.java[tags=locking-optimistic-exclude-attribute-example,indent=0]
-----
-
-[source, sql,indent=0]
-----
-include::{extrasdir}/locking-optimistic-exclude-attribute-example.sql[]
+include::{example-dir-locking}/LockingGuideTests.java[tags=locking-guide-exclusion-example]
 ----
 ====
 
-When Bob changes the `Phone` entity `callCount`, the entity version is not bumped up.
-That's why Alice's UPDATE succeeds since the entity version is still 0, even if Bob has changed the record
-since Alice loaded it.
-
-[WARNING]
-====
-Although there is no conflict between Bob and Alice, Alice's UPDATE overrides Bob's change to the `callCount` attribute.
-
-For this reason, you should only use this feature if you can accommodate lost updates on the excluded entity properties.
-====
+The excluded change does not increment the version.
+Consequently, another transaction can write using that unchanged version, potentially overwriting the excluded value if its update includes stale state for that attribute.
+Exclusion does not protect an attribute against lost updates; use it only when the application accepts those semantics.
+The example asserts the final values and version to make this tradeoff observable.
 
 [[locking-optimistic-versionless]]
-===== Versionless optimistic locking
+=== Versionless optimistic locking
 
-Although the default `@Version` property optimistic locking mechanism is sufficient in many situations,
-sometimes, you need to rely on the actual database row column values to prevent *lost updates*.
+`@OptimisticLocking` selects Hibernate's conflict-detection strategy:
 
-Hibernate supports a form of optimistic locking that does not require a dedicated "version attribute".
-This is also useful for use with modeling legacy schemas.
+`VERSION`:: The default version-attribute strategy.
+`NONE`:: Disable optimistic checks, even when a version attribute is present.
+`ALL`:: Compare eligible previously loaded column values in update/delete predicates.
+`DIRTY`:: Compare eligible previously loaded values of dirty attributes for updates.
 
-The idea is that you can get Hibernate to perform "version checks" using either all of the entity's attributes or just the attributes that have changed.
-This is achieved through the use of the
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`]
-annotation which defines a single attribute of type
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLockType.html[`org.hibernate.annotations.OptimisticLockType`].
-
-There are 4 available OptimisticLockTypes:
-
-`NONE`::
-	optimistic locking is disabled even if there is a `@Version` annotation present
-`VERSION` (the default)::
-	performs optimistic locking based on a `@Version` as described above
-`ALL`::
-	performs optimistic locking based on _all_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
-`DIRTY`::
-	performs optimistic locking based on _dirty_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
+ALL and DIRTY require dynamic updates, normally enabled with <<pc-managed-state-dynamic-update,`@DynamicUpdate`>>, and cannot be combined with a `@Version` attribute.
+Attributes mapped with <<domain-version-exclusions,`@ExcludedFromVersioning`>> do not participate in their comparisons.
+These strategies compare row values rather than maintaining a separate version number.
 
 [[locking-optimistic-versionless-all]]
-====== Versionless optimistic locking using `OptimisticLockType.ALL`
+==== Comparing all eligible loaded values
 
 [[locking-optimistic-lock-type-all-example]]
-.`OptimisticLockType.ALL` mapping example
+.ALL mapping
 ====
-[source,java]
+[source,java,indent=0]
 ----
-include::{example-dir-locking}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-example,indent=0]
+include::{example-dir-locking}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-example]
 ----
 ====
-
-When you need to modify the `Person` entity above:
 
 [[locking-optimistic-lock-type-all-update-example]]
-.`OptimisticLockType.ALL` update example
+.ALL update predicate
 ====
-[source,java]
+[source,java,indent=0]
 ----
-include::{example-dir-locking}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-update-example,indent=0]
+include::{example-dir-locking}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-update-example]
 ----
 
-[source,sql]
+[source,sql,indent=0]
 ----
 include::{extrasdir}/locking-optimistic-lock-type-all-update-example.sql[]
 ----
 ====
 
-As you can see, all the columns of the associated database row are used in the `WHERE` clause.
-If any column has changed after the row was loaded, there won't be any match, and a `StaleStateException` or an `OptimisticEntityLockException`
-is going to be thrown.
-
-[NOTE]
-====
-When using `OptimisticLockType.ALL`, you should also use `@DynamicUpdate` because the `UPDATE` statement must take into consideration all the entity property values.
-====
+The predicate compares the eligible loaded values, including unchanged attributes.
+A concurrent change to a compared value can cause an optimistic failure even when the two transactions changed different attributes.
+Nullable values use null-aware comparisons rather than equality to a null parameter.
 
 [[locking-optimistic-versionless-dirty]]
-====== Versionless optimistic locking using `OptimisticLockType.DIRTY`
-
-The `OptimisticLockType.DIRTY` differs from `OptimisticLockType.ALL`
-in that it only takes into consideration the entity properties that have changed
-since the entity was loaded in the currently running Persistence Context.
+==== Comparing dirty values
 
 [[locking-optimistic-lock-type-dirty-example]]
-.`OptimisticLockType.DIRTY` mapping example
+.DIRTY mapping
 ====
-[source,java]
+[source,java,indent=0]
 ----
-include::{example-dir-locking}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-example,indent=0]
+include::{example-dir-locking}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-example]
 ----
 ====
-
-When you need to modify the `Person` entity above:
 
 [[locking-optimistic-lock-type-dirty-update-example]]
-.`OptimisticLockType.DIRTY` update example
+.DIRTY update predicate
 ====
-[source,java]
+[source,java,indent=0]
 ----
-include::{example-dir-locking}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-update-example,indent=0]
+include::{example-dir-locking}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-update-example]
 ----
 
-[source,sql]
+[source,sql,indent=0]
 ----
 include::{extrasdir}/locking-optimistic-lock-type-dirty-update-example.sql[]
 ----
 ====
 
-This time, only the database column that has changed was used in the `WHERE` clause.
+Only the changed eligible values participate in this update's optimistic predicate.
+DIRTY can allow nonoverlapping changes, but does not validate invariants spanning multiple attributes or guarantee that conflicts disappear.
+The database still enforces its <<transactions-concurrency,transaction isolation rules>>.
+At stronger isolation levels, snapshot or serialization conflicts may reject an update even when the transactions changed different attributes and Hibernate's optimistic predicate still matches.
+A delete has no ordinary dirty-property set: loaded values may be used for its checks, so do not infer delete semantics from the update predicate alone.
 
-[NOTE]
-====
-The main advantage of `OptimisticLockType.DIRTY` over `OptimisticLockType.ALL`
-and the default `OptimisticLockType.VERSION` used implicitly along with the `@Version` mapping,
-is that it allows you to minimize the risk of `OptimisticEntityLockException` across non-overlapping entity property changes.
-
-When using `OptimisticLockType.DIRTY`, you should also use `@DynamicUpdate` because the `UPDATE` statement must take into consideration all the dirty entity property values,
-and also the `@SelectBeforeUpdate` annotation so that detached entities are properly handled by the
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#update-java.lang.Object-[`Session#update(entity)`] operation.
-====
+Both strategies depend on the original loaded state available to the current context.
+After detachment, <<pc-merge,merge>> does not reconstruct the database snapshot from when the detached object was originally read.
+Prefer a version attribute when conflict detection must survive detached transfer between requests.
 
 [[locking-pessimistic]]
-=== Pessimistic
+=== Pessimistic scope, timeouts, and skip-locked behavior
 
-Typically, you only need to specify an isolation level for the JDBC connections and let the database handle locking issues.
-If you do need to obtain exclusive pessimistic locks or re-obtain locks at the start of a new transaction, Hibernate gives you the tools you need.
-
-[NOTE]
-====
-Hibernate always uses the locking mechanism of the database, and never locks objects in memory.
-====
-
-[[locking-LockMode]]
-=== `LockMode` and `LockModeType`
-
-Long before Java Persistence 1.0, Hibernate already defined various explicit locking strategies through its `LockMode` enumeration.
-Jakarta Persistence comes with its own {jpaJavadocUrlPrefix}LockModeType.html[`LockModeType`] enumeration which defines similar strategies as the Hibernate-native `LockMode`.
-
-[cols=",,",, options="header"]
-|=======================================================================
-|`LockModeType`|`LockMode`|Description
-
-|`NONE`|`NONE` |The absence of a lock. All objects switch to this lock mode at the end of a transaction. Objects associated with the session via a call to `update()` or `saveOrUpdate()` also start out in this lock mode.
-|`READ` and `OPTIMISTIC`|`READ` | The entity version is checked towards the end of the currently running transaction. On databases where a plain read would not wait for a concurrent uncommitted write to the row, the check is performed as a locking read, so that it sees the current version.
-|`WRITE` and `OPTIMISTIC_FORCE_INCREMENT`|`WRITE` | The entity version is incremented automatically even if the entity has not changed.
-|`PESSIMISTIC_FORCE_INCREMENT`|`PESSIMISTIC_FORCE_INCREMENT` | The entity is locked pessimistically and its version is incremented automatically even if the entity has not changed.
-|`PESSIMISTIC_READ`|`PESSIMISTIC_READ` | The entity is locked pessimistically using a shared lock if the database supports such a feature. Otherwise, an explicit lock is used.
-|`PESSIMISTIC_WRITE`|`PESSIMISTIC_WRITE`, `UPGRADE` | The entity is locked using an explicit lock.
-|`PESSIMISTIC_WRITE` with a `jakarta.persistence.lock.timeout` setting of 0 |`UPGRADE_NOWAIT` | The lock acquisition request fails fast if the row is already locked.
-|`PESSIMISTIC_WRITE` with a `jakarta.persistence.lock.timeout` setting of -2 |`UPGRADE_SKIPLOCKED` | The lock acquisition request skips the already locked rows. It uses a `SELECT ... FOR UPDATE SKIP LOCKED` in Oracle and PostgreSQL 9.5, or `SELECT ... with (rowlock, updlock, readpast) in SQL Server`.
-|=======================================================================
-
-The explicit user request mentioned above occurs as a consequence of any of the following actions:
-
-* a call to `Session.load()`, specifying a `LockMode`.
-* a call to `Session.lock()`.
-* a call to `Query.setLockMode()`.
-
-If you call `Session.load()` with option `UPGRADE`, `UPGRADE_NOWAIT` or `UPGRADE_SKIPLOCKED`,
-and the requested object is not already loaded by the session, the object is loaded using `SELECT ... FOR UPDATE`.
-
-If you call `load()` for an object that is already loaded with a less restrictive lock than the one you request, Hibernate calls `lock()` for that object.
-
-`Session.lock(`) performs a version number check if the specified lock mode is `READ`, `UPGRADE`, `UPGRADE_NOWAIT` or `UPGRADE_SKIPLOCKED`.
-In the case of `UPGRADE`, `UPGRADE_NOWAIT` or `UPGRADE_SKIPLOCKED`, the `SELECT ... FOR UPDATE` syntax is used.
-
-If the requested lock mode is not supported by the database, Hibernate uses an appropriate alternate mode instead of throwing an exception.
-This ensures that applications are portable.
+Pessimistic read/write locking protects rows using the database's supported locking clauses or table hints.
+Shared requests may use exclusive protection where shared locks are unavailable.
+The dialect, query shape, and requested options determine how locking is acquired.
+Unsupported combinations may fail; there is no universal guarantee of silent fallback preserving every requested behavior.
 
 [[locking-jpa-query-hints]]
-=== Jakarta Persistence locking query hints
+==== Lock scope
 
-Jakarta Persistence defined two locking-related query hints:
+`PessimisticLockScope` controls which rows participate:
 
-jakarta.persistence.lock.timeout:: it gives the number of milliseconds a lock acquisition request will wait before throwing an exception
-jakarta.persistence.lock.scope:: defines the {jpaJavadocUrlPrefix}PessimisticLockScope.html[_scope_] of the lock acquisition request.
-The scope can either be `NORMAL` (default value) or `EXTENDED`. The `EXTENDED` scope will cause a lock acquisition request to be passed to other owned table structured (e.g. `@Inheritance(strategy=InheritanceType.JOINED)`, `@ElementCollection`)
+[cols="1,3",options="header"]
+|===
+|Scope |Rows included
+|`NORMAL` |The entity's primary and secondary table rows, including its joined-inheritance rows.
+|`EXTENDED` |Normal scope plus collection-table and owned association join-table rows. Referenced entity state is not automatically locked.
+|`FETCHED` |Rows for relationships and collections fetched by the locking operation, including associated entity state as defined by the scope contract.
+|===
+
+Normal scope is the default.
+Extended scope does not promise protection against every phantom insertion into a collection or join table.
+Fetched scope follows the <<fetching-locking-interaction,fetch plan>> of the locking operation; it is not a recursive lock of everything reachable from the entity.
+Dialect capabilities and mapping/query shape can require additional statements or limit support.
+
+[[locking-scope-example]]
+.Normal, extended, and fetched scope requests
+====
+[source,java,indent=0]
+----
+include::{example-dir-locking}/options/ScopeTests.java[tags=locking-guide-scope-normal]
+----
+
+[source,java,indent=0]
+----
+include::{example-dir-locking}/options/ScopeTests.java[tags=locking-guide-scope-extended]
+----
+
+[source,java,indent=0]
+----
+include::{example-dir-locking}/options/ScopeTests.java[tags=locking-guide-scope-fetched]
+----
+====
+
+The Book examples compare normal and extended protection of owned collection tables.
+The Report example requests fetched scope for its eagerly fetched relationships and collection.
+Each snippet runs in its own transaction.
+The same scope values can be supplied to standard query lock controls or through `jakarta.persistence.lock.scope`.
+Joined-inheritance and secondary-table rows already belong to normal scope; choosing extended scope is not necessary just to include them.
+
+==== Lock acquisition timeout
+
+Use `Timeout.milliseconds()` or `Timeout.seconds()` as typed options, or the standard `jakarta.persistence.lock.timeout` property/hint in milliseconds.
+A lock timeout concerns waiting for a lock, not total query execution or transaction duration.
+See <<query-execution,query execution>> and <<transactions-timeouts,transaction timeouts>> for those separate controls.
 
 [[locking-jpa-query-hints-timeout-example]]
-.`jakarta.persistence.lock.timeout` example
+.Requesting a lock acquisition timeout
 ====
-[source, java,indent=0]
+[source,java,indent=0]
 ----
-include::{example-dir-locking}/ExplicitLockingTest.java[tags=locking-jpa-query-hints-timeout-example,indent=0]
+include::{example-dir-locking}/ExplicitLockingTest.java[tags=locking-jpa-query-hints-timeout-example]
 ----
+====
 
-[source, sql,indent=0]
+Timeout enforcement and precision depend on the database, driver, and dialect.
+Hibernate may render a wait clause or temporarily adjust connection-level lock-wait settings, restoring them after the operation.
+Do not assume exact millisecond enforcement, universal support, or that every unsupported request is simply ignored.
+
+==== No-wait and skip-locked options
+
+`Timeouts.NO_WAIT` requests immediate failure when a conflicting lock cannot be acquired.
+`Timeouts.SKIP_LOCKED` requests skipping already locked rows instead of waiting.
+Their property/hint values are `0` and `-2`, respectively; `-2` is a Hibernate extension.
+`Timeouts.WAIT_FOREVER` uses `-1` to request no acquisition timeout, subject to database settings and other timeouts.
+
+[[locking-skip-locked-example]]
+.Skip-locked query
+====
+[source,java,indent=0]
 ----
-include::{extrasdir}/locking-jpa-query-hints-timeout-example.sql[]
+include::{example-dir-locking}/LockingGuideTests.java[tags=locking-guide-skip-locked-example]
 ----
 ====
+
+A skip-locked result may contain fewer rows or differ from an ordinary selection of the same predicate.
+An empty result does not prove that no matching rows exist: matching rows may be locked elsewhere.
+
+
+Skip-locked is not a legal `lock()` option for an already managed entity; use a supported selection operation.
 
 [NOTE]
 ====
-Not all JDBC database drivers support setting a timeout value for a locking request.
-If not supported, the Hibernate dialect ignores this query hint.
+On Sybase ASE, skip-locked `PESSIMISTIC_WRITE` selection uses `READPAST` with `FOR UPDATE` to retain exclusive row locks.
+This requires the ASE server option `select for update` to be enabled and the selected tables to use `datarows` locking.
+Hibernate does not enable the server option automatically.
+When JDBC metadata access is available, Hibernate checks the option during bootstrap and rejects exclusive skip-locked requests if it is disabled or cannot be verified.
+When bootstrapping without JDBC metadata, the application must ensure that the option is enabled.
+ASE does not support `FOR UPDATE` with `DISTINCT`, `GROUP BY`, `HAVING`, aggregate functions, subqueries, or set operations such as `UNION`.
+Hibernate rejects exclusive skip-locked HQL and Criteria queries with these shapes before executing SQL, including table-per-class polymorphic queries and full joins implemented using a union.
+Use a supported query shape when exclusive skip-locked selection is required.
+Skip-locked `PESSIMISTIC_READ` set queries use `READPAST` on each selected table and query-level repeatable-read isolation to retain shared locks.
 ====
 
-[NOTE]
-====
-The `jakarta.persistence.lock.scope` is https://hibernate.atlassian.net/browse/HHH-9636[not yet supported] as specified by the Jakarta Persistence standard.
-====
+==== Locking failures
 
-[[locking-session-lock]]
-=== Session.lock()
-
-The following example shows how to obtain a shared database lock.
-
-[[locking-session-lock-example]]
-.`session.lock()` example
-====
-[source, java,indent=0]
-----
-include::{example-dir-locking}/ExplicitLockingTest.java[tags=locking-session-lock-example,indent=0]
-----
-
-[source, sql,indent=0]
-----
-include::{extrasdir}/locking-sessionlock-example.sql[]
-----
-====
+At the Jakarta Persistence API boundary, `OptimisticLockException` indicates an optimistic conflict.
+Native Hibernate APIs may report a stale-state or native locking failure instead.
+A pessimistic acquisition failure that rolls back the transaction is represented by `PessimisticLockException`; a statement-level acquisition timeout is represented by `LockTimeoutException`.
+The actual database failure and exception conversion determine which case applies.
+Do not assume a timed-out transaction is always usable.
+Roll back and discard an affected stateful context before retrying the appropriate unit of work; see <<transactions-completion,transaction failure handling>>.
 
 [[locking-follow-on]]
-=== Follow-on-locking
+=== Follow-on locking
 
-When using Oracle, the https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF55371[`FOR UPDATE` exclusive locking clause] cannot be used with:
-
-- `DISTINCT`
-- `GROUP BY`
-- `UNION`
-- inlined views (derived tables), therefore, affecting the legacy Oracle pagination mechanism as well.
-
-For this reason, Hibernate uses secondary selects to lock the previously fetched entities.
+Hibernate may select rows first and acquire locks with additional statements when the dialect cannot apply locking directly to the query shape.
+Restrictions on joins, distinct results, grouping, set operations, or pagination depend on the database.
 
 [[locking-follow-on-example]]
-.Follow-on-locking example
+.Requesting follow-on locking
 ====
-[source, java,indent=0]
+[source,java,indent=0]
 ----
-include::{example-dir-locking}/ExplicitLockingTest.java[tags=locking-follow-on-example,indent=0]
+include::{example-dir-locking}/LockingGuideTests.java[tags=locking-guide-follow-on-example]
 ----
 
-[source, sql,indent=0]
+[source,sql,indent=0]
 ----
 include::{extrasdir}/locking-follow-on-example.sql[]
 ----
 ====
 
-[NOTE]
-====
-To avoid the N+1 query problem, a separate query can be used to apply the lock using the associated entity identifiers.
-====
+The simplified SQL illustrates grouped acquisition for the two-row, single-table example using a locking clause.
+Table-hint dialects and other mappings can use a different statement shape or count.
+The original selection and later acquisition are separate steps.
+Do not assume the selected rows still satisfy the original predicate or page membership under every concurrent change.
+Acquisition can reread database state, but does not universally refresh already managed instances; use explicit refresh when that is required.
 
 [[locking-follow-on-secondary-query-example]]
-.Secondary query entity locking
-====
-[source, java,indent=0]
-----
-include::{example-dir-locking}/ExplicitLockingTest.java[tags=locking-follow-on-secondary-query-example,indent=0]
-----
+Hibernate can group locking reads by entity type and table instead of issuing one additional select for every entity.
+The statement count depends on mappings, query shape, result processing, and dialect; incremental processing can acquire protection differently from materializing a result list.
+An application-issued secondary query is not an always-needed workaround for an N+1 pattern.
+Distinguish lock-acquisition statements from association-loading statements when <<fetching-plan-selection,verifying a fetch plan>>.
 
-[source, sql,indent=0]
-----
-include::{extrasdir}/locking-follow-on-secondary-query-example.sql[]
-----
-====
+[cols="1,3",options="header"]
+|===
+|`Locking.FollowOn` |Policy
+|`ALLOW` |Permit follow-on acquisition when necessary.
+|`DISALLOW` |Reject an operation that requires follow-on acquisition.
+|`FORCE` |Request follow-on acquisition, subject to the applicable dialect and execution path.
+|`IGNORE` |When follow-on acquisition would be required, allow execution without the expected locks.
+|===
 
-The lock request was moved from the original query to a secondary one which takes the previously fetched entities to lock their associated database records.
-
-Prior to Hibernate 5.2.1, the follow-on-locking mechanism was applied uniformly to any locking query executing on Oracle.
-Since 5.2.1, the Oracle Dialect tries to figure out if the current query demands the follow-on-locking mechanism.
-
-Even more important is that you can overrule the default follow-on-locking detection logic and explicitly enable or disable it on a per query basis.
+Use `IGNORE` only when the application explicitly accepts the possibility that requested protection is absent.
+The policies can be passed as Hibernate find/lock/refresh options or applied to queries using `setFollowOnStrategy()` or `HibernateHints.HINT_FOLLOW_ON_STRATEGY`.
 
 [[locking-follow-on-explicit-example]]
-.Disabling the follow-on-locking mechanism explicitly
+.Disallowing follow-on acquisition
 ====
-[source, java,indent=0]
+[source,java,indent=0]
 ----
-include::{example-dir-locking}/ExplicitLockingTest.java[tags=locking-follow-on-explicit-example,indent=0]
-----
-
-[source, sql,indent=0]
-----
-include::{extrasdir}/locking-follow-on-explicit-example.sql[]
+include::{example-dir-locking}/LockingGuideTests.java[tags=locking-guide-follow-on-disallow-example]
 ----
 ====
 
-[NOTE]
-====
-The follow-on-locking mechanism should be explicitly enabled only if the currently executing query fails because the `FOR UPDATE` clause cannot be applied, meaning that the Dialect resolving mechanism needs to be further improved.
-====
+Disallowing follow-on acquisition does not force the database to accept an otherwise unsupported locking clause.
+Incompatible operations can throw instead of silently weakening the request.
+Some result shapes and options, including skip-locked requests, restrict follow-on acquisition; do not assume every policy is supported for every query.
+See link:{doc-javadoc-url}org/hibernate/Locking.FollowOn.html[`Locking.FollowOn`] for the policy API.
+
+[[locking-graph-root]]
+=== Coordinating access through a graph root
+
+Applications can coordinate access to a graph of objects through an agreed graph root using either optimistic or pessimistic locking.
+With optimistic locking, participating transactions capture the root's version before reading the graph state it protects and validate that version before successful transaction completion.
+Graph writers advance the root's version even when the root's own attributes are unchanged.
+With pessimistic locking, participating transactions acquire a lock on the root before reading the graph state it protects: a shared lock for readers or an exclusive lock for writers, held until transaction completion.
+
+Choose the <<fetching-locking-interaction,loading operation and fetch plan>> so that protected state is not read before the required coordination step.
+Eager association loading and the selection phase of follow-on locking can retrieve that state before lock acquisition;
+do not assume that requesting a root lock automatically establishes the protocol's required ordering.
+
+This coordination requires all participating transactions to follow the same root-locking protocol.
+Locking the root does not automatically lock, version, or validate every associated entity; the agreement makes the root the coordination point for graph access.
+Neither approach automatically refreshes graph objects already loaded into the persistence context.
+When existing managed state must be reloaded, see <<pc-refresh,refreshing entity state>>; acquiring or validating the root's lock does not make that state current.
+
+[[locking-concurrency-baseline]]
+=== Concurrency baseline and optimistic validation
+
+Hibernate resolves a transaction concurrency baseline during bootstrap and uses it when selecting the current read needed to verify an explicit optimistic lock's version.
+Resolution considers the bootstrap connection's isolation and database-specific configuration, including SQL Server's `READ_COMMITTED_SNAPSHOT` setting and TiDB's transaction mode.
+It does not change connection isolation.
+
+The `hibernate.transaction.concurrency` setting declares the baseline when it cannot be observed, especially when `hibernate.boot.allow_jdbc_metadata_access` is `DISALLOW`.
+Its registered names are `READ_UNCOMMITTED`, `READ_COMMITTED`, `LOCKING_READ_COMMITTED`, `READ_COMMITTED_SNAPSHOT`, `REPEATABLE_READ`, `SNAPSHOT`, and `SERIALIZABLE`.
+Names are interpreted by the dialect: `SNAPSHOT` is distinct from statement-level `READ_COMMITTED_SNAPSHOT`.
+Programmatic configuration may instead supply a `TransactionConcurrency` instance constructed using `TransactionConcurrencies.builder()`.
+An explicitly supplied instance bypasses concurrency resolution, probing, and validation; its accuracy and immutability are the caller's responsibility.
+A known contradiction between a named declaration and observed behavior fails bootstrap.
+
+With metadata access `ALLOW`, a failed concurrency query leaves the affected facts unresolved without discarding other JDBC metadata.
+With `REQUIRE`, failure of a supported query fails bootstrap.
+`DISALLOW` performs no JDBC access for concurrency resolution.
+An unsupported query is not an execution failure and may be compensated for by a declaration.
+
+All connections used by a factory must have consistent concurrency configuration.
+The declaration does not configure a pool, replace `hibernate.connection.isolation`, or support session-specific overrides.
+If neither an ordinary read nor a dialect current-read strategy establishes the required guarantee, Hibernate rejects the affected optimistic validation rather than relying on a potentially stale snapshot.
+
+Stateless optimistic locking requires a read that retains row protection through transaction completion.
+Hibernate uses a shared-lock or update-lock read, or an ordinary read when the resolved configuration already guarantees that protection.
+A current read that provides only freshness, or a stable snapshot that permits concurrent modification, is insufficient for this purpose.
+See <<transactions-concurrency,isolation and concurrency declarations>> and link:{doc-javadoc-url}org/hibernate/cfg/TransactionSettings.html#TRANSACTION_CONCURRENCY[`TransactionSettings`] for configuration, and
+link:{doc-spi-url}org/hibernate/dialect/lock/spi/TransactionConcurrency.html[`TransactionConcurrency`] for the descriptor contract.

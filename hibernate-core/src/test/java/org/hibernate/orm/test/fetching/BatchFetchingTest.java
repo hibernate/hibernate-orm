@@ -5,6 +5,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * @author Vlad Mihalcea
  */
@@ -25,7 +28,7 @@ import java.util.List;
 		BatchFetchingTest.Department.class,
 		BatchFetchingTest.Employee.class
 })
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 public class BatchFetchingTest {
 	private final Logger log = Logger.getLogger( BatchFetchingTest.class );
 
@@ -42,7 +45,7 @@ public class BatchFetchingTest {
 				department.id = i;
 				entityManager.persist(department);
 
-				for (int j = 0; j < Math.random() * 5; j++) {
+				for (int j = 0; j < 2; j++) {
 					Employee employee = new Employee();
 					employee.id = (i * 5) + j;
 					employee.name = String.format("John %d", employee.getId());
@@ -53,24 +56,29 @@ public class BatchFetchingTest {
 			}
 		} );
 
+		factoryScope.getCollectingStatementObserver().clear();
 		factoryScope.inTransaction( (entityManager) -> {
 			//tag::fetching-batch-fetching-example[]
 			List<Department> departments = entityManager.createQuery(
-							"select d " +
-							"from Department d " +
-							"inner join d.employees e " +
-							"where e.name like 'John%'", Department.class)
+							"select d from Department d order by d.id", Department.class)
 					.getResultList();
 
+			//end::fetching-batch-fetching-example[]
+			assertThat( departments ).hasSize( 10 );
+			assertThat( departments ).allSatisfy(
+					department -> assertThat( Hibernate.isInitialized( department.employees ) ).isFalse() );
+			//tag::fetching-batch-fetching-example[]
 			for (Department department : departments) {
 				log.infof(
-						"Department %d has {} employees",
+						"Department %d has %d employees",
 						department.getId(),
 						department.getEmployees().size()
 				);
 			}
 			//end::fetching-batch-fetching-example[]
+			assertThat( departments ).allSatisfy( department -> assertThat( department.employees ).hasSize( 2 ) );
 		} );
+		factoryScope.getCollectingStatementObserver().assertQueries().hasSize( 3 );
 	}
 
 	//tag::fetching-batch-mapping-example[]

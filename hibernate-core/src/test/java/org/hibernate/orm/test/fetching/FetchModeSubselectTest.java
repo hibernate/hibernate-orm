@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.NaturalId;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
@@ -29,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		FetchModeSubselectTest.Department.class,
 		FetchModeSubselectTest.Employee.class,
 })
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 public class FetchModeSubselectTest {
 	private final Logger log = Logger.getLogger( FetchModeSubselectTest.class );
 
@@ -41,10 +43,10 @@ public class FetchModeSubselectTest {
 	@Test
 	public void test(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			for (long i = 0; i < 2; i++) {
+			for (long i = 0; i < 3; i++) {
 				Department department = new Department();
 				department.id = i + 1;
-				department.name = String.format("Department %d", department.id);
+				department.name = i == 2 ? "Other" : String.format("Department %d", department.id);
 				entityManager.persist(department);
 
 				for (long j = 0; j < 3; j++) {
@@ -57,6 +59,8 @@ public class FetchModeSubselectTest {
 		});
 
 		factoryScope.inTransaction( entityManager -> {
+			Department unrelated = entityManager.find( Department.class, 3L );
+			factoryScope.getCollectingStatementObserver().clear();
 			//tag::fetching-strategies-fetch-mode-subselect-example[]
 			List<Department> departments = entityManager.createQuery(
 				"select d " +
@@ -65,12 +69,19 @@ public class FetchModeSubselectTest {
 			.setParameter("token", "Department%")
 			.getResultList();
 
+			//end::fetching-strategies-fetch-mode-subselect-example[]
+			assertThat( departments ).hasSize( 2 );
+			assertThat( departments ).allSatisfy(
+					department -> assertThat( Hibernate.isInitialized( department.employees ) ).isFalse() );
+			//tag::fetching-strategies-fetch-mode-subselect-example[]
 			log.infof("Fetched %d Departments", departments.size());
 
 			for (Department department : departments) {
 				assertEquals( 3, department.getEmployees().size() );
 			}
 			//end::fetching-strategies-fetch-mode-subselect-example[]
+			assertThat( Hibernate.isInitialized( unrelated.employees ) ).isFalse();
+			factoryScope.getCollectingStatementObserver().assertQueries().hasSize( 2 );
 		});
 	}
 

@@ -3,141 +3,54 @@
 :example-dir-pc: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
 :jcache-project-dir: {root-project-dir}/hibernate-jcache
 :example-dir-caching: {jcache-project-dir}/src/test/java/org/hibernate/orm/test/caching
-:extrasdir: extras
+:pc-extrasdir: extras
+:example-dir-custom-sql: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
 
-Both the `org.hibernate.Session` API and `jakarta.persistence.EntityManager` API represent a context for dealing with persistent data.
-This concept is called a `persistence context`.
-Persistent data has a state in relation to both a persistence context and the underlying database.
+[[pc-fundamentals]]
+=== Persistence-context fundamentals
 
-`transient`:: the entity has just been instantiated and is not associated with a persistence context.
-It has no persistent representation in the database and typically no identifier value has been assigned (unless the _assigned_ generator was used).
-`managed` or `persistent`:: the entity has an associated identifier and is associated with a persistence context.
-It may or may not physically exist in the database yet.
-`detached`:: the entity has an associated identifier but is no longer associated with a persistence context (usually because the persistence context was closed or the instance was evicted from the context)
-`removed`:: the entity has an associated identifier and is associated with a persistence context, however, it is scheduled for removal from the database.
-
-Much of the `org.hibernate.Session` and `jakarta.persistence.EntityManager` methods deal with moving entities among these states.
-
-[[pc-unwrap]]
-=== Accessing Hibernate APIs from Jakarta Persistence
-
-Jakarta Persistence defines an incredibly useful method to allow applications access to the APIs of the underlying provider.
-
-[[pc-unwrap-example]]
-.Accessing Hibernate APIs from Jakarta Persistence
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-unwrap-example]
-----
-====
-
-include::BytecodeEnhancement.adoc[]
-
-[[pc-persist]]
-=== Making entities persistent
-
-Once you've created a new entity instance (using the standard `new` operator) it is in `new` state.
-You can make it persistent by associating it to either an `org.hibernate.Session` or a `jakarta.persistence.EntityManager`.
-
-[[pc-persist-jpa-example]]
-.Making an entity persistent with Jakarta Persistence
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-persist-jpa-example]
-----
-====
-
-[[pc-persist-native-example]]
-.Making an entity persistent with Hibernate API
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-persist-native-example]
-----
-====
-
-`org.hibernate.Session` also has a method named persist which follows the exact semantics defined in the Jakarta Persistence specification for the persist method.
-It is this `org.hibernate.Session` method to which the Hibernate `jakarta.persistence.EntityManager` implementation delegates.
-
-Instances of entity types using <<identifiers-generators,generated identifiers>> will be automatically associated with
-an identifier value when the save or persist operation is called.
-If an entity type does not rely on a <<identifiers-generators,generated id>>, then an identifier value
-(usually natural) must be manually assigned to the entity instance before the save or persist operations can be called.
-
-[[pc-remove]]
-=== Deleting (removing) entities
-
-Entities can also be deleted.
-
-[[pc-remove-jpa-example]]
-.Deleting an entity with Jakarta Persistence
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-remove-jpa-example]
-----
-====
-
-[[pc-remove-native-example]]
-.Deleting an entity with the Hibernate API
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-remove-native-example]
-----
-====
-
-[NOTE]
-====
-Hibernate itself can handle deleting entities in detached state.
-Jakarta Persistence, however, disallows this behavior.
-
-The implication here is that the entity instance passed to the `org.hibernate.Session` delete method can be either in managed or detached state,
-while the entity instance passed to remove on `jakarta.persistence.EntityManager` must be in the managed state.
-====
-
-[[pc-get-reference]]
-=== Obtain an entity reference without initializing its data
-
-Sometimes referred to as lazy loading, the ability to obtain a reference to an entity without having to load its data is hugely important.
-The most common case being the need to create an association between an entity and another existing entity.
-
-[[pc-get-reference-jpa-example]]
-.Obtaining an entity reference without initializing its data with Jakarta Persistence
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-reference-jpa-example]
-----
-====
-
-[[pc-get-reference-native-example]]
-.Obtaining an entity reference without initializing its data with Hibernate API
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-reference-native-example]
-----
-====
-
-The above works on the assumption that the entity is defined to allow lazy loading, generally through use of runtime proxies.
-In both cases an exception will be thrown later if the given entity does not refer to actual database state when the application attempts to use the returned proxy in any way that requires access to its data.
+A persistence context tracks entity instances and their pending changes.
+Both `jakarta.persistence.EntityManager` and `org.hibernate.Session` provide this context.
+Within a context, an entity type and identifier identify a single managed representation.
+Repeated lookups return that representation, which may already contain unflushed changes;
+a lookup is not a request to <<pc-refresh,refresh>> its state from the database.
 
 [IMPORTANT]
-====
-Unless the entity class is declared `final`, the proxy extends the entity class. If the entity class is `final`, the proxy will implement an interface instead. See the <<chapters/domain/entity.adoc#entity-proxy, `@Proxy` mapping>> section for more info.
-====
+`EntityAgent` and Hibernate's `StatelessSession` operate without a persistence context:
+they do not provide managed identity or automatic dirty checking. See <<batch-stateless-session-example,stateless processing>>.
+
+An entity instance has one of the following states in relation to the persistence-context:
+
+`new` or `transient`:: Not associated with a context and not yet persistent. An assigned identifier alone does not make an instance persistent.
+`managed` or `persistent`:: Associated with the context. Its database row might not exist yet if insertion is pending.
+`detached`:: Previously persistent, but no longer associated with this context.
+`removed`:: Associated with the context and scheduled for removal from the database.
+
+The persistence-context lifetime and <<transactions,transaction>> lifetime are distinct:
+
+* *Container-managed, transaction-scoped context:* normally ends when its associated transaction completes.
+* *Container-managed, extended context:* can span multiple transactions; its lifetime is controlled by the container, typically through the owning stateful session bean.
+* *Application-managed context:* lasts until the application closes it and may participate in multiple transactions during that lifetime.
+
+See <<bootstrap-standardized-container,container bootstrap>>, <<bootstrap-standardized-app,application bootstrap>>,
+and <<long-conversations,long conversations>> for their configuration and usage.
+
+A context is not thread-safe. Do not share an `EntityManager` or `Session` between concurrent threads.
+It holds references to managed objects, so use <<pc-detach,detachment and clearing>> when controlling memory during <<batch-session-batch,batch processing>>.
+
+[[pc-loading]]
+=== Finding entities and obtaining references
 
 [[pc-find]]
-=== Obtain an entity with its data initialized
+==== Finding entities
 
-It is also quite common to want to obtain an entity along with its data (e.g. like when we need to display it in the UI).
-Hibernate offers two flavors of this operation:
+Jakarta Persistence provides two lookup operations:
 
 find():: Performs the requested lookup, returning `null` if no matching row was found.
-get():: Performs the requested lookup, throwing an exception if no matching row was found.
+get():: Performs the requested lookup, throwing `EntityNotFoundException` if no matching row was found.
+
+These operations initialize the entity itself, but not necessarily its lazy attributes or associations.
+Use <<fetching,fetch plans>> or <<fetching-strategies-dynamic-fetching-entity-graph,entity graphs>> to control the state fetched with it.
 
 [[pc-find-example]]
 .Finding an initialized entity reference
@@ -157,7 +70,7 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-example]
 ----
 ====
 
-Hibernate also offers a consistent way to `find()` and `get()` an entity by its <<naturalid>>.
+Use `KeyType.NATURAL` to interpret the lookup argument as a <<naturalid,natural identifier>> instead of the primary key.
 
 [[pc-find-by-natual-id-example]]
 .Finding an entity by natural-id
@@ -177,29 +90,48 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-by-natural-id-
 ----
 ====
 
+[[pc-get-reference]]
+==== Obtaining references
+
+Use `getReference()` when an association needs a reference to an existing entity without first loading its state.  This should be preferred for defining associations, for example.
+
+[[pc-get-reference-jpa-example]]
+.Obtaining an entity reference [[pc-get-reference-native-example]]
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-reference-jpa-example]
+----
+====
+
+Hibernate may return an existing managed instance, a runtime proxy, or an enhanced entity with unloaded state.
+A reference is not a guarantee that the row exists: an `EntityNotFoundException` may be raised when its state is initialized.
+Runtime subclass proxies require a proxyable entity class; a final class does not automatically gain an interface proxy.
+See <<fetching-lazy-basic>> for lazy attribute loading, <<fetching-initialization>> for initialization checks and explicit loading,
+and <<BytecodeEnhancement>> for enhancement mechanisms.
 
 [[pc-by-multiple-ids]]
-=== Obtain multiple entities by their identifiers
+==== Finding multiple entities
 
-If you want to load multiple entities by providing their identifiers, calling the `EntityManager#find` method multiple times is not only inconvenient,
-but also inefficient.
+Jakarta Persistence provides `findMultiple()` and `getMultiple()` for loading a list of identifiers.
+By default, results follow identifier order. `findMultiple()` represents a missing entity with a null list element;
+`getMultiple()` throws `EntityNotFoundException` if any requested entity is missing.
+A single method call may execute multiple database requests, depending on batching and dialect capabilities.
 
-While the Jakarta Persistence standard does not support retrieving multiple entities at once, other than running a JPQL or Criteria API query,
-Hibernate offers this functionality via the `Session#findMultiple` methods which accepts a list of identifiers to load and a group of options which control certain behaviors of the loading -
+Hibernate accepts additional loading options through `Session`, including:
 
-* `ReadOnlyMode` - whether the entities loaded should be marked as read-only.
-* `LockMode` (`LockModeType`) - a lock mode to be applied
-* `Timeout` - if a pessimistic lock mode is used, a timeout to allow
-* `Locking.Scope` (PessimisticLockScope`) - if a pessimistic lock mode is used, what scope should it be applied to
-* `Locking.FollowOn` - allow (or not) Hibernate to acquire locks through additional queries if needed
-* `CacheMode` (`CacheStoreMode` / `CacheRetrieveMode`) - how second level caching should be used, if at all
+* `ReadOnlyMode` - whether loaded entities should be marked <<pc-read-only,read-only>>.
+* `LockMode` (`LockModeType`) - the <<locking-LockMode,lock mode>> to apply.
+* `Timeout` - the timeout for a <<locking-pessimistic,pessimistic lock>>.
+* `Locking.Scope` (`PessimisticLockScope`) - the <<locking-jpa-query-hints,scope of pessimistic locking>>.
+* `Locking.FollowOn` - whether to acquire locks through <<locking-follow-on,additional queries>> when needed.
+* `CacheMode` (`CacheStoreMode` / `CacheRetrieveMode`) - how to use the <<caching-management,second-level cache>>.
 * `BatchSize` - how many identifiers should be loaded from the database at once
 * `SessionCheckMode` - whether to look into the persistence context to check entity state
 * `RemovalsMode` - if `SessionCheckMode` is enabled, how removed entities should be handled
 * `OrderingMode` - whether the results should be ordered according to the order of the passed identifiers
 
-Now, assuming we have 3 `Person` entities in the database, we can load all of them with a single call
-as illustrated by the following example:
+The following example requests three entities and uses a batch size of two:
 
 [[tag::pc-find-multiple-example]]
 .Loading multiple entities using `findMultiple()`
@@ -219,14 +151,14 @@ There is also `getMultiple()` which behaves in a similar manner to `get()` in th
 
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/FindMultipleDocTests.java[tags=pc-find-multiple-example]
+include::{example-dir-pc}/FindMultipleDocTests.java[tags=pc-get-multiple-example]
 ----
 ====
 
 Note that `findMultiple()` and `getMultiple()` both support loading by natural-id as well with the same semantics.
 
-[[tag::pc-get-multiple-example]]
-.Loading multiple entities using `getMultiple()`
+[[pc-find-multiple-natural-id-example]]
+.Loading multiple entities by natural-id
 ====
 
 [source, java, indent=0]
@@ -235,468 +167,45 @@ include::{example-dir-pc}/FindMultipleDocTests.java[tags=pc-find-multiple-natura
 ----
 ====
 
+[[pc-initialization]]
+==== Checking initialization
 
-[[pc-filtering]]
-=== Filtering entities and associations
+A managed reference or attribute may still contain unloaded state.
+See <<fetching-initialization,initialization checks and explicit loading>> for the standard and Hibernate APIs.
+For state used after detachment, choose the required <<fetching-plan-selection,fetch plan>> before leaving the context.
 
-Hibernate offers two options if you want to filter entities or entity associations:
+[[pc-operations]]
+=== Persisting, modifying, and removing entities
 
-static (e.g. `@SQLRestriction` and `@SQLJoinTableRestriction`):: which are defined at mapping time and
-cannot change at runtime.
-dynamic (e.g. `@Filter` and `@FilterJoinTable`):: which are applied and configured at runtime.
+[[pc-persist]]
+==== Persisting new entities
 
-[[pc-where]]
-==== `@SQLRestriction`
+Call `persist()` to make a new entity managed. Its changes are synchronized during <<flushing,flushing>>;
+calling `persist()` does not commit a transaction.
 
-Sometimes, you want to filter out entities or collections using custom SQL criteria.
-This can be achieved using the `@SQLRestriction` annotation, which can be applied to entities and collections.
-
-[[pc-where-example]]
-.`@SQLRestriction` mapping usage
+[[pc-persist-jpa-example]]
+.Persisting a new entity [[pc-persist-native-example]]
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/WhereTest.java[tags=pc-where-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-persist-jpa-example]
 ----
 ====
 
-If the database contains the following entities:
-
-[[pc-where-persistence-example]]
-.Persisting and fetching entities with a `@SQLRestriction` mapping
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/WhereTest.java[tags=pc-where-persistence-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-where-persistence-example.sql[]
-----
-====
-
-When executing an `Account` entity query, Hibernate is going to filter out all records that are not active.
-
-[[pc-where-entity-query-example]]
-.Query entities mapped with `@SQLRestriction`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/WhereTest.java[tags=pc-where-entity-query-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-where-entity-query-example.sql[]
-----
-====
-
-When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate is going to apply the `@SQLRestriction` clause filtering criteria to the associated child entities.
-
-[[pc-where-collection-query-example]]
-.Traversing collections mapped with `@SQLRestriction`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/WhereTest.java[tags=pc-where-collection-query-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-where-collection-query-example.sql[]
-----
-====
-
-[[pc-to-one-restrictions]]
-==== Restrictions on to-one associations
-
-`@SQLRestriction` and `@Filter` may also be declared on a `@ManyToOne` or `@OneToOne` field or getter:
-
-[source,java]
-----
-@ManyToOne(fetch = FetchType.LAZY)
-@SQLRestriction("active = true")
-Person approver;
-
-@ManyToOne(fetch = FetchType.LAZY)
-@Filter(name = "activePerson", condition = "active = :active")
-Person reviewer;
-----
-
-The filter must have a corresponding `@FilterDef` with an `active` parameter.
-Enable it and set its parameter before loading the owner:
-
-[source,java]
-----
-session.enableFilter("activePerson").setParameter("active", true);
-----
-
-The conditions apply to the target entity through the annotated association, including associations
-mapped using `@JoinTable` and inverse one-to-one associations. Applicable conditions on the target entity
-and the association are combined using `AND`. Association filters apply whenever enabled, regardless of
-`@FilterDef.applyToLoadByKey`. Entity-level filters retain their usual load-by-key rules.
-Filter default conditions and explicit `@SqlFragmentAlias` declarations work as for collections.
-Use explicit aliases for filters referring to other tables of a target mapped with `JOINED` inheritance
-or `@SecondaryTable`. SQL restrictions qualify mapped columns from these tables automatically.
-
-An excluded target is represented as null, even if the target is already managed or cached.
-Other associations and direct lookups may still return the same target. Hibernate preserves the stored
-foreign key and join-table row when unrelated fields change or null is assigned to an already hidden
-association. Assigning a new nonnull target replaces the reference. A hidden target is not orphan-removed.
-Merge assumes that the detached source was loaded under the same filters and parameter values.
-
-Changing filters does not reinterpret already loaded associations. Refresh or reload the owner to obtain
-a new view. These predicates affect loading, not validation of newly assigned targets.
-Native result mappings require an additional visibility query when the association has an applicable restriction.
-
-[[pc-where-join-table]]
-==== `@SQLJoinTableRestriction`
-
-Just like `@SQLRestriction` annotation, `@SQLJoinTableRestriction` is used to filter out collections using a joined table (e.g. @ManyToMany association).
-
-[[pc-where-join-table-example]]
-.`@SQLJoinTableRestriction` mapping example
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-where-join-table-example.sql[]
-----
-====
-
-In the example above, the current week `Reader` entities are included in the `currentWeekReaders` collection
-which uses the `@SQLJoinTableRestriction` annotation to filter the joined table rows according to the provided SQL clause.
-
-Considering that the following two `Book_Reader` entries are added into our system:
-
-[[pc-where-join-table-persist-example]]
-.`@SQLJoinTableRestriction` test data
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-persist-example]
-----
-====
-
-When fetching the `currentWeekReaders` collection, Hibernate is going to find only one entry:
-
-[[pc-where-join-table-fetch-example]]
-.`@SQLJoinTableRestriction` fetch example
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-fetch-example]
-----
-====
-
-[[pc-filter]]
-==== `@Filter`
-
-The `@Filter` annotation is another way to filter out entities or collections using custom SQL criteria.
-Unlike the `@SQLRestriction` annotation, `@Filter` allows you to parameterize the filter clause at runtime.
-
-Now, considering we have the following `Account` entity:
-
-[[pc-filter-account-example]]
-.`@Filter` mapping entity-level usage
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-filter-Account-example]
-----
-====
-
-[NOTE]
-====
-Notice that the `active` property is mapped to the `active_status` column.
-
-This mapping was done to show you that the `@Filter` condition uses a SQL condition and not a JPQL filtering predicate.
-====
-
-As already explained, we can also apply the `@Filter` annotation for collections as illustrated by the `Client` entity:
-
-[[pc-filter-client-example]]
-.`@Filter` mapping collection-level usage
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-filter-Client-example]
-----
-====
-
-If we persist a `Client` with three associated `Account` entities,
-Hibernate will execute the following SQL statements:
-
-[[pc-filter-persistence-example]]
-.Persisting and fetching entities with a `@Filter` mapping
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-filter-persistence-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-filter-persistence-example.sql[]
-----
-====
-
-By default, without enabling the filter, Hibernate is going to fetch all `Account` entities.
-
-[[pc-no-filter-entity-query-example]]
-.Query entities mapped without activating the `@Filter`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-entity-query-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-no-filter-entity-query-example.sql[]
-----
-====
-
-If the filter is enabled and the filter parameter value is provided,
-then Hibernate is going to apply the filtering criteria to the associated `Account` entities.
-The filter can be enabled explicitly on the session or by specifying
-that it will be enabled by default directly on its `@FilterDef`.
-
-[[pc-filter-entity-query-example]]
-.Query entities mapped with `@Filter`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-query-example]
-----
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-filter-auto-enabled-Account-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-filter-entity-query-example.sql[]
-----
-====
-
-A parameter's value can be explicitly set on the filter itself, or can be
-resolved by using a custom `Supplier`. The resolver must implement
-the interface `java.util.function.Supplier` and must be defined as a managed bean.
-
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-filter-resolver-Account-example]
-----
-
-[IMPORTANT]
-====
-Filters declared on an entity apply to entity queries, but not to direct fetching, unless otherwise configured using the `applyToLoadByKey` flag
-on the `@FilterDef`, that should be set to `true` in order to activate the filter with direct fetching.
-====
-
-In the following example, the `activeAccount` filter is not taken into consideration when fetching an entity from the Persistence Context.
-On the other hand, the `minimumAmount` filter is taken into consideration, because its `applyToLoadByKey` flag is set to `true`.
-
-[[pc-filter-entity-example]]
-.Fetching entities mapped with `@Filter`
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-filter-entity-example.sql[]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-filter-entity-find-example.sql[]
-----
-
-[CAUTION]
-====
-When an enabled filter excludes the target of a `@ManyToOne` or `@OneToOne` association, the mapped field or property of the entity instance is set to `null`.
-In this case:
-
-- Explicitly assigning a null value to the association has no effect on the persistent state of the entity, and the foreign key is not set to null when the session is flushed.
-- But assigning a non-null value to the association _does_ result in an update to the foreign key.
-
-Special care must be taken when merging a detached object which was retrieved with an enabled filter.
-The safest approach is to ensure that exactly the same filter is enabled in the session in which `merge()` is called.
-Otherwise, a null field of the detached entity could result in the foreign key being set to null in the database.
-====
-
-As you can see from the example above, contrary to an entity query, the `activeAccount` filter does not prevent the entity from being loaded,
-but the `minimumAmount` filter limits the results to the ones with an amount that is greater than the specified one.
-
-Just like with entity queries, collections can be filtered as well, but only if the filter is enabled on the currently running Hibernate `Session`,
-either if the filter is enabled explicitly or by setting `autoEnabled` to `true`.
-
-[[pc-no-filter-collection-query-example]]
-.Traversing collections without activating the `@Filter`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-collection-query-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-no-filter-collection-query-example.sql[]
-----
-====
-
-When activating the `@Filter` and fetching the `accounts` collections, Hibernate is going to apply the filter condition to the associated collection entries.
-
-[[pc-filter-collection-query-example]]
-.Traversing collections mapped with `@Filter`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterTest.java[tags=pc-filter-collection-query-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-filter-collection-query-example.sql[]
-----
-====
-
-[NOTE]
-====
-The main advantage of `@Filter` over the `@SQLRestriction` clause is that the filtering criteria can be customized at runtime.
-====
-
-[WARNING]
-====
-It's not possible to combine the `@Filter` and `@Cache` collection annotations.
-This limitation is due to ensuring consistency and because the filtering information is not stored in the second-level cache.
-
-If caching were allowed for a currently filtered collection, then the second-level cache would store only a subset of the whole collection.
-Afterward, every other Session will get the filtered collection from the cache, even if the Session-level filters have not been explicitly activated.
-
-For this reason, the second-level collection cache is limited to storing whole collections, and not subsets.
-====
-
-[[pc-filter-sql-fragment-alias]]
-==== `@Filter` with `@SqlFragmentAlias`
-
-When using the `@Filter` annotation and working with entities that are mapped onto multiple database tables,
-you will need to use the
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation
-if the `@Filter` defines a condition that uses predicates across multiple tables.
-
-[[pc-filter-sql-fragment-alias-example]]
-.`@SqlFragmentAlias` mapping usage
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterSqlFragmentAliasTest.java[tags=pc-filter-sql-fragment-alias-example]
-----
-====
-
-Now, when fetching the `Account` entities and activating the filter,
-Hibernate is going to apply the right table aliases to the filter predicates:
-
-[[pc-filter-sql-fragment-alias-query-example]]
-.Fetching a collection filtered with `@SqlFragmentAlias`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterSqlFragmentAliasTest.java[tags=pc-filter-sql-fragment-alias-query-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-filter-sql-fragment-alias-query-example.sql[]
-----
-====
-
-[[pc-filter-join-table]]
-==== `@FilterJoinTable`
-
-When using the `@Filter` annotation with collections, the filtering is done against the child entries (entities or embeddables).
-However, if you have a link table between the parent entity and the child table, then you need to use the `@FilterJoinTable` to filter child entries according to some column contained in the join table.
-
-The `@FilterJoinTable` annotation can be, therefore, applied to a unidirectional `@OneToMany` collection as illustrated in the following mapping:
-
-[[pc-filter-join-table-example]]
-.`@FilterJoinTable` mapping usage
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-example]
-----
-====
-
-The `firstAccounts` filter will allow us to get only the `Account` entities that have the `order_id`
-(which tells the position of every entry inside the `accounts` collection)
-less than a given number (e.g. `maxOrderId`).
-
-Let's assume our database contains the following entities:
-
-[[pc-filter-join-table-persistence-example]]
-.Persisting and fetching entities with a `@FilterJoinTable` mapping
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-persistence-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-filter-join-table-persistence-example.sql[]
-----
-====
-
-The collections can be filtered only if the associated filter is enabled on the currently running Hibernate `Session`.
-
-[[pc-no-filter-join-table-collection-query-example]]
-.Traversing collections mapped with `@FilterJoinTable` without enabling the filter
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-no-filter-join-table-collection-query-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-no-filter-join-table-collection-query-example.sql[]
-----
-====
-
-If we enable the filter and set the `maxOrderId` to `1` when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria, and we will get just
-`2` `Account` entities, with the `order_id` values of `0` and `1`.
-
-[[pc-filter-join-table-collection-query-example]]
-.Traversing collections mapped with `@FilterJoinTable`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-collection-query-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-filter-join-table-collection-query-example.sql[]
-----
-====
+For an <<identifiers-generators,assigned identifier>>, set the identifier before calling `persist()`.
+For generated identifiers, availability depends on the generator and insertion timing.
+Sequence-generated identifiers can be assigned before the row is inserted.
+Identity-generated identifiers normally require insertion, though the <<flushing-settings,graph queue can defer identity inserts>>.
 
 [[pc-managed-state]]
-=== Modifying managed/persistent state
+==== Modifying managed entities
 
 Entities in managed/persistent state may be manipulated by the application, and any changes will be automatically detected and persisted when the persistence context is flushed.
-There is no need to call a particular method to make your modifications persistent.
+There is no need to call `merge()` or `persist()` again for a managed instance.
+Automatic detection is subject to <<pc-read-only,read-only state>> and <<mutability-immutable,immutability>>.
 
 [[pc-managed-state-jpa-example]]
-.Modifying managed state with Jakarta Persistence
+.Modifying a managed entity [[pc-managed-state-native-example]]
 ====
 [source, java, indent=0]
 ----
@@ -704,18 +213,275 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-managed-state-jpa-
 ----
 ====
 
-[[pc-managed-state-native-example]]
-.Modifying managed state with Hibernate API
+[[pc-remove]]
+==== Removing entities
+
+Call `remove()` to schedule deletion of a managed entity. The SQL is normally executed during <<flushing,flushing>>.
+Removal may <<pc-cascade-remove,cascade>> to associated entities. See also <<pc-rowid,row-id locators>> for delete predicates.
+
+[[pc-remove-jpa-example]]
+.Removing an entity [[pc-remove-native-example]]
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-managed-state-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-remove-jpa-example]
 ----
 ====
 
-By default, when you modify an entity, all columns but the identifier are being set during update.
+[NOTE]
+====
+For a managed instance, `remove()` schedules deletion.
+For a new instance, no deletion is scheduled, but configured <<pc-cascade-remove,removal cascades>> still apply.
+An already removed instance is ignored.
+With <<bootstrap-native,native bootstrap>>, Hibernate also supports removal of detached instances.
+Jakarta Persistence disallows removal of detached instances, and JPA bootstrap rejects them.
+This distinction depends on bootstrap, not on whether the method is called through an `EntityManager` or `Session` variable.
+====
 
-Therefore, considering you have the following `Product` entity mapping:
+[[pc-cascade]]
+=== Cascading operations and orphan removal
+
+Cascading propagates an operation from an entity to its associated entities.
+The Jakarta Persistence `CascadeType` enumeration defines these operations:
+
+`ALL`:: includes all the cascade operations listed below.
+`PERSIST`:: cascades the entity persist operation.
+`MERGE`:: cascades the entity merge operation.
+`REMOVE`:: cascades the entity remove operation.
+`REFRESH`:: cascades the entity refresh operation.
+`DETACH`:: cascades the entity detach operation.
+
+Cascading propagates an operation; it does not determine <<associations,association ownership>>.
+For example, `REMOVE` propagates removal of the parent to its children, while `orphanRemoval=true` removes a child when it is dissociated from its owner.
+See <<associations-one-to-many-bidirectional,bidirectional one-to-many associations>> and <<collections-bidirectional-bag-orphan-removal-example,orphan removal>> for examples.
+
+The following examples use these entities:
+
+[source, java, indent=0]
+----
+include::{example-dir-pc}/Person.java[tags=pc-cascade-domain-model-example]
+
+include::{example-dir-pc}/Phone.java[tags=pc-cascade-domain-model-example]
+----
+
+[[pc-cascade-persist]]
+==== `CascadeType.PERSIST`
+
+`CascadeType.PERSIST` propagates `persist()` to the associated child.
+
+[[pc-cascade-persist-example]]
+.`CascadeType.PERSIST` example
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadePersistTest.java[tags=pc-cascade-persist-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-cascade-persist-example.sql[]
+----
+====
+
+Persisting the `Person` also persists its associated `Phone`.
+
+[[pc-cascade-merge]]
+==== `CascadeType.MERGE`
+
+`CascadeType.MERGE` propagates <<pc-merge,merge>> to the associated child.
+
+[[pc-cascade-merge-example]]
+.`CascadeType.MERGE` example
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeMergeTest.java[tags=pc-cascade-merge-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-cascade-merge-example.sql[]
+----
+====
+
+In this example, merge loads the managed target graph before copying the incoming state.
+
+[[pc-cascade-remove]]
+==== `CascadeType.REMOVE`
+
+`CascadeType.REMOVE` propagates `remove()` to the associated child.
+
+[[pc-cascade-remove-example]]
+.`CascadeType.REMOVE` example
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeRemoveTest.java[tags=pc-cascade-remove-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-cascade-remove-example.sql[]
+----
+====
+
+[[pc-cascade-detach]]
+==== `CascadeType.DETACH`
+
+`CascadeType.DETACH` is used to propagate the detach operation from a parent entity to a child.
+
+[[pc-cascade-detach-example]]
+.`CascadeType.DETACH` example
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
+----
+====
+
+[[pc-cascade-refresh]]
+==== `CascadeType.REFRESH`
+
+`CascadeType.REFRESH` propagates <<pc-refresh,refresh>> to the associated child.
+The refresh operation will discard the current entity state, and it will override it using the one loaded from the database.
+
+[[pc-cascade-refresh-example]]
+.`CascadeType.REFRESH` example
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeRefreshTest.java[tags=pc-cascade-refresh-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-cascade-refresh-example.sql[]
+----
+====
+
+Refreshing the `Person` also refreshes its associated `Phone`.
+
+[[pc-cascade-on-delete]]
+==== Database cascades with `@OnDelete`
+
+Unlike operation cascades, `@OnDelete` declares a database foreign-key action.
+With `OnDeleteAction.CASCADE`, the database deletes child rows when the referenced parent row is deleted.
+
+So, when annotating the `@ManyToOne` association with `@OnDelete( action = OnDeleteAction.CASCADE )`,
+the automatic schema generator will apply the ON DELETE CASCADE SQL directive to the Foreign Key declaration,
+as illustrated by the following example.
+
+[[pc-cascade-on-delete-mapping-example]]
+.`@OnDelete` `@ManyToOne` mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Person-example]
+----
+
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Phone-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-cascade-on-delete-mapping-example.sql[]
+----
+====
+
+Remove the `Person` entity, and the associated `Phone` entities are deleted automatically via the Foreign Key cascade.
+
+[[pc-cascade-on-delete-example]]
+.`@OnDelete` `@ManyToOne` delete example
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-cascade-on-delete-example.sql[]
+----
+====
+
+The `@OnDelete` annotation can also be placed on a collection, as
+illustrated in the following example.
+
+[[pc-cascade-on-delete-collection-mapping-example]]
+.`@OnDelete` `@OneToMany` mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Person-example]
+----
+
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Phone-example]
+----
+====
+
+When removing the `Person` entity, all the associated `Phone` child entities are deleted via the Foreign Key cascade even if the `@OneToMany` collection was using the `CascadeType.ALL` attribute.
+
+[[pc-cascade-on-delete-collection-example]]
+.`@OnDelete` `@OneToMany` delete example
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-cascade-on-delete-example.sql[]
+----
+====
+
+[NOTE]
+====
+Without the `@OnDelete` annotation, the `@OneToMany` association relies on the `cascade` attribute to propagate the `remove` entity state transition from the parent entity to its children.
+However, when the `@OnDelete` annotation is in place, Hibernate prevents the child entity `DELETE` statement from being executed while flushing the Persistence Context.
+
+This way, only the parent entity gets deleted, and all the associated child records are removed by the database engine, instead of being deleted explicitly via `DELETE` statements.
+====
+
+Database cascades and operation cascades have different effects on in-memory state.
+With `@OnDelete(action=CASCADE)` alone, child entities deleted by the database are not automatically marked removed in the context or evicted from the <<caching,second-level cache>>.
+Combining it with `cascade=REMOVE` lets Hibernate load and mark the children removed and evict their cache entries, while the database executes the child-row deletion.
+The foreign key must actually declare the action; configure it through <<schema-generation,schema tooling>> or the schema migration used by the application.
+
+[[pc-dirty-checking]]
+=== Dirty checking and update behavior
+
+During flushing, Hibernate determines which managed values have changed.
+Snapshot-based dirty checking compares current state with the state recorded when the entity was loaded or last synchronized.
+<<BytecodeEnhancement-dirty-tracking,Enhanced dirty tracking>> records attribute writes and reduces that comparison work.
+Hibernate still checks internally mutable values, such as `Date` or a mutable document value, according to their <<basic-mapping-composition-mutability,mutability plans>>.
+
+[[pc-read-only]]
+==== Read-only entity state
+
+Use `Session.setDefaultReadOnly(true)` for entities loaded subsequently, `Session.setReadOnly(entity, true)` for a managed instance,
+or query/loading options such as `setReadOnly(true)` and `ReadOnlyMode.READ_ONLY` for selected results.
+Setting the default does not change entities already managed. A query option does not replace the read-only status of an existing managed instance.
+
+Hibernate does not dirty-check ordinary properties of a read-only entity for updates.
+Changes to collections may still be synchronized and may increment its version; cascaded operations are also not disabled.
+Read-only state is therefore not a prohibition on all writes.
+
+Read-only state differs from <<mutability-immutable,`@Immutable`>>, which is a mapping-level declaration,
+from <<flushing-manual,manual flushing>>, which controls synchronization timing,
+and from database transaction read-only settings. See <<transactions,transactions>> for transaction boundaries.
+When making a read-only instance modifiable again, do not expect changes made while it was read-only to be detected automatically;
+refresh it first if those changes should be discarded.
+
+==== Default update statements
+
+By default, an entity update sets the eligible updatable columns for the table being updated, even if only some of those attributes changed.
+Identifier columns, `updatable=false` attributes, generated attributes, and unloaded lazy state may affect which columns are included.
+The following mapping illustrates the usual case:
 
 [[pc-managed-state-update-mapping-example]]
 .`Product` entity mapping
@@ -726,7 +492,7 @@ include::{example-dir-pc}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-
 ----
 ====
 
-If you persist the following `Product` entity:
+The example persists this `Product`:
 
 [[pc-managed-state-update-persist-example]]
 .Persisting a `Product` entity
@@ -737,7 +503,7 @@ include::{example-dir-pc}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-
 ----
 ====
 
-When you modify the `Product` entity, Hibernate generates the following SQL UPDATE statement:
+Modifying the `Product` produces this update:
 
 [[pc-managed-state-update-example]]
 .Modifying the `Product` entity
@@ -749,24 +515,17 @@ include::{example-dir-pc}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/pc-managed-state-update-example.sql[]
+include::{pc-extrasdir}/pc-managed-state-update-example.sql[]
 ----
 ====
 
-The default UPDATE statement containing all columns has two advantages:
-
-- it allows you to better benefit from JDBC Statement caching.
-- it allows you to enable batch updates even if multiple entities modify different properties.
-
-However, there is also one downside to including all columns in the SQL UPDATE statement.
-If you have multiple indexes, the database might update those redundantly even if you don't actually modify all column values.
-
-To fix this issue, you can use dynamic updates.
+A stable update statement improves statement reuse and lets updates with different dirty attributes share a JDBC batch.
+Depending on the database, including unchanged indexed columns can also cause unnecessary index work.
 
 [[pc-managed-state-dynamic-update]]
 ==== Dynamic updates
 
-To enable dynamic updates, you need to annotate the entity with the `@DynamicUpdate` annotation:
+Annotate the entity with `@DynamicUpdate` to generate update statements from the dirty attributes:
 
 [[pc-managed-state-dynamic-update-mapping-example]]
 .`Product` entity mapping
@@ -777,26 +536,64 @@ include::{example-dir-pc}/DynamicUpdateTest.java[tags=pc-managed-state-dynamic-u
 ----
 ====
 
-This time, when rerunning the previous test case, Hibernate generates the following SQL UPDATE statement:
+For the same change, Hibernate generates the following update:
 
 [[pc-managed-state-dynamic-update-example]]
 .Modifying the `Product` entity with a dynamic update
 ====
 [source, sql, indent=0]
 ----
-include::{extrasdir}/pc-managed-state-dynamic-update-example.sql[]
+include::{pc-extrasdir}/pc-managed-state-dynamic-update-example.sql[]
 ----
 ====
 
-The dynamic update allows you to set just the columns that were modified in the associated entity.
+Dynamic updates reduce the columns written, but different sets of dirty attributes produce different SQL statements,
+which can reduce statement reuse and <<batch-jdbcbatch,JDBC batching>> opportunities. Version and other required columns may still be included.
+
+[[pc-rowid]]
+==== Row-id locators for updates and deletes
+
+`@RowId` enables a database row-id column or pseudo-column as a locator for entity updates and deletes, where supported by the dialect.
+For example:
+
+[source,java]
+----
+@Entity
+@RowId
+class Product {
+    @Id Long id;
+    @Version int version;
+    String name;
+}
+----
+
+The entity identifier still defines persistence-context identity and association references.
+The row-id changes how Hibernate locates a row for mutation; it does not replace `@Id` or remove optimistic-lock checks.
+When the row-id is available, statements for the entity's identifier table may use predicates like these (shown using Oracle's `ROWID` spelling):
+
+[source,sql,opts=novalidate]
+----
+update Product set name=?, version=? where ROWID=? and version=?
+delete from Product where ROWID=? and version=?
+----
+
+Other mapped tables, such as secondary tables, retain their own key predicates.
+If the dialect does not support row-id locators, `@RowId` is ignored and Hibernate uses the primary key.
+Even on a supporting dialect, the primary key is used when the row-id is unavailable.
+Hibernate obtains the locator when loading the entity; availability immediately after insertion depends on the dialect and generated-value retrieval support.
+The annotation's optional name is mainly needed for explicitly declared row-id columns; dialects with implicit pseudo-columns determine the name themselves.
+See <<identifiers-rowid,`@RowId` mapping>> for the mapping example.
+
+include::../flushing/Flushing.adoc[]
 
 [[pc-refresh]]
-=== Refresh entity state
+=== Refreshing entity state
 
-You can reload an entity instance and its collections at any time.
+Call `refresh()` on a managed entity to reload its state from the database, discarding local changes.
+Unlike another `find()`, refresh explicitly replaces the state held by the context.
 
 [[pc-refresh-jpa-example]]
-.Refreshing entity state with Jakarta Persistence
+.Refreshing after a bulk update
 ====
 [source, java, indent=0]
 ----
@@ -805,7 +602,7 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-refresh-jpa-exampl
 ====
 
 [[pc-refresh-native-example]]
-.Refreshing entity state with Hibernate API
+.Refreshing after direct JDBC changes
 ====
 [source, java, indent=0]
 ----
@@ -816,32 +613,28 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-refresh-native-exa
 One case where this is useful is when it is known that the database state has changed since the data was read.
 Refreshing allows the current database state to be pulled into the entity instance and the persistence context.
 
-Another case where this might be useful is when database triggers are used to initialize some of the properties of the entity.
+The second example uses the standard `EntityManager.runWithConnection()` API to execute JDBC directly.
+Refresh is also useful when database triggers initialize entity properties.
 
 [NOTE]
 ====
-Only the entity instance and its value type collections are refreshed unless you specify `REFRESH` as a cascade style of any associations.
-However, please note that Hibernate has the capability to handle this automatically through its notion of generated properties.
+Associated entities are refreshed when the association cascades <<pc-cascade-refresh,`REFRESH`>>.
+For values maintained by database triggers, Hibernate may retrieve the values automatically using generated-attribute mappings.
 See the discussion of non-identifier <<chapters/domain/basic_types.adoc#mapping-generated,generated attributes>>.
 ====
 
 [IMPORTANT]
 ====
-Traditionally, Hibernate allowed detached entities to be refreshed.
-however, Jakarta Persistence prohibits this practice and specifies that an `IllegalArgumentException` should be thrown instead. This is the default behaviour from version 7.0 onwards.
+`refresh()` requires a managed instance. Passing a detached instance throws `IllegalArgumentException`.
 ====
 
 [[pc-refresh-gotchas]]
-==== Refresh gotchas
+==== Refreshing associations to new entities
 
-The `refresh` entity state transition is meant to overwrite the entity attributes according to the info currently contained in the associated database record.
-
-However, you have to be very careful when cascading the refresh action to any transient entity.
-
-For instance, consider the following example:
+Cascading refresh to a new entity can fail because there is no database row to reload:
 
 [[pc-refresh-child-entity-jpa-example]]
-.Refreshing entity state gotcha
+.Refreshing an association to a new entity
 ====
 [source, java, indent=0]
 ----
@@ -849,29 +642,99 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-refresh-child-enti
 ----
 ====
 
-In the aforementioned example, an `EntityNotFoundException` is thrown because the `Book` entity is still in a transient state.
+In this example, an `EntityNotFoundException` is thrown because the `Book` entity is still in a transient state.
 When the refresh action is cascaded from the `Person` entity, Hibernate will not be able to locate the `Book` entity in the database.
 
-For this reason, you should be very careful when mixing the refresh action with transient child entity objects.
+Persist and synchronize new children before refreshing a graph that cascades refresh to them.
+
+[[pc-refresh-external-changes]]
+==== Refreshing after bulk or external changes
+
+<<batch-bulk-hql,Bulk mutations>> and SQL executed outside Hibernate can change database rows without updating managed instances.
+Flush pending changes before a bulk mutation when they must be included, then refresh affected entities or clear the context before relying on their state.
+Automatic flushing before a query does not refresh objects after the query changes database state.
 
 [[pc-detach]]
-=== Working with detached data
+=== Detachment, clearing, and merging
 
-Detachment is the process of working with data outside the scope of any persistence context.
-Data becomes detached in a number of ways.
-Once the persistence context is closed, all data that was associated with it becomes detached.
-Clearing the persistence context has the same effect.
-Evicting a particular entity from the persistence context makes it detached.
-And finally, serialization will make the deserialized form be detached (the original instance is still managed).
+Closing a context, clearing it, or detaching an instance ends automatic dirty checking for those instances.
+Serialization produces a detached copy without detaching the original managed instance.
+Detached objects may be edited, but their changes are not automatically synchronized. Use <<pc-merge,merge>> to copy their state into a context.
 
-Detached data can still be manipulated, however, the persistence context will no longer automatically know about these modifications, and the application will need to intervene to make the changes persistent again.
+==== Detaching entities and clearing the context
+
+`detach()` removes an entity from the context; Hibernate's `evict()` is a synonym.
+Detachment cascades only through associations configured with <<pc-cascade-detach,`DETACH`>>.
+Detachment stops automatic dirty checking of the instance; it does not cancel every insertion or deletion already queued.
+Flush first when pending changes must be preserved.
+Detachment does not undo SQL already executed in the current transaction.
+
+[[caching-management-jpa-detach-example]]
+.Detaching an entity from the `EntityManager`
+====
+[source, java, indent=0]
+----
+include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-jpa-detach-example]
+----
+====
+
+[[caching-management-native-evict-example]]
+.Detaching entities during iteration
+====
+[source, java, indent=0]
+----
+include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-native-evict-example]
+----
+====
+
+`clear()` detaches all managed instances and cancels pending insertions, updates, and deletions.
+It does not roll back statements already executed. See <<flushing-explicit,explicit flushing>> and <<batch-session-batch,batch processing>>.
+
+[[caching-management-clear-example]]
+.Clearing the persistence context
+====
+[source, java, indent=0]
+----
+include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-clear-example]
+----
+====
+
+The following check demonstrates that a detached instance is no longer contained in the context:
+
+[[caching-management-contains-example]]
+.Verify if an entity is contained in a persistence context
+====
+[source, java, indent=0]
+----
+include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-contains-example]
+----
+====
+
+[[pc-contains]]
+==== Checking context membership
+
+`contains()` checks whether an entity instance is managed by this context, excluding instances scheduled for removal.
+It returns false for a removed instance even while Hibernate still tracks it for deletion.
+It does not check whether the row exists or whether lazy state is initialized.
+
+[[pc-contains-jpa-example]]
+.Checking whether an entity is managed [[pc-contains-native-example]]
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-contains-jpa-example]
+----
+====
 
 [[pc-merge]]
 ==== Merging detached data
 
-Merging is the process of taking an incoming entity instance that is in the detached state and copying its data over onto a new managed instance.
+`merge()` copies the incoming state into a managed instance and returns that instance.
+The managed target may already exist in this context; otherwise Hibernate loads or creates it.
+The incoming detached instance remains detached. Use the returned instance for subsequent managed changes.
+Merge also accepts new instances, whose managed copies are persisted according to merge and cascade semantics.
 
-Although not exactly per se, the following example is a good visualization of the `merge` operation internals.
+The following sketch illustrates state copying; it is not a replacement for `merge()`.
 
 [[pc-merge-visualize-example]]
 .Visualizing merge
@@ -883,7 +746,7 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-merge-visualize-ex
 ====
 
 [[pc-merge-jpa-example]]
-.Merging a detached entity with Jakarta Persistence
+.Merging detached state [[pc-merge-native-example]]
 ====
 [source, java, indent=0]
 ----
@@ -891,21 +754,12 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-merge-jpa-example]
 ----
 ====
 
-[[pc-merge-native-example]]
-.Merging a detached entity with Hibernate API
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-merge-native-example]
-----
-====
-
 [[pc-merge-gotchas]]
-===== Merging gotchas
+===== Multiple representations of the same entity
 
-For example, Hibernate throws `IllegalStateException` when merging a parent entity which has references to 2 detached child entities `child1` and `child2` (obtained from different sessions), and `child1` and `child2` represent the same persistent entity, `Child`.
+By default, Hibernate throws `IllegalStateException` when merging a parent entity which has references to two detached child entities `child1` and `child2` (obtained from different sessions), and `child1` and `child2` represent the same persistent entity, `Child`.
 
-A new configuration property, `hibernate.event.merge.entity_copy_observer`, controls how Hibernate will respond when multiple representations of the same persistent entity ("entity copy") is detected while merging.
+The configuration property `hibernate.event.merge.entity_copy_observer` controls how Hibernate will respond when multiple representations of the same persistent entity ("entity copy") is detected while merging.
 
 The possible values are:
 
@@ -924,7 +778,6 @@ The entity state resulting from merging an entity copy will be overwritten when 
 Because cascade order is undefined, the order in which the entity copies are merged is undefined.
 As a result, if property values in the entity copies are not consistent, the resulting entity state will be indeterminate, and data will be lost from all entity copies except for the last one merged.
 Therefore, the *last writer wins*.
-
 
 If an entity copy cascades the merge operation to an association that is (or contains) a new entity, that new entity will be merged (i.e., persisted and the merge operation will be cascaded to its associations according to its mapping),
 even if that same association is ultimately overwritten when Hibernate merges a different representation having a different value for its association.
@@ -956,336 +809,522 @@ The log should be reviewed to determine if multiple representations of entities 
 If so, the application should be modified so there is only one representation, and a custom implementation of `org.hibernate.event.spi.EntityCopyObserver` should be provided to disallow entity copies for entities with critical data.
 
 Using optimistic locking is recommended to detect if different representations are from different versions of the same persistent entity.
-If they are not from the same version, Hibernate will throw either the Jakarta Persistence `OptimisticEntityLockException` or the native `StaleObjectStateException` depending on your bootstrapping strategy.
+If they are not from the same version, Hibernate will throw an `OptimisticLockException`, possibly wrapping a Hibernate `StaleObjectStateException`. See <<locking,locking>>.
 ====
 
-[[pc-contains]]
-=== Checking persistent state
+[[pc-filtering]]
+=== Filtering entities and associations
 
-An application can verify the state of entities and collections in relation to the persistence context.
+Hibernate supports static restrictions and dynamic filters for entity loading and associations.
+These predicates govern the loaded view; they do not validate every newly assigned association.
+Changing filter settings does not reinterpret entities or collections already loaded into the context.
 
-[[pc-contains-jpa-example]]
-.Verifying managed state with Jakarta Persistence
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-contains-jpa-example]
-----
-====
+static (e.g. `@SQLRestriction` and `@SQLJoinTableRestriction`):: which are defined at mapping time and
+cannot change at runtime.
+dynamic (e.g. `@Filter` and `@FilterJoinTable`):: which are applied and configured at runtime.
 
-[[pc-contains-native-example]]
-.Verifying managed state with Hibernate API
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-contains-native-example]
-----
-====
+[[pc-where]]
+==== `@SQLRestriction`
 
-[[pc-verify-lazy-jpa-example]]
-.Verifying laziness with Jakarta Persistence
+`@SQLRestriction` applies a fixed SQL predicate when loading entities or collections.
+The predicate cannot be disabled or parameterized at runtime.
+
+[[pc-where-example]]
+.`@SQLRestriction` mapping usage
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-example]
+include::{example-dir-pc}/WhereTest.java[tags=pc-where-example]
 ----
 ====
 
-[[pc-verify-lazy-native-example]]
-.Verifying laziness with Hibernate API
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-native-example]
-----
-====
+If the database contains the following entities:
 
-In Jakarta Persistence there is an alternative means to check laziness using the following `jakarta.persistence.PersistenceUtil` pattern (which is recommended wherever possible).
-
-[[pc-verify-lazy-jpa-alternative-example]]
-.Alternative Jakarta Persistence means to verify laziness
+[[pc-where-persistence-example]]
+.Persisting and fetching entities with a `@SQLRestriction` mapping
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-alternative-example]
-----
-====
-
-=== Evicting entities
-
-When the `flush()` method is called, the state of the entity is synchronized with the database.
-If you do not want this synchronization to occur, or if you are processing a huge number of objects and need to manage memory efficiently,
-the `evict()` method can be used to remove the object and its collections from the first-level cache.
-
-[[caching-management-jpa-detach-example]]
-.Detaching an entity from the `EntityManager`
-====
-[source, java, indent=0]
-----
-include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-jpa-detach-example]
-----
-====
-
-[[caching-management-native-evict-example]]
-.Evicting an entity from the Hibernate `Session`
-====
-[source, java, indent=0]
-----
-include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-native-evict-example]
-----
-====
-
-To detach all entities from the current persistence context, both the `EntityManager` and the Hibernate `Session` define a `clear()` method.
-
-[[caching-management-clear-example]]
-.Clearing the persistence context
-====
-[source, java, indent=0]
-----
-include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-clear-example]
-----
-====
-
-To verify if an entity instance is currently attached to the running persistence context, both the `EntityManager` and the Hibernate `Session` define a `contains(Object entity)` method.
-
-[[caching-management-contains-example]]
-.Verify if an entity is contained in a persistence context
-====
-[source, java, indent=0]
-----
-include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-contains-example]
-----
-====
-
-[[pc-cascade]]
-=== Cascading entity state transitions
-
-Jakarta Persistence allows you to propagate the state transition from a parent entity to a child.
-For this purpose, the Jakarta Persistence `jakarta.persistence.CascadeType` defines various cascade types:
-
-`ALL`:: cascades all entity state transitions.
-`PERSIST`:: cascades the entity persist operation.
-`MERGE`:: cascades the entity merge operation.
-`REMOVE`:: cascades the entity remove operation.
-`REFRESH`:: cascades the entity refresh operation.
-`DETACH`:: cascades the entity detach operation.
-
-The following examples will explain some of the aforementioned cascade operations using the following entities:
-
-[source, java, indent=0]
-----
-include::{example-dir-pc}/Person.java[tags=pc-cascade-domain-model-example]
-
-include::{example-dir-pc}/Phone.java[tags=pc-cascade-domain-model-example]
-----
-
-[[pc-cascade-persist]]
-==== `CascadeType.PERSIST`
-
-The `CascadeType.PERSIST` allows us to persist a child entity along with the parent one.
-
-[[pc-cascade-persist-example]]
-.`CascadeType.PERSIST` example
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/CascadePersistTest.java[tags=pc-cascade-persist-example]
+include::{example-dir-pc}/WhereTest.java[tags=pc-where-persistence-example]
 ----
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/pc-cascade-persist-example.sql[]
+include::{pc-extrasdir}/pc-where-persistence-example.sql[]
 ----
 ====
 
-Even if just the `Person` parent entity was persisted, Hibernate has managed to cascade the persist operation to the associated `Phone` child entity as well.
+When executing an `Account` entity query, Hibernate excludes all records that are not active.
 
-[[pc-cascade-merge]]
-==== `CascadeType.MERGE`
-
-The `CascadeType.MERGE` allows us to merge a child entity along with the parent one.
-
-[[pc-cascade-merge-example]]
-.`CascadeType.MERGE` example
+[[pc-where-entity-query-example]]
+.Query entities mapped with `@SQLRestriction`
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/CascadeMergeTest.java[tags=pc-cascade-merge-example]
+include::{example-dir-pc}/WhereTest.java[tags=pc-where-entity-query-example]
 ----
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/pc-cascade-merge-example.sql[]
+include::{pc-extrasdir}/pc-where-entity-query-example.sql[]
 ----
 ====
 
-During merge, the current state of the entity is copied onto the entity version that was just fetched from the database.
-That's the reason why Hibernate executed the SELECT statement which fetched both the `Person` entity along with its children.
+When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate applies the `@SQLRestriction` clause filtering criteria to the associated child entities.
 
-[[pc-cascade-remove]]
-==== `CascadeType.REMOVE`
-
-The `CascadeType.REMOVE` allows us to remove a child entity along with the parent one.
-
-[[pc-cascade-remove-example]]
-.`CascadeType.REMOVE` example
+[[pc-where-collection-query-example]]
+.Traversing collections mapped with `@SQLRestriction`
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/CascadeRemoveTest.java[tags=pc-cascade-remove-example]
+include::{example-dir-pc}/WhereTest.java[tags=pc-where-collection-query-example]
 ----
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/pc-cascade-remove-example.sql[]
+include::{pc-extrasdir}/pc-where-collection-query-example.sql[]
 ----
 ====
 
-[[pc-cascade-detach]]
-==== `CascadeType.DETACH`
+[[pc-to-one-restrictions]]
+==== Restrictions on to-one associations
 
-`CascadeType.DETACH` is used to propagate the detach operation from a parent entity to a child.
+`@SQLRestriction` and `@Filter` may also be declared on a `@ManyToOne` or `@OneToOne` field or getter:
 
-[[pc-cascade-detach-example]]
-.`CascadeType.DETACH` example
+[source,java]
+----
+@ManyToOne(fetch = FetchType.LAZY)
+@SQLRestriction("active = true")
+Person approver;
+
+@ManyToOne(fetch = FetchType.LAZY)
+@Filter(name = "activePerson", condition = "active = :active")
+Person reviewer;
+----
+
+The filter must have a corresponding `@FilterDef` with an `active` parameter.
+Enable it and set its parameter before loading the owner:
+
+[source,java,opts=novalidate]
+----
+session.enableFilter("activePerson").setParameter("active", true);
+----
+
+The conditions apply to the target entity through the annotated association, including associations
+mapped using `@JoinTable` and inverse one-to-one associations. Applicable conditions on the target entity
+and the association are combined using `AND`. Association filters apply whenever enabled, regardless of
+`@FilterDef.applyToLoadByKey`. Entity-level filters retain their usual load-by-key rules.
+Filter default conditions and explicit `@SqlFragmentAlias` declarations work as for collections.
+Use explicit aliases for filters referring to other tables of a target mapped with `JOINED` inheritance
+or `@SecondaryTable`. SQL restrictions qualify mapped columns from these tables automatically.
+
+An excluded target is represented as null, even if the target is already managed or cached.
+Other associations and direct lookups may still return the same target. Hibernate preserves the stored
+foreign key and join-table row when unrelated fields change or null is assigned to an already hidden
+association. Assigning a new nonnull target replaces the reference. A hidden target is not orphan-removed.
+Merge assumes that the detached source was loaded under the same filters and parameter values.
+
+Changing filters does not reinterpret already loaded associations. Refresh or reload the owner to obtain
+a new view. These predicates affect loading, not validation of newly assigned targets.
+Native result mappings require an additional visibility query when the association has an applicable restriction.
+
+[[pc-where-join-table]]
+==== `@SQLJoinTableRestriction`
+
+Like `@SQLRestriction`, `@SQLJoinTableRestriction` is used to filter out collections using a joined table (e.g. @ManyToMany association).
+
+[[pc-where-join-table-example]]
+.`@SQLJoinTableRestriction` mapping example
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
-----
-====
-
-[[pc-cascade-refresh]]
-==== `CascadeType.REFRESH`
-
-The `CascadeType.REFRESH` is used to propagate the refresh operation from a parent entity to a child.
-The refresh operation will discard the current entity state, and it will override it using the one loaded from the database.
-
-[[pc-cascade-refresh-example]]
-.`CascadeType.REFRESH` example
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/CascadeRefreshTest.java[tags=pc-cascade-refresh-example]
+include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-example]
 ----
 
 [source, sql, indent=0]
 ----
-include::{extrasdir}/pc-cascade-refresh-example.sql[]
+include::{pc-extrasdir}/pc-where-join-table-example.sql[]
 ----
 ====
 
-In the aforementioned example, you can see that both the `Person` and `Phone` entities are refreshed even if we only called this operation on the parent entity only.
+In the example above, the current week `Reader` entities are included in the `currentWeekReaders` collection
+which uses the `@SQLJoinTableRestriction` annotation to filter the joined table rows according to the provided SQL clause.
 
-[[pc-cascade-on-delete]]
-==== `@OnDelete` cascade
+The following two `Book_Reader` entries are added:
 
-While the previous cascade types propagate entity state transitions, the `@OnDelete` cascade is a DDL-level FK feature which allows you
-to remove a child record whenever the parent row is deleted.
-
-So, when annotating the `@ManyToOne` association with `@OnDelete( action = OnDeleteAction.CASCADE )`,
-the automatic schema generator will apply the ON DELETE CASCADE SQL directive to the Foreign Key declaration,
-as illustrated by the following example.
-
-[[pc-cascade-on-delete-mapping-example]]
-.`@OnDelete` `@ManyToOne` mapping
+[[pc-where-join-table-persist-example]]
+.`@SQLJoinTableRestriction` test data
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Person-example]
-----
-
-[source, java, indent=0]
-----
-include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Phone-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-cascade-on-delete-mapping-example.sql[]
+include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-persist-example]
 ----
 ====
 
-Now, you can just remove the `Person` entity, and the associated `Phone` entities are going to be deleted automatically via the Foreign Key cascade.
+When fetching the `currentWeekReaders` collection, Hibernate finds only one entry:
 
-[[pc-cascade-on-delete-example]]
-.`@OnDelete` `@ManyToOne` delete example
+[[pc-where-join-table-fetch-example]]
+.`@SQLJoinTableRestriction` fetch example
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-cascade-on-delete-example.sql[]
+include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-fetch-example]
 ----
 ====
 
-The `@OnDelete` annotation can also be placed on a collection, as
-illustrated in the following example.
+[[pc-filter]]
+==== `@Filter`
 
-[[pc-cascade-on-delete-collection-mapping-example]]
-.`@OnDelete` `@OneToMany` mapping
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Person-example]
-----
+The `@Filter` annotation is another way to filter out entities or collections using custom SQL criteria.
+Unlike `@SQLRestriction`, `@Filter` accepts parameter values at runtime.
 
-[source, java, indent=0]
-----
-include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Phone-example]
-----
-====
+Consider the following `Account` entity:
 
-Now, when removing the `Person` entity, all the associated `Phone` child entities are deleted via the Foreign Key cascade even if the `@OneToMany` collection was using the `CascadeType.ALL` attribute.
-
-[[pc-cascade-on-delete-collection-example]]
-.`@OnDelete` `@ManyToOne` delete example
+[[pc-filter-account-example]]
+.`@Filter` mapping entity-level usage
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-cascade-on-delete-example.sql[]
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-Account-example]
 ----
 ====
 
 [NOTE]
 ====
-Without the `@OnDelete` annotation, the `@OneToMany` association relies on the `cascade` attribute to propagate the `remove` entity state transition from the parent entity to its children.
-However, when the `@OnDelete` annotation is in place, Hibernate prevents the child entity `DELETE` statement from being executed while flushing the Persistence Context.
+Notice that the `active` property is mapped to the `active_status` column.
 
-This way, only the parent entity gets deleted, and all the associated child records are removed by the database engine, instead of being deleted explicitly via `DELETE` statements.
+The filter condition refers to SQL column names, not Java attribute names or a JPQL predicate.
 ====
+
+You can also apply the `@Filter` annotation for collections as illustrated by the `Client` entity:
+
+[[pc-filter-client-example]]
+.`@Filter` mapping collection-level usage
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-Client-example]
+----
+====
+
+Persisting a `Client` with three associated `Account` entities produces these statements:
+
+[[pc-filter-persistence-example]]
+.Persisting and fetching entities with a `@Filter` mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-persistence-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-filter-persistence-example.sql[]
+----
+====
+
+By default, without enabling the filter, Hibernate fetches all `Account` entities.
+
+[[pc-no-filter-entity-query-example]]
+.Query entities mapped without activating the `@Filter`
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-entity-query-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-no-filter-entity-query-example.sql[]
+----
+====
+
+If the filter is enabled and the filter parameter value is provided,
+then Hibernate applies the filtering criteria to the associated `Account` entities.
+The filter can be enabled explicitly on the session or by specifying
+that it will be enabled by default directly on its `@FilterDef`.
+
+[[pc-filter-entity-query-example]]
+.Query entities mapped with `@Filter`
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-query-example]
+----
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-auto-enabled-Account-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-filter-entity-query-example.sql[]
+----
+====
+
+A parameter's value may be set explicitly on the filter or resolved by a custom `java.util.function.Supplier`.
+Hibernate obtains the resolver through its <<beans,bean infrastructure>>.
+When no external bean container is configured, Hibernate can instantiate an ordinary resolver class using a no-argument constructor;
+CDI or Spring registration is not required.
+
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-resolver-Account-example]
+----
+
+[IMPORTANT]
+====
+Filters declared on an entity apply to entity queries, but not to direct fetching, unless otherwise configured using the `applyToLoadByKey` flag
+on the `@FilterDef`, that should be set to `true` in order to activate the filter with direct fetching.
+====
+
+In the following example, the `activeAccount` filter is not taken into consideration when fetching an entity from the Persistence Context.
+On the other hand, the `minimumAmount` filter is taken into consideration, because its `applyToLoadByKey` flag is set to `true`.
+
+[[pc-filter-entity-example]]
+.Fetching entities mapped with `@Filter`
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-filter-entity-example.sql[]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-filter-entity-find-example.sql[]
+----
+
+For hidden to-one targets and merge requirements, see <<pc-to-one-restrictions,restrictions on to-one associations>>.
+
+Here, `activeAccount` does not apply to direct loading, while `minimumAmount` applies because it enables `applyToLoadByKey`.
+These rules concern a database load; changing filters does not retroactively filter an instance already present in the context.
+
+Just like with entity queries, collections can be filtered as well, but only if the filter is enabled on the currently running Hibernate `Session`,
+either if the filter is enabled explicitly or by setting `autoEnabled` to `true`.
+
+[[pc-no-filter-collection-query-example]]
+.Traversing collections without activating the `@Filter`
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-collection-query-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-no-filter-collection-query-example.sql[]
+----
+====
+
+When activating the `@Filter` and fetching the `accounts` collections, Hibernate applies the filter condition to the associated collection entries.
+
+[[pc-filter-collection-query-example]]
+.Traversing collections mapped with `@Filter`
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-collection-query-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-filter-collection-query-example.sql[]
+----
+====
+
+[NOTE]
+====
+The main advantage of `@Filter` over the `@SQLRestriction` clause is that the filtering criteria can be customized at runtime.
+====
+
+[NOTE]
+====
+`@Filter` and `@Cache` may be combined on a collection.
+When an enabled filter affects the collection, Hibernate bypasses collection-cache reads and does not write the filtered result to the cache.
+An existing cache entry containing the complete collection is preserved for loads without an affecting filter.
+Filter parameter values are not part of the collection-cache key, so filtered subsets must not replace the complete cached collection.
+See <<caching-collection,collection caching>>.
+====
+
+[[pc-filter-sql-fragment-alias]]
+==== `@Filter` with `@SqlFragmentAlias`
+
+When using the `@Filter` annotation and working with entities that are mapped onto multiple database tables,
+use the
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation
+if the `@Filter` defines a condition that uses predicates across multiple tables.
+
+[[pc-filter-sql-fragment-alias-example]]
+.`@SqlFragmentAlias` mapping usage
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterSqlFragmentAliasTest.java[tags=pc-filter-sql-fragment-alias-example]
+----
+====
+
+When the filter is enabled and `Account` entities are loaded,
+Hibernate applies the right table aliases to the filter predicates:
+
+[[pc-filter-sql-fragment-alias-query-example]]
+.Fetching a collection filtered with `@SqlFragmentAlias`
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterSqlFragmentAliasTest.java[tags=pc-filter-sql-fragment-alias-query-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-filter-sql-fragment-alias-query-example.sql[]
+----
+====
+
+[[pc-filter-join-table]]
+==== `@FilterJoinTable`
+
+When using the `@Filter` annotation with collections, the filtering is done against the child entries (entities or embeddables).
+Use `@FilterJoinTable` when the predicate refers to a column of the link table instead.
+
+The `@FilterJoinTable` annotation can be, therefore, applied to a unidirectional `@OneToMany` collection as illustrated in the following mapping:
+
+[[pc-filter-join-table-example]]
+.`@FilterJoinTable` mapping usage
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-example]
+----
+====
+
+The `firstAccounts` filter selects accounts whose link-table `order_id`
+(their position in the `accounts` collection) is less than or equal to `maxOrderId`.
+
+Let's assume our database contains the following entities:
+
+[[pc-filter-join-table-persistence-example]]
+.Persisting and fetching entities with a `@FilterJoinTable` mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-persistence-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-filter-join-table-persistence-example.sql[]
+----
+====
+
+The collections can be filtered only if the associated filter is enabled on the currently running Hibernate `Session`.
+
+[[pc-no-filter-join-table-collection-query-example]]
+.Traversing collections mapped with `@FilterJoinTable` without enabling the filter
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-no-filter-join-table-collection-query-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-no-filter-join-table-collection-query-example.sql[]
+----
+====
+
+Enabling the filter with `maxOrderId` set to `1` selects two accounts, whose link-table `order_id` values are `0` and `1`.
+
+[[pc-filter-join-table-collection-query-example]]
+.Traversing collections mapped with `@FilterJoinTable`
+====
+[source, java, indent=0]
+----
+include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-collection-query-example]
+----
+
+[source, sql, indent=0]
+----
+include::{pc-extrasdir}/pc-filter-join-table-collection-query-example.sql[]
+----
+====
+
+[[sql-crud]]
+=== Custom SQL for entity and collection operations
+
+Hibernate can use custom SQL for CRUD operations.
+The SQL can be overridden at the statement level or individual column level.
+This section describes statement overrides.
+For columns, see <<chapters/domain/basic_types.adoc#mapping-column-read-and-write,Column transformers: read and write expressions>>.
+
+The following example shows how to define custom SQL operations using annotations.
+`@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` override the INSERT, UPDATE, DELETE statements of a given entity.
+Similarly, `@SQLSelect` specifies a custom SELECT query used for loading the underlying table record.
+
+For collections, Hibernate allows defining a custom `@SQLDeleteAll` which is used for removing all child records associated with a given parent entity.
+To filter collections, the `@SQLRestriction` annotation allows customizing the underlying SQL WHERE clause.
+
+[[sql-custom-crud-example]]
+.Custom CRUD
+====
+[source, java, indent=0]
+----
+include::{example-dir-custom-sql}/CustomSQLTest.java[tags=sql-custom-crud-example]
+----
+====
+
+In the example above, the entity is mapped so that entries are soft-deleted (the records are not removed from the database, but instead, a flag marks the row validity).
+The `Person` entity benefits from custom INSERT, UPDATE, and DELETE statements which update the `valid` column accordingly.
+The custom `@SQLSelect` is used to retrieve only `Person` rows that are valid.
+
+The same is done for the `phones` collection. The `@SQLDeleteAll` and the `SQLInsert` queries are used whenever the collection is modified.
+
+[NOTE]
+====
+You can also call a stored procedure using the custom CRUD statements.
+The only requirement is to set the `callable` attribute to `true`.
+====
+
+Use the annotation's `verify` member to select an `Expectation` implementation for checking the outcome,
+for example `Expectation.RowCount.class` when exactly one row should be affected.
+The older `check` member is deprecated.
+For callable SQL, parameter order, output parameters, and verification must match the stored procedure contract.
+See <<stored-procedures>> for procedure calls issued directly by the application.
+
+Custom SQL implements mapped entity and collection operations; it does not change the behavior of bulk HQL statements.
+Prefer <<soft-delete,soft-delete mappings>> when their semantics meet the application's requirements.
 
 [[pc-exception-handling]]
 === Exception handling
 
-If the Jakarta Persistence `EntityManager` or the Hibernate-specific `Session` throws an exception, including any JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/SQLException.html[`SQLException`], you have to immediately rollback the database transaction and close the current `EntityManager` or `Session`.
+After a persistence or flush failure that leaves the context unreliable, roll back the transaction and discard the `EntityManager` or `Session`.
+Do not continue using that context or attempt to repair it by clearing it.
+For application-managed contexts, ensure closure with a `finally` block or try-with-resources; container-managed contexts follow their container lifecycle.
 
-Certain methods of the Jakarta Persistence `EntityManager` or the Hibernate `Session` will not leave the Persistence Context in a consistent state. As a rule of thumb, no exception thrown by Hibernate can be treated as recoverable. Ensure that the Session will be closed by calling the `close()` method in a finally block.
+Not every query-result exception implies a damaged context.
+For example, `NoResultException` and `NonUniqueResultException` report result cardinality and do not themselves mark the transaction for rollback.
+Follow the exception's documented transaction semantics; do not generalize these exceptions to JDBC, optimistic-lock, or flush failures.
+See <<transactions,transactions>> and <<locking,locking>> for transaction and lock handling.
 
-Rolling back the database transaction does not put your business objects back into the state they were at the start of the transaction. This means that the database state and the business objects will be out of sync. Usually, this is not a problem because exceptions are not recoverable and you will have to start over after rollback anyway.
+Rollback restores database transactional state, but does not restore the values of Java objects or their generated identifiers.
+Discard or reload affected objects before starting another unit of work.
 
-The Jakarta Persistence {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] or the
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/HibernateException.html[`HibernateException`] wraps most of the errors that can occur in a Hibernate persistence layer.
-
-Both the `PersistenceException` and the `HibernateException` are runtime exceptions because, in our opinion, we should not force the application developer to catch an unrecoverable exception at a low layer. In most systems, unchecked and fatal exceptions are handled in one of the first frames of the method call stack (i.e., in higher layers) and either an error message is presented to the application user or some other appropriate action is taken. Note that Hibernate might also throw other unchecked exceptions that are not a `HibernateException`. These are not recoverable either, and appropriate action should be taken.
+Hibernate and Jakarta Persistence expose unchecked exceptions. Hibernate may convert failures into Jakarta Persistence exceptions at API boundaries;
+using a `Session` variable does not guarantee that only Hibernate exception types will be thrown.
 
 Hibernate wraps the JDBC `SQLException`, thrown while interacting with the database, in a
 https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/JDBCException.html[`JDBCException`].
-In fact, Hibernate will attempt to convert the exception into a more meaningful subclass of `JDBCException`. The underlying `SQLException` is always available via https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/JDBCException.html#getSQLException--[`JDBCException.getSQLException()`]. Hibernate converts the `SQLException` into an appropriate JDBCException subclass using the
+In fact, Hibernate will attempt to convert the exception into a more meaningful subclass of `JDBCException`. The underlying `SQLException` is always available via https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/JDBCException.html#getSQLException()[`JDBCException.getSQLException()`]. Hibernate converts the `SQLException` into an appropriate JDBCException subclass using the
 https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`]
 attached to the current `SessionFactory`.
 
-By default, the `SQLExceptionConverter` is defined by the configured Hibernate `Dialect` via the
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#buildSQLExceptionConversionDelegate--[`buildSQLExceptionConversionDelegate`] method
-which is overridden by several database-specific ``Dialect``s.
+By default, Hibernate combines an optional dialect-specific delegate supplied by the
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#buildSQLExceptionConversionDelegate()[`buildSQLExceptionConversionDelegate`] method
+with standard delegates that inspect JDBC exception subclasses and SQLState codes.
+The dialect delegate is consulted first when present; the standard delegates provide fallback conversion.
 
 The standard `JDBCException` subtypes are:
 
@@ -1308,11 +1347,3 @@ QueryTimeoutException::
 	indicates that the current executing query has timed out.
 SQLGrammarException::
 	indicates a grammar or syntax problem with the issued SQL.
-
-[NOTE]
-====
-Starting with Hibernate 5.2, the Hibernate `Session` extends the Jakarta Persistence `EntityManager`. For this reason, when a `SessionFactory` is built via Hibernate's native bootstrapping,
-the `HibernateException` or `SQLException` can be wrapped in a Jakarta Persistence {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] when thrown
-by `Session` methods that implement `EntityManager` methods (e.g., https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#merge-java.lang.Object-[Session.merge(Object object)],
-https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#flush--[Session.flush()]).
-====

@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import static jakarta.persistence.PessimisticLockScope.EXTENDED;
 import static jakarta.persistence.PessimisticLockScope.FETCHED;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
+import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
 import static org.hibernate.orm.test.locking.options.Helper.Table.BOOKS;
 import static org.hibernate.orm.test.locking.options.Helper.Table.BOOK_AUTHORS;
 import static org.hibernate.orm.test.locking.options.Helper.Table.BOOK_GENRES;
@@ -61,7 +61,9 @@ public class ScopeTests {
 	@Test
 	void testFind(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
+			//tag::locking-guide-scope-normal[]
 			final Book theTalisman = session.find( Book.class, 3, PESSIMISTIC_WRITE );
+			//end::locking-guide-scope-normal[]
 			assertThat( Hibernate.isInitialized( theTalisman ) ).isTrue();
 
 			BOOKS.checkLocked( theTalisman.getId(), true, factoryScope );
@@ -73,7 +75,9 @@ public class ScopeTests {
 	@Test
 	void testFindWithExtended(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
+			//tag::locking-guide-scope-extended[]
 			final Book theTalisman = session.find( Book.class, 3, PESSIMISTIC_WRITE, EXTENDED );
+			//end::locking-guide-scope-extended[]
 			assertThat( Hibernate.isInitialized( theTalisman ) ).isTrue();
 
 			BOOKS.checkLocked( theTalisman.getId(), true, factoryScope );
@@ -202,7 +206,9 @@ public class ScopeTests {
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
 	void testEagerFindWithFetchScope(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
+			//tag::locking-guide-scope-fetched[]
 			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE, FETCHED );
+			//end::locking-guide-scope-fetched[]
 
 			REPORTS.checkLocked( report.getId(), true, factoryScope );
 			PERSONS.checkLocked( report.getReporter().getId(), true, factoryScope );

@@ -12,10 +12,10 @@ from
 where
         ( id, companyName )
     in (
-        ( 1,'Red Hat USA' ),
-        ( 3,'Red Hat USA' ),
-        ( 1,'Red Hat Europe' ),
-        ( 3,'Red Hat Europe' )
+        ( 2,'Red Hat USA' ),
+        ( 4,'Red Hat USA' ),
+        ( 6,'Red Hat Europe' ),
+        ( 8,'Red Hat Europe' )
     )
 
 delete
@@ -24,10 +24,10 @@ from
 where
         ( id, companyName )
     in (
-        ( 1,'Red Hat USA' ),
-        ( 3,'Red Hat USA' ),
-        ( 1,'Red Hat Europe' ),
-        ( 3,'Red Hat Europe' )
+        ( 2,'Red Hat USA' ),
+        ( 4,'Red Hat USA' ),
+        ( 6,'Red Hat Europe' ),
+        ( 8,'Red Hat Europe' )
     )
 
 delete
@@ -36,8 +36,8 @@ from
 where
         ( id, companyName )
     in (
-        ( 1,'Red Hat USA' ),
-        ( 3,'Red Hat USA' ),
-        ( 1,'Red Hat Europe' ),
-        ( 3,'Red Hat Europe' )
+        ( 2,'Red Hat USA' ),
+        ( 4,'Red Hat USA' ),
+        ( 6,'Red Hat Europe' ),
+        ( 8,'Red Hat Europe' )
     )

@@ -8,6 +8,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
@@ -176,10 +177,10 @@ public class SecondLevelCacheTest {
 			//tag::caching-statistics-example[]
 			Statistics statistics = session.getSessionFactory().getStatistics();
 			CacheRegionStatistics secondLevelCacheStatistics =
-					statistics.getDomainDataRegionStatistics("query.cache.person");
+					statistics.getQueryRegionStatistics("query.cache.person");
 			long hitCount = secondLevelCacheStatistics.getHitCount();
 			long missCount = secondLevelCacheStatistics.getMissCount();
-			double hitRatio = (double) hitCount / (hitCount + missCount);
+			double hitRatio = hitCount + missCount == 0 ? 0.0 : (double) hitCount / (hitCount + missCount);
 			//end::caching-statistics-example[]
 		});
 
@@ -242,6 +243,7 @@ public class SecondLevelCacheTest {
 	//tag::caching-entity-natural-id-mapping-example[]
 	@Entity(name = "Person")
 	@Cacheable
+	@NaturalIdCache
 	@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 	public static class Person {
 

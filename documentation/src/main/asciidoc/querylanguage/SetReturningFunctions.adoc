@@ -1,0 +1,78 @@
+[[hql-from-set-returning-functions]]
+=== Set-returning functions
+
+:ql-srf-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/srf
+
+A set-returning function is a function that produces rows instead of a single scalar value
+and is exclusively used in the `from` clause, either as root node or join target.
+
+For <<hql-array-unnest,`unnest()`>> and <<hql-from-set-returning-functions-generate-series,`generate_series()`>>,
+`index(alias)` accesses the 1-based index of a returned row.
+For <<hql-json-table-function,`json_table()`>> and <<hql-xmltable-function,`xmltable()`>>, declare a named `for ordinality` column
+and access it through the function alias, for example, `t.idx` for a column declared as `idx for ordinality`.
+
+The following set-returning functions are available on many platforms:
+
+|===
+| Function | purpose
+
+| <<hql-array-unnest,`unnest()`>> | Turns an array into rows
+| <<hql-from-set-returning-functions-generate-series,`generate_series()`>> | Creates a series of values as rows
+| <<hql-json-table-function,`json_table()`>> | Turns a JSON document into rows
+| <<hql-xmltable-function,`xmltable()`>> | Turns an XML document into rows
+|===
+
+[[hql-from-set-returning-functions-generate-series]]
+==== `generate_series()`
+
+A <<hql-from-set-returning-functions,set-returning function>>, which generates rows from a given start value (inclusive)
+up to a given stop value (inclusive). The function has 2 variants:
+
+* `generate_series(numeric, numeric [,numeric])` - Arguments are `start`, `stop` and `step` with a default of `1` for the optional `step` argument
+* `generate_series(temporal, temporal, duration)` - Like the numeric variant, but for temporal types and `step` is required
+
+NOTE: On H2, Hibernate emulates series generation when ordinality is requested, the arguments are temporal,
+or an argument is neither a literal nor a parameter. The default H2 dialect limits this emulation to 10,000 rows,
+so larger series can be truncated. Numeric calls with literal or parameter arguments and no ordinality use
+`system_range()` directly and do not have this emulation limit.
+
+[[hql-generate-series-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-srf-example-dir}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-example]
+----
+====
+
+To obtain the "row number" of a generated value i.e. ordinality, it is possible to use the `index()` function.
+
+[[hql-generate-series-ordinality-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-srf-example-dir}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-ordinality-example]
+----
+====
+
+The `step` argument can be a negative value and progress from a higher `start` value to a lower `stop` value.
+
+[[hql-generate-series-temporal-example]]
+====
+[source, java, indent=0]
+----
+include::{ql-srf-example-dir}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-temporal-example]
+----
+====
+
+[[hql-join-set-returning-function]]
+==== Set-returning functions in joins
+
+A `join` clause may contain a set-returning function, either:
+
+- an uncorrelated set-returning function, which is almost the same as a <<hql-from-set-returning-functions,set-returning function in the `from` clause>>, except that it may have an `on` restriction, or
+- a _lateral join_, which is a correlated set-returning function, and may refer to other roots declared earlier in the same `from` clause.
+
+The `lateral` keyword just distinguishes the two cases.
+A lateral join may be an inner or left outer join, but not a right join, nor a full join.
+
+For custom database functions and their registration, see link:{doc-user-guide-url}#query-language[Function integration].

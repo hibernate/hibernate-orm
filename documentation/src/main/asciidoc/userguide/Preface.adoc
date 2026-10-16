@@ -3,23 +3,10 @@
 [[preface]]
 == Preface
 
-Working with both Object-Oriented software and Relational Databases can be cumbersome and time-consuming.
-Development costs are significantly higher due to a paradigm mismatch between how data is represented in objects versus relational databases.
-Hibernate is an Object/Relational Mapping solution for Java environments.
-The term https://en.wikipedia.org/wiki/Object-relational_mapping[Object/Relational Mapping] refers to the technique of mapping data from an object model representation to a relational data model representation (and vice versa).
+Hibernate is an object/relational mapping (ORM) framework for Java applications.
 
-Hibernate not only takes care of the mapping from Java classes to database tables (and from Java data types to SQL data types), but also provides data query and retrieval facilities.
-It can significantly reduce development time otherwise spent with manual data handling in SQL and JDBC.
-Hibernate’s design goal is to relieve the developer from 95% of common data persistence-related programming tasks by eliminating the need for manual, hand-crafted data processing using SQL and JDBC.
-However, unlike many other persistence solutions, Hibernate does not hide the power of SQL from you and guarantees that your investment in relational technology and knowledge is as valid as always.
-
-Hibernate may not be the best solution for data-centric applications that only use stored-procedures to implement the business logic in the database, it is most useful with object-oriented domain models and business logic in the Java-based middle-tier.
-However, Hibernate can certainly help you to remove or encapsulate vendor-specific SQL code and will help with the common task of result set translation from a tabular representation to a graph of objects.
-
-[[system-requirements]]
-=== System Requirements
-
-Hibernate {majorMinorVersion} requires at least Java 11 and JDBC 4.2.
+Hibernate maps Java domain models to relational data and supports business logic implemented in Java, in the database, or across both.
+Applications can combine entity-based persistence with native SQL and stored procedure calls, using Hibernate’s result mapping facilities to translate query results into Java objects.
 
 [[getting-started]]
 === Getting Started
@@ -28,19 +15,61 @@ include::{shared-attributes-dir}/background.adoc[]
 
 [TIP]
 ====
-New users may want to first look at the tutorial-style link:{doc-quick-start-url}[Quick Start] guide.
-
-This User Guide is really more of a reference guide.
-For a more high-level discussion of the most used features of Hibernate, see the link:{doc-introduction-url}[Introduction to Hibernate] guide.
-
-There is also a series of link:{doc-topical-url}[topical guides] providing deep dives into various topics such as logging, compatibility and support, etc.
+Start with the link:{doc-quick-start-url}[Quick Start] guide for a tutorial, or
+link:{doc-introduction-url}[Introduction to Hibernate] for an overview of commonly used features.
+This User Guide provides detailed reference material.
+The link:{doc-topical-url}[topical guides] cover subjects such as logging, compatibility, and support.
 ====
 
 
+[[user-guide-reading-map]]
+=== Finding your way through this guide
+
+Use this reference guide by task, or follow the chapter order from mapping and setup through runtime operations, querying, and performance.
+The following links provide starting points for common tasks.
+
+[cols="1,3",options="header"]
+|===
+|Task |Start here
+
+|[[system-requirements]]Check system requirements
+|<<compatibility-dependencies>> for the required Java runtime, Jakarta Persistence, and JDBC versions.
+
+|Understand the main APIs
+|<<architecture>>.
+
+|Map application data
+|<<domain-model>>.
+
+|Configure and start Hibernate
+|<<bootstrap>> and <<database>>.
+See <<schema-generation>> for schema operations and DDL scripts, <<BytecodeEnhancement>> for enhancement capabilities and build-time or runtime setup,
+and <<tooling>> for Gradle, Maven, and Ant integration, metamodel generation, and other build services.
+
+|Manage entity state and transactions
+|<<pc,Persistence Context>>, <<transactions>>, and <<locking>>.
+
+|Construct and execute queries
+|<<hql,Query APIs and execution>>, <<criteria>>, <<QuerySpecification,Programmatic query specifications>>, <<sql,Native SQL Queries>>, and <<stored-procedures>>.
+See <<query-language,Function integration>> for registering custom functions, and the
+link:{doc-query-language-url}[Query Language guide] for HQL syntax and built-in functions.
+
+|Plan loading and tune performance
+|<<fetching>>, <<batch,Batching>>, <<caching>>, <<statistics>>, and <<best-practices>>.
+
+|Use integrations and specialized features
+|<<multitenacy,Multitenancy>>, <<events>>, <<beans>>, <<spatial>>, and <<vector-module>>.
+
+|Evaluate portability across databases or persistence providers
+|<<portability>> for portability boundaries, mapping and query choices, and target-environment verification.
+
+|Look up settings and diagnostic events
+|<<settings,Configuration Settings>> and <<appendix-monitoring-with-JFR>>.
+|===
+
 === Get Involved
 
-* Use Hibernate and report any bugs or issues you find. See https://hibernate.org/issuetracker[Issue Tracker] for details.
-* Try your hand at fixing some bugs or implementing enhancements. Again, see https://hibernate.org/issuetracker[Issue Tracker].
-* Engage with the community using the methods listed in the https://hibernate.org/community[Community section].
-* Help improve this documentation. Contact us on the developer mailing list or Zulip if you have interest.
-* Spread the word. Let the rest of your organization know about the benefits of Hibernate.
+* Report bugs and request enhancements through the https://hibernate.org/issuetracker[issue tracker].
+* Contribute fixes, features, or documentation improvements using the https://hibernate.org/community/contribute/[contribution guidelines].
+* Ask questions, help other users, and join development discussions through the forums, Zulip,
+  and mailing lists linked from the https://hibernate.org/community/[community page].

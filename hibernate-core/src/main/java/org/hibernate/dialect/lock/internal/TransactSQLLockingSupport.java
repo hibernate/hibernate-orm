@@ -12,7 +12,11 @@ import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
+import org.hibernate.dialect.lock.spi.LockingSqlRewriter;
+import org.hibernate.dialect.lock.spi.LockingSqlRewriteResult;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.StandardLockingSqlRewriters;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 import org.hibernate.dialect.lock.spi.TableLockHintRenderer;
@@ -59,16 +63,41 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			TransactSQLLockingSupport::renderSybaseTableLockHint
 	);
 
-	public static final LockingSupport SYBASE_ASE = new TransactSQLLockingSupport(
-			PessimisticLockStyle.TABLE_HINT,
-			LockTimeoutType.CONNECTION,
-			LockTimeoutType.CONNECTION,
-			LockTimeoutType.QUERY,
-			RowLockStrategy.TABLE,
-			OuterJoinLockingType.IDENTIFIED,
-			SybaseImpl.IMPL,
-			TransactSQLLockingSupport::renderSybaseAseTableLockHint
-	);
+	public static final LockingSupport SYBASE_ASE = forSybaseASE( true );
+
+	public static LockingSupport forSybaseASE(boolean selectForUpdateEnabled) {
+		return new TransactSQLLockingSupport(
+				PessimisticLockStyle.TABLE_HINT,
+				LockTimeoutType.CONNECTION,
+				LockTimeoutType.CONNECTION,
+				LockTimeoutType.QUERY,
+				RowLockStrategy.TABLE,
+				OuterJoinLockingType.IDENTIFIED,
+				SybaseImpl.IMPL,
+				TransactSQLLockingSupport::renderSybaseAseTableLockHint ) {
+			@Override
+			public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+				return SybaseASETransactionConcurrencyResolver.INSTANCE;
+			}
+
+			@Override
+			public String render(LockingClauseRequest request) {
+				if ( request.timeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
+					if ( request.lockKind() == PessimisticLockKind.UPDATE ) {
+						if ( !selectForUpdateEnabled ) {
+							throw new org.hibernate.query.IllegalQueryOperationException(
+									"Sybase ASE exclusive skip-locked locking requires the server option 'select for update'" );
+						}
+						return " for update";
+					}
+					// READPAST cannot be combined with HOLDLOCK. Retain shared locks
+					// without changing the connection's isolation level.
+					return " at isolation 2";
+				}
+				return super.render( request );
+			}
+		};
+	}
 
 	public static final LockingSupport SYBASE_LEGACY = new TransactSQLLockingSupport(
 			PessimisticLockStyle.TABLE_HINT,
@@ -78,7 +107,7 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
 			SybaseImpl.IMPL,
-			TransactSQLLockingSupport::renderSybaseAseTableLockHint
+			TransactSQLLockingSupport::renderSybaseTableLockHint
 	);
 
 	public static LockingSupport forSybaseAnywhere(DatabaseVersion version) {
@@ -177,6 +206,21 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 	}
 
 	@Override
+	public LockingSqlRewriter getLockingSqlRewriter() {
+		final var rewriter = StandardLockingSqlRewriters.forSupport( this );
+		if ( getPessimisticLockStyle() != PessimisticLockStyle.TABLE_HINT ) {
+			return rewriter;
+		}
+		return request -> {
+			final var result = rewriter.rewrite( request );
+			return result.outcome() == LockingSqlRewriteResult.Outcome.APPLIED
+					? LockingSqlRewriteResult.applied( result.sql() + render( new LockingClauseRequest(
+							request.lockKind(), request.timeout(), request.targets() ) ) )
+					: result;
+		};
+	}
+
+	@Override
 	public ConnectionLockTimeoutStrategy getConnectionLockTimeoutStrategy() {
 		return connectionLockTimeoutStrategy;
 	}
@@ -219,7 +263,7 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			return "";
 		}
 		return request.timeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI
-				? " holdlock readpast"
+				? " readpast"
 				: " holdlock";
 	}
 

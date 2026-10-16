@@ -102,7 +102,7 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 		return CacheLoadHelper.loadFromSecondLevelCache(
 				context.getStatelessSession(),
 				null,
-				getLockMode(),
+				getNullSafeLockMode(),
 				getEntityDescriptor(),
 				new EntityKey( key, getEntityDescriptor() )
 		);

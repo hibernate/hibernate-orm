@@ -5,12 +5,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -21,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 ///
 /// @author Steve Ebersole
 @BaseUnitTest
+@RequiresDialect(H2Dialect.class)
 public class DatabaseAccessHikariTests {
 	@Test
 	void managedPool() throws Exception {

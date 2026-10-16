@@ -2534,16 +2534,13 @@ public class ToOneAttributeMapping
 		return isInternalLoadNullable;
 	}
 
+	@Override
 	public NotFoundAction getNotFoundAction() {
 		return notFoundAction;
 	}
 
 	public boolean isIgnoreNotFound(){
 		return notFoundAction == NotFoundAction.IGNORE;
-	}
-
-	public boolean hasNotFoundAction() {
-		return notFoundAction != null;
 	}
 
 	@Override

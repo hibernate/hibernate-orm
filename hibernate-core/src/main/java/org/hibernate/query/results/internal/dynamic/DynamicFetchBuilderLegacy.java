@@ -7,6 +7,7 @@ package org.hibernate.query.results.internal.dynamic;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -181,8 +182,14 @@ public class DynamicFetchBuilderLegacy
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
 		final var creationState = impl( domainResultCreationState );
-		final var ownerTableGroup = creationState.getFromClauseAccess().findByAlias( ownerTableAlias );
-		final var tableGroup = tableGroup( fetchPath, ownerTableGroup, creationState );
+		final var fromClauseAccess = creationState.getFromClauseAccess();
+		final var ownerTableGroup = fromClauseAccess.findByAlias( ownerTableAlias );
+		assert fetchPath.getParent() != null;
+		final var partNature = CollectionPart.Nature.fromNameExact( fetchPath.getParent().getLocalName() );
+		final var lhsTableGroup = partNature != null
+				? fromClauseAccess.findTableGroup( ownerTableGroup.getNavigablePath().append( partNature.getName() ) )
+				: ownerTableGroup;
+		final var tableGroup = tableGroup( fetchPath, lhsTableGroup, creationState );
 		if ( lockMode != null ) {
 			domainResultCreationState.getSqlAstCreationState()
 					.registerLockMode( tableAlias, lockMode );

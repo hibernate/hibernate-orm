@@ -332,8 +332,8 @@ public class MapBinder extends CollectionBinder {
 		//element.setFetchMode( fetchMode );
 		//element.setLazy( fetchMode != FetchMode.JOIN );
 		//make the second join non-lazy
-		element.setFetchMode( FetchMode.JOIN );
-		element.setLazy( false );
+		element.setFetchMode( getCollectionPartFetchMode() );
+		element.setLazy( isCollectionPartLazy() );
 		//does not make sense for a map key element.setIgnoreNotFound( ignoreNotFound );
 		return element;
 	}

@@ -7,6 +7,7 @@ import org.hibernate.type.format.AbstractJsonFormatMapper;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
+import jakarta.json.bind.spi.JsonbProvider;
 
 import java.lang.reflect.Type;
 
@@ -28,6 +29,22 @@ public final class JsonBJsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public JsonBJsonFormatMapper(Jsonb jsonb) {
 		this.jsonb = jsonb;
+	}
+
+	static JsonBJsonFormatMapper createIfAvailable() {
+		final JsonbProvider provider;
+		try {
+			provider = JsonbProvider.provider();
+		}
+		catch (JsonbException e) {
+			if ( e.getCause() instanceof ClassNotFoundException ) {
+				// The API is available, but its default provider is not.
+				return null;
+			}
+			throw e;
+		}
+		// Do not ignore failures in an installed provider.
+		return new JsonBJsonFormatMapper( provider.create().build() );
 	}
 
 	@Override

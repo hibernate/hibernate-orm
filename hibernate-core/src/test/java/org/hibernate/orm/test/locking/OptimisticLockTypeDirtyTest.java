@@ -8,9 +8,14 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.hibernate.dialect.CockroachDialect;
@@ -28,18 +33,29 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Vlad Mihalcea
  */
-// Test DIRTY predicates without stronger isolation rejecting nonoverlapping changes.
+// Test DIRTY predicates at READ_COMMITTED where available. Spanner runs only the basic mapping test.
 @SuppressWarnings("JUnitMalformedDeclaration")
-@Jpa(annotatedClasses = OptimisticLockTypeDirtyTest.Person.class,
-		properties = @Setting(name = ISOLATION, value = "READ_COMMITTED"))
+@ServiceRegistry(settingProviders = @SettingProvider(settingName = ISOLATION, provider = OptimisticLockTypeDirtyTest.IsolationProvider.class))
+@DomainModel(annotatedClasses = OptimisticLockTypeDirtyTest.Person.class)
+@SessionFactory
 public class OptimisticLockTypeDirtyTest {
+	public static class IsolationProvider implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			var dialect = DialectContext.getDialect();
+			return dialect instanceof SpannerDialect || dialect instanceof SpannerPostgreSQLDialect
+					? "SERIALIZABLE"
+					: "READ_COMMITTED";
+		}
+	}
+
 	@AfterEach
-	void tearDown(EntityManagerFactoryScope factoryScope) {
+	void tearDown(SessionFactoryScope factoryScope) {
 		factoryScope.dropData();
 	}
 
 	@BeforeEach
-	public void prepareData(EntityManagerFactoryScope factoryScope) {
+	public void prepareData(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			var person = new Person();
 			person.setId(1L);
@@ -53,7 +69,7 @@ public class OptimisticLockTypeDirtyTest {
 	}
 
 	@Test
-	public void test(EntityManagerFactoryScope factoryScope) {
+	public void test(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::locking-optimistic-lock-type-dirty-update-example[]
 			var person = entityManager.find(Person.class, 1L);
@@ -66,8 +82,8 @@ public class OptimisticLockTypeDirtyTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Concurrent changes can instead fail at SERIALIZABLE isolation")
-	public void testNonoverlappingChangesSucceed(EntityManagerFactoryScope factoryScope) {
-		try (EntityManager entityManager = factoryScope.getEntityManagerFactory().createEntityManager()) {
+	public void testNonoverlappingChangesSucceed(SessionFactoryScope factoryScope) {
+		try (EntityManager entityManager = factoryScope.getSessionFactory().createEntityManager()) {
 			entityManager.getTransaction().begin();
 			try {
 				Person person = entityManager.find( Person.class, 1L );
@@ -91,8 +107,8 @@ public class OptimisticLockTypeDirtyTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Concurrent changes can instead fail at SERIALIZABLE isolation")
-	public void testOverlappingChangesConflict(EntityManagerFactoryScope factoryScope) {
-		try (EntityManager entityManager = factoryScope.getEntityManagerFactory().createEntityManager()) {
+	public void testOverlappingChangesConflict(SessionFactoryScope factoryScope) {
+		try (EntityManager entityManager = factoryScope.getSessionFactory().createEntityManager()) {
 			entityManager.getTransaction().begin();
 			try {
 				Person person = entityManager.find( Person.class, 1L );

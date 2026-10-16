@@ -108,7 +108,7 @@ class LockingGuideTests {
 					assertEquals( 0, book.version );
 					scope.inTransaction( writer -> writer.find( Book.class, 1L ).title = "Concurrent" );
 				} ) );
-		assertTrue( causedByOptimisticFailure( failure ) );
+		assertTrue( causedByOptimisticFailure( failure ), failure::toString );
 	}
 
 	@Test
@@ -194,7 +194,8 @@ class LockingGuideTests {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	void skipLockedSelection(EntityManagerFactoryScope scope) {
 		scope.inTransaction( holder -> {
-			holder.find( Book.class, 1L, LockModeType.PESSIMISTIC_WRITE );
+			holder.find( Book.class, 1L, LockModeType.PESSIMISTIC_WRITE ).title = "In progress";
+			holder.flush();
 			scope.inTransaction( entityManager -> {
 				//tag::locking-guide-skip-locked-example[]
 				List<Book> available = entityManager.createQuery( "from GuideBook order by id", Book.class )

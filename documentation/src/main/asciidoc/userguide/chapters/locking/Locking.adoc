@@ -347,6 +347,19 @@ An empty result does not prove that no matching rows exist: matching rows may be
 
 Skip-locked is not a legal `lock()` option for an already managed entity; use a supported selection operation.
 
+[NOTE]
+====
+On Sybase ASE, skip-locked `PESSIMISTIC_WRITE` selection uses `READPAST` with `FOR UPDATE` to retain exclusive row locks.
+This requires the ASE server option `select for update` to be enabled and the selected tables to use `datarows` locking.
+Hibernate does not enable the server option automatically.
+When JDBC metadata access is available, Hibernate checks the option during bootstrap and rejects exclusive skip-locked requests if it is disabled or cannot be verified.
+When bootstrapping without JDBC metadata, the application must ensure that the option is enabled.
+ASE does not support `FOR UPDATE` with `DISTINCT`, `GROUP BY`, `HAVING`, aggregate functions, subqueries, or set operations such as `UNION`.
+Hibernate rejects exclusive skip-locked HQL and Criteria queries with these shapes before executing SQL, including table-per-class polymorphic queries and full joins implemented using a union.
+Use a supported query shape when exclusive skip-locked selection is required.
+Skip-locked `PESSIMISTIC_READ` set queries use `READPAST` on each selected table and query-level repeatable-read isolation to retain shared locks.
+====
+
 ==== Locking failures
 
 At the Jakarta Persistence API boundary, `OptimisticLockException` indicates an optimistic conflict.

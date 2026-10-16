@@ -296,12 +296,12 @@ public class SqlAstTranslatorSurfaceTests {
 				TransactSQLLockingSupport.SYBASE_ASE,
 				PessimisticLockKind.UPDATE,
 				Timeouts.SKIP_LOCKED
-		) ).isEqualTo( " holdlock readpast" );
+		) ).isEqualTo( " readpast" );
 		assertThat( renderTableLockHint(
 				TransactSQLLockingSupport.SYBASE_LEGACY,
 				PessimisticLockKind.UPDATE,
 				Timeouts.SKIP_LOCKED
-		) ).isEqualTo( " holdlock readpast" );
+		) ).isEqualTo( " holdlock" );
 		assertThat( renderTableLockHint(
 				TransactSQLLockingSupport.SYBASE,
 				PessimisticLockKind.SHARE,

@@ -12,7 +12,9 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.mutation.EntityTableMappingImpl;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
@@ -195,6 +197,26 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 				statementDetails.releaseStatement( session );
 			}
 			valueBindings.afterStatement( tableDetails );
+		}
+	}
+
+	protected static void checkUnmatchedUpdate(
+			GeneratedValuesMutationDelegate generatedValuesDelegate,
+			GeneratedValues generatedValues,
+			PreparedStatementDetails statementDetails,
+			OperationResultChecker resultChecker,
+			SharedSessionContractImplementor session) {
+		if ( generatedValues == null && generatedValuesDelegate.getTiming() == EventType.UPDATE ) {
+			try {
+				checkResults( resultChecker, statementDetails, 0, -1 );
+			}
+			catch (SQLException e) {
+				throw session.getJdbcServices().getSqlExceptionHelper().convert(
+						e,
+						"Unable to check the result of an update returning generated values",
+						statementDetails.getSqlString()
+				);
+			}
 		}
 	}
 }

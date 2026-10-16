@@ -7,6 +7,14 @@ import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
 
 import org.hibernate.SPI;
+import org.hibernate.LockOptions;
+import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingClauseStrategy;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.spi.SqlAppender;
 import static org.hibernate.SPI.Role.USE;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -70,6 +78,7 @@ import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.List;
 
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_ANSI_NULL;
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_PAGE_SIZE;
@@ -90,6 +99,22 @@ import static org.hibernate.type.SqlTypes.XML_ARRAY;
  * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 16 and above.
  */
 public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSupport, TemporalOperationSupport {
+
+	@Override
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		if ( lockOptions == null || LockingSqlRewriterSupport.interpretLockKind( lockOptions ) == PessimisticLockKind.NONE ) {
+			return super.getLockingClauseStrategy( querySpec, lockOptions );
+		}
+		final String clause = getLockingSupport().getLockingClauseRenderer().render( new LockingClauseRequest(
+				LockingSqlRewriterSupport.interpretLockKind( lockOptions ),
+				LockingSqlRewriterSupport.effectiveTimeout( lockOptions ), List.of() ) );
+		return new TransactSQLLockingClauseStrategy( lockOptions.getScope(), querySpec.getRootPathsForLocking() ) {
+			@Override
+			public void render(SqlAppender sqlAppender) {
+				sqlAppender.appendSql( clause );
+			}
+		};
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
@@ -140,6 +165,7 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 	};
 
 	private final boolean ansiNull;
+	private final LockingSupport lockingSupport;
 	private final int pageSize;
 	private final TypeSizingProfile typeSizingProfile;
 
@@ -150,6 +176,7 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 	public SybaseASEDialect(DatabaseVersion version) {
 		super(version);
 		ansiNull = false;
+		lockingSupport = TransactSQLLockingSupport.SYBASE_ASE;
 		pageSize = MAX_PAGE_SIZE;
 		typeSizingProfile = createTypeSizingProfile( pageSize );
 	}
@@ -157,6 +184,7 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 	public SybaseASEDialect(DialectResolutionInfo info) {
 		super(info);
 		ansiNull = isAnsiNull( info );
+		lockingSupport = TransactSQLLockingSupport.forSybaseASE( isSelectForUpdateEnabled( info ) );
 		pageSize = pageSize( info );
 		typeSizingProfile = createTypeSizingProfile( pageSize );
 	}
@@ -262,6 +290,24 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 		// The maximum possible value for replicating an XML tag, so that the resulting string stays below the 16K limit
 		// https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug31.htm
 		return 4094;
+	}
+
+	private static boolean isSelectForUpdateEnabled(DialectResolutionInfo info) {
+		final var metadata = info.getDatabaseMetadata();
+		if ( metadata != null ) {
+			try ( var statement = metadata.getConnection().createStatement();
+					var result = statement.executeQuery(
+							"select value from master..syscurconfigs where config in "
+									+ "(select config from master..sysconfigures where name = 'select for update')" ) ) {
+				return result.next() && result.getInt( 1 ) == 1;
+			}
+			catch (SQLException ex) {
+				// Without verification, do not risk silently obtaining only shared locks.
+				return false;
+			}
+		}
+		// Offline SQL generation relies on the documented server prerequisite.
+		return true;
 	}
 
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
@@ -652,7 +698,7 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return TransactSQLLockingSupport.SYBASE_ASE;
+		return lockingSupport;
 	}
 
 	@Override

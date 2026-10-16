@@ -1,10 +1,18 @@
 package org.hibernate.dialect.sql.ast.internal;
 
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Locking;
+import org.hibernate.Timeouts;
+import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
+import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
@@ -24,6 +32,10 @@ import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
 import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
@@ -37,6 +49,7 @@ import org.hibernate.sql.ast.spi.query.select.QueryGroup;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -50,6 +63,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
 	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
+	private final Set<QuerySpec> lockingSetQueryArms = new HashSet<>();
 
 	public SybaseASESqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
 		super( request );
@@ -168,6 +182,15 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
+		if ( getSqlAst() instanceof SelectStatement select && select.getQueryPart() == querySpec
+				&& needsLocking( querySpec )
+				&& getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI
+				&& LockingSqlRewriterSupport.interpretLockKind( getLockOptions() ) == PessimisticLockKind.UPDATE ) {
+			validateExclusiveSkipLockedQuery( querySpec );
+		}
+		if ( lockingSetQueryArms.contains( querySpec ) ) {
+			setLockingTarget( querySpec );
+		}
 		final var helper = currentFullJoinEmulationHelper();
 		final boolean needsNestedHelper =
 				helper.hasActiveFullJoinEmulation()
@@ -189,6 +212,90 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 	}
 
+	private void validateExclusiveSkipLockedQuery(QuerySpec querySpec) {
+		if ( querySpec.getSelectClause().isDistinct() ) {
+			throw unsupportedExclusiveSkipLockedShape( "DISTINCT" );
+		}
+		if ( querySpec.getHavingClauseRestrictions() != null ) {
+			throw unsupportedExclusiveSkipLockedShape( "HAVING" );
+		}
+		if ( !querySpec.getGroupByClauseExpressions().isEmpty() ) {
+			throw unsupportedExclusiveSkipLockedShape( "GROUP BY" );
+		}
+		if ( hasAggregateFunctions( querySpec ) ) {
+			throw unsupportedExclusiveSkipLockedShape( "aggregate functions" );
+		}
+		querySpec.accept( new AbstractSqlAstWalker() {
+			@Override
+			public void visitQuerySpec(QuerySpec nested) {
+				if ( nested != querySpec ) {
+					throw unsupportedExclusiveSkipLockedShape( "subqueries" );
+				}
+				super.visitQuerySpec( nested );
+			}
+
+			@Override
+			public void visitQueryGroup(QueryGroup group) {
+				throw unsupportedExclusiveSkipLockedShape( "subqueries" );
+			}
+
+			@Override
+			public void visitTableGroupJoin(TableGroupJoin join) {
+				if ( join.getJoinType() == SqlAstJoinType.FULL ) {
+					throw unsupportedExclusiveSkipLockedShape( "FULL JOIN emulation" );
+				}
+				super.visitTableGroupJoin( join );
+			}
+
+			@Override
+			public void visitNamedTableReference(NamedTableReference tableReference) {
+				if ( tableReference instanceof UnionTableReference
+						&& tableReference.getTableExpression().startsWith( "(" ) ) {
+					throw unsupportedExclusiveSkipLockedShape( "union table references" );
+				}
+			}
+		} );
+	}
+
+	private static IllegalQueryOperationException unsupportedExclusiveSkipLockedShape(String shape) {
+		return new IllegalQueryOperationException(
+				"Sybase ASE does not support exclusive skip-locked locking with " + shape );
+	}
+
+	@Override
+	public void visitQueryGroup(QueryGroup queryGroup) {
+		if ( getSqlAst() instanceof SelectStatement select
+				&& select.getQueryPart() == queryGroup
+				&& needsLocking( queryGroup.getFirstQuerySpec() )
+				&& getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI ) {
+			final var kind = LockingSqlRewriterSupport.interpretLockKind( getLockOptions() );
+			if ( kind == PessimisticLockKind.UPDATE ) {
+				throw new IllegalQueryOperationException(
+						"Sybase ASE does not support exclusive skip-locked locking of set queries (UNION, INTERSECT, EXCEPT)" );
+			}
+			queryGroup.visitQuerySpecs( lockingSetQueryArms::add );
+			try {
+				renderQueryGroupWithPagination( queryGroup );
+				appendSql( getDialect().getLockingSupport().getLockingClauseRenderer().render(
+						new LockingClauseRequest( kind, Timeouts.SKIP_LOCKED, List.of() ) ) );
+			}
+			finally {
+				lockingSetQueryArms.clear();
+				setLockingTarget( queryGroup.getFirstQuerySpec() );
+			}
+		}
+		else {
+			renderQueryGroupWithPagination( queryGroup );
+		}
+	}
+
+	@Override
+	protected void visitForUpdateClause(QuerySpec querySpec) {
+		if ( !lockingSetQueryArms.contains( querySpec ) ) {
+			super.visitForUpdateClause( querySpec );
+		}
+	}
+
 	@Override
 	protected void renderSelectClause(SelectClause selectClause) {
 		if ( !currentFullJoinEmulationHelper().renderSelectClauseIfNeeded( selectClause ) ) {
@@ -196,17 +303,22 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 	}
 
-	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
-		if ( queryGroup.hasSortSpecifications() || queryGroup.hasOffsetOrFetchClause() ) {
+	private void renderQueryGroupWithPagination(QueryGroup queryGroup) {
+		if ( queryGroup.hasSortSpecifications() || queryGroup.hasOffsetOrFetchClause()
+				|| queryGroup.isRoot() && hasLimit() ) {
 			appendSql( "select " );
-			renderTopClause(
-					queryGroup.getOffsetClauseExpression(),
-					queryGroup.getFetchClauseExpression(),
-					queryGroup.getFetchClauseType(),
-					true,
-					false
-			);
+			if ( queryGroup.isRoot() && hasLimit() ) {
+				renderTopClause( getOffsetParameter(), getLimitParameter(), FetchClauseType.ROWS_ONLY, true, false );
+			}
+			else {
+				renderTopClause(
+						queryGroup.getOffsetClauseExpression(),
+						queryGroup.getFetchClauseExpression(),
+						queryGroup.getFetchClauseType(),
+						true,
+						false
+				);
+			}
 			appendSql( "* from (" );
 			renderQueryGroupWithoutOrderByAndOffsetFetch( queryGroup );
 			appendSql( ") grp_(c0" );

@@ -8,7 +8,10 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.internal.TableLockHintRendererSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -199,6 +202,16 @@ public class SimpleSelect implements RestrictionRenderingContext {
 		applyFromClause( buf );
 		applyWhereClause( buf );
 		applyOrderBy( buf );
+
+		// Table hints are already rendered by applyFromClause(). Some profiles
+		// additionally need a statement-level clause to retain those locks.
+		if ( lockOptions != null
+				&& dialect.getLockingSupport().getMetadata().getPessimisticLockStyle() == PessimisticLockStyle.TABLE_HINT
+				&& LockingSqlRewriterSupport.interpretLockKind( lockOptions ) != PessimisticLockKind.NONE ) {
+			buf.append( dialect.getLockingSupport().getLockingClauseRenderer().render( new LockingClauseRequest(
+					LockingSqlRewriterSupport.interpretLockKind( lockOptions ),
+					LockingSqlRewriterSupport.effectiveTimeout( lockOptions ), List.of() ) ) );
+		}
 
 		final String selectString = (lockOptions != null)
 				? LockingSqlRewriterSupport.rewrite(

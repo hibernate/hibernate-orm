@@ -2369,9 +2369,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		try {
 			final var querySpec = currentQuerySpec();
 			final var sqlSelectClause = querySpec.getSelectClause();
-			if ( sqmQueryPartStack.depth() == 1 && currentClauseStack.depth() == 1 ) {
-				// these 2 conditions combined *should* indicate we have the
-				// root query-spec of a top-level select statement
+			if ( contributesToTopLevelSelectClause() ) {
+				// Include every arm of a top-level set query, but not nested subqueries.
 				rootPathsForLockingCollector = querySpec::applyRootPathForLocking;
 			}
 			if ( selectClause.getSelections().isEmpty() ) {

@@ -564,6 +564,8 @@ exec sp_configure 'heap memory per user', 0, '64K'
 go
 exec sp_configure 'wait on uncommitted insert', 1
 go
+exec sp_configure 'select for update', 1
+go
 exec sp_dboption $SYBASE_DB, 'abort tran on log full', true
 go
 exec sp_dboption $SYBASE_DB, 'allow nulls by default', true

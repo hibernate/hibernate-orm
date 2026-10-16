@@ -25,14 +25,18 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource, LockOptions lockOptions) {
 		if ( isCacheable ( keySource ) ) {
 			final Object query = keySource.getQueryStringCacheKey();
+			final boolean hasPagination = keySource.getQueryOptions().hasLimit();
+			final int baseHashCode = query instanceof SqmStatement<?> statement ? statement.cacheHashCode() : query.hashCode();
+			final int hashCode = 31 * baseHashCode + (hasPagination ? 1 : 0);
 			return new SqmInterpretationsKey(
 					query,
 					keySource.unnamedParameterIndices(),
-					query instanceof SqmStatement<?> statement ? statement.cacheHashCode() : query.hashCode(),
+					hashCode,
 					keySource.getResultType(),
 					lockOptions,
 					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() ),
-					keySource.getLoadQueryInfluencers().getTemporalIdentifier() != null
+					keySource.getLoadQueryInfluencers().getTemporalIdentifier() != null,
+					hasPagination
 			);
 		}
 		else {
@@ -93,6 +97,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	private final LockOptions lockOptions;
 	private final Collection<String> enabledFetchProfiles;
 	private final boolean historical;
+	private final boolean hasPagination;
 	private final int hashCode;
 
 	private SqmInterpretationsKey(
@@ -102,8 +107,10 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			Class<?> resultType,
 			LockOptions lockOptions,
 			Collection<String> enabledFetchProfiles,
-			boolean historical) {
+			boolean historical,
+			boolean hasPagination) {
 		this.historical = historical;
+		this.hasPagination = hasPagination;
 		assert query.getClass() == String.class || query instanceof SqmStatement<?>;
 		this.query = query;
 		this.unnamedParameterIndices = unnamedParameterIndices;
@@ -123,7 +130,8 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 				// Since lock options might be mutable, we need a copy for the cache key
 				lockOptions.makeDefensiveCopy(),
 				enabledFetchProfiles,
-				historical
+				historical,
+				hasPagination
 		);
 	}
 
@@ -148,7 +156,8 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			&& Objects.equals( this.resultType, that.resultType )
 			&& Objects.equals( this.lockOptions, that.lockOptions )
 			&& Objects.equals( this.enabledFetchProfiles, that.enabledFetchProfiles )
-			&& this.historical == that.historical;
+			&& this.historical == that.historical
+			&& this.hasPagination == that.hasPagination;
 	}
 
 	@Override

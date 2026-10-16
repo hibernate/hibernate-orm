@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.hibernate.annotations.SQLRestriction;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -60,6 +62,7 @@ public class WhereAnnotationAndJoinedInheritanceTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testCriteriaQuery(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -108,6 +111,7 @@ public class WhereAnnotationAndJoinedInheritanceTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testCriteriaQuery2(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

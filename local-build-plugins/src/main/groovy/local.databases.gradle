@@ -89,8 +89,9 @@ ext {
                     'jdbc.driver': 'net.sourceforge.jtds.jdbc.Driver',
                     'jdbc.user'  : 'hibernate_orm_test',
                     'jdbc.pass'  : 'hibernate_orm_test',
-                    // Disable prepared statement caching to avoid issues with changing schemas
-                    'jdbc.url'   : 'jdbc:jtds:sybase://' + dbHost + ':9000/hibernate_orm_test_$worker;maxStatements=0;cacheMetaData=false',
+                    // Disable prepared statement caching to avoid issues with changing schemas.
+                    // Match jTDS's startup flag to ASE's CHAINED OFF so Hibernate can apply the requested mode.
+                    'jdbc.url'   : 'jdbc:jtds:sybase://' + dbHost + ':9000/hibernate_orm_test_$worker;maxStatements=0;cacheMetaData=false;autoCommit=true',
                     'jdbc.datasource' : 'net.sourceforge.jtds.jdbc.Driver',
 //                        'jdbc.datasource' : 'net.sourceforge.jtds.jdbcx.JtdsDataSource',
                     'connection.init_sql' : 'set ansinull on'

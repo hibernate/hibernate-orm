@@ -44,32 +44,32 @@ jobs:
     permissions:
       contents: read
     name: OpenJDK 25 - ${{matrix.rdbms}}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runs-on }}
     # Default per-job timeout; individual matrix entries can override it via `timeout`.
     timeout-minutes: ${{ matrix.timeout != '' && matrix.timeout || 60 }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - rdbms: h2
-          - rdbms: hsqldb
-          - rdbms: mysql
-          - rdbms: mariadb
-          - rdbms: postgis
-          - rdbms: spannerpgsql
-          - rdbms: spanner
-          - rdbms: edb
-          - rdbms: oracle
-          - rdbms: db2
-          - rdbms: mssql
-          - rdbms: sybase
-            # Sybase runs are slower than the others; give them a wider window.
-            timeout: 120
-    # Running with CockroachDB requires at least 2-4 vCPUs, which we don't have on GH Actions runners
-    #          - rdbms: cockroachdb
+          - { rdbms: h2, runs-on: 'ubuntu-latest' }
+          - { rdbms: hsqldb, runs-on: 'ubuntu-latest' }
+          - { rdbms: mysql, runs-on: 'ubuntu-latest' }
+          - { rdbms: mariadb, runs-on: 'ubuntu-latest' }
+          - { rdbms: postgis, runs-on: 'ubuntu-latest' }
+          - { rdbms: spannerpgsql, runs-on: 'runs-on/fleet=linux-standard/env=commonhaus' }
+          - { rdbms: spanner, runs-on: 'runs-on/fleet=linux-standard/env=commonhaus' }
+          - { rdbms: edb, runs-on: 'runs-on/fleet=linux-standard/env=commonhaus' }
+          - { rdbms: oracle, runs-on: 'runs-on/fleet=linux-standard/env=ibm' }
+          - { rdbms: db2, runs-on: 'runs-on/fleet=linux-standard/env=ibm' }
+          - { rdbms: mssql, runs-on: 'runs-on/fleet=linux-standard/env=commonhaus' }
+          - { rdbms: sybase, runs-on: 'runs-on/fleet=linux-standard/env=ibm', timeout: 120 }
+          - { rdbms: cockroachdb, runs-on: 'runs-on/fleet=linux-standard/env=commonhaus' }
     # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
     #          - rdbms: hana
     steps:
+      - name: Set up RunsOn
+        if: ${{ contains(matrix.runs-on, 'runs-on') }}
+        uses: runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3 # v2.5.0
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -702,11 +702,295 @@ jobs:
       - name: Omit produced artifacts from build cache
         run: ./ci/before-cache.sh
 
+  # JDK compatibility tests.
+  # JDK 17 (build+test) and JDK 25 --enable-preview run on all events.
+  # Nightly builds intentionally stay on free runners (queue times don't matter).
+  build-jdk:
+    if: github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main')
+    permissions:
+      contents: read
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {
+            name: "JDK 17 (build)",
+            runs-on: 'ubuntu-latest',
+            main-jdk: 17,
+            gradle-args: '-Porm.jdk.min=17 -PskipErrorProne=true'
+          }
+          - {
+            name: "JDK 17 (test)",
+            runs-on: 'ubuntu-latest',
+            test-jdk: 17
+          }
+          - {
+            name: "JDK 21",
+            runs-on: 'runs-on/fleet=linux-standard/env=ibm',
+            test-jdk: 21
+          }
+          - {
+            name: "JDK 25 (preview)",
+            runs-on: 'ubuntu-latest',
+            test-jdk: 25,
+            test-jdk-args: '--enable-preview'
+          }
+    steps:
+      - name: Set up RunsOn
+        if: ${{ contains(matrix.runs-on, 'runs-on') }}
+        uses: runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3 # v2.5.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+      - name: Set up test JDK ${{ matrix.test-jdk }}
+        if: ${{ matrix.test-jdk && matrix.test-jdk != 25 }}
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.test-jdk }}
+      - name: Capture test JDK home
+        if: ${{ matrix.test-jdk && matrix.test-jdk != 25 }}
+        run: echo "TEST_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+      - name: Set up main JDK ${{ matrix.main-jdk || 25 }}
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.main-jdk || 25 }}
+      - name: Capture main JDK home
+        run: echo "MAIN_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+      - name: Set up default JDK 25
+        if: ${{ matrix.main-jdk && matrix.main-jdk != 25 }}
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: 25
+
+      - name: Generate cache key
+        id: cache-key
+        env:
+          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
+        run: |
+          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
+          CURRENT_DAY=$(/bin/date -u "+%d")
+          ROOT_CACHE_KEY="buildtool-cache"
+          {
+            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
+            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
+            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Cache Maven/Gradle Dependency/Dist Caches
+        id: cache-maven
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name != 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+      - name: Restore Maven/Gradle Dependency/Dist Caches
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name == 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+
+      - name: Run build script
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          read -ra extra_gradle_args <<< "$EXTRA_GRADLE_ARGS"
+          jdk_args=(-Porg.gradle.java.installations.paths="$JAVA_HOME${MAIN_JDK_HOME:+,$MAIN_JDK_HOME}${TEST_JDK_HOME:+,$TEST_JDK_HOME}")
+          if [ -n "$MAIN_JDK_VERSION" ]; then
+            jdk_args+=("-Pmain.jdk.version=$MAIN_JDK_VERSION")
+          fi
+          if [ -n "$TEST_JDK_VERSION" ]; then
+            jdk_args+=("-Ptest.jdk.version=$TEST_JDK_VERSION")
+          fi
+          if [ -n "$TEST_JDK_LAUNCHER_ARGS" ]; then
+            jdk_args+=("-Ptest.jdk.launcher.args=$TEST_JDK_LAUNCHER_ARGS")
+          fi
+          ./ci/build-github.sh "${common_gradle_args[@]}" "${extra_gradle_args[@]}" "${jdk_args[@]}"
+        shell: bash
+        env:
+          MAIN_JDK_VERSION: ${{ matrix.main-jdk }}
+          TEST_JDK_VERSION: ${{ matrix.test-jdk }}
+          TEST_JDK_LAUNCHER_ARGS: ${{ matrix.test-jdk-args }}
+          EXTRA_GRADLE_ARGS: ${{ matrix.gradle-args }}
+          JPA_PREVIEW: "true"
+          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
+          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
+
+      - name: Upload GitHub Actions artifact for the Develocity build scan
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
+        with:
+          name: build-scan-data-${{ matrix.name }}
+          path: ~/.gradle/build-scan-data
+      - name: Store coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: build-coverage-data-${{ matrix.name }}
+          retention-days: 1
+          path: |
+            ./**/target/jacoco/*.exec
+      - name: Upload test reports (if Gradle failed)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: test-reports-${{ matrix.name }}
+          path: |
+            ./**/target/reports/tests/
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh
+
+  # JDK compatibility tests for versions > 25 (after-merge only).
+  # Nightly builds intentionally stay on free runners (queue times don't matter).
+  build-jdk-after-merge:
+    if: github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm'
+    permissions:
+      contents: read
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {
+            name: "JDK 26",
+            runs-on: 'runs-on/fleet=linux-standard/env=ibm',
+            test-jdk: 26,
+            test-jdk-args: '--enable-preview --illegal-final-field-mutation=deny'
+          }
+          - {
+            name: "JDK 27",
+            runs-on: 'runs-on/fleet=linux-standard/env=ibm',
+            test-jdk: 27,
+            test-jdk-args: '--enable-preview --illegal-final-field-mutation=deny',
+            gradle-args: '-PskipJacoco=true'
+          }
+          - {
+            name: "JDK 28",
+            runs-on: 'runs-on/fleet=linux-standard/env=ibm',
+            test-jdk: 28,
+            test-jdk-args: '--enable-preview --illegal-final-field-mutation=deny -Dnet.bytebuddy.experimental=true',
+            gradle-args: '-PskipJacoco=true'
+          }
+    steps:
+      - name: Set up RunsOn
+        if: ${{ contains(matrix.runs-on, 'runs-on') }}
+        uses: runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3 # v2.5.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+      - name: Set up test JDK ${{ matrix.test-jdk }}
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.test-jdk }}
+      - name: Capture test JDK home
+        run: echo "TEST_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+      - name: Set up Java 25
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: 25
+
+      - name: Generate cache key
+        id: cache-key
+        env:
+          CURRENT_BRANCH: ${{ github.base_ref || github.ref_name }}
+        run: |
+          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
+          CURRENT_DAY=$(/bin/date -u "+%d")
+          ROOT_CACHE_KEY="buildtool-cache"
+          {
+            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
+            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
+            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Cache Maven/Gradle Dependency/Dist Caches
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+
+      - name: Run build script
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          read -ra extra_gradle_args <<< "$EXTRA_GRADLE_ARGS"
+          ./ci/build-github.sh "${common_gradle_args[@]}" "${extra_gradle_args[@]}" \
+              -Ptest.jdk.version="$TEST_JDK_VERSION" \
+              "-Ptest.jdk.launcher.args=$TEST_JDK_LAUNCHER_ARGS" \
+              -Porg.gradle.java.installations.paths="$JAVA_HOME${TEST_JDK_HOME:+,$TEST_JDK_HOME}"
+        shell: bash
+        env:
+          TEST_JDK_VERSION: ${{ matrix.test-jdk }}
+          TEST_JDK_LAUNCHER_ARGS: ${{ matrix.test-jdk-args }}
+          EXTRA_GRADLE_ARGS: ${{ matrix.gradle-args }}
+          JPA_PREVIEW: "true"
+          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
+          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
+
+      - name: Upload GitHub Actions artifact for the Develocity build scan
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: "${{ !cancelled() }}"
+        with:
+          name: build-scan-data-${{ matrix.name }}
+          path: ~/.gradle/build-scan-data
+      - name: Store coverage report
+        if: ${{ !matrix.gradle-args || !contains(matrix.gradle-args, 'skipJacoco') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: build-coverage-data-${{ matrix.name }}
+          retention-days: 1
+          path: |
+            ./**/target/jacoco/*.exec
+      - name: Upload test reports (if Gradle failed)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: test-reports-${{ matrix.name }}
+          path: |
+            ./**/target/reports/tests/
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh
+
   prepare-sonar-bundle:
     name: Prepare build bundle for Sonar scanner
     needs:
       - build
       - otp
+      - build-jdk
+      - build-jdk-after-merge
     if: |
       (github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main'))
       && always() && !cancelled()

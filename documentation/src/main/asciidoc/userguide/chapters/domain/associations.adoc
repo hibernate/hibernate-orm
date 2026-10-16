@@ -863,7 +863,7 @@ Therefore, the `@JoinColumnOrFormula` annotation is used to define a custom join
 [[associations-one-to-one-formulas]]
 ==== One-to-one associations using formulas
 
-Starting with Hibernate 8.0, a `@OneToOne` association may use SQL formulas to identify the associated row, including a combination of formulas and read-only physical join columns.
+A `@OneToOne` association may use SQL formulas to identify the associated row, including a combination of formulas and read-only physical join columns.
 This supports mappings previously expressed using formulas in an `hbm.xml` `<one-to-one>`.
 The join must contain at least one formula and reference the entire primary key of the target entity for the optional one-to-one behavior described here.
 
@@ -885,8 +885,9 @@ private Address address;
 
 The join compares `Person.name` with `Address.personName`, and the SQL literal `'HOME'` with `Address.addressType`.
 A second association using `'MAILING'` may independently select the mailing address.
-Use the actual mapped column names, including their case, in join-column declarations and SQL formula expressions.
-Formula expressions are native SQL and must be valid for the database in use.
+Join-column names and `referencedColumnName` values, including those in `@JoinFormula`, identify logical mapping column names, which Hibernate resolves using the <<PhysicalNamingStrategy,physical naming strategy>>.
+Formula expressions are native SQL and must use physical database column names, with the appropriate case and quoting for the database in use.
+Hibernate does not apply the naming strategy to column names embedded in a formula expression.
 
 A join may also consist entirely of formulas.
 For the same model, the equivalent declaration is:
@@ -909,7 +910,12 @@ With `optional = true`, an absent matching address is represented by `null`, wit
 The person may exist with a home address, a mailing address, both, or neither.
 Direct loading and left fetch joins preserve the person when an optional address is missing.
 As with other joins, an inner fetch join excludes a person for whom no matching address exists.
-Optional formula one-to-one associations are resolved eagerly, including when lazy fetching is requested.
+
+[IMPORTANT]
+====
+Without bytecode enhancement, optional formula one-to-one associations are resolved eagerly, including when `FetchType.LAZY` is requested.
+<<BytecodeEnhancement-lazy-loading,Bytecode enhancement>> can allow lazy fetching; declaring `FetchType.LAZY` alone does not guarantee deferred loading.
+====
 
 Formula expressions and read-only join columns do not receive values from association assignments.
 Assigning `person.address` does not copy an identifier from the address into the person or update the discriminator used by the formula.

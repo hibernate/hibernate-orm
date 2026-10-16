@@ -165,7 +165,7 @@ public class CachingGuideTests {
 		// Deliberately bypass Hibernate invalidation, simulating an external writer.
 		scope.inTransaction( session -> session.doWork( connection -> {
 			try ( var statement = connection.createStatement() ) {
-				statement.executeUpdate( "update cache_guide_person set name = 'External'" );
+				statement.executeUpdate( "update cache_guide_person set name = 'External' where id in (1, 2)" );
 			}
 		} ) );
 		assertThat( scope.<List<String>>fromTransaction( session -> names( session, 1L, CacheMode.REFRESH ) ) )

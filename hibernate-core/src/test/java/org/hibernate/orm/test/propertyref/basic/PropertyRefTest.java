@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/propertyref/basic/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/propertyref/basic/Person.orm.xml"
 
 )
 @SessionFactory(

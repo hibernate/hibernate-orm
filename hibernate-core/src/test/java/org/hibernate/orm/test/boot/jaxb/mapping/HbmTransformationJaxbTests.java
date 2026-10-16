@@ -1580,7 +1580,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testOneToOneFormulaTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "org/hibernate/orm/test/onetoone/formula/Person.hbm.xml", scope, transformed -> {
+		transformAndVerify( "xml/jaxb/mapping/one-to-one-formula/Person.hbm.xml", scope, transformed -> {
 			final JaxbEntityImpl personEntity = transformed.getEntities().stream()
 					.filter( e -> "Person".equals( e.getClazz() ) )
 					.findFirst()
@@ -1610,7 +1610,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testOneToOneFormulaTransformationBootModelParity(ServiceRegistryScope scope) {
-		transformAndVerify( "org/hibernate/orm/test/onetoone/formula/Person.hbm.xml", scope, transformed -> {
+		transformAndVerify( "xml/jaxb/mapping/one-to-one-formula/Person.hbm.xml", scope, transformed -> {
 			final MetadataImplementor rebuilt = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
 					.addMappingXmlBinding( new Binding<>(
 							transformed,

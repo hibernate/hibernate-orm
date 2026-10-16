@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-4825" )
-@DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass/alias/mapping.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass/alias/mapping.orm.xml")
 @SessionFactory
 public class SellCarTest {
 	@BeforeEach

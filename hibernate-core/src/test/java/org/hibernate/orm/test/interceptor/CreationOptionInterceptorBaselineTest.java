@@ -86,7 +86,7 @@ class CreationOptionInterceptorBaselineTest {
 
 	private static SessionFactoryImplementor buildSessionFactory(StandardServiceRegistry ssr) {
 		final Metadata metadata = new MetadataSources( ssr )
-				.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+				.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 				.buildMetadata();
 		return (SessionFactoryImplementor) metadata.buildSessionFactory();
 	}

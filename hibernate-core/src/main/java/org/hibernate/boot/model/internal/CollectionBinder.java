@@ -1690,7 +1690,7 @@ public abstract class CollectionBinder {
 		}
 
 		bindSynchronize();
-		bindFilters( false );
+		bindFilters( false, false );
 		handleWhere( false );
 
 		final var targetEntity = persistentClasses.get( getElementType().getName() );
@@ -1771,20 +1771,20 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private void bindFilters(boolean hasAssociationTable) {
+	private void bindFilters(boolean hasAssociationTable, boolean hasSeparateTargetTable) {
 		final var context = modelsContext();
 		property.forEachAnnotationUsage( Filter.class, context,
-				usage -> addFilter( hasAssociationTable, usage ) );
+				usage -> addFilter( hasSeparateTargetTable, usage ) );
 		property.forEachAnnotationUsage( FilterJoinTable.class, context,
 				usage -> addFilterJoinTable( hasAssociationTable, usage ) );
 	}
 
-	private void addFilter(boolean hasAssociationTable, Filter filter) {
+	private void addFilter(boolean hasSeparateTargetTable, Filter filter) {
 		final Map<String,String> aliasTableMap = new HashMap<>();
 		final Map<String,String> aliasEntityMap = new HashMap<>();
 		fillAliasMaps( filter.aliases(), aliasTableMap, aliasEntityMap );
 		final String filterCondition = getFilterCondition( filter );
-		if ( hasAssociationTable ) {
+		if ( hasSeparateTargetTable ) {
 			collection.addManyToManyFilter(
 					filter.name(),
 					filterCondition,
@@ -2173,7 +2173,8 @@ public abstract class CollectionBinder {
 		}
 
 		bindSynchronize();
-		bindFilters( isCollectionOfEntities );
+		// A @ManyToAny association has a join table, but no single target table for @Filter.
+		bindFilters( isCollectionOfEntities || isManyToAny, isCollectionOfEntities );
 		handleWhere( isCollectionOfEntities );
 
 		bindCollectionSecondPass( targetEntity, joinColumns );

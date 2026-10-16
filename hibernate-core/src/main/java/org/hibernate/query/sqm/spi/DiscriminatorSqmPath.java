@@ -2,10 +2,6 @@ package org.hibernate.query.sqm.spi;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
-import jakarta.persistence.criteria.ComparableExpression;
-import jakarta.persistence.criteria.NumericExpression;
-import jakarta.persistence.criteria.TemporalExpression;
-import jakarta.persistence.criteria.TextExpression;
 import jakarta.persistence.metamodel.BooleanAttribute;
 import jakarta.persistence.metamodel.ComparableAttribute;
 import jakarta.persistence.metamodel.MapAttribute;
@@ -18,10 +14,14 @@ import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
+import org.hibernate.query.sqm.tree.spi.domain.SqmBooleanPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmNumericPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPluralPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmTemporalPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmTextPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.spi.expression.SqmBooleanExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmComparableExpression;
 
 import java.time.temporal.Temporal;
 import java.util.Collection;
@@ -72,31 +72,31 @@ public interface DiscriminatorSqmPath<T> extends SqmPath<T> {
 
 	@Nonnull
 	@Override
-	default SqmBooleanExpression get(@Nonnull BooleanAttribute<? super T> attribute) {
+	default SqmBooleanPath get(@Nonnull BooleanAttribute<? super T> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
 	@Nonnull
 	@Override
-	default <C extends Comparable<? super C>> ComparableExpression<C> get(@Nonnull ComparableAttribute<? super T, C> attribute) {
+	default <C extends Comparable<? super C>> SqmComparableExpression<C> get(@Nonnull ComparableAttribute<? super T, C> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
 	@Nonnull
 	@Override
-	default <A extends Temporal & Comparable<? super A>> TemporalExpression<A> get(@Nonnull TemporalAttribute<? super T, A> attribute) {
+	default <A extends Temporal & Comparable<? super A>> SqmTemporalPath<A> get(@Nonnull TemporalAttribute<? super T, A> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
 	@Nonnull
 	@Override
-	default <N extends Number & Comparable<N>> NumericExpression<N> get(@Nonnull NumericAttribute<? super T, N> attribute) {
+	default <N extends Number & Comparable<N>> SqmNumericPath<N> get(@Nonnull NumericAttribute<? super T, N> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
 	@Nonnull
 	@Override
-	default TextExpression get(@Nonnull TextAttribute<? super T> attribute) {
+	default SqmTextPath get(@Nonnull TextAttribute<? super T> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 

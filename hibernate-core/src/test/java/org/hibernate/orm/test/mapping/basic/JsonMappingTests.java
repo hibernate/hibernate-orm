@@ -17,7 +17,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
@@ -293,7 +292,6 @@ public abstract class JsonMappingTests {
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Blobs are not allowed in this expression")
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support comparing JSONB type")
-	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner doesn't support comparing JSON type")
 	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

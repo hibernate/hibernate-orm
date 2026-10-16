@@ -1,9 +1,6 @@
 package org.hibernate.dialect.sql.ast.spi;
 
-
-
 import java.util.Locale;
-
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.Nulls;
@@ -448,6 +445,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected final void setLockingTarget(QuerySpec querySpec) {
+		if ( lockingTarget != querySpec ) {
+			lockingClauseStrategy = null;
+		}
 		lockingTarget = querySpec;
 	}
 

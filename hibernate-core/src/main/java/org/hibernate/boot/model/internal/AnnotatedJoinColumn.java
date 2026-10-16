@@ -227,6 +227,32 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				: buildImplicitInheritanceJoinColumn( parent, context, defaultColumnName );
 	}
 
+	/**
+	 * Called for {@link jakarta.persistence.InheritanceType#JOINED} entities with composite IDs.
+	 * This method handles a specific column from a composite identifier.
+	 *
+	 * @param primaryKeyJoinColumn the primary key join column annotation (may be null)
+	 * @param joinColumn the join column annotation (may be null)
+	 * @param identifier the identifier value (may be composite)
+	 * @param columnIndex the index of the column in the composite identifier
+	 * @param parent the parent join columns
+	 * @param context the metadata building context
+	 * @return the built join column
+	 */
+	public static AnnotatedJoinColumn buildInheritanceJoinColumn(
+			PrimaryKeyJoinColumn primaryKeyJoinColumn,
+			JoinColumn joinColumn,
+			Value identifier,
+			int columnIndex,
+			AnnotatedJoinColumns parent,
+			MetadataBuildingContext context) {
+		final String defaultColumnName = context.getMetadataCollector()
+				.getLogicalColumnName( identifier.getTable(), identifier.getColumns().get(columnIndex).getQuotedName() );
+		return primaryKeyJoinColumn != null || joinColumn != null
+				? buildExplicitInheritanceJoinColumn( primaryKeyJoinColumn, joinColumn, parent, context, defaultColumnName )
+				: buildImplicitInheritanceJoinColumn( parent, context, defaultColumnName );
+	}
+
 	private static AnnotatedJoinColumn buildExplicitInheritanceJoinColumn(
 			PrimaryKeyJoinColumn primaryKeyJoinColumn,
 			JoinColumn joinColumn,

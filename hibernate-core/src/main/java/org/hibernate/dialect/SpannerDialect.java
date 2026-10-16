@@ -44,6 +44,7 @@ import org.hibernate.dialect.sql.ast.spi.MutationKind;
 import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
 import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
 import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
 import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
 import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
 import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
@@ -90,6 +91,7 @@ import org.hibernate.dialect.pagination.spi.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.dialect.sequence.internal.SpannerSequenceSupport;
 import org.hibernate.dialect.schema.internal.SpannerDialectTableExporter;
+import org.hibernate.dialect.schema.internal.SpannerIndexExporter;
 import org.hibernate.dialect.type.spi.SpannerJdbcTypes;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
@@ -103,6 +105,7 @@ import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
@@ -234,6 +237,7 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 
 	private final UniqueDelegate SPANNER_UNIQUE_DELEGATE = UniqueDelegates.alwaysIndex( this );
 	private final Exporter<Table> SPANNER_TABLE_EXPORTER = new SpannerDialectTableExporter( this );
+	private final Exporter<Index> SPANNER_INDEX_EXPORTER = new SpannerIndexExporter( this );
 	private final SequenceSupport SPANNER_SEQUENCE_SUPPORT = new SpannerSequenceSupport(this);
 
 	private static final Pattern NOT_NULL_PATTERN = Pattern.compile( ".*Cannot specify a null value for column(?:[:]? (.*?) in table|: (.*?(?=$))).*" );
@@ -355,21 +359,21 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( JSON, columnType( JSON ),this ));
 		ddlTypeRegistry.addDescriptor(
-				StandardDdlTypes.builder( VARCHAR, columnType( VARCHAR ), this )
+				StandardDdlTypes.builder( VARCHAR, columnType( LONG32VARCHAR ), this )
 						.castTypeNamePattern( castType( VARCHAR ) )
 						.castTypeName( castType( VARCHAR ) )
 				.withTypeCapacity( getTypeSizingProfile().maxVarcharLength(), columnType( VARCHAR ) )
 				.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				StandardDdlTypes.builder( NVARCHAR, columnType( NVARCHAR ), this )
+				StandardDdlTypes.builder( NVARCHAR, columnType( LONG32NVARCHAR ), this )
 						.castTypeNamePattern( castType( NVARCHAR ) )
 						.castTypeName( castType( NVARCHAR ) )
 				.withTypeCapacity( getTypeSizingProfile().maxNVarcharLength(), columnType( NVARCHAR ) )
 				.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				StandardDdlTypes.builder( VARBINARY, columnType( VARBINARY ), this )
+				StandardDdlTypes.builder( VARBINARY, columnType( LONG32VARBINARY ), this )
 						.castTypeNamePattern( castType( VARBINARY ) )
 						.castTypeName( castType( VARBINARY ) )
 				.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), columnType( VARBINARY ) )
@@ -1158,6 +1162,11 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 	}
 
 	@Override
+	public Exporter<Index> getIndexExporter() {
+		return SPANNER_INDEX_EXPORTER;
+	}
+
+	@Override
 	@SPI({ USE, IMPLEMENT })
 	public boolean supports(org.hibernate.dialect.constraint.spi.CheckConstraintPlacement placement) {
 		return placement == org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.TABLE;
@@ -1439,6 +1448,16 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 		return MutationSyntaxSupport.builder()
 				.capability( MutationKind.UPDATE, MutationSyntaxCapability.REQUIRES_WHERE )
 				.capability( MutationKind.DELETE, MutationSyntaxCapability.REQUIRES_WHERE )
+				.build();
+	}
+
+	@Override
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capabilities(
+						PredicateSupport.Capability.DISTINCT_FROM,
+						PredicateSupport.Capability.TRUTHNESS
+				)
 				.build();
 	}
 

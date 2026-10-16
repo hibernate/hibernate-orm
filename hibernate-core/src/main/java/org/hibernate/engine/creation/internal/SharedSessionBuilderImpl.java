@@ -12,6 +12,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
+import java.util.Objects;
+
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
@@ -23,8 +25,6 @@ public abstract class SharedSessionBuilderImpl
 
 	private final SharedSessionContractImplementor original;
 	private final SharedStatefulOptions options;
-
-	private boolean tenantIdChanged;
 	private boolean readOnlyChanged;
 
 	public SharedSessionBuilderImpl(SharedSessionContractImplementor original) {
@@ -58,9 +58,10 @@ public abstract class SharedSessionBuilderImpl
 	@Nonnull
 	public SessionImplementor open() {
 		CORE_LOGGER.openingSession( options.getTenantIdentifierValue() );
-		if ( original.getFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
+		final var factoryOptions = original.getFactory().getSessionFactoryOptions();
+		if ( factoryOptions.isMultiTenancyEnabled() || factoryOptions.getMultiTenantConnectionStrategy() != null ) {
 			if ( options.isTransactionCoordinatorShared() ) {
-				if ( tenantIdChanged ) {
+				if ( !Objects.equals( original.getTenantIdentifierValue(), options.getTenantIdentifierValue() ) ) {
 					throw new SessionException(
 							"Cannot redefine the tenant identifier on a child session if the connection is reused" );
 				}
@@ -77,14 +78,6 @@ public abstract class SharedSessionBuilderImpl
 	@Nonnull
 	public SessionImplementor openSession() {
 		return open();
-	}
-
-	@Override
-	@Nonnull
-	public SharedSessionBuilderImplementor tenantIdentifier(Object tenantIdentifier) {
-		super.tenantIdentifier( tenantIdentifier );
-		tenantIdChanged = true;
-		return this;
 	}
 
 	@Override

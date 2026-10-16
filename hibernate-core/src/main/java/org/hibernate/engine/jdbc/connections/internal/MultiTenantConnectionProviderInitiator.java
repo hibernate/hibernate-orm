@@ -7,7 +7,9 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.resource.beans.internal.Helper;
@@ -15,6 +17,8 @@ import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CONNECTION_PROVIDER;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CONNECTION_STRATEGY;
+import static org.hibernate.MultiTenantConnectionStrategy.DATABASE;
 
 /**
  * A service initiator for the {@link MultiTenantConnectionProvider} service.
@@ -37,18 +41,26 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 
 	@Override
 	public MultiTenantConnectionProvider<?> initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
+		final var strategy = MultiTenancy.getConnectionStrategy( configurationValues );
 		if ( !configurationValues.containsKey( MULTI_TENANT_CONNECTION_PROVIDER ) ) {
-			return Helper.getBean(
+			final var bean = Helper.getBean(
 				Helper.getBeanContainer( registry ),
 				MultiTenantConnectionProvider.class,
 				true,
 				true,
 				null
 			);
+			return bean != null ? bean : strategy == DATABASE ? databaseProvider( configurationValues, registry ) : null;
 		}
 
 		final Object configValue = configurationValues.get( MULTI_TENANT_CONNECTION_PROVIDER );
 		if ( configValue == null ) {
+			if ( strategy == DATABASE ) {
+				return databaseProvider( configurationValues, registry );
+			}
+			if ( strategy != null ) {
+				return null;
+			}
 			// if they also specified the data source *name*, then let's assume they want
 			// DataSourceBasedMultiTenantConnectionProviderImpl
 			final Object dataSourceConfigValue = configurationValues.get( JdbcSettings.DATASOURCE );
@@ -68,6 +80,25 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 				throw new ServiceException( "Unable to instantiate specified multi-tenant connection provider [" + providerClass.getName() + "]", e );
 			}
 		}
+	}
+
+	private static MultiTenantConnectionProvider<?> databaseProvider(
+			Map<String, Object> settings, ServiceRegistryImplementor registry) {
+		// Inspect the binding without initiating ConnectionProvider, whose initiator
+		// itself needs to determine whether a MultiTenantConnectionProvider exists.
+		final var ordinaryProviderBinding = registry.locateServiceBinding( ConnectionProvider.class );
+		if ( settings.get( JdbcSettings.CONNECTION_PROVIDER ) != null
+				|| ordinaryProviderBinding != null && ordinaryProviderBinding.getService() != null ) {
+			throw new ConnectionProviderConfigurationException( "'" + MULTI_TENANT_CONNECTION_STRATEGY
+					+ "=DATABASE' conflicts with an explicitly configured or registered ConnectionProvider; "
+					+ "supply a MultiTenantConnectionProvider instead" );
+		}
+		if ( !(settings.get( JdbcSettings.DATASOURCE ) instanceof String name) || name.isBlank() ) {
+			throw new ConnectionProviderConfigurationException( "'" + MULTI_TENANT_CONNECTION_STRATEGY
+					+ "=DATABASE' requires '" + JdbcSettings.DATASOURCE
+					+ "' to name a datasource or context in JNDI, or a custom MultiTenantConnectionProvider" );
+		}
+		return new DataSourceBasedMultiTenantConnectionProviderImpl<>();
 	}
 
 	private static Class<? extends MultiTenantConnectionProvider<?>> providerClass(

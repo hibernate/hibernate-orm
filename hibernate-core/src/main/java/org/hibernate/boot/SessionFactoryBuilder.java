@@ -365,6 +365,8 @@ public interface SessionFactoryBuilder {
 	 * Note that this setting does not affect
 	 * {@linkplain org.hibernate.annotations.TenantId discriminator-based}
 	 * multitenancy.
+	 * An explicit {@link org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_CONNECTION_STRATEGY
+	 * connection strategy} takes precedence over this operation.
 	 *
 	 * @param enabled True if multi-tenancy in use via a {@code MultiTenantConnectionProvider}.
 	 *

@@ -15,6 +15,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
 import org.hibernate.callback.spi.ConfiguredInterceptor;
 import org.hibernate.LockOptions;
+import org.hibernate.MultiTenantConnectionStrategy;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
@@ -238,6 +239,12 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isMultiTenancyEnabled() {
 		return delegate.isMultiTenancyEnabled();
+	}
+
+	@Override
+	@Nullable
+	public MultiTenantConnectionStrategy getMultiTenantConnectionStrategy() {
+		return delegate.getMultiTenantConnectionStrategy();
 	}
 
 	@Override

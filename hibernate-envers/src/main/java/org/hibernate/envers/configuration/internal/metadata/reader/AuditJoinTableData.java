@@ -12,8 +12,12 @@ import java.util.List;
 
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.configuration.internal.metadata.ColumnNameIterator;
+import org.hibernate.models.spi.AnnotationTarget;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.JoinColumn;
+
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
 
 /**
  * A data class that represents an {@link AuditJoinTable} annotation.
@@ -37,9 +41,15 @@ public class AuditJoinTableData {
 	}
 
 	public AuditJoinTableData(AuditJoinTable auditJoinTable) {
+		this( auditJoinTable, null, null );
+	}
+
+	public AuditJoinTableData(AuditJoinTable auditJoinTable, AnnotationTarget annotationTarget, ModelsContext modelsContext) {
 		this.name = auditJoinTable.name();
 		this.catalog = auditJoinTable.catalog();
-		this.schema = auditJoinTable.schema();
+		this.schema = modelsContext == null
+				? auditJoinTable.schema()
+				: defaultSchema( auditJoinTable.schema(), annotationTarget, modelsContext );
 
 		for ( JoinColumn joinColumn : auditJoinTable.inverseJoinColumns() ) {
 			inverseJoinColumnNames.add( joinColumn.name() );

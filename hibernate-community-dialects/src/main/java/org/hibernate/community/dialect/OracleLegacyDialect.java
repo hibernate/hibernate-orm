@@ -847,6 +847,7 @@ public class OracleLegacyDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
 		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this, false ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BIT, "number(1,0)", this ) );
 	}
 
 	@Override

@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# Resolve compose files relative to this script, even when invoked from a subproject.
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")" || exit 1
+
 ###############################################################################
 # Detect container cli (Docker/Podman)
 # Docker has priority to make CI builds more stable/predictable

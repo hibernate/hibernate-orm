@@ -10,6 +10,7 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.hibernate.dialect.CockroachDialect;
@@ -19,6 +20,7 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
 
+import static org.hibernate.cfg.JdbcSettings.ISOLATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
@@ -26,8 +28,10 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Vlad Mihalcea
  */
+// Test DIRTY predicates without stronger isolation rejecting nonoverlapping changes.
 @SuppressWarnings("JUnitMalformedDeclaration")
-@Jpa(annotatedClasses = OptimisticLockTypeDirtyTest.Person.class)
+@Jpa(annotatedClasses = OptimisticLockTypeDirtyTest.Person.class,
+		properties = @Setting(name = ISOLATION, value = "READ_COMMITTED"))
 public class OptimisticLockTypeDirtyTest {
 	@AfterEach
 	void tearDown(EntityManagerFactoryScope factoryScope) {

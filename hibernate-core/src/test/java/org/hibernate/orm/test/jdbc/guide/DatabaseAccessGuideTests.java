@@ -11,12 +11,14 @@ import jakarta.persistence.Id;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.engine.jdbc.env.JdbcMetadataOnBoot;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.util.connections.BaseDataSource;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 ///
 /// @author Steve Ebersole
 @BaseUnitTest
+@RequiresDialect(H2Dialect.class)
 public class DatabaseAccessGuideTests {
 	@Test
 	void externalDataSource() throws Exception {

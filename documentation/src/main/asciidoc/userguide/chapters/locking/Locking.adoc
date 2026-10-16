@@ -247,6 +247,8 @@ include::{extrasdir}/locking-optimistic-lock-type-dirty-update-example.sql[]
 
 Only the changed eligible values participate in this update's optimistic predicate.
 DIRTY can allow nonoverlapping changes, but does not validate invariants spanning multiple attributes or guarantee that conflicts disappear.
+The database still enforces its <<transactions-concurrency,transaction isolation rules>>.
+At stronger isolation levels, snapshot or serialization conflicts may reject an update even when the transactions changed different attributes and Hibernate's optimistic predicate still matches.
 A delete has no ordinary dirty-property set: loaded values may be used for its checks, so do not infer delete semantics from the update predicate alone.
 
 Both strategies depend on the original loaded state available to the current context.

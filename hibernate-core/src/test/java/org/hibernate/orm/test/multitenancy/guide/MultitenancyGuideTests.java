@@ -26,11 +26,13 @@ import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.orm.test.multitenancy.ConfigurableMultiTenantConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +45,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 ///
 /// @author Steve Ebersole
 @BaseUnitTest
+@RequiresDialect(H2Dialect.class)
 public class MultitenancyGuideTests {
 	@Test
 	void tenantSelectionAndPartitionedData() {

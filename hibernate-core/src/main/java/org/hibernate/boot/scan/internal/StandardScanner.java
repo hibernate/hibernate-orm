@@ -16,11 +16,13 @@ public class StandardScanner implements Scanner {
 
 	@Override
 	public ScanningResult scan(URL... boundaries) {
+		ScannerLogger.SCANNER_LOGGER.scanningWithNoScannerFactory();
 		return ScanningResult.NONE;
 	}
 
 	@Override
 	public ScanningResult jpaScan(ArchiveDescriptor rootArchive, JaxbPersistenceImpl.JaxbPersistenceUnitImpl jaxbUnit) {
+		ScannerLogger.SCANNER_LOGGER.scanningWithNoScannerFactory();
 		return ScanningResult.NONE;
 	}
 }

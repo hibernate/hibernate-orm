@@ -2697,7 +2697,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( attributeNames.length != 0 ) {
-			final boolean[] propertyUpdateability = entityMetamodel.getPropertyUpdateability();
+			final boolean[] propertyCheckability = entityMetamodel.getPropertyCheckability();
 			if ( superMappingType == null ) {
 				/*
 						Sort attribute names so that we can traverse mappings efficiently
@@ -2723,7 +2723,7 @@ public abstract class AbstractEntityPersister
 					final AttributeMapping attributeMapping = attributeMappings.get( i );
 					if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
 						final int position = attributeMapping.getStateArrayPosition();
-						if ( propertyUpdateability[position] && !fields.contains( position ) ) {
+						if ( propertyCheckability[position] && !fields.contains( position ) ) {
 							fields.add( position );
 						}
 						index = skipDuplicateAndNestedAttributeNames( attributeMapping, attributeNames, index + 1 );
@@ -2736,7 +2736,7 @@ public abstract class AbstractEntityPersister
 			else {
 				for ( String attributeName : attributeNames ) {
 					final Integer index = entityMetamodel.getPropertyIndexOrNull( attributeName );
-					if ( index != null && propertyUpdateability[index] && !fields.contains( index ) ) {
+					if ( index != null && propertyCheckability[index] && !fields.contains( index ) ) {
 						fields.add( index );
 					}
 				}

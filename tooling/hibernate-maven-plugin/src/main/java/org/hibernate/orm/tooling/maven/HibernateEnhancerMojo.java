@@ -166,6 +166,7 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 
 	private void addFileSetToSourceSet(FileSet fileSet) {
 		getLog().debug(PROCESSING_FILE_SET);
+		normalizePatterns(fileSet);
 		String directory = fileSet.getDirectory();
 		FileSetManager fileSetManager = new FileSetManager();
 		File baseDir = classesDirectory;
@@ -184,6 +185,26 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 			}
 		}
 		getLog().debug(FILESET_PROCESSED_SUCCESSFULLY);
+	}
+
+	void normalizePatterns(FileSet fileSet) {
+		normalizePatterns(fileSet.getIncludes());
+		normalizePatterns(fileSet.getExcludes());
+	}
+
+	private void normalizePatterns(List<String> patterns) {
+		if (patterns == null) {
+			return;
+		}
+		for (int i = 0; i < patterns.size(); i++) {
+			String pattern = patterns.get(i);
+			if (pattern != null && !pattern.isEmpty()
+					&& (pattern.charAt(0) == '/' || pattern.charAt(0) == '\\')) {
+				String normalized = pattern.substring(1);
+				patterns.set(i, normalized);
+				getLog().warn(LEADING_SEPARATOR_STRIPPED.formatted(pattern, normalized));
+			}
+		}
 	}
 
 	private ClassLoader createClassLoader() throws MojoExecutionException {
@@ -357,6 +378,7 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 
 	// warning messages
 	static final String PROBLEM_CLEARING_FILE = "Problem clearing file for writing out enhancements [ %s ]";
+	static final String LEADING_SEPARATOR_STRIPPED = "Include/exclude pattern '%s' starts with a path separator which prevents matching on some platforms. Stripped to '%s'";
 	static final String ENABLE_LAZY_INITIALIZATION_DEPRECATED = "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning";
 	static final String ENABLE_DIRTY_TRACKING_DEPRECATED = "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning";
 

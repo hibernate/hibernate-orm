@@ -346,8 +346,11 @@ public class CompositeNestedGeneratedValueGenerator
 
 	private static boolean hasOnExecutionGenerators(List<Generator> generators) {
 		for ( var generator : generators ) {
+			// A generator might implement both OnExecutionGenerator and BeforeExecutionGenerator
+			// (for example, GenericGeneratorGeneration), so we need to check generatedOnExecution()
 			if ( generator instanceof OnExecutionGenerator
-					&& generator.generatesOnInsert() ) {
+					&& generator.generatesOnInsert()
+					&& generator.generatedOnExecution() ) {
 				return true;
 			}
 		}

@@ -2,15 +2,19 @@ package org.hibernate.context.spi;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
+import org.hibernate.MultiTenantConnectionStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.service.ServiceRegistry;
 
 import java.util.Map;
+import java.util.Locale;
 
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CONNECTION_STRATEGY;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_SCHEMA_MAPPER;
 
@@ -27,6 +31,30 @@ import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_SCHEMA_MAPPER;
  */
 @Incubating(since = "7.2")
 public class MultiTenancy {
+
+	/**
+	 * Obtain the explicitly configured connection strategy, if any.
+	 */
+	@Nullable
+	public static MultiTenantConnectionStrategy getConnectionStrategy(Map<String, Object> settings) {
+		final Object value = settings.get( MULTI_TENANT_CONNECTION_STRATEGY );
+		if ( value == null ) {
+			return null;
+		}
+		if ( value instanceof MultiTenantConnectionStrategy strategy ) {
+			return strategy;
+		}
+		if ( value instanceof String string ) {
+			try {
+				return MultiTenantConnectionStrategy.valueOf( string.strip().toUpperCase( Locale.ROOT ) );
+			}
+			catch (IllegalArgumentException ignored) {
+				// Report the setting and its accepted values below.
+			}
+		}
+		throw new ConnectionProviderConfigurationException( "Invalid value for '"
+				+ MULTI_TENANT_CONNECTION_STRATEGY + "': expected DATABASE or SCHEMA" );
+	}
 
 	/**
 	 * Is a {@link MultiTenantConnectionProvider} available?

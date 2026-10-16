@@ -30,6 +30,7 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
+import org.hibernate.MultiTenantConnectionStrategy;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SharedStatelessSessionBuilder;
@@ -854,7 +855,9 @@ abstract class AbstractSharedSessionContract
 	@Nullable
 	private static Object getTenantId( SessionFactoryOptions factoryOptions, SessionCreationOptions options ) {
 		final Object tenantIdentifier = options.getTenantIdentifierValue();
-		if ( factoryOptions.isMultiTenancyEnabled() && tenantIdentifier == null ) {
+		if ( tenantIdentifier == null
+				&& (factoryOptions.isMultiTenancyEnabled()
+						|| factoryOptions.getMultiTenantConnectionStrategy() != null) ) {
 			throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 		}
 		return tenantIdentifier;
@@ -1506,12 +1509,26 @@ abstract class AbstractSharedSessionContract
 
 	private boolean useSchemaBasedMultiTenancy() {
 		return tenantIdentifier != null
-			&& getSessionFactoryOptions().getTenantSchemaMapper() != null;
+			&& (factoryOptions.getTenantSchemaMapper() != null
+					|| factoryOptions.getMultiTenantConnectionStrategy() == MultiTenantConnectionStrategy.SCHEMA);
 	}
 
 	private String tenantSchema() {
 		final var mapper = getSessionFactoryOptions().getTenantSchemaMapper();
-		return mapper == null ? null : normalizeSchemaName( mapper.schemaName( tenantIdentifier ) );
+		final String schema;
+		if ( mapper != null ) {
+			schema = mapper.schemaName( tenantIdentifier );
+		}
+		else if ( tenantIdentifier instanceof String identifier ) {
+			schema = identifier;
+		}
+		else {
+			throw new HibernateException( "SCHEMA connection strategy requires a String tenant identifier or a TenantSchemaMapper" );
+		}
+		if ( schema == null || schema.isBlank() ) {
+			throw new HibernateException( "Tenant schema name must not be null or blank" );
+		}
+		return normalizeSchemaName( schema );
 	}
 
 	private String normalizeSchemaName(String schemaName) {
@@ -1520,13 +1537,17 @@ abstract class AbstractSharedSessionContract
 	}
 
 	private transient String initialSchema;
+	private transient boolean schemaChangeAttempted;
 
 	@Override
 	public void afterObtainConnection(@Nonnull Connection connection)
 			throws SQLException {
 		if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
+			final String schema = tenantSchema();
 			initialSchema = connection.getSchema();
-			connection.setSchema( tenantSchema() );
+			schemaChangeAttempted = true;
+			connection.setSchema( schema );
+			verifyConnectionSchema( connection, schema );
 		}
 		setUpRowLevelSecurity( connection );
 		if ( readOnly && manageReadOnly() ) {
@@ -1537,11 +1558,34 @@ abstract class AbstractSharedSessionContract
 	@Override
 	public void beforeReleaseConnection(@Nonnull Connection connection)
 			throws SQLException {
-		if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
-			connection.setSchema( initialSchema );
+		if ( schemaChangeAttempted ) {
+			try {
+				connection.setSchema( initialSchema );
+				verifyConnectionSchema( connection, initialSchema );
+			}
+			catch (SQLException e) {
+				if ( factoryOptions.getMultiTenantConnectionStrategy() != null ) {
+					throw new HibernateException( "Unable to restore JDBC connection schema", e );
+				}
+				throw e;
+			}
+			finally {
+				schemaChangeAttempted = false;
+				initialSchema = null;
+			}
 		}
 		if ( readOnly && manageReadOnly() ) {
 			connection.setReadOnly( false );
+		}
+	}
+
+	private void verifyConnectionSchema(Connection connection, @Nullable String expectedSchema) throws SQLException {
+		if ( factoryOptions.getMultiTenantConnectionStrategy() != null ) {
+			final String actualSchema = connection.getSchema();
+			if ( !Objects.equals( expectedSchema, actualSchema ) ) {
+				throw new HibernateException( "JDBC connection did not select schema '" + expectedSchema
+						+ "' (current schema is '" + actualSchema + "')" );
+			}
 		}
 	}
 

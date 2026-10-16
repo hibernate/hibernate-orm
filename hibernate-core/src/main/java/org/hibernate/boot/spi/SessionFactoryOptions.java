@@ -9,6 +9,7 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.MultiTenantConnectionStrategy;
 import org.hibernate.cfg.CheckHandling;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -286,6 +287,18 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_CONNECTION_PROVIDER
 	 */
 	boolean isMultiTenancyEnabled();
+
+	/**
+	 * The explicit connection strategy, or {@code SCHEMA} inferred from a schema
+	 * mapper when no multi-tenant connection provider is selected. A null result
+	 * does not imply the absence of a multi-tenant connection provider.
+	 *
+	 * @since 8.1
+	 */
+	@Nullable
+	default MultiTenantConnectionStrategy getMultiTenantConnectionStrategy() {
+		return null;
+	}
 
 	/**
 	 * Obtain a reference to the

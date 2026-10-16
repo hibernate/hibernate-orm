@@ -26,6 +26,7 @@ import org.hibernate.GraphParserMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
+import org.hibernate.MultiTenantConnectionStrategy;
 import org.hibernate.Remove;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
@@ -59,6 +60,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 import org.hibernate.callback.internal.ConfiguredInterceptorImpl;
@@ -91,6 +93,8 @@ import org.hibernate.type.format.FormatMapperCreationContext;
 
 import jakarta.persistence.criteria.Nulls;
 
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CONNECTION_STRATEGY;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.boot.model.internal.AuditHelper.determineAuditStrategy;
@@ -213,6 +217,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final boolean callbacksEnabled;
 
 	// multi-tenancy
+	@Nullable
+	private final MultiTenantConnectionStrategy explicitConnectionStrategy;
 	private boolean multiTenancyEnabled;
 	@Nullable
 	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
@@ -457,6 +463,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 		auditStrategy = determineAuditStrategy( settings );
 
+		explicitConnectionStrategy = MultiTenancy.getConnectionStrategy( settings );
 		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
 		currentTenantIdentifierResolver = MultiTenancy.getTenantIdentifierResolver( settings, serviceRegistry );
 		tenantSchemaMapper = MultiTenancy.getTenantSchemaMapper( settings, serviceRegistry );
@@ -1332,6 +1339,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	@Nullable
+	public MultiTenantConnectionStrategy getMultiTenantConnectionStrategy() {
+		return explicitConnectionStrategy != null
+				? explicitConnectionStrategy
+				: !multiTenancyEnabled && tenantSchemaMapper != null
+						? MultiTenantConnectionStrategy.SCHEMA
+						: null;
+	}
+
+	@Override
+	@Nullable
 	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
 		return tenantSchemaMapper;
 	}
@@ -1798,7 +1815,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public void applyMultiTenancy(boolean enabled) {
-		this.multiTenancyEnabled = enabled;
+		if ( explicitConnectionStrategy == null ) {
+			this.multiTenancyEnabled = enabled;
+		}
 	}
 
 	public void applyCurrentTenantIdentifierResolver(@Nullable CurrentTenantIdentifierResolver<?> resolver) {
@@ -1944,10 +1963,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Nonnull
 	public SessionFactoryOptions buildOptions() {
+		if ( explicitConnectionStrategy != null && multiTenancyEnabled && tenantCredentialsMapper != null ) {
+			throw new ConnectionProviderConfigurationException(
+					"'" + MULTI_TENANT_CONNECTION_STRATEGY
+							+ "' with a MultiTenantConnectionProvider conflicts with '"
+							+ MULTI_TENANT_CREDENTIALS_MAPPER + "'" );
+		}
 		if ( jpaCompliance instanceof MutableJpaCompliance mutableJpaCompliance ) {
 			jpaCompliance = mutableJpaCompliance.immutableCopy();
 		}
-		return this;
+		return new TenantConnectionOptions( this );
 	}
 
 	@Override

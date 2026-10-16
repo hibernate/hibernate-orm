@@ -7,6 +7,10 @@ import org.hibernate.Incubating;
  * Supplies the name of a database schema for a given tenant identifier when
  * {@linkplain org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_SCHEMA_MAPPER
  * schema-based multitenancy} is enabled.
+ * A mapper implies the {@link org.hibernate.MultiTenantConnectionStrategy#SCHEMA SCHEMA}
+ * connection strategy when no explicit strategy or multi-tenant connection provider is
+ * configured. It may also select a schema on connections obtained using
+ * {@link org.hibernate.MultiTenantConnectionStrategy#DATABASE DATABASE} routing.
  *
  * @param <T> The type of the tenant id
  *

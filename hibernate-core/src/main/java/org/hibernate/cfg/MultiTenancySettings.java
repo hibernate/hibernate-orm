@@ -10,6 +10,18 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 public interface MultiTenancySettings {
 
 	/**
+	 * Selects {@link org.hibernate.MultiTenantConnectionStrategy#DATABASE DATABASE}
+	 * or {@link org.hibernate.MultiTenantConnectionStrategy#SCHEMA SCHEMA} connection
+	 * handling, as an enum instance or a case-insensitive string. Without an explicit
+	 * strategy or a multi-tenant connection provider, a tenant schema mapper implies
+	 * {@code SCHEMA}. A tenant identifier resolver alone does not select a strategy.
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String MULTI_TENANT_CONNECTION_STRATEGY = "hibernate.multi_tenant.connection_strategy";
+
+	/**
 	 * Specifies a {@link MultiTenantConnectionProvider} to use, either:
 	 * <ul>
 	 *     <li>an instance of {@code MultiTenantConnectionProvider},
@@ -53,11 +65,14 @@ public interface MultiTenancySettings {
 	 *     <li>a {@link Class} representing a class that implements {@code TenantSchemaMapper}, or
 	 *     <li>the name of a class that implements {@code TenantSchemaMapper}.
 	 * </ul>
-	 * When a tenant schema mapper is set, {@link java.sql.Connection#setSchema(String)}}
+	 * When a tenant schema mapper is set, {@link java.sql.Connection#setSchema(String)}
 	 * is called on newly acquired JDBC connections with the schema name returned by
 	 * {@link org.hibernate.context.spi.TenantSchemaMapper#schemaName}.
 	 * <p>
 	 * By default, there is no tenant schema mapper.
+	 * Without an explicit connection strategy or a multi-tenant connection provider,
+	 * a mapper implies {@link org.hibernate.MultiTenantConnectionStrategy#SCHEMA SCHEMA}.
+	 * It may also be combined with {@link org.hibernate.MultiTenantConnectionStrategy#DATABASE DATABASE}.
 	 *
 	 * @see org.hibernate.context.spi.TenantSchemaMapper
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantSchemaMapper

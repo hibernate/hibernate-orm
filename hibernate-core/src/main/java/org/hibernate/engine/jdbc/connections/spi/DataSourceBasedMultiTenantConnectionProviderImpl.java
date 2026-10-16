@@ -55,7 +55,14 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	protected DataSource selectDataSource(T tenantIdentifier) {
 		DataSource dataSource = dataSourceMap().get( tenantIdentifier );
 		if ( dataSource == null ) {
-			dataSource = (DataSource) jndiService.locate( baseJndiNamespace + '/' + tenantIdentifier );
+			final String tenantJndiName = baseJndiNamespace.isEmpty()
+					? tenantIdentifier.toString()
+					: baseJndiNamespace + '/' + tenantIdentifier;
+			final Object binding = jndiService.locate( tenantJndiName );
+			if ( !(binding instanceof DataSource) ) {
+				throw new HibernateException( "Tenant JNDI binding [" + tenantJndiName + "] does not name a DataSource" );
+			}
+			dataSource = (DataSource) binding;
 			dataSourceMap().put( tenantIdentifier, dataSource );
 		}
 		return dataSource;
@@ -85,7 +92,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 		}
 		else if ( namedObject instanceof DataSource datasource ) {
 			final int loc = jndiName.lastIndexOf( '/' );
-			baseJndiNamespace = jndiName.substring( 0, loc );
+			baseJndiNamespace = loc < 0 ? "" : jndiName.substring( 0, loc );
 			final String prefix = jndiName.substring( loc + 1);
 			tenantIdentifierForAny = (T) prefix;
 			dataSourceMap().put( tenantIdentifierForAny, datasource );
@@ -105,6 +112,8 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 					"] found in JNDI location [" + this.jndiName + "]"
 			);
 		}
+		// Validate the bootstrap binding even when JDBC metadata access is disabled.
+		selectAnyDataSource();
 	}
 
 	@Override

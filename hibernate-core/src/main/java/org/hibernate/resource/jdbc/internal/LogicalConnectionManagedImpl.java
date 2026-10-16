@@ -100,7 +100,13 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private void releaseConnectionIfNeeded() {
 		final Connection connection = physicalConnection;
 		if ( connection != null ) {
-			beforeRelease();
+			RuntimeException failure = null;
+			try {
+				beforeRelease();
+			}
+			catch (RuntimeException e) {
+				failure = e;
+			}
 			// Set the connection to null before releasing resources to prevent
 			// recursion into this method. Recursion can happen when we release
 			// resources and when batch statements are in progress: releasing
@@ -108,7 +114,18 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			// logicalConnection.afterStatement(), which in some configurations
 			// releases the connection.
 			physicalConnection = null;
-			release( connection );
+			try {
+				release( connection );
+			}
+			catch (RuntimeException e) {
+				if ( failure == null ) {
+					throw e;
+				}
+				failure.addSuppressed( e );
+			}
+			if ( failure != null ) {
+				throw failure;
+			}
 		}
 	}
 
@@ -230,14 +247,24 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			// give the session a chance to set the schema
 			jdbcSessionOwner.afterObtainConnection( physicalConnection );
 		}
-		catch (SQLException e) {
+		catch (SQLException | RuntimeException e) {
+			final Connection connection = physicalConnection;
+			physicalConnection = null;
 			try {
-				getJdbcConnectionAccess().releaseConnection( physicalConnection );
+				jdbcSessionOwner.beforeReleaseConnection( connection );
 			}
-			catch (SQLException re) {
+			catch (SQLException | RuntimeException cleanupFailure) {
+				e.addSuppressed( cleanupFailure );
+			}
+			try {
+				getJdbcConnectionAccess().releaseConnection( connection );
+			}
+			catch (SQLException | RuntimeException re) {
 				e.addSuppressed( re );
 			}
-			throw getExceptionHelper().convert( e, "Error after acquiring JDBC Connection" );
+			throw e instanceof SQLException sqlException
+					? getExceptionHelper().convert( sqlException, "Error after acquiring JDBC Connection" )
+					: (RuntimeException) e;
 		}
 	}
 

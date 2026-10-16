@@ -49,7 +49,8 @@ public abstract class SharedStatelessSessionBuilderImpl
 	@Nonnull
 	public StatelessSessionImplementor open() {
 		CORE_LOGGER.openingStatelessSession( options.getTenantIdentifierValue() );
-		if ( original.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
+		final var factoryOptions = original.getSessionFactory().getSessionFactoryOptions();
+		if ( factoryOptions.isMultiTenancyEnabled() || factoryOptions.getMultiTenantConnectionStrategy() != null ) {
 			if ( options.isTransactionCoordinatorShared() ) {
 				final var tenantId = original.getTenantIdentifierValue();
 				assert tenantId != null;

@@ -99,13 +99,93 @@ public class Account {
 The `@TenantId` field is automatically populated by Hibernate when an instance is made
 persistent.
 
+[[multitenacy-hibernate-connection-strategies]]
+==== Built-in tenant connection handling
+
+The setting `hibernate.multi_tenant.connection_strategy` selects how JDBC connections target a tenant:
+
+* `SCHEMA` uses an ordinary connection provider and selects the tenant's schema on each acquired connection.
+* `DATABASE` obtains connections from tenant-specific datasources.
+
+The strategy is fixed during bootstrap.
+It accepts a `org.hibernate.MultiTenantConnectionStrategy` value or a case-insensitive string.
+It does not enable or disable column-based tenancy using `@TenantId`.
+The historical `hibernate.multiTenancy` setting is not an alias and remains ignored.
+
+For schema isolation, configure a datasource instance or JNDI datasource name and select `SCHEMA`:
+
+[source, properties]
+----
+hibernate.multi_tenant.connection_strategy=SCHEMA
+hibernate.connection.datasource=java:comp/env/jdbc/application
+----
+
+Supply the tenant identifier when opening each session, or configure a `CurrentTenantIdentifierResolver`.
+By default, a String tenant identifier is the schema name.
+For different schema names or non-string identifiers, supply a `TenantSchemaMapper` using
+`hibernate.multi_tenant.schema_mapper`, `Configuration.setTenantSchemaMapper()`,
+or `SessionFactoryBuilder.applyTenantSchemaMapper()`.
+Without an explicit strategy or a `MultiTenantConnectionProvider`, a schema mapper implies `SCHEMA`.
+A resolver alone does not select a connection strategy.
+
+Hibernate uses JDBC `Connection.getSchema()` and `Connection.setSchema()` to select the schema and
+restore the original schema before releasing the connection. The driver must support these operations.
+Hibernate verifies the current schema after selection and restoration and reports a mismatch as a failure.
+Every application session in `SCHEMA`, including mapper-inferred `SCHEMA`, requires a tenant identifier.
+Previously, a schema mapper could be configured while still opening tenantless sessions;
+such sessions now fail when opened.
+Other ordinary connection providers may also be used with `SCHEMA`.
+
+For database isolation, select `DATABASE` and configure the JNDI name of a bootstrap datasource:
+
+[source, properties]
+----
+hibernate.multi_tenant.connection_strategy=DATABASE
+hibernate.connection.datasource=java:comp/env/jdbc/bootstrap
+----
+
+Hibernate supplies `DataSourceBasedMultiTenantConnectionProviderImpl` automatically.
+With this configuration, tenant `acme` selects `java:comp/env/jdbc/acme`, and tenant `globex`
+selects `java:comp/env/jdbc/globex`. The configured `bootstrap` datasource supplies connections
+for startup metadata and tooling independently of the current application tenant.
+All tenant databases must be compatible with the factory's dialect and mappings.
+
+Alternatively, the configured JNDI name may identify a context containing the tenant datasources.
+In this case, `hibernate.multi_tenant.datasource.identifier_for_any` identifies its bootstrap datasource.
+An instance-valued datasource cannot describe how to find other databases; use a custom
+`MultiTenantConnectionProvider` for such arrangements.
+An explicitly configured ordinary connection provider, including one registered as a service,
+conflicts with built-in `DATABASE` routing.
+
+An explicit `DATABASE` strategy may be combined with a `TenantSchemaMapper`: Hibernate obtains the
+tenant-specific connection first and then selects its mapped schema.
+Custom providers retain precedence over built-in connection handling.
+If a provider reports `handlesConnectionSchema()`, it owns schema selection and restoration.
+For an explicit strategy, a credentials mapper cannot be combined with a `MultiTenantConnectionProvider`;
+credentials mapping remains available with ordinary providers, including `SCHEMA`.
+
+Without a strategy, a schema mapper, or a `MultiTenantConnectionProvider`, ordinary connection-provider
+behavior remains unchanged, including possible column-based tenancy or credentials mapping.
+Supplying a tenant identifier does not activate schema switching or datasource routing on such a factory.
+User-supplied session connections remain the caller's responsibility and are not routed or schema-switched
+by this feature. Tenant schemas and datasources must be provisioned separately; Hibernate does not enumerate tenants.
+
+[NOTE]
+====
+Tenant lookup and schema-selection failures never fall back to the bootstrap datasource or default schema.
+Schema-restoration failures are reported and the connection is still released through its provider.
+Hibernate has no portable mechanism to evict an underlying pooled connection after a restoration failure;
+the pool's connection-reset and failure handling still apply.
+====
+
 [[multitenacy-hibernate-MultiTenantConnectionProvider]]
 ==== MultiTenantConnectionProvider
 
 When using either the separate database or separate schema approach, Hibernate needs to be able to obtain connections in a tenant-specific manner.
 
 That is the role of the `MultiTenantConnectionProvider` contract.
-Application developers will need to provide an implementation of this contract. 
+For arrangements beyond the built-in connection strategies, application developers may provide
+an implementation of this contract.
 
 Most of its methods are extremely self-explanatory.
 The only ones which might not be are `getAnyConnection` and `releaseAnyConnection`. 
@@ -118,8 +198,9 @@ The `MultiTenantConnectionProvider` to use can be specified in a number of ways:
 It could name a `MultiTenantConnectionProvider` instance, a `MultiTenantConnectionProvider` implementation class reference or a `MultiTenantConnectionProvider` implementation class name.
 * Provided by the configured `BeanContainer`.
 * Passed directly to the `org.hibernate.boot.registry.StandardServiceRegistryBuilder`.
-* If none of the above options match, but the settings do specify a `hibernate.connection.datasource` value,
-Hibernate will assume it should use the specific `DataSourceBasedMultiTenantConnectionProviderImpl` implementation which works on a number of pretty reasonable assumptions when running inside of an app server and using one `javax.sql.DataSource` per tenant.
+* With `hibernate.multi_tenant.connection_strategy=DATABASE` and no custom provider,
+Hibernate uses `DataSourceBasedMultiTenantConnectionProviderImpl`, which assumes JNDI bindings
+and one `javax.sql.DataSource` per tenant as described above.
 See its https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[Javadocs] for more details.
 
 The following example portrays a `MultiTenantConnectionProvider` implementation that handles multiple ``ConnectionProvider``s.

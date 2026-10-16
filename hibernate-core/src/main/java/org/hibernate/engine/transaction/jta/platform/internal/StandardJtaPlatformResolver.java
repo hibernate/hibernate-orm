@@ -15,6 +15,11 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.logging.Logger;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
+import static org.hibernate.engine.transaction.jta.platform.internal.JakartaStandardJtaPlatform.TRANSACTION_SYNCHRONIZATION_REGISTRY;
+
 /**
  * @author Steve Ebersole
  */
@@ -25,11 +30,11 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 
 	@Override
 	public JtaPlatform resolveJtaPlatform(Map<?,?> configurationValues, ServiceRegistryImplementor registry) {
-		final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
+		final var classLoaderService = registry.requireService( ClassLoaderService.class );
 
 		// Initially look for a JtaPlatformProvider
-		for ( JtaPlatformProvider provider : classLoaderService.loadJavaServices( JtaPlatformProvider.class ) ) {
-			final JtaPlatform providedPlatform = provider.getProvidedJtaPlatform();
+		for ( var provider : classLoaderService.loadJavaServices( JtaPlatformProvider.class ) ) {
+			final var providedPlatform = provider.getProvidedJtaPlatform();
 			LOG.tracef( "Located JtaPlatformProvider [%s] provided JtaPlatform : %s", provider, providedPlatform );
 			if ( providedPlatform!= null ) {
 				return providedPlatform;
@@ -87,8 +92,18 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		catch (ClassLoadingException ignore) {
 		}
 
+		// Fallback for EE environment
+		try {
+			new InitialContext().lookup( TRANSACTION_SYNCHRONIZATION_REGISTRY );
+			LOG.tracef( "Could not determine JtaPlatform, using default [%s]", JakartaStandardJtaPlatform.class.getName() );
+			return JakartaStandardJtaPlatform.INSTANCE;
+		}
+		catch (NamingException ne) {
+			//ignore
+		}
+
 		// Finally, return the default...
-		LOG.tracef( "Could not resolve JtaPlatform, using default [%s]", NoJtaPlatform.class.getName() );
+		LOG.tracef( "Could not determine JtaPlatform, using default [%s]", NoJtaPlatform.class.getName() );
 		return NoJtaPlatform.INSTANCE;
 	}
 }

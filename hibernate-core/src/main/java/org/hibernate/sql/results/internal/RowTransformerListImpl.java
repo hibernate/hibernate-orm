@@ -4,6 +4,9 @@ import org.hibernate.sql.results.spi.RowTransformer;
 
 import java.util.List;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
+
 /**
  * {@link RowTransformer} instantiating a {@link List}
  *
@@ -23,6 +26,6 @@ public class RowTransformerListImpl<T> implements RowTransformer<List<Object>> {
 
 	@Override
 	public List<Object> transformRow(Object[] row) {
-		return List.of( row );
+		return unmodifiableList( asList( row.clone() ) );
 	}
 }

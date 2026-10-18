@@ -40,6 +40,7 @@ import org.hibernate.dialect.sql.ast.spi.MutationKind;
 import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
 import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
 import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
 import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
 import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
 import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
@@ -1443,6 +1444,16 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 		return MutationSyntaxSupport.builder()
 				.capability( MutationKind.UPDATE, MutationSyntaxCapability.REQUIRES_WHERE )
 				.capability( MutationKind.DELETE, MutationSyntaxCapability.REQUIRES_WHERE )
+				.build();
+	}
+
+	@Override
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capabilities(
+						PredicateSupport.Capability.DISTINCT_FROM,
+						PredicateSupport.Capability.TRUTHNESS
+				)
 				.build();
 	}
 

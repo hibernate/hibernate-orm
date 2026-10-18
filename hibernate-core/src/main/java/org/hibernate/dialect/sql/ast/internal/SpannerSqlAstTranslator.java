@@ -146,7 +146,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			}
 		}
 		else {
-			renderComparisonEmulateIntersect( lhs, operator, rhs );
+			renderComparisonStandard( lhs, operator, rhs );
 		}
 	}
 

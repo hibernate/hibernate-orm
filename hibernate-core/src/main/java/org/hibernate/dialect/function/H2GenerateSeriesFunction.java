@@ -19,7 +19,6 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstNode;
-import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.from.FunctionTableGroup;
@@ -140,19 +139,15 @@ public class H2GenerateSeriesFunction extends NumberSeriesGenerateSeriesFunction
 			final Expression explicitStep = arguments.size() > 2
 					? (Expression) arguments.get( 2 )
 					: null;
-			final ColumnReference joinBaseColumnReference = NullnessHelper.coalesce(
-					start.getColumnReference(),
-					stop.getColumnReference(),
-					explicitStep != null
-							? explicitStep.getColumnReference()
-							: null
-			);
+			final boolean needsEmulation = needsEmulation( start )
+					|| needsEmulation( stop )
+					|| explicitStep != null && needsEmulation( explicitStep );
 			final JdbcMapping type = expressionType.getSingleJdbcMapping();
 			if ( type == null ) {
 				throw new IllegalArgumentException( "Couldn't determine types of arguments to function 'generate_series'" );
 			}
 
-			if ( joinBaseColumnReference != null || withOrdinality || type.getJdbcType().isTemporal() ) {
+			if ( needsEmulation || withOrdinality || type.getJdbcType().isTemporal() ) {
 				return resolveIterationVariableBasedFunctionReturnType( arguments, tableIdentifierVariable, lateral, withOrdinality, converter );
 			}
 			else {

@@ -446,7 +446,7 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 			return CollectionChangeSet.EMPTY;
 		}
 
-		final boolean isEntityCollection = persister.getElementType().isEntityType();
+		final boolean isEntityCollection = persister.isOneToMany() || persister.isManyToMany();
 
 		if (isEntityCollection) {
 			return computeEntityCollectionChangeSet( snapshot, persister );

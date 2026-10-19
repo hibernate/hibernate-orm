@@ -53,7 +53,7 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 							.getCollection( new CollectionKey( persister, key ) );
 			for ( Object element : resultList ) {
 				if ( element != null
-						&& !persister.getElementType().getReturnedClass().isInstance( element ) ) {
+						&& !getLoadable().getElementDescriptor().getJavaType().getJavaTypeClass().isInstance( element ) ) {
 					throw new QueryTypeMismatchException( "Collection loader for '" + persister.getRole()
 							+ "' returned an instance of '" + element.getClass().getName() + "'" );
 				}

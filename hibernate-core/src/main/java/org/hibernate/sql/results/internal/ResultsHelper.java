@@ -254,7 +254,7 @@ public class ResultsHelper {
 			PersistenceContext context,
 			CollectionPersister collectionDescriptor,
 			CollectionCacheEntry entry) {
-		if ( collectionDescriptor.getElementType().isEntityType() ) {
+		if ( collectionDescriptor.isOneToMany() || collectionDescriptor.isManyToMany() ) {
 			final var entityPersister = collectionDescriptor.getElementPersister();
 			for ( Object id : entry.getState() ) {
 				if ( context.wasInsertedDuringTransaction( entityPersister, id ) ) {

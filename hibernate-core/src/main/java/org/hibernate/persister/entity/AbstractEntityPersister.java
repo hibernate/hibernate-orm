@@ -5112,7 +5112,7 @@ public abstract class AbstractEntityPersister
 	public Type getPropertyType(@Nonnull String propertyName) throws MappingException {
 		final var propertyPath = resolvePropertyPath( propertyName );
 		if ( propertyPath == null ) {
-			throw new QueryException( "Could not resolve property: " + propertyName + " of: " + getEntityName() );
+			throw new QueryException( "Could not resolve property: " + propertyName + " of: " + getEntityName(), (String) null );
 		}
 		return propertyPath.type();
 	}

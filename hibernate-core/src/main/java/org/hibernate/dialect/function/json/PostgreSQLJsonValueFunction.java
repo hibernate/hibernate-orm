@@ -55,10 +55,10 @@ public class PostgreSQLJsonValueFunction extends JsonValueFunction {
 		else {
 			// jsonb_path_query_first errors by default
 			if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonValueErrorBehavior.ERROR ) {
-				throw new QueryException( "Can't emulate on error clause on PostgreSQL" );
+				throw new QueryException( "Can't emulate on error clause on PostgreSQL", (String) null );
 			}
 			if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonValueEmptyBehavior.NULL ) {
-				throw new QueryException( "Can't emulate on empty clause on PostgreSQL" );
+				throw new QueryException( "Can't emulate on empty clause on PostgreSQL", (String) null );
 			}
 
 			appendJsonValue(

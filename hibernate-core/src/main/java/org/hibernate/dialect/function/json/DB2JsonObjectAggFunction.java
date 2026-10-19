@@ -30,14 +30,14 @@ public class DB2JsonObjectAggFunction extends JsonObjectAggFunction {
 			SqlAstTranslator<?> translator) {
 		final boolean caseWrapper = filter != null;
 		if ( arguments.uniqueKeysBehavior() == JsonObjectAggUniqueKeysBehavior.WITH ) {
-			throw new QueryException( "Can't emulate json_objectagg 'with unique keys' clause." );
+			throw new QueryException( "Can't emulate json_objectagg 'with unique keys' clause.", (String) null );
 		}
 		sqlAppender.appendSql( "'{'||listagg(" );
 		renderArgument( sqlAppender, arguments.key(), arguments.nullBehavior(), translator );
 		sqlAppender.appendSql( "||':'||" );
 		if ( caseWrapper ) {
 			if ( arguments.nullBehavior() != JsonNullBehavior.ABSENT ) {
-				throw new QueryException( "Can't emulate json_objectagg filter clause when using 'null on null' clause." );
+				throw new QueryException( "Can't emulate json_objectagg filter clause when using 'null on null' clause.", (String) null );
 			}
 			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( "case when " );

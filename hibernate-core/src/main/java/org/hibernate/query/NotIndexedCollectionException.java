@@ -9,6 +9,6 @@ import jakarta.annotation.Nonnull;
  */
 public class NotIndexedCollectionException extends SemanticException {
 	public NotIndexedCollectionException(@Nonnull String message) {
-		super( message );
+		super( message, (String) null );
 	}
 }

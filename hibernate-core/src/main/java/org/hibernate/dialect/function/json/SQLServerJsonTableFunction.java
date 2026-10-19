@@ -109,7 +109,7 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 			sqlAppender.appendSql( separator );
 			if ( columnDefinition instanceof JsonTableValueColumnDefinition valueColumnDefinition ) {
 				if ( valueColumnDefinition.errorBehavior() != null && valueColumnDefinition.errorBehavior() != JsonValueErrorBehavior.ERROR ) {
-					throw new QueryException( "Can't emulate on error clause for value within json_table() on SQL server" );
+					throw new QueryException( "Can't emulate on error clause for value within json_table() on SQL server", (String) null );
 				}
 				sqlAppender.appendSql( 't' );
 				sqlAppender.appendSql( clauseLevel );
@@ -119,7 +119,7 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 			}
 			else if ( columnDefinition instanceof JsonTableQueryColumnDefinition queryColumnDefinition ) {
 				if ( queryColumnDefinition.errorBehavior() != null && queryColumnDefinition.errorBehavior() != JsonQueryErrorBehavior.ERROR ) {
-					throw new QueryException( "Can't emulate on error clause for query within json_table() on SQL server" );
+					throw new QueryException( "Can't emulate on error clause for query within json_table() on SQL server", (String) null );
 				}
 				if ( queryColumnDefinition.emptyBehavior() == JsonQueryEmptyBehavior.EMPTY_ARRAY
 						|| queryColumnDefinition.emptyBehavior() == JsonQueryEmptyBehavior.EMPTY_OBJECT ) {
@@ -151,7 +151,7 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 			}
 			else if ( columnDefinition instanceof JsonTableExistsColumnDefinition existsColumnDefinition ) {
 				if ( existsColumnDefinition.errorBehavior() == JsonExistsErrorBehavior.FALSE ) {
-					throw new QueryException( "Can't emulate exists false on error for json_table() on SQL Server" );
+					throw new QueryException( "Can't emulate exists false on error for json_table() on SQL Server", (String) null );
 				}
 				final String jsonPath = existsColumnDefinition.jsonPath() == null
 						? "$." + existsColumnDefinition.name()

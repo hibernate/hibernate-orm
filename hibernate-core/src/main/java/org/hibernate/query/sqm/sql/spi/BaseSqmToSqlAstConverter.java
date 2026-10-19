@@ -913,12 +913,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					getMappingMetamodel()
 							.findEntityDescriptor( sqmStatement.getTarget().getEntityName() );
 			if ( !persister.isVersioned() ) {
-				throw new SemanticException( "Increment option specified for update of non-versioned entity" );
+				throw new SemanticException( "Increment option specified for update of non-versioned entity", (String) null );
 			}
 
 			final var versionType = persister.getVersionType();
 			if ( versionType instanceof UserVersionType ) {
-				throw new SemanticException( "User-defined version types not supported for increment option" );
+				throw new SemanticException( "User-defined version types not supported for increment option", (String) null );
 			}
 
 			currentClauseStack.push( Clause.SET );
@@ -1238,7 +1238,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			if ( hasJoins( rootTableGroup ) ) {
-				throw new SemanticException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
+				throw new SemanticException( "Not expecting multiple table references for an SQM INSERT-SELECT", (String) null );
 			}
 		}
 		finally {
@@ -1773,7 +1773,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			name = baseName + "_" + i;
 		}
-		throw new InterpretationException(
+		throw new InterpretationException( null,
 				String.format(
 						"Couldn't generate CTE name for base name [%s] after %d tries",
 						baseName,
@@ -2848,7 +2848,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					from.getCorrelationParent().getNavigablePath()
 			);
 			if ( parentTableGroup == null ) {
-				throw new InterpretationException( "Access to from node '" + from.getCorrelationParent() + "' is not possible in from-clause subqueries, unless the 'lateral' keyword is used for the subquery!" );
+				throw new InterpretationException( null, "Access to from node '" + from.getCorrelationParent() + "' is not possible in from-clause subqueries, unless the 'lateral' keyword is used for the subquery!" );
 			}
 			final var sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
 			if ( parentTableGroup instanceof PluralTableGroup pluralTableGroup ) {
@@ -3141,7 +3141,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final String identifierVariable = sqlAliasBase.generateNewAlias();
 		final var cteStatement = cteContainer.getCteStatement( cteName );
 		if ( cteStatement == null ) {
-			throw new InterpretationException( "Could not find CTE for name '" + cteName + "'!" );
+			throw new InterpretationException( null, "Could not find CTE for name '" + cteName + "'!" );
 		}
 		final var cteQueryPart = ( (SelectStatement) cteStatement.getCteDefinition() ).getQueryPart();
 		// If the query part of the CTE is one which we are currently processing, then this is a recursive CTE
@@ -3540,7 +3540,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return consumePluralPartJoin( pluralPartJoin, ownerTableGroup, transitive );
 		}
 		else {
-			throw new InterpretationException( "Could not resolve SqmJoin [" + sqmJoin.getNavigablePath() + "] to TableGroupJoin" );
+			throw new InterpretationException( null, "Could not resolve SqmJoin [" + sqmJoin.getNavigablePath() + "] to TableGroupJoin" );
 		}
 	}
 
@@ -3851,7 +3851,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( correspondingSqlJoinType != SqlAstJoinType.CROSS ) {
 			// TODO: should probably be a SyntaxException
 			throw new SemanticException( "Entity join did not specify a join condition [" + sqmJoin + "]"
-					+ " (specify a join condition with 'on' or use 'cross join')" );
+					+ " (specify a join condition with 'on' or use 'cross join')", (String) null );
 		}
 
 		if ( transitive ) {
@@ -4342,7 +4342,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( resolved, sqmRoot );
 		}
 
-		throw new InterpretationException( "SqmRoot not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmRoot not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4353,7 +4353,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( resolved, sqmRoot );
 		}
 
-		throw new InterpretationException( "SqmDerivedRoot not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmDerivedRoot not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4364,7 +4364,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( resolved, sqmRoot );
 		}
 
-		throw new InterpretationException( "SqmFunctionRoot not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmFunctionRoot not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4375,7 +4375,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( resolved, sqmRoot );
 		}
 
-		throw new InterpretationException( "SqmCteRoot not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmCteRoot not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4386,7 +4386,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( existing, sqmJoin );
 		}
 
-		throw new InterpretationException( "SqmAttributeJoin not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmAttributeJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4397,7 +4397,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( existing, sqmJoin );
 		}
 
-		throw new InterpretationException( "SqmDerivedJoin not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmDerivedJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4408,7 +4408,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( existing, sqmJoin );
 		}
 
-		throw new InterpretationException( "SqmFunctionJoin not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmFunctionJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4419,7 +4419,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( existing, sqmJoin );
 		}
 
-		throw new InterpretationException( "SqmCteJoin not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmCteJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4430,7 +4430,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( existing, sqmJoin );
 		}
 
-		throw new InterpretationException( "SqmCrossJoin not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmCrossJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4441,7 +4441,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( existing, sqmJoin );
 		}
 
-		throw new InterpretationException( "SqmPluralPartJoin not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmPluralPartJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4452,7 +4452,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return visitTableGroup( existing, sqmJoin );
 		}
 
-		throw new InterpretationException( "SqmEntityJoin not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmEntityJoin not yet resolved to TableGroup" );
 	}
 
 	private Expression visitTableGroup(TableGroup tableGroup, SqmPath<?> path) {
@@ -4686,7 +4686,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					throw new SemanticException(
 							"The derived SqmFrom" + ( (AnonymousTupleType<?>) path.getReferencedPathSource() ).getComponentNames() + " can not be used in a context where the expression needs to " +
 									"be expanded to identifying parts, because a derived model part does not have identifying parts. " +
-									"Replace uses of the root with paths instead e.g. `derivedRoot.get(\"alias1\")` or `derivedRoot.alias1`"
+									"Replace uses of the root with paths instead e.g. `derivedRoot.get(\"alias1\")` or `derivedRoot.alias1`", (String) null
 					);
 				}
 			}
@@ -4702,7 +4702,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				throw new SemanticException(
 						"The SqmFrom node [" + path + "] can not be used in a context where the expression needs to " +
 								"be expanded to identifying parts, because the model part [" + actualModelPart +
-								"] does not have identifying parts."
+								"] does not have identifying parts.", (String) null
 				);
 			}
 		}
@@ -4976,7 +4976,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //			LOG.tracef( "SqmCorrelation [%s] resolved to existing TableGroup [%s]", correlation, resolved );
 			return visitTableGroup( resolved, correlation );
 		}
-		throw new InterpretationException( "SqmCorrelation not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmCorrelation not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4987,7 +4987,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //			LOG.tracef( "SqmTreatedPath [%s] resolved to existing TableGroup [%s]", sqmTreatedPath, resolved );
 			return visitTableGroup( resolved, sqmTreatedPath );
 		}
-		throw new InterpretationException( "SqmTreatedPath not yet resolved to TableGroup" );
+		throw new InterpretationException( null, "SqmTreatedPath not yet resolved to TableGroup" );
 	}
 
 
@@ -6177,7 +6177,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							value.getClass(),
 							valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
 							valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
-					)
+					), (String) null
 			);
 		}
 	}
@@ -7029,7 +7029,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( temporalTypeToLeft != null && durationToRight ) {
 			if ( adjustmentScale != null || negativeAdjustment ) {
 				//we can't distribute a scale over a date/timestamp
-				throw new SemanticException( "Scalar multiplication of temporal value" );
+				throw new SemanticException( "Scalar multiplication of temporal value", (String) null );
 			}
 		}
 
@@ -7213,7 +7213,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					negativeAdjustment = negate;
 				}
 			default:
-				throw new SemanticException( "Illegal operator for a duration " + operator );
+				throw new SemanticException( "Illegal operator for a duration " + operator, (String) null );
 		}
 	}
 
@@ -7226,7 +7226,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// operator expressions with two dates or
 		// timestamps are ill-formed
 		if ( operator != SUBTRACT ) {
-			throw new SemanticException( "Illegal operator for temporal type: " + operator );
+			throw new SemanticException( "Illegal operator for temporal type: " + operator, (String) null );
 		}
 
 		// a difference between two dates or two

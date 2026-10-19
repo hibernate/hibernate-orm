@@ -49,7 +49,7 @@ public class SqmTuple<T>
 	public SqmTuple(@Nonnull List<SqmExpression<?>> groupedExpressions, @Nullable SqmBindableType<T> type, @Nonnull NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
-			throw new SemanticException( "Tuple constructor must have at least one element" );
+			throw new SemanticException( "Tuple constructor must have at least one element", (String) null );
 		}
 		this.groupedExpressions = groupedExpressions;
 		if ( type == null ) {

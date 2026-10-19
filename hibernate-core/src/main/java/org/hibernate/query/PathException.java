@@ -12,11 +12,11 @@ import jakarta.annotation.Nullable;
  */
 public class PathException extends SemanticException {
 	public PathException(@Nonnull String message) {
-		super( message );
+		super( message, (String) null );
 	}
 
 	public PathException(@Nonnull String message, @Nullable Exception cause) {
-		super( message, cause );
+		super( message, null, cause );
 	}
 
 	public PathException(@Nonnull String message, @Nullable String hql, @Nullable Exception cause) {

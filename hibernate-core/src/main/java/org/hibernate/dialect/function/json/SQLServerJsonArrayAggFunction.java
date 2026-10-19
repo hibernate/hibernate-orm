@@ -57,7 +57,7 @@ public class SQLServerJsonArrayAggFunction extends JsonArrayAggFunction {
 		}
 		if ( caseWrapper ) {
 			if ( nullBehavior != JsonNullBehavior.ABSENT ) {
-				throw new QueryException( "Can't emulate json_arrayagg filter clause when using 'null on null' clause." );
+				throw new QueryException( "Can't emulate json_arrayagg filter clause when using 'null on null' clause.", (String) null );
 			}
 			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( "case when " );

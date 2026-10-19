@@ -30,7 +30,7 @@ public class SQLServerJsonExistsFunction extends JsonExistsFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		if ( arguments.errorBehavior() == JsonExistsErrorBehavior.TRUE ) {
-			throw new QueryException( "Can't emulate json_exists(... true on error) on SQL Server" );
+			throw new QueryException( "Can't emulate json_exists(... true on error) on SQL Server", (String) null );
 		}
 		if ( supportsExtendedJson ) {
 			if ( arguments.errorBehavior() == JsonExistsErrorBehavior.ERROR ) {
@@ -82,7 +82,7 @@ public class SQLServerJsonExistsFunction extends JsonExistsFunction {
 		}
 		else {
 			if ( arguments.errorBehavior() == JsonExistsErrorBehavior.FALSE ) {
-				throw new QueryException( "Can't emulate json_exists(... false on error) on SQL Server" );
+				throw new QueryException( "Can't emulate json_exists(... false on error) on SQL Server", (String) null );
 			}
 			final String jsonPath = walker.getLiteralValue( arguments.jsonPath() );
 			final JsonPathPassingClause passingClause = arguments.passingClause();

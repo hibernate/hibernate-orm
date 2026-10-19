@@ -31,14 +31,14 @@ public class CockroachDBJsonExistsFunction extends JsonExistsFunction {
 			SqlAstTranslator<?> walker) {
 		// jsonb_path_exists errors by default
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonExistsErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on CockroachDB" );
+			throw new QueryException( "Can't emulate on error clause on CockroachDB", (String) null );
 		}
 		final String jsonPath;
 		try {
 			jsonPath = walker.getLiteralValue( arguments.jsonPath() );
 		}
 		catch (Exception ex) {
-			throw new QueryException( "CockroachDB json_value only support literal json paths, but got " + arguments.jsonPath() );
+			throw new QueryException( "CockroachDB json_value only support literal json paths, but got " + arguments.jsonPath(), (String) null );
 		}
 		appendJsonExists(
 				sqlAppender,
@@ -84,7 +84,7 @@ public class CockroachDBJsonExistsFunction extends JsonExistsFunction {
 				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) jsonPathElement ).parameterName();
 				final Expression expression = jsonPathPassingClause.getPassingExpressions().get( parameterName );
 				if ( expression == null ) {
-					throw new QueryException( "JSON path [" + JsonPathHelper.toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterName + "] that is not passed" );
+					throw new QueryException( "JSON path [" + JsonPathHelper.toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 				}
 
 				sqlAppender.appendSql( "cast(" );

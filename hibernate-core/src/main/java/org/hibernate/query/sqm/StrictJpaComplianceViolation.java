@@ -53,12 +53,12 @@ public class StrictJpaComplianceViolation extends SemanticException {
 	private final Type type;
 
 	public StrictJpaComplianceViolation(@Nonnull Type type) {
-		super( "Strict JPA query language compliance was violated: " + type.description );
+		super( "Strict JPA query language compliance was violated: " + type.description, (String) null );
 		this.type = type;
 	}
 
 	public StrictJpaComplianceViolation(@Nonnull String message, @Nonnull Type type) {
-		super( message );
+		super( message, (String) null );
 		this.type = type;
 	}
 

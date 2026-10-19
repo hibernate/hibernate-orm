@@ -16,7 +16,7 @@ public class JsonPathHelper {
 
 	public static List<JsonPathElement> parseJsonPathElements(String jsonPath) {
 		if ( jsonPath.charAt( 0 ) != '$' ) {
-			throw new QueryException( "Json path expression expression emulation only supports absolute paths i.e. must start with a '$' but got: " + jsonPath );
+			throw new QueryException( "Json path expression expression emulation only supports absolute paths i.e. must start with a '$' but got: " + jsonPath, (String) null );
 		}
 		final var jsonPathElements = new ArrayList<JsonPathElement>();
 		int startIndex;
@@ -42,7 +42,7 @@ public class JsonPathHelper {
 				}
 			}
 			catch (Exception ex) {
-				throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath, ex );
+				throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath, null, ex );
 			}
 		}
 		return jsonPathElements;
@@ -115,7 +115,7 @@ public class JsonPathHelper {
 			final String parameterName = part.substring( 0, parameterNameEndIndex );
 			final Expression expression = passingClause.getPassingExpressions().get( parameterName );
 			if ( expression == null ) {
-				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 			}
 			appendJsonPassingLiteralValue( sqlAppender, walker.getLiteralValue( expression ) );
 			appendLiteral( sqlAppender, parameterNameEndIndex, part );
@@ -168,7 +168,7 @@ public class JsonPathHelper {
 			final String parameterName = part.substring( 0, parameterNameEndIndex );
 			final Expression expression = passingClause.getPassingExpressions().get( parameterName );
 			if ( expression == null ) {
-				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 			}
 			expression.accept( walker );
 			sqlAppender.appendSql( ',' );
@@ -191,11 +191,11 @@ public class JsonPathHelper {
 
 	private static void parseBracket(String jsonPath, int bracketStartIndex, int endIndex, ArrayList<JsonPathElement> jsonPathElements) {
 		if ( jsonPath.charAt( bracketStartIndex ) != '[' ) {
-			throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath );
+			throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath, (String) null );
 		}
 		final int bracketEndIndex = jsonPath.lastIndexOf( ']', endIndex );
 		if ( bracketEndIndex < bracketStartIndex ) {
-			throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath );
+			throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath, (String) null );
 		}
 		final int contentStartIndex = indexOfNonWhitespace( jsonPath, bracketStartIndex + 1 );
 		final int contentEndIndex = lastIndexOfWhitespace( jsonPath, bracketEndIndex - 1 );
@@ -239,7 +239,7 @@ public class JsonPathHelper {
 				final Expression expression = passingClause.getPassingExpressions()
 						.get( parameterIndexAccess.parameterName() );
 				if ( expression == null ) {
-					throw new QueryException( "JSON path [" + toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterIndexAccess.parameterName() + "] that is not passed" );
+					throw new QueryException( "JSON path [" + toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterIndexAccess.parameterName() + "] that is not passed", (String) null );
 				}
 				jsonPathElements.set( i, new JsonIndexAccess( walker.getLiteralValue( expression ) ) );
 			}

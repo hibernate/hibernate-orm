@@ -22,6 +22,6 @@ import org.hibernate.QueryException;
  */
 public class ParsingException extends QueryException {
 	public ParsingException(String message) {
-		super( message );
+		super( message, (String) null );
 	}
 }

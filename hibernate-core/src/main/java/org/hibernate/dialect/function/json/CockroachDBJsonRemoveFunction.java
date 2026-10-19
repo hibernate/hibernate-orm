@@ -50,7 +50,7 @@ public class CockroachDBJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
 				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
-				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 			}
 			else {
 				sqlAppender.appendSql( '\'' );

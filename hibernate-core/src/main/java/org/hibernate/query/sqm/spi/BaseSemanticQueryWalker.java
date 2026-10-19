@@ -333,7 +333,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 			consumePluralPartJoin( pluralPartJoin, transitive );
 		}
 		else {
-			throw new InterpretationException( "Could not visit SqmJoin [" + sqmJoin.getNavigablePath() + "] of type [" + sqmJoin.getClass().getName() + "]" );
+			throw new InterpretationException( null, "Could not visit SqmJoin [" + sqmJoin.getNavigablePath() + "] of type [" + sqmJoin.getClass().getName() + "]" );
 		}
 	}
 

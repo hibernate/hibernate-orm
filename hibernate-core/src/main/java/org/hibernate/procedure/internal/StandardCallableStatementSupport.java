@@ -106,7 +106,7 @@ public final class StandardCallableStatementSupport implements CallableStatement
 
 	private void verifyRefCursorSupport(Dialect dialect) {
 		if ( ! supportsRefCursors ) {
-			throw new QueryException( "Dialect [" + dialect.getClass().getName() + "] not known to support REF_CURSOR parameters" );
+			throw new QueryException( "Dialect [" + dialect.getClass().getName() + "] not known to support REF_CURSOR parameters", (String) null );
 		}
 	}
 }

@@ -40,7 +40,7 @@ public class CockroachDBJsonTableFunction extends PostgreSQLJsonTableFunction {
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		if ( arguments.errorBehavior() == JsonTableErrorBehavior.NULL ) {
-			throw new QueryException( "Can't emulate null on error clause on CockroachDB" );
+			throw new QueryException( "Can't emulate null on error clause on CockroachDB", (String) null );
 		}
 		final SqlAstNode jsonPathExpression = arguments.jsonPath();
 		final List<JsonPathHelper.JsonPathElement> jsonPathElements;
@@ -56,7 +56,7 @@ public class CockroachDBJsonTableFunction extends PostgreSQLJsonTableFunction {
 				jsonPath = walker.getLiteralValue( arguments.jsonPath() );
 			}
 			catch (Exception ex) {
-				throw new QueryException( "CockroachDB json_table only support literal json paths, but got " + arguments.jsonPath() );
+				throw new QueryException( "CockroachDB json_table only support literal json paths, but got " + arguments.jsonPath(), (String) null );
 			}
 			isArray = jsonPath.endsWith( "[*]" );
 			if ( isArray ) {
@@ -138,7 +138,7 @@ public class CockroachDBJsonTableFunction extends PostgreSQLJsonTableFunction {
 	protected void renderJsonExistsColumnDefinition(SqlAppender sqlAppender, JsonTableExistsColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		// jsonb_path_exists errors by default
 		if ( definition.errorBehavior() != null && definition.errorBehavior() != JsonExistsErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on CockroachDB" );
+			throw new QueryException( "Can't emulate on error clause on CockroachDB", (String) null );
 		}
 		final String jsonPath = definition.jsonPath() == null
 				? "$." + definition.name()
@@ -159,10 +159,10 @@ public class CockroachDBJsonTableFunction extends PostgreSQLJsonTableFunction {
 	protected void renderJsonQueryColumnDefinition(SqlAppender sqlAppender, JsonTableQueryColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		// jsonb_path_query functions error by default
 		if ( definition.errorBehavior() != null && definition.errorBehavior() != JsonQueryErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on CockroachDB" );
+			throw new QueryException( "Can't emulate on error clause on CockroachDB", (String) null );
 		}
 		if ( definition.emptyBehavior() != null && definition.emptyBehavior() != JsonQueryEmptyBehavior.NULL ) {
-			throw new QueryException( "Can't emulate on empty clause on CockroachDB" );
+			throw new QueryException( "Can't emulate on empty clause on CockroachDB", (String) null );
 		}
 		final JsonQueryWrapMode wrapMode = definition.wrapMode();
 
@@ -191,10 +191,10 @@ public class CockroachDBJsonTableFunction extends PostgreSQLJsonTableFunction {
 	protected void renderJsonValueColumnDefinition(SqlAppender sqlAppender, JsonTableValueColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		// jsonb_path_query_first errors by default
 		if ( definition.errorBehavior() != null && definition.errorBehavior() != JsonValueErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on CockroachDB" );
+			throw new QueryException( "Can't emulate on error clause on CockroachDB", (String) null );
 		}
 		if ( definition.emptyBehavior() != null && definition.emptyBehavior() != JsonValueEmptyBehavior.NULL ) {
-			throw new QueryException( "Can't emulate on empty clause on CockroachDB" );
+			throw new QueryException( "Can't emulate on empty clause on CockroachDB", (String) null );
 		}
 		final String jsonPath = definition.jsonPath() == null
 				? "$." + definition.name()

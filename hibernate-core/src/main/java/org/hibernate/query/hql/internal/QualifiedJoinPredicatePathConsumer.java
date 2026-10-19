@@ -72,7 +72,8 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 									"SqmQualifiedJoin predicate referred to SqmRoot [%s] other than the join's root [%s]",
 									pathRoot.getNavigablePath(),
 									sqmJoin.getNavigablePath()
-							)
+							),
+							getCreationState() instanceof SemanticQueryBuilder<?> builder ? builder.getQuery() : null
 					);
 				}
 
@@ -104,7 +105,8 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 								"SqmQualifiedJoin predicate referred to SqmRoot [%s] other than the join's root [%s]",
 								pathRoot.getNavigablePath(),
 								sqmJoin.getNavigablePath()
-						)
+						),
+						getCreationState() instanceof SemanticQueryBuilder<?> builder ? builder.getQuery() : null
 				);
 			}
 

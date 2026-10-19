@@ -1038,7 +1038,7 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 				case YEAR:
 				case QUARTER:
 				case MONTH:
-					throw new SemanticException( "Illegal unit for timestamp_add(): " + unit );
+					throw new SemanticException( "Illegal unit for timestamp_add(): " + unit, (String) null );
 				case WEEK:
 					return "timestamp_add(?3, interval cast(?2 * 7 as int64) day)";
 				case SECOND:
@@ -1054,7 +1054,7 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 				case MINUTE:
 				case HOUR:
 				case NATIVE:
-					throw new SemanticException( "Illegal unit for date_add(): " + unit );
+					throw new SemanticException( "Illegal unit for date_add(): " + unit, (String) null );
 				default:
 					return "date_add(?3, interval cast(?2 as int64) ?1)";
 			}
@@ -1070,7 +1070,7 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 				case YEAR:
 				case QUARTER:
 				case MONTH:
-					throw new SemanticException( "Illegal unit for timestamp_diff(): " + unit );
+					throw new SemanticException( "Illegal unit for timestamp_diff(): " + unit, (String) null );
 				case WEEK:
 					return "div(timestamp_diff(?3, ?2, day), 7)";
 				case NATIVE:

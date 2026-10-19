@@ -73,7 +73,7 @@ public class StringFunction
 			sqlAppender.appendSql( " end" );
 		}
 		else {
-			throw new QueryException( "Unsupported enum type passed to 'string()' function: " + argumentType );
+			throw new QueryException( "Unsupported enum type passed to 'string()' function: " + argumentType, (String) null );
 		}
 	}
 

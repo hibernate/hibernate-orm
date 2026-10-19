@@ -34,10 +34,10 @@ public class PostgreSQLJsonQueryFunction extends JsonQueryFunction {
 			SqlAstTranslator<?> walker) {
 		// jsonb_path_query functions error by default
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonQueryErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on PostgreSQL" );
+			throw new QueryException( "Can't emulate on error clause on PostgreSQL", (String) null );
 		}
 		if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonQueryEmptyBehavior.NULL ) {
-			throw new QueryException( "Can't emulate on empty clause on PostgreSQL" );
+			throw new QueryException( "Can't emulate on empty clause on PostgreSQL", (String) null );
 		}
 
 		appendJsonQuery(

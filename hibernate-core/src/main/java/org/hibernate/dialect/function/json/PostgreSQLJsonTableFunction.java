@@ -47,7 +47,7 @@ public class PostgreSQLJsonTableFunction extends JsonTableFunction {
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		if ( arguments.errorBehavior() == JsonTableErrorBehavior.NULL ) {
-			throw new QueryException( "Can't emulate null on error clause on PostgreSQL" );
+			throw new QueryException( "Can't emulate null on error clause on PostgreSQL", (String) null );
 		}
 		sqlAppender.appendSql( "(select" );
 
@@ -136,10 +136,10 @@ public class PostgreSQLJsonTableFunction extends JsonTableFunction {
 	protected void renderJsonValueColumnDefinition(SqlAppender sqlAppender, JsonTableValueColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		// jsonb_path_query_first errors by default
 		if ( definition.errorBehavior() != null && definition.errorBehavior() != JsonValueErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on PostgreSQL" );
+			throw new QueryException( "Can't emulate on error clause on PostgreSQL", (String) null );
 		}
 		if ( definition.emptyBehavior() != null && definition.emptyBehavior() != JsonValueEmptyBehavior.NULL ) {
-			throw new QueryException( "Can't emulate on empty clause on PostgreSQL" );
+			throw new QueryException( "Can't emulate on empty clause on PostgreSQL", (String) null );
 		}
 		final String jsonPath = definition.jsonPath() == null
 				? "$." + definition.name()
@@ -164,10 +164,10 @@ public class PostgreSQLJsonTableFunction extends JsonTableFunction {
 	protected void renderJsonQueryColumnDefinition(SqlAppender sqlAppender, JsonTableQueryColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		// jsonb_path_query functions error by default
 		if ( definition.errorBehavior() != null && definition.errorBehavior() != JsonQueryErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on PostgreSQL" );
+			throw new QueryException( "Can't emulate on error clause on PostgreSQL", (String) null );
 		}
 		if ( definition.emptyBehavior() != null && definition.emptyBehavior() != JsonQueryEmptyBehavior.NULL ) {
-			throw new QueryException( "Can't emulate on empty clause on PostgreSQL" );
+			throw new QueryException( "Can't emulate on empty clause on PostgreSQL", (String) null );
 		}
 		final String jsonPath = definition.jsonPath() == null
 				? "$." + definition.name()
@@ -192,7 +192,7 @@ public class PostgreSQLJsonTableFunction extends JsonTableFunction {
 	protected void renderJsonExistsColumnDefinition(SqlAppender sqlAppender, JsonTableExistsColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		// jsonb_path_exists errors by default
 		if ( definition.errorBehavior() != null && definition.errorBehavior() != JsonExistsErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on PostgreSQL" );
+			throw new QueryException( "Can't emulate on error clause on PostgreSQL", (String) null );
 		}
 		final String jsonPath = definition.jsonPath() == null
 				? "$." + definition.name()

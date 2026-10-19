@@ -46,7 +46,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 							"Cannot compare left expression of type '%s' with right expression of type '%s'",
 							castNonNull( leftHandExpression.getNodeType() ).getTypeName(),
 							pluralPath.getNodeType().getTypeName()
-					)
+					), (String) null
 			);
 		}
 

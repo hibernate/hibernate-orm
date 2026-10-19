@@ -43,6 +43,6 @@ public class InterpretationException extends QueryException {
 	 */
 	@Deprecated(since = "6.3", forRemoval = true)
 	public InterpretationException(String message) {
-		super( "Error interpreting query [" + message + "]" );
+		this( null, message );
 	}
 }

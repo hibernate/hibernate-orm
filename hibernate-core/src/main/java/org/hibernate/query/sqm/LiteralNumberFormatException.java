@@ -10,10 +10,10 @@ import org.hibernate.query.SemanticException;
  */
 public class LiteralNumberFormatException extends SemanticException {
 	public LiteralNumberFormatException(@Nonnull String message) {
-		super( message );
+		super( message, (String) null );
 	}
 
 	public LiteralNumberFormatException(@Nonnull String message, @Nullable Exception cause) {
-		super( message, cause );
+		super( message, null, cause );
 	}
 }

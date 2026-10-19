@@ -29,7 +29,7 @@ public class PostgreSQLJsonExistsFunction extends JsonExistsFunction {
 			SqlAstTranslator<?> walker) {
 		// jsonb_path_exists errors by default
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonExistsErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on PostgreSQL" );
+			throw new QueryException( "Can't emulate on error clause on PostgreSQL", (String) null );
 		}
 		appendJsonExists( sqlAppender, walker, arguments.jsonDocument(), arguments.jsonPath(), arguments.passingClause() );
 	}

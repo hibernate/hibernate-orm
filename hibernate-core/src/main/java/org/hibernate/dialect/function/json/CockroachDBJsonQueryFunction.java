@@ -33,10 +33,10 @@ public class CockroachDBJsonQueryFunction extends JsonQueryFunction {
 			SqlAstTranslator<?> walker) {
 		// jsonb_path_query functions error by default
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonQueryErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on CockroachDB" );
+			throw new QueryException( "Can't emulate on error clause on CockroachDB", (String) null );
 		}
 		if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonQueryEmptyBehavior.NULL ) {
-			throw new QueryException( "Can't emulate on empty clause on CockroachDB" );
+			throw new QueryException( "Can't emulate on empty clause on CockroachDB", (String) null );
 		}
 		final JsonQueryWrapMode wrapMode = arguments.wrapMode();
 
@@ -49,7 +49,7 @@ public class CockroachDBJsonQueryFunction extends JsonQueryFunction {
 			jsonPath = walker.getLiteralValue( arguments.jsonPath() );
 		}
 		catch (Exception ex) {
-			throw new QueryException( "CockroachDB json_value only support literal json paths, but got " + arguments.jsonPath() );
+			throw new QueryException( "CockroachDB json_value only support literal json paths, but got " + arguments.jsonPath(), (String) null );
 		}
 		appendJsonQuery(
 				sqlAppender,
@@ -101,7 +101,7 @@ public class CockroachDBJsonQueryFunction extends JsonQueryFunction {
 					final Expression expression = jsonPathPassingClause.getPassingExpressions().get( parameterName );
 					if ( expression == null ) {
 						throw new QueryException(
-								"JSON path [" + JsonPathHelper.toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterName + "] that is not passed" );
+								"JSON path [" + JsonPathHelper.toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 					}
 
 					sqlAppender.appendSql( "cast(" );

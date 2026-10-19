@@ -235,7 +235,7 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 					addIdColumns( embeddableModelPart, idColumns );
 				}
 				else {
-					throw new QueryException( "Unsupported model part container: " + modelPartContainer );
+					throw new QueryException( "Unsupported model part container: " + modelPartContainer, (String) null );
 				}
 			}
 

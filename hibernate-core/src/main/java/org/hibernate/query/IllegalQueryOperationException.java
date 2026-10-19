@@ -17,7 +17,7 @@ import org.hibernate.QueryException;
  */
 public class IllegalQueryOperationException extends QueryException {
 	public IllegalQueryOperationException(@Nonnull String message) {
-		super( message );
+		super( message, (String) null );
 	}
 
 	public IllegalQueryOperationException(@Nonnull String message, @Nullable String queryString, @Nullable Exception cause) {

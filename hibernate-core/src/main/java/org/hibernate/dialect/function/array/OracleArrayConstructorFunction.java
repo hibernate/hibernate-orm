@@ -23,12 +23,12 @@ public class OracleArrayConstructorFunction extends ArrayConstructorFunction {
 			SqlAstTranslator<?> walker) {
 		if ( returnType == null ) {
 			throw new SemanticException(
-					"Oracle array constructor emulation requires knowledge about the return type, but resolved return type could not be determined"
+					"Oracle array constructor emulation requires knowledge about the return type, but resolved return type could not be determined", (String) null
 			);
 		}
 		if ( !(returnType instanceof BasicPluralType<?, ?> pluralType) ) {
 			throw new SemanticException(
-					"Oracle array constructor emulation requires a basic plural return type, but resolved return type was: " + returnType
+					"Oracle array constructor emulation requires a basic plural return type, but resolved return type was: " + returnType, (String) null
 			);
 		}
 		final String arrayTypeName = DdlTypeHelper.getCastTypeName(

@@ -173,7 +173,8 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				return literalJava;
 			}
 
-			throw new SemanticException( "Could not interpret path expression '" + pathSoFar + "'" );
+			throw new SemanticException( "Could not interpret path expression '" + pathSoFar + "'",
+					creationState instanceof SemanticQueryBuilder<?> builder ? builder.getQuery() : null );
 		}
 
 		private SemanticPathPart resolvePath(String identifier, boolean isTerminal, SqmCreationState creationState) {

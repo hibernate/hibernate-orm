@@ -618,7 +618,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 				// all the following units:
 				case HOUR, MINUTE, SECOND, NANOSECOND, NATIVE ->
 						"extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
-				default -> throw new SemanticException( "Unrecognized field: " + unit );
+				default -> throw new SemanticException( "Unrecognized field: " + unit, (String) null );
 			};
 		}
 	}

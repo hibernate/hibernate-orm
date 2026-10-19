@@ -163,7 +163,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 			else if ( queryPart instanceof SqmQuerySpec<?> querySpec ) {
 				final var selections = querySpec.getSelectClause().getSelections();
 				if ( firstSelectionSize != selections.size() ) {
-					throw new SemanticException( "All query parts in a query group must have the same arity" );
+					throw new SemanticException( "All query parts in a query group must have the same arity", (String) null );
 				}
 				for ( int j = 0; j < firstSelectionSize; j++ ) {
 					final SqmTypedNode<?> firstSqmSelection = typedNodes.get( j );
@@ -171,7 +171,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 					final JavaType<?> nodeJavaType = selections.get( j ).getNodeJavaType();
 					if ( nodeJavaType != null && firstJavaType != null && firstJavaType != nodeJavaType ) {
 						throw new SemanticException(
-								"Select items of the same index must have the same java type across all query parts"
+								"Select items of the same index must have the same java type across all query parts", (String) null
 						);
 					}
 					if ( firstSqmSelection instanceof SqmFrom<?, ?> firstFrom ) {
@@ -196,7 +196,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 					final var matchingAttrJoin = findFirstFetchJoin( joinIter );
 					if ( matchingAttrJoin == null || firstAttrJoin.getModel() != matchingAttrJoin.getModel() ) {
 						throw new SemanticException(
-								"All query parts in a query group must have the same join fetches in the same order"
+								"All query parts in a query group must have the same join fetches in the same order", (String) null
 						);
 					}
 					validateFetchesMatch( firstAttrJoin, matchingAttrJoin );
@@ -208,7 +208,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 			if ( joinIter.next() instanceof SqmAttributeJoin<?, ?> attrJoin
 					&& attrJoin.isFetched() ) {
 				throw new SemanticException(
-						"All query parts in a query group must have the same join fetches in the same order"
+						"All query parts in a query group must have the same join fetches in the same order", (String) null
 				);
 			}
 		}

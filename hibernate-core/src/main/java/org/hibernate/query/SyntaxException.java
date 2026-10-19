@@ -19,6 +19,6 @@ public class SyntaxException extends QueryException {
 		super( message, queryString );
 	}
 	public SyntaxException(@Nonnull String message) {
-		super( message );
+		super( message, (String) null );
 	}
 }

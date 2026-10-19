@@ -258,7 +258,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
 				if ( found != null ) {
 					throw new SemanticException( "Ambiguous unqualified attribute reference '" + navigableName +
-							"' (qualify the attribute reference by an identification variable)" );
+							"' (qualify the attribute reference by an identification variable)",
+							associatedProcessingState.getCreationState() instanceof SemanticQueryBuilder<?> builder ? builder.getQuery() : null );
 				}
 				found = fromElement;
 			}
@@ -303,7 +304,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	public <X extends SqmFrom<?, ?>> X resolveFromByPath(NavigablePath navigablePath) {
 		final X from = findFromByPath( navigablePath );
 		if ( from == null ) {
-			throw new SemanticException( "Cannot resolve find from by navigable path '" + navigablePath + "'" );
+			throw new SemanticException( "Cannot resolve find from by navigable path '" + navigablePath + "'",
+					associatedProcessingState.getCreationState() instanceof SemanticQueryBuilder<?> builder ? builder.getQuery() : null );
 		}
 		return from;
 	}
@@ -319,7 +321,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		else {
 			final var lhs = path.getLhs();
 			if ( lhs == null ) {
-				throw new SemanticException( "Cannot resolve path '" + path + "'" );
+				throw new SemanticException( "Cannot resolve path '" + path + "'",
+						associatedProcessingState.getCreationState() instanceof SemanticQueryBuilder<?> builder ? builder.getQuery() : null );
 			}
 			final var sqmFrom = resolveFrom( lhs ).join( path.getNavigablePath().getLocalName() );
 			register( sqmFrom );

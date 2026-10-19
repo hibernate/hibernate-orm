@@ -558,8 +558,10 @@ To make use of multi-tenancy, we'll usually need to set at least one of these co
 | Configuration property name           | Purpose
 
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_IDENTIFIER_RESOLVER[`hibernate.tenant_identifier_resolver`]  | Specifies the `CurrentTenantIdentifierResolver`
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_DATASOURCE_MAPPER[`hibernate.multi_tenant.datasource_mapper`]  | Specifies the `TenantDataSourceMapper` for database-based multi-tenancy
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_SCHEMA_MAPPER[`hibernate.multi_tenant.schema_mapper`]  | Specifies the `TenantSchemaMapper` for schema-based multi-tenancy
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CREDENTIALS_MAPPER[`hibernate.multi_tenant.credentials_mapper`]  | Specifies the `TenantCredentialsMapper` for schema-based or discriminator-based multi-tenancy
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_DATASOURCE_MAPPER[`hibernate.multi_tenant.datasource_mapper`]  | Specifies the `TenantDataSourceMapper` for JNDI-based data source selection
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CONNECTION_PROVIDER[`hibernate.multi_tenant_connection_provider`]  | Specifies the `MultiTenantConnectionProvider` for database-based multi-tenancy
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_RLS_ENABLED[`hibernate.multi_tenant.rls_enabled`]  | When `false`, disables enforcement of discriminator-based multi-tenancy via database-native row-level security
 |===
@@ -577,18 +579,19 @@ There are three common approaches to multi-tenancy:
 
 The first option is to give each tenant its own database.
 That is, we'll use a separate source of JDBC connections for each tenant.
+There are two ways to implement this option:
+
+- implement a custom `MultiTenantConnectionProvider`, or
+- just supply a `TenantDataSourceMapper`.
 
 The interface link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] is responsible for obtaining an appropriate `Connection` for a given tenant.
-Typically, we'll provide a custom implementation of this interface:
+If we provide a custom implementation of this interface:
 
 - from time to time, Hibernate will ask for a connection, passing the id of the current tenant, and then we must create an appropriate connection or obtain one from a pool, and return it to Hibernate, and
 - later, Hibernate will release the connection and ask us to destroy it or return it to the appropriate pool.
 
-[TIP]
-====
-Check out link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[`DataSourceBasedMultiTenantConnectionProviderImpl`] for inspiration.
-If your source of JDBC connections is a set of JNDI-bound ``DataSource``s, you might even be able to use this implementation directly.
-====
+Alternatively, If the connection pools are JNDI-bound ``DataSource``s, we can instead supply a link:{doc-javadoc-url}org/hibernate/context/spi/TenantDataSourceMapper.html[`TenantDataSourceMapper`] mapping each tenant id to the full JNDI name of its data source.
+
 
 [discrete]
 ==== Schema-based multi-tenancy

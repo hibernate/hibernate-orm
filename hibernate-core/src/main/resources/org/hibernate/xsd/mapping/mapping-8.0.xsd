@@ -726,6 +726,7 @@
 
                 <xsd:group ref="orm:basic-type-group" />
             </xsd:choice>
+            <xsd:element name="update-timestamp" type="orm:update-timestamp" minOccurs="0"/>
             <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                          minOccurs="0"/>
             <!-- hbm : is the state of this property considered mutable : ! @Immutable -->

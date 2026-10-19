@@ -369,7 +369,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				final var tableReference = resolveTableReference( columnReference, tableReferenceByAlias );
 
 				if ( assignmentTableReference != null && assignmentTableReference != tableReference ) {
-					throw new SemanticException( "Assignment referred to columns from multiple tables: " + i );
+					throw new SemanticException( "Assignment referred to columns from multiple tables: " + i, (String) null );
 				}
 				assignmentTableReference = tableReference;
 			}
@@ -1006,7 +1006,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			return tableReferenceByQualifier;
 		}
 
-		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
+		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference, (String) null );
 	}
 
 	private NamedTableReference resolveUnionTableReference(TableReference tableReference, String tableExpression) {

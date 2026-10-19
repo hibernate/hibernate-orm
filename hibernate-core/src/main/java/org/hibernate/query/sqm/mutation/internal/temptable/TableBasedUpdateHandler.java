@@ -229,7 +229,7 @@ public class TableBasedUpdateHandler
 				final var tableReference = resolveTableReference( columnReference, tableReferenceByAlias );
 				if ( assignmentTableReference != null && assignmentTableReference != tableReference ) {
 					throw new SemanticException( "Assignment referred to columns from multiple tables: "
-													+ assignment.getAssignable() );
+													+ assignment.getAssignable(), (String) null );
 				}
 				assignmentTableReference = tableReference;
 			}
@@ -354,7 +354,7 @@ public class TableBasedUpdateHandler
 			return tableReferenceByQualifier;
 		}
 
-		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
+		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference, (String) null );
 	}
 
 	protected NamedTableReference resolveUnionTableReference(

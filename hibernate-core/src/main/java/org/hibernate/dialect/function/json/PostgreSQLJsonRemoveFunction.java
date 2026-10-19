@@ -49,7 +49,7 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess parameterIndexAccess ) {
 				final String parameterName = parameterIndexAccess.parameterName();
-				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 			}
 			else {
 				sqlAppender.appendSql( '\'' );

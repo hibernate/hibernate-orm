@@ -140,7 +140,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			final boolean isArray;
 			if ( arguments.jsonPath() != null ) {
 				if ( !( arguments.jsonPath() instanceof Literal literal) ) {
-					throw new QueryException( "H2 json_table() only supports literal json paths, but got " + arguments.jsonPath() );
+					throw new QueryException( "H2 json_table() only supports literal json paths, but got " + arguments.jsonPath(), (String) null );
 				}
 				final String rawJsonPath = (String) literal.getLiteralValue();
 				isArray = isArrayAccess( rawJsonPath );
@@ -310,7 +310,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			if ( arguments.jsonPath() != null ) {
 				if ( !(arguments.jsonPath() instanceof Literal literal) ) {
 					throw new QueryException(
-							"H2 json_table() only supports literal json paths, but got " + arguments.jsonPath() );
+							"H2 json_table() only supports literal json paths, but got " + arguments.jsonPath(), (String) null );
 				}
 				final String rawJsonPath = (String) literal.getLiteralValue();
 				isArray = isArrayAccess( rawJsonPath );
@@ -427,7 +427,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		if ( arguments.errorBehavior() == JsonTableErrorBehavior.NULL ) {
-			throw new QueryException( "Can't emulate null on error clause on H2" );
+			throw new QueryException( "Can't emulate null on error clause on H2", (String) null );
 		}
 
 		final Expression jsonPathExpression = arguments.jsonPath();
@@ -615,7 +615,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			final boolean isArray;
 			if ( arguments.jsonPath() != null ) {
 				if ( !( arguments.jsonPath() instanceof Literal literal) ) {
-					throw new QueryException( "H2 json_table() only supports literal json paths, but got " + arguments.jsonPath() );
+					throw new QueryException( "H2 json_table() only supports literal json paths, but got " + arguments.jsonPath(), (String) null );
 				}
 				final String rawJsonPath = (String) literal.getLiteralValue();
 				isArray = isArrayAccess( rawJsonPath );
@@ -704,7 +704,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			final Literal defaultExpression;
 			if ( emptyBehavior != null && emptyBehavior.getDefaultExpression() != null ) {
 				if ( !( emptyBehavior.getDefaultExpression() instanceof Literal literal ) ) {
-					throw new QueryException( "H2 json_table() only supports literal default expressions, but got " + emptyBehavior.getDefaultExpression() );
+					throw new QueryException( "H2 json_table() only supports literal default expressions, but got " + emptyBehavior.getDefaultExpression(), (String) null );
 				}
 				defaultExpression = literal;
 			}

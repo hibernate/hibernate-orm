@@ -12,7 +12,7 @@ public class QueryParameterException extends QueryException {
 	 * @param message The message explaining the exception condition
 	 */
 	public QueryParameterException(String message) {
-		super( message );
+		super( message, (String) null );
 	}
 
 	/**

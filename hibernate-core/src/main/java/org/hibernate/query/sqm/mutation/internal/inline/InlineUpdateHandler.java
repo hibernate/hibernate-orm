@@ -137,7 +137,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 				);
 
 				if ( assignmentTableReference != null && assignmentTableReference != tableReference ) {
-					throw new SemanticException( "Assignment referred to columns from multiple tables: " + assignment.getAssignable() );
+					throw new SemanticException( "Assignment referred to columns from multiple tables: " + assignment.getAssignable(), (String) null );
 				}
 
 				assignmentTableReference = tableReference;
@@ -624,7 +624,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 			return tableReferenceByQualifier;
 		}
 
-		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
+		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference, (String) null );
 	}
 
 	private NamedTableReference resolveUnionTableReference(

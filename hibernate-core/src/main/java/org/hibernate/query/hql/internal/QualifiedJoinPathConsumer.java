@@ -166,7 +166,8 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	private AttributeJoinDelegate resolveAlias(String identifier, boolean isTerminal, SqmFrom<?, Object> pathRootByAlias) {
 		// identifier is an alias (identification variable)
 		if (isTerminal) {
-			throw new SemanticException( "Cannot join to root entity '" + identifier + "'" );
+			throw new SemanticException( "Cannot join to root entity '" + identifier + "'",
+					creationState instanceof SemanticQueryBuilder<?> builder ? builder.getQuery() : null );
 		}
 		else {
 			return new AttributeJoinDelegate(

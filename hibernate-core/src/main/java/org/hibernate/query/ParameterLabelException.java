@@ -11,6 +11,6 @@ import jakarta.annotation.Nonnull;
  */
 public class ParameterLabelException extends SemanticException {
 	public ParameterLabelException(@Nonnull String message) {
-		super(message);
+		super( message, (String) null );
 	}
 }

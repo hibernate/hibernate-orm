@@ -54,7 +54,7 @@ public class PostgreSQLJsonReplaceFunction extends AbstractJsonReplaceFunction {
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess jsonParameterIndexAccess ) {
 				final String parameterName = jsonParameterIndexAccess.parameterName();
-				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 			}
 			else {
 				sqlAppender.appendSql( '\'' );

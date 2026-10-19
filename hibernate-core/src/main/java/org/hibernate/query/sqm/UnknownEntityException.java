@@ -29,12 +29,12 @@ public class UnknownEntityException extends SemanticException {
 	}
 
 	public UnknownEntityException(@Nonnull String message, @Nonnull String entityName) {
-		super( message );
+		super( message, (String) null );
 		this.entityName = entityName;
 	}
 
 	public UnknownEntityException(@Nonnull String message, @Nonnull String entityName, @Nullable Exception cause) {
-		super( message, cause );
+		super( message, null, cause );
 		this.entityName = entityName;
 	}
 

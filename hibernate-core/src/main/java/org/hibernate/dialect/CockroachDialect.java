@@ -1036,7 +1036,7 @@ public class CockroachDialect extends Dialect implements CurrentTemporalSupport,
 				// https://github.com/cockroachdb/cockroach/issues/72523
 				case HOUR, MINUTE, SECOND, NANOSECOND, NATIVE ->
 						"round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")::int";
-				default -> throw new SemanticException( "Unrecognized field: " + unit );
+				default -> throw new SemanticException( "Unrecognized field: " + unit, (String) null );
 			};
 		}
 	}

@@ -35,7 +35,7 @@ public class PostgreSQLJsonObjectAggFunction extends JsonObjectAggFunction {
 		}
 		else {
 			if ( arguments.uniqueKeysBehavior() == JsonObjectAggUniqueKeysBehavior.WITH ) {
-				throw new QueryException( "Can't emulate json_objectagg 'with unique keys' clause." );
+				throw new QueryException( "Can't emulate json_objectagg 'with unique keys' clause.", (String) null );
 			}
 			final String jsonTypeName = translator.getSessionFactory().getTypeConfiguration().getDdlTypeRegistry()
 					.getTypeName( SqlTypes.JSON, translator.getSessionFactory().getJdbcServices().getDialect() );

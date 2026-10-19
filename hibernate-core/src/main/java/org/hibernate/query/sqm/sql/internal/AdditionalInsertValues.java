@@ -88,7 +88,7 @@ public final class AdditionalInsertValues {
 				if ( !( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkGenerator ) ) {
 					throw new SemanticException(
 							"SQM INSERT-SELECT without bulk insertion capable identifier generator: "
-									+ identifierGenerator
+									+ identifierGenerator, (String) null
 					);
 				}
 				if ( identifierGenerator instanceof OptimizableGenerator optimizableGenerator ) {

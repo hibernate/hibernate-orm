@@ -36,7 +36,7 @@ public class MySQLJsonTableFunction extends JsonTableFunction {
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		if ( arguments.errorBehavior() == JsonTableErrorBehavior.NULL ) {
-			throw new QueryException( "Can't emulate null on error clause on MySQL" );
+			throw new QueryException( "Can't emulate null on error clause on MySQL", (String) null );
 		}
 		sqlAppender.appendSql( "json_table(" );
 		arguments.jsonDocument().accept( walker );
@@ -118,7 +118,7 @@ public class MySQLJsonTableFunction extends JsonTableFunction {
 	protected void renderJsonQueryColumnDefinition(SqlAppender sqlAppender, JsonTableQueryColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		// Conditional wrapper is the default behavior on MySQL
 		if ( definition.wrapMode() != null && definition.wrapMode() != JsonQueryWrapMode.WITH_CONDITIONAL_WRAPPER ) {
-			throw new QueryException( "Can't emulate wrapper clause on MySQL" );
+			throw new QueryException( "Can't emulate wrapper clause on MySQL", (String) null );
 		}
 		sqlAppender.appendSql( definition.name() );
 		sqlAppender.appendSql( ' ' );
@@ -161,7 +161,7 @@ public class MySQLJsonTableFunction extends JsonTableFunction {
 	protected void renderJsonExistsColumnDefinition(SqlAppender sqlAppender, JsonTableExistsColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		// jsonb_path_exists errors by default
 		if ( definition.errorBehavior() != null && definition.errorBehavior() != JsonExistsErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on MySQL" );
+			throw new QueryException( "Can't emulate on error clause on MySQL", (String) null );
 		}
 		sqlAppender.appendSql( definition.name() );
 		sqlAppender.appendSql( ' ' );

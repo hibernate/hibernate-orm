@@ -95,7 +95,7 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 			case NANOSECOND:
 				return extractNanoseconds( expression, queryEngine );
 			case NATIVE:
-				throw new SemanticException("NATIVE is not a legal field for extract()");
+				throw new SemanticException("NATIVE is not a legal field for extract()", (String) null);
 			case OFFSET:
 				if ( compositeTemporal ) {
 					final SqmPath<Object> offsetPath = ( (SqmPath<?>) originalExpression ).get(

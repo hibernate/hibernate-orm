@@ -31,14 +31,14 @@ public class SQLServerJsonArrayInsertFunction extends AbstractJsonArrayInsertFun
 		if ( jsonPath.isEmpty()
 				|| bracketEndIndex != jsonPath.length() - 1
 				|| bracketStartIndex == -1 ) {
-			throw new QueryException( "JSON path does not end with an array index: " + jsonPath );
+			throw new QueryException( "JSON path does not end with an array index: " + jsonPath, (String) null );
 		}
 		final int index;
 		try {
 			index = Integer.parseInt( jsonPath.substring( bracketStartIndex + 1, bracketEndIndex ) );
 		}
 		catch ( NumberFormatException e ) {
-			throw new QueryException( "JSON path does not point to a valid array index: " + jsonPath );
+			throw new QueryException( "JSON path does not point to a valid array index: " + jsonPath, (String) null );
 		}
 		final Expression json = (Expression) arguments.get( 0 );
 		final SqlAstNode value = arguments.get( 2 );

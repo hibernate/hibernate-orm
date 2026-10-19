@@ -38,10 +38,10 @@ public class H2JsonValueFunction extends JsonValueFunction {
 			SqlAstTranslator<?> walker) {
 		// Json dereference errors by default if the JSON is invalid
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonValueErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on H2" );
+			throw new QueryException( "Can't emulate on error clause on H2", (String) null );
 		}
 		if ( arguments.emptyBehavior() == JsonValueEmptyBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate error on empty clause on H2" );
+			throw new QueryException( "Can't emulate error on empty clause on H2", (String) null );
 		}
 		final Expression defaultExpression = arguments.emptyBehavior() == null
 				? null
@@ -66,7 +66,7 @@ public class H2JsonValueFunction extends JsonValueFunction {
 			jsonPath = walker.getLiteralValue( arguments.jsonPath() );
 		}
 		catch (Exception ex) {
-			throw new QueryException( "H2 json_value only support literal json paths, but got " + arguments.jsonPath() );
+			throw new QueryException( "H2 json_value only support literal json paths, but got " + arguments.jsonPath(), (String) null );
 		}
 
 		sqlAppender.appendSql( "stringdecode(regexp_replace(nullif(" );
@@ -139,7 +139,7 @@ public class H2JsonValueFunction extends JsonValueFunction {
 				final String parameterName = parameterIndexAccess.parameterName();
 				final Expression expression = passingClause.getPassingExpressions().get( parameterName );
 				if ( expression == null ) {
-					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 				}
 
 				sqlAppender.appendSql( '[' );
@@ -184,10 +184,10 @@ public class H2JsonValueFunction extends JsonValueFunction {
 				final String parameterName = parameterIndexAccess.parameterName();
 				final Expression expression = passingClause.getPassingExpressions().get( parameterName );
 				if ( expression == null ) {
-					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 				}
 				if ( !( expression instanceof Literal literal) ) {
-					throw new QueryException( "H2 json_table() passing clause only supports literal json path passing values, but got " + expression );
+					throw new QueryException( "H2 json_table() passing clause only supports literal json path passing values, but got " + expression, (String) null );
 				}
 
 				sb.append( '[' );

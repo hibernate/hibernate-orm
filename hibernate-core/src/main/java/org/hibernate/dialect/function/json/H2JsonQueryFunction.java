@@ -29,10 +29,10 @@ public class H2JsonQueryFunction extends JsonQueryFunction {
 			SqlAstTranslator<?> walker) {
 		// Json dereference errors by default if the JSON is invalid
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonQueryErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on H2" );
+			throw new QueryException( "Can't emulate on error clause on H2", (String) null );
 		}
 		if ( arguments.emptyBehavior() == JsonQueryEmptyBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate error on empty clause on H2" );
+			throw new QueryException( "Can't emulate error on empty clause on H2", (String) null );
 		}
 		appendJsonQuery(
 				sqlAppender,
@@ -60,7 +60,7 @@ public class H2JsonQueryFunction extends JsonQueryFunction {
 			jsonPath = walker.getLiteralValue( jsonPathExpression );
 		}
 		catch (Exception ex) {
-			throw new QueryException( "H2 json_query only support literal json paths, but got " + jsonPathExpression );
+			throw new QueryException( "H2 json_query only support literal json paths, but got " + jsonPathExpression, (String) null );
 		}
 		appendJsonQuery( sqlAppender, jsonDocument, isJsonType, jsonPath, passingClause, wrapMode, emptyBehavior, walker );
 	}

@@ -1408,7 +1408,7 @@ public class CteInsertHandler implements InsertHandler {
 			return tableReferenceByQualifier;
 		}
 
-		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
+		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference, (String) null );
 	}
 
 	protected String getCteTableName(String tableExpression, SessionFactoryImplementor sessionFactory) {

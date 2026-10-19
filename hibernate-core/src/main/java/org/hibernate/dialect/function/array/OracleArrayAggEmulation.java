@@ -66,7 +66,7 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 			SqlAstTranslator<?> translator) {
 		if ( !( returnType instanceof BasicPluralType<?, ?> pluralType ) ) {
 			throw new SemanticException(
-					"Oracle array_agg emulation requires a basic plural return type, but resolved return type was: " + returnType
+					"Oracle array_agg emulation requires a basic plural return type, but resolved return type was: " + returnType, (String) null
 			);
 		}
 		final boolean returnJson = pluralType.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.JSON_ARRAY;

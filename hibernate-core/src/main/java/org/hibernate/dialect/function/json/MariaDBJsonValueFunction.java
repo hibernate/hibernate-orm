@@ -33,10 +33,10 @@ public class MariaDBJsonValueFunction extends JsonValueFunction {
 			SqlAstTranslator<?> walker) {
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonValueErrorBehavior.NULL ) {
 			// MariaDB reports the error 4038 as warning and simply returns null
-			throw new QueryException( "Can't emulate on error clause on MariaDB" );
+			throw new QueryException( "Can't emulate on error clause on MariaDB", (String) null );
 		}
 		if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonValueEmptyBehavior.NULL ) {
-			throw new QueryException( "Can't emulate on empty clause on MariaDB" );
+			throw new QueryException( "Can't emulate on empty clause on MariaDB", (String) null );
 		}
 			final JdbcType jdbcType = arguments.returningType() == null
 					? null

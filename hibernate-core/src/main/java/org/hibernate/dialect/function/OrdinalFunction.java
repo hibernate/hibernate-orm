@@ -75,7 +75,7 @@ public class OrdinalFunction
 			sqlAppender.appendSql( " end" );
 		}
 		else {
-			throw new QueryException( "Unsupported enum type passed to 'ordinal()' function: " + argumentType );
+			throw new QueryException( "Unsupported enum type passed to 'ordinal()' function: " + argumentType, (String) null );
 		}
 	}
 

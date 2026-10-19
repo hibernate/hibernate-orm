@@ -19,7 +19,7 @@ public class SemanticException extends QueryException {
 	 */
 	@Deprecated(since = "6.3")
 	public SemanticException(@Nonnull String message) {
-		super( message );
+		super( message, (String) null );
 	}
 
 	/**
@@ -28,7 +28,7 @@ public class SemanticException extends QueryException {
 	 */
 	@Deprecated(since = "6.3")
 	public SemanticException(@Nonnull String message, @Nullable Exception cause) {
-		super( message, cause );
+		super( message, null, cause );
 	}
 
 	public SemanticException(@Nonnull String message, @Nullable String queryString) {

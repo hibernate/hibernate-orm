@@ -96,7 +96,7 @@ public class AnonymousTupleType<T>
 			String alias = aliases.get( i );
 			if ( alias == null ) {
 				throw new SemanticException( "Select item at position " + (i+1) + " in select list has no alias"
-						+ " (aliases are required in CTEs and in subqueries occurring in from clause)" );
+						+ " (aliases are required in CTEs and in subqueries occurring in from clause)", (String) null );
 			}
 			componentIndexMap.put( alias, i );
 			componentNames[i] = alias;

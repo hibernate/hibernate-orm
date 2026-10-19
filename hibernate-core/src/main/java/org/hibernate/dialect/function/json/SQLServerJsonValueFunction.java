@@ -28,7 +28,7 @@ public class SQLServerJsonValueFunction extends JsonValueFunction {
 			SqlAstTranslator<?> walker) {
 		// openjson errors by default
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonValueErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on SQL server" );
+			throw new QueryException( "Can't emulate on error clause on SQL server", (String) null );
 		}
 		sqlAppender.appendSql( "(select " );
 		final CastTarget returningType = arguments.returningType();

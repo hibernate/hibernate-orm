@@ -18,6 +18,6 @@ import org.hibernate.QueryException;
  */
 public class UnknownNamedQueryException extends QueryException {
 	public UnknownNamedQueryException(@Nonnull String queryName) {
-		super( "No query named '" + queryName + "'" );
+		super( "No query named '" + queryName + "'", (String) null );
 	}
 }

@@ -46,7 +46,7 @@ public class ChrLiteralEmulation extends AbstractSqmSelfRenderingFunctionDescrip
 															Locale.ROOT,
 															"Emulation of function chr() supports only integer literals, but %s argument given",
 															arg.getClass().getName()
-													)
+													), (String) null
 											);
 										}
 									}

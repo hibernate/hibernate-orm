@@ -551,7 +551,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			final var roots = getFromClause().getRoots();
 			if ( selectClause.getSelections().isEmpty() ) {
 				if ( isEmpty( roots ) ) {
-					throw new SemanticException( "No query roots were specified" );
+					throw new SemanticException( "No query roots were specified", (String) null );
 				}
 				else {
 					selectedFromSet = singleton( roots.get( 0 ) );
@@ -636,7 +636,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			throw new SemanticException(
 					"Query specified join fetching, but the owner " +
 							"of the fetched association was not present in the select list " +
-							"[" + fetchJoin.asLoggableText() + "]"
+							"[" + fetchJoin.asLoggableText() + "]", (String) null
 			);
 		}
 	}

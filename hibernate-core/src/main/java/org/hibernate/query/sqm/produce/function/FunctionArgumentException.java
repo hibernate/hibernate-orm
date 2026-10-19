@@ -13,6 +13,6 @@ import org.hibernate.query.SemanticException;
  */
 public class FunctionArgumentException extends SemanticException {
 	public FunctionArgumentException(@Nonnull String message) {
-		super(message);
+		super( message, (String) null );
 	}
 }

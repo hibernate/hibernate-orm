@@ -178,7 +178,7 @@ public enum TemporalUnit {
 		}
 
 		if ( unit.normalized() != normalized() ) {
-			throw new SemanticException("Illegal unit conversion " + this + " to " + unit);
+			throw new SemanticException("Illegal unit conversion " + this + " to " + unit, (String) null);
 		}
 
 		long from = normalizationFactor( dialect );
@@ -205,7 +205,7 @@ public enum TemporalUnit {
 		}
 
 		if ( unit.normalized() != normalized() ) {
-			throw new SemanticException("Illegal unit conversion " + this + " to " + unit);
+			throw new SemanticException("Illegal unit conversion " + this + " to " + unit, (String) null);
 		}
 
 		long from = normalizationFactor( dialect );
@@ -256,7 +256,7 @@ public enum TemporalUnit {
 				factor *= nativeFractionalSecondPrecision( dialect );
 				break;
 			default:
-				throw new SemanticException("Inconvertible unit " + this);
+				throw new SemanticException("Inconvertible unit " + this, (String) null);
 		}
 		return factor;
 	}
@@ -366,7 +366,7 @@ public enum TemporalUnit {
 			case MONTH:
 				return MONTH;
 			default:
-				throw new SemanticException("Illegal unit " + this);
+				throw new SemanticException("Illegal unit " + this, (String) null);
 		}
 	}
 

@@ -144,7 +144,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
 			@Nonnull SqmCreationState creationState) {
-		throw new SemanticException( "Index operator applied to non-plural path '" + getNavigablePath() + "'" );
+		throw new SemanticException( "Index operator applied to non-plural path '" + getNavigablePath() + "'", (String) null );
 	}
 
 	/**

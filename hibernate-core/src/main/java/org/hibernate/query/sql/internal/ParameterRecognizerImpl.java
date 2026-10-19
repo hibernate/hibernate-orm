@@ -161,7 +161,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		if ( position < 1 ) {
-			throw new QueryException( "Incoming parameter position [" + position + "] is less than base [1]" );
+			throw new QueryException( "Incoming parameter position [" + position + "] is less than base [1]", (String) null );
 		}
 
 		QueryParameterImplementor<?> parameter = null;

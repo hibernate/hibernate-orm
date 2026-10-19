@@ -121,7 +121,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 					String.format(
 							"Target type '%s' is not an entity",
 							root.getModel().getHibernateEntityName()
-					)
+					), (String) null
 			);
 		}
 		super.setTarget( root );

@@ -81,7 +81,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			DomainResultCreationState creationState) {
 		final var resolvedExpression = getResolvedExpression();
 		if ( resolvedExpression instanceof SqlTuple ) {
-			throw new SemanticException( "Composite query parameter cannot be used in select" );
+			throw new SemanticException( "Composite query parameter cannot be used in select", (String) null );
 		}
 
 		final var jdbcMapping = resolvedExpression.getExpressionType().getSingleJdbcMapping();
@@ -119,7 +119,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	public SqlSelection resolveSqlSelection(DomainResultCreationState creationState) {
 		final var resolvedExpression = getResolvedExpression();
 		if ( resolvedExpression instanceof SqlTuple ) {
-			throw new SemanticException( "Composite query parameter cannot be used in select" );
+			throw new SemanticException( "Composite query parameter cannot be used in select", (String) null );
 		}
 
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();

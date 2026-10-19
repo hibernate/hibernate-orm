@@ -3386,7 +3386,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			return new SqmMemberOfPredicate( elem, pluralValuedSimplePath, negated, this );
 		}
 		else {
-			throw new SemanticException( "Operand of 'member of' operator must be a plural path" );
+			throw new SemanticException( "Operand of 'member of' operator must be a plural path", (String) null );
 		}
 	}
 
@@ -6981,7 +6981,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				if ( !( expression instanceof SqmPath<?> path ) || !( path.getModel() instanceof PersistentAttribute<?, ?> attribute ) ) {
 					throw new SemanticException(
 							"Can't use expression '" + expression + " without explicit name in xmlforest function"+
-									", because XML element names can only be derived from path expressions."
+									", because XML element names can only be derived from path expressions.", (String) null
 					);
 				}
 				arguments.add( new SqmNamedExpression<>( (SqmExpression<?>) expression, attribute.getName() ) );

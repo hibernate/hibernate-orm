@@ -273,7 +273,7 @@ public class SqmUpdateStatement<T>
 					String.format(
 							"Target type '%s' is not an entity",
 							root.getModel().getHibernateEntityName()
-					)
+					), (String) null
 			);
 		}
 		super.setTarget( root );

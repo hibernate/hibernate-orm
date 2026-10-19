@@ -94,7 +94,7 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		if ( arguments.errorBehavior() == JsonTableErrorBehavior.NULL ) {
-			throw new QueryException( "Can't emulate null on error clause on DB2" );
+			throw new QueryException( "Can't emulate null on error clause on DB2", (String) null );
 		}
 		final Expression jsonDocument = arguments.jsonDocument();
 		final Expression jsonPath = arguments.jsonPath();

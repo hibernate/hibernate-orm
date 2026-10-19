@@ -48,7 +48,7 @@ public final class JTDSCallableStatementSupport implements CallableStatementSupp
 		final StringBuilder buffer;
 		final int offset;
 		if ( functionReturn != null ) {
-			throw new QueryException( "The jTDS driver does not support calling functions through the JDBC CallableStatement API" );
+			throw new QueryException( "The jTDS driver does not support calling functions through the JDBC CallableStatement API", (String) null );
 		}
 		offset = 1;
 		buffer = new StringBuilder( 9 + procedureName.length() + paramStringSizeEstimate ).append( "{call " );
@@ -63,7 +63,7 @@ public final class JTDSCallableStatementSupport implements CallableStatementSupp
 			for ( int i = 0; i < registrations.size(); i++ ) {
 				final ProcedureParameterImplementor<?> parameter = registrations.get( i );
 				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-					throw new QueryException( "Dialect [" + procedureCall.getSession().getJdbcServices().getJdbcEnvironment().getDialect().getClass().getName() + "] not known to support REF_CURSOR parameters" );
+					throw new QueryException( "Dialect [" + procedureCall.getSession().getJdbcServices().getJdbcEnvironment().getDialect().getClass().getName() + "] not known to support REF_CURSOR parameters", (String) null );
 				}
 				buffer.append( sep );
 				final JdbcCallParameterRegistration registration = parameter.toJdbcParameterRegistration(

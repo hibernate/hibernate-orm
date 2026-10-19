@@ -805,7 +805,7 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 				pattern.append( "(?3+numtodsinterval(?2,'second'))" );
 				break;
 			default:
-				throw new SemanticException( unit + " is not a legal field" );
+				throw new SemanticException( unit + " is not a legal field", (String) null );
 		}
 		return pattern.toString();
 	}
@@ -876,7 +876,7 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 				pattern.append( ")" );
 				break;
 			default:
-				throw new SemanticException( "Unrecognized field: " + unit );
+				throw new SemanticException( "Unrecognized field: " + unit, (String) null );
 		}
 		return pattern.toString();
 	}
@@ -896,7 +896,7 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 			case SECOND:
 				break;
 			default:
-				throw new SemanticException( unit + " is not a legal field" );
+				throw new SemanticException( unit + " is not a legal field", (String) null );
 		}
 		pattern.append( ")" );
 		pattern.append( unit.conversionFactor( toUnit, this ) );

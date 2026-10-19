@@ -78,7 +78,7 @@ public class JsonObjectAggFunction extends AbstractSqmSelfRenderingFunctionDescr
 		sqlAppender.appendSql( valueSeparator );
 		if ( caseWrapper ) {
 			if ( arguments.nullBehavior() != JsonNullBehavior.ABSENT ) {
-				throw new QueryException( "Can't emulate json_objectagg filter clause when using 'null on null' clause." );
+				throw new QueryException( "Can't emulate json_objectagg filter clause when using 'null on null' clause.", (String) null );
 			}
 			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( "case when " );

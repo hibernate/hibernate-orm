@@ -24,14 +24,14 @@ public class H2JsonExistsFunction extends JsonExistsFunction {
 			SqlAstTranslator<?> walker) {
 		// Json dereference errors by default if the JSON is invalid
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonExistsErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on H2" );
+			throw new QueryException( "Can't emulate on error clause on H2", (String) null );
 		}
 		final String jsonPath;
 		try {
 			jsonPath = walker.getLiteralValue( arguments.jsonPath() );
 		}
 		catch (Exception ex) {
-			throw new QueryException( "H2 json_value only support literal json paths, but got " + arguments.jsonPath() );
+			throw new QueryException( "H2 json_value only support literal json paths, but got " + arguments.jsonPath(), (String) null );
 		}
 		arguments.jsonDocument().accept( walker );
 		sqlAppender.appendSql( " is not null and " );

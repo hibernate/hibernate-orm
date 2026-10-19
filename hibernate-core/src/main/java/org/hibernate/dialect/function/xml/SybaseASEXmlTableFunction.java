@@ -136,10 +136,10 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 				documentFragment = columnReference.getExpressionText();
 			}
 			else {
-				throw new QueryException( "Sybase ASE only supports passing a literal or column reference as XML document for xmltable() when using query columns, but got: " + arguments.xmlDocument() );
+				throw new QueryException( "Sybase ASE only supports passing a literal or column reference as XML document for xmltable() when using query columns, but got: " + arguments.xmlDocument(), (String) null );
 			}
 			if ( !( arguments.xpath() instanceof Literal literal)) {
-				throw new QueryException( "Sybase ASE only supports passing an XPath literal to xmltable() when using query columns, but got: " + arguments.xpath() );
+				throw new QueryException( "Sybase ASE only supports passing an XPath literal to xmltable() when using query columns, but got: " + arguments.xpath(), (String) null );
 			}
 			final String xpathString = (String) literal.getLiteralValue();
 			final String definitionPath = definition.xpath() == null ? definition.name() : definition.xpath();

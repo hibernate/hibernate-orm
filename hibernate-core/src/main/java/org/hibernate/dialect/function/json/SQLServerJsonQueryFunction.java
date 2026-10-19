@@ -29,7 +29,7 @@ public class SQLServerJsonQueryFunction extends JsonQueryFunction {
 			SqlAstTranslator<?> walker) {
 		// openjson errors by default
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonQueryErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on SQL server" );
+			throw new QueryException( "Can't emulate on error clause on SQL server", (String) null );
 		}
 		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements(
 				walker.getLiteralValue( arguments.jsonPath() )

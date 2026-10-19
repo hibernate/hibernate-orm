@@ -310,7 +310,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 			return tableReferenceByQualifier;
 		}
 
-		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
+		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference, (String) null );
 	}
 
 	@Override

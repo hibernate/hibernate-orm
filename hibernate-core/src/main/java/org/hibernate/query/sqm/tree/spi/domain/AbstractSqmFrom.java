@@ -985,7 +985,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			);
 		}
 
-		throw new SemanticException( "Attribute '" + attribute + "' is not joinable" );
+		throw new SemanticException( "Attribute '" + attribute + "' is not joinable", (String) null );
 	}
 
 	@Nonnull

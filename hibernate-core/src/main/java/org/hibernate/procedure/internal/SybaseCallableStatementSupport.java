@@ -75,7 +75,7 @@ public final class SybaseCallableStatementSupport implements CallableStatementSu
 			for ( int i = 0; i < registrations.size(); i++ ) {
 				final ProcedureParameterImplementor<?> parameter = registrations.get( i );
 				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-					throw new QueryException( "Dialect [" + procedureCall.getSession().getJdbcServices().getJdbcEnvironment().getDialect().getClass().getName() + "] not known to support REF_CURSOR parameters" );
+					throw new QueryException( "Dialect [" + procedureCall.getSession().getJdbcServices().getJdbcEnvironment().getDialect().getClass().getName() + "] not known to support REF_CURSOR parameters", (String) null );
 				}
 				buffer.append( sep );
 				final JdbcCallParameterRegistration registration = parameter.toJdbcParameterRegistration(

@@ -420,13 +420,13 @@ public class TypecheckUtil {
 		final Integer rightTupleLength = right.getTupleLength();
 		if ( leftTupleLength != null && rightTupleLength != null
 				&& leftTupleLength.intValue() != rightTupleLength.intValue() ) {
-			throw new SemanticException( "Cannot compare tuples of different lengths" );
+			throw new SemanticException( "Cannot compare tuples of different lengths", (String) null );
 		}
 
 		// SqmMemberOfPredicate is the only one allowing multivalued paths, its comparability is now evaluated in areTypesComparable
 		// i.e. without calling this method, so we can check this here for other Predicates that do call this
 		if ( left instanceof SqmPluralValuedSimplePath || right instanceof SqmPluralValuedSimplePath ) {
-			throw new SemanticException( "Multivalued paths are only allowed for the 'member of' operator" );
+			throw new SemanticException( "Multivalued paths are only allowed for the 'member of' operator", (String) null );
 		}
 
 		// allow comparing literal null to things
@@ -451,7 +451,7 @@ public class TypecheckUtil {
 								"Cannot compare left expression of type '%s' with right expression of type '%s'",
 								leftType.getTypeName(),
 								rightType.getTypeName()
-						)
+						), (String) null
 				);
 			}
 		}
@@ -516,7 +516,7 @@ public class TypecheckUtil {
 								&& !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
 							throw new SemanticException(
 									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
-											"' which is not a numeric type (it is not an instance of 'java.lang.Number' or 'java.time.TemporalAmount')"
+											"' which is not a numeric type (it is not an instance of 'java.lang.Number' or 'java.time.TemporalAmount')", (String) null
 							);
 						}
 						break;
@@ -524,7 +524,7 @@ public class TypecheckUtil {
 						if ( !Number.class.isAssignableFrom( rightJavaType ) ) {
 							throw new SemanticException(
 									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
-											"' which is not a numeric type (it is not an instance of 'java.lang.Number')"
+											"' which is not a numeric type (it is not an instance of 'java.lang.Number')", (String) null
 							);
 						}
 						break;
@@ -539,14 +539,14 @@ public class TypecheckUtil {
 						if ( !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
 							throw new SemanticException(
 									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
-											"' which is not a temporal amount (it is not an instance of 'java.time.TemporalAmount')"
+											"' which is not a temporal amount (it is not an instance of 'java.time.TemporalAmount')", (String) null
 							);
 						}
 						break;
 					default:
 						throw new SemanticException(
 								"Operand of " + op.getOperatorSqlText() + " is of type '" + leftNodeType.getTypeName() +
-										"' which is not a numeric type (it is not an instance of 'java.lang.Number')"
+										"' which is not a numeric type (it is not an instance of 'java.lang.Number')", (String) null
 						);
 				}
 			}
@@ -559,7 +559,7 @@ public class TypecheckUtil {
 						if ( !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
 							throw new SemanticException(
 									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
-											"' which is not a temporal amount (it is not an instance of 'java.time.TemporalAmount')"
+											"' which is not a temporal amount (it is not an instance of 'java.time.TemporalAmount')", (String) null
 							);
 						}
 						break;
@@ -571,14 +571,14 @@ public class TypecheckUtil {
 								&& !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
 							throw new SemanticException(
 									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
-											"' which is not a temporal amount (it is not an instance of 'java.time.TemporalAmount')"
+											"' which is not a temporal amount (it is not an instance of 'java.time.TemporalAmount')", (String) null
 							);
 						}
 						break;
 					default:
 						throw new SemanticException(
 								"Operand of " + op.getOperatorSqlText() + " is of type '" + leftNodeType.getTypeName() +
-										"' which is not a numeric type (it is not an instance of 'java.lang.Number')"
+										"' which is not a numeric type (it is not an instance of 'java.lang.Number')", (String) null
 						);
 				}
 			}
@@ -587,7 +587,7 @@ public class TypecheckUtil {
 				if ( !isNumberArray( rightNodeType ) ) {
 					throw new SemanticException(
 							"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
-									"' which is not a numeric array type" + " (it is not an instance of 'java.lang.Number[]')"
+									"' which is not a numeric array type" + " (it is not an instance of 'java.lang.Number[]')", (String) null
 					);
 				}
 			}
@@ -595,7 +595,7 @@ public class TypecheckUtil {
 				throw new SemanticException(
 						"Operand of " + op.getOperatorSqlText()
 								+ " is of type '" + leftNodeType.getTypeName() + "' which is not a numeric type"
-								+ " (it is not an instance of 'java.lang.Number', 'java.time.Temporal', or 'java.time.TemporalAmount')"
+								+ " (it is not an instance of 'java.lang.Number', 'java.time.Temporal', or 'java.time.TemporalAmount')", (String) null
 				);
 			}
 		}
@@ -619,7 +619,7 @@ public class TypecheckUtil {
 					|| !jdbcMapping.getJdbcType().isStringLike() ) {
 				throw new SemanticException(
 						"Operand of 'like' is of type '" + nodeType.getTypeName() +
-								"' which is not a string (its JDBC type code is not string-like)"
+								"' which is not a string (its JDBC type code is not string-like)", (String) null
 				);
 			}
 		}
@@ -632,7 +632,7 @@ public class TypecheckUtil {
 					|| !jdbcMapping.getJdbcType().isDuration() ) {
 				throw new SemanticException(
 						"Operand of 'by' is of type '" + nodeType.getTypeName() +
-								"' which is not a duration (its JDBC type code is not duration-like)"
+								"' which is not a duration (its JDBC type code is not duration-like)", (String) null
 				);
 			}
 		}
@@ -645,7 +645,7 @@ public class TypecheckUtil {
 					|| !jdbcMapping.getJdbcType().isNumber() ) {
 				throw new SemanticException(
 						"Operand of " + op.getOperatorChar() + " is of type '" + nodeType.getTypeName() +
-								"' which is not a numeric type (its JDBC type code is not numeric)"
+								"' which is not a numeric type (its JDBC type code is not numeric)", (String) null
 				);
 			}
 		}

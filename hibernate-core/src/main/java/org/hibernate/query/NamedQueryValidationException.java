@@ -21,7 +21,7 @@ public class NamedQueryValidationException extends QueryException {
 	private final Map<String, HibernateException> errors;
 
 	public NamedQueryValidationException(@Nonnull String message, @Nonnull Map<String, HibernateException> errors) {
-		super( message );
+		super( message, (String) null );
 		this.errors = errors;
 	}
 

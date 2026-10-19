@@ -14,10 +14,10 @@ import org.hibernate.query.SemanticException;
  */
 public class AliasCollisionException extends SemanticException {
 	public AliasCollisionException(@Nonnull String message) {
-		super( message );
+		super( message, (String) null );
 	}
 
 	public AliasCollisionException(@Nonnull String message, @Nullable Exception cause) {
-		super( message, cause );
+		super( message, null, cause );
 	}
 }

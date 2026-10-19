@@ -772,6 +772,12 @@
                       printMethod="org.hibernate.boot.jaxb.mapping.internal.ConstraintModeMarshalling.toXml" />
         </bindings>
 
+        <bindings node="//xsd:simpleType[@name='source-type']">
+            <javaType name="org.hibernate.annotations.SourceType"
+                      parseMethod="org.hibernate.boot.jaxb.mapping.internal.SourceTypeMarshalling.fromXml"
+                      printMethod="org.hibernate.boot.jaxb.mapping.internal.SourceTypeMarshalling.toXml" />
+        </bindings>
+
         <bindings node="//xsd:simpleType[@name='collection-classification-enum']">
             <javaType name="org.hibernate.metamodel.CollectionClassification"
                       parseMethod="org.hibernate.boot.jaxb.mapping.internal.CollectionClassificationMarshalling.fromXml"

@@ -3086,11 +3086,44 @@
         <xsd:sequence>
             <xsd:element name="column" type="orm:column" minOccurs="0"/>
             <xsd:element name="temporal" type="orm:temporal" minOccurs="0"/>
+            <xsd:element name="update-timestamp" type="orm:update-timestamp" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
     </xsd:complexType>
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="update-timestamp">
+        <xsd:annotation>
+            <xsd:documentation>
+
+                @Target({METHOD, FIELD}) @Retention(RUNTIME)
+                public @interface UpdateTimestamp {
+                    SourceType source() default SourceType.VM;
+                }
+
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="source" type="orm:source-type" default="VM"/>
+    </xsd:complexType>
+
+    <!-- **************************************************** -->
+
+    <xsd:simpleType name="source-type">
+        <xsd:annotation>
+            <xsd:documentation>
+
+                public enum SourceType { VM, DB }
+
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="VM"/>
+            <xsd:enumeration value="DB"/>
+        </xsd:restriction>
+    </xsd:simpleType>
 
 
 

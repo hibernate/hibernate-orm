@@ -24,6 +24,7 @@ import org.hibernate.StatementObserver;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
@@ -309,6 +310,16 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	@Nullable
 	TenantSchemaMapper<Object> getTenantSchemaMapper();
+
+	/**
+	 * Obtain the {@link TenantDataSourceMapper} used to select the data source
+	 * belonging to the current tenant.
+	 *
+	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_DATASOURCE_MAPPER
+	 * @since 8.1
+	 */
+	@Nullable
+	TenantDataSourceMapper<Object> getTenantDataSourceMapper();
 
 	/**
 	 * Obtain a reference to the current {@linkplain TenantCredentialsMapper tenant credentials mapper},

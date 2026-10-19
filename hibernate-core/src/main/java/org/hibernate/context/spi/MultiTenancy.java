@@ -11,6 +11,7 @@ import org.hibernate.service.ServiceRegistry;
 import java.util.Map;
 
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_DATASOURCE_MAPPER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_SCHEMA_MAPPER;
 
@@ -104,5 +105,36 @@ public class MultiTenancy {
 			);
 		}
 		return tenantCredentialsMapper;
+	}
+
+	/**
+	 * Obtain the configured {@link TenantDataSourceMapper}.
+	 * Returns {@code null} for {@code "default"}, which requests the connection
+	 * provider's conventional JNDI naming rules.
+	 *
+	 * @since 8.0
+	 */
+	@SuppressWarnings("unchecked")
+	@Nullable
+	public static TenantDataSourceMapper<Object> getTenantDataSourceMapper(
+			Map<String,Object> settings, ServiceRegistry registry) {
+		final Object setting = settings.get( MULTI_TENANT_DATASOURCE_MAPPER );
+		if ( "default".equals( setting ) ) {
+			// The provider constructs its mapper once the base JNDI namespace is known.
+			return null;
+		}
+		final var tenantDataSourceMapper =
+				registry.requireService( StrategySelector.class )
+						.resolveStrategy( TenantDataSourceMapper.class, setting );
+		if ( tenantDataSourceMapper == null ) {
+			return Helper.getBean(
+					Helper.getBeanContainer( registry ),
+					TenantDataSourceMapper.class,
+					true,
+					false,
+					null
+			);
+		}
+		return tenantDataSourceMapper;
 	}
 }

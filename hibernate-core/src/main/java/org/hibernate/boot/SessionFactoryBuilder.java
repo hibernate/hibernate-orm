@@ -18,6 +18,7 @@ import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -400,6 +401,23 @@ public interface SessionFactoryBuilder {
 	 * @since 7.1
 	 */
 	SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper);
+
+	/**
+	 * Specifies a {@link TenantDataSourceMapper} mapping tenant identifiers to
+	 * data source JNDI names. The mapper is retained for the lifetime of the
+	 * session factory and may be invoked concurrently.
+	 *
+	 * @param mapper The mapping strategy to use
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_DATASOURCE_MAPPER
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	@SPI(SPI.Role.SUPPLY)
+	default SessionFactoryBuilder applyTenantDataSourceMapper(TenantDataSourceMapper<?> mapper) {
+		throw new UnsupportedOperationException( "Tenant data source mapping is not supported by this builder" );
+	}
 
 	/**
 	 * Specifies a {@link TenantCredentialsMapper} that is responsible for

@@ -38,6 +38,7 @@ import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.cfg.GraphParserSettings;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -218,6 +219,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
 	@Nullable
 	private TenantSchemaMapper<Object> tenantSchemaMapper;
+	@Nullable
+	private TenantDataSourceMapper<Object> tenantDataSourceMapper;
 	@Nullable
 	private TenantCredentialsMapper<Object> tenantCredentialsMapper;
 
@@ -460,6 +463,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
 		currentTenantIdentifierResolver = MultiTenancy.getTenantIdentifierResolver( settings, serviceRegistry );
 		tenantSchemaMapper = MultiTenancy.getTenantSchemaMapper( settings, serviceRegistry );
+		tenantDataSourceMapper = MultiTenancy.getTenantDataSourceMapper( settings, serviceRegistry );
 		tenantCredentialsMapper = MultiTenancy.getTenantCredentialsMapper( settings, serviceRegistry );
 
 		defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, settings, -1 );
@@ -1327,13 +1331,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public boolean isMultiTenancyEnabled() {
-		return multiTenancyEnabled;
+		return multiTenancyEnabled || tenantDataSourceMapper != null;
 	}
 
 	@Override
 	@Nullable
 	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
 		return tenantSchemaMapper;
+	}
+
+	@Override
+	@Nullable
+	public TenantDataSourceMapper<Object> getTenantDataSourceMapper() {
+		return tenantDataSourceMapper;
 	}
 
 	@Override
@@ -1809,6 +1819,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	public void applyTenantSchemaMapper(@Nullable TenantSchemaMapper<?> mapper) {
 		//noinspection unchecked
 		this.tenantSchemaMapper = (TenantSchemaMapper<Object>) mapper;
+	}
+
+	public void applyTenantDataSourceMapper(@Nullable TenantDataSourceMapper<?> mapper) {
+		//noinspection unchecked
+		this.tenantDataSourceMapper = (TenantDataSourceMapper<Object>) mapper;
 	}
 
 	public void applyTenantCredentialsMapper(@Nullable TenantCredentialsMapper<?> mapper) {

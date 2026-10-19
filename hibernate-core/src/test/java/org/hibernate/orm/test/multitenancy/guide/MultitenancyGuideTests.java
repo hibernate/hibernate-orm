@@ -25,6 +25,7 @@ import org.hibernate.context.TenantIdentifierMismatchException;
 import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
@@ -147,6 +148,22 @@ public class MultitenancyGuideTests {
 				assertThat( session.createSelectionQuery( "from LocalDocument", LocalDocument.class ).getResultList() ).hasSize( 1 );
 			} );
 		}
+	}
+
+	public static HibernatePersistenceConfiguration dataSourceConfiguration() {
+		// tag::multitenancy-datasource-configuration[]
+		TenantDataSourceMapper<String> dataSources = tenant -> switch ( tenant ) {
+			case "alpha" -> "java:comp/env/jdbc/alpha";
+			case "beta" -> "java:comp/env/jdbc/beta";
+			default -> throw new IllegalArgumentException( "Unknown tenant: " + tenant );
+		};
+		var dataSourceConfiguration = new HibernatePersistenceConfiguration( "tenant-datasources" )
+				.managedClasses( SchemaDocument.class )
+				.property( "hibernate.multi_tenant.datasource.identifier_for_any", "alpha" )
+				.property( "hibernate.multi_tenant.datasource_mapper", dataSources )
+				.property( "hibernate.hbm2ddl.auto", "none" );
+		// end::multitenancy-datasource-configuration[]
+		return dataSourceConfiguration;
 	}
 
 	@Test

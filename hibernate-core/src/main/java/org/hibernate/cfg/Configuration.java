@@ -47,6 +47,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -174,6 +175,7 @@ public class Configuration {
 	private StatementInspector statementInspector;
 	private CurrentTenantIdentifierResolver<?> currentTenantIdentifierResolver;
 	private TenantSchemaMapper<?> tenantSchemaMapper;
+	private TenantDataSourceMapper<?> tenantDataSourceMapper;
 	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
 	private ColumnOrderingStrategy columnOrderingStrategy;
 	private SharedCacheMode sharedCacheMode;
@@ -1054,6 +1056,31 @@ public class Configuration {
 	}
 
 	/**
+	 * The {@link TenantDataSourceMapper}, if any, that was added to this configuration.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	public TenantDataSourceMapper<?> getTenantDataSourceMapper() {
+		return tenantDataSourceMapper;
+	}
+
+	/**
+	 * Specify a {@link TenantDataSourceMapper} to be added to this configuration.
+	 * The mapper is retained for the lifetime of the session factory and may be
+	 * invoked concurrently.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	public Configuration setTenantDataSourceMapper(TenantDataSourceMapper<?> tenantDataSourceMapper) {
+		this.tenantDataSourceMapper = tenantDataSourceMapper;
+		return this;
+	}
+
+	/**
 	 * The {@link CustomEntityDirtinessStrategy}, if any, that was added to this configuration.
 	 */
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
@@ -1184,6 +1211,10 @@ public class Configuration {
 			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( currentTenantIdentifierResolver );
 		}
 
+		if ( tenantDataSourceMapper != null ) {
+			sessionFactoryBuilder.applyTenantDataSourceMapper( tenantDataSourceMapper );
+		}
+
 		if ( tenantSchemaMapper != null ) {
 			sessionFactoryBuilder.applyTenantSchemaMapper( tenantSchemaMapper );
 		}
@@ -1209,6 +1240,9 @@ public class Configuration {
 	public SessionFactory buildSessionFactory() throws HibernateException {
 		CORE_LOGGER.buildingFactoryWithInternalRegistryBuilder();
 		standardServiceRegistryBuilder.applySettings( properties );
+		if ( tenantDataSourceMapper != null ) {
+			standardServiceRegistryBuilder.applySetting( AvailableSettings.MULTI_TENANT_DATASOURCE_MAPPER, tenantDataSourceMapper );
+		}
 		final var lifecycle = new BootstrapRegistryLifecycle( null );
 		final var serviceRegistry = lifecycle.register( standardServiceRegistryBuilder.build() );
 		try {

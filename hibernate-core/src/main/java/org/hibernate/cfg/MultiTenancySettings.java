@@ -90,6 +90,28 @@ public interface MultiTenancySettings {
 	String MULTI_TENANT_CREDENTIALS_MAPPER = "hibernate.multi_tenant.credentials_mapper";
 
 	/**
+	 * Specifies a {@link org.hibernate.context.spi.TenantDataSourceMapper} to use, either:
+	 * <ul>
+	 *     <li>an instance of {@code TenantDataSourceMapper},
+	 *     <li>a {@link Class} implementing {@code TenantDataSourceMapper},
+	 *     <li>the name of such a class, or
+	 *     <li>{@code "default"}, to use the conventional JNDI naming rules of
+	 *         {@link org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl}.
+	 * </ul>
+	 * Configuring a mapper automatically enables this connection provider unless
+	 * a custom multi-tenant connection provider is supplied. By default, there is
+	 * no tenant data source mapper.
+	 *
+	 * @see org.hibernate.context.spi.TenantDataSourceMapper
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantDataSourceMapper
+	 * @see org.hibernate.cfg.Configuration#setTenantDataSourceMapper
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	String MULTI_TENANT_DATASOURCE_MAPPER = "hibernate.multi_tenant.datasource_mapper";
+
+	/**
 	 * Specifies whether database-level row-level security (RLS) for multi-tenancy is enabled.
 	 * <p>
 	 * By default, row-level security is used if the database supports it.

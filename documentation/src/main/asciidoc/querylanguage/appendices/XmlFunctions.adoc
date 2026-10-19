@@ -257,7 +257,6 @@ WARNING: H2, MySQL, MariaDB and HSQLDB do not support this function.
 The following tables describe registered Hibernate implementations, including native SQL and emulation.
 A registered function may still have restrictions on clauses, argument types, paths, or null/error behavior; see its description in this appendix.
 These tables are an implementation inventory, not the result of executing every function on every database.
-JSON and XML functions require no opt-in setting in Hibernate 8.1.
 
 The inventory contains 9 functions: `xmlagg()`, `xmlcomment()`, `xmlconcat()`, `xmlelement()`, `xmlexists()`, `xmlforest()`, `xmlpi()`, `xmlquery()`, `xmltable()`.
 `All` and `All other functions` refer to this inventory.

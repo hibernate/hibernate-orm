@@ -44,7 +44,7 @@ Native SQL and JDBC work have different boundaries; see <<multitenancy-direct-sq
 [cols="1,2,2",options="header"]
 |===
 |Approach |Typical integration |Application responsibilities
-|Separate databases |`MultiTenantConnectionProvider` |Provision databases, route connections, and manage tenant sources
+|Separate databases |`TenantDataSourceMapper` for JNDI datasources, or a custom `MultiTenantConnectionProvider` |Provision databases, route connections, and manage tenant sources
 |Separate schemas |`TenantSchemaMapper` with ordinary connection access, or a custom provider |Provision schemas and use supported schema switching with connection-state cleanup
 |Shared tables |`@TenantId`, optionally with database RLS |Map partitioned data and design suitable keys, constraints, and database policies
 |Tenant-specific database users |`TenantCredentialsMapper` with a supporting provider |Provision users and grants; combine with schema selection or row discrimination as needed
@@ -206,13 +206,38 @@ Query filtering alone does not create tenant-aware foreign keys or uniqueness co
 See <<identifiers>> and <<associations>> for identifier and relationship mappings.
 
 [[multitenancy-mappers]]
-=== Schema and credentials mapping
+=== Datasource, schema, and credentials mapping
+
+[[multitenancy-datasource-mapper]]
+==== TenantDataSourceMapper
+
+link:{doc-javadoc-url}org/hibernate/context/spi/TenantDataSourceMapper.html[`TenantDataSourceMapper<T>`] maps a tenant identifier to the full JNDI name of the datasource that should be used by that tenant.
+Configure `hibernate.multi_tenant.datasource_mapper` with an instance, class, or class name, use the factory-builder integration, or supply it through a `BeanContainer`.
+The special setting value `default` selects the <<multitenancy-jndi,conventional JNDI naming strategy>>.
+Configuring a mapper automatically enables link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[`DataSourceBasedMultiTenantConnectionProviderImpl`], unless a custom `MultiTenantConnectionProvider` is supplied.
+
+// The following example assumes that the datasources are already bound in JNDI:
+
+[[multitenancy-datasource-configuration-example]]
+====
+[source,java,indent=0]
+----
+include::{multitenancy-guide-examples}[tags=multitenancy-datasource-configuration]
+----
+====
+
+Hibernate needs a datasource during bootstrap.
+Either:
+
+- Set `hibernate.connection.datasource` to the JNDI name of the datasource to use during bootstrap, or
+- set `hibernate.multi_tenant.datasource.identifier_for_any` to a tenant identifier which should be used.
+
 
 [[multitenancy-schema-mapper]]
 ==== TenantSchemaMapper
 
 link:{doc-javadoc-url}org/hibernate/context/spi/TenantSchemaMapper.html[`TenantSchemaMapper<T>`] maps a tenant identifier to a schema name.
-Configure `hibernate.multi_tenant.schema_mapper` with an instance, class, or class name, use the factory-builder integration, or supply it through a BeanContainer.
+Configure `hibernate.multi_tenant.schema_mapper` with an instance, class, or class name, use the factory-builder integration, or supply it through a `BeanContainer`.
 It can be used with ordinary connection access, without a custom `MultiTenantConnectionProvider`.
 
 The following H2 fixture uses one externally owned JDBC connection through an ordinary test provider, and rejects unrecognized tenant names.
@@ -250,7 +275,7 @@ This differs from a shared-table simple primary key.
 ==== TenantCredentialsMapper
 
 link:{doc-javadoc-url}org/hibernate/context/spi/TenantCredentialsMapper.html[`TenantCredentialsMapper<T>`] selects database credentials for a tenant.
-Configure `hibernate.multi_tenant.credentials_mapper` with an instance, class, or class name, use the factory-builder integration, or supply it through a BeanContainer.
+Configure `hibernate.multi_tenant.credentials_mapper` with an instance, class, or class name, use the factory-builder integration, or supply it through a `BeanContainer`.
 This can be combined with schema selection or row discrimination.
 
 [[multitenancy-credentials-example]]
@@ -268,7 +293,7 @@ Not every pool supports credentials per acquisition; see <<database-connectionpr
 The mapper does not provision users, grant privileges, or itself partition data.
 This credential-based contract differs from `MultiTenantConnectionProvider.getConnection(tenantId)`.
 
-Both mapper interfaces are incubating APIs; consult their Javadocs when upgrading.
+These mapper interfaces are incubating APIs; consult their Javadocs when upgrading.
 
 [[multitenacy-hibernate-MultiTenantConnectionProvider]]
 === Custom multitenant connection providers
@@ -310,13 +335,26 @@ include::{multitenancy-guide-examples}[tags=multitenancy-provider-configuration]
 [[multitenancy-jndi]]
 ==== JNDI datasource routing
 
-To use link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[`DataSourceBasedMultiTenantConnectionProviderImpl`], select it explicitly using `hibernate.multi_tenant_connection_provider`.
-It expects tenant datasources beneath a common JNDI namespace and a string `hibernate.connection.datasource` naming either a representative datasource or the base JNDI Context.
-For a Context, also configure `hibernate.multi_tenant.datasource.identifier_for_any` to identify the representative tenant.
-See <<jndi>> and the provider's Javadocs for lookup assumptions.
+Setting `hibernate.multi_tenant.datasource_mapper=default` enables `DataSourceBasedMultiTenantConnectionProviderImpl` with its conventional naming strategy: tenant datasources are identified by the tenant identifier beneath a common JNDI context.
+For example:
 
-There is a legacy fallback when the multitenant-provider key is explicitly present with a null value and `hibernate.connection.datasource` is a string.
-Do not rely on a datasource setting alone to select this path; explicit provider selection is clearer.
+[source,properties]
+----
+hibernate.multi_tenant.datasource_mapper=default
+hibernate.connection.datasource=java:comp/env/jdbc/tenants
+hibernate.multi_tenant.datasource.identifier_for_any=acme
+----
+
+Here, tenant `acme` uses the `DataSource` bound to `java:comp/env/jdbc/tenants/acme`, which also supplies bootstrap connections.
+Alternatively, `hibernate.connection.datasource` may directly specify a bootstrap datasource.
+Then its parent context supplies the namespace, and `hibernate.multi_tenant.datasource.identifier_for_any` is unnecessary.
+
+[source,properties]
+----
+hibernate.multi_tenant.datasource_mapper=default
+hibernate.connection.datasource=java:comp/env/jdbc/tenants/BootstrapDS
+----
+
 
 [[multitenancy-rls]]
 === Row-level security

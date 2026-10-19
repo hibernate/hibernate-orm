@@ -16,6 +16,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -203,6 +204,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
 		delegate.applyTenantSchemaMapper( mapper );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyTenantDataSourceMapper(TenantDataSourceMapper<?> mapper) {
+		delegate.applyTenantDataSourceMapper( mapper );
 		return getThis();
 	}
 

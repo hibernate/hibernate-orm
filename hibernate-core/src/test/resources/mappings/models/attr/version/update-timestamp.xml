@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="8.0">
+    <entity class="org.hibernate.orm.test.boot.models.xml.attr.VersionAttributeTests$SimpleEntity" metadata-complete="true" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <version name="version">
+                <temporal>TIMESTAMP</temporal>
+                <update-timestamp source="DB"/>
+            </version>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

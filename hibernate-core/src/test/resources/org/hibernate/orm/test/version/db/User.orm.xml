@@ -27,6 +27,7 @@
             <version name="timestamp">
                 <column name="ts"/>
                 <temporal>TIMESTAMP</temporal>
+                <update-timestamp source="DB"/>
             </version>
             <many-to-many name="groups" target-entity="Group" fetch="LAZY" mapped-by="users" classification="SET" optimistic-lock="true">
                 <mutable>true</mutable>

@@ -40,7 +40,7 @@ public final class CollectionValueWalker {
 			BiConsumer<PluralAttributeMapping, Object> consumer) {
 		final EmbeddableMappingType.ConcreteEmbeddableType subtype;
 		if ( instance != null
-			 	&& mappingType instanceof EmbeddableMappingType embeddableType
+				&& mappingType instanceof EmbeddableMappingType embeddableType
 				&& embeddableType.isPolymorphic() ) {
 			subtype = embeddableType.findSubtypeBySubclass( instance.getClass().getName() );
 			if ( subtype == null ) {

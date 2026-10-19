@@ -4,6 +4,8 @@ import java.util.Date;
 
 import jakarta.persistence.Version;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -76,6 +78,27 @@ public class BasicAttributeTests {
 				.isNotNull();
 	}
 
+	@Test
+	@SuppressWarnings("JUnitMalformedDeclaration")
+	void testUpdateTimestampSource(ServiceRegistryScope scope) {
+		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
+				.addXmlMappings( "mappings/models/attr/basic/update-timestamp.xml" )
+				.build();
+
+		final ModelsContext modelsContext = createBuildingContext( managedResources, serviceRegistry );
+		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+
+		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( UpdateTimestampEntity.class.getName() );
+
+		final FieldDetails lastModifiedField = classDetails.findFieldByName( "lastModified" );
+		final UpdateTimestamp updateTimestamp = lastModifiedField.getDirectAnnotationUsage( UpdateTimestamp.class );
+		assertThat( updateTimestamp )
+				.as( "<basic> with <update-timestamp source=\"DB\"/> should have @UpdateTimestamp" )
+				.isNotNull();
+		assertThat( updateTimestamp.source() ).isEqualTo( SourceType.DB );
+	}
+
 	@SuppressWarnings("unused")
 	@Entity(name = "SimpleEntity")
 	@Table(name = "SimpleEntity")
@@ -98,5 +121,15 @@ public class BasicAttributeTests {
 
 		@Version
 		private Long version;
+	}
+
+	@SuppressWarnings("unused")
+	@Entity(name = "UpdateTimestampEntity")
+	@Table(name = "UpdateTimestampEntity")
+	public static class UpdateTimestampEntity {
+		@Id
+		private Integer id;
+		private Date lastModified;
+		private String name;
 	}
 }

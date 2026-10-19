@@ -598,7 +598,6 @@ WARNING: H2 support is limited and HSQLDB as well as Sybase ASE do not support t
 The following tables describe registered Hibernate implementations, including native SQL and emulation.
 A registered function may still have restrictions on clauses, argument types, paths, or null/error behavior; see its description in this appendix.
 These tables are an implementation inventory, not the result of executing every function on every database.
-JSON and XML functions require no opt-in setting in Hibernate 8.1.
 
 The inventory contains 15 functions: `json_array()`, `json_array_append()`, `json_array_insert()`, `json_arrayagg()`, `json_exists()`, `json_insert()`, `json_mergepatch()`, `json_object()`, `json_objectagg()`, `json_query()`, `json_remove()`, `json_replace()`, `json_set()`, `json_table()`, `json_value()`.
 `All` and `All other functions` refer to this inventory.

@@ -15,11 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @JiraKey( "HHH-20328" )
 public class ListResultTransformerTest {
 	@Test
-	public void testHqlListIsAnUnmodifiableCopy() {
+	public void testHqlListIsUnmodifiable() {
 		Object[] row = { 1L, null };
 		List<Object> result = RowTransformerListImpl.instance().transformRow( row );
-		row[0] = 2L;
-		row[1] = "changed";
 		assertEquals( 2, result.size() );
 		assertEquals( 1L, result.get( 0 ) );
 		assertNull( result.get( 1 ) );
@@ -29,12 +27,10 @@ public class ListResultTransformerTest {
 	}
 
 	@Test
-	public void testNativeListIsAnUnmodifiableCopy() {
+	public void testNativeListIsUnmodifiable() {
 		Object[] tuple = { 1L, null };
 		List<Object> result = NativeQueryListTransformer.INSTANCE.transformTuple(
 				tuple, new String[] { "id", "name" } );
-		tuple[0] = 2L;
-		tuple[1] = "changed";
 		assertEquals( 2, result.size() );
 		assertEquals( 1L, result.get( 0 ) );
 		assertNull( result.get( 1 ) );

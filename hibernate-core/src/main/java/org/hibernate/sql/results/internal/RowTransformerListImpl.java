@@ -26,6 +26,6 @@ public class RowTransformerListImpl<T> implements RowTransformer<List<Object>> {
 
 	@Override
 	public List<Object> transformRow(Object[] row) {
-		return unmodifiableList( asList( row.clone() ) );
+		return unmodifiableList( asList( row ) );
 	}
 }

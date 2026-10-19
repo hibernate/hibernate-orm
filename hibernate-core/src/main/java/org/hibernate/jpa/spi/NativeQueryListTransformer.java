@@ -23,6 +23,6 @@ public class NativeQueryListTransformer implements TupleTransformer<List<Object>
 	@Override
 	@Nonnull
 	public List<Object> transformTuple(@Nonnull Object[] tuple, @Nonnull String[] aliases) {
-		return unmodifiableList( asList( tuple.clone() ) );
+		return unmodifiableList( asList( tuple ) );
 	}
 }

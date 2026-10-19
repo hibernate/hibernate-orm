@@ -476,7 +476,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 			return CollectionChangeSet.EMPTY;
 		}
 		else {
-			return persister.getElementType().isEntityType()
+			return ( persister.isOneToMany() || persister.isManyToMany() )
 					? computeEntityListChangeSet( sn, persister )
 					: computeElementListChangeSet( sn, persister );
 		}

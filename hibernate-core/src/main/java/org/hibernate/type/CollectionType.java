@@ -451,7 +451,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	public String getAssociatedEntityName(SessionFactoryImplementor factory)
 			throws MappingException {
 		final var persister = getPersister( factory );
-		if ( persister.getElementType().isEntityType() ) {
+		if ( persister.isOneToMany() || persister.isManyToMany() ) {
 			return persister.getElementPersister().getEntityName();
 		}
 		else {

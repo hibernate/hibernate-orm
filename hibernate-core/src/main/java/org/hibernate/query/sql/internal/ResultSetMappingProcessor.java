@@ -419,7 +419,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private static String[] getElementColumnAliases(
 			String suffix, String entitySuffix, CollectionPersister collectionPersister) {
-		if ( collectionPersister.getElementType().isEntityType() ) {
+		if ( collectionPersister.isOneToMany() || collectionPersister.isManyToMany() ) {
 			final var elementPersister = collectionPersister.getElementPersister();
 			final var propertyNames = elementPersister.getPropertyNames();
 			final var identifierAliases = elementPersister.getIdentifierAliases( entitySuffix );

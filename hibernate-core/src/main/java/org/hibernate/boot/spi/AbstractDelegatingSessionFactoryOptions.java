@@ -21,6 +21,7 @@ import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -250,6 +251,12 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Nullable
 	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
 		return delegate.getTenantSchemaMapper();
+	}
+
+	@Override
+	@Nullable
+	public TenantDataSourceMapper<Object> getTenantDataSourceMapper() {
+		return delegate.getTenantDataSourceMapper();
 	}
 
 	@Override

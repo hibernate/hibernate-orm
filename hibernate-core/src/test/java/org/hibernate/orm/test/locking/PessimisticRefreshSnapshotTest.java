@@ -1,11 +1,13 @@
 package org.hibernate.orm.test.locking;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -13,6 +15,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.util.ExceptionUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,17 +25,23 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Version;
 
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_HANDLING;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /// Refresh must retain the state obtained by a pessimistic load even when an earlier
 /// consistent read established a snapshot preceding a concurrent insert or update.
 /// Run with both the configured isolation and explicit repeatable read to expose
 /// differences between database implementations without prescribing the reload SQL.
+/// PostgreSQL repeatable-read locking reads retain the snapshot: a later insert is
+/// invisible, and locking a row updated since the snapshot raises a serialization failure.
 ///
 /// @author Steve Ebersole
 @DomainModel(annotatedClasses = {
@@ -67,6 +76,11 @@ public class PessimisticRefreshSnapshotTest {
 		withSnapshot( scope, repeatableRead, session -> {
 			// Transaction B commits after A's snapshot, before A obtains any target-row lock.
 			scope.inTransaction( other -> other.persist( new RefreshTarget( "inserted" ) ) );
+			if ( isPostgreSQLRepeatableRead( scope, session ) ) {
+				assertNull( session.find( RefreshTarget.class, 1, loadMode ),
+						"PostgreSQL locking reads must not see rows inserted after the repeatable-read snapshot" );
+				return;
+			}
 			assertRefreshRetainsState( session, loadMode, refreshMode, "inserted", 0 );
 		} );
 	}
@@ -81,8 +95,22 @@ public class PessimisticRefreshSnapshotTest {
 				final var target = other.find( RefreshTarget.class, 1 );
 				target.data = "updated";
 			} );
+			if ( isPostgreSQLRepeatableRead( scope, session ) ) {
+				final var failure = assertThrows( PersistenceException.class,
+						() -> session.find( RefreshTarget.class, 1, loadMode ),
+						"PostgreSQL must reject locking a row updated since the repeatable-read snapshot" );
+				final var sqlException = assertInstanceOf( SQLException.class,
+						ExceptionUtil.rootCause( failure ) );
+				assertEquals( "40001", sqlException.getSQLState(), "Expected a serialization failure" );
+				return;
+			}
 			assertRefreshRetainsState( session, loadMode, refreshMode, "updated", 1 );
 		} );
+	}
+
+	private static boolean isPostgreSQLRepeatableRead(SessionFactoryScope scope, Session session) {
+		return scope.getSessionFactory().getJdbcServices().getDialect() instanceof PostgreSQLDialect
+				&& session.doReturningWork( Connection::getTransactionIsolation ) == Connection.TRANSACTION_REPEATABLE_READ;
 	}
 
 	private static void withSnapshot(
@@ -104,7 +132,7 @@ public class PessimisticRefreshSnapshotTest {
 				assertEquals( 1, session.createQuery(
 						"select m.id from SnapshotMarker m where m.id = 1", Integer.class ).getSingleResult() );
 				work.accept( session );
-				session.getTransaction().commit();
+				// A only reads. Roll it back in finally, also covering expected serialization failures.
 			}
 			finally {
 				try {

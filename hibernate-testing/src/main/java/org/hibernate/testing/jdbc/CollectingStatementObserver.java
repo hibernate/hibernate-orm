@@ -36,6 +36,20 @@ public class CollectingStatementObserver implements StatementObserver {
 	public record Statement(String sql, int batchPosition) {
 	}
 
+	public int getNumberOfBatches() {
+		int count = 0;
+		for ( Statement statement : statements ) {
+			if ( statement.batchPosition() == -1 ) {
+				throw new IllegalStateException( "Collection contained non-batched statements" );
+			}
+
+			if ( statement.batchPosition() == 1 ) {
+				count++;
+			}
+		}
+		return count;
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// AssertJ
 

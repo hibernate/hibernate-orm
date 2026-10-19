@@ -8,27 +8,28 @@ import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.cfg.BatchSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Jpa(
-		annotatedClasses = {
-				OnDeleteJoinedInheritanceTest.A.class,
-				OnDeleteJoinedInheritanceTest.B.class,
-				OnDeleteJoinedInheritanceTest.C.class },
-		useCollectingStatementInspector = true,
-		// MySQLDialect and a few others do not enable batching by default
-		integrationSettings = @Setting(name= BatchSettings.STATEMENT_BATCH_SIZE, value="15")
-)
+// MySQLDialect and a few others do not enable batching by default
+@ServiceRegistry(settings = @Setting(name= BatchSettings.STATEMENT_BATCH_SIZE, value="15"))
+@DomainModel( annotatedClasses = {
+		OnDeleteJoinedInheritanceTest.A.class,
+		OnDeleteJoinedInheritanceTest.B.class,
+		OnDeleteJoinedInheritanceTest.C.class
+} )
+@SessionFactory( useCollectingStatementObserver = true)
 class OnDeleteJoinedInheritanceTest {
 	@Test
-	void test(EntityManagerFactoryScope scope) {
-		var inspector = scope.getCollectingStatementInspector();
+	void test(SessionFactoryScope scope) {
+		var sqlObserver = scope.getCollectingStatementObserver();
 		scope.inTransaction( em -> {
 			B b = new B();
 			b.id = 1;
@@ -39,17 +40,17 @@ class OnDeleteJoinedInheritanceTest {
 		} );
 		// The GRAPH queue batches the inserts into the root table whereas the LEGACY queue
 		// could not.
-		inspector.assertExecutedCount( isGraphQueue( scope ) ? 3 : 4 );
-		inspector.clear();
+		assertThat( sqlObserver.getNumberOfBatches() ).isEqualTo( isGraphQueue( scope ) ? 3 : 4 );
+		sqlObserver.clear();
 
 		scope.inTransaction( em -> {
 			A b = em.find( A.class, 1L );
 			A c = em.getReference( A.class, 2L );
-			inspector.assertExecutedCount( 1 );
+			assertThat( sqlObserver.getSqlQueries() ).hasSize( 1 );
 			em.remove( b );
 			em.remove( c );
 		} );
-		inspector.assertExecutedCount( scope.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) ? 4 : 6 );
+		assertThat( sqlObserver.getSqlQueries() ).hasSize( usingDbDeleteCascade( scope ) ? 4 : 6 );
 
 		scope.inTransaction( em -> {
 			assertEquals( 0,
@@ -64,9 +65,16 @@ class OnDeleteJoinedInheritanceTest {
 		} );
 	}
 
-	private static boolean isGraphQueue(EntityManagerFactoryScope scope) {
-		return ((SessionFactoryImplementor) scope.getEntityManagerFactory()).getActionQueueFactory()
-				.getConfiguredQueueType() == QueueType.GRAPH;
+	private static boolean isGraphQueue(SessionFactoryScope scope) {
+		return scope.getSessionFactory().getActionQueueFactory().getConfiguredQueueType() == QueueType.GRAPH;
+	}
+
+	private static boolean usingDbDeleteCascade(SessionFactoryScope scope) {
+		return scope.getSessionFactory()
+				.getJdbcServices()
+				.getDialect()
+				.getForeignKeySupport()
+				.supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE );
 	}
 
 	@Entity(name = "A")

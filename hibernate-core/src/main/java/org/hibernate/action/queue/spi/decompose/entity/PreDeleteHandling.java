@@ -22,6 +22,17 @@ public class PreDeleteHandling implements PreExecutionCallback {
 	}
 
 	@Override
+	public boolean requiresBatchFlush() {
+		return !invoked && action.getInstance() != null && needsCallbacks();
+	}
+
+	private boolean needsCallbacks() {
+		return action.getPersister().getEntityCallbacks().hasRegisteredCallbacks( CallbackType.PRE_DELETE )
+			|| !action.getSession().getFactory().getEventListenerGroups().eventListenerGroup_PRE_DELETE.isEmpty();
+	}
+
+
+	@Override
 	public boolean beforeExecution(SessionImplementor session) {
 		if ( !invoked ) {
 			veto = action.getInstance() != null && firePreDelete( session );

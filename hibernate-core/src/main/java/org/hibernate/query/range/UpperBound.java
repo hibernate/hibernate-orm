@@ -12,7 +12,7 @@ import java.util.Objects;
  *
  * @author Gavin King
  */
-record UpperBound<U extends Comparable<U>>(@Nonnull U bound, boolean open) implements Range<U> {
+record UpperBound<U extends Comparable<? super U>>(@Nonnull U bound, boolean open) implements Range<U> {
 	UpperBound {
 		Objects.requireNonNull( bound, "bound is null" );
 	}

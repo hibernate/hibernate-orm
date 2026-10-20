@@ -13,7 +13,7 @@ import java.util.Objects;
  *
  * @author Gavin King
  */
-record LowerBound<U extends Comparable<U>>(@Nonnull U bound, boolean open) implements Range<U> {
+record LowerBound<U extends Comparable<? super U>>(@Nonnull U bound, boolean open) implements Range<U> {
 	LowerBound {
 		Objects.requireNonNull( bound, "bound is null" );
 	}

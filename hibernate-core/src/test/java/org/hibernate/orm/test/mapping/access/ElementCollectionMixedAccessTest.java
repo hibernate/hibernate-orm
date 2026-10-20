@@ -15,7 +15,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,7 +32,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Jira( "https://hibernate.atlassian.net/browse/HHH-13537" )
 class ElementCollectionMixedAccessTest {
 	@Test
-	@FailureExpected( jiraKey = "HHH-13537" )
 	void collectionElementsInheritFieldAccess(SessionFactoryScope scope) {
 		var metamodel = scope.getSessionFactory().getJpaMetamodel();
 		assertThat( metamodel.entity( Owner.class ).getId( Long.class ).getJavaMember() )

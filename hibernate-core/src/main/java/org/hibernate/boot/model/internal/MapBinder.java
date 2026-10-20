@@ -211,7 +211,7 @@ public class MapBinder extends CollectionBinder {
 					keyTypeDetails,
 					annotatedMapKeyType( property, isEmbedded, mapKeyType, keyTypeDetails ),
 					buildCollectionPropertyHolder( property, keyTypeDetails ),
-					accessType( property, collection.getOwner() )
+					embeddableAccessType()
 			);
 		}
 		//FIXME pass the Index Entity JoinColumns

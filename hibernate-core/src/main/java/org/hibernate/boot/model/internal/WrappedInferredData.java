@@ -36,6 +36,11 @@ public class WrappedInferredData implements PropertyData {
 	}
 
 	@Override
+	public AccessType getClassAccess() {
+		return wrappedInferredData.getClassAccess();
+	}
+
+	@Override
 	public AccessType getDefaultAccess() {
 		return wrappedInferredData.getDefaultAccess();
 	}

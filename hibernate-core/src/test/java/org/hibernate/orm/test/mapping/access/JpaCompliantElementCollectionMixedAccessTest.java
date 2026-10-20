@@ -16,7 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -35,7 +34,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Jira( "https://hibernate.atlassian.net/browse/HHH-13537" )
 class JpaCompliantElementCollectionMixedAccessTest {
 	@Test
-	@FailureExpected( jiraKey = "HHH-13537", reason = "Embeddable collection incorrectly inherits identifier property access" )
 	void collectionElementsInheritFieldAccess(SessionFactoryScope scope) {
 		var metamodel = scope.getSessionFactory().getJpaMetamodel();
 		assertThat( metamodel.entity( Owner.class ).getId( Long.class ).getJavaMember() )

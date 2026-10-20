@@ -5,8 +5,6 @@ import java.util.Set;
 
 import org.hibernate.annotations.EmbeddableInstantiator;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -22,13 +20,11 @@ public class Person {
 
 	@Embedded
 	@EmbeddableInstantiator( NameInstantiator.class )
-	@Access( AccessType.PROPERTY )
 	public Name name;
 
 	@ElementCollection
 	@Embedded
 	@EmbeddableInstantiator( NameInstantiator.class )
-	@Access( AccessType.PROPERTY )
 	public Set<Name> aliases;
 
 	private Person() {

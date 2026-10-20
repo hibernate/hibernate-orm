@@ -695,7 +695,11 @@ when calling the superclass implementation.
 This section describes changes in behavior that applications should be aware of.
 
 [[embeddable-collection-access]]
-=== Access type for embeddable collection elements and map keys
+=== Access type for embeddables
+
+The fixes for https://hibernate.atlassian.net/browse/HHH-13537[HHH-13537] and
+https://hibernate.atlassian.net/browse/HHH-21017[HHH-21017] correct how embeddables
+inherit their access type.
 
 Embeddable elements of an `@ElementCollection` and embeddable map keys now inherit
 the access type of the class declaring the collection attribute, instead of the
@@ -709,12 +713,22 @@ property access, its embeddable collection elements now use field access by defa
 Previously, Hibernate incorrectly used property access, potentially causing bootstrap
 failures when the embeddable had no accessor methods.
 
+Additionally, an attribute-level `@Access` override on an `@Embedded`, `@EmbeddedId`,
+or collection attribute now controls only access to that attribute. The embedded
+state inherits the containing class's access type independently of the override.
+This applies to singular embeddables, collection elements, and embeddable map keys
+in both element collections and relationship maps.
+
+For example, a field-accessed entity may use `@Access(AccessType.PROPERTY)` on the
+getter of an embedded attribute or element collection. Hibernate uses that getter
+to access the attribute, but uses field access for the embeddable's state by default.
+Previously, the attribute override also caused the embeddable to use property access.
+
 Applications that relied on the previous behavior should declare the intended
 access type explicitly on the embeddable using `@Access(AccessType.PROPERTY)` or
 `@Access(AccessType.FIELD)`. An explicit access type on the embeddable continues to
-take precedence. For compatibility, an attribute-level `@Access` override on the
-collection itself continues to determine the access type inherited by its embeddable
-elements or map keys.
+take precedence. If the same embeddable is used in multiple contexts that require
+different access types, review those usages before applying a class-level override.
 
 This change aligns with the expected Jakarta Persistence behavior.
 

@@ -9,6 +9,8 @@ import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
 import jakarta.json.bind.spi.JsonbProvider;
 
+import org.jboss.logging.Logger;
+
 import java.lang.reflect.Type;
 
 /**
@@ -20,6 +22,8 @@ import java.lang.reflect.Type;
 public final class JsonBJsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jsonb";
+
+	private static final Logger LOG = Logger.getLogger( JsonBJsonFormatMapper.class );
 
 	private final Jsonb jsonb;
 
@@ -37,11 +41,8 @@ public final class JsonBJsonFormatMapper extends AbstractJsonFormatMapper {
 			provider = JsonbProvider.provider();
 		}
 		catch (JsonbException e) {
-			if ( e.getCause() instanceof ClassNotFoundException ) {
-				// The API is available, but its default provider is not.
-				return null;
-			}
-			throw e;
+			LOG.debug( "Unable to discover a JSON-B provider", e );
+			return null;
 		}
 		// Do not ignore failures in an installed provider.
 		return new JsonBJsonFormatMapper( provider.create().build() );

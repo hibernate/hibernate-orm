@@ -78,6 +78,7 @@ public class ElementCollectionAttributeProcessing {
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbElementCollection, memberDetails, xmlDocumentContext );
 
 		applyCollectionTable( jaxbElementCollection.getCollectionTable(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyModifiedEntities( jaxbElementCollection.getChangelogModifiedEntities(), memberDetails, xmlDocumentContext );
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -13,7 +13,7 @@ import jakarta.persistence.criteria.Predicate;
  *
  * @author Gavin King
  */
-record Interval<U extends Comparable<U>>(LowerBound<U> lowerBound, UpperBound<U> upperBound)
+record Interval<U extends Comparable<? super U>>(LowerBound<U> lowerBound, UpperBound<U> upperBound)
 		implements Range<U> {
 	@Override
 	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {

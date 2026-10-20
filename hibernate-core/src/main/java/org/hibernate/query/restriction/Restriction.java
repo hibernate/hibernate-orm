@@ -186,14 +186,14 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#closed(Comparable, Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> between(SingularAttribute<T, U> attribute, U lowerBound, U upperBound) {
+	static <T, U extends Comparable<? super U>> Restriction<T> between(SingularAttribute<T, U> attribute, U lowerBound, U upperBound) {
 		return restrict( attribute, Range.closed( lowerBound, upperBound ) );
 	}
 
 	/**
 	 * Restrict the given attribute to not fall between the given values.
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> notBetween(SingularAttribute<T, U> attribute, U lowerBound, U upperBound) {
+	static <T, U extends Comparable<? super U>> Restriction<T> notBetween(SingularAttribute<T, U> attribute, U lowerBound, U upperBound) {
 		return between( attribute, lowerBound, upperBound ).negated();
 	}
 
@@ -202,7 +202,7 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#greaterThan(Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> greaterThan(SingularAttribute<T, U> attribute, U lowerBound) {
+	static <T, U extends Comparable<? super U>> Restriction<T> greaterThan(SingularAttribute<T, U> attribute, U lowerBound) {
 		return restrict( attribute, Range.greaterThan( lowerBound ) );
 	}
 
@@ -211,7 +211,7 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#lessThan(Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> lessThan(SingularAttribute<T, U> attribute, U upperBound) {
+	static <T, U extends Comparable<? super U>> Restriction<T> lessThan(SingularAttribute<T, U> attribute, U upperBound) {
 		return restrict( attribute, Range.lessThan( upperBound ) );
 	}
 
@@ -220,7 +220,7 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#greaterThanOrEqualTo(Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> greaterThanOrEqual(SingularAttribute<T, U> attribute, U lowerBound) {
+	static <T, U extends Comparable<? super U>> Restriction<T> greaterThanOrEqual(SingularAttribute<T, U> attribute, U lowerBound) {
 		return restrict( attribute, Range.greaterThanOrEqualTo( lowerBound ) );
 	}
 
@@ -229,7 +229,7 @@ public interface Restriction<X> {
 	 *
 	 * @see Range#lessThanOrEqualTo(Comparable)
 	 */
-	static <T, U extends Comparable<U>> Restriction<T> lessThanOrEqual(SingularAttribute<T, U> attribute, U upperBound) {
+	static <T, U extends Comparable<? super U>> Restriction<T> lessThanOrEqual(SingularAttribute<T, U> attribute, U upperBound) {
 		return restrict( attribute, Range.lessThanOrEqualTo( upperBound ) );
 	}
 

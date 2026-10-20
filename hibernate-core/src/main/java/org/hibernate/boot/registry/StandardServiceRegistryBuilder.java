@@ -116,7 +116,7 @@ public class StandardServiceRegistryBuilder {
 			Map<String,Object> settings,
 			LoadedConfig loadedConfig) {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
-		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
+		this.configLoader = new ConfigLoader( bootstrapServiceRegistry, settings );
 		this.settings = settings;
 		this.aggregatedCfgXml = loadedConfig;
 		this.initiators = standardInitiatorList();
@@ -151,7 +151,7 @@ public class StandardServiceRegistryBuilder {
 			LoadedConfig loadedConfigBaseline) {
 		this.settings = PropertiesHelper.map( Environment.getProperties() );
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
-		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
+		this.configLoader = new ConfigLoader( bootstrapServiceRegistry, this.settings );
 		this.aggregatedCfgXml = loadedConfigBaseline;
 		this.initiators = standardInitiatorList();
 	}

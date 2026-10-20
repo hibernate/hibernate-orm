@@ -1,16 +1,18 @@
 package org.hibernate.orm.test.util.dtd;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@ServiceRegistry
+@ServiceRegistry(settings = @Setting(name = MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, value = "true"))
 @BaseUnitTest
 public class EntityResolverTest {
 	@Test

@@ -73,7 +73,7 @@ public interface Range<U> {
 	 * lower bound.
 	 */
 	@Nonnull
-	static <U extends Comparable<U>> Range<U> greaterThan(@Nonnull U bound) {
+	static <U extends Comparable<? super U>> Range<U> greaterThan(@Nonnull U bound) {
 		return new LowerBound<>( bound, true );
 	}
 
@@ -82,7 +82,7 @@ public interface Range<U> {
 	 * lower bound.
 	 */
 	@Nonnull
-	static <U extends Comparable<U>> Range<U> greaterThanOrEqualTo(@Nonnull U bound) {
+	static <U extends Comparable<? super U>> Range<U> greaterThanOrEqualTo(@Nonnull U bound) {
 		return new LowerBound<>( bound, false );
 	}
 
@@ -91,7 +91,7 @@ public interface Range<U> {
 	 * upper bound.
 	 */
 	@Nonnull
-	static <U extends Comparable<U>> Range<U> lessThan(@Nonnull U bound) {
+	static <U extends Comparable<? super U>> Range<U> lessThan(@Nonnull U bound) {
 		return new UpperBound<>( bound, true );
 	}
 
@@ -100,7 +100,7 @@ public interface Range<U> {
 	 * upper bound.
 	 */
 	@Nonnull
-	static <U extends Comparable<U>> Range<U> lessThanOrEqualTo(@Nonnull U bound) {
+	static <U extends Comparable<? super U>> Range<U> lessThanOrEqualTo(@Nonnull U bound) {
 		return new UpperBound<>( bound, false );
 	}
 
@@ -109,7 +109,7 @@ public interface Range<U> {
 	 * given lower bound, and strictly less than the given upper bound.
 	 */
 	@Nonnull
-	static <U extends Comparable<U>> Range<U> open(@Nonnull U lowerBound, @Nonnull U upperBound) {
+	static <U extends Comparable<? super U>> Range<U> open(@Nonnull U lowerBound, @Nonnull U upperBound) {
 		return new Interval<>( new LowerBound<>( lowerBound, true ),
 				new UpperBound<>( upperBound, true ) );
 	}
@@ -119,7 +119,7 @@ public interface Range<U> {
 	 * given lower bound, and less than or equal to the given upper bound.
 	 */
 	@Nonnull
-	static <U extends Comparable<U>> Range<U> closed(@Nonnull U lowerBound, @Nonnull U upperBound) {
+	static <U extends Comparable<? super U>> Range<U> closed(@Nonnull U lowerBound, @Nonnull U upperBound) {
 		return new Interval<>( new LowerBound<>( lowerBound, false ),
 				new UpperBound<>( upperBound, false ) );
 	}

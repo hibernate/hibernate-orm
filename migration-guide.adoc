@@ -43,6 +43,26 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+[[comparable-restrictions]]
+=== Comparable values in restrictions and ranges
+
+The ordering factories of `Restriction` and `Range` now accept values that implement
+`Comparable` for a supertype, including `LocalDate` and `LocalDateTime`.
+Their generic bound is now `Comparable<? super U>` instead of `Comparable<U>`.
+The erased signatures are unchanged, preserving binary compatibility.
+
+For a `Range` factory call assigned to `var`, Java may now infer a more specific
+type. For example, `var range = Range.greaterThan(localDate)` now infers
+`Range<LocalDate>` instead of `Range<ChronoLocalDate>`.
+If subsequent code requires the wider type, declare it explicitly:
+
+[source,java]
+----
+Range<ChronoLocalDate> range = Range.greaterThan(localDate);
+----
+
+Alternatively, use an explicit type witness: `Range.<ChronoLocalDate>greaterThan(localDate)`.
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

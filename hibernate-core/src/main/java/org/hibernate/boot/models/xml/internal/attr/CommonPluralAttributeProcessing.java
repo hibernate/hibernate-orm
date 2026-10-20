@@ -55,6 +55,16 @@ public class CommonPluralAttributeProcessing {
 				memberDetails,
 				xmlDocumentContext
 		);
+		XmlAnnotationHelper.applyAudited(
+				jaxbPluralAttribute.getAudited(),
+				memberDetails,
+				xmlDocumentContext
+		);
+		XmlAnnotationHelper.applyExcludeFromAuditing(
+				jaxbPluralAttribute.getExcludeFromAuditing(),
+				memberDetails,
+				xmlDocumentContext
+		);
 
 		if ( jaxbPluralAttribute.getFetchMode() != null ) {
 			final FetchAnnotation fetchAnn = (FetchAnnotation) memberDetails.applyAnnotationUsage(

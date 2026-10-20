@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
@@ -19,6 +20,8 @@ import static org.hibernate.boot.jaxb.SourceType.FILE;
 import static org.hibernate.boot.jaxb.SourceType.RESOURCE;
 import static org.hibernate.boot.jaxb.SourceType.URL;
 
+import jakarta.annotation.Nullable;
+
 /**
  * Loads {@code cfg.xml} files.
  *
@@ -27,18 +30,31 @@ import static org.hibernate.boot.jaxb.SourceType.URL;
 public class ConfigLoader {
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
+	private final @Nullable Map<String, Object> settings;
 
 	private final ValueHolder<JaxbCfgProcessor> jaxbProcessorHolder = new ValueHolder<>(
 			new ValueHolder.DeferredInitializer<>() {
 				@Override
 				public JaxbCfgProcessor initialize() {
-					return new JaxbCfgProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );
+					return new JaxbCfgProcessor(
+							bootstrapServiceRegistry.getService( ClassLoaderService.class ),
+							settings
+					);
 				}
 			}
 	);
 
 	public ConfigLoader(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		this( bootstrapServiceRegistry, null );
+	}
+
+	/**
+	 * @param settings settings gathered (e.g. from system properties and {@code /hibernate.properties})
+	 * before {@code hibernate.cfg.xml} is parsed, or {@code null} if no such settings are available
+	 */
+	public ConfigLoader(BootstrapServiceRegistry bootstrapServiceRegistry, @Nullable Map<String, Object> settings) {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
+		this.settings = settings;
 	}
 
 	private InputStream locateStream(String cfgXmlResourceName) {

@@ -343,6 +343,12 @@
             <!-- @org.hibernate.annotations.Temporal (temporal entity); nests @Temporal.HistoryPartitioning / @Temporal.HistoryTable -->
             <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
 
+            <!-- @org.hibernate.annotations.Audited (audited entity); nests @Audited.Table -->
+            <xsd:element name="audited" type="orm:audited" minOccurs="0"/>
+
+            <!-- @org.hibernate.annotations.Changelog : marks this entity as the changelog entity for audit logging -->
+            <xsd:element name="changelog" type="orm:changelog" minOccurs="0"/>
+
             <!-- hbm: The size for batch fetching : @BatchSize -->
             <xsd:element name="batch-size" type="xsd:int" minOccurs="0"/>
 
@@ -733,6 +739,10 @@
                          minOccurs="0"/>
             <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
             <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Audited.Excluded : exclude this attribute from the owning entity's auditing -->
+            <xsd:element name="exclude-from-auditing" type="orm:emptyType" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Changelog.Timestamp : marks this property as the timestamp of a @Changelog entity -->
+            <xsd:element name="changelog-timestamp" type="orm:emptyType" minOccurs="0"/>
             <!-- hbm : is the state of this property considered mutable : ! @Immutable -->
             <xsd:element name="mutable" type="xsd:boolean" minOccurs="0"/>
         </xsd:sequence>
@@ -1172,6 +1182,12 @@
             <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
             <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
             <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Audited (audited collection); nests @Audited.Table -->
+            <xsd:element name="audited" type="orm:audited" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Audited.Excluded : exclude this attribute from the owning entity's auditing -->
+            <xsd:element name="exclude-from-auditing" type="orm:emptyType" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Changelog.ModifiedEntities : marks this Set<String> as the modified-entities property of a @Changelog entity -->
+            <xsd:element name="changelog-modified-entities" type="orm:emptyType" minOccurs="0"/>
             <!-- hbm : on-delete cascade for collection key : @OnDelete on collection field -->
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
@@ -1685,6 +1701,8 @@
 
             <xsd:group ref="orm:basic-type-group" />
             <xsd:element name="mutable" type="xsd:boolean" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Changelog.ChangesetId : marks this id as the changeset identifier of a @Changelog entity -->
+            <xsd:element name="changeset-id" type="orm:emptyType" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
@@ -1953,6 +1971,10 @@
             <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
             <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
             <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Audited (audited collection); nests @Audited.Table -->
+            <xsd:element name="audited" type="orm:audited" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Audited.Excluded : exclude this attribute from the owning entity's auditing -->
+            <xsd:element name="exclude-from-auditing" type="orm:emptyType" minOccurs="0"/>
             <!-- hbm : on-delete cascade for collection key : @OnDelete on collection field -->
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
@@ -2605,6 +2627,10 @@
             <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
             <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
             <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Audited (audited collection); nests @Audited.Table -->
+            <xsd:element name="audited" type="orm:audited" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Audited.Excluded : exclude this attribute from the owning entity's auditing -->
+            <xsd:element name="exclude-from-auditing" type="orm:emptyType" minOccurs="0"/>
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -3123,6 +3149,87 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:attribute name="name" type="xsd:string"/>
+    </xsd:complexType>
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="audited">
+        <xsd:annotation>
+            <xsd:documentation>
+
+                See `@org.hibernate.annotations.Audited`
+
+                @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE}) @Retention(RUNTIME)
+                public @interface Audited {
+                }
+
+                The optional `audited-table` child maps to `@Audited.Table`, which is only
+                meaningful in conjunction with `@Audited` on an entity and is therefore nested
+                here.
+
+                `@Audited.Excluded` is represented separately by the `exclude-from-auditing`
+                element on the attribute, since it applies to attributes that are themselves not
+                audited.
+
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="audited-table" type="orm:audited-table" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="audited-table">
+        <xsd:annotation>
+            <xsd:documentation>
+
+                See `@org.hibernate.annotations.Audited.Table`
+
+                @Target({TYPE, PACKAGE, ANNOTATION_TYPE}) @Retention(RUNTIME)
+                public @interface Table {
+                String name() default "";
+                String schema() default "";
+                String catalog() default "";
+                String changesetIdColumn() default "REV";
+                String modificationTypeColumn() default "REVTYPE";
+                String invalidatingChangesetIdColumn() default "REVEND";
+                }
+
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="name" type="xsd:string"/>
+        <xsd:attribute name="schema" type="xsd:string"/>
+        <xsd:attribute name="catalog" type="xsd:string"/>
+        <xsd:attribute name="changeset-id-column" type="xsd:string"/>
+        <xsd:attribute name="modification-type-column" type="xsd:string"/>
+        <xsd:attribute name="invalidating-changeset-id-column" type="xsd:string"/>
+    </xsd:complexType>
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="changelog">
+        <xsd:annotation>
+            <xsd:documentation>
+
+                See `@org.hibernate.annotations.Changelog`
+
+                @Target({TYPE}) @Retention(RUNTIME)
+                public @interface Changelog {
+                Class&lt;? extends ChangesetListener&gt; listener() default ChangesetListener.class;
+                }
+
+                The `listener` attribute, if given, is the fully-qualified name of a class
+                implementing `org.hibernate.audit.ChangesetListener`.
+
+                The field/property-level markers `@Changelog.ChangesetId`, `@Changelog.Timestamp`
+                and `@Changelog.ModifiedEntities` are represented separately, as the
+                `changeset-id` element on `id`, the `changelog-timestamp` element on `basic`,
+                and the `changelog-modified-entities` element on `element-collection`.
+
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="listener" type="xsd:string"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -3729,6 +3836,10 @@
             <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
             <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
             <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Audited (audited collection); nests @Audited.Table -->
+            <xsd:element name="audited" type="orm:audited" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Audited.Excluded : exclude this attribute from the owning entity's auditing -->
+            <xsd:element name="exclude-from-auditing" type="orm:emptyType" minOccurs="0"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>

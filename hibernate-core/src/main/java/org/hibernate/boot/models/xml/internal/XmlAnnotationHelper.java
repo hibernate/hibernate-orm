@@ -24,9 +24,12 @@ import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.mapping.GenerationTiming;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAuditedImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAuditedTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicMapping;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCachingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCascadeTypeImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbChangelogImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeImpl;
@@ -78,8 +81,10 @@ import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AssociationOverridesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AuditedTableAnnotation;
 import org.hibernate.boot.models.annotations.internal.AttributeOverrideJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AttributeOverridesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ChangelogAnnotation;
 import org.hibernate.boot.models.annotations.internal.CheckConstraintJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionClassificationXmlAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
@@ -602,6 +607,147 @@ public class XmlAnnotationHelper {
 
 		target.applyAnnotationUsage(
 				HibernateAnnotations.TEMPORAL_EXCLUDED,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+	}
+
+	/**
+	 * Handle {@code <audited/>} ({@link org.hibernate.annotations.Audited}) and its nested
+	 * {@code <audited-table/>} ({@link org.hibernate.annotations.Audited.Table}) for both entity
+	 * and collection targets.
+	 */
+	public static void applyAudited(
+			JaxbAuditedImpl jaxbAudited,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbAudited == null ) {
+			return;
+		}
+
+		target.applyAnnotationUsage(
+				HibernateAnnotations.AUDITED,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		final JaxbAuditedTableImpl jaxbAuditedTable = jaxbAudited.getAuditedTable();
+		if ( jaxbAuditedTable != null ) {
+			final AuditedTableAnnotation auditedTableAnn =
+					(AuditedTableAnnotation) target.applyAnnotationUsage(
+							HibernateAnnotations.AUDITED_TABLE,
+							xmlDocumentContext.getModelBuildingContext()
+					);
+			if ( isNotEmpty( jaxbAuditedTable.getName() ) ) {
+				auditedTableAnn.name( jaxbAuditedTable.getName() );
+			}
+			if ( isNotEmpty( jaxbAuditedTable.getSchema() ) ) {
+				auditedTableAnn.schema( jaxbAuditedTable.getSchema() );
+			}
+			if ( isNotEmpty( jaxbAuditedTable.getCatalog() ) ) {
+				auditedTableAnn.catalog( jaxbAuditedTable.getCatalog() );
+			}
+			if ( isNotEmpty( jaxbAuditedTable.getChangesetIdColumn() ) ) {
+				auditedTableAnn.changesetIdColumn( jaxbAuditedTable.getChangesetIdColumn() );
+			}
+			if ( isNotEmpty( jaxbAuditedTable.getModificationTypeColumn() ) ) {
+				auditedTableAnn.modificationTypeColumn( jaxbAuditedTable.getModificationTypeColumn() );
+			}
+			if ( isNotEmpty( jaxbAuditedTable.getInvalidatingChangesetIdColumn() ) ) {
+				auditedTableAnn.invalidatingChangesetIdColumn( jaxbAuditedTable.getInvalidatingChangesetIdColumn() );
+			}
+		}
+	}
+
+	/**
+	 * Handle {@code <exclude-from-auditing/>} ({@link org.hibernate.annotations.Audited.Excluded}):
+	 * marks the attribute as excluded from the owning entity's auditing.
+	 */
+	public static void applyExcludeFromAuditing(
+			JaxbEmptyTypeImpl jaxbExcludeFromAuditing,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbExcludeFromAuditing == null ) {
+			return;
+		}
+
+		target.applyAnnotationUsage(
+				HibernateAnnotations.AUDITED_EXCLUDED,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+	}
+
+	/**
+	 * Handle {@code <changelog/>} ({@link org.hibernate.annotations.Changelog}): marks the
+	 * entity as the changelog entity for audit logging.
+	 */
+	@SuppressWarnings("unchecked")
+	public static void applyChangelog(
+			JaxbChangelogImpl jaxbChangelog,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbChangelog == null ) {
+			return;
+		}
+
+		final ChangelogAnnotation changelogAnn = (ChangelogAnnotation) target.applyAnnotationUsage(
+				HibernateAnnotations.CHANGELOG,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		if ( isNotEmpty( jaxbChangelog.getListener() ) ) {
+			final Class<?> listenerClass = resolveJavaType( jaxbChangelog.getListener(), xmlDocumentContext ).toJavaClass();
+			changelogAnn.setListener( (Class<? extends org.hibernate.audit.ChangesetListener>) listenerClass );
+		}
+	}
+
+	/**
+	 * Handle {@code <changeset-id/>} ({@link org.hibernate.annotations.Changelog.ChangesetId}):
+	 * marks the id as the changeset identifier of a {@code @Changelog} entity.
+	 */
+	public static void applyChangesetId(
+			JaxbEmptyTypeImpl jaxbChangesetId,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbChangesetId == null ) {
+			return;
+		}
+
+		target.applyAnnotationUsage(
+				HibernateAnnotations.CHANGELOG_CHANGESET_ID,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+	}
+
+	/**
+	 * Handle {@code <changelog-timestamp/>} ({@link org.hibernate.annotations.Changelog.Timestamp}):
+	 * marks the property as the timestamp of a {@code @Changelog} entity.
+	 */
+	public static void applyChangelogTimestamp(
+			JaxbEmptyTypeImpl jaxbChangelogTimestamp,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbChangelogTimestamp == null ) {
+			return;
+		}
+
+		target.applyAnnotationUsage(
+				HibernateAnnotations.CHANGELOG_TIMESTAMP,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+	}
+
+	/**
+	 * Handle {@code <changelog-modified-entities/>} ({@link org.hibernate.annotations.Changelog.ModifiedEntities}):
+	 * marks the collection as the modified-entities property of a {@code @Changelog} entity.
+	 */
+	public static void applyModifiedEntities(
+			JaxbEmptyTypeImpl jaxbModifiedEntities,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbModifiedEntities == null ) {
+			return;
+		}
+
+		target.applyAnnotationUsage(
+				HibernateAnnotations.CHANGELOG_MODIFIED_ENTITIES,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 	}

@@ -19,55 +19,21 @@ env.COMMON_GRADLE_ARGS = '-Igradle/init.gradle'
 stage('Configure') {
 	requireApprovalForPullRequest 'hibernate'
 
+	// Most environments have been moved to GitHub Actions (ci.yml / nightly.yml).
+	// This Jenkinsfile retains only:
+	// - s390x (architecture-specific hardware)
+	// - Label-triggered tests requiring Jenkins infrastructure
+	//   (HANA Cloud lockable resource, sybase_jconn proprietary driver)
 	this.environments = [
-//		new BuildEnvironment( dbName: 'h2' ),
-//		new BuildEnvironment( dbName: 'hsqldb' ),
-//		new BuildEnvironment( dbName: 'derby' ),
-//		new BuildEnvironment( dbName: 'mysql' ),
-//		new BuildEnvironment( dbName: 'mariadb' ),
-//		new BuildEnvironment( dbName: 'postgresql' ),
-//		new BuildEnvironment( dbName: 'edb' ),
-//		new BuildEnvironment( dbName: 'oracle' ),
-//		new BuildEnvironment( dbName: 'db2' ),
-//		new BuildEnvironment( dbName: 'mssql' ),
-//		new BuildEnvironment( dbName: 'sybase' ),
-// Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
-// 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
-		new BuildEnvironment( node: 's390x' ),
-		// We generally build with JDK 25, but our baseline is Java 17, so we test with JDK 17, to be sure everything works.
-		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '17' ),
-		// Additionally, have one job that builds using JDK 17 as well
-		new BuildEnvironment( mainJdkVersion: '17', additionalOptions: '-Porm.jdk.min=17 -PskipErrorProne=true' ),
-		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '21' ),
-		// We want to enable preview features when testing newer builds of OpenJDK:
-		// even if we don't use these features, just enabling them can cause side effects
-		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview' ),
-		// --illegal-final-field-mutation=deny: check we don't try to mutate final fields anywhere in tests, because that'll be forbidden eventually.
-		new BuildEnvironment( testJdkVersion: '26', testJdkLauncherArgs: '--enable-preview --illegal-final-field-mutation=deny' ),
-		new BuildEnvironment( testJdkVersion: '27', testJdkLauncherArgs: '--enable-preview --illegal-final-field-mutation=deny', additionalOptions: '-PskipJacoco=true' ),
-		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
-		// they require the use of -Dnet.bytebuddy.experimental=true.
-		// Make sure to remove that argument as soon as possible
-		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '28', testJdkLauncherArgs: '--enable-preview --illegal-final-field-mutation=deny -Dnet.bytebuddy.experimental=true', additionalOptions: '-PskipJacoco=true' )
+		new BuildEnvironment( node: 's390x' )
 	];
 
 	if ( env.CHANGE_ID ) {
-		if ( pullRequest.labels.contains( 'cockroachdb' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ) )
-		}
 		if ( pullRequest.labels.contains( 'hana' ) ) {
 			this.environments.add( new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ) )
 		}
 		if ( pullRequest.labels.contains( 'sybase' ) ) {
 			this.environments.add( new BuildEnvironment( dbName: 'sybase_jconn' ) )
-		}
-		if ( pullRequest.labels.contains( 'tidb' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'tidb', node: 'tidb' ) )
-		}
-		if ( pullRequest.labels.contains( 'informix' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'informix' ) )
 		}
 	}
 
@@ -103,12 +69,6 @@ stage('Build') {
 	Map<String, Closure> executions = [:]
 	Map<String, Map<String, String>> state = [:]
 	environments.each { BuildEnvironment buildEnv ->
-		// Don't build environments for newer JDKs when this is a PR, unless the PR is labelled with 'jdk' or 'jdk-<version>'
-		if ( helper.scmSource.pullRequest &&
-				buildEnv.testJdkVersion && buildEnv.testJdkVersion.toInteger() > DEFAULT_JDK_VERSION.toInteger() &&
-				!pullRequest.labels.contains( 'jdk' ) && !pullRequest.labels.contains( "jdk-${buildEnv.testJdkVersion}" ) ) {
-			return
-		}
 		state[buildEnv.tag] = [:]
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node ?: NODE_PATTERN_BASE) {
@@ -152,27 +112,10 @@ stage('Build') {
 					tryFinally({
 						stage('Start database') {
 							switch (buildEnv.dbName) {
-								case "edb":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:15.4-3.3-postgis').pull()
-									sh "./db.sh edb"
-									state[buildEnv.tag]['containerName'] = "edb"
-									break;
 								case "sybase_jconn":
 									docker.image('nguoianphu/docker-sybase').pull()
 									sh "./db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
-									break;
-								case "cockroachdb":
-									docker.image('cockroachdb/cockroach:v23.1.12').pull()
-									sh "./db.sh cockroachdb"
-									state[buildEnv.tag]['containerName'] = "cockroach"
-									break;
-								case "informix":
-									sh "./db.sh informix"
-									state[buildEnv.tag]['containerName'] = "informix"
-									// Disable parallel testing
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-											" -Ptest.threads=1"
 									break;
 							}
 						}

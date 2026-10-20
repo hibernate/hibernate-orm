@@ -1,3 +1,9 @@
+# See MAINTAINERS.md for details about all available CI jobs.
+#
+# Nightly CI: runs additional environments that are too expensive for every push/PR,
+# plus a reproducible build check across maintained branches.
+# Uses the same reusable workflow as ci.yml for the build + test pattern.
+
 name: Nightly
 
 on:
@@ -9,6 +15,7 @@ permissions: { }
 
 jobs:
   reproducible-build-check:
+    if: github.repository == 'hibernate/hibernate-orm' || github.event_name != 'schedule'
     strategy:
       fail-fast: false
       matrix:
@@ -18,3 +25,54 @@ jobs:
       branch: ${{ matrix.branch }}
     permissions:
       contents: read
+
+  build:
+    if: github.repository == 'hibernate/hibernate-orm' || github.event_name != 'schedule'
+    uses: ./.github/workflows/build.yml
+    permissions:
+      contents: read
+    with:
+      # Nightly jobs run on free runners (queue times don't matter).
+      #
+      # --- Databases ---
+      # Minimum supported versions: test with the oldest database versions
+      # still in the support matrix.
+      # Unfortunately there is no DB2 11.1 image, but 11.5 should mostly
+      # have feature parity.
+      # Unfortunately there is no SQL Server 2008 image, so we have to
+      # test with 2017.
+      #
+      # --- JDKs ---
+      # We enable preview features when testing newer builds of OpenJDK:
+      # even if we don't use these features, just enabling them can cause
+      # side effects and it's useful to test that.
+      # --illegal-final-field-mutation=deny: check we don't try to mutate
+      # final fields anywhere in tests, because that'll be forbidden eventually.
+      # JDKs that aren't supported by Hibernate ORM out-of-the box yet
+      # require the use of -Dnet.bytebuddy.experimental=true.
+      # Make sure to remove that argument as soon as possible
+      # -- generally that requires upgrading bytebuddy after the JDK goes GA.
+      matrix-json: >-
+        [
+          { "name": "cockroachdb", "rdbms": "cockroachdb",
+            "timeout": 300 },
+          { "name": "hsqldb 2.6", "rdbms": "hsqldb_2_6" },
+          { "name": "mysql 8.0", "rdbms": "mysql_8_0" },
+          { "name": "mariadb 10.6", "rdbms": "mariadb_10_6" },
+          { "name": "postgis 14", "rdbms": "postgis_14" },
+          { "name": "edb 14", "rdbms": "edb_14" },
+          { "name": "db2 11.5", "rdbms": "db2_11_5",
+            "timeout": 120,
+            "gradle-args": "-Ptest.threads=1" },
+          { "name": "mssql 2017", "rdbms": "mssql_2017" },
+          { "name": "informix", "rdbms": "informix",
+            "gradle-args": "-Ptest.threads=1" },
+          { "name": "JDK", "java-test-version": "27",
+            "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny",
+            "gradle-args": "-PskipJacoco=true" },
+          { "name": "JDK", "java-test-version": "28",
+            "java-test-from": "jdk.java.net",
+            "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny -Dnet.bytebuddy.experimental=true",
+            "gradle-args": "-PskipJacoco=true" }
+        ]
+    secrets: inherit

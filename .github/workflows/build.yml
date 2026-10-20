@@ -1,0 +1,631 @@
+# See MAINTAINERS.md for details about all available CI jobs.
+#
+# Reusable workflow: compile once, then run test matrix in parallel.
+# Called by ci.yml (before-merge entries) and nightly.yml (after-merge entries).
+#
+# --- Caching strategy ---
+#
+# Two complementary mechanisms transfer state to downstream jobs:
+#
+# 1. GitHub Actions cache (dependency cache):
+#    Stores downloaded dependencies (~/.gradle/caches/, ~/.m2/repository/, wrappers).
+#    Only the initial build *saves* this cache, and only on non-PR events (push,
+#    schedule, workflow_dispatch) to avoid accumulating per-PR cache entries.
+#    All other jobs -- including the initial build on PRs -- restore it read-only.
+#    OTP jobs use a separate 'otp-gradle-' prefix because they run on self-hosted
+#    runners with GraalVM, whose resolved artifacts may differ.
+#
+# 2. Build cache tarball (artifact):
+#    The initial build uploads ~/.gradle/caches/build-cache-1 as an artifact.
+#    Test (including TCK) and OTP jobs download and extract it to skip recompilation.
+#    This is ephemeral (retention-days: 1) and scoped to the current workflow run.
+#
+# Why not persist the Gradle build cache across runs (like Search does with
+# Maven's Develocity local cache)?
+#    Gradle's local build cache (~/.gradle/caches/build-cache-1) holds all task
+#    outputs -- compilation, test results, etc. -- in one flat directory, typically
+#    ~300 MB. Maven's Develocity local cache (~/.m2/.develocity/build-cache) is a
+#    separate, smaller directory (~tens of MB). Persisting the Gradle build cache
+#    per test matrix entry would cost ~300 MB × N entries in GitHub cache storage
+#    with limited benefit: any change to core code invalidates all test tasks anyway.
+#    The remote Develocity cache at develocity.commonhaus.dev already provides
+#    cross-run caching for non-PR builds.
+
+name: CI Build
+
+on:
+  workflow_call:
+    inputs:
+      initial-build-runs-on:
+        description: 'Runner label for the initial build job'
+        type: string
+        required: false
+        default: 'ubuntu-latest'
+      matrix-json:
+        description: 'JSON array of test matrix entries'
+        type: string
+        required: true
+      otp-matrix-json:
+        description: 'JSON array of Oracle Test Pilot entries (each must have "rdbms")'
+        type: string
+        required: false
+        default: ''
+      run-formatting-checks:
+        description: 'Whether to run code formatting checks'
+        type: boolean
+        required: false
+        default: true
+      run-sonar:
+        description: 'Whether to prepare a Sonar coverage bundle after tests'
+        type: boolean
+        required: false
+        default: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  GRADLE_JAVA_VERSION: '25'
+  COMMON_GRADLE_ARGS: "-Igradle/init.gradle"
+  MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+  MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
+  JPA_PREVIEW: "true"
+
+permissions: { }
+
+jobs:
+  # Compile-only build: compiles all sources and renders documentation (releasePrepare),
+  # but does NOT run tests. Shares its local Gradle build cache as a tarball artifact
+  # so that downstream jobs can skip recompilation.
+  build:
+    name: Initial build
+    runs-on: >-
+      ${{
+        github.repository == 'hibernate/hibernate-orm' && inputs.initial-build-runs-on
+        || !contains(inputs.initial-build-runs-on, 'runs-on') && inputs.initial-build-runs-on
+        || 'ubuntu-latest'
+      }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Set up RunsOn
+        if: ${{ contains(inputs.initial-build-runs-on, 'runs-on') && github.repository == 'hibernate/hibernate-orm' }}
+        uses: runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3 # v2.5.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+      - name: Set up Gradle JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.GRADLE_JAVA_VERSION }}
+
+      - name: Cache local Gradle repository
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name != 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+      - name: Restore local Gradle repository
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name == 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Run build script
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          ./ci/build-github.sh "${common_gradle_args[@]}" -x test
+        env:
+          RDBMS: h2
+          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name != 'pull_request' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
+          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
+
+      - name: Create build cache tarball
+        run: tar -czf gradle-build-cache.tgz -C ~ .gradle/caches/build-cache-1
+      - name: Upload build cache
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gradle-build-cache
+          retention-days: 1
+          path: gradle-build-cache.tgz
+
+      - name: Upload GitHub Actions artifact for the Develocity build scan
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
+        with:
+          name: build-scan-data-initial
+          path: ~/.gradle/build-scan-data
+      - name: Store build results
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: build-compilation-data
+          retention-days: 1
+          path: |
+            ./**/target/resources/
+            ./**/target/classes/
+            ./**/target/generated/
+      - name: Upload docs preview
+        uses: hibernate/.github/actions/build-docs-preview@709cd8c0127dfa8918b6845cf476e72d2c2a04a8 # main
+        with:
+          dist-path: 'documentation/target/asciidoc'
+          src-paths: |
+            documentation/src
+            migration-guide.adoc
+            dialects.adoc
+            whats-new.adoc
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh
+
+  # Matrix-driven test jobs. Each entry downloads the build cache tarball from the
+  # initial build and runs the full test suite against a specific database or JDK.
+  test:
+    name: >-
+      ${{ matrix.name
+      }}${{ matrix.java-test-version && format(' {0}', matrix.java-test-version)
+      || '' }}
+    needs: build
+    runs-on: >-
+      ${{
+        github.repository == 'hibernate/hibernate-orm' && matrix.runs-on
+        || !contains(matrix.runs-on || '', 'runs-on') && matrix.runs-on
+        || 'ubuntu-latest'
+      }}
+    timeout-minutes: ${{ matrix.timeout != '' && matrix.timeout || 60 }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.matrix-json) }}
+    steps:
+      - name: Set up RunsOn
+        if: ${{ contains(matrix.runs-on || '', 'runs-on') && github.repository == 'hibernate/hibernate-orm' }}
+        uses: runs-on/action@17b59092eb37ebfdbb034460892887c09100eaa3 # v2.5.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+      - name: Compute entry label
+        run: |
+          echo "ENTRY_LABEL=${_LABEL//[\":<>|*?\\\/]/-}" >> "$GITHUB_ENV"
+        env:
+          _LABEL: ${{ matrix.name }}
+
+      # --- JDK setup ---
+      # Install test/build JDKs first (if needed), capture their homes,
+      # then install the default JDK (GRADLE_JAVA_VERSION) which becomes JAVA_HOME for the Gradle daemon.
+      - name: Set up test JDK ${{ matrix.java-test-version }}
+        if: ${{ matrix.java-test-version && matrix.java-test-version != env.GRADLE_JAVA_VERSION && matrix.java-test-from != 'jdk.java.net' }}
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-test-version }}
+      - name: Set up test JDK ${{ matrix.java-test-version }} (EA from jdk.java.net)
+        if: ${{ matrix.java-test-from == 'jdk.java.net' }}
+        uses: oracle-actions/setup-java@fff43251af9936a0e6a4d5d0946e14f1680e9b6b # v1.5.0
+        with:
+          website: jdk.java.net
+          release: ${{ matrix.java-test-version }}
+      - name: Capture test JDK home
+        if: ${{ matrix.java-test-version && matrix.java-test-version != env.GRADLE_JAVA_VERSION }}
+        run: echo "TEST_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+      - name: Set up build JDK ${{ matrix.java-build-version }}
+        if: ${{ matrix.java-build-version && matrix.java-build-version != env.GRADLE_JAVA_VERSION }}
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-build-version }}
+      - name: Capture build JDK home
+        if: ${{ matrix.java-build-version && matrix.java-build-version != env.GRADLE_JAVA_VERSION }}
+        run: echo "BUILD_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+      - name: Set up Gradle JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.GRADLE_JAVA_VERSION }}
+
+      # --- Caching (restore-only: initial build saves the cache) ---
+      - name: Restore local Gradle repository
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+      - name: Download build cache
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        with:
+          name: gradle-build-cache
+      - name: Extract build cache
+        run: |
+          tar -xzf gradle-build-cache.tgz -C ~
+          rm gradle-build-cache.tgz
+
+      # --- Database ---
+      - name: Start database
+        if: ${{ matrix.rdbms }}
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+        run: ci/database-start.sh
+      - name: Dump container logs
+        if: ${{ failure() && matrix.rdbms }}
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+        run: |
+          container=$(docker ps -a --filter "label=com.docker.compose.project=hibernate_orm" --format '{{.Names}}' | head -1)
+          if [ -n "$container" ]; then
+            echo "::group::Container logs for $container"
+            docker logs "$container" 2>&1 | tail -200
+            echo "::endgroup::"
+            echo "::group::Container inspect"
+            docker inspect "$container" --format '{{json .State}}' | python3 -m json.tool
+            echo "::endgroup::"
+          else
+            echo "No container found for project hibernate_orm"
+            docker ps -a
+          fi
+      - id: db_version
+        name: Determine changed database image version
+        if: ${{ matrix.rdbms }}
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+          _BASE_REF: ${{ github.base_ref || '' }}
+        run: |
+          if [[ -n "$_BASE_REF" ]] && git diff --name-only "origin/$_BASE_REF...HEAD" 2>/dev/null | grep -q '^docker-compose/'; then
+            echo "dbVersion=$(ci/database-version.sh)" >> "$GITHUB_OUTPUT"
+          else
+            echo "dbVersion=" >> "$GITHUB_OUTPUT"
+          fi
+
+      # --- Build and test ---
+      - name: Run build script
+        run: |
+          read -ra gradle_args <<< "$COMMON_GRADLE_ARGS"
+
+          # JDK toolchain args
+          jdk_paths="$JAVA_HOME"
+          if [[ -n "$JAVA_TEST_VERSION" ]]; then
+            gradle_args+=("-Ptest.jdk.version=$JAVA_TEST_VERSION")
+            if [[ -n "$TEST_JDK_HOME" && "$TEST_JDK_HOME" != "$JAVA_HOME" ]]; then
+              jdk_paths="$jdk_paths,$TEST_JDK_HOME"
+            fi
+          fi
+          if [[ -n "$JAVA_BUILD_VERSION" ]]; then
+            gradle_args+=("-Pmain.jdk.version=$JAVA_BUILD_VERSION")
+            if [[ -n "$BUILD_JDK_HOME" && "$BUILD_JDK_HOME" != "$JAVA_HOME" ]]; then
+              jdk_paths="$jdk_paths,$BUILD_JDK_HOME"
+            fi
+          fi
+          if [[ -n "$JAVA_LAUNCHER_ARGS" ]]; then
+            gradle_args+=("-Ptest.jdk.launcher.args=$JAVA_LAUNCHER_ARGS")
+          fi
+          if [[ "$jdk_paths" == *","* ]]; then
+            gradle_args+=("-Porg.gradle.java.installations.paths=$jdk_paths")
+          fi
+
+          # Matrix-level Gradle args (applied last so they can override)
+          if [[ -n "$GRADLE_ARGS_MATRIX" ]]; then
+            read -ra _a <<< "$GRADLE_ARGS_MATRIX"
+            gradle_args+=("${_a[@]}")
+          fi
+
+          ./"${BUILD_SCRIPT}" "${gradle_args[@]}"
+        env:
+          BUILD_SCRIPT: ${{ matrix.build-script || 'ci/build-github.sh' }}
+          RDBMS: ${{ matrix.rdbms || '' }}
+          DB_VERSION: ${{ steps.db_version.outputs.dbVersion || '' }}
+          JAVA_TEST_VERSION: ${{ matrix.java-test-version || '' }}
+          JAVA_BUILD_VERSION: ${{ matrix.java-build-version || '' }}
+          JAVA_LAUNCHER_ARGS: ${{ matrix.java-launcher-args || '' }}
+          GRADLE_ARGS_MATRIX: ${{ matrix.gradle-args || '' }}
+          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name != 'pull_request' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
+          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
+
+      # --- Artifacts ---
+      - name: Upload GitHub Actions artifact for the Develocity build scan
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
+        with:
+          name: build-scan-data-${{ env.ENTRY_LABEL }}
+          path: ~/.gradle/build-scan-data
+      - name: Store coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() && matrix.coverage != false }}
+        with:
+          name: build-coverage-data-${{ env.ENTRY_LABEL }}
+          retention-days: 1
+          path: |
+            ./**/target/jacoco/*.exec
+      - name: Upload test reports (if Gradle failed)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: test-reports-${{ env.ENTRY_LABEL }}
+          path: |
+            ./**/target/reports/tests/
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh
+
+  # Oracle Test Pilot: database tests on self-hosted OracleTestPilot runners with
+  # GraalVM and oracle-actions/setup-testpilot for DB lifecycle. Uses a separate
+  # cache namespace (otp-gradle-) to avoid polluting the shared cache.
+  otp:
+    name: ${{ matrix.name }}
+    needs: build
+    if: ${{ inputs.otp-matrix-json != '' && github.repository == 'hibernate/hibernate-orm' }}
+    runs-on: [ self-hosted, Linux, X64, OracleTestPilot ]
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.otp-matrix-json) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Gradle JDK
+        uses: graalvm/setup-graalvm@0426e2e191540e8514dff98dc52a5f5146a2a276 # v1.6.6
+        with:
+          distribution: 'graalvm'
+          java-version: ${{ env.GRADLE_JAVA_VERSION }}
+
+      # --- Caching (OTP-prefixed: OTP runners must not pollute the shared cache) ---
+      - name: Cache local Gradle repository
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name != 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: otp-gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            otp-gradle-${{ runner.os }}-
+            gradle-${{ runner.os }}-
+      - name: Restore local Gradle repository
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name == 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: otp-gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            otp-gradle-${{ runner.os }}-
+            gradle-${{ runner.os }}-
+      - name: Download build cache
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        with:
+          name: gradle-build-cache
+      - name: Extract build cache
+        run: |
+          tar -xzf gradle-build-cache.tgz -C ~
+          rm gradle-build-cache.tgz
+
+      - id: create_database
+        uses: oracle-actions/setup-testpilot@ad55a0d7294112c44a9cc9a38f4b3d293da8fcf0 # v1.0.31
+        with:
+          oci-service: ${{ matrix.rdbms }}
+          action: create
+          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4,hibernate_orm_test_5,hibernate_orm_test_6,hibernate_orm_test_7,hibernate_orm_test_8
+
+      - name: Run build script
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+          RUNID: ${{ github.run_number }}
+          TESTPILOT_CONNECTION_STRING_SUFFIX: ${{ steps.create_database.outputs.connection_string_suffix }}
+          TESTPILOT_PASSWORD: ${{ steps.create_database.outputs.database_password }}
+          API_HOST: ""
+          TESTPILOT_CLIENT_ID: ""
+          TESTPILOT_TOKEN: ""
+          LD_PRELOAD: /home/ubuntu/ojdbc_tfo/ojdbc17/23.26.2.0.0/libtfojdbc1.so
+          LD_LIBRARY_PATH: /home/ubuntu/ojdbc_tfo/ojdbc17/23.26.2.0.0
+          GRADLE_OPTS: "-Dorg.gradle.workers.max=8"
+          ORG_GRADLE_JVMARGS: "-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
+          ORG_GRADLE_PROJECT_toolchain.compiler.jvmargs: "-Dlog4j2.disableJmx=true -Xmx4g -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
+          ORG_GRADLE_PROJECT_toolchain.launcher.jvmargs: "-Dlog4j2.disableJmx=true -Xmx3g -XX:MaxMetaspaceSize=448m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          ./ci/build-github.sh "${common_gradle_args[@]}"
+
+      - uses: oracle-actions/setup-testpilot@ad55a0d7294112c44a9cc9a38f4b3d293da8fcf0 # v1.0.31
+        if: always()
+        with:
+          oci-service: ${{ matrix.rdbms }}
+          action: delete
+          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4,hibernate_orm_test_5,hibernate_orm_test_6,hibernate_orm_test_7,hibernate_orm_test_8
+
+      - name: Upload GitHub Actions artifact for the Develocity build scan
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: "${{ !cancelled() }}"
+        with:
+          name: build-scan-data-${{ matrix.rdbms }}
+          path: ~/.gradle/build-scan-data
+      - name: Store coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: build-coverage-data-${{ matrix.rdbms }}
+          retention-days: 1
+          path: |
+            ./**/target/jacoco/*.exec
+      - name: Upload test reports (if Gradle failed)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: test-reports-${{ matrix.rdbms }}
+          path: |
+            ./**/target/reports/tests/
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh
+
+  # Spotless/Checkstyle formatting verification.
+  formatting-checks:
+    name: Code formatting checks
+    if: ${{ inputs.run-formatting-checks }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Reclaim disk space and sanitize user home
+        run: .github/ci-prerequisites-atlas.sh
+      - name: Set up Gradle JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.GRADLE_JAVA_VERSION }}
+
+      # Restore-only: the initial build job saves the cache; this job just reads it.
+      - name: Restore local Gradle repository
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Run build script
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          ./gradlew "${common_gradle_args[@]}" formatChecks
+        env:
+          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name != 'pull_request' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
+          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
+
+      - name: Upload GitHub Actions artifact for the Develocity build scan
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
+        with:
+          name: build-scan-data-sca
+          path: ~/.gradle/build-scan-data
+
+      - name: Upload test reports (if Gradle failed)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: test-reports-sca
+          path: |
+            ./**/target/reports/tests/
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh
+
+  # Merges JaCoCo reports from all test jobs and the initial build into a single
+  # artifact for the Sonar scanner (run separately by the calling workflow).
+  prepare-sonar-bundle:
+    name: Prepare build bundle for Sonar scanner
+    needs: test
+    if: >-
+      inputs.run-sonar
+      && always() && !cancelled()
+      && needs.test.result != 'cancelled'
+    runs-on: ubuntu-slim
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Gradle JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: ${{ env.GRADLE_JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Restore local Gradle repository
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # The build cache + compiled classes are needed so that Gradle can resolve
+      # task dependencies for mergeCodeCoverageReport without recompiling.
+      - name: Download build cache
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        with:
+          name: gradle-build-cache
+      - name: Extract build cache
+        run: |
+          tar -xzf gradle-build-cache.tgz -C ~
+          rm gradle-build-cache.tgz
+
+      - name: Download compilation results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        with:
+          name: build-compilation-data
+          path: .
+        continue-on-error: true
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        with:
+          pattern: build-coverage-data*
+          path: .
+          merge-multiple: 'true'
+        continue-on-error: true
+
+      - name: Merge Jacoco Reports
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          ./gradlew "${common_gradle_args[@]}" mergeCodeCoverageReport copyDependenciesSonar --no-parallel
+
+      - name: Store build info for Sonar scanning
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: build-results-data
+          retention-days: 1
+          path: |
+            ./**/target/jacoco/*.exec
+            ./**/target/classes/
+            ./**/target/generated/
+            ./**/target/resources/
+            ./**/target/reports/
+            ./**/target/sonar-dependencies/

@@ -5,8 +5,7 @@ cd -- "$(dirname -- "${BASH_SOURCE[0]}")" || exit 1
 
 ###############################################################################
 # Detect container cli (Docker/Podman)
-# Docker has priority to make CI builds more stable/predictable
-# (Jenkins is currently better configured to deal with Docker)
+# Docker has priority for historical reasons.
 ###############################################################################
 if command -v docker > /dev/null; then
   CONTAINER_CLI=$(command -v docker)

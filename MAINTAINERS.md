@@ -16,10 +16,11 @@ Maintainers own compatibility-baseline selection and activation of the explicit 
 
 ## <a id="ci"></a> Continuous integration
 
-Continuous integration is split across two platforms:
+Continuous integration happens on GitHub Actions,
+using [RunsOn Fleet](https://runs-on.com/) for self-hosted runners,
+with some jobs still on a self-hosted Jenkins instance at https://ci.hibernate.org.
 
-* GitHub Actions at https://github.com/hibernate/hibernate-orm/actions
-* a self-hosted Jenkins instance at https://ci.hibernate.org.
+Below is a list of all notable workflows/jobs.
 
 ### Tips
 
@@ -52,24 +53,69 @@ pass `-DenableMavenLocalRepo=true` to the `gradle` command.
 This adds `mavenLocal()` as a repository, which is disabled by default
 to ensure reproducible builds on CI.
 
-### GitHub Actions workflows
+### Main pipeline
 
-TODO: describe the workflows available.
+https://github.com/hibernate/hibernate-orm/actions/workflows/ci.yml
 
-### Jenkins main pipeline
-
-https://ci.hibernate.org/job/hibernate-orm-pipeline/
-
-This job takes care of testing additional DBs for:
+This workflow takes care of:
 
 * Primary branch builds
 * Pull request builds
 
-It is generally triggered on push,
-but can also be triggered manually,
-which is particularly useful to test more environments on a pull request.
+It is generally triggered on push or pull request.
 
-See [Jenkinsfile](Jenkinsfile) for the job definition. 
+See [.github/workflows/ci.yml](.github/workflows/ci.yml)
+and [.github/workflows/build.yml](.github/workflows/build.yml) for the workflow definitions.
+
+The initial build compiles sources and renders documentation (no tests).
+Test matrix entries then run in parallel, including:
+
+* Multiple JDK versions (baseline build check, LTS releases, latest GA with preview features)
+* Multiple database vendors, including label-triggered databases on PRs
+* Label-triggered nightly JDK versions on PRs (`jdk` for all, or `jdk-<version>` for specific versions)
+* Oracle Test Pilot databases
+* Persistence TCK and Data TCK
+* Static code analysis (format checks)
+
+See [CONTRIBUTING.md](CONTRIBUTING.md#building-from-source)
+for information about how to execute similar builds from the commandline.
+
+### Nightly pipeline
+
+https://github.com/hibernate/hibernate-orm/actions/workflows/nightly.yml
+
+This workflow runs additional environments that are too expensive for every push/PR,
+plus a reproducible build check across maintained branches.
+
+* Minimum-version database compatibility
+* Additional databases not tested on every push
+* EA JDK versions
+
+See [.github/workflows/nightly.yml](.github/workflows/nightly.yml)
+and [.github/workflows/build.yml](.github/workflows/build.yml) for the workflow definitions.
+
+### Jenkins pipeline
+
+https://ci.hibernate.org/job/hibernate-orm-pipeline/
+
+This job runs tests that require Jenkins-specific infrastructure:
+
+* s390x architecture tests
+* HANA Cloud tests (lockable resource, label-triggered on pull requests)
+* sybase_jconn (proprietary driver credential, label-triggered on pull requests)
+
+See [Jenkinsfile](Jenkinsfile) for the job definition.
+
+### Jenkins nightly pipeline
+
+https://ci.hibernate.org/job/hibernate-orm-nightly/
+
+This job runs nightly tests that require Jenkins-specific infrastructure:
+
+* sybase_jconn (proprietary driver credential)
+* HANA Cloud tests (lockable resource)
+
+See [nightly.Jenkinsfile](nightly.Jenkinsfile) for the job definition.
 
 ### Release pipeline
 
@@ -113,7 +159,10 @@ You must perform releases by manually triggering a CI job.
 In any case, before the release:
 
 * Check that everything has been pushed to the upstream repository.
-* Check that the [CI jobs](#continuous-integration) for the branch you want to release are green.
+* Check that the [CI jobs](#continuous-integration) for the branch you want to release are green:
+  * Check the [main CI workflow](https://github.com/hibernate/hibernate-orm/actions/workflows/ci.yml).
+  * Check the [nightly CI workflow](https://github.com/hibernate/hibernate-orm/actions/workflows/nightly.yml).
+    In particular to make sure that the build is reproducible.
 * Check Jira [Releases](https://hibernate.atlassian.net/projects/HHH?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page):
   * Check that the release you are about to publish exists in Jira.
   * Remove the fix version for anything rejected, etc.

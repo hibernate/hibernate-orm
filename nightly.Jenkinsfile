@@ -18,19 +18,11 @@ env.COMMON_GRADLE_ARGS = '-Igradle/init.gradle'
 
 stage('Configure') {
 	this.environments = [
-		// Minimum supported versions
-		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
-		new BuildEnvironment( dbName: 'mysql_8_0' ),
-		new BuildEnvironment( dbName: 'mariadb_10_6' ),
-		new BuildEnvironment( dbName: 'postgis_14' ),
-		new BuildEnvironment( dbName: 'edb_14' ),
-		new BuildEnvironment( dbName: 'db2_11_5' ), // Unfortunately there is no SQL Server 11.1 image, but 11.5 should mostly have feature parity
-		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
-// 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
+		// Most environments have been moved to GitHub Actions (nightly.yml).
+		// This Jenkinsfile retains only jobs requiring Jenkins infrastructure:
+		// - sybase_jconn: proprietary jConnect driver stored as Jenkins credential
+		// - hana_cloud: HANA Cloud lockable resource for exclusive access coordination
 		new BuildEnvironment( dbName: 'sybase_jconn' ),
-		new BuildEnvironment( dbName: 'informix' ),
-		// Long running databases
-		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ),
 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true )
 	];
 
@@ -98,51 +90,9 @@ stage('Build') {
 					tryFinally({
 						stage('Start database') {
 							switch (buildEnv.dbName) {
-								case "hsqldb_2_6":
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-										" -Pgradle.libs.versions.hsqldb=2.6.1"
-									break;
-								case "mysql_8_0":
-									sh "./db.sh mysql_8_0"
-									state[buildEnv.tag]['containerName'] = "mysql"
-									break;
-								case "mariadb_10_6":
-									sh "./db.sh mariadb_10_6"
-									state[buildEnv.tag]['containerName'] = "mariadb"
-									break;
-								case "postgis_14":
-									sh "./db.sh postgis_14"
-									state[buildEnv.tag]['containerName'] = "postgis"
-									break;
-								case "edb_14":
-									sh "./db.sh edb_14"
-									state[buildEnv.tag]['containerName'] = "edb"
-									break;
-								case "db2_11_5":
-									sh "./db.sh db2_11_5"
-									state[buildEnv.tag]['containerName'] = "db2"
-									// The tenant feature was only added in DB2 12, so disable parallel testing
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-										" -Ptest.threads=1"
-									break;
-								case "informix":
-									sh "./db.sh informix"
-									state[buildEnv.tag]['containerName'] = "informix"
-									// Disable parallel testing
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-										" -Ptest.threads=1"
-									break;
-								case "mssql_2017":
-									sh "./db.sh mssql_2017"
-									state[buildEnv.tag]['containerName'] = "mssql"
-									break;
 								case "sybase_jconn":
 									sh "./db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
-									break;
-								case "cockroachdb":
-									sh "./db.sh cockroachdb"
-									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}
 						}
@@ -178,35 +128,6 @@ stage('Build') {
 							sh "docker rm -f ${state[buildEnv.tag]['containerName']}"
 						}
 					})
-				}
-			}
-		})
-	}
-	// Don't run additional checks when this is a PR
-	if ( !helper.scmSource.pullRequest ) {
-		executions.put('Reproducible build check', {
-			runBuildOnNode(NODE_PATTERN_BASE) {
-				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
-				// Use withEnv instead of setting env directly, as that is global!
-				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
-				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
-					stage('Checkout') {
-						checkout scm
-					}
-					stage('Test') {
-						withGradle {
-							def tempDir = pwd(tmp: true)
-							def repo1 = tempDir + '/repo1'
-							def repo2 = tempDir + '/repo2'
-							// build Hibernate ORM two times without any cache and "publish" the resulting artifacts to different maven repositories
-							// so that we can compare them afterwards:
-							sh "./gradlew \$COMMON_GRADLE_ARGS --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo1}"
-							sh "./gradlew \$COMMON_GRADLE_ARGS --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo2}"
-
-							sh "sh ci/compare-build-results.sh ${repo1} ${repo2}"
-							sh "cat .buildcompare"
-						}
-					}
 				}
 			}
 		})

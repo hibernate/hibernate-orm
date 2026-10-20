@@ -1,8 +1,8 @@
-name: GH Actions CI reporting
+name: CI Reporting
 
 on:
   workflow_run:
-    workflows: [ "GH Actions CI" ]
+    workflows: [ "CI", "GH Actions CI", "Nightly" ]
     types: [ completed ]
 
 defaults:

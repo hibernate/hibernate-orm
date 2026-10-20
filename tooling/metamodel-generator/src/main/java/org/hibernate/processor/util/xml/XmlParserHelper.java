@@ -20,6 +20,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.hibernate.boot.cfgxml.internal.XmlFactoryUtil;
 import org.hibernate.boot.jaxb.cfg.spi.ObjectFactory;
 
 import org.hibernate.processor.Context;
@@ -145,6 +146,7 @@ public class XmlParserHelper {
 	}
 
 	private synchronized XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
+		XmlFactoryUtil.configureXmlFactory( XML_INPUT_FACTORY, context.allowDtdAndExternalEntities() );
 		return XML_INPUT_FACTORY.createXMLEventReader( xmlStream );
 	}
 

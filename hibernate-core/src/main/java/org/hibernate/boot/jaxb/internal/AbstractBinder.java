@@ -15,6 +15,7 @@ import javax.xml.validation.Schema;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.cfgxml.internal.XmlFactoryUtil;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.internal.stax.BufferedXMLEventReader;
 import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
@@ -41,6 +42,8 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 	}
 
 	public abstract boolean isValidationEnabled();
+
+	public abstract boolean isDtdAndExternalEntitiesAllowed();
 
 	@Override
 	public <X extends T> Binding<X> bind(InputStream stream, Origin origin) {
@@ -114,6 +117,7 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 
 	private XMLInputFactory buildStaxFactory() {
 		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
+		XmlFactoryUtil.configureXmlFactory( staxFactory, isDtdAndExternalEntitiesAllowed() );
 		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
 	}

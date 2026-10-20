@@ -24,11 +24,12 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /// Collection contents inherit declaring-class access independently of identifier
-/// overrides, while collection overrides retain their historical effect.
+/// overrides and collection attribute overrides.
 ///
 /// @author Steve Ebersole
 @ServiceRegistry
 @Jira( "https://hibernate.atlassian.net/browse/HHH-13537" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-21017" )
 class CollectionEmbeddableAccessTest {
 	@Test
 	void propertyAccessWithFieldIdentifier(ServiceRegistryScope scope) {
@@ -37,12 +38,12 @@ class CollectionEmbeddableAccessTest {
 
 	@Test
 	void collectionOverride(ServiceRegistryScope scope) {
-		verify( scope, OverrideOwner.class, "details", "property", false );
+		verify( scope, OverrideOwner.class, "details", "field", false );
 	}
 
 	@Test
 	void fieldCollectionOverride(ServiceRegistryScope scope) {
-		verify( scope, FieldOverrideOwner.class, "details", "field", false );
+		verify( scope, FieldOverrideOwner.class, "details", "property", false );
 	}
 
 	@Test
@@ -67,7 +68,7 @@ class CollectionEmbeddableAccessTest {
 
 	@Test
 	void mapKeyCollectionOverride(ServiceRegistryScope scope) {
-		verify( scope, MapOverrideOwner.class, "details", "property", true );
+		verify( scope, MapOverrideOwner.class, "details", "field", true );
 	}
 
 	private void verify(ServiceRegistryScope scope, Class<?> owner, String path, String access, boolean mapKey) {
@@ -107,14 +108,14 @@ class CollectionEmbeddableAccessTest {
 		@Id
 		long id;
 		@Transient
-		List<PropertyDetail> details;
+		List<FieldDetail> details;
 
 		@ElementCollection
 		@Access( AccessType.PROPERTY )
-		public List<PropertyDetail> getDetails() {
+		public List<FieldDetail> getDetails() {
 			return details;
 		}
-		public void setDetails(List<PropertyDetail> details) {
+		public void setDetails(List<FieldDetail> details) {
 			this.details = details;
 		}
 	}
@@ -125,7 +126,7 @@ class CollectionEmbeddableAccessTest {
 		long id;
 		@ElementCollection
 		@Access( AccessType.FIELD )
-		List<FieldDetail> details;
+		List<PropertyDetail> details;
 
 		@Id
 		public long getId() {
@@ -220,14 +221,14 @@ class CollectionEmbeddableAccessTest {
 		@Id
 		long id;
 		@Transient
-		Map<PropertyDetail, String> details;
+		Map<FieldDetail, String> details;
 
 		@ElementCollection
 		@Access( AccessType.PROPERTY )
-		public Map<PropertyDetail, String> getDetails() {
+		public Map<FieldDetail, String> getDetails() {
 			return details;
 		}
-		public void setDetails(Map<PropertyDetail, String> details) {
+		public void setDetails(Map<FieldDetail, String> details) {
 			this.details = details;
 		}
 	}

@@ -1,8 +1,12 @@
 package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf2;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+
 /**
  * @author Steve Ebersole
  */
+@Access( AccessType.PROPERTY )
 public class Name {
 	private final String first;
 	private final String last;

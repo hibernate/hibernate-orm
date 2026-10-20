@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.Origin;
@@ -54,6 +55,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLazyWithExtraEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLazyWithNoProxyEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListIndexType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTimestampSourceEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToAnyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
@@ -166,6 +168,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlSelectImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSynchronizedTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbUpdateTimestampImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping;
@@ -5009,6 +5012,11 @@ public class HbmXmlTransformer {
 			}
 			//noinspection deprecation
 			version.setTemporal( TemporalType.TIMESTAMP );
+			if ( hbmTimestamp.getSource() == JaxbHbmTimestampSourceEnum.DB ) {
+				final var updateTimestamp = new JaxbUpdateTimestampImpl();
+				updateTimestamp.setSource( SourceType.DB );
+				version.setUpdateTimestamp( updateTimestamp );
+			}
 			target.getAttributes().setVersion( version );
 		}
 	}

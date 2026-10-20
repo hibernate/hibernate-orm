@@ -54,6 +54,7 @@ public class BasicIdAttributeProcessing {
 		XmlAnnotationHelper.applyTableGenerator( jaxbId.getTableGenerator(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyUuidGenerator( jaxbId.getUuidGenerator(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyGenericGenerator( jaxbId.getGenericGenerator(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyChangesetId( jaxbId.getChangesetId(), memberDetails, xmlDocumentContext );
 
 		// todo : unsaved-value?
 		// todo : ...

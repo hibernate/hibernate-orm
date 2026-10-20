@@ -44,6 +44,17 @@ public class CommonPluralAttributeProcessing {
 			memberDetails.applyAnnotationUsage( HibernateAnnotations.IMMUTABLE, buildingContext );
 		}
 
+		XmlAnnotationHelper.applyTemporalVersioning(
+				jaxbPluralAttribute.getTemporalVersioning(),
+				memberDetails,
+				xmlDocumentContext
+		);
+		XmlAnnotationHelper.applyExcludeFromTemporalVersioning(
+				jaxbPluralAttribute.getExcludeFromTemporalVersioning(),
+				memberDetails,
+				xmlDocumentContext
+		);
+
 		if ( jaxbPluralAttribute.getFetchMode() != null ) {
 			final FetchAnnotation fetchAnn = (FetchAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.FETCH,

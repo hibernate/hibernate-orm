@@ -33,6 +33,10 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConfigurationParameterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConvertImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmptyTypeImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbHistoryPartitioningImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbHistoryTableImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTemporalVersioningImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCustomSqlImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorFormulaImpl;
@@ -131,6 +135,9 @@ import org.hibernate.boot.models.annotations.internal.SynchronizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
+import org.hibernate.boot.models.annotations.internal.HistoryPartitioningAnnotation;
+import org.hibernate.boot.models.annotations.internal.HistoryTableAnnotation;
+import org.hibernate.boot.models.annotations.internal.TemporalAnnotation;
 import org.hibernate.boot.models.annotations.internal.TemporalJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
@@ -523,6 +530,80 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 		temporalAnn.value( temporalType );
+	}
+
+	/**
+	 * Handle {@code <temporal-versioning/>} ({@link org.hibernate.annotations.Temporal}) and its
+	 * nested {@code <history-partitioning/>} / {@code <history-table/>}
+	 * ({@link org.hibernate.annotations.Temporal.HistoryPartitioning} /
+	 * {@link org.hibernate.annotations.Temporal.HistoryTable}) for both entity and collection targets.
+	 */
+	public static void applyTemporalVersioning(
+			JaxbTemporalVersioningImpl jaxbTemporal,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbTemporal == null ) {
+			return;
+		}
+
+		final TemporalAnnotation temporalAnn = (TemporalAnnotation) target.applyAnnotationUsage(
+				HibernateAnnotations.TEMPORAL,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		if ( isNotEmpty( jaxbTemporal.getRowStart() ) ) {
+			temporalAnn.setRowStart( jaxbTemporal.getRowStart() );
+		}
+		if ( isNotEmpty( jaxbTemporal.getRowEnd() ) ) {
+			temporalAnn.setRowEnd( jaxbTemporal.getRowEnd() );
+		}
+		if ( jaxbTemporal.getSecondPrecision() != null ) {
+			temporalAnn.setSecondPrecision( jaxbTemporal.getSecondPrecision() );
+		}
+
+		final JaxbHistoryPartitioningImpl jaxbPartitioning = jaxbTemporal.getHistoryPartitioning();
+		if ( jaxbPartitioning != null ) {
+			final HistoryPartitioningAnnotation partitioningAnn =
+					(HistoryPartitioningAnnotation) target.applyAnnotationUsage(
+							HibernateAnnotations.TEMPORAL_HISTORY_PARTITIONING,
+							xmlDocumentContext.getModelBuildingContext()
+					);
+			if ( isNotEmpty( jaxbPartitioning.getCurrentPartition() ) ) {
+				partitioningAnn.currentPartition( jaxbPartitioning.getCurrentPartition() );
+			}
+			if ( isNotEmpty( jaxbPartitioning.getHistoryPartition() ) ) {
+				partitioningAnn.historyPartition( jaxbPartitioning.getHistoryPartition() );
+			}
+		}
+
+		final JaxbHistoryTableImpl jaxbHistoryTable = jaxbTemporal.getHistoryTable();
+		if ( jaxbHistoryTable != null ) {
+			final HistoryTableAnnotation historyTableAnn =
+					(HistoryTableAnnotation) target.applyAnnotationUsage(
+							HibernateAnnotations.TEMPORAL_HISTORY_TABLE,
+							xmlDocumentContext.getModelBuildingContext()
+					);
+			if ( isNotEmpty( jaxbHistoryTable.getName() ) ) {
+				historyTableAnn.name( jaxbHistoryTable.getName() );
+			}
+		}
+	}
+
+	/**
+	 * Handle {@code <exclude-from-temporal-versioning/>} ({@link org.hibernate.annotations.Temporal.Excluded}):
+	 * marks the attribute as excluded from the owning entity's temporal versioning.
+	 */
+	public static void applyExcludeFromTemporalVersioning(
+			JaxbEmptyTypeImpl jaxbExcludeFromTemporalVersioning,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbExcludeFromTemporalVersioning == null ) {
+			return;
+		}
+
+		target.applyAnnotationUsage(
+				HibernateAnnotations.TEMPORAL_EXCLUDED,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 	}
 
 	public static void applyLob(JaxbLobImpl jaxbLob, MutableMemberDetails memberDetails, XmlDocumentContext xmlDocumentContext) {

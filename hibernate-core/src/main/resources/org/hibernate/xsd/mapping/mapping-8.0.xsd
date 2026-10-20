@@ -340,6 +340,9 @@
             <!-- hbm : Hibernate specific caching configuration : @Cache -->
             <xsd:element name="caching" type="orm:caching" minOccurs="0"/>
 
+            <!-- @org.hibernate.annotations.Temporal (temporal entity); nests @Temporal.HistoryPartitioning / @Temporal.HistoryTable -->
+            <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
+
             <!-- hbm: The size for batch fetching : @BatchSize -->
             <xsd:element name="batch-size" type="xsd:int" minOccurs="0"/>
 
@@ -728,6 +731,8 @@
             </xsd:choice>
             <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                          minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
+            <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
             <!-- hbm : is the state of this property considered mutable : ! @Immutable -->
             <xsd:element name="mutable" type="xsd:boolean" minOccurs="0"/>
         </xsd:sequence>
@@ -1163,6 +1168,10 @@
             <xsd:element name="collection-table" type="orm:collection-table" minOccurs="0"/>
             <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                          minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Temporal (temporal collection); nests @Temporal.HistoryPartitioning / @Temporal.HistoryTable -->
+            <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
+            <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
             <!-- hbm : on-delete cascade for collection key : @OnDelete on collection field -->
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
@@ -1940,6 +1949,10 @@
                          minOccurs="0"/>
             <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                          minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Temporal (temporal collection); nests @Temporal.HistoryPartitioning / @Temporal.HistoryTable -->
+            <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
+            <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
             <!-- hbm : on-delete cascade for collection key : @OnDelete on collection field -->
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
@@ -2588,6 +2601,10 @@
                          minOccurs="0"/>
             <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                          minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Temporal (temporal collection); nests @Temporal.HistoryPartitioning / @Temporal.HistoryTable -->
+            <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
+            <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -3034,6 +3051,79 @@
             <xsd:enumeration value="TIMESTAMP"/>
         </xsd:restriction>
     </xsd:simpleType>
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="temporal-versioning">
+        <xsd:annotation>
+            <xsd:documentation>
+
+                See `@org.hibernate.annotations.Temporal`
+
+                @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE}) @Retention(RUNTIME)
+                public @interface Temporal {
+                String rowStart() default "effective";
+                String rowEnd() default "superseded";
+                int secondPrecision() default -1;
+                }
+
+                The optional `history-partitioning` and `history-table` children map to
+                `@Temporal.HistoryPartitioning` and `@Temporal.HistoryTable`, which are only
+                meaningful in conjunction with `@Temporal` and are therefore nested here.
+
+                `@Temporal.Excluded` is represented separately by the `exclude-from-temporal-versioning`
+                element on the attribute, since it applies to attributes that are themselves not
+                temporal. (Note: the distinct `exclude-from-versioning` element maps the JPA
+                `@ExcludedFromVersioning` optimistic-lock exclusion, not temporal versioning.)
+
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="history-partitioning" type="orm:history-partitioning" minOccurs="0"/>
+            <xsd:element name="history-table" type="orm:history-table" minOccurs="0"/>
+        </xsd:sequence>
+        <xsd:attribute name="row-start" type="xsd:string"/>
+        <xsd:attribute name="row-end" type="xsd:string"/>
+        <xsd:attribute name="second-precision" type="xsd:int"/>
+    </xsd:complexType>
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="history-partitioning">
+        <xsd:annotation>
+            <xsd:documentation>
+
+                See `@org.hibernate.annotations.Temporal.HistoryPartitioning`
+
+                @Target({TYPE, FIELD, METHOD}) @Retention(RUNTIME)
+                public @interface HistoryPartitioning {
+                String currentPartition() default "";
+                String historyPartition() default "";
+                }
+
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="current-partition" type="xsd:string"/>
+        <xsd:attribute name="history-partition" type="xsd:string"/>
+    </xsd:complexType>
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="history-table">
+        <xsd:annotation>
+            <xsd:documentation>
+
+                See `@org.hibernate.annotations.Temporal.HistoryTable`
+
+                @Target({TYPE, FIELD, METHOD}) @Retention(RUNTIME)
+                public @interface HistoryTable {
+                String name() default "";
+                }
+
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="name" type="xsd:string"/>
+    </xsd:complexType>
 
     <!-- **************************************************** -->
 
@@ -3635,6 +3725,10 @@
             <xsd:element name="join-table" type="orm:join-table"/>
             <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                          minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Temporal (temporal collection); nests @Temporal.HistoryPartitioning / @Temporal.HistoryTable -->
+            <xsd:element name="temporal-versioning" type="orm:temporal-versioning" minOccurs="0"/>
+            <!-- @org.hibernate.annotations.Temporal.Excluded : exclude this attribute from the owning entity's temporal versioning -->
+            <xsd:element name="exclude-from-temporal-versioning" type="orm:emptyType" minOccurs="0"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>

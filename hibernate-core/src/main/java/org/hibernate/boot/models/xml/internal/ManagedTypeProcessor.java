@@ -198,6 +198,7 @@ public class ManagedTypeProcessor {
 		XmlAnnotationHelper.applyEntity( jaxbEntity, classDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyInheritance( jaxbEntity, classDetails, xmlDocumentContext );
 		applyCaching( jaxbEntity, classDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyTemporalVersioning( jaxbEntity.getTemporalVersioning(), classDetails, xmlDocumentContext );
 		applyFetchProfileAnnotation( jaxbEntity, classDetails, xmlDocumentContext );
 
 		if ( jaxbEntity.isAbstract() != null ) {

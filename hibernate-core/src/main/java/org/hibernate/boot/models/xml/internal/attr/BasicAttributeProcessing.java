@@ -77,6 +77,7 @@ public class BasicAttributeProcessing {
 			);
 		}
 		XmlAnnotationHelper.applyTemporal( jaxbBasic.getTemporal(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyExcludeFromTemporalVersioning( jaxbBasic.getExcludeFromTemporalVersioning(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyLob( jaxbBasic.getLob(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyEnumerated( jaxbBasic.getEnumerated(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyNationalized( jaxbBasic.getNationalized(), memberDetails, xmlDocumentContext );

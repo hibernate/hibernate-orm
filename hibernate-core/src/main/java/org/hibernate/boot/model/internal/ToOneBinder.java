@@ -773,11 +773,19 @@ public class ToOneBinder {
 	private static ForeignKey nestedForeignKey(MemberDetails memberDetails) {
 		final var joinColumn = memberDetails.getDirectAnnotationUsage( JoinColumn.class );
 		final var joinColumns = memberDetails.getDirectAnnotationUsage( JoinColumns.class );
+		final var primaryKeyJoinColumn = memberDetails.getDirectAnnotationUsage( PrimaryKeyJoinColumn.class );
+		final var primaryKeyJoinColumns = memberDetails.getDirectAnnotationUsage( PrimaryKeyJoinColumns.class );
 		if ( joinColumn != null ) {
 			return joinColumn.foreignKey();
 		}
 		else if ( joinColumns != null ) {
 			return resolveContainerForeignKey( joinColumns.foreignKey(), joinColumns.value() );
+		}
+		else if ( primaryKeyJoinColumn != null ) {
+			return primaryKeyJoinColumn.foreignKey();
+		}
+		else if ( primaryKeyJoinColumns != null ) {
+			return resolveContainerForeignKey( primaryKeyJoinColumns.foreignKey(), primaryKeyJoinColumns.value() );
 		}
 		else {
 			return null;

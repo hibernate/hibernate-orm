@@ -135,7 +135,7 @@ public final class StandardLockingSupports {
 			LockTimeoutType waitType, LockTimeoutType noWaitType, LockTimeoutType skipLockedType,
 			OuterJoinLockingType outerJoinType, boolean supportsInnerJoins, TransactionConcurrencyResolver resolver) {
 		Objects.requireNonNull( resolver, "resolver" );
-		return new LockingSupportParameterized( style, rowLockStrategy, waitType, noWaitType, skipLockedType, outerJoinType, supportsInnerJoins ) {
+		return new LockingSupportParameterized( style, rowLockStrategy, waitType, noWaitType, skipLockedType, outerJoinType, supportsInnerJoins, supportsInnerJoins ) {
 			@Override
 			public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
 				return resolver;

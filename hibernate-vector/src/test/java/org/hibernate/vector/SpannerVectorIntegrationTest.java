@@ -533,14 +533,14 @@ public class SpannerVectorIntegrationTest {
 	public void testVectorSpiDiscovery() {
 		final ClassLoader classLoader = getClass().getClassLoader();
 		final ServiceLoader<TypeContributor> typeLoader = ServiceLoader.load( TypeContributor.class, classLoader );
-		final List<Class<? extends TypeContributor>> typeClasses = typeLoader.stream()
+		var typeClasses = typeLoader.stream()
 				.map( ServiceLoader.Provider::type )
 				.toList();
 		assertTrue( typeClasses.contains( SpannerVectorTypeContributor.class ) );
 		assertTrue( typeClasses.contains( SpannerPostgreSQLVectorTypeContributor.class ) );
 
 		final ServiceLoader<FunctionContributor> fnLoader = ServiceLoader.load( FunctionContributor.class, classLoader );
-		final List<Class<? extends FunctionContributor>> fnClasses = fnLoader.stream()
+		var fnClasses = fnLoader.stream()
 				.map( ServiceLoader.Provider::type )
 				.toList();
 		assertTrue( fnClasses.contains( SpannerVectorFunctionContributor.class ) );

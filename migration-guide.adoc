@@ -694,6 +694,30 @@ when calling the superclass implementation.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[embeddable-collection-access]]
+=== Access type for embeddable collection elements and map keys
+
+Embeddable elements of an `@ElementCollection` and embeddable map keys now inherit
+the access type of the class declaring the collection attribute, instead of the
+access type of the owning entity's identifier. An attribute-level `@Access` override
+on the identifier no longer changes the access type inherited by these embeddables.
+This also applies when the collection is declared by a mapped superclass or a
+containing embeddable, and the inherited access type propagates to nested embeddables.
+
+For example, if an entity uses field access but overrides its identifier to use
+property access, its embeddable collection elements now use field access by default.
+Previously, Hibernate incorrectly used property access, potentially causing bootstrap
+failures when the embeddable had no accessor methods.
+
+Applications that relied on the previous behavior should declare the intended
+access type explicitly on the embeddable using `@Access(AccessType.PROPERTY)` or
+`@Access(AccessType.FIELD)`. An explicit access type on the embeddable continues to
+take precedence. For compatibility, an attribute-level `@Access` override on the
+collection itself continues to determine the access type inherited by its embeddable
+elements or map keys.
+
+This change aligns with the expected Jakarta Persistence behavior.
+
 [[bootstrap-info-logging]]
 === Bootstrap information logging
 

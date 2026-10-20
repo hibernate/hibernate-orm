@@ -166,7 +166,7 @@ public class EmbeddableBinder {
 			return bindEmbeddable(
 					inferredData,
 					propertyHolder,
-					entityBinder.getPropertyAccessor( property ),
+					inferredData.getDefaultAccess(),
 					entityBinder,
 					isIdentifierMapper,
 					context,

@@ -1542,16 +1542,20 @@ public class StatelessSessionImpl
 		}
 
 		// Otherwise, immediately materialize it.
-		return internalLoadGet( entityName, id, persistenceContext );
+		final Object entity = internalLoadGet( entityName, id, persistenceContext );
+		if ( entity == null && !nullable ) {
+			throw notFound( entityName, id );
+		}
+		return entity;
 	}
 
 	// For Hibernate Reactive
 	protected Object internalLoadGet(String entityName, Object id, PersistenceContext persistenceContext) {
 		// Increment/decrement the load count before/after getting the value
-		// to ensure that #get does not clear the PersistenceContext.
+		// to ensure that #find does not clear the PersistenceContext.
 		persistenceContext.beforeLoad();
 		try {
-			return get( entityName, id );
+			return find( entityName, id );
 		}
 		finally {
 			persistenceContext.afterLoad();

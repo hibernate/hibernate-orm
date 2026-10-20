@@ -31,6 +31,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
@@ -85,6 +86,7 @@ import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.loader.internal.CacheLoadHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -1141,34 +1143,61 @@ public class StatelessSessionImpl
 	protected void forEachOwnedCollection(
 			Object entity, Object key,
 			EntityPersister persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
-		persister.visitAttributeMappings( attribute -> {
-			if ( attribute.isPluralAttributeMapping() ) {
-				final var descriptor = attribute.asPluralAttributeMapping().getCollectionDescriptor();
-				final Object cacheKey = lockCacheItem( key, descriptor );
-				if ( !descriptor.isInverse() ) {
-					final Object value = attribute.getPropertyAccess().getPropertyValueAccessor().get(entity);
-					final PersistentCollection<?> collection;
-					if ( value instanceof PersistentCollection<?> persistentCollection ) {
-						if ( !persistentCollection.wasInitialized() ) {
-							return;
-						}
-						collection = persistentCollection;
+		persister.visitAttributeMappings( attribute ->
+				forEachOwnedCollection( entity, entity, key, attribute, action ) );
+	}
+
+	private void forEachOwnedCollection(
+			Object entity, Object container, Object key, AttributeMapping attribute,
+			BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
+		if ( attribute.isPluralAttributeMapping() ) {
+			final var descriptor = attribute.asPluralAttributeMapping().getCollectionDescriptor();
+			final Object cacheKey = lockCacheItem( key, descriptor );
+			if ( !descriptor.isInverse() ) {
+				final Object value = container == null ? null
+						: attribute.getPropertyAccess().getPropertyValueAccessor().get( container );
+				final PersistentCollection<?> collection;
+				if ( value instanceof PersistentCollection<?> persistentCollection ) {
+					if ( !persistentCollection.wasInitialized() ) {
+						return;
 					}
-					else {
-						collection = wrapOrInstantiateCollection( entity, key, value, descriptor );
-					}
-					action.accept( descriptor, collection );
+					collection = persistentCollection;
 				}
-				removeCacheItem( cacheKey, descriptor );
+				else {
+					collection = wrapOrInstantiateCollection( entity, key, value, descriptor );
+				}
+				action.accept( descriptor, collection );
 			}
-		} );
+			removeCacheItem( cacheKey, descriptor );
+		}
+		else if ( attribute.isEmbeddedAttributeMapping() ) {
+			final Object value = container == null ? null
+					: attribute.getPropertyAccess().getPropertyValueAccessor().get( container );
+			final var embeddable = attribute.asEmbeddedAttributeMapping().getEmbeddableTypeDescriptor();
+			final var subtype = value == null ? null : embeddable.findSubtypeBySubclass( value.getClass().getName() );
+			embeddable.forEachAttributeMapping( subAttribute -> {
+				// Treat attributes of other subtypes as null to remove rows left by a subtype change.
+				final Object subContainer = subtype == null || subtype.declaresAttribute( subAttribute ) ? value : null;
+				forEachOwnedCollection( entity, subContainer, key, subAttribute, action );
+			} );
+		}
 	}
 
 	private PersistentCollection<?> wrapOrInstantiateCollection(
 			Object entity, Object key, Object value, CollectionPersister descriptor) {
-		return value == null
-				? instantiateEmpty( key, descriptor )
-				: wrap( descriptor, value, entity );
+		if ( value == null ) {
+			if ( descriptor.isArray() ) {
+				// Initializing an empty array holder writes through the owner's property accessor.
+				// Wrap an empty array instead, without changing the entity or its component.
+				return wrap( descriptor,
+						StandardArraySemantics.INSTANCE.instantiateWithElements( 0, descriptor, List.of() ), entity );
+			}
+			final var collection = instantiateEmpty( key, descriptor );
+			collection.initializeEmptyCollection( descriptor );
+			collection.setOwner( entity );
+			return collection;
+		}
+		return wrap( descriptor, value, entity );
 	}
 
 	// Hibernate Reactive calls this

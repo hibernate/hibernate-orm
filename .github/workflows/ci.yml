@@ -1,4 +1,6 @@
-name: GH Actions CI
+# See MAINTAINERS.md for details about all available CI jobs.
+
+name: CI
 
 on:
   push:
@@ -18,7 +20,7 @@ on:
       - 'dependabot/github_actions/workflow-actions-**'
   workflow_dispatch:
 
-permissions: { } # none
+permissions: { }
 
 # See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
 concurrency:
@@ -29,761 +31,98 @@ concurrency:
   # for pull requests or pushes to forks (not the upstream repository).
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'hibernate/hibernate-orm' }}
 
-env:
-  COMMON_GRADLE_ARGS: "-Igradle/init.gradle"
-  MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
-  MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
-
 jobs:
 
-  # Main job for h2/docker DBs.
+  # --- Main build + test matrix (reusable workflow) ---
+  # Initial build compiles sources and renders docs; test matrix entries run in parallel after.
+
   build:
     # Skip push builds on forks for the main branch;
     # this avoids duplicate CI when syncing the fork, since the upstream repo already runs CI on push to main.
     if: github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main')
+    uses: ./.github/workflows/build.yml
     permissions:
       contents: read
-    name: OpenJDK 25 - ${{matrix.rdbms}}
-    runs-on: ubuntu-latest
-    # Default per-job timeout; individual matrix entries can override it via `timeout`.
-    timeout-minutes: ${{ matrix.timeout != '' && matrix.timeout || 60 }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - rdbms: h2
-          - rdbms: hsqldb
-          - rdbms: mysql
-          - rdbms: mariadb
-          - rdbms: postgis
-          - rdbms: spannerpgsql
-          - rdbms: spanner
-          - rdbms: edb
-          - rdbms: oracle
-          - rdbms: db2
-          - rdbms: mssql
-          - rdbms: sybase
-            # Sybase runs are slower than the others; give them a wider window.
-            timeout: 120
-    # Running with CockroachDB requires at least 2-4 vCPUs, which we don't have on GH Actions runners
-    #          - rdbms: cockroachdb
-    # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
-    #          - rdbms: hana
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Reclaim Disk Space
-        run: .github/ci-prerequisites.sh
-      - name: Start database
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-        run: ci/database-start.sh
-      - id: db_version
-        name: Determine changed database image version
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-        run: |
-          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q '^docker-compose/'; then
-            echo "dbVersion=$(ci/database-version.sh)" >> "$GITHUB_OUTPUT"
-          else
-            echo "dbVersion=" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Set up Java 25
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-
-      - name: Generate cache key
-        id: cache-key
-        env:
-          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
-        run: |
-          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
-          CURRENT_DAY=$(/bin/date -u "+%d")
-          ROOT_CACHE_KEY="buildtool-cache"
-          {
-            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
-            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
-            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
-          } >> "$GITHUB_OUTPUT"
-      - name: Cache Maven/Gradle Dependency/Dist Caches
-        id: cache-maven
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it's not a pull request, we restore and save the cache
-        if: github.event_name != 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable, but it's not a problem.
-          # The whole cache is dropped monthly to prevent unlimited growth.
-          # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-      - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it is a pull request, we restore the cache, but we don't save it
-        if: github.event_name == 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-
-      - name: Run build script
-        run: |
-          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
-          ./ci/build-github.sh "${common_gradle_args[@]}"
-        shell: bash
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-          DB_VERSION: ${{ steps.db_version.outputs.dbVersion }}
-          JPA_PREVIEW: "true"
-          # For jobs running on 'push', publish build scan and cache immediately.
-          # This won't work for pull requests, since they don't have access to secrets.
-          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
-          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
-
-      # For jobs running on 'pull_request', upload build scan data.
-      # The actual publishing must be done in a separate job (see ci-report.yml).
-      # We don't write to the remote cache as that would be unsafe.
-      - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
-        with:
-          name: build-scan-data-${{ matrix.rdbms }}
-          path: ~/.gradle/build-scan-data
-      - name: Store coverage report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: build-coverage-data-${{ matrix.rdbms }}
-          retention-days: 1
-          path: |
-            ./**/target/jacoco/*.exec
-      - name: Store build results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: "${{ matrix.rdbms == 'h2' }}"
-        with:
-          name: build-compilation-data
-          retention-days: 1
-          path: |
-            ./**/target/resources/
-            ./**/target/classes/
-            ./**/target/generated/
-            .gradle/caches/build-cache-*
-      - name: Upload docs preview
-        if: "${{ matrix.rdbms == 'h2' }}"
-        uses: hibernate/.github/actions/build-docs-preview@709cd8c0127dfa8918b6845cf476e72d2c2a04a8 # main
-        with:
-          dist-path: 'documentation/target/asciidoc'
-          src-paths: |
-            documentation/src
-            migration-guide.adoc
-            dialects.adoc
-            whats-new.adoc
-      - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: failure()
-        with:
-          name: test-reports-java11-${{ matrix.rdbms }}
-          path: |
-            ./**/target/reports/tests/
-      - name: Omit produced artifacts from build cache
-        run: ./ci/before-cache.sh
-
-  # Job for builds on Oracle TP infrastructure.
-  # This is untrusted, even for pushes, see below.
-  otp:
-    permissions:
-      contents: read
-    name: GraalVM 25 - ${{matrix.rdbms}}
-    runs-on: [ self-hosted, Linux, X64, OracleTestPilot ]
-    timeout-minutes: 120
-    if: github.repository == 'hibernate/hibernate-orm'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - rdbms: autonomous-transaction-processing-serverless-26ai
-          - rdbms: autonomous-transaction-processing-serverless-19c
-          - rdbms: base-database-service-19c
-          - rdbms: base-database-service-21c
-          - rdbms: base-database-service-26ai
-          - rdbms: base-database-service-26ai-rac
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Set up Java 25
-        uses: graalvm/setup-graalvm@0426e2e191540e8514dff98dc52a5f5146a2a276 # v1.6.6
-        with:
-          distribution: 'graalvm'
-          java-version: '25'
-      - name: Generate cache key
-        id: cache-key
-        env:
-          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
-        run: |
-          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
-          CURRENT_DAY=$(/bin/date -u "+%d")
-          ROOT_CACHE_KEY="buildtool-cache-oracle-test-pilot"
-          { 
-            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
-            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
-            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
-          } >> "$GITHUB_OUTPUT"
-      - name: Cache Maven/Gradle Dependency/Dist Caches
-        id: cache-maven
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it's not a pull request, we restore and save the cache
-        if: github.event_name != 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable, but it's not a problem.
-          # The whole cache is dropped monthly to prevent unlimited growth.
-          # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-      - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it is a pull request, we restore the cache, but we don't save it
-        if: github.event_name == 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-
-      - id: create_database
-        uses: oracle-actions/setup-testpilot@ad55a0d7294112c44a9cc9a38f4b3d293da8fcf0 # v1.0.31
-        with:
-          oci-service: ${{ matrix.rdbms }}
-          action: create
-          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4,hibernate_orm_test_5,hibernate_orm_test_6,hibernate_orm_test_7,hibernate_orm_test_8
-
-      - name: Run build script
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-          JPA_PREVIEW: "true"
-          RUNID: ${{ github.run_number }}
-          TESTPILOT_CONNECTION_STRING_SUFFIX: ${{ steps.create_database.outputs.connection_string_suffix }}
-          TESTPILOT_PASSWORD: ${{ steps.create_database.outputs.database_password }}
-          API_HOST: ""
-          TESTPILOT_CLIENT_ID: ""
-          TESTPILOT_TOKEN: ""
-          # Needed for TFO (TCP fast open)
-          LD_PRELOAD: /home/ubuntu/ojdbc_tfo/ojdbc17/23.26.2.0.0/libtfojdbc1.so
-          LD_LIBRARY_PATH: /home/ubuntu/ojdbc_tfo/ojdbc17/23.26.2.0.0
-          # maximum number of worker (upper limit to maxParallelForks property, otherwise number of available CPUs)
-          GRADLE_OPTS: "-Dorg.gradle.workers.max=8"
-          # Better control of RAM for Gradle, must be aligned with gradle.properties
-          # Daemon:
-          ORG_GRADLE_JVMARGS: "-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
-          # Java compiler:
-          ORG_GRADLE_PROJECT_toolchain.compiler.jvmargs: "-Dlog4j2.disableJmx=true -Xmx4g -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
-          # Gradle workers (Tests...)
-          ORG_GRADLE_PROJECT_toolchain.launcher.jvmargs: "-Dlog4j2.disableJmx=true -Xmx3g -XX:MaxMetaspaceSize=448m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
-        run: |
-          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
-          ./ci/build-github.sh "${common_gradle_args[@]}"
-        shell: bash
-
-      - uses: oracle-actions/setup-testpilot@ad55a0d7294112c44a9cc9a38f4b3d293da8fcf0 # v1.0.31
-        if: always()
-        with:
-          oci-service: ${{ matrix.rdbms }}
-          action: delete
-          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4,hibernate_orm_test_5,hibernate_orm_test_6,hibernate_orm_test_7,hibernate_orm_test_8
-
-      # Upload build scan data.
-      # The actual publishing must be done in a separate job (see ci-report.yml).
-      # We don't write to the remote cache as that would be unsafe.
-      # That's even on push, because we do not trust Oracle Test Pilot runners to hold secrets: they are shared infrastructure.
-      - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: "${{ !cancelled() }}"
-        with:
-          name: build-scan-data-${{ matrix.rdbms }}
-          path: ~/.gradle/build-scan-data
-      - name: Store coverage report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: build-coverage-data-${{ matrix.rdbms }}
-          retention-days: 1
-          path: |
-            ./**/target/jacoco/*.exec
-      - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: failure()
-        with:
-          name: test-reports-java11-${{ matrix.rdbms }}
-          path: |
-            ./**/target/reports/tests/
-      - name: Omit produced artifacts from build cache
-        run: ./ci/before-cache.sh
-
-  # Main job for h2/docker DBs.
-  tck-runner:
-    if: github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main')
-    permissions:
-      contents: read
-    name: OpenJDK 25 - Jakarta Persistence TCK 4.0
-    runs-on: ubuntu-latest
-    # The TCK runs pretty fast usually, and if it doesn't,
-    # then something is seriously wrong and needs to be analyzed manually
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - rdbms: postgresql
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Reclaim Disk Space
-        run: .github/ci-prerequisites.sh
-      - name: Start database
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-        run: ci/database-start.sh
-      - id: db_version
-        name: Determine changed database image version
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-        run: |
-          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q '^docker-compose/'; then
-            echo "dbVersion=$(ci/database-version.sh)" >> "$GITHUB_OUTPUT"
-          else
-            echo "dbVersion=" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Set up Java 25
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-
-      - name: Generate cache key
-        id: cache-key
-        env:
-          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
-        run: |
-          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
-          CURRENT_DAY=$(/bin/date -u "+%d")
-          ROOT_CACHE_KEY="buildtool-cache-tck-run"
-          {
-            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
-            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
-            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
-          } >> "$GITHUB_OUTPUT"
-      - name: Cache Maven/Gradle Dependency/Dist Caches
-        id: cache-maven
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it's not a pull request, we restore and save the cache
-        if: github.event_name != 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable, but it's not a problem.
-          # The whole cache is dropped monthly to prevent unlimited growth.
-          # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-      - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it is a pull request, we restore the cache, but we don't save it
-        if: github.event_name == 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-
-      - name: Run build script
-        run: |
-          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
-          ci/build-tck-github.sh "${common_gradle_args[@]}"
-        shell: bash
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-          DB_VERSION: ${{ steps.db_version.outputs.dbVersion }}
-          JPA_PREVIEW: "true"
-          # For jobs running on 'push', publish build scan and cache immediately.
-          # This won't work for pull requests, since they don't have access to secrets.
-          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
-          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
-
-      # For jobs running on 'pull_request', upload build scan data.
-      # The actual publishing must be done in a separate job (see ci-report.yml).
-      # We don't write to the remote cache as that would be unsafe.
-      - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
-        with:
-          name: build-scan-data-${{ matrix.rdbms }}-tck-run
-          path: ~/.gradle/build-scan-data
-      - name: Store coverage report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: build-coverage-data-${{ matrix.rdbms }}-tck-run
-          retention-days: 1
-          path: |
-            ./**/target/jacoco/*.exec
-      - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: failure()
-        with:
-          name: test-reports-java25-${{ matrix.rdbms }}-tck-run
-          path: |
-            ./**/target/reports/tests/
-      - name: Omit produced artifacts from build cache
-        run: ./ci/before-cache.sh
-
-  data-tck-runner:
-    if: github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main')
-    permissions:
-      contents: read
-    name: OpenJDK 25 - Jakarta Data TCK 1.1
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - rdbms: h2
-          - rdbms: postgresql
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Reclaim Disk Space
-        run: .github/ci-prerequisites.sh
-      - name: Start database
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-        run: ci/database-start.sh
-      - id: db_version
-        name: Determine changed database image version
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-        run: |
-          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q '^docker-compose/'; then
-            echo "dbVersion=$(ci/database-version.sh)" >> "$GITHUB_OUTPUT"
-          else
-            echo "dbVersion=" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Set up Java 25
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-
-      - name: Generate cache key
-        id: cache-key
-        env:
-          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
-        run: |
-          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
-          CURRENT_DAY=$(/bin/date -u "+%d")
-          ROOT_CACHE_KEY="buildtool-cache-data-tck-run"
-          {
-            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
-            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
-            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
-          } >> "$GITHUB_OUTPUT"
-      - name: Cache Maven/Gradle Dependency/Dist Caches
-        id: cache-maven
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it's not a pull request, we restore and save the cache
-        if: github.event_name != 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable, but it's not a problem.
-          # The whole cache is dropped monthly to prevent unlimited growth.
-          # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-      - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it is a pull request, we restore the cache, but we don't save it
-        if: github.event_name == 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-
-      - name: Run build script
-        run: |
-          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
-          ci/build-data-tck-github.sh "${common_gradle_args[@]}"
-        shell: bash
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-          DB_VERSION: ${{ steps.db_version.outputs.dbVersion }}
-          # For jobs running on 'push', publish build scan and cache immediately.
-          # This won't work for pull requests, since they don't have access to secrets.
-          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
-          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
-
-      # For jobs running on 'pull_request', upload build scan data.
-      # The actual publishing must be done in a separate job (see ci-report.yml).
-      # We don't write to the remote cache as that would be unsafe.
-      - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
-        with:
-          name: build-scan-data-${{ matrix.rdbms }}-data-tck-run
-          path: ~/.gradle/build-scan-data
-      - name: Store coverage report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: build-coverage-data-${{ matrix.rdbms }}-data-tck-run
-          retention-days: 1
-          path: |
-            ./**/target/jacoco/*.exec
-      - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: failure()
-        with:
-          name: test-reports-java25-${{ matrix.rdbms }}-data-tck-run
-          path: |
-            ./**/target/reports/tests/
-      - name: Omit produced artifacts from build cache
-        run: ./ci/before-cache.sh
-
-  # Static code analysis check
-  format_checks:
-    if: github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main')
-    permissions:
-      contents: read
-    name: Static code analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Reclaim disk space and sanitize user home
-        run: .github/ci-prerequisites-atlas.sh
-      - name: Set up Java 25
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-
-      - name: Generate cache key
-        id: cache-key
-        env:
-          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
-        run: |
-          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
-          CURRENT_DAY=$(/bin/date -u "+%d")
-          ROOT_CACHE_KEY="buildtool-cache"
-          {
-            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
-            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
-            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
-          } >> "$GITHUB_OUTPUT"
-      - name: Cache Maven/Gradle Dependency/Dist Caches
-        id: cache-maven
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it's not a pull request, we restore and save the cache
-        if: github.event_name != 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable, but it's not a problem.
-          # The whole cache is dropped monthly to prevent unlimited growth.
-          # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-      - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        # if it is a pull request, we restore the cache, but we don't save it
-        if: github.event_name == 'pull_request'
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-    
-
-      - name: Run build script
-        run: |
-          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
-          ./gradlew "${common_gradle_args[@]}" formatChecks
-        env:
-          JPA_PREVIEW: "true"
-          # For jobs running on 'push', publish build scan and cache immediately.
-          # This won't work for pull requests, since they don't have access to secrets.
-          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
-          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
-
-      # For jobs running on 'pull_request', upload build scan data.
-      # The actual publishing must be done in a separate job (see ci-report.yml).
-      # We don't write to the remote cache as that would be unsafe.
-      - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
-        with:
-          name: build-scan-data-sca
-          path: ~/.gradle/build-scan-data
-
-      - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: failure()
-        with:
-          name: test-reports-java11-sca
-          path: |
-            ./**/target/reports/tests/
-      - name: Omit produced artifacts from build cache
-        run: ./ci/before-cache.sh
-
-  prepare-sonar-bundle:
-    name: Prepare build bundle for Sonar scanner
-    needs:
-      - build
-      - otp
-    if: |
-      (github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main'))
-      && always() && !cancelled()
-      && needs.build.result != 'cancelled' && needs.otp.result != 'cancelled'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          java-version: '25'
-          distribution: 'temurin'
-
-      - name: Generate cache key
-        id: cache-key
-        env:
-          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
-        run: |
-          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
-          CURRENT_DAY=$(/bin/date -u "+%d")
-          ROOT_CACHE_KEY="buildtool-cache"
-          {
-            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
-            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
-            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
-          } >> "$GITHUB_OUTPUT"
-      - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.m2/repository/
-            ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
-            ~/.gradle/wrapper/
-          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
-          restore-keys: |
-            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
-            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-
-      - name: Download compilation results
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
-        with:
-          name: build-compilation-data
-          path: .
-        # Don't fail the build if there are no matching artifacts (the build will re-compile things then)
-        continue-on-error: true
-
-      - name: Download coverage reports
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
-        with:
-          pattern: build-coverage-data*
-          path: .
-          merge-multiple: 'true'
-        # Don't fail the build if there are no matching artifacts
-        continue-on-error: true
-
-      - name: Merge Jacoco Reports
-        run: |
-          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
-          ./gradlew "${common_gradle_args[@]}" mergeCodeCoverageReport copyDependenciesSonar --no-parallel
-        env:
-          JPA_PREVIEW: "true"
-
-      - name: Store build info for Sonar scanning
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: build-results-data
-          retention-days: 1
-          path: |
-            ./**/target/jacoco/*.exec
-            ./**/target/classes/
-            ./**/target/generated/
-            ./**/target/resources/
-            ./**/target/reports/
-            ./**/target/sonar-dependencies/
+    with:
+      initial-build-runs-on: "runs-on/fleet=linux-standard/env=ibm"
+      # --- Databases ---
+      # Sybase runs are slower than the others; give them a wider window.
+      # CockroachDB is long-running; label-triggered on PRs, always in nightly.
+      # Running with HANA requires at least 8GB memory just for the database,
+      # which we don't have on free GH Actions runners; see Jenkins nightly.
+      #
+      # --- Label-triggered entries (PR only) ---
+      # tidb and informix are only included when the PR has the corresponding label.
+      # Nightly JDK versions are included with the 'jdk' label (all) or
+      # 'jdk-<version>' labels (specific versions).
+      #
+      # --- JDKs ---
+      # We generally build with JDK 25, but our baseline is Java 17,
+      # so we test with JDK 17, to be sure everything works.
+      # We also verify that the project compiles with JDK 17 (JDK 17 build).
+      # We want to enable preview features when testing newer builds of OpenJDK:
+      # even if we don't use these features, just enabling them can cause
+      # side effects and it's useful to test that.
+      matrix-json: >-
+        [
+          { "name": "h2" },
+          { "name": "hsqldb", "rdbms": "hsqldb" },
+          { "name": "mysql", "rdbms": "mysql" },
+          { "name": "mariadb", "rdbms": "mariadb" },
+          { "name": "postgis", "rdbms": "postgis" },
+          { "name": "spannerpgsql", "rdbms": "spannerpgsql",
+            "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
+          { "name": "spanner", "rdbms": "spanner",
+            "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
+          { "name": "edb", "rdbms": "edb",
+            "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
+          { "name": "oracle", "rdbms": "oracle",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "db2", "rdbms": "db2",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "mssql", "rdbms": "mssql",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "sybase", "rdbms": "sybase",
+            "timeout": 120 },
+          { "name": "JDK", "java-test-version": "17",
+            "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
+          { "name": "JDK", "java-test-version": "21",
+            "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
+          { "name": "JDK", "java-test-version": "26",
+            "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny",
+            "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
+          { "name": "JDK 17 build", "java-build-version": "17",
+            "gradle-args": "-PskipErrorProne=true -x test",
+            "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
+          { "name": "Persistence TCK - postgresql", "rdbms": "postgresql",
+            "build-script": "ci/build-tck-github.sh",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "Data TCK - h2", "rdbms": "h2",
+            "build-script": "ci/build-data-tck-github.sh",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "Data TCK - postgresql", "rdbms": "postgresql",
+            "build-script": "ci/build-data-tck-github.sh",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" }
+          ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'cockroachdb') && ', { "name": "cockroachdb", "rdbms": "cockroachdb", "timeout": 300 }' || '' }}
+          ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'tidb') && ', { "name": "tidb", "rdbms": "tidb" }' || '' }}
+          ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'informix') && ', { "name": "informix", "rdbms": "informix", "gradle-args": "-Ptest.threads=1" }' || '' }}
+          ${{ github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'jdk') || contains(github.event.pull_request.labels.*.name, 'jdk-27')) && ', { "name": "JDK", "java-test-version": "27", "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny", "gradle-args": "-PskipJacoco=true" }' || '' }}
+          ${{ github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'jdk') || contains(github.event.pull_request.labels.*.name, 'jdk-28')) && ', { "name": "JDK", "java-test-version": "28", "java-test-from": "jdk.java.net", "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny -Dnet.bytebuddy.experimental=true", "gradle-args": "-PskipJacoco=true" }' || '' }}
+        ]
+      otp-matrix-json: >-
+        [
+          { "name": "Oracle 26ai Autonomous (Test Pilot)",
+            "rdbms": "autonomous-transaction-processing-serverless-26ai" },
+          { "name": "Oracle 19c Autonomous (Test Pilot)",
+            "rdbms": "autonomous-transaction-processing-serverless-19c" },
+          { "name": "Oracle 19c (Test Pilot)",
+            "rdbms": "base-database-service-19c" },
+          { "name": "Oracle 21c (Test Pilot)",
+            "rdbms": "base-database-service-21c" },
+          { "name": "Oracle 26ai (Test Pilot)",
+            "rdbms": "base-database-service-26ai" },
+          { "name": "Oracle 26ai RAC (Test Pilot)",
+            "rdbms": "base-database-service-26ai-rac" }
+        ]
+      run-sonar: true
+    secrets: inherit

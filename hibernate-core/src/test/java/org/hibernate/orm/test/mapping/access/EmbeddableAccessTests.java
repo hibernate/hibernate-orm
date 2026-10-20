@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
+@Jira( "https://hibernate.atlassian.net/browse/HHH-21017" )
 @DomainModel( annotatedClasses = { Person.class, Name.class } )
 @SessionFactory( exportSchema = false )
 public class EmbeddableAccessTests {
@@ -34,16 +36,16 @@ public class EmbeddableAccessTests {
 			assertThat( nameMapping.getPropertySpan() ).isEqualTo( 2 );
 			final Property nameFirst = nameMapping.getProperty( 0 );
 			final Property nameLast = nameMapping.getProperty( 1 );
-			assertThat( nameFirst.getName() ).isEqualTo( "firstName" );
-			assertThat( nameLast.getName() ).isEqualTo( "lastName" );
+			assertThat( nameFirst.getName() ).isEqualTo( "first" );
+			assertThat( nameLast.getName() ).isEqualTo( "last" );
 
 			final Property aliasesProperty = personDescriptor.getProperty( "aliases" );
 			final Component aliasMapping = (Component) ( (Collection) aliasesProperty.getValue() ).getElement();
 			assertThat( aliasMapping.getPropertySpan() ).isEqualTo( 2 );
 			final Property aliasFirst = aliasMapping.getProperty( 0 );
 			final Property aliasLast = aliasMapping.getProperty( 1 );
-			assertThat( aliasFirst.getName() ).isEqualTo( "firstName" );
-			assertThat( aliasLast.getName() ).isEqualTo( "lastName" );
+			assertThat( aliasFirst.getName() ).isEqualTo( "first" );
+			assertThat( aliasLast.getName() ).isEqualTo( "last" );
 		} );
 	}
 
@@ -52,23 +54,21 @@ public class EmbeddableAccessTests {
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
 		final EntityMappingType personDescriptor = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( Person.class );
 
-		// Person defines FIELD access, while Name uses PROPERTY
-		//		- if we find the property annotations, the attribute names will be
-		//			`firstName` and `lastName`, and the columns `first_name` and `last_name`
-		//		- otherwise, we have property and column names being `first` and `last`
+		// Both embeddables inherit Person's FIELD access despite PROPERTY overrides
+		// on the embedding attributes, so their attribute names are first and last.
 		final EmbeddableMappingType nameEmbeddable = ( (EmbeddedAttributeMapping) personDescriptor.findAttributeMapping( "name" ) ).getEmbeddableTypeDescriptor();
 		assertThat( nameEmbeddable.getNumberOfAttributeMappings() ).isEqualTo( 2 );
 		final AttributeMapping nameFirst = nameEmbeddable.getAttributeMapping( 0 );
 		final AttributeMapping nameLast = nameEmbeddable.getAttributeMapping( 1 );
-		assertThat( nameFirst.getAttributeName() ).isEqualTo( "firstName" );
-		assertThat( nameLast.getAttributeName() ).isEqualTo( "lastName" );
+		assertThat( nameFirst.getAttributeName() ).isEqualTo( "first" );
+		assertThat( nameLast.getAttributeName() ).isEqualTo( "last" );
 
 		final PluralAttributeMapping aliasesAttribute = (PluralAttributeMapping) personDescriptor.findAttributeMapping( "aliases" );
 		final EmbeddableMappingType aliasEmbeddable = ( (EmbeddedCollectionPart) aliasesAttribute.getElementDescriptor() ).getEmbeddableTypeDescriptor();
 		assertThat( aliasEmbeddable.getNumberOfAttributeMappings() ).isEqualTo( 2 );
-		final AttributeMapping aliasFirst = nameEmbeddable.getAttributeMapping( 0 );
-		final AttributeMapping aliasLast = nameEmbeddable.getAttributeMapping( 1 );
-		assertThat( aliasFirst.getAttributeName() ).isEqualTo( "firstName" );
-		assertThat( aliasLast.getAttributeName() ).isEqualTo( "lastName" );
+		final AttributeMapping aliasFirst = aliasEmbeddable.getAttributeMapping( 0 );
+		final AttributeMapping aliasLast = aliasEmbeddable.getAttributeMapping( 1 );
+		assertThat( aliasFirst.getAttributeName() ).isEqualTo( "first" );
+		assertThat( aliasLast.getAttributeName() ).isEqualTo( "last" );
 	}
 }

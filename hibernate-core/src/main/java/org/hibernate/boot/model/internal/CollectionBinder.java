@@ -1,6 +1,5 @@
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.Access;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
@@ -2289,12 +2288,7 @@ public abstract class CollectionBinder {
 	}
 
 	protected AccessType embeddableAccessType() {
-		// Preserve the historical effect of a collection attribute's access override
-		// on its contents, while retaining the containing class's access separately.
-		// todo : technically this violates the JPA spec which states that the AccessType for the
-		//  	embeddable should come from "the containing class".  If a TCK test is ever added
-		//		for this, changing this would be the fix.
-		return property.hasDirectAnnotationUsage( Access.class ) ? accessType : containingClassAccessType;
+		return containingClassAccessType;
 	}
 
 	private AnnotatedClassType annotatedElementType(

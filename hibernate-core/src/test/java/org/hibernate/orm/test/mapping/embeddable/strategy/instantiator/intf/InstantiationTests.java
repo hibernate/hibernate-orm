@@ -14,6 +14,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -24,11 +25,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Builds on {@link org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf2.InstantiationTests}
  * attempting to map an interface.
  *
- * At the moment this does not work, as Hibernate fails without setters
+ * Property access is explicit on the mapped interface; the instantiator supplies
+ * immutable implementations without setters.
  */
 @DomainModel( annotatedClasses = { Person.class, NameImpl.class } )
 @SessionFactory
 @JiraKey( "HHH-14950" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-21017" )
 public class InstantiationTests {
 	@Test
 	public void bootModelTest(DomainModelScope scope) {
@@ -36,10 +39,16 @@ public class InstantiationTests {
 			final Property name = personMapping.getProperty( "name" );
 			final Component nameMapping = (Component) name.getValue();
 			assertThat( nameMapping.getPropertySpan() ).isEqualTo( 2 );
+			assertThat( name.getPropertyAccessorName() ).isEqualTo( "field" );
+			assertThat( nameMapping.getProperties() ).allSatisfy( attribute ->
+					assertThat( attribute.getPropertyAccessorName() ).isEqualTo( "property" ) );
 
 			final Property aliases = personMapping.getProperty( "aliases" );
 			final Component aliasMapping = (Component) ( (Collection) aliases.getValue() ).getElement();
 			assertThat( aliasMapping.getPropertySpan() ).isEqualTo( 2 );
+			assertThat( aliases.getPropertyAccessorName() ).isEqualTo( "field" );
+			assertThat( aliasMapping.getProperties() ).allSatisfy( attribute ->
+					assertThat( attribute.getPropertyAccessorName() ).isEqualTo( "property" ) );
 		});
 	}
 

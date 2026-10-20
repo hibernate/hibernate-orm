@@ -70,7 +70,7 @@ public interface Range<U> {
 	 * A range containing all values strictly greater than the given
 	 * lower bound.
 	 */
-	static <U extends Comparable<U>> Range<U> greaterThan(U bound) {
+	static <U extends Comparable<? super U>> Range<U> greaterThan(U bound) {
 		return new LowerBound<>( bound, true );
 	}
 
@@ -78,7 +78,7 @@ public interface Range<U> {
 	 * A range containing all values greater than or equal to the given
 	 * lower bound.
 	 */
-	static <U extends Comparable<U>> Range<U> greaterThanOrEqualTo(U bound) {
+	static <U extends Comparable<? super U>> Range<U> greaterThanOrEqualTo(U bound) {
 		return new LowerBound<>( bound, false );
 	}
 
@@ -86,7 +86,7 @@ public interface Range<U> {
 	 * A range containing all values strictly less than the given
 	 * upper bound.
 	 */
-	static <U extends Comparable<U>> Range<U> lessThan(U bound) {
+	static <U extends Comparable<? super U>> Range<U> lessThan(U bound) {
 		return new UpperBound<>( bound, true );
 	}
 
@@ -94,7 +94,7 @@ public interface Range<U> {
 	 * A range containing all values less than or equal to the given
 	 * upper bound.
 	 */
-	static <U extends Comparable<U>> Range<U> lessThanOrEqualTo(U bound) {
+	static <U extends Comparable<? super U>> Range<U> lessThanOrEqualTo(U bound) {
 		return new UpperBound<>( bound, false );
 	}
 
@@ -102,7 +102,7 @@ public interface Range<U> {
 	 * An open range containing all values strictly greater than the
 	 * given lower bound, and strictly less than the given upper bound.
 	 */
-	static <U extends Comparable<U>> Range<U> open(U lowerBound, U upperBound) {
+	static <U extends Comparable<? super U>> Range<U> open(U lowerBound, U upperBound) {
 		return new Interval<>( new LowerBound<>( lowerBound, true ),
 				new UpperBound<>( upperBound, true ) );
 	}
@@ -111,7 +111,7 @@ public interface Range<U> {
 	 * A closed range containing all values greater than or equal to the
 	 * given lower bound, and less than or equal to the given upper bound.
 	 */
-	static <U extends Comparable<U>> Range<U> closed(U lowerBound, U upperBound) {
+	static <U extends Comparable<? super U>> Range<U> closed(U lowerBound, U upperBound) {
 		return new Interval<>( new LowerBound<>( lowerBound, false ),
 				new UpperBound<>( upperBound, false ) );
 	}

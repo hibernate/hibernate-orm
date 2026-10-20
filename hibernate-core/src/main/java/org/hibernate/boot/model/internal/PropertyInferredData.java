@@ -56,6 +56,11 @@ public class PropertyInferredData implements PropertyData {
 	}
 
 	@Override
+	public AccessType getClassAccess() {
+		return defaultAccess;
+	}
+
+	@Override
 	public AccessType getDefaultAccess() throws MappingException {
 		AccessType accessType = defaultAccess;
 

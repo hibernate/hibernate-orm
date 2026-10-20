@@ -128,7 +128,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import static jakarta.persistence.AccessType.PROPERTY;
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static jakarta.persistence.FetchType.DEFAULT;
@@ -170,7 +169,6 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
-import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.BASIC;
 
 /**
  * Base class for stateful binders responsible for producing mapping model objects of type {@link Collection}.
@@ -227,6 +225,7 @@ public abstract class CollectionBinder {
 	protected Map<ClassDetails, InheritanceState> inheritanceStatePerClass;
 	private boolean declaringClassSet;
 	private AccessType accessType;
+	private AccessType containingClassAccessType;
 	private boolean hibernateExtensionMapping;
 
 	private jakarta.persistence.OrderBy jpaOrderBy;
@@ -286,6 +285,7 @@ public abstract class CollectionBinder {
 		collectionBinder.setNotFoundAction( notFoundAction( propertyHolder, inferredData, memberDetails, manyToManyAnn, modelsContext ) );
 		collectionBinder.setElementType( inferredData.getClassOrElementType() );
 		collectionBinder.setAccessType( inferredData.getDefaultAccess() );
+		collectionBinder.containingClassAccessType = inferredData.getClassAccess();
 		collectionBinder.setEmbedded( memberDetails.hasAnnotationUsage( Embedded.class, modelsContext ) );
 		collectionBinder.setProperty( memberDetails );
 		collectionBinder.setOnDeleteActionAction( onDeleteAction( memberDetails ) );
@@ -2255,7 +2255,7 @@ public abstract class CollectionBinder {
 			CollectionPropertyHolder holder,
 			Class<? extends CompositeUserType<?>> compositeUserType) {
 		//TODO be smart with isNullable
-		final var accessType = accessType( property, collection.getOwner() );
+		final var accessType = embeddableAccessType();
 		// We create a new entity binder here because it's needed for processing the embeddable
 		// Since this is an element collection, there is no real entity binder though,
 		// so we just create an "empty shell" for the purpose of avoiding null checks in the fillEmbeddable() method etc.
@@ -2287,36 +2287,13 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	static AccessType accessType(MemberDetails property, PersistentClass owner) {
-		final var access = property.getDirectAnnotationUsage( Access.class );
-		if ( access != null ) {
-			// the attribute is locally annotated with `@Access`, use that
-			return access.value() == PROPERTY
-					? AccessType.PROPERTY
-					: AccessType.FIELD;
-		}
-		else {
-			final var identifierProperty = owner.getIdentifierProperty();
-			if ( identifierProperty != null ) {
-				// use the access for the owning entity's id attribute, if one
-				return identifierProperty.getPropertyAccessorName().equals( BASIC.getExternalName() )
-						? AccessType.PROPERTY
-						: AccessType.FIELD;
-			}
-			else {
-				final var identifierMapper = owner.getIdentifierMapper();
-				if ( identifierMapper != null && identifierMapper.getPropertySpan() > 0 ) {
-					// use the access for the owning entity's "id mapper"
-					final Property first = identifierMapper.getProperties().get( 0 );
-					return first.getPropertyAccessorName().equals( BASIC.getExternalName() )
-							? AccessType.PROPERTY
-							: AccessType.FIELD;
-				}
-				else {
-					throw new AssertionFailure( "Unable to guess collection property accessor name" );
-				}
-			}
-		}
+	protected AccessType embeddableAccessType() {
+		// Preserve the historical effect of a collection attribute's access override
+		// on its contents, while retaining the containing class's access separately.
+		// todo : technically this violates the JPA spec which states that the AccessType for the
+		//  	embeddable should come from "the containing class".  If a TCK test is ever added
+		//		for this, changing this would be the fix.
+		return property.hasDirectAnnotationUsage( Access.class ) ? accessType : containingClassAccessType;
 	}
 
 	private AnnotatedClassType annotatedElementType(

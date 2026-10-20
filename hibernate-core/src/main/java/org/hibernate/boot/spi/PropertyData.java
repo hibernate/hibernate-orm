@@ -16,6 +16,12 @@ public interface PropertyData {
 	 */
 	AccessType getDefaultAccess();
 
+	/// The resolved access of the class declaring this attribute, before any
+	/// attribute-level access override is applied.
+	default AccessType getClassAccess() {
+		return getDefaultAccess();
+	}
+
 	/**
 	 * @return property name
 	 * @throws MappingException No getter or field found or wrong JavaBean spec usage

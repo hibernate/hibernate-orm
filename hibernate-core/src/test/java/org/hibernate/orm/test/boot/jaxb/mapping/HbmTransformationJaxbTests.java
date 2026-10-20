@@ -35,6 +35,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularFetchModeImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -1775,6 +1776,48 @@ public class HbmTransformationJaxbTests {
 			assertThat( anotherEntity.getAttributes().getBasicAttributes() )
 					.extracting( JaxbBasicImpl::getName )
 					.containsExactly( "code" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-21016" )
+	public void testTimestampSourceDbTransformation(ServiceRegistryScope scope) {
+		// hbm <timestamp source="db"/> should be transformed into a <version> with
+		// <temporal>TIMESTAMP</temporal> and an <update-timestamp source="DB"/>.
+		transformAndVerify( "xml/jaxb/mapping/timestamp-source/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl dbSourcedEntity = transformed.getEntities().stream()
+					.filter( e -> "DbSourcedEntity".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbVersionImpl version = dbSourcedEntity.getAttributes().getVersion();
+			assertThat( version ).isNotNull();
+			assertThat( version.getName() ).isEqualTo( "lastModified" );
+			assertThat( version.getColumn().getName() ).isEqualTo( "last_modified" );
+			//noinspection deprecation
+			assertThat( version.getTemporal() ).isEqualTo( jakarta.persistence.TemporalType.TIMESTAMP );
+			assertThat( version.getUpdateTimestamp() ).isNotNull();
+			assertThat( version.getUpdateTimestamp().getSource() )
+					.isEqualTo( org.hibernate.annotations.SourceType.DB );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-21016" )
+	public void testTimestampSourceVmTransformation(ServiceRegistryScope scope) {
+		// hbm <timestamp source="vm"/> (the default) should not produce an <update-timestamp> element.
+		transformAndVerify( "xml/jaxb/mapping/timestamp-source/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl vmSourcedEntity = transformed.getEntities().stream()
+					.filter( e -> "VmSourcedEntity".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbVersionImpl version = vmSourcedEntity.getAttributes().getVersion();
+			assertThat( version ).isNotNull();
+			assertThat( version.getName() ).isEqualTo( "lastModified" );
+			//noinspection deprecation
+			assertThat( version.getTemporal() ).isEqualTo( jakarta.persistence.TemporalType.TIMESTAMP );
+			assertThat( version.getUpdateTimestamp() ).isNull();
 		} );
 	}
 

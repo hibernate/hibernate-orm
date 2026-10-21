@@ -101,12 +101,12 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
 			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return type.cast( java.sql.Date.from( instant ) );
+			return type.cast( new java.sql.Date( instant.toEpochMilli() ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
 			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return type.cast( java.sql.Time.from( instant ) );
+			return type.cast( new java.sql.Time( instant.toEpochMilli() ) );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {

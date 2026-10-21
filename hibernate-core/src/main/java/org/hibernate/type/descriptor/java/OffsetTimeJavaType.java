@@ -144,6 +144,10 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 			return type.cast( instant.toEpochMilli() );
 		}
 
+		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
+			throw new IllegalArgumentException( "Illegal attempt to treat 'java.time.OffsetTime' as 'java.sql.Date'" );
+		}
+
 		if ( Date.class.isAssignableFrom( type ) ) {
 			return type.cast( Date.from( instant ) );
 		}

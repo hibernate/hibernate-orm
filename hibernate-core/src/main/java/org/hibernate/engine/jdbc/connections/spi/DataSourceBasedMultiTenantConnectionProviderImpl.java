@@ -52,7 +52,11 @@ import static org.hibernate.cfg.MultiTenancySettings.TENANT_IDENTIFIER_TO_USE_FO
  * and as a fallback for tenant connections.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Configure a {@link TenantDataSourceMapper} with
+ * {@link org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider} instead.
  */
+@Deprecated(since = "8.0")
 public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 		extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T>
 		implements ServiceRegistryAwareService, Stoppable {

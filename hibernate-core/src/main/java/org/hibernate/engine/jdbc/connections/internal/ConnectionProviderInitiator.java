@@ -39,6 +39,7 @@ import static org.hibernate.cfg.JdbcSettings.URL;
 import static org.hibernate.cfg.JdbcSettings.USER;
 import static org.hibernate.cfg.SchemaToolingSettings.ENABLE_SYNONYMS;
 import static org.hibernate.context.spi.MultiTenancy.isMultiTenancyEnabled;
+import static org.hibernate.context.spi.MultiTenancy.getTenantDataSourceMapper;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderLogging.CONNECTION_PROVIDER_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfBlank;
@@ -113,7 +114,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			}
 		}
 
-		return instantiateConnectionProvider( configurationValues, strategySelector, beanContainer );
+		return getTenantDataSourceMapper( configurationValues, registry ) == null
+				? instantiateConnectionProvider( configurationValues, strategySelector, beanContainer )
+				: new DataSourceConnectionProvider();
 	}
 
 	private static Class<? extends ConnectionProvider> connectionProviderClass(Class<?> providerClass) {

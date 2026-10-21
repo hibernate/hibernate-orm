@@ -63,6 +63,59 @@ public interface ConnectionProvider extends Service, Wrapped {
 	}
 
 	/**
+	 * Obtain a connection from the named data source, using the configured credentials
+	 * or the data source's defaults.
+	 *
+	 * @param dataSourceName The name supplied by a {@link org.hibernate.context.spi.TenantDataSourceMapper}
+	 * @throws UnsupportedOperationException if named data sources are not supported
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	default Connection getConnection(String dataSourceName) throws SQLException {
+		throw new UnsupportedOperationException( "ConnectionProvider does not support named data sources: "
+				+ getClass().getTypeName() );
+	}
+
+	/**
+	 * Obtain a connection from the named data source using the given credentials.
+	 *
+	 * @param dataSourceName The name supplied by a {@link org.hibernate.context.spi.TenantDataSourceMapper}
+	 * @param user The database user
+	 * @param password The database password
+	 * @throws UnsupportedOperationException if named data sources with contextual credentials are not supported
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	default Connection getConnection(String dataSourceName, String user, String password) throws SQLException {
+		throw new UnsupportedOperationException( "ConnectionProvider does not support named data sources with contextual credentials: "
+				+ getClass().getTypeName() );
+	}
+
+	/**
+	 * Obtain a connection for read-only use from the named data source.
+	 *
+	 * @implNote By default, delegates to {@link #getConnection(String)}. An override
+	 * returning a distinct replica must also override {@link #closeReadOnlyConnection(Connection)}.
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	default Connection getReadOnlyConnection(String dataSourceName) throws SQLException {
+		return getConnection( dataSourceName );
+	}
+
+	/**
+	 * Obtain a connection for read-only use from the named data source using the given credentials.
+	 *
+	 * @implNote By default, delegates to {@link #getConnection(String, String, String)}. An override
+	 * returning a distinct replica must also override {@link #closeReadOnlyConnection(Connection)}.
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	default Connection getReadOnlyConnection(String dataSourceName, String user, String password) throws SQLException {
+		return getConnection( dataSourceName, user, password );
+	}
+
+	/**
 	 * Obtains a connection to a read-only replica for use according to the underlying
 	 * strategy of this provider.
 	 *

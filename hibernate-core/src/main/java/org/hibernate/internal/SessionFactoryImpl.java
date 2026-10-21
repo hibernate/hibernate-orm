@@ -364,11 +364,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			persistenceUnitLifecycleCallbacks =
 					persistenceUnitLifecycleCallbacks( bootMetamodel.getPersistenceUnitLifecycleCallbackDefinitions() );
 
-			final boolean multiTenancyEnabled = options.isMultiTenancyEnabled();
-			connectionProvider =
-					multiTenancyEnabled ? null : serviceRegistry.requireService( ConnectionProvider.class );
 			multiTenantConnectionProvider =
-					multiTenancyEnabled ? serviceRegistry.requireService( MultiTenantConnectionProvider.class ) : null;
+					serviceRegistry.getService( MultiTenantConnectionProvider.class );
+			connectionProvider = multiTenantConnectionProvider == null
+					? serviceRegistry.requireService( ConnectionProvider.class ) : null;
 
 			eventMonitor = loadEventMonitor();
 

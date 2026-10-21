@@ -10,15 +10,15 @@ import org.hibernate.Incubating;
  * or obtained from the configured bean container.
  * <p>
  * Configuring a mapper automatically enables
- * {@link org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl}
- * unless a custom multi-tenant connection provider is supplied.
+ * {@link org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider}
+ * unless a connection provider or a multi-tenant connection provider is explicitly supplied.
  *
  * @param <T> The type of the tenant id
  *
  * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_DATASOURCE_MAPPER
  * @see org.hibernate.cfg.Configuration#setTenantDataSourceMapper
  * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantDataSourceMapper
- * @see org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl#DataSourceBasedMultiTenantConnectionProviderImpl(TenantDataSourceMapper)
+ * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String)
  *
  * @since 8.0
  */

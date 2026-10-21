@@ -22,7 +22,7 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  */
 public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
 
-	private final Map<String, Object> settings;
+	private final @Nonnull Map<String, Object> settings;
 	private ServiceRegistryImplementor serviceRegistry;
 
 	/**

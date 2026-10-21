@@ -81,6 +81,7 @@ public class BasicAttributeProcessing {
 		XmlAnnotationHelper.applyEnumerated( jaxbBasic.getEnumerated(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyNationalized( jaxbBasic.getNationalized(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyGenerated( jaxbBasic.getGenerated(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyUpdateTimestamp( jaxbBasic.getUpdateTimestamp(), memberDetails, xmlDocumentContext );
 
 		// todo : ...
 

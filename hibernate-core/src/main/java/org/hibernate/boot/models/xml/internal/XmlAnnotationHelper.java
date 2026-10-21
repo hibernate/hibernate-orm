@@ -65,6 +65,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbSynchronizedTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraintImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbUpdateTimestampImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
@@ -133,6 +134,7 @@ import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.annotations.internal.TemporalJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.UpdateTimestampAnnotation;
 import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
@@ -1982,6 +1984,7 @@ public class XmlAnnotationHelper {
 			CommonAttributeProcessing.applyAccess( accessType, memberDetails, xmlDocumentContext );
 			CommonAttributeProcessing.applyAttributeAccessor( version, memberDetails, xmlDocumentContext );
 			XmlAnnotationHelper.applyTemporal( version.getTemporal(), memberDetails, xmlDocumentContext );
+			XmlAnnotationHelper.applyUpdateTimestamp( version.getUpdateTimestamp(), memberDetails, xmlDocumentContext );
 			if ( version.getColumn() != null ) {
 				final ColumnJpaAnnotation columnAnn = (ColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 						JpaAnnotations.COLUMN,
@@ -1990,6 +1993,23 @@ public class XmlAnnotationHelper {
 				columnAnn.apply( version.getColumn(), xmlDocumentContext );
 				XmlAnnotationHelper.applyColumnTransformation( version.getColumn(), memberDetails, xmlDocumentContext );
 			}
+		}
+	}
+
+	public static void applyUpdateTimestamp(
+			JaxbUpdateTimestampImpl updateTimestamp,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( updateTimestamp == null ) {
+			return;
+		}
+
+		final UpdateTimestampAnnotation updateTimestampAnn = (UpdateTimestampAnnotation) memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.UPDATE_TIMESTAMP,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		if ( updateTimestamp.getSource() != null ) {
+			updateTimestampAnn.source( updateTimestamp.getSource() );
 		}
 	}
 

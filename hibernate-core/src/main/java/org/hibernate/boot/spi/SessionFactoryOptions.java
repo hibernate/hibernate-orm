@@ -54,6 +54,7 @@ import jakarta.persistence.criteria.Nulls;
  * The legacy SPI accessor {@link org.hibernate.SessionFactory#getSessionFactoryOptions()}
  * is deprecated and marked for removal; the accessor on {@code SessionFactoryImplementor}
  * remains supported.
+ * This interface is not intended for implementation by application code.
  *
  * @since 5.0
  *
@@ -316,7 +317,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * belonging to the current tenant.
 	 *
 	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_DATASOURCE_MAPPER
-	 * @since 8.1
+	 * @since 8.0
 	 */
 	@Nullable
 	TenantDataSourceMapper<Object> getTenantDataSourceMapper();

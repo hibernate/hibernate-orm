@@ -288,10 +288,12 @@ class TenantDataSourceMapperTest {
 		}
 	}
 
-	@Test
-	void builderMapperOverridesConfiguredMapper() {
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void builderMapperOverridesConfiguredMapper(boolean conventionalNaming) {
 		try ( var registry = registryBuilder()
-				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, "default" ).build();
+				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, conventionalNaming
+						? "default" : (TenantDataSourceMapper<Object>) tenant -> "jdbc/other" ).build();
 			var factory = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata()
 					.getSessionFactoryBuilder().applyTenantDataSourceMapper( new Mapper() ).build() ) {
 			assertTenantSession( factory );

@@ -761,6 +761,10 @@ Hibernate caches HQL interpretations and reusable execution plans to avoid repea
 Criteria queries already represent a query tree; they are not parsed as HQL strings.
 Criteria plan caching and query-tree copying have separate controls.
 
+Enabled filters do not prevent plan caching.
+A cached plan depends on the names of the enabled filters and on the number of elements of each multivalued filter argument, but not on the argument values.
+Hibernate binds the filter arguments of the executing session on every execution, so sessions with different filter arguments, such as different tenants, share one plan.
+
 See the generated settings for <<settings-hibernate.query.plan_cache_enabled,`hibernate.query.plan_cache_enabled`>>,
 <<settings-hibernate.query.plan_cache_max_size,`hibernate.query.plan_cache_max_size`>>,
 <<settings-hibernate.criteria.plan_cache_enabled,`hibernate.criteria.plan_cache_enabled`>>, and

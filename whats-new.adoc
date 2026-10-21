@@ -39,3 +39,10 @@ now recognized and bound as a true one-to-one association instead of falling bac
 many-to-one. For each physical join column that is also part of the owner's primary key, Hibernate
 infers `insertable=false, updatable=false`, since the identifier mapping already owns that column's
 value. See the link:{userGuideBase}#associations-one-to-one-formulas[user guide] for details and examples.
+
+[[filter-query-plan-cache]]
+== Query plans are cached when filters are enabled
+
+HQL query plans, and Criteria query plans when `hibernate.criteria.plan_cache_enabled` is set, are now cached when the session has enabled filters, including the filter that `@TenantId` enables in every tenant session.
+Filter arguments are bound on every execution, so sessions with different filter arguments share one plan.
+See the link:{userGuideBase}#hql-query-plan-cache[user guide].

@@ -13,7 +13,7 @@ import static org.hibernate.dialect.generated.spi.GeneratedValuesSupport.Capabil
 @RequiresDialect(H2Dialect.class)
 @ServiceRegistry(settings = @Setting(name = DIALECT,
 		value = "org.hibernate.orm.test.locking.ExcludedFromVersioningNoReturningTests$NoReturningDialect"))
-public class ExcludedFromVersioningNoReturningTests extends ExcludedFromVersioningTests {
+public class ExcludedFromVersioningNoReturningTests extends AnnotatedExcludedFromVersioningTests {
 	public static class NoReturningDialect extends H2Dialect {
 		@Override
 		public GeneratedValuesSupport getGeneratedValuesSupport() {

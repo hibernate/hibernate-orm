@@ -16,6 +16,7 @@ import org.hibernate.models.spi.MutableMemberDetails;
 
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyExcludeFromVersioning;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.boot.models.xml.internal.attr.CommonPluralAttributeProcessing.applyPluralAttributeStructure;
@@ -73,6 +74,7 @@ public class ManyToManyAttributeProcessing {
 		XmlAnnotationHelper.applyNotFound( jaxbManyToMany, memberDetails, xmlDocumentContext );
 
 		applyOptimisticLock( jaxbManyToMany, memberDetails, xmlDocumentContext );
+		applyExcludeFromVersioning( jaxbManyToMany, memberDetails, xmlDocumentContext );
 
 		return memberDetails;
 	}

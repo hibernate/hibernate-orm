@@ -21,6 +21,7 @@ import jakarta.persistence.AccessType;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCascading;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyExcludeFromVersioning;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptionality;
@@ -99,6 +100,7 @@ public class OneToOneAttributeProcessing {
 		applyFetching( jaxbOneToOne, memberDetails, annotation, xmlDocumentContext );
 		applyOptionality( jaxbOneToOne, annotation, xmlDocumentContext );
 		applyOptimisticLock( jaxbOneToOne, memberDetails, xmlDocumentContext );
+		applyExcludeFromVersioning( jaxbOneToOne, memberDetails, xmlDocumentContext );
 
 		if ( jaxbOneToOne.isOrphanRemoval() != null ) {
 			annotation.orphanRemoval( jaxbOneToOne.isOrphanRemoval() );

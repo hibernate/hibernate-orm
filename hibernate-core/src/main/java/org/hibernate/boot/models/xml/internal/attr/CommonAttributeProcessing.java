@@ -91,6 +91,18 @@ public class CommonAttributeProcessing {
 		}
 	}
 
+	public static void applyExcludeFromVersioning(
+			JaxbLockableAttribute jaxbAttribute,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbAttribute.getExcludeFromVersioning() != null ) {
+			memberDetails.applyAnnotationUsage(
+					JpaAnnotations.EXCLUDE_FROM_VERSIONING,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+		}
+	}
+
 	public static void applyFetching(
 			JaxbStandardAttribute jaxbAttribute,
 			MutableMemberDetails memberDetails,

@@ -21,6 +21,7 @@ import jakarta.persistence.AccessType;
 
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyExcludeFromVersioning;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
@@ -72,6 +73,7 @@ public class ElementCollectionAttributeProcessing {
 		applyAttributeAccessor( jaxbElementCollection, memberDetails, xmlDocumentContext );
 		applyFetching( jaxbElementCollection, memberDetails, elementCollectionUsage, xmlDocumentContext );
 		applyOptimisticLock( jaxbElementCollection, memberDetails, xmlDocumentContext );
+		applyExcludeFromVersioning( jaxbElementCollection, memberDetails, xmlDocumentContext );
 
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbElementCollection, memberDetails, xmlDocumentContext );
 

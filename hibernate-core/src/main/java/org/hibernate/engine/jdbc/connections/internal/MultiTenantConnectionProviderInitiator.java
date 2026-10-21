@@ -8,6 +8,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.context.spi.MultiTenancy;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -29,6 +30,10 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 	 * Singleton access
 	 */
 	public static final MultiTenantConnectionProviderInitiator INSTANCE = new MultiTenantConnectionProviderInitiator();
+
+	public static boolean isDefaultProvider(MultiTenantConnectionProvider<?> provider) {
+		return provider instanceof DefaultProvider;
+	}
 
 	@Nonnull
 	@Override
@@ -52,7 +57,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 			}
 			final var mapper = MultiTenancy.getTenantDataSourceMapper( configurationValues, registry );
 			return mapper != null || "default".equals( configurationValues.get( MULTI_TENANT_DATASOURCE_MAPPER ) )
-					? new DataSourceBasedMultiTenantConnectionProviderImpl<>( mapper )
+					? new DefaultProvider( mapper )
 					: null;
 		}
 
@@ -60,13 +65,13 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 		if ( configValue == null ) {
 			final var mapper = MultiTenancy.getTenantDataSourceMapper( configurationValues, registry );
 			if ( mapper != null || "default".equals( configurationValues.get( MULTI_TENANT_DATASOURCE_MAPPER ) ) ) {
-				return new DataSourceBasedMultiTenantConnectionProviderImpl<>( mapper );
+				return new DefaultProvider( mapper );
 			}
 			// if they also specified the data source *name*, then let's assume they want
 			// DataSourceBasedMultiTenantConnectionProviderImpl
 			final Object dataSourceConfigValue = configurationValues.get( JdbcSettings.DATASOURCE );
 			return dataSourceConfigValue instanceof String
-					? new DataSourceBasedMultiTenantConnectionProviderImpl<>()
+					? new DefaultProvider( null )
 					: null;
 		}
 		else if ( configValue instanceof MultiTenantConnectionProvider<?> multiTenantConnectionProvider ) {
@@ -103,6 +108,13 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 			catch (ClassLoadingException cle) {
 				throw new ServiceException( "Unable to locate specified multi-tenant connection provider [" + className + "]", cle );
 			}
+		}
+	}
+
+	// Only automatically created providers may be replaced by factory-specific mappings.
+	private static class DefaultProvider extends DataSourceBasedMultiTenantConnectionProviderImpl<Object> {
+		private DefaultProvider(TenantDataSourceMapper<Object> mapper) {
+			super( mapper );
 		}
 	}
 }

@@ -15,6 +15,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_DATASOURCE_MAPPER;
+import static org.hibernate.engine.jdbc.connections.internal.MultiTenantConnectionProviderInitiator.isDefaultProvider;
 
 /**
  * Acts as a service in the {@link org.hibernate.boot.registry.internal.StandardServiceRegistryImpl} whose
@@ -42,7 +43,7 @@ public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryS
 		final var mapper = options.getTenantDataSourceMapper();
 		if ( mapper != null || isDefaultMappedEnabled() && options.getTenantCredentialsMapper() != null ) {
 			final var provider = theBasicServiceRegistry.getService( MultiTenantConnectionProvider.class );
-			if ( provider == null || provider.getClass() == DataSourceBasedMultiTenantConnectionProviderImpl.class ) {
+			if ( provider == null || isDefaultProvider( provider ) ) {
 				builder.addInitiator( new SessionFactoryServiceInitiator<MultiTenantConnectionProvider<?>>() {
 					@Override
 					@SuppressWarnings({ "unchecked", "rawtypes" })

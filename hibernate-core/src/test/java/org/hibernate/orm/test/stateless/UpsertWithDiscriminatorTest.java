@@ -7,8 +7,10 @@ package org.hibernate.orm.test.stateless;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @JiraKey( "HHH-18742" )
 @JiraKey( "HHH-20155" )
 class UpsertWithDiscriminatorTest {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBAMode.class, comment = "GaussDB A mode cannot upsert entities whose table has only the PK column (X/Y/Z expose only id + DTYPE): the plain INSERT fallback aborts on duplicate key and ON DUPLICATE KEY UPDATE rejects updating key columns; M mode allows it.")
 	@Test void test(SessionFactoryScope scope) {
 		scope.getSessionFactory().inStatelessTransaction( s -> {
 			s.upsert( new X() );

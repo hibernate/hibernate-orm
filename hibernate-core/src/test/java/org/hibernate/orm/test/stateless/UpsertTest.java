@@ -11,8 +11,10 @@ import jakarta.persistence.InheritanceType;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -121,6 +123,7 @@ public class UpsertTest {
 		});
 	}
 
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBAMode.class, comment = "GaussDB A mode cannot upsert entities whose table has only the PK column: the plain INSERT fallback aborts on duplicate key and ON DUPLICATE KEY UPDATE rejects updating key columns; M mode allows it.")
 	@Test void testIdOnlySubtype(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();
 

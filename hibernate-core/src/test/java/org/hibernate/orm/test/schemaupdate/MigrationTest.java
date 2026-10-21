@@ -79,6 +79,7 @@ public class MigrationTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportAlterColumnType.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode gsjdbc4 metadata reports storesLowerCaseIdentifiers=true while the DB stores the mixed-case table name, so the raw DatabaseMetaData lookup returns no rows and the column length reads as -1; the test uses raw DatabaseMetaData rather than the dialect's IdentifierHelper, so it cannot be fixed at the dialect layer. A mode (PG kernel) is unaffected.")
 	public void testSimpleColumnTypeChange(ServiceRegistryScope registryScope) {
 		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
 		String resource4 = "org/hibernate/orm/test/schemaupdate/4_Version.hbm.xml";

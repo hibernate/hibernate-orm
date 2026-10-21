@@ -542,6 +542,10 @@ public class DefaultCatalogAndSchemaTest
 	}
 
 	@Test
+	// GaussDB M mode folds unquoted identifiers to lowercase on CREATE SEQUENCE, but treats the
+	// nextval() string argument as case-sensitive, so these assertions about catalog/schema
+	// qualifier substitution with mixed-case sequence names cannot hold in M mode.
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class)
 	public void sequenceGenerator() {
 		org.hibernate.id.enhanced.SequenceStyleGenerator generator = idGenerator(
 				org.hibernate.id.enhanced.SequenceStyleGenerator.class,
@@ -556,6 +560,8 @@ public class DefaultCatalogAndSchemaTest
 	}
 
 	@Test
+	// Same M-mode identifier case-folding limitation as sequenceGenerator above.
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class)
 	public void enhancedSequenceGenerator() {
 		org.hibernate.id.enhanced.SequenceStyleGenerator generator = idGenerator(
 				org.hibernate.id.enhanced.SequenceStyleGenerator.class,

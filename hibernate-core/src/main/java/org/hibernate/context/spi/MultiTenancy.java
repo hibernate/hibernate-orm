@@ -67,7 +67,7 @@ public class MultiTenancy {
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public static TenantSchemaMapper<Object> getTenantSchemaMapper(
-			Map<String,Object> settings, StandardServiceRegistry registry) {
+			Map<String,Object> settings, ServiceRegistry registry) {
 		final var tenantSchemaMapper =
 				registry.requireService( StrategySelector.class )
 						.resolveStrategy( TenantSchemaMapper.class,
@@ -90,7 +90,7 @@ public class MultiTenancy {
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public static TenantCredentialsMapper<Object> getTenantCredentialsMapper(
-			Map<String,Object> settings, StandardServiceRegistry registry) {
+			Map<String,Object> settings, ServiceRegistry registry) {
 		final var tenantCredentialsMapper =
 				registry.requireService( StrategySelector.class )
 						.resolveStrategy( TenantCredentialsMapper.class,

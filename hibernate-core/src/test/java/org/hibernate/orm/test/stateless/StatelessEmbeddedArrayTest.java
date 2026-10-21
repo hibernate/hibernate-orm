@@ -31,6 +31,20 @@ class StatelessEmbeddedArrayTest {
 	}
 
 	@Test
+	void testInsertPreservesNonNullArray(SessionFactoryScope scope) {
+		final var owner = new EmbeddedArrayOwner();
+		final String[] tags = { "first", "second" };
+		owner.values.tags = tags;
+
+		scope.inStatelessTransaction( session -> session.insert( owner ) );
+
+		assertThat( owner.values.tags ).isSameAs( tags ).containsExactly( "first", "second" );
+		scope.inTransaction( session -> assertThat( session.createNativeQuery(
+				"select tags from embedded_array_tags order by tag_order", String.class
+		).getResultList() ).containsExactly( "first", "second" ) );
+	}
+
+	@Test
 	void testDeleteWithNullDirectArray(SessionFactoryScope scope) {
 		final var owner = new DirectArrayOwner();
 		owner.tags = new String[] { "original" };

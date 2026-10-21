@@ -2,6 +2,7 @@ package org.hibernate.orm.test.boot.models.xml.attr;
 
 import java.util.Date;
 
+import jakarta.persistence.Version;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
@@ -16,6 +17,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.ExcludedFromVersioning;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -54,6 +56,26 @@ public class BasicAttributeTests {
 				.isNull();
 	}
 
+	@Test
+	@SuppressWarnings("JUnitMalformedDeclaration")
+	void testExcludeFromVersioning(ServiceRegistryScope scope) {
+		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
+				.addXmlMappings( "mappings/models/attr/basic/exclude-from-versioning.xml" )
+				.build();
+
+		final ModelsContext modelsContext = createBuildingContext( managedResources, serviceRegistry );
+		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+
+		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( CounterEntity.class.getName() );
+
+		final FieldDetails counterField = classDetails.findFieldByName( "callCount" );
+		assertThat( counterField.getDirectAnnotationUsage( ExcludedFromVersioning.class ) )
+				.as( "<exclude-from-versioning/> in orm.xml should synthesize @ExcludedFromVersioning on the field "
+						+ counterField.getName() )
+				.isNotNull();
+	}
+
 	@SuppressWarnings("unused")
 	@Entity(name = "SimpleEntity")
 	@Table(name = "SimpleEntity")
@@ -63,5 +85,18 @@ public class BasicAttributeTests {
 		private Date mutableDate;
 		private Date immutableDate;
 		private String name;
+	}
+
+	@SuppressWarnings("unused")
+	@Entity(name = "CounterEntity")
+	@Table(name = "CounterEntity")
+	public static class CounterEntity {
+		@Id
+		private Integer id;
+		@ExcludedFromVersioning
+		private long callCount;
+
+		@Version
+		private Long version;
 	}
 }

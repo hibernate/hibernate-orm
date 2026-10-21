@@ -139,6 +139,14 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			return type.cast( value );
 		}
 
+		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
+			return type.cast( new java.sql.Timestamp( toDateEpoch( value ) ) );
+		}
+
+		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
+			throw new IllegalArgumentException( "Illegal attempt to treat 'java.sql.Date' as 'java.sql.Time'" );
+		}
+
 		if ( java.util.Date.class.isAssignableFrom( type ) ) {
 			return type.cast( value );
 		}
@@ -155,14 +163,6 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			final var gregorianCalendar = new GregorianCalendar();
 			gregorianCalendar.setTimeInMillis( toDateEpoch( value ) );
 			return type.cast( gregorianCalendar );
-		}
-
-		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return type.cast( new java.sql.Timestamp( toDateEpoch( value ) ) );
-		}
-
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			throw new IllegalArgumentException( "Illegal attempt to treat 'java.sql.Date' as 'java.sql.Time'" );
 		}
 
 		throw unknownUnwrap( type );

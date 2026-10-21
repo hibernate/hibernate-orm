@@ -166,11 +166,11 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return type.cast( java.sql.Date.from( offsetDateTime.toInstant() ) );
+			return type.cast( new java.sql.Date( offsetDateTime.toInstant().toEpochMilli() ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return type.cast( java.sql.Time.from( offsetDateTime.toInstant() ) );
+			return type.cast( new java.sql.Time( offsetDateTime.toInstant().toEpochMilli() ) );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {

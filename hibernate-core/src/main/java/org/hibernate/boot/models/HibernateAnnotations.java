@@ -106,6 +106,26 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.ANNOTATION ),
 			false
 	);
+	OrmAnnotationDescriptor<Audited, AuditedAnnotation> AUDITED = new OrmAnnotationDescriptor<>(
+			Audited.class,
+			AuditedAnnotation.class,
+			EnumSet.of( Kind.ANNOTATION, Kind.CLASS, Kind.FIELD, Kind.METHOD, Kind.PACKAGE ),
+			false
+	);
+	OrmAnnotationDescriptor<Audited.Table,AuditedTableAnnotation> AUDITED_TABLE =
+			new OrmAnnotationDescriptor<>(
+					Audited.Table.class,
+					AuditedTableAnnotation.class,
+					EnumSet.of( Kind.ANNOTATION, Kind.CLASS, Kind.PACKAGE ),
+					false
+			);
+	OrmAnnotationDescriptor<Audited.Excluded,AuditedExcludedAnnotation> AUDITED_EXCLUDED =
+			new OrmAnnotationDescriptor<>(
+					Audited.Excluded.class,
+					AuditedExcludedAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
 	OrmAnnotationDescriptor<Bag, BagAnnotation> BAG = new OrmAnnotationDescriptor<>(
 			Bag.class,
 			BagAnnotation.class,
@@ -124,6 +144,33 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
+	OrmAnnotationDescriptor<Changelog, ChangelogAnnotation> CHANGELOG = new OrmAnnotationDescriptor<>(
+			Changelog.class,
+			ChangelogAnnotation.class,
+			EnumSet.of( Kind.CLASS ),
+			false
+	);
+	OrmAnnotationDescriptor<Changelog.ChangesetId,ChangelogChangesetIdAnnotation> CHANGELOG_CHANGESET_ID =
+			new OrmAnnotationDescriptor<>(
+					Changelog.ChangesetId.class,
+					ChangelogChangesetIdAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
+	OrmAnnotationDescriptor<Changelog.Timestamp,ChangelogTimestampAnnotation> CHANGELOG_TIMESTAMP =
+			new OrmAnnotationDescriptor<>(
+					Changelog.Timestamp.class,
+					ChangelogTimestampAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
+	OrmAnnotationDescriptor<Changelog.ModifiedEntities,ChangelogModifiedEntitiesAnnotation> CHANGELOG_MODIFIED_ENTITIES =
+			new OrmAnnotationDescriptor<>(
+					Changelog.ModifiedEntities.class,
+					ChangelogModifiedEntitiesAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
 	OrmAnnotationDescriptor<Checks, ChecksAnnotation> CHECKS = new OrmAnnotationDescriptor<>(
 			Checks.class,
 			ChecksAnnotation.class,

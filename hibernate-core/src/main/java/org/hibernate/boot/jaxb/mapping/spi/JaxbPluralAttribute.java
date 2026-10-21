@@ -94,6 +94,18 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	Boolean isMutable();
 	void setMutable(Boolean mutable);
 
+	JaxbEmptyTypeImpl getExcludeFromTemporalVersioning();
+	void setExcludeFromTemporalVersioning(JaxbEmptyTypeImpl value);
+
+	JaxbTemporalVersioningImpl getTemporalVersioning();
+	void setTemporalVersioning(JaxbTemporalVersioningImpl value);
+
+	JaxbEmptyTypeImpl getExcludeFromAuditing();
+	void setExcludeFromAuditing(JaxbEmptyTypeImpl value);
+
+	JaxbAuditedImpl getAudited();
+	void setAudited(JaxbAuditedImpl value);
+
 	String getSqlRestriction();
 	void setSqlRestriction(String sqlRestriction);
 

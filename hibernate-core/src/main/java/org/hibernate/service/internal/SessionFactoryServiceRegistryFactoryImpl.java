@@ -3,6 +3,7 @@ package org.hibernate.service.internal;
 import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -13,6 +14,8 @@ import org.hibernate.service.spi.SessionFactoryServiceContributor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_DATASOURCE_MAPPER;
+
 /**
  * Acts as a service in the {@link org.hibernate.boot.registry.internal.StandardServiceRegistryImpl} whose
  * function is to act as a factory for {@link SessionFactoryServiceRegistryImpl} implementations.
@@ -20,7 +23,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
  * @author Steve Ebersole
  */
 public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryServiceRegistryFactory {
-	private final ServiceRegistryImplementor theBasicServiceRegistry;
+	private final @Nonnull ServiceRegistryImplementor theBasicServiceRegistry;
 
 	public SessionFactoryServiceRegistryFactoryImpl(@Nonnull ServiceRegistryImplementor theBasicServiceRegistry) {
 		this.theBasicServiceRegistry = theBasicServiceRegistry;
@@ -37,17 +40,18 @@ public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryS
 		// Scope its provider to this factory so other factories sharing that registry
 		// keep their own tenant mappings.
 		final var mapper = options.getTenantDataSourceMapper();
-		if ( mapper != null ) {
+		if ( mapper != null || isDefaultMappedEnabled() && options.getTenantCredentialsMapper() != null ) {
 			final var provider = theBasicServiceRegistry.getService( MultiTenantConnectionProvider.class );
 			if ( provider == null || provider.getClass() == DataSourceBasedMultiTenantConnectionProviderImpl.class ) {
 				builder.addInitiator( new SessionFactoryServiceInitiator<MultiTenantConnectionProvider<?>>() {
 					@Override
 					@SuppressWarnings({ "unchecked", "rawtypes" })
+					@Nonnull
 					public Class<MultiTenantConnectionProvider<?>> getServiceInitiated() {
 						return (Class) MultiTenantConnectionProvider.class;
 					}
-
 					@Override
+					@Nonnull
 					public MultiTenantConnectionProvider<?> initiateService(SessionFactoryServiceInitiatorContext context) {
 						return new DataSourceBasedMultiTenantConnectionProviderImpl<>( mapper );
 					}
@@ -58,5 +62,10 @@ public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryS
 			contributor.contribute( builder );
 		}
 		return builder.buildSessionFactoryServiceRegistry( sessionFactory, options );
+	}
+
+	private boolean isDefaultMappedEnabled() {
+		return "default".equals( theBasicServiceRegistry.requireService( ConfigurationService.class )
+				.getSettings().get( MULTI_TENANT_DATASOURCE_MAPPER ) );
 	}
 }

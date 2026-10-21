@@ -1,15 +1,21 @@
 package org.hibernate.context.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.service.ServiceRegistry;
 
 import java.util.Map;
+import javax.naming.Context;
+import javax.sql.DataSource;
 
+import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_DATASOURCE_MAPPER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
@@ -32,7 +38,7 @@ public class MultiTenancy {
 	/**
 	 * Is a {@link MultiTenantConnectionProvider} available?
 	 */
-	public static boolean isMultiTenancyEnabled(ServiceRegistry serviceRegistry) {
+	public static boolean isMultiTenancyEnabled(@Nonnull ServiceRegistry serviceRegistry) {
 		return serviceRegistry.getService( MultiTenantConnectionProvider.class ) != null;
 	}
 
@@ -42,7 +48,7 @@ public class MultiTenancy {
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public static CurrentTenantIdentifierResolver<Object> getTenantIdentifierResolver(
-			Map<String,Object> settings, StandardServiceRegistry registry) {
+			@Nonnull Map<String,Object> settings, @Nonnull StandardServiceRegistry registry) {
 		final var currentTenantIdentifierResolver =
 				registry.requireService( StrategySelector.class )
 						.resolveStrategy( CurrentTenantIdentifierResolver.class,
@@ -67,7 +73,7 @@ public class MultiTenancy {
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public static TenantSchemaMapper<Object> getTenantSchemaMapper(
-			Map<String,Object> settings, ServiceRegistry registry) {
+			@Nonnull Map<String,Object> settings, @Nonnull ServiceRegistry registry) {
 		final var tenantSchemaMapper =
 				registry.requireService( StrategySelector.class )
 						.resolveStrategy( TenantSchemaMapper.class,
@@ -109,32 +115,70 @@ public class MultiTenancy {
 
 	/**
 	 * Obtain the configured {@link TenantDataSourceMapper}.
-	 * Returns {@code null} for {@code "default"}, which requests the connection
-	 * provider's conventional JNDI naming rules.
+	 * For {@code "default"}, resolves the common JNDI namespace from the configured
+	 * data source or context and returns a mapper using conventional tenant names.
 	 *
 	 * @since 8.0
 	 */
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public static TenantDataSourceMapper<Object> getTenantDataSourceMapper(
-			Map<String,Object> settings, ServiceRegistry registry) {
+			@Nonnull Map<String,Object> settings, @Nonnull ServiceRegistry registry) {
 		final Object setting = settings.get( MULTI_TENANT_DATASOURCE_MAPPER );
 		if ( "default".equals( setting ) ) {
-			// The provider constructs its mapper once the base JNDI namespace is known.
-			return null;
+			// An explicitly supplied multitenant provider retains its own naming rules.
+			return isMultiTenancyEnabled( registry )
+					? null
+					: defaultDataSourceMapper( settings, registry );
 		}
-		final var tenantDataSourceMapper =
-				registry.requireService( StrategySelector.class )
-						.resolveStrategy( TenantDataSourceMapper.class, setting );
-		if ( tenantDataSourceMapper == null ) {
-			return Helper.getBean(
-					Helper.getBeanContainer( registry ),
-					TenantDataSourceMapper.class,
-					true,
-					false,
-					null
-			);
+		else {
+			final var tenantDataSourceMapper =
+					registry.requireService( StrategySelector.class )
+							.resolveStrategy( TenantDataSourceMapper.class, setting );
+			if ( tenantDataSourceMapper == null ) {
+				return Helper.getBean(
+						Helper.getBeanContainer( registry ),
+						TenantDataSourceMapper.class,
+						true,
+						false,
+						null
+				);
+			}
+			return tenantDataSourceMapper;
 		}
-		return tenantDataSourceMapper;
+	}
+
+	@Nonnull
+	private static TenantDataSourceMapper<Object> defaultDataSourceMapper(
+			@Nonnull Map<String, Object> settings, @Nonnull ServiceRegistry registry) {
+		if ( !(settings.get( DATASOURCE ) instanceof String jndiName) ) {
+			throw new HibernateException( "The default tenant data source mapper requires a JNDI name in '"
+					+ DATASOURCE + "'" );
+		}
+		else {
+			final Object namedObject =
+					registry.requireService( JndiService.class )
+							.locate( jndiName );
+			if ( namedObject instanceof Context ) {
+				return new DefaultTenantDataSourceMapper( jndiName );
+			}
+			else if ( namedObject instanceof DataSource
+						&& jndiName.lastIndexOf( '/' ) > 0 ) {
+				return new DefaultTenantDataSourceMapper(
+						jndiName.substring( 0, jndiName.lastIndexOf( '/' ) ) );
+			}
+			else {
+				throw new HibernateException( "Cannot determine the tenant JNDI namespace from '" + jndiName + "'" );
+			}
+		}
+	}
+
+	private record DefaultTenantDataSourceMapper(String baseJndiNamespace)
+			implements TenantDataSourceMapper<Object> {
+		@Override
+		@Nonnull
+		public String dataSourceName(@Nonnull Object tenantIdentifier) {
+			return baseJndiNamespace + '/' + tenantIdentifier;
+		}
 	}
 }

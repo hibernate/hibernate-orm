@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 import java.util.stream.Stream;
 import javax.naming.Context;
 import javax.naming.NamingException;
@@ -12,12 +14,17 @@ import javax.naming.spi.InitialContextFactory;
 import javax.sql.DataSource;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.HibernateException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.TenantDataSourceMapper;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.AbstractDataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -29,15 +36,18 @@ import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hibernate.cfg.AvailableSettings.ALLOW_EXTENSIONS_IN_CDI;
 import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
+import static org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER;
 import static org.hibernate.cfg.AvailableSettings.DATASOURCE;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
 import static org.hibernate.cfg.AvailableSettings.JNDI_CLASS;
@@ -49,6 +59,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @BaseUnitTest
@@ -93,25 +105,101 @@ class TenantDataSourceMapperTest {
 	@MethodSource("mappers")
 	void configuredMapperEnablesProvider(Object mapper) throws SQLException, NamingException {
 		try ( var registry = registryBuilder()
-				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, mapper ).build() ) {
+				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, mapper ).build();
+			var factory = factory( registry ) ) {
 			final var provider = provider( registry );
-			assertInstanceOf( DataSourceBasedMultiTenantConnectionProviderImpl.class, provider );
+			assertInstanceOf( DataSourceConnectionProvider.class, provider );
+			assertNull( registry.getService( MultiTenantConnectionProvider.class ) );
 			assertAnyConnection( provider, bootstrapDataSource );
-			assertTenantConnection( provider, 42, tenantDataSource );
+			assertTenantConnection( factory, 42, tenantDataSource );
 			// A cached data source remains usable after its JNDI binding is removed.
 			context.unbind( "tenants/tenant-42" );
-			assertTenantConnection( provider, 42, tenantDataSource );
+			assertTenantConnection( factory, 42, tenantDataSource );
 		}
 	}
 
 	@Test
 	void differentTenantsUseDifferentDataSources() throws SQLException {
 		try ( var registry = registryBuilder()
-				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, Mapper.class ).build() ) {
+				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, Mapper.class ).build();
+			var factory = factory( registry ) ) {
+			assertTenantConnection( factory, 42, tenantDataSource );
+			assertTenantConnection( factory, 43, otherDataSource );
+			assertTenantConnection( factory, 42, tenantDataSource );
+		}
+	}
+
+	@Test
+	void factoriesShareProviderWithDifferentMappings() {
+		try ( var registry = registryBuilder().build() ) {
 			final var provider = provider( registry );
-			assertTenantConnection( provider, 42, tenantDataSource );
-			assertTenantConnection( provider, 43, otherDataSource );
-			assertTenantConnection( provider, 42, tenantDataSource );
+			try ( var first = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata().getSessionFactoryBuilder()
+					.applyTenantDataSourceMapper( new Mapper() ).build();
+				var second = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata().getSessionFactoryBuilder()
+						.applyTenantDataSourceMapper( tenant -> "jdbc/other" ).build() ) {
+				assertSame( provider, first.getServiceRegistry().requireService( ConnectionProvider.class ) );
+				assertSame( provider, second.getServiceRegistry().requireService( ConnectionProvider.class ) );
+				assertTenantConnection( first, 42, tenantDataSource );
+				assertTenantConnection( second, 42, otherDataSource );
+				assertTenantConnection( first, 42, tenantDataSource );
+			}
+		}
+	}
+
+	@Test
+	void bootstrapDataSourceMayBeAnInstance() throws SQLException {
+		try ( var registry = registryBuilder()
+				.applySetting( DATASOURCE, bootstrapDataSource )
+				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, new Mapper() ).build();
+			var factory = factory( registry ) ) {
+			assertAnyConnection( provider( registry ), bootstrapDataSource );
+			assertTenantConnection( factory, 42, tenantDataSource );
+			assertThrows( HibernateException.class, factory::openSession );
+		}
+	}
+
+	@Test
+	void readOnlySessionUsesMappedDataSource() {
+		try ( var registry = registryBuilder()
+				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, new Mapper() ).build();
+			var factory = factory( registry );
+			var session = factory.withOptions().tenantIdentifier( 42 ).readOnly( true ).openSession() ) {
+			session.doWork( connection -> assertConnection( connection, tenantDataSource ) );
+		}
+	}
+
+	@Test
+	void explicitConnectionProviderIsNotReplaced() {
+		try ( var registry = registryBuilder()
+				.applySetting( CONNECTION_PROVIDER, DriverManagerConnectionProvider.class )
+				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, new Mapper() ).build();
+			var factory = factory( registry );
+			var session = factory.withOptions().tenantIdentifier( 42 ).openSession() ) {
+			assertInstanceOf( DriverManagerConnectionProvider.class, provider( registry ) );
+			assertSame( provider( registry ), factory.getServiceRegistry().requireService( ConnectionProvider.class ) );
+			assertThrows( UnsupportedOperationException.class, () -> session.doWork( connection -> {} ) );
+		}
+	}
+
+	@Test
+	@RequiresDialect(H2Dialect.class)
+	void dataSourceAndSchemaMappersCanBeCombined() throws SQLException {
+		final String schema = "TENANT_DS_" + UUID.randomUUID().toString().replace( "-", "" ).toUpperCase( Locale.ROOT );
+		try ( var connection = bootstrapDataSource.getConnection(); var statement = connection.createStatement() ) {
+			statement.execute( "create schema " + schema );
+			try ( var registry = registryBuilder().build();
+				var factory = new MetadataSources( registry ).buildMetadata().getSessionFactoryBuilder()
+						.applyTenantDataSourceMapper( new Mapper() )
+						.applyTenantSchemaMapper( tenant -> schema ).build();
+				var session = factory.withOptions().tenantIdentifier( 42 ).openSession() ) {
+				session.doWork( tenantConnection -> {
+					assertConnection( tenantConnection, tenantDataSource );
+					assertEquals( schema, tenantConnection.getSchema() );
+				} );
+			}
+			finally {
+				statement.execute( "drop schema " + schema );
+			}
 		}
 	}
 
@@ -122,6 +210,7 @@ class TenantDataSourceMapperTest {
 		jdbcContext.bind( "alpha", tenantDataSource );
 		jdbcContext.bind( "beta", otherDataSource );
 		try ( var factory = MultitenancyGuideTests.dataSourceConfiguration()
+				.property( CONNECTION_PROVIDER, DataSourceConnectionProvider.class )
 				.property( JNDI_CLASS, ContextFactory.class.getName() )
 				.property( "hibernate.jndi.testContext", context )
 				.createEntityManagerFactory() ) {
@@ -139,10 +228,11 @@ class TenantDataSourceMapperTest {
 		try ( var registry = registryBuilder()
 				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER,
 						(TenantDataSourceMapper<String>) tenant -> "tenants/tenant-" + tenant )
-				.build() ) {
+				.build();
+			var factory = factory( registry ) ) {
 			final var provider = provider( registry );
 			assertAnyConnection( provider, bootstrapDataSource );
-			assertTenantConnection( provider, "bootstrap", tenantDataSource );
+			assertTenantConnection( factory, "bootstrap", tenantDataSource );
 		}
 	}
 
@@ -165,10 +255,11 @@ class TenantDataSourceMapperTest {
 			builder.applySetting( DATASOURCE, "jdbc" )
 					.applySetting( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY, "bootstrap" );
 		}
-		try ( var registry = builder.build() ) {
+		try ( var registry = builder.build();
+			var factory = factory( registry ) ) {
 			final var provider = provider( registry );
 			assertAnyConnection( provider, bootstrapDataSource );
-			assertTenantConnection( provider, "other", otherDataSource );
+			assertTenantConnection( factory, "other", otherDataSource );
 		}
 	}
 
@@ -189,9 +280,10 @@ class TenantDataSourceMapperTest {
 				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, "default" )
 				.applySetting( ALLOW_EXTENSIONS_IN_CDI, true )
 				.applySetting( BEAN_CONTAINER, new MapperBeanContainer( tenant -> "tenants/tenant-42" ) )
-				.build() ) {
+				.build();
+			var factory = factory( registry ) ) {
 			assertAnyConnection( provider( registry ), bootstrapDataSource );
-			assertTenantConnection( provider( registry ), "other", otherDataSource );
+			assertTenantConnection( factory, "other", otherDataSource );
 		}
 	}
 
@@ -200,8 +292,8 @@ class TenantDataSourceMapperTest {
 		try ( var registry = registryBuilder()
 				.applySetting( MULTI_TENANT_CONNECTION_PROVIDER, DataSourceBasedMultiTenantConnectionProviderImpl.class )
 				.build() ) {
-			assertAnyConnection( provider( registry ), bootstrapDataSource );
-			assertTenantConnection( provider( registry ), "other", otherDataSource );
+			assertAnyConnection( multiTenantProvider( registry ), bootstrapDataSource );
+			assertTenantConnection( multiTenantProvider( registry ), "other", otherDataSource );
 		}
 	}
 
@@ -213,8 +305,8 @@ class TenantDataSourceMapperTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(booleans = { false, true })
-	void explicitProviderTakesPrecedence(boolean service) throws SQLException {
+	@CsvSource({ "false, false", "true, false", "false, true", "true, true" })
+	void explicitProviderTakesPrecedence(boolean service, boolean conventionalNaming) throws SQLException {
 		final var customProvider = new AbstractDataSourceBasedMultiTenantConnectionProviderImpl<Object>() {
 			@Override
 			protected DataSource selectAnyDataSource() {
@@ -226,16 +318,22 @@ class TenantDataSourceMapperTest {
 				return otherDataSource;
 			}
 		};
-		final var builder = registryBuilder().applySetting( MULTI_TENANT_DATASOURCE_MAPPER, Mapper.class );
+		final var builder = registryBuilder().applySetting( MULTI_TENANT_DATASOURCE_MAPPER,
+				conventionalNaming ? "default" : Mapper.class );
+		if ( conventionalNaming ) {
+			// A custom provider does not need Hibernate's JNDI namespace configuration.
+			builder.getSettings().remove( DATASOURCE );
+		}
 		if ( service ) {
 			builder.addService( MultiTenantConnectionProvider.class, customProvider );
 		}
 		else {
 			builder.applySetting( MULTI_TENANT_CONNECTION_PROVIDER, customProvider );
 		}
-		try ( var registry = builder.build() ) {
-			assertSame( customProvider, provider( registry ) );
-			assertTenantConnection( provider( registry ), 42, otherDataSource );
+		try ( var registry = builder.build(); var factory = factory( registry ) ) {
+			assertSame( customProvider, multiTenantProvider( registry ) );
+			assertSame( customProvider, factory.getServiceRegistry().requireService( MultiTenantConnectionProvider.class ) );
+			assertTenantConnection( factory, 42, otherDataSource );
 		}
 	}
 
@@ -258,8 +356,9 @@ class TenantDataSourceMapperTest {
 				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, Mapper.class )
 				.applySetting( ALLOW_EXTENSIONS_IN_CDI, true )
 				.applySetting( BEAN_CONTAINER, new MapperBeanContainer( tenant -> "jdbc/other" ) )
-				.build() ) {
-			assertTenantConnection( provider( registry ), 42, tenantDataSource );
+				.build();
+			var factory = factory( registry ) ) {
+			assertTenantConnection( factory, 42, tenantDataSource );
 		}
 	}
 
@@ -314,8 +413,9 @@ class TenantDataSourceMapperTest {
 
 	private void assertTenantSession(SessionFactoryImplementor factory) {
 		assertTrue( factory.getSessionFactoryOptions().isMultiTenancyEnabled() );
-		assertInstanceOf( DataSourceBasedMultiTenantConnectionProviderImpl.class,
-				factory.getServiceRegistry().getService( MultiTenantConnectionProvider.class ) );
+		assertInstanceOf( DataSourceConnectionProvider.class,
+				factory.getServiceRegistry().getService( ConnectionProvider.class ) );
+		assertNull( factory.getServiceRegistry().getService( MultiTenantConnectionProvider.class ) );
 		try ( var session = factory.withOptions().tenantIdentifier( 42 ).openSession() ) {
 			session.doWork( connection -> assertConnection( connection, tenantDataSource ) );
 		}
@@ -330,6 +430,27 @@ class TenantDataSourceMapperTest {
 		}
 		finally {
 			provider.releaseConnection( tenant, connection );
+		}
+		assertTrue( connection.isClosed() );
+	}
+
+	private SessionFactoryImplementor factory(StandardServiceRegistry registry) {
+		return (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata().buildSessionFactory();
+	}
+
+	private void assertTenantConnection(SessionFactoryImplementor factory, Object tenant, TrackingDataSource dataSource) {
+		try ( var session = factory.withOptions().tenantIdentifier( tenant ).openSession() ) {
+			session.doWork( connection -> assertConnection( connection, dataSource ) );
+		}
+	}
+
+	private void assertAnyConnection(ConnectionProvider provider, TrackingDataSource dataSource) throws SQLException {
+		final var connection = provider.getConnection();
+		try {
+			assertConnection( connection, dataSource );
+		}
+		finally {
+			provider.closeConnection( connection );
 		}
 		assertTrue( connection.isClosed() );
 	}
@@ -353,15 +474,21 @@ class TenantDataSourceMapperTest {
 	}
 
 	private StandardServiceRegistryBuilder registryBuilder() {
-		return new StandardServiceRegistryBuilder()
+		final var builder = new StandardServiceRegistryBuilder()
 				.applySetting( DATASOURCE, BOOTSTRAP )
 				.applySetting( JNDI_CLASS, ContextFactory.class.getName() )
 				.applySetting( "hibernate.jndi.testContext", context )
 				.applySetting( HBM2DDL_AUTO, "none" );
+		builder.getSettings().remove( CONNECTION_PROVIDER );
+		return builder;
+	}
+
+	private ConnectionProvider provider(StandardServiceRegistry registry) {
+		return registry.requireService( ConnectionProvider.class );
 	}
 
 	@SuppressWarnings("unchecked")
-	private MultiTenantConnectionProvider<Object> provider(StandardServiceRegistry registry) {
+	private MultiTenantConnectionProvider<Object> multiTenantProvider(StandardServiceRegistry registry) {
 		return registry.requireService( MultiTenantConnectionProvider.class );
 	}
 

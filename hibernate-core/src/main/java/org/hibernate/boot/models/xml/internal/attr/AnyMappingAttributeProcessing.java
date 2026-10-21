@@ -35,6 +35,7 @@ import static org.hibernate.boot.models.HibernateAnnotations.ANY_DISCRIMINATOR_V
 import static org.hibernate.boot.models.JpaAnnotations.JOIN_COLUMN;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyExcludeFromVersioning;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptionality;
@@ -67,6 +68,7 @@ public class AnyMappingAttributeProcessing {
 		applyFetching( jaxbHbmAnyMapping, memberDetails, anyAnn, xmlDocumentContext );
 		applyOptionality( jaxbHbmAnyMapping, anyAnn, xmlDocumentContext );
 		applyOptimisticLock( jaxbHbmAnyMapping, memberDetails, xmlDocumentContext );
+		applyExcludeFromVersioning( jaxbHbmAnyMapping, memberDetails, xmlDocumentContext );
 
 		applyDiscriminator( memberDetails, jaxbHbmAnyMapping, xmlDocumentContext );
 		applyKey( memberDetails, jaxbHbmAnyMapping, xmlDocumentContext );

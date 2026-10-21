@@ -212,6 +212,8 @@ class StatelessEmbeddedCollectionTest {
 		@GeneratedValue
 		Long id;
 
+		private String name;
+
 		@Embedded
 		SkillSet skillSet = new SkillSet();
 	}

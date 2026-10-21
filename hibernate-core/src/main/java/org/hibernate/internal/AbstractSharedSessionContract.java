@@ -1473,8 +1473,7 @@ abstract class AbstractSharedSessionContract
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		// See class-level Javadoc for a discussion of the concurrent-access safety of this method
 		if ( jdbcConnectionAccess == null ) {
-			if ( !factoryOptions.isMultiTenancyEnabled() ) {
-				// we might still be using schema-based multitenancy
+			if ( factory.multiTenantConnectionProvider == null ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						readOnly,
 						sessionEventsManager,
@@ -1483,7 +1482,7 @@ abstract class AbstractSharedSessionContract
 				);
 			}
 			else {
-				// we're using datasource-based multitenancy
+				// An explicitly configured multitenant provider takes precedence over mappers
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
 						tenantIdentifier,
 						readOnly,

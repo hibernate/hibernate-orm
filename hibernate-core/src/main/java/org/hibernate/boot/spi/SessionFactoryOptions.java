@@ -281,7 +281,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isOrderInsertsEnabled();
 
 	/**
-	 * Is there a
+	 * Is there a {@linkplain TenantDataSourceMapper tenant data source mapper} or
 	 * {@linkplain org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider
 	 * multi-tenant connection provider} configured?
 	 *

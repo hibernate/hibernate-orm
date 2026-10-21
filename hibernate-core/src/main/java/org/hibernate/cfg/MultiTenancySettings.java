@@ -77,8 +77,8 @@ public interface MultiTenancySettings {
 	 * When a tenant credentials mapper is set,
 	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String, String)}
 	 * is used to acquire JDBC connections, or
-	 * {@link org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl}
-	 * passes the credentials to the selected datasource.
+	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String, String, String)}
+	 * is used when a tenant data source mapper is also configured.
 	 * This typically requires that the JDBC {@code DataSource}
 	 * correctly implements the method {@link javax.sql.DataSource#getConnection(String, String)}.
 	 * <p>
@@ -98,12 +98,14 @@ public interface MultiTenancySettings {
 	 *     <li>an instance of {@code TenantDataSourceMapper},
 	 *     <li>a {@link Class} implementing {@code TenantDataSourceMapper},
 	 *     <li>the name of such a class, or
-	 *     <li>{@code "default"}, to use the conventional JNDI naming rules of
-	 *         {@link org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl}.
+	 *     <li>{@code "default"}, to use tenant identifiers as names within the JNDI
+	 *         context identified by {@value org.hibernate.cfg.JdbcSettings#DATASOURCE},
+	 *         or beneath the parent context when that setting names a data source.
 	 * </ul>
-	 * Configuring a mapper automatically enables this connection provider unless
-	 * a custom multi-tenant connection provider is supplied. By default, there is
-	 * no tenant data source mapper.
+	 * Configuring a mapper automatically selects
+	 * {@link org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider}
+	 * unless a connection provider or a multi-tenant connection provider is explicitly supplied.
+	 * By default, there is no tenant data source mapper.
 	 *
 	 * @see org.hibernate.context.spi.TenantDataSourceMapper
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantDataSourceMapper

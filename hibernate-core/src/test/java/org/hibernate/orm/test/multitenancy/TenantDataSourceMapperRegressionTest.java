@@ -12,6 +12,7 @@ import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 import javax.sql.DataSource;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
@@ -252,14 +253,16 @@ class TenantDataSourceMapperRegressionTest {
 		private Credentials current = databaseCredentials();
 
 		@Override
-		public String user(String tenant) {
+		@Nonnull
+		public String user(@Nonnull String tenant) {
 			assertEquals( "tenant", tenant );
 			userCalls++;
 			return current.user();
 		}
 
 		@Override
-		public String password(String tenant) {
+		@Nonnull
+		public String password(@Nonnull String tenant) {
 			assertEquals( "tenant", tenant );
 			passwordCalls++;
 			return current.password();

@@ -15,6 +15,7 @@ import static org.hibernate.boot.models.xml.internal.attr.AnyMappingAttributePro
 import static org.hibernate.boot.models.xml.internal.attr.AnyMappingAttributeProcessing.applyKey;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyExcludeFromVersioning;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.boot.models.xml.internal.attr.CommonPluralAttributeProcessing.applyPluralAttributeStructure;
@@ -47,6 +48,7 @@ public class PluralAnyMappingAttributeProcessing {
 		applyAttributeAccessor( jaxbHbmManyToAny, memberDetails, xmlDocumentContext );
 		applyFetching( jaxbHbmManyToAny, memberDetails, manyToAnyAnn, xmlDocumentContext );
 		applyOptimisticLock( jaxbHbmManyToAny, memberDetails, xmlDocumentContext );
+		applyExcludeFromVersioning( jaxbHbmManyToAny, memberDetails, xmlDocumentContext );
 
 		applyDiscriminator( memberDetails, jaxbHbmManyToAny, xmlDocumentContext );
 		applyKey( memberDetails, jaxbHbmManyToAny, xmlDocumentContext );

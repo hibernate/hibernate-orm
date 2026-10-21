@@ -21,6 +21,7 @@ import jakarta.persistence.AccessType;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyNotFound;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyExcludeFromVersioning;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptionality;
@@ -54,6 +55,7 @@ public class ManyToOneAttributeProcessing {
 		applyFetching( jaxbManyToOne, memberDetails, manyToOneAnn, xmlDocumentContext );
 		applyOptionality( jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
 		applyOptimisticLock( jaxbManyToOne, memberDetails, xmlDocumentContext );
+		applyExcludeFromVersioning( jaxbManyToOne, memberDetails, xmlDocumentContext );
 
 		// todo (7.0) : cascades?
 

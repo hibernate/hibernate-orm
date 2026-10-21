@@ -16,6 +16,7 @@ import jakarta.persistence.AccessType;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyExcludeFromVersioning;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
@@ -51,6 +52,7 @@ public class EmbeddedAttributeProcessing {
 		applyAccess( accessType, memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbEmbedded, memberDetails, xmlDocumentContext );
 		applyOptimisticLock( jaxbEmbedded, memberDetails, xmlDocumentContext );
+		applyExcludeFromVersioning( jaxbEmbedded, memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyAttributeOverrides( jaxbEmbedded.getAttributeOverrides(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyAssociationOverrides( jaxbEmbedded.getAssociationOverrides(), memberDetails, xmlDocumentContext );

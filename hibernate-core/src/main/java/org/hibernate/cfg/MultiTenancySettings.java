@@ -76,7 +76,10 @@ public interface MultiTenancySettings {
 	 * </ul>
 	 * When a tenant credentials mapper is set,
 	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String, String)}
-	 * is used to acquire JDBC connections. This typically requires that the JDBC {@code DataSource}
+	 * is used to acquire JDBC connections, or
+	 * {@link org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl}
+	 * passes the credentials to the selected datasource.
+	 * This typically requires that the JDBC {@code DataSource}
 	 * correctly implements the method {@link javax.sql.DataSource#getConnection(String, String)}.
 	 * <p>
 	 * By default, there is no tenant credentials mapper.

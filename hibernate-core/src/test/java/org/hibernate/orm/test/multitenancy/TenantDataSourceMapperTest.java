@@ -390,6 +390,13 @@ class TenantDataSourceMapperTest {
 			connections.add( connection );
 			return connection;
 		}
+
+		@Override
+		public Connection getConnection(String user, String password) throws SQLException {
+			final var connection = super.getConnection( user, password );
+			connections.add( connection );
+			return connection;
+		}
 	}
 
 	private static class MapperBeanContainer extends AbstractBeanContainer {

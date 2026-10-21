@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.H2Dialect;
@@ -105,6 +106,7 @@ public class InformationExtractionSupportTests {
 	private static ExtractionContext extractionContext() {
 		final ConfigurationService configurationService = new ConfigurationService() {
 			@Override
+			@Nonnull
 			public Map<String, Object> getSettings() {
 				return Map.of();
 			}
@@ -115,12 +117,14 @@ public class InformationExtractionSupportTests {
 			}
 
 			@Override
-			public <T> T getSetting(String name, Converter<T> converter, T defaultValue) {
+			@Nonnull
+			public <T> T getSetting(String name, Converter<T> converter, @Nonnull T defaultValue) {
 				return defaultValue;
 			}
 
 			@Override
-			public <T> T getSetting(String name, Class<T> expected, T defaultValue) {
+			@Nonnull
+			public <T> T getSetting(String name, Class<T> expected, @Nonnull T defaultValue) {
 				return defaultValue;
 			}
 		};

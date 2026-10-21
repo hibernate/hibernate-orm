@@ -1,16 +1,20 @@
 package org.hibernate.engine.jdbc.connections.spi;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.Context;
 import javax.sql.DataSource;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MultiTenancySettings;
 import org.hibernate.context.spi.MultiTenancy;
+import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -18,16 +22,20 @@ import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
+import static org.hibernate.cfg.JdbcSettings.PASS;
+import static org.hibernate.cfg.JdbcSettings.USER;
 import static org.hibernate.cfg.MultiTenancySettings.TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY;
 
 /**
  * A concrete implementation of the {@link MultiTenantConnectionProvider} contract based
  * on a number of reasonable assumptions. A configured {@link TenantDataSourceMapper}
  * supplies full JNDI names for tenant data sources. Without a mapper, or with the
- * {@code default} strategy, we assume that:<ul>
+ * {@code default} strategy, we assume that:
+ * <ul>
  *     <li>
  *         The {@link DataSource} instances are all available from JNDI named by the tenant
  *         identifier relative to a single base JNDI context.
@@ -38,6 +46,10 @@ import static org.hibernate.cfg.MultiTenancySettings.TENANT_IDENTIFIER_TO_USE_FO
  *         {@link MultiTenancySettings#TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY} must also be set.
  *     </li>
  * </ul>
+ * <p>
+ * The configured {@link TenantCredentialsMapper}, if any, supplies tenant-specific credentials.
+ * Otherwise, the default configured connection credentials are used for bootstrap connections
+ * and as a fallback for tenant connections.
  *
  * @author Steve Ebersole
  */
@@ -51,6 +63,9 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	private String baseJndiNamespace;
 	private String jndiName;
 	private TenantDataSourceMapper<T> tenantDataSourceMapper;
+	private TenantCredentialsMapper<T> tenantCredentialsMapper;
+	private String user;
+	private String password;
 	private DataSource anyDataSource;
 
 	public DataSourceBasedMultiTenantConnectionProviderImpl() {
@@ -66,6 +81,27 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	@Incubating(since = "8.0")
 	public DataSourceBasedMultiTenantConnectionProviderImpl(TenantDataSourceMapper<T> mapper) {
 		tenantDataSourceMapper = mapper;
+	}
+
+	@Override
+	public Connection getAnyConnection() throws SQLException {
+		return getConnection( selectAnyDataSource() );
+	}
+
+	@Override
+	public Connection getConnection(T tenantIdentifier) throws SQLException {
+		final var dataSource = selectDataSource( tenantIdentifier );
+		return tenantCredentialsMapper == null
+				? getConnection( dataSource )
+				: dataSource.getConnection(
+						tenantCredentialsMapper.user( tenantIdentifier ),
+						tenantCredentialsMapper.password( tenantIdentifier ) );
+	}
+
+	private Connection getConnection(DataSource dataSource) throws SQLException {
+		return user != null || password != null
+				? dataSource.getConnection( user, password )
+				: dataSource.getConnection();
 	}
 
 	@Override
@@ -93,6 +129,10 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final var settings = configurationService.getSettings();
+		user = (String) settings.get( USER );
+		password = (String) settings.get( PASS );
+		tenantCredentialsMapper = (TenantCredentialsMapper<T>)
+				getTenantCredentialsMapper( serviceRegistry, settings );
 		if ( tenantDataSourceMapper == null ) {
 			tenantDataSourceMapper = (TenantDataSourceMapper<T>)
 					MultiTenancy.getTenantDataSourceMapper( settings, serviceRegistry );
@@ -155,6 +195,14 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 					"] found in JNDI location [" + this.jndiName + "]"
 			);
 		}
+	}
+
+	@Nullable
+	private static TenantCredentialsMapper<Object> getTenantCredentialsMapper(
+			@Nonnull ServiceRegistryImplementor serviceRegistry, Map<String, Object> settings) {
+		return serviceRegistry instanceof SessionFactoryServiceInitiatorContext context
+				? context.getSessionFactoryOptions().getTenantCredentialsMapper()
+				: MultiTenancy.getTenantCredentialsMapper( settings, serviceRegistry );
 	}
 
 	@Override

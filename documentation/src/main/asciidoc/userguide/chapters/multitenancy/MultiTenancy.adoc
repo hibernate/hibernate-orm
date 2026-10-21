@@ -214,7 +214,7 @@ See <<identifiers>> and <<associations>> for identifier and relationship mapping
 link:{doc-javadoc-url}org/hibernate/context/spi/TenantDataSourceMapper.html[`TenantDataSourceMapper<T>`] maps a tenant identifier to the full JNDI name of the datasource that should be used by that tenant.
 Configure `hibernate.multi_tenant.datasource_mapper` with an instance, class, or class name, use the factory-builder integration, or supply it through a `BeanContainer`.
 The special setting value `default` selects the <<multitenancy-jndi,conventional JNDI naming strategy>>.
-Configuring a mapper automatically enables link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[`DataSourceBasedMultiTenantConnectionProviderImpl`], unless a custom `MultiTenantConnectionProvider` is supplied.
+Configuring a mapper automatically selects `DataSourceConnectionProvider`, unless a connection provider is explicitly specified.
 
 // The following example assumes that the datasources are already bound in JNDI:
 
@@ -288,7 +288,7 @@ include::{multitenancy-guide-examples}[tags=multitenancy-credentials]
 
 Register this mapper with `property("hibernate.multi_tenant.credentials_mapper", credentials)`.
 `lookupPassword()` represents the application's credential source; the executable fixture uses synthetic credentials to verify routing, not actual tenant database users.
-The ordinary provider must support `getConnection(user, password)` and the datasource must honor those credentials.
+The ordinary provider must support `getConnection(user, password)`, or `getConnection(dataSourceName, user, password)` when a datasource mapper is also configured, and the datasource must honor those credentials.
 Not every pool supports credentials per acquisition; see <<database-connectionprovider-datasource>>.
 The mapper does not provision users, grant privileges, or itself partition data.
 This credential-based contract differs from `MultiTenantConnectionProvider.getConnection(tenantId)`.
@@ -335,7 +335,7 @@ include::{multitenancy-guide-examples}[tags=multitenancy-provider-configuration]
 [[multitenancy-jndi]]
 ==== JNDI datasource routing
 
-Setting `hibernate.multi_tenant.datasource_mapper=default` enables `DataSourceBasedMultiTenantConnectionProviderImpl` with its conventional naming strategy: tenant datasources are identified by the tenant identifier beneath a common JNDI context.
+Setting `hibernate.multi_tenant.datasource_mapper=default` selects `DataSourceConnectionProvider` with conventional naming: tenant datasources are identified by the tenant identifier beneath a common JNDI context.
 For example:
 
 [source,properties]

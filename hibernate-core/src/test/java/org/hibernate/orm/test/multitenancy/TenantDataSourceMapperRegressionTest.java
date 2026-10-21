@@ -195,7 +195,8 @@ class TenantDataSourceMapperRegressionTest {
 	@ValueSource(booleans = { false, true })
 	void explicitlySuppliedConcreteProviderIsRetained(boolean suppliedAsService) throws Exception {
 		final var explicit = new DataSourceBasedMultiTenantConnectionProviderImpl<String>( tenant -> TENANT );
-		final var builder = registry( new RecordingDataSource(), new RecordingDataSource() )
+		final var tenantSource = new RecordingDataSource();
+		final var builder = registry( new RecordingDataSource(), tenantSource )
 				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, (TenantDataSourceMapper<String>) tenant -> BOOTSTRAP );
 		if ( suppliedAsService ) {
 			builder.addService( MultiTenantConnectionProvider.class, explicit );
@@ -210,6 +211,27 @@ class TenantDataSourceMapperRegressionTest {
 			}
 			assertSame( explicit, registry.requireService( MultiTenantConnectionProvider.class ) );
 			try ( var factory = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata().buildSessionFactory() ) {
+				assertSame( explicit, factory.getServiceRegistry().requireService( MultiTenantConnectionProvider.class ) );
+				try ( var session = factory.withOptions().tenantIdentifier( "tenant" ).openSession() ) {
+					session.doWork( connection -> assertFalse( connection.isClosed() ) );
+				}
+				assertEquals( List.of( databaseCredentials() ), tenantSource.credentials );
+			}
+		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void explicitlyConfiguredProviderClassIsRetained(boolean className) throws Exception {
+		try ( var registry = registry( new RecordingDataSource(), new RecordingDataSource() )
+				.applySetting( MULTI_TENANT_CONNECTION_PROVIDER, className
+						? DataSourceBasedMultiTenantConnectionProviderImpl.class.getName()
+						: DataSourceBasedMultiTenantConnectionProviderImpl.class )
+				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, (TenantDataSourceMapper<String>) tenant -> TENANT )
+				.build() ) {
+			final var explicit = registry.requireService( MultiTenantConnectionProvider.class );
+			try ( var factory = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata()
+					.getSessionFactoryBuilder().applyTenantDataSourceMapper( tenant -> BOOTSTRAP ).build() ) {
 				assertSame( explicit, factory.getServiceRegistry().requireService( MultiTenantConnectionProvider.class ) );
 			}
 		}

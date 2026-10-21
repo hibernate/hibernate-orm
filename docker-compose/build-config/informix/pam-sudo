@@ -1,0 +1,8 @@
+#%PAM-1.0
+# Custom PAM config for sudo: replaces "account include system-auth" with
+# pam_permit.so to work around pam_unix's unix_chkpwd failing to setuid(0)
+# inside containers on Ubuntu 24.04+ hosts (linux-pam#876).
+auth       include      system-auth
+account    sufficient   pam_permit.so
+password   include      system-auth
+session    include      system-auth

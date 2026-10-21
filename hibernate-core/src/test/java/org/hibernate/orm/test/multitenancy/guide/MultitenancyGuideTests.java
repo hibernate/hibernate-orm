@@ -13,6 +13,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
@@ -229,7 +230,8 @@ public class MultitenancyGuideTests {
 			// tag::multitenancy-credentials[]
 			TenantCredentialsMapper<String> credentials = new TenantCredentialsMapper<>() {
 				@Override
-				public String user(String tenant) {
+				@Nonnull
+				public String user(@Nonnull String tenant) {
 					return switch ( tenant ) {
 						case "alpha" -> "ALPHA_USER";
 						case "beta" -> "BETA_USER";
@@ -238,7 +240,8 @@ public class MultitenancyGuideTests {
 				}
 
 				@Override
-				public String password(String tenant) {
+				@Nonnull
+				public String password(@Nonnull String tenant) {
 					return lookupPassword( user( tenant ) );
 				}
 			};

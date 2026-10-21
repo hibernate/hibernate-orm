@@ -29,6 +29,7 @@ import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
@@ -84,21 +85,21 @@ class TenantDataSourceMapperRegressionTest {
 				.applySetting( USER, credentials.user() ).applySetting( PASS, credentials.password() )
 				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER,
 						conventionalNaming ? "default" : (TenantDataSourceMapper<String>) tenant -> TENANT ).build() ) {
-			final var provider = registry.requireService( MultiTenantConnectionProvider.class );
-			final var connection = provider.getAnyConnection();
+			final var provider = registry.requireService( ConnectionProvider.class );
+			final var connection = provider.getConnection();
 			try {
 				assertFalse( connection.isClosed() );
 			}
 			finally {
-				provider.releaseAnyConnection( connection );
+				provider.closeConnection( connection );
 			}
 			assertTrue( connection.isClosed() );
-			final var tenantConnection = provider.getConnection( "tenant" );
+			final var tenantConnection = provider.getConnection( TENANT );
 			try {
 				assertFalse( tenantConnection.isClosed() );
 			}
 			finally {
-				provider.releaseConnection( "tenant", tenantConnection );
+				provider.closeConnection( tenantConnection );
 			}
 			assertTrue( tenantConnection.isClosed() );
 			assertEquals( List.of( credentials, credentials ), source.credentials );
@@ -158,11 +159,11 @@ class TenantDataSourceMapperRegressionTest {
 		builder.getSettings().remove( USER );
 		builder.getSettings().remove( PASS );
 		try ( var registry = builder.build() ) {
-			final var provider = registry.requireService( MultiTenantConnectionProvider.class );
-			final var bootstrap = provider.getAnyConnection();
-			provider.releaseAnyConnection( bootstrap );
-			final var tenant = provider.getConnection( "tenant" );
-			provider.releaseConnection( "tenant", tenant );
+			final var provider = registry.requireService( ConnectionProvider.class );
+			final var bootstrap = provider.getConnection();
+			provider.closeConnection( bootstrap );
+			final var tenant = provider.getConnection( TENANT );
+			provider.closeConnection( tenant );
 			assertTrue( bootstrap.isClosed() );
 			assertTrue( tenant.isClosed() );
 			assertEquals( 2, source.defaultConnections );
@@ -171,8 +172,8 @@ class TenantDataSourceMapperRegressionTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(booleans = { false, true })
-	void factoryBuilderCredentialsAreUsed(boolean conventionalNaming) throws Exception {
+	@CsvSource({ "false, false", "true, false", "false, true", "true, true" })
+	void factoryBuilderCredentialsAreUsed(boolean conventionalNaming, boolean readOnly) throws Exception {
 		final var source = new RecordingDataSource();
 		final var credentials = new CountingCredentialsMapper();
 		try ( var registry = registry( source, source )
@@ -182,7 +183,7 @@ class TenantDataSourceMapperRegressionTest {
 						.applyTenantCredentialsMapper( credentials ).build() ) {
 			assertEquals( 0, credentials.userCalls );
 			assertEquals( 0, credentials.passwordCalls );
-			try ( var session = factory.withOptions().tenantIdentifier( "tenant" ).openSession() ) {
+			try ( var session = factory.withOptions().tenantIdentifier( "tenant" ).readOnly( readOnly ).openSession() ) {
 				session.doWork( connection -> assertFalse( connection.isClosed() ) );
 			}
 			assertEquals( 1, credentials.userCalls );

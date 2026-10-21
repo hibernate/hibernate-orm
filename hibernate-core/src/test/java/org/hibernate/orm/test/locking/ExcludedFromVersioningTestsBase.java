@@ -8,10 +8,10 @@ import jakarta.persistence.EntityAgent;
 import jakarta.persistence.ExcludedFromVersioning;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
+
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,15 +27,21 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.dialect.generated.spi.GeneratedValuesSupport.Capability.UPDATE_RETURNING;
 
-/// Corollary to [OptimisticLockTest] using JPA's [ExcludedFromVersioning] instead of
+/// Behavioral tests for `@jakarta.persistence.ExcludedFromVersioning`, shared by an annotation-mapped
+/// variant ({@link AnnotatedExcludedFromVersioningTests}) and an XML-mapped variant
+/// ({@link XmlExcludedFromVersioningTests}). The {@link Phone}/{@link Counter} entities declared here
+/// carry `@ExcludedFromVersioning` directly; the XML variant maps the very same classes with
+/// `metadata-complete="true"`, so those annotations are ignored there and the equivalent
+/// `<exclude-from-versioning/>` orm.xml element is exercised instead.
+///
+/// Corollary to [OptimisticLockTest] using JPA's [jakarta.persistence.ExcludedFromVersioning] instead of
 /// Hibernate's [org.hibernate.annotations.OptimisticLock].
 ///
 /// @author Steve Ebersole
-@DomainModel(annotatedClasses = { ExcludedFromVersioningTests.Phone.class, ExcludedFromVersioningTests.Counter.class })
 @SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
-public class ExcludedFromVersioningTests {
-	private static final Logger log = Logger.getLogger( ExcludedFromVersioningTests.class );
+public abstract class ExcludedFromVersioningTestsBase {
+	private static final Logger log = Logger.getLogger( ExcludedFromVersioningTestsBase.class );
 
 	@AfterEach
 	void tearDown(SessionFactoryScope factoryScope) {
@@ -68,7 +74,6 @@ public class ExcludedFromVersioningTests {
 
 			log.info("Alice changes the Phone number");
 		} );
-		//end::locking-optimistic-exclude-attribute-example[]
 	}
 
 	@Test

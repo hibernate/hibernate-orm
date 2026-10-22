@@ -574,7 +574,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 				queryExpressionContext.accept( this );
 
-				insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
+				processingStateStack.push( stateFieldsProcessingState );
+				try {
+					insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
+				}
+				finally {
+					processingStateStack.pop();
+				}
 				insertStatement.validate( query );
 				return insertStatement;
 			}

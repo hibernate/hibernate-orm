@@ -40,6 +40,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.EnumeratedValue;
 
+import static java.lang.reflect.Modifier.isFinal;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
 import static org.hibernate.type.descriptor.java.TemporalJavaType.resolveJdbcTypeCode;
@@ -468,7 +469,11 @@ public class InferredBasicValueResolver {
 
 	private static void validateEnumeratedValue(Field enumeratedValueField, JdbcTypeIndicators stdIndicators) {
 		final Class<?> fieldType = enumeratedValueField.getType();
-		if ( stdIndicators.getEnumeratedType() == EnumType.STRING ) {
+		final EnumType enumeratedType = stdIndicators.getEnumeratedType();
+		if ( enumeratedType == EnumType.STRING
+				|| enumeratedType == null
+						&& String.class.equals( fieldType )
+						&& isFinal( enumeratedValueField.getModifiers() ) ) {
 			// JPA says only String is valid here
 			// todo (7.0) : support char/Character as well
 			if ( !String.class.equals( fieldType )
@@ -484,7 +489,7 @@ public class InferredBasicValueResolver {
 			}
 		}
 		else {
-			assert stdIndicators.getEnumeratedType() == null || stdIndicators.getEnumeratedType() == EnumType.ORDINAL;
+			assert enumeratedType == null || enumeratedType == EnumType.ORDINAL;
 			// JPA says only byte, short, or int are valid here
 			if ( !byte.class.equals( fieldType )
 					&& !short.class.equals( fieldType )

@@ -10,7 +10,7 @@ import jakarta.persistence.criteria.Predicate;
  *
  * @author Gavin King
  */
-record Interval<U extends Comparable<U>>(@Nonnull LowerBound<U> lowerBound, @Nonnull UpperBound<U> upperBound)
+record Interval<U extends Comparable<? super U>>(@Nonnull LowerBound<U> lowerBound, @Nonnull UpperBound<U> upperBound)
 		implements Range<U> {
 	@Nonnull
 	@Override

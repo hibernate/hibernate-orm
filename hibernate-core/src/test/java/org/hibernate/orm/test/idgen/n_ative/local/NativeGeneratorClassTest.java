@@ -8,10 +8,13 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 
+import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
+// the boot model is inspected after the SessionFactory has been created
+@ServiceRegistry(settings = @Setting(name = PersistenceSettings.RELEASE_BOOT_BINDING_STATE, value = "false"))
 @DomainModel(annotatedClasses = NativeGeneratorClassTest.NativeEntity.class)
 public class NativeGeneratorClassTest {
 	@AfterEach

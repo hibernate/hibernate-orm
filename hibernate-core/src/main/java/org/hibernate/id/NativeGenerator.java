@@ -37,7 +37,7 @@ import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
  */
 public class NativeGenerator
 		implements OnExecutionGenerator, BeforeExecutionGenerator, Configurable, ExportableProducer,
-						AnnotationBasedGenerator<org.hibernate.annotations.NativeGenerator> {
+		BulkInsertionCapableIdentifierGenerator, AnnotationBasedGenerator<org.hibernate.annotations.NativeGenerator> {
 	private GenerationType generationType;
 	private org.hibernate.annotations.NativeGenerator annotation;
 	private Generator dialectNativeGenerator;
@@ -162,5 +162,24 @@ public class NativeGenerator
 				context.getServiceRegistry()
 						.requireService( ConfigurationService.class )
 		);
+	}
+
+	@Override
+	public boolean supportsBulkInsertionIdentifierGeneration() {
+		if ( dialectNativeGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableIdentifierGenerator ) {
+			return bulkInsertionCapableIdentifierGenerator.supportsBulkInsertionIdentifierGeneration();
+		}
+
+		return false;
+	}
+
+	@Override
+	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
+		if ( dialectNativeGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableIdentifierGenerator ) {
+			return bulkInsertionCapableIdentifierGenerator.determineBulkInsertionIdentifierGenerationSelectFragment(
+					context );
+		}
+
+		return null;
 	}
 }

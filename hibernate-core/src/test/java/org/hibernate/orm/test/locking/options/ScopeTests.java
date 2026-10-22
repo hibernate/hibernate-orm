@@ -3,6 +3,7 @@ package org.hibernate.orm.test.locking.options;
 import org.hibernate.EnabledFetchProfile;
 import org.hibernate.Hibernate;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -59,6 +60,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID makes a concurrent update on the FK-child table wait on the X-locked parent row, so the lock scope this test expects does not hold")
 	void testFind(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			//tag::locking-guide-scope-normal[]
@@ -110,6 +112,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID makes a concurrent update on the FK-child table wait on the X-locked parent row, so the lock scope this test expects does not hold")
 	void testLock(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3 );
@@ -138,6 +141,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID makes a concurrent update on the FK-child table wait on the X-locked parent row, so the lock scope this test expects does not hold")
 	void testRefresh(SessionFactoryScope factoryScope) {
 
 		factoryScope.inTransaction( (session) -> {

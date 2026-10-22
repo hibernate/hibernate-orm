@@ -27,7 +27,7 @@ import jakarta.persistence.Table;
 		}
 )
 @SessionFactory
-@BytecodeEnhanced
+@BytecodeEnhanced(runNotEnhancedAsWell = true)
 public class OverriddenFieldTest {
 
 	@Test

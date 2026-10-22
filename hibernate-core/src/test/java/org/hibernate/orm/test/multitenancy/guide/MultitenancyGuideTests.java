@@ -491,11 +491,13 @@ public class MultitenancyGuideTests {
 		}
 
 		@Override
+		@Nonnull
 		public Connection getConnection() {
 			return connection;
 		}
 
 		@Override
+		@Nonnull
 		public Connection getConnection(String user, String password) {
 			this.user = user;
 			this.password = password;
@@ -503,7 +505,7 @@ public class MultitenancyGuideTests {
 		}
 
 		@Override
-		public void closeConnection(Connection connection) {}
+		public void closeConnection(@Nonnull Connection connection) {}
 
 		@Override
 		public void stop() {

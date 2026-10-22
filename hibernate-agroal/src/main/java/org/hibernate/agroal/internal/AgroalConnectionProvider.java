@@ -145,12 +145,16 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	// --- ConnectionProvider
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
-		return agroalDataSource == null ? null : agroalDataSource.getConnection();
+		if ( agroalDataSource == null ) {
+			throw new IllegalStateException( "AgroalConnectionProvider is not configured" );
+		}
+		return agroalDataSource.getConnection();
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		connection.close();
 	}
 
@@ -163,7 +167,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		final var poolConfig = agroalDataSource.getConfiguration().connectionPoolConfiguration();
 		final var connectionConfig = poolConfig.connectionFactoryConfiguration();
 		try ( var connection = agroalDataSource.getConnection() ) {

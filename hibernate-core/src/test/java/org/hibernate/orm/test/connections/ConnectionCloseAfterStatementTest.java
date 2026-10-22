@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
@@ -110,13 +111,14 @@ public class ConnectionCloseAfterStatementTest {
 		private final AtomicInteger connectionOpenEventCount = new AtomicInteger();
 
 		@Override
+		@Nonnull
 		public Connection getConnection() throws SQLException {
 			this.connectionOpenEventCount.incrementAndGet();
 			return super.getConnection();
 		}
 
 		@Override
-		public void closeConnection(Connection connection) throws SQLException {
+		public void closeConnection(@Nonnull Connection connection) throws SQLException {
 			this.connectionOpenEventCount.decrementAndGet();
 			super.closeConnection( connection );
 		}

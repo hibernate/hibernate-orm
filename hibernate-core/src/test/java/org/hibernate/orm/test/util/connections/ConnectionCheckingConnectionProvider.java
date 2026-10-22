@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 
@@ -31,6 +32,7 @@ public final class ConnectionCheckingConnectionProvider extends UserSuppliedConn
 	private final Vector<CheckedConnection> openedConnections = new Vector<>();
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		this.connectionOpenEventCount.incrementAndGet();
 		final CheckedConnection opened = new CheckedConnection( dataSource.getConnection() );
@@ -39,7 +41,7 @@ public final class ConnectionCheckingConnectionProvider extends UserSuppliedConn
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		connection.close();
 		//cast is also meant to verify we're not being returned a different implementation
 		CheckedConnection wrapper = (CheckedConnection) connection;

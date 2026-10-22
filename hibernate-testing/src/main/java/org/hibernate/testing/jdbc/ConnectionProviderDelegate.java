@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
@@ -87,12 +88,13 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		return connectionProvider.getConnection();
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		connectionProvider.closeConnection( connection );
 	}
 
@@ -103,12 +105,14 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		return connectionProvider.getDatabaseConnectionInfo( dialect );
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect, @Nonnull ExtractedDatabaseMetaData metaData) {
 		return connectionProvider.getDatabaseConnectionInfo( dialect, metaData );
 	}
 

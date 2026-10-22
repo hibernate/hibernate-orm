@@ -10,6 +10,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Hibernate;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -814,6 +815,7 @@ public class QueryCacheTest {
 		}
 
 		@Override
+		@Nonnull
 		public Connection getConnection() throws SQLException {
 			SQLException exceptionToSend = CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW.get();
 			if ( exceptionToSend != null ) {

@@ -25,6 +25,9 @@ import static org.hibernate.engine.internal.CacheHelper.usingCache;
 import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.ProxyUtil.forceInitialize;
 import static org.hibernate.engine.internal.ProxyUtil.isUninitialized;
+import static org.hibernate.dialect.lock.spi.Operation.READ;
+import static org.hibernate.dialect.lock.spi.Operation.SHARED_LOCK_READ;
+import static org.hibernate.dialect.lock.spi.Operation.UPDATE_LOCK_READ;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -249,11 +252,21 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			else {
 				// The requested lock mode is no more restrictive than the
 				// exclusive lock already held. Preserve the current mode.
-				lockOptionsToUse = lockOptions.makeCopy();
-				// The current transaction already holds an exclusive lock,
-				// so refreshing with READ is sufficient. Also see HHH-19937;
-				// we want to avoid dupe version checks.
-				lockOptionsToUse.setLockMode( LockMode.READ );
+				if ( lockingReadHasDifferentVisibility( requestedLockMode, source ) ) {
+					// Under REPEATABLE READ on MySQL (and MariaDB with innodb_snapshot_isolation off),
+					// a pessimistic locking read sees the latest committed changes. A non-locking
+					// read may instead use the snapshot established by the transaction's first
+					// consistent read, even when the transaction already holds a lock on the row.
+					// Retain an explicitly requested pessimistic lock to avoid stale state.
+					lockOptionsToUse = lockOptions;
+				}
+				else {
+					lockOptionsToUse = lockOptions.makeCopy();
+					// The current transaction already holds an exclusive lock,
+					// so refreshing with READ is sufficient. Also see HHH-19937;
+					// we want to avoid dupe version checks.
+					lockOptionsToUse.setLockMode( LockMode.READ );
+				}
 				// But prepare to reset the entry lock mode to the previous
 				// lock mode after the refresh completes, except in the case
 				// where the two lock modes belong to the same level, in which
@@ -278,6 +291,39 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			source.setReadOnly( result, isReadOnly( entry, persister, lazyInitializer, source ) );
 		}
 		return result;
+	}
+
+	/**
+	 * Conservatively retain the requested lock when the dialect guarantees a current locking read,
+	 * but does not guarantee a current ordinary read. These are guarantees for each operation;
+	 * they do not establish whether an already-held lock makes an ordinary reload safe.
+	 * Thus, the MySQL/MariaDB profiles retain the lock clause even under READ COMMITTED,
+	 * where the ordinary read uses a fresh statement snapshot and the clause may be redundant.
+	 * Other dialects reporting the same distinction are also affected.
+	 * <p>
+	 * MariaDB currently uses the MySQL resolver, which does not inspect innodb_snapshot_isolation.
+	 * We therefore retain the locking read with that setting either on or off. When it is on,
+	 * MariaDB may reject a row changed since the snapshot instead of returning its current state;
+	 * preserving the locking read preserves that conflict detection as well.
+	 * <p>
+	 * TransactionConcurrency is resolved at factory bootstrap, not for the active transaction.
+	 * It requires consistent isolation and relevant database settings across the factory's connections.
+	 * Changing those settings afterwards is not detected here and may invalidate this decision:
+	 * for example, switching a connection from SERIALIZABLE to REPEATABLE READ on MySQL could
+	 * allow the downgrade even though ordinary reads now use a transaction snapshot.
+	 */
+	private static boolean lockingReadHasDifferentVisibility(LockMode requestedLockMode, EventSource source) {
+		if ( !requestedLockMode.isPessimistic() ) {
+			return false;
+		}
+		final var concurrency = source.getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
+		final var lockingRead = requestedLockMode == LockMode.PESSIMISTIC_READ
+				&& concurrency.supports( SHARED_LOCK_READ )
+					? SHARED_LOCK_READ
+					: UPDATE_LOCK_READ;
+		return concurrency.supports( lockingRead )
+				&& concurrency.getReadGuarantees( lockingRead ).isCurrentRead()
+				&& !concurrency.getReadGuarantees( READ ).isCurrentRead();
 	}
 
 	private static boolean isReadOnly(

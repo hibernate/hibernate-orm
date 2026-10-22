@@ -3,6 +3,7 @@ package org.hibernate.query.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -321,7 +322,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		// We can assume the java types are compatible, since this is relevant for cases when using the same parameter
 		// in multiple contexts e.g. assignment or comparison.
 		return jdbcMapping1.getJdbcType() == jdbcMapping2.getJdbcType()
-				&& jdbcMapping1.getValueConverter() == jdbcMapping2.getValueConverter();
+				&& Objects.equals( jdbcMapping1.getValueConverter(), jdbcMapping2.getValueConverter() );
 	}
 
 	private <V> void clarifyType(Object valueOrValues, BindableType<V> clarifiedType) {

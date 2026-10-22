@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -96,6 +97,7 @@ public class QualifiedTableNamingTest {
 		private Connection connection;
 
 		@Override
+		@Nonnull
 		public Connection getConnection() throws SQLException {
 			if (connection == null) {
 				connection = JdbcMocks.createConnection( "db1", 0 );
@@ -104,7 +106,7 @@ public class QualifiedTableNamingTest {
 		}
 
 		@Override
-		public void closeConnection(Connection connection) {
+		public void closeConnection(@Nonnull Connection connection) {
 		}
 
 		@Override

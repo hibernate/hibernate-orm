@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 import java.util.UUID;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
@@ -223,6 +224,7 @@ public class DatabaseAccessGuideTests {
 		int requests;
 
 		@Override
+		@Nonnull
 		public Connection getConnection() {
 			requests++;
 			throw new AssertionError( "Bootstrap must not acquire a connection" );

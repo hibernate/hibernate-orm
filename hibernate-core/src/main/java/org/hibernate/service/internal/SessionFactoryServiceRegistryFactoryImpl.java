@@ -16,7 +16,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
  * @author Steve Ebersole
  */
 public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryServiceRegistryFactory {
-	private final ServiceRegistryImplementor theBasicServiceRegistry;
+	private final @Nonnull ServiceRegistryImplementor theBasicServiceRegistry;
 
 	public SessionFactoryServiceRegistryFactoryImpl(@Nonnull ServiceRegistryImplementor theBasicServiceRegistry) {
 		this.theBasicServiceRegistry = theBasicServiceRegistry;
@@ -34,4 +34,5 @@ public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryS
 		}
 		return builder.buildSessionFactoryServiceRegistry( sessionFactory, options );
 	}
+
 }

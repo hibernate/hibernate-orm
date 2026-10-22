@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.RollbackException;
@@ -122,6 +124,7 @@ public class TransactionCommitFailureTest {
 		}
 
 		@Override
+		@Nonnull
 		public Connection getConnection() throws SQLException {
 			Connection delegate = super.getConnection();
 			connectionIsOpen.set( true );
@@ -133,7 +136,7 @@ public class TransactionCommitFailureTest {
 		}
 
 		@Override
-		public void closeConnection(Connection connection) throws SQLException {
+		public void closeConnection(@Nonnull Connection connection) throws SQLException {
 			final ConnectionInvocationHandler handler = (ConnectionInvocationHandler)
 					Proxy.getInvocationHandler( connection );
 			super.closeConnection( handler.delegate );

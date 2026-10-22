@@ -35,8 +35,8 @@ public class BaseDataSource implements DataSource {
 	}
 
 	@Override
-	public Connection getConnection(String username, String password) {
-		throw new UnsupportedOperationException( "method not supported" );
+	public Connection getConnection(String username, String password) throws SQLException {
+		return DriverManager.getConnection( url, username == null ? null : resolveUsername( username ), password );
 	}
 
 	@Override

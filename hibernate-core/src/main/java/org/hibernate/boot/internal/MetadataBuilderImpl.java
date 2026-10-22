@@ -640,7 +640,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
 			wrapperArrayHandling = resolveWrapperArrayHandling( configService );
-			multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
+			multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry )
+					|| MultiTenancy.getTenantDataSourceMapper( configService.getSettings(), serviceRegistry ) != null;
 
 			xmlMappingEnabled = configService.getSetting(
 					XML_MAPPING_ENABLED,

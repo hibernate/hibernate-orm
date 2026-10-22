@@ -1,5 +1,6 @@
 package org.hibernate.tool.reveng.internal.core.dialect;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.AfterEach;
@@ -35,11 +36,12 @@ public class H2MetaDataDialectTest {
 
 		ConnectionProvider connectionProvider = new ConnectionProvider() {
 			@Override
+			@Nonnull
 			public Connection getConnection() throws SQLException {
 				return DriverManager.getConnection(JDBC_URL, "sa", "");
 			}
 			@Override
-			public void closeConnection(Connection connection) throws SQLException {
+			public void closeConnection(@Nonnull Connection connection) throws SQLException {
 				connection.close();
 			}
 			@Override
@@ -138,11 +140,12 @@ public class H2MetaDataDialectTest {
 		H2MetaDataDialect freshDialect = new H2MetaDataDialect();
 		ConnectionProvider cp = new ConnectionProvider() {
 			@Override
+			@Nonnull
 			public Connection getConnection() throws SQLException {
 				return DriverManager.getConnection(JDBC_URL, "sa", "");
 			}
 			@Override
-			public void closeConnection(Connection connection) throws SQLException {
+			public void closeConnection(@Nonnull Connection connection) throws SQLException {
 				connection.close();
 			}
 			@Override

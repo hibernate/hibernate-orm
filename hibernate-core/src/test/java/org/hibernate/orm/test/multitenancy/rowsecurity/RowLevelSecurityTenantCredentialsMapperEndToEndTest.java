@@ -418,6 +418,7 @@ class RowLevelSecurityTenantCredentialsMapperEndToEndTest {
 		}
 
 		@Override
+		@Nonnull
 		public Connection getConnection(String user, String password) throws SQLException {
 			final var tenantConnectionProperties = new Properties();
 			tenantConnectionProperties.putAll( connectionProperties );
@@ -443,7 +444,7 @@ class RowLevelSecurityTenantCredentialsMapperEndToEndTest {
 		}
 
 		@Override
-		public void closeConnection(Connection connection) throws SQLException {
+		public void closeConnection(@Nonnull Connection connection) throws SQLException {
 			if ( tenantConnections.remove( connection ) ) {
 				connection.close();
 			}

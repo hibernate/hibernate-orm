@@ -1,5 +1,6 @@
 package org.hibernate.tool.ant.test.utils;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 
 import java.io.Serial;
@@ -28,9 +29,10 @@ public class ConnectionProvider extends UserSuppliedConnectionProviderImpl {
 	private static final Connection CONNECTION = new Connection();
 	private static final DatabaseMetaData DATABASE_META_DATA = new DatabaseMetaData();
 
-	@Override public java.sql.Connection getConnection() { return CONNECTION; }
+	@Override @Nonnull
+	public java.sql.Connection getConnection() { return CONNECTION; }
 
-	@Override public void closeConnection(java.sql.Connection conn) {}
+	@Override public void closeConnection(@Nonnull java.sql.Connection conn) {}
 
 	private static class Connection implements java.sql.Connection {
 		@Override public <T> T unwrap(Class<T> iface) { return null; }

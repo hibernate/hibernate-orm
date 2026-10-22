@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -24,6 +25,7 @@ public class SQLServerSnapshotIsolationConnectionProvider
 	private String dbName = null;
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		Connection connection = super.getConnection();
 		try(Statement statement = connection.createStatement()) {

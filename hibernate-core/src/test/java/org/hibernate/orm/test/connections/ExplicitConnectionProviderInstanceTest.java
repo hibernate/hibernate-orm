@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.connections;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -38,12 +39,13 @@ public class ExplicitConnectionProviderInstanceTest  {
 		public static final TestingConnectionProviderImpl INSTANCE = new TestingConnectionProviderImpl();
 
 		@Override
+		@Nonnull
 		public Connection getConnection() throws SQLException {
-			return null;
+			throw new UnsupportedOperationException( "Testing" );
 		}
 
 		@Override
-		public void closeConnection(Connection connection) {
+		public void closeConnection(@Nonnull Connection connection) {
 		}
 
 		@Override

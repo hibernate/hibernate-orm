@@ -3,6 +3,7 @@ package org.hibernate.engine.jdbc.connections.spi;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
@@ -39,6 +40,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem opening a connection
 	 * @throws org.hibernate.HibernateException Indicates a problem obtaining a connection.
 	 */
+	@Nonnull
 	Connection getConnection() throws SQLException;
 
 	/**
@@ -55,6 +57,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @since 7.3
 	 */
 	@Incubating(since = "7.3")
+	@Nonnull
 	default Connection getConnection(String user, String password) throws SQLException {
 		throw new UnsupportedOperationException(
 				"ConnectionProvider does not support contextual credentials: "
@@ -71,6 +74,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @since 8.0
 	 */
 	@Incubating(since = "8.0")
+	@Nonnull
 	default Connection getConnection(String dataSourceName) throws SQLException {
 		throw new UnsupportedOperationException( "ConnectionProvider does not support named data sources: "
 				+ getClass().getTypeName() );
@@ -86,6 +90,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @since 8.0
 	 */
 	@Incubating(since = "8.0")
+	@Nonnull
 	default Connection getConnection(String dataSourceName, String user, String password) throws SQLException {
 		throw new UnsupportedOperationException( "ConnectionProvider does not support named data sources with contextual credentials: "
 				+ getClass().getTypeName() );
@@ -99,6 +104,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @since 8.0
 	 */
 	@Incubating(since = "8.0")
+	@Nonnull
 	default Connection getReadOnlyConnection(String dataSourceName) throws SQLException {
 		return getConnection( dataSourceName );
 	}
@@ -111,6 +117,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @since 8.0
 	 */
 	@Incubating(since = "8.0")
+	@Nonnull
 	default Connection getReadOnlyConnection(String dataSourceName, String user, String password) throws SQLException {
 		return getConnection( dataSourceName, user, password );
 	}
@@ -132,6 +139,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @since 7.2
 	 */
 	@Incubating(since = "7.2")
+	@Nonnull
 	default Connection getReadOnlyConnection() throws SQLException {
 		return getConnection();
 	}
@@ -144,7 +152,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem closing the connection
 	 * @throws org.hibernate.HibernateException Indicates a problem releasing a connection.
 	 */
-	void closeConnection(Connection connection) throws SQLException;
+	void closeConnection(@Nonnull Connection connection) throws SQLException;
 
 	/**
 	 * Release a connection to a read-only replica from Hibernate use.
@@ -163,7 +171,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @since 7.2
 	 */
 	@Incubating(since = "7.2")
-	default void closeReadOnlyConnection(Connection connection) throws SQLException {
+	default void closeReadOnlyConnection(@Nonnull Connection connection) throws SQLException {
 		closeConnection( connection );
 	}
 
@@ -218,7 +226,8 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 *
 	 * @since 6.6
 	 */
-	default DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+	@Nonnull
+	default DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		return new DatabaseConnectionInfoImpl( dialect );
 	}
 
@@ -227,7 +236,8 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 *
 	 * @since 7.0
 	 */
-	default DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+	@Nonnull
+	default DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect, @Nonnull ExtractedDatabaseMetaData metaData) {
 		return getDatabaseConnectionInfo( dialect );
 	}
 }

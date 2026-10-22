@@ -279,6 +279,7 @@ public class DriverManagerConnectionProvider
 	// use the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		if ( state == null ) {
 			throw new IllegalStateException( "Cannot get a connection as the driver manager is not properly initialized" );
@@ -287,7 +288,7 @@ public class DriverManagerConnectionProvider
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		if ( state == null ) {
 			throw new IllegalStateException( "Cannot close a connection as the driver manager is not properly initialized" );
 		}
@@ -300,7 +301,8 @@ public class DriverManagerConnectionProvider
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
 				DriverManagerConnectionProvider.class,
 				dbInfo.getJdbcUrl(),

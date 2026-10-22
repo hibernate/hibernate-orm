@@ -1,5 +1,6 @@
 package org.hibernate.tool.hbm2ddl;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.jspecify.annotations.NonNull;
@@ -36,11 +37,12 @@ public class SuppliedConnectionProviderConnectionHelperTest {
 	private ConnectionProvider stubProvider() {
 		return new ConnectionProvider() {
 			@Override
+			@Nonnull
 			public Connection getConnection() {
 				return rawConnection;
 			}
 			@Override
-			public void closeConnection(Connection connection) throws SQLException {
+			public void closeConnection(@Nonnull Connection connection) throws SQLException {
 				// don't actually close — we manage lifecycle in tearDown
 			}
 			@Override

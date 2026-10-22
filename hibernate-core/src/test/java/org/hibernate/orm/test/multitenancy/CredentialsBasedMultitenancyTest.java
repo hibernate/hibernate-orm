@@ -85,6 +85,7 @@ public class CredentialsBasedMultitenancyTest {
 
 	public static class MyConnectionProvider extends DriverManagerConnectionProvider {
 		@Override
+		@Nonnull
 		public Connection getConnection(String user, String password) throws SQLException {
 			assertEquals( user, currentTenantIdentifier );
 			assertEquals( password, currentTenantIdentifier );

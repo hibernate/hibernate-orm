@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.jdbc.JdbcSpies;
@@ -30,6 +31,7 @@ public class PreparedStatementSpyConnectionProvider extends GradleParallelTestin
 	}
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		Connection connection = spy( actualConnection() );
 		acquiredConnections.add( connection );
@@ -37,7 +39,7 @@ public class PreparedStatementSpyConnectionProvider extends GradleParallelTestin
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		acquiredConnections.remove( connection );
 		releasedConnections.add( connection );
 		super.closeConnection( spyContext.getSpiedInstance( connection ) );

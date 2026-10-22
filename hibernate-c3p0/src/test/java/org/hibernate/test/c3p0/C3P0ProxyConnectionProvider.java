@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.sql.DataSource;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 
 import org.hibernate.testing.util.ReflectionUtil;
@@ -49,7 +50,7 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		final Connection originalConnection = connectionSpyMap.get( connection );
 		super.closeConnection( originalConnection != null ? originalConnection : connection);
 	}

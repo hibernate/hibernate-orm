@@ -95,6 +95,7 @@ public class C3P0ConnectionProvider
 	private ServiceRegistryImplementor serviceRegistry;
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		final var connection = dataSource.getConnection();
 		prepareConnection( connection );
@@ -102,6 +103,7 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
+	@Nonnull
 	public Connection getConnection(String user, String password) throws SQLException {
 		final var connection = dataSource.getConnection( user, password );
 		prepareConnection( connection );
@@ -118,7 +120,7 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		connection.close();
 	}
 
@@ -303,7 +305,8 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		return dbInfoProducer.apply( dialect );
 	}
 

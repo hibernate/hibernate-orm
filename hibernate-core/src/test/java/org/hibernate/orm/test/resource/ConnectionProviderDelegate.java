@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.resource;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -105,6 +106,7 @@ public class ConnectionProviderDelegate implements
 	HashMap<Connection, ConnectionWrapper> xref = new HashMap<>();
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		final var connection = connectionProvider.getConnection();
 		ConnectionWrapper connectionWrapper = xref.get( connection );
@@ -116,7 +118,7 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		connectionProvider.closeConnection( ((ConnectionWrapper) connection).delegate );
 	}
 
@@ -127,7 +129,8 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		return connectionProvider.getDatabaseConnectionInfo( dialect );
 	}
 

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
@@ -65,6 +66,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	}
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		Connection connection = instrumentConnection( actualConnection() );
 		acquiredConnections.add( connection );
@@ -72,7 +74,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		acquiredConnections.remove( connection );
 		releasedConnections.add( connection );
 		super.closeConnection( spyContext.getSpiedInstance( connection ) );

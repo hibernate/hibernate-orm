@@ -8,6 +8,7 @@ import javax.naming.Context;
 import javax.sql.DataSource;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.context.spi.MultiTenancy;
@@ -197,6 +198,7 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		if ( !available ) {
 			throw new HibernateException( "Provider is closed" );
@@ -207,6 +209,7 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
+	@Nonnull
 	public Connection getConnection(String user, String password) throws SQLException {
 		if ( !available ) {
 			throw new HibernateException( "Provider is closed" );
@@ -215,6 +218,7 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
+	@Nonnull
 	public Connection getConnection(String dataSourceName) throws SQLException {
 		if ( !available ) {
 			throw new HibernateException( "Provider is closed" );
@@ -226,6 +230,7 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
+	@Nonnull
 	public Connection getConnection(String dataSourceName, String user, String password) throws SQLException {
 		if ( !available ) {
 			throw new HibernateException( "Provider is closed" );
@@ -235,7 +240,7 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		connection.close();
 	}
 
@@ -245,27 +250,23 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
-		return getDatabaseConnectionInfo( dialect, null );
-	}
-
-	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
 				DataSourceConnectionProvider.class,
-				metaData == null ? null : metaData.getUrl(),
-				metaData == null ? null : metaData.getDriver(),
+				null,
+				null,
 				dialect.getClass(),
 				dialect.getVersion(),
-				metaData == null || metaData.supportsSchemas(),
-				metaData == null || metaData.supportsCatalogs(),
-				metaData == null ? null : metaData.getConnectionSchemaName(),
-				metaData == null ? null : metaData.getConnectionCatalogName(),
-				null,
-				metaData == null ? null : isolationString( metaData ),
+				true,
+				true,
 				null,
 				null,
-				metaData != null ? fetchSize( metaData ) : null
+				null,
+				null,
+				null,
+				null,
+				null
 		) {
 			@Override
 			public String toInfoString() {
@@ -276,12 +277,42 @@ public class DataSourceConnectionProvider
 		};
 	}
 
-	private static Integer fetchSize(ExtractedDatabaseMetaData metaData) {
+	@Override
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect, @Nonnull ExtractedDatabaseMetaData metaData) {
+		return new DatabaseConnectionInfoImpl(
+				DataSourceConnectionProvider.class,
+				metaData.getUrl(),
+				metaData.getDriver(),
+				dialect.getClass(),
+				dialect.getVersion(),
+				metaData.supportsSchemas(),
+				metaData.supportsCatalogs(),
+				metaData.getConnectionSchemaName(),
+				metaData.getConnectionCatalogName(),
+				null,
+				isolationString( metaData ),
+				null,
+				null,
+				fetchSize( metaData )
+		) {
+			@Override
+			public String toInfoString() {
+				return dataSourceJndiName != null
+						? "\tDataSource JNDI name [" + dataSourceJndiName + "]\n" + super.toInfoString()
+						: super.toInfoString();
+			}
+		};
+	}
+
+	@Nullable
+	private static Integer fetchSize(@Nonnull ExtractedDatabaseMetaData metaData) {
 		final int defaultFetchSize = metaData.getDefaultFetchSize();
 		return defaultFetchSize == -1 ? null : defaultFetchSize;
 	}
 
-	private String isolationString(ExtractedDatabaseMetaData metaData) {
+	@Nonnull
+	private String isolationString(@Nonnull ExtractedDatabaseMetaData metaData) {
 		return toIsolationNiceName( metaData.getTransactionIsolation() )
 			+ " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]";
 	}

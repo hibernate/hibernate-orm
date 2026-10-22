@@ -19,12 +19,19 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Brett Meyer
  */
 public class AgroalConnectionProviderTest {
+
+	@Test
+	public void testGetConnectionBeforeConfigure() {
+		var provider = new AgroalConnectionProvider();
+		assertThrows( IllegalStateException.class, provider::getConnection );
+	}
 
 	@Test
 	@ServiceRegistry

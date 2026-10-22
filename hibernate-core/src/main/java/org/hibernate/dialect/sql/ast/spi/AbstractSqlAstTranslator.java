@@ -75,7 +75,6 @@ import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.spi.SqlAstNode;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.sql.ast.spi.analysis.AggregateFunctionChecker;
 import org.hibernate.sql.ast.spi.translation.Clause;
@@ -184,6 +183,7 @@ import org.hibernate.sql.ast.spi.query.update.Assignable;
 import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.ExecutionException;
+import org.hibernate.sql.exec.internal.FilterJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.LimitJdbcParameter;
 import org.hibernate.sql.exec.internal.OffsetJdbcParameter;
@@ -9266,78 +9266,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		appendSql( sqlFragment.substring( startPosition, markerStart ) );
 
-		final Object value = parameter.getValue();
-		final JdbcMapping valueMapping = parameter.getValueMapping();
-
 		if ( parameter.getJdbcParameter() != null ) {
 			visitParameterAsParameter( parameter.getJdbcParameter() );
 		}
-		else if ( value instanceof Iterable<?> iterable
-				&& !valueMapping.getJavaTypeDescriptor().isInstance( value ) ) {
-			processIterableFilterParameterValue( valueMapping, iterable.iterator() );
-		}
 		else {
-			processSingularFilterParameterValue( valueMapping, value );
+			final var jdbcParameters = parameter.getFilterJdbcParameters();
+			for ( int i = 0; i < jdbcParameters.size(); i++ ) {
+				if ( i > 0 ) {
+					appendSql( ',' );
+				}
+				visitParameterAsParameter( jdbcParameters.get( i ) );
+			}
 		}
 
 		return markerStart + marker.length();
-	}
-
-	private void processSingularFilterParameterValue(JdbcMapping valueMapping, Object value) {
-		visitParameterAsParameter( new FilterJdbcParameter( valueMapping, value ) );
-	}
-
-	private void processIterableFilterParameterValue(JdbcMapping valueMapping, Iterator<?> iterator) {
-		while ( iterator.hasNext() ) {
-			processSingularFilterParameterValue( valueMapping, iterator.next() );
-			if ( iterator.hasNext() ) {
-				appendSql( "," );
-			}
-		}
-	}
-
-	private static final class FilterJdbcParameter implements JdbcParameter, JdbcParameterBinder {
-		private final JdbcMapping jdbcMapping;
-		private final Object jdbcParameterValue;
-
-		private FilterJdbcParameter(JdbcMapping jdbcMapping, Object jdbcParameterValue) {
-			this.jdbcMapping = jdbcMapping;
-			this.jdbcParameterValue = jdbcParameterValue;
-		}
-
-		@Override
-		public JdbcParameterBinder getParameterBinder() {
-			return this;
-		}
-
-		@Override
-		public void bindParameterValue(
-				PreparedStatement statement,
-				int startPosition,
-				JdbcParameterBindings jdbcParameterBindings,
-				ExecutionContext executionContext) throws SQLException {
-			jdbcMapping.getJdbcValueBinder().bind(
-					statement,
-					jdbcMapping.convertToRelationalValue( jdbcParameterValue ),
-					startPosition,
-					executionContext.getSession()
-			);
-		}
-
-		@Override
-		public JdbcMappingContainer getExpressionType() {
-			return jdbcMapping;
-		}
-
-		@Override
-		public @Nullable Integer getParameterId() {
-			return null;
-		}
-
-		@Override
-		public void accept(SqlAstWalker sqlTreeWalker) {
-			throw new IllegalStateException();
-		}
 	}
 
 	@Override

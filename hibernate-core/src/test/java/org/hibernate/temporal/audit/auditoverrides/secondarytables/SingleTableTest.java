@@ -1,0 +1,146 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.temporal.audit.auditoverrides.secondarytables;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.Table;
+import org.hibernate.SharedSessionContract;
+import org.hibernate.annotations.Audited;
+import org.hibernate.audit.AuditLog;
+import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.mapping.Column;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collection;
+import java.util.function.Consumer;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+
+@SessionFactory
+@DomainModel(annotatedClasses = {
+		SingleTableTest.Base.class,
+		SingleTableTest.Sub.class,
+})
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
+		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
+public class SingleTableTest {
+	private static int currentTxId;
+
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
+		@Override
+		public Integer generateIdentifier(SharedSessionContract session) {
+			return ++currentTxId;
+		}
+	}
+
+
+	@MappedSuperclass
+	@Audited
+	static class UpperMSCThatAuditsAProperty {
+
+		@Id
+		long id;
+
+		@Audited.Excluded
+		@jakarta.persistence.Column(name = "str1", table = "secondary_table")
+		String str1;
+
+		@jakarta.persistence.Column(name = "str2", table = "secondary_table")
+		String str2;
+
+	}
+	@MappedSuperclass
+	@Audited.Overrides( @Audited.Override(name = "str1", isAudited = false) )
+	static class LowerMSCThatExcludesTheProperty extends UpperMSCThatAuditsAProperty {
+
+
+	}
+	@Entity(name = "Base")
+	@Table
+	@SecondaryTable(
+			name = "secondary_table",
+			pkJoinColumns = @PrimaryKeyJoinColumn(name = "base_id")
+	)
+	static class Base extends LowerMSCThatExcludesTheProperty {
+
+	}
+	@MappedSuperclass
+	@Audited.Overrides(
+			{@Audited.Override(name = "str1", isAudited = true)} // <-- revocation of str1
+	)
+	static class UpperSecondMSCThatRevokesTheExclusion extends Base {
+
+	}
+	@MappedSuperclass
+	@Audited.Overrides(
+			{@Audited.Override(name = "str2", isAudited = false)} // <-- exclusion of str2
+	)
+
+	static class LowerSecondMSCThatDoesNothing extends UpperSecondMSCThatRevokesTheExclusion{
+
+	}
+	@Entity(name = "Sub")
+	static class Sub extends LowerSecondMSCThatDoesNothing {
+
+	}
+	@Test
+	public void twoGroups(DomainModelScope domainModelScope, SessionFactoryScope scope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		assertTable( tables, "secondary_table_AUD", table -> {
+			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+			assertTrue( table.containsColumn( new Column( "str2" ) ) );
+		} );
+		scope.inTransaction( s -> {
+			var baseEntity = new Base();
+			baseEntity.id = 0;
+			baseEntity.str1 = "v";
+			baseEntity.str2 = "w";
+			s.persist( baseEntity );
+
+			var subEntity = new Sub();
+			subEntity.id = 1;
+			subEntity.str1 = "v";
+			subEntity.str2 = "w";
+			s.persist( subEntity );
+		} );
+
+		scope.inTransaction( s -> {
+			var statelessSession = s.getSessionFactory().withStatelessOptions().atChangeset( AuditLog.ALL_CHANGESETS )
+					.openStatelessSession();
+			var auditedBase = statelessSession.createSelectionQuery("from Base b where Type(b) = Base", Base.class).getSingleResult();
+			assertNull( auditedBase.str1 );
+			assertNotNull( auditedBase.str2 );
+
+			var auditedSub = statelessSession.createSelectionQuery("from Sub", Sub.class).getSingleResult();
+			assertNotNull( auditedSub.str1 );
+			assertNull( auditedSub.str2 );
+		} );
+	}
+
+	public static void assertTable(Collection<org.hibernate.mapping.Table> tables, String tableName, Consumer<org.hibernate.mapping.Table> consumer) {
+		var tableFound = false;
+		for ( var table : tables ) {
+			if ( table.getName().equals( tableName ) ) {
+				tableFound = true;
+				consumer.accept( table );
+			}
+		}
+		assertTrue( tableFound, () -> "Table %s not found. Available tables: %s".formatted( tableName, tables ) );
+	}
+}

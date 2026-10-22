@@ -18,6 +18,12 @@ public final class EnhancerConstants {
 	public static final String PERSISTENT_FIELD_WRITER_PREFIX = "$$_hibernate_write_";
 
 	/**
+	 * Prefix for raw persistent-field writer methods used by lazy loading of final fields.
+	 * These methods primarily initialize an unfetched field, but may overwrite it on later intercepted reads.
+	 */
+	public static final String PERSISTENT_FIELD_RAW_WRITER_PREFIX = "$$_hibernate_raw_write_";
+
+	/**
 	 * Name of the method used to get reference of the entity instance (this in the case of enhanced classes).
 	 */
 	public static final String ENTITY_INSTANCE_GETTER_NAME = "$$_hibernate_getEntityInstance";

@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -25,6 +24,7 @@ import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -45,6 +45,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler<?> keyAssembler;
+	protected final EntityValuedFetchable referencedModelPart;
 	protected final ToOneAttributeMapping toOneMapping;
 	protected final boolean affectedByFilter;
 	protected final boolean keyIsEager;
@@ -69,7 +70,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	public EntitySelectFetchInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping toOneMapping,
+			EntityValuedFetchable referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
@@ -77,7 +78,8 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.parent = parent;
-		this.toOneMapping = toOneMapping;
+		this.referencedModelPart = referencedModelPart;
+		this.toOneMapping = referencedModelPart instanceof ToOneAttributeMapping ? (ToOneAttributeMapping) referencedModelPart : null;
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
 		this.affectedByFilter = affectedByFilter;
@@ -95,8 +97,8 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		return new EntitySelectFetchInitializerData( this, rowProcessingState );
 	}
 
-	public ModelPart getInitializedPart(){
-		return toOneMapping;
+	public EntityValuedFetchable getInitializedPart(){
+		return referencedModelPart;
 	}
 
 	@Override
@@ -250,7 +252,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 				entityName,
 				data.entityIdentifier,
 				true,
-				toOneMapping.isInternalLoadNullable()
+				referencedModelPart.isInternalLoadNullable()
 		);
 		data.setInstance( instance );
 
@@ -264,7 +266,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			);
 		}
 
-		final boolean unwrapProxy = toOneMapping.isUnwrapProxy() && isEnhancedForLazyLoading;
+		final boolean unwrapProxy = referencedModelPart.isUnwrapProxy() && isEnhancedForLazyLoading;
 		final var lazyInitializer = extractLazyInitializer( data.getInstance() );
 		if ( lazyInitializer != null ) {
 			lazyInitializer.setUnwrap( unwrapProxy );
@@ -272,13 +274,13 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	void checkNotFound(EntitySelectFetchInitializerData data) {
-		checkNotFound( toOneMapping, affectedByFilter,
+		checkNotFound( referencedModelPart, affectedByFilter,
 				concreteDescriptor.getEntityName(),
 				data.entityIdentifier );
 	}
 
 	static void checkNotFound(
-			ToOneAttributeMapping toOneMapping,
+			EntityValuedFetchable toOneMapping,
 			boolean affectedByFilter,
 			String entityName, Object identifier) {
 		final var notFoundAction = toOneMapping.getNotFoundAction();

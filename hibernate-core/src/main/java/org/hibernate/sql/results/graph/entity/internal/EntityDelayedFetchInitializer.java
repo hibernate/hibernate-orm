@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -27,6 +26,7 @@ import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
@@ -49,7 +49,7 @@ public class EntityDelayedFetchInitializer
 	private final InitializerParent<?> parent;
 	private final NavigablePath navigablePath;
 	private final boolean isPartOfKey;
-	private final ToOneAttributeMapping referencedModelPart;
+	private final EntityValuedFetchable referencedModelPart;
 	private final boolean selectByUniqueKey;
 	private final DomainResultAssembler<?> identifierAssembler;
 	private final @Nullable BasicResultAssembler<?> discriminatorAssembler;
@@ -68,7 +68,7 @@ public class EntityDelayedFetchInitializer
 	public EntityDelayedFetchInitializer(
 			InitializerParent<?> parent,
 			NavigablePath fetchedNavigable,
-			ToOneAttributeMapping referencedModelPart,
+			EntityValuedFetchable referencedModelPart,
 			boolean selectByUniqueKey,
 			DomainResult<?> keyResult,
 			@Nullable BasicFetch<?> discriminatorResult,

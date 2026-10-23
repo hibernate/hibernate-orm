@@ -23,6 +23,37 @@ import static org.hibernate.SPI.Role.USE;
 @Incubating(since = "6.0", group = "sql-execution")
 @SPI({ USE, SUPPLY })
 public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
+	/// Creates the invocation-local secondary-action runner. Obtain one runner
+	/// per invocation and retain it for pre-actions, post-actions, and failure cleanup.
+	///
+	/// The default adapter invokes the legacy callbacks. Implementations using
+	/// stateful action definitions must override it to materialize execution instances.
+	default JdbcActionExecution createActionExecution() {
+		return new JdbcActionExecution() {
+			private boolean started;
+			private boolean finished;
+
+			@Override
+			public void performPreActions(StatementAccess access, Connection connection, ExecutionContext context) {
+				if ( started || finished ) {
+					throw new IllegalStateException( "Action execution is single-use" );
+				}
+				started = true;
+				JdbcSelect.this.performPreActions( access, connection, context );
+			}
+
+			@Override
+			public void performPostActions(
+					boolean succeeded, StatementAccess access, Connection connection,
+					ExecutionContext context, LoadedValuesCollector collector) {
+				if ( !finished ) {
+					finished = true;
+					JdbcSelect.this.performPostActions( succeeded, access, connection, context, collector );
+				}
+			}
+		};
+	}
+
 	JdbcValuesMappingProducer getJdbcValuesMappingProducer();
 
 	/// Which stage owns pessimistic locking for this execution plan.
@@ -64,7 +95,13 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	 * @param jdbcStatementAccess Access to a JDBC Statement object which may be used to perform the action.
 	 * @param jdbcConnection The JDBC Connection.
 	 * @param executionContext Access to contextual information useful while executing.
+	 *
+	 * @deprecated Obtain an invocation-local runner from {@link #createActionExecution()}
+	 * and invoke {@link JdbcActionExecution#performPreActions} on it. Retain that same
+	 * runner for post-actions and failure cleanup; direct invocation may access cached
+	 * action definitions that cannot hold execution state.
 	 */
+	@Deprecated(since = "8.0")
 	void performPreActions(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext);
 
 	/**
@@ -78,8 +115,16 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	 * @param jdbcStatementAccess Access to a JDBC Statement object which may be used to perform the action.
 	 * @param jdbcConnection The JDBC Connection.
 	 * @param executionContext Access to contextual information useful while executing.
-	 * @param loadedValuesCollector Access to the collector of values loaded as part of the primary operation.  This is useful for post-actions that need to know what was loaded in order to perform their work.
+	 * @param loadedValuesCollector Access to the collector of values loaded as part of the primary operation.
+	 * This is useful for post-actions that need to know what was loaded in order to perform their work.
+	 *
+	 * @deprecated Use the same invocation-local runner obtained from
+	 * {@link #createActionExecution()} for pre-actions. Invoke
+	 * {@link JdbcActionExecution#performPostActions} on success, or
+	 * {@link JdbcActionExecution#cleanupAfterFailure} with the original exception on
+	 * failure. Do not create another runner for this phase.
 	 */
+	@Deprecated(since = "8.0")
 	void performPostActions(
 			boolean succeeded,
 			StatementAccess jdbcStatementAccess,

@@ -26,6 +26,30 @@ public interface UnsavedValueStrategy {
 	@Nullable Boolean isUnsaved(@Nullable Object test);
 
 	/**
+	 * Make the transient/detached determination with access to entity context.
+	 * <p>
+	 * This variant allows strategies to consider the entity instance and session when determining
+	 * unsaved status. This is particularly useful for generators that implement mixed-timing patterns
+	 * where the timing of ID generation can vary per-instance.
+	 * <p>
+	 * The default implementation delegates to {@link #isUnsaved(Object)} for backward compatibility.
+	 * Implementations that need entity/session context should override this method.
+	 *
+	 * @param test The value to be tested
+	 * @param entity The entity instance
+	 * @param session The session
+	 *
+	 * @return {@code true} indicates the value corresponds to unsaved data (aka, transient state); {@code false}
+	 * indicates the value does not corresponds to unsaved data (aka, detached state); {@code null} indicates that
+	 * this strategy was not able to determine conclusively.
+	 *
+	 * @since 6.6
+	 */
+	default @Nullable Boolean isUnsaved(@Nullable Object test, @Nullable Object entity, @Nullable SharedSessionContractImplementor session) {
+		return isUnsaved( test );
+	}
+
+	/**
 	 * Get a default value meant to indicate transience.
 	 *
 	 * @param currentValue The current state value.

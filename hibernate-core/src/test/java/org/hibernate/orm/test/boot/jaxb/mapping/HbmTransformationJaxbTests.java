@@ -907,6 +907,37 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20975" )
+	public void testListIndexBaseTransformation(ServiceRegistryScope scope) {
+		// <list-index base="1"/> has no equivalent attribute on <order-column/> in mapping.xml;
+		// it must be transferred as the sibling <list-index-base/> element instead. The <key/>
+		// also uses property-ref, targeting the owning entity's alternate key rather than its PK.
+		transformAndVerify( "xml/jaxb/mapping/list-index-base/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl noteEntity = transformed.getEntities().get( 0 );
+			assertThat( noteEntity.getAttributes().getElementCollectionAttributes() ).hasSize( 1 );
+
+			final var items = noteEntity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( items.getName() ).isEqualTo( "items" );
+			assertThat( items.getOrderColumn() ).isNotNull();
+			assertThat( items.getOrderColumn().getName() ).isEqualTo( "position" );
+			assertThat( items.getListIndexBase() )
+					.as( "<list-index base='1'/> should be transferred as <list-index-base>1</list-index-base>" )
+					.isEqualTo( 1 );
+
+			final var collectionTable = items.getCollectionTable();
+			assertThat( collectionTable ).isNotNull();
+			assertThat( collectionTable.getJoinColumns() ).hasSize( 1 );
+			final var keyJoinColumn = collectionTable.getJoinColumns().get( 0 );
+			assertThat( keyJoinColumn.getName() ).isEqualTo( "note_id" );
+			assertThat( keyJoinColumn.getReferencedColumnName() )
+					.as( "Collection <key property-ref='altKey'> should reference the alternate-key column" )
+					.isEqualTo( "alt_key" );
+		} );
+	}
+
+	@Test
 	public void testElementCollectionNotNullTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/element-not-null/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );

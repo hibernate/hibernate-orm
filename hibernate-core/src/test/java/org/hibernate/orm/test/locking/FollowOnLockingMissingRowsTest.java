@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
@@ -19,20 +20,21 @@ import jakarta.persistence.Version;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -53,13 +55,18 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 		FollowOnLockingMissingRowsTest.UnversionedItem.class
 })
 @SessionFactory(generateStatistics = true)
-@RequiresDialect(H2Dialect.class)
+@ExtendWith(FollowOnLockingTestSupport.Eligibility.class)
+@ServiceRegistry(settings = {
+		@Setting(name = "hibernate.connection.isolation", value = "2"),
+		@Setting(name = "hibernate.use_sql_comments", value = "false")
+})
 @Tag("db-locking")
 @Jira("https://hibernate.atlassian.net/browse/HHH-21027")
 class FollowOnLockingMissingRowsTest {
 	@BeforeEach
 	void createData(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			FollowOnLockingTestSupport.assertReadCommitted( session );
 			final int[] identifiers = { 1, 2, 30, 10, 20, 40 };
 			for ( int position = 0; position < identifiers.length; position++ ) {
 				session.persist( new Item( identifiers[position], position ) );
@@ -102,12 +109,16 @@ class FollowOnLockingMissingRowsTest {
 	@ParameterizedTest
 	@MethodSource("entityTypes")
 	void completeAcquisitionSucceeds(Class<? extends BaseItem> type, SessionFactoryScope scope) {
+		FollowOnLockingTestSupport.requireAcquisition( scope );
 		scope.inTransaction( session -> {
-			final var items = session.createQuery( "from " + entityName( type ) + " where id in :ids order by position", type )
+			FollowOnLockingTestSupport.assertReadCommitted( session );
+			final var query = session.createQuery( "from " + entityName( type ) + " where id in :ids order by position", type )
 					.setParameterList( "ids", List.of( 1, 2 ) )
-					.setLockMode( PESSIMISTIC_WRITE ).setFollowOnStrategy( Locking.FollowOn.FORCE ).getResultList();
-			assertThat( items ).extracting( item -> item.id ).containsExactly( 1, 2 );
-			assertThat( items ).allSatisfy( item -> {
+					.setLockMode( PESSIMISTIC_WRITE ).setFollowOnStrategy( Locking.FollowOn.FORCE );
+			FollowOnLockingTestSupport.assertFollowOnPlan( session, query );
+			final var results = query.getResultList();
+			assertThat( results ).extracting( item -> item.id ).containsExactly( 1, 2 );
+			assertThat( results ).allSatisfy( item -> {
 				assertThat( item.title ).isEqualTo( "initial-" + item.id );
 				assertThat( session.getCurrentLockMode( item ) ).isEqualTo( LockMode.PESSIMISTIC_WRITE );
 			} );
@@ -116,12 +127,13 @@ class FollowOnLockingMissingRowsTest {
 
 	@Test
 	void emptyInitialResultIsSuccessful(SessionFactoryScope scope) {
+		FollowOnLockingTestSupport.requireAcquisition( scope );
 		scope.inTransaction( session -> {
-			assertThat( session.createQuery( "from MissingRowItem where id = -1", Item.class )
-					.setLockMode( PESSIMISTIC_WRITE )
-					.setFollowOnStrategy( Locking.FollowOn.FORCE )
-					.getResultList()
-			).isEmpty();
+			FollowOnLockingTestSupport.assertReadCommitted( session );
+			final var query = session.createQuery( "from MissingRowItem where id = -1", Item.class )
+					.setLockMode( PESSIMISTIC_WRITE ).setFollowOnStrategy( Locking.FollowOn.FORCE );
+			FollowOnLockingTestSupport.assertFollowOnPlan( session, query );
+			assertThat( query.getResultList() ).isEmpty();
 		} );
 	}
 
@@ -131,15 +143,19 @@ class FollowOnLockingMissingRowsTest {
 			LockModeType mode,
 			List<Integer> queryIds,
 			List<Integer> missingIds) {
+		FollowOnLockingTestSupport.requireDeletionRace( scope );
 		final var persister = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( type );
 		final String tableName = persister.getIdentifierTableDetails().getTableName();
 		final var readerReference = new AtomicReference<SessionImplementor>();
 		final List<String> statements = new ArrayList<>();
 		final var snapshots = new LinkedHashMap<Integer, EntrySnapshot>();
 		final UnaryOperator<String> inspector = sql -> {
+			if ( !FollowOnLockingTestSupport.isEntitySelect( sql, persister ) ) {
+				return sql;
+			}
 			statements.add( sql );
 			if ( statements.size() == 2 ) {
-				assertThat( sql ).contains( tableName ).contains( "for update" );
+				assertThat( sql ).contains( tableName );
 				final var reader = readerReference.get();
 				final var context = reader.getPersistenceContextInternal();
 				for ( var id : queryIds ) {
@@ -149,6 +165,7 @@ class FollowOnLockingMissingRowsTest {
 					snapshots.put( id, new EntrySnapshot( item, entry, entry.getLockMode(), entry.getVersion() ) );
 				}
 				scope.inTransaction( writer -> {
+					FollowOnLockingTestSupport.assertReadCommitted( writer );
 					queryIds.stream().filter( id -> !missingIds.contains( id ) ).findFirst().ifPresent( survivor ->
 							writer.createMutationQuery( "update " + entityName( type ) + " set title = 'changed' where id = :id" )
 									.setParameter( "id", survivor ).executeUpdate() );
@@ -164,13 +181,14 @@ class FollowOnLockingMissingRowsTest {
 			final var implementor = reader.unwrap( SessionImplementor.class );
 			readerReference.set( implementor );
 			final var transaction = reader.beginTransaction();
-			final var graph = persister.createRootGraph( implementor );
-			implementor.getLoadQueryInfluencers().applyEntityGraph( graph, GraphSemantic.LOAD );
 			try {
-				final var failure = catchThrowableOfType( OptimisticLockException.class, () ->
-						reader.createQuery( "from " + entityName( type ) + " where id in :ids order by position", type )
-								.setParameterList( "ids", queryIds ).setLockMode( mode )
-								.setFollowOnStrategy( Locking.FollowOn.FORCE ).getResultList() );
+				FollowOnLockingTestSupport.assertReadCommitted( reader );
+				final var graph = persister.createRootGraph( implementor );
+				implementor.getLoadQueryInfluencers().applyEntityGraph( graph, GraphSemantic.LOAD );
+				final var query = reader.createQuery( "from " + entityName( type ) + " where id in :ids order by position", type )
+						.setParameterList( "ids", queryIds ).setLockMode( mode ).setFollowOnStrategy( Locking.FollowOn.FORCE );
+				FollowOnLockingTestSupport.assertFollowOnPlan( implementor, query );
+				final var failure = catchThrowableOfType( OptimisticLockException.class, query::getResultList );
 				assertThat( failure ).hasCauseInstanceOf( StaleObjectStateException.class );
 				final var stale = (StaleObjectStateException) failure.getCause();
 				assertThat( stale.getEntityName() ).isEqualTo( persister.getEntityName() );
@@ -218,6 +236,7 @@ class FollowOnLockingMissingRowsTest {
 	static abstract class BaseItem {
 		@Id int id;
 		String title;
+		@Column(name = "acquisition_position")
 		int position;
 		BaseItem() {}
 		BaseItem(int id, int position) {

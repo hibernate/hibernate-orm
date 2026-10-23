@@ -7,7 +7,6 @@ import java.util.Map;
 import jakarta.persistence.Timeout;
 
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
@@ -20,8 +19,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcActionExecution;
 import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -38,8 +35,6 @@ import static org.mockito.Mockito.when;
 /// execution deterministically, without threads, sleeps, or a database dependency.
 ///
 /// @author Steve Ebersole
-@RequiresDialect(H2Dialect.class)
-@Tag("db-locking")
 @Jira( "https://hibernate.atlassian.net/browse/HHH-21032" )
 class LockTimeoutActionStateTest {
 

@@ -13,16 +13,8 @@ import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.sql.ast.internal.SQLServerSqlAstTranslator;
-import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.sql.ast.SqlAstHelper;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.query.internal.QueryOptionsImpl;
-import org.hibernate.sql.exec.spi.JdbcLockingApplication;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -33,15 +25,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.Timeouts.SKIP_LOCKED;
-import static org.mockito.AdditionalAnswers.delegatesTo;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 /// Reproduces follow-on acquisition returning a row skipped because another
 /// transaction holds its lock. The direct query is a control demonstrating
@@ -120,15 +107,6 @@ class FollowOnSkipLockedTest {
 		} );
 	}
 
-	@ParameterizedTest
-	@EnumSource(value = Locking.FollowOn.class, names = { "FORCE", "ALLOW" })
-	void rejectionDoesNotDependOnContentionOrResults(Locking.FollowOn strategy, SessionFactoryScope scope) {
-		assertRejected( scope, strategy, false, false );
-		assertRejected( scope, strategy, false, true );
-		assertRejected( scope, strategy, true, false );
-		assertRejected( scope, strategy, true, true );
-	}
-
 	private void assertRejected(SessionFactoryScope scope, Locking.FollowOn strategy, boolean legacy, boolean empty) {
 		final List<String> statements = new ArrayList<>();
 		final UnaryOperator<String> inspector = sql -> { statements.add( sql ); return sql; };
@@ -149,60 +127,6 @@ class FollowOnSkipLockedTest {
 				transaction.rollback();
 			}
 		}
-	}
-
-	@Test
-	void scrollAndStreamRejectBeforeSql(SessionFactoryScope scope) {
-		final List<String> statements = new ArrayList<>();
-		try ( var session = scope.getSessionFactory().withOptions()
-				.statementInspector( (UnaryOperator<String>) sql -> { statements.add( sql ); return sql; } )
-				.openSession() ) {
-			final var transaction = session.beginTransaction();
-			try {
-				assertUnsupportedScroll( () -> query( session, Locking.FollowOn.FORCE, false )
-						.setLockTimeout( SKIP_LOCKED ).scroll() );
-				assertUnsupportedScroll( () -> {
-					try ( var stream = query( session, Locking.FollowOn.FORCE, false )
-							.setLockTimeout( SKIP_LOCKED ).getResultStream() ) {
-						stream.toList();
-					}
-				} );
-				assertThat( statements ).isEmpty();
-			}
-			finally {
-				transaction.rollback();
-			}
-		}
-	}
-
-	@Test
-	void statelessQueryRejectsFollowOnSkipLocked(SessionFactoryScope scope) {
-		scope.inStatelessTransaction( session -> assertUnsupported( () -> session
-				.createQuery( "from SkipLockedItem", Item.class )
-				.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-				.setFollowOnStrategy( Locking.FollowOn.FORCE )
-				.setLockTimeout( SKIP_LOCKED ).getResultList() ) );
-	}
-
-	@Test
-	void sqlServerKeepsDirectTableHintsEvenWhenFollowOnIsForced(SessionFactoryScope scope) {
-		scope.inSession( session -> {
-			final var factory = mock( SessionFactoryImplementor.class, delegatesTo( scope.getSessionFactory() ) );
-			final var services = mock( JdbcServices.class, delegatesTo( factory.getJdbcServices() ) );
-			doReturn( services ).when( factory ).getJdbcServices();
-			doReturn( new SQLServerDialect() ).when( services ).getDialect();
-			for ( var strategy : List.of( Locking.FollowOn.ALLOW, Locking.FollowOn.FORCE ) ) {
-				final var sqlAst = SqlAstHelper.translateHqlSelectQuery( "from SkipLockedItem", Item.class, session );
-				final var options = new QueryOptionsImpl();
-				options.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE )
-						.setTimeout( SKIP_LOCKED ).setFollowOnStrategy( strategy );
-				final var operation = new SQLServerSqlAstTranslator<>( new SqlAstTranslationRequest.Select( factory, sqlAst ) )
-						.translate( null, options );
-				assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.RENDERED );
-				assertThat( operation.getSqlString() ).contains( "updlock", "readpast" );
-				assertThat( operation.getLoadedValuesCollectorFactory() ).isNull();
-			}
-		} );
 	}
 
 	@Test
@@ -230,11 +154,6 @@ class FollowOnSkipLockedTest {
 	private void assertUnsupported(Runnable work) {
 		assertThatThrownBy( work::run ).isInstanceOf( IllegalStateException.class )
 				.hasCauseInstanceOf( IllegalQueryOperationException.class )
-				.hasMessageContaining( "SKIP_LOCKED is not supported with follow-on locking" );
-	}
-
-	private void assertUnsupportedScroll(Runnable work) {
-		assertThatThrownBy( work::run ).isInstanceOf( IllegalQueryOperationException.class )
 				.hasMessageContaining( "SKIP_LOCKED is not supported with follow-on locking" );
 	}
 

@@ -1,8 +1,11 @@
 package org.hibernate.orm.test.version.mappedsuperclass;
 
+import jakarta.persistence.Entity;
+
 /**
  * @author Andrea Boriero
  */
+@Entity
 public class TestEntity extends AbstractEntity {
 	String name;
 

@@ -54,7 +54,7 @@ public class InterceptorStrategyTest {
 		assertSame( interceptor, strategy.getFactoryInterceptor() );
 	}
 
-	@DomainModel(xmlMappings = "org/hibernate/orm/test/interceptor/User.hbm.xml")
+	@DomainModel(xmlMappings = "org/hibernate/orm/test/interceptor/User.orm.xml")
 	@ServiceRegistry(settings = @Setting(name = AvailableSettings.INTERCEPTOR, value = "org.hibernate.orm.test.interceptor.StatefulInterceptor"))
 	@SessionFactory
 	@Test
@@ -72,7 +72,7 @@ public class InterceptorStrategyTest {
 				.applySetting( AvailableSettings.INTERCEPTOR, StatefulInterceptor.class )
 				.build() ) {
 			try ( var sessionFactory = (SessionFactoryImplementor) new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder()
 					.build() ) {
@@ -88,7 +88,7 @@ public class InterceptorStrategyTest {
 		}
 	}
 
-	@DomainModel(xmlMappings = "org/hibernate/orm/test/interceptor/User.hbm.xml")
+	@DomainModel(xmlMappings = "org/hibernate/orm/test/interceptor/User.orm.xml")
 	@ServiceRegistry(settings = @Setting(name = AvailableSettings.SESSION_SCOPED_INTERCEPTOR, value = "org.hibernate.orm.test.interceptor.StatefulInterceptor"))
 	@SessionFactory
 	@Test
@@ -109,7 +109,7 @@ public class InterceptorStrategyTest {
 		strategy.releaseInterceptor( interceptor2 );
 	}
 
-	@DomainModel(xmlMappings = "org/hibernate/orm/test/interceptor/User.hbm.xml")
+	@DomainModel(xmlMappings = "org/hibernate/orm/test/interceptor/User.orm.xml")
 	@SessionFactory
 	@Test
 	public void testNoConfigurationDefaultsToNoInterceptorStrategy(SessionFactoryScope scope) {
@@ -117,7 +117,7 @@ public class InterceptorStrategyTest {
 		assertInstanceOf( NoInterceptorStrategy.class, strategy );
 	}
 
-	@DomainModel(xmlMappings = "org/hibernate/orm/test/interceptor/User.hbm.xml")
+	@DomainModel(xmlMappings = "org/hibernate/orm/test/interceptor/User.orm.xml")
 	@ServiceRegistry(settings = @Setting(name = AvailableSettings.SESSION_SCOPED_INTERCEPTOR, value = "org.hibernate.orm.test.interceptor.StatefulInterceptor"))
 	@SessionFactory
 	@Test
@@ -138,7 +138,7 @@ public class InterceptorStrategyTest {
 				.applySetting( AvailableSettings.SESSION_SCOPED_INTERCEPTOR, supplier )
 				.build() ) {
 			try ( var sessionFactory = (SessionFactoryImplementor) new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder()
 					.build() ) {
@@ -176,7 +176,7 @@ public class InterceptorStrategyTest {
 				.applySetting( AvailableSettings.SESSION_SCOPED_INTERCEPTOR, supplier )
 				.build() ) {
 			try ( var sessionFactory = (SessionFactoryImplementor) new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder()
 					.build() ) {
@@ -200,7 +200,7 @@ public class InterceptorStrategyTest {
 						StatefulInterceptor.class.getName() )
 				.build() ) {
 			try ( var sessionFactory = (SessionFactoryImplementor) new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder()
 					.build() ) {
@@ -259,7 +259,7 @@ public class InterceptorStrategyTest {
 						StatefulInterceptor.class.getName() )
 				.build() ) {
 			final var sfBuilder = new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder();
 
@@ -283,7 +283,7 @@ public class InterceptorStrategyTest {
 				.applySetting( AvailableSettings.SESSION_SCOPED_INTERCEPTOR, supplier )
 				.build() ) {
 			try ( var sessionFactory = (SessionFactoryImplementor) new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder()
 					.build() ) {
@@ -308,7 +308,7 @@ public class InterceptorStrategyTest {
 						StatefulInterceptor.class.getName() )
 				.build() ) {
 			try ( var sessionFactory = (SessionFactoryImplementor) new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder()
 					.build() ) {
@@ -329,7 +329,7 @@ public class InterceptorStrategyTest {
 	public void testApplyStatelessInterceptorClassNowRoutesThroughScopedStrategy() {
 		try ( var services = ServiceRegistryUtil.serviceRegistryBuilder().build() ) {
 			final var sfBuilder = new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder();
 
@@ -357,7 +357,7 @@ public class InterceptorStrategyTest {
 				.applySetting( AvailableSettings.INTERCEPTOR, StatefulInterceptor.class.getName() )
 				.build() ) {
 			final var sfBuilder = new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder();
 
@@ -376,7 +376,7 @@ public class InterceptorStrategyTest {
 		final Supplier<StatefulInterceptor> supplier = StatefulInterceptor::new;
 		try ( var services = ServiceRegistryUtil.serviceRegistryBuilder().build() ) {
 			final var sfBuilder = new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder();
 
@@ -399,7 +399,7 @@ public class InterceptorStrategyTest {
 				.applySetting( AvailableSettings.SESSION_SCOPED_INTERCEPTOR, supplier )
 				.build() ) {
 			final var sfBuilder = new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder();
 
@@ -421,7 +421,7 @@ public class InterceptorStrategyTest {
 				.applySetting( AvailableSettings.INTERCEPTOR, StatefulInterceptor.class.getName() )
 				.build() ) {
 			try ( var sessionFactory = (SessionFactoryImplementor) new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder()
 					.build() ) {
@@ -439,7 +439,7 @@ public class InterceptorStrategyTest {
 		final var explicitInterceptor = new StatefulInterceptor();
 		try ( var services = ServiceRegistryUtil.serviceRegistryBuilder().build() ) {
 			final var sfBuilder = new MetadataSources( services )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
+					.addResource( "org/hibernate/orm/test/interceptor/User.orm.xml" )
 					.buildMetadata()
 					.getSessionFactoryBuilder();
 

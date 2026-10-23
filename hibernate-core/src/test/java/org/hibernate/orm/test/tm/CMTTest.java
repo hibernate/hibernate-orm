@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @SkipForDialect(dialectClass = SQLServerDialect.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/tm/Item.hbm.xml",
+		xmlMappings = "org/hibernate/orm/test/tm/Item.orm.xml",
 		concurrencyStrategy = "transactional"
 )
 @SessionFactory(generateStatistics = true)

@@ -2,8 +2,6 @@ package org.hibernate.orm.test.stateless.fetching;
 
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class User {

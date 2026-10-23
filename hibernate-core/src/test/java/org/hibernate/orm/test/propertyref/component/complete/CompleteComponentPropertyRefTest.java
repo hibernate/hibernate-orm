@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/propertyref/component/complete/Mapping.hbm.xml",
+		xmlMappings = "org/hibernate/orm/test/propertyref/component/complete/Mapping.orm.xml",
 		concurrencyStrategy = "nonstrict-read-write"
 )
 @SessionFactory

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
  * @author stliu
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/entityname/Vehicle.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/entityname/Vehicle.orm.xml")
 @SessionFactory
 public class EntityNameFromSubClassTest {
 	@AfterEach

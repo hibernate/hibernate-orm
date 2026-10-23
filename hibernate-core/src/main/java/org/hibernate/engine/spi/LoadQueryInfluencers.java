@@ -22,6 +22,7 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
+import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -52,6 +53,9 @@ public class LoadQueryInfluencers implements Serializable {
 
 	@Nullable
 	private CascadingFetchProfile enabledCascadingFetchProfile;
+
+	@Nullable
+	private transient RefreshContext refreshContext;
 
 	//Lazily initialized!
 	@Nullable
@@ -138,13 +142,26 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public <T> T fromInternalFetchProfile(@Nonnull CascadingFetchProfile profile, @Nonnull Supplier<T> supplier) {
 		final var previous = enabledCascadingFetchProfile;
+		final var previousRefreshContext = refreshContext;
 		enabledCascadingFetchProfile = profile;
+		if ( profile == CascadingFetchProfile.REFRESH && refreshContext == null ) {
+			refreshContext = RefreshContext.create();
+		}
 		try {
 			return supplier.get();
 		}
 		finally {
 			enabledCascadingFetchProfile = previous;
+			refreshContext = previousRefreshContext;
 		}
+	}
+
+	/**
+	 * Register an entity whose collections have been prepared for the current refresh.
+	 */
+	@Internal
+	public boolean registerRefreshingEntity(@Nonnull Object entity) {
+		return refreshContext != null && refreshContext.add( entity );
 	}
 
 	/**

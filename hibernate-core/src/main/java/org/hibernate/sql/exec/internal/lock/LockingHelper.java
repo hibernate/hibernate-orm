@@ -6,8 +6,10 @@ import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
@@ -15,6 +17,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -36,20 +40,87 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
 /**
- * Helper for dealing with follow-on locking for collection-tables.
+ * Helper for acquiring and validating follow-on entity and collection locks.
  *
  * @author Steve Ebersole
  */
 public class LockingHelper {
+	/// Whether the request expresses pessimistic skip-locked intent, including
+	/// the legacy lock mode. Does not change direct-locking option precedence.
+	public static boolean isSkipLockedRequest(LockOptions lockOptions) {
+		return lockOptions != null && lockOptions.getLockMode().isPessimistic()
+				&& (lockOptions.getTimeout().milliseconds() == SKIP_LOCKED_MILLI
+						|| lockOptions.getLockMode() == LockMode.UPGRADE_SKIPLOCKED);
+	}
+
+	/// Rejects skip-locked acquisition after follow-on locking has been selected.
+	public static void validateFollowOnLocking(LockOptions lockOptions) {
+		if ( isSkipLockedRequest( lockOptions ) ) {
+			throw new IllegalQueryOperationException(
+					"SKIP_LOCKED is not supported with follow-on locking; use direct locking for a supported query shape"
+			);
+		}
+	}
+
+	/// Validates identifier coverage for one follow-on table acquisition without
+	/// executing SQL or applying reread state. Optional non-identifier tables and
+	/// skip-locked acquisition are exempt. Expected-key order determines both the
+	/// representative missing entity and the complete diagnostic identifier list.
+	///
+	/// @throws StaleObjectStateException if a required entity row was not acquired
+	public static void validateAcquiredRows(
+			TableDetails tableDetails,
+			EntityMappingType entityMappingType,
+			List<EntityKey> expectedKeys,
+			List<Object[]> acquiredRows,
+			Timeout lockTimeout,
+			SharedSessionContractImplementor session) {
+		if ( lockTimeout.milliseconds() == SKIP_LOCKED_MILLI
+				|| !tableDetails.isIdentifierTable()
+						&& tableDetails instanceof TableMapping tableMapping && tableMapping.isOptional() ) {
+			return;
+		}
+
+		final var missingKeys = new LinkedHashSet<>( expectedKeys );
+		final var persister = entityMappingType.getEntityPersister();
+		for ( var row : acquiredRows ) {
+			missingKeys.remove( session.generateEntityKey( row[0], persister ) );
+		}
+		if ( missingKeys.isEmpty() ) {
+			return;
+		}
+
+		final var firstMissing = missingKeys.iterator().next();
+		final var factory = session.getFactory();
+		final var identifiers = new StringJoiner( ", ", "[", "]" );
+		for ( var key : missingKeys ) {
+			identifiers.add( persister.getIdentifierType().toLoggableString( key.getIdentifier(), factory ) );
+		}
+		final var statistics = factory.getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.optimisticFailure( firstMissing.getEntityName() );
+		}
+		throw new StaleObjectStateException(
+				firstMissing.getEntityName(),
+				firstMissing.getIdentifier(),
+				"Follow-on locking failed for entity '" + firstMissing.getEntityName()
+						+ "' on table '" + tableDetails.getTableName() + "': missing identifiers " + identifiers
+		);
+	}
+
 	/**
 	 * Lock a collection-table for a single entity.
 	 *

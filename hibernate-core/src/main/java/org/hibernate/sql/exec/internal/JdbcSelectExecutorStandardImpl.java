@@ -9,11 +9,13 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.sql.exec.internal.lock.LockingHelper;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcLockingApplication;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
@@ -21,6 +23,7 @@ import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.jdbc.internal.AbstractJdbcValues;
 import org.hibernate.sql.results.jdbc.internal.CachedJdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
+import org.hibernate.sql.results.jdbc.internal.JdbcSelectSqlFinalizer;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
@@ -124,89 +127,108 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final var session = executionContext.getSession();
 		final var factory = session.getFactory();
+		// Only skip-locked requests need a late raw-SQL decision before actions
+		// or connection acquisition. Keep all other finalization at its usual point.
+		JdbcSelectSqlFinalizer.FinalizedResult finalizedResult = null;
+		final var queryOptions = executionContext.getQueryOptions();
+		final var lockOptions = queryOptions == null ? null : queryOptions.getLockOptions();
+		if ( LockingHelper.isSkipLockedRequest( lockOptions ) ) {
+			if ( jdbcSelect.getLockingApplication() == JdbcLockingApplication.FOLLOW_ON ) {
+				LockingHelper.validateFollowOnLocking( lockOptions );
+			}
+			else if ( jdbcSelect.getLockingApplication() == JdbcLockingApplication.RAW_SQL ) {
+				finalizedResult = JdbcSelectSqlFinalizer.finalizeSql(
+						jdbcSelect, jdbcParameterBindings, executionContext );
+			}
+		}
 		final var logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
 
 		final var connection = logicalConnection.getPhysicalConnection();
 		final var statementAccess = new StatementAccessImpl( connection, logicalConnection, factory );
-		jdbcSelect.performPreActions( statementAccess, connection, executionContext );
-
-		final var deferredResultSetAccess = new DeferredResultSetAccess(
-				jdbcSelect,
-				jdbcParameterBindings,
-				executionContext,
-				statementCreator,
-				resultCountEstimate
-		);
-		final var jdbcValues = resolveJdbcValuesSource(
-				executionContext.getQueryIdentifier( deferredResultSetAccess.getFinalSql() ),
-				jdbcSelect,
-				resultsConsumer.canResultsBeCached(),
-				executionContext,
-				deferredResultSetAccess
-		);
-
-		if ( rowTransformer == null ) {
-			rowTransformer = getRowTransformer( executionContext, jdbcValues );
-		}
-
-		final boolean stats;
-		long startTime = 0;
-		final var statistics = factory.getStatistics();
-		if ( executionContext.hasQueryExecutionToBeAddedToStatistics()
-				&& jdbcValues instanceof JdbcValuesResultSetImpl ) {
-			stats = statistics.isStatisticsEnabled();
-			if ( stats ) {
-				startTime = System.nanoTime();
-			}
-		}
-		else {
-			stats = false;
-		}
-
-		/*
-		 * Processing options effectively are only used for entity loading.  Here we don't need these values.
-		 */
-		final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
-			@Override
-			public Object getEffectiveOptionalObject() {
-				return executionContext.getEntityInstance();
-			}
-
-			@Override
-			public String getEffectiveOptionalEntityName() {
-				return null;
-			}
-
-			@Override
-			public Object getEffectiveOptionalId() {
-				return executionContext.getEntityId();
-			}
-
-			@Override
-			public boolean shouldReturnProxies() {
-				return true;
-			}
-		};
-
-		final var loadedValuesCollector = jdbcSelect.getLoadedValuesCollectorFactory() == null
-				? null
-				: jdbcSelect.getLoadedValuesCollectorFactory().build();
-		final var valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
-				loadedValuesCollector,
-				processingOptions,
-				executionContext
-		);
-
-		final var rowReader = ResultsHelper.createRowReader(
-				factory,
-				rowTransformer,
-				domainResultType,
-				jdbcValues
-		);
-
-		final var rowProcessingState = new RowProcessingStateStandardImpl( valuesProcessingState, executionContext, rowReader, jdbcValues );
-
+		final var actionExecution = jdbcSelect.createActionExecution();
+		LoadedValuesCollector loadedValuesCollector = null;
 		try {
+			actionExecution.performPreActions( statementAccess, connection, executionContext );
+
+			final var deferredResultSetAccess = finalizedResult == null ? new DeferredResultSetAccess(
+					jdbcSelect,
+					jdbcParameterBindings,
+					executionContext,
+					statementCreator,
+					resultCountEstimate
+			) : new DeferredResultSetAccess(
+					jdbcSelect, jdbcParameterBindings, executionContext, statementCreator, resultCountEstimate,
+					finalizedResult
+			);
+			final var jdbcValues = resolveJdbcValuesSource(
+					executionContext.getQueryIdentifier( deferredResultSetAccess.getFinalSql() ),
+					jdbcSelect,
+					resultsConsumer.canResultsBeCached(),
+					executionContext,
+					deferredResultSetAccess
+			);
+
+			if ( rowTransformer == null ) {
+				rowTransformer = getRowTransformer( executionContext, jdbcValues );
+			}
+
+			final boolean stats;
+			long startTime = 0;
+			final var statistics = factory.getStatistics();
+			if ( executionContext.hasQueryExecutionToBeAddedToStatistics()
+					&& jdbcValues instanceof JdbcValuesResultSetImpl ) {
+				stats = statistics.isStatisticsEnabled();
+				if ( stats ) {
+					startTime = System.nanoTime();
+				}
+			}
+			else {
+				stats = false;
+			}
+
+			/*
+			 * Processing options effectively are only used for entity loading.  Here we don't need these values.
+			 */
+			final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
+				@Override
+				public Object getEffectiveOptionalObject() {
+					return executionContext.getEntityInstance();
+				}
+
+				@Override
+				public String getEffectiveOptionalEntityName() {
+					return null;
+				}
+
+				@Override
+				public Object getEffectiveOptionalId() {
+					return executionContext.getEntityId();
+				}
+
+				@Override
+				public boolean shouldReturnProxies() {
+					return true;
+				}
+			};
+
+			loadedValuesCollector = jdbcSelect.getLoadedValuesCollectorFactory() == null
+					? null
+					: jdbcSelect.getLoadedValuesCollectorFactory().build();
+			final var valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
+					loadedValuesCollector,
+					processingOptions,
+					executionContext
+			);
+
+			final var rowReader = ResultsHelper.createRowReader(
+					factory,
+					rowTransformer,
+					domainResultType,
+					jdbcValues
+			);
+
+			final var rowProcessingState = new RowProcessingStateStandardImpl( valuesProcessingState, executionContext, rowReader, jdbcValues );
+
 			final T result = resultsConsumer.consume(
 					jdbcValues,
 					session,
@@ -216,7 +238,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					rowReader
 			);
 
-			jdbcSelect.performPostActions( true, statementAccess, connection, executionContext, loadedValuesCollector );
+			actionExecution.performPostActions( true, statementAccess, connection, executionContext, loadedValuesCollector );
 
 			if ( stats ) {
 				logQueryStatistics( jdbcSelect, executionContext, startTime, result, statistics );
@@ -224,8 +246,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 			return result;
 		}
-		catch (RuntimeException e) {
-			jdbcSelect.performPostActions( false, statementAccess, connection, executionContext, loadedValuesCollector );
+		catch (RuntimeException | Error e) {
+			actionExecution.cleanupAfterFailure( e, statementAccess, connection, executionContext, loadedValuesCollector );
 			throw e;
 		}
 	}

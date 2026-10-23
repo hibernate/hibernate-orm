@@ -11,6 +11,7 @@ import org.hibernate.dialect.lock.spi.FollowOnLockingRequest;
 import org.hibernate.dialect.lock.spi.LockingSqlRewriteResult;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.NoopLimitHandler;
 import org.hibernate.dialect.pagination.spi.PaginationJdbcInstructions;
 import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.dialect.pagination.spi.PaginationResult;
@@ -18,10 +19,15 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.internal.QuerySqlDecorator;
+import org.hibernate.sql.exec.internal.lock.LockingHelper;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcLockingApplication;
 import org.hibernate.sql.exec.spi.JdbcPaginationApplication;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard.isStandardRenderer;
 
 /// Finalizes execution-time SQL details for a JDBC select.
 ///
@@ -41,6 +47,59 @@ public final class JdbcSelectSqlFinalizer {
 	);
 
 	private JdbcSelectSqlFinalizer() {
+	}
+
+	/// Assembles execution metadata and finalizes SQL without acquiring a JDBC
+	/// connection or executing actions. The result belongs to this invocation.
+	public static FinalizedResult finalizeSql(
+			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) {
+		final var queryOptions = executionContext.getQueryOptions();
+		if ( queryOptions == null ) {
+			return new FinalizedResult(
+					jdbcSelect.getSqlString(),
+					JdbcLockingApplication.NONE,
+					new PaginationJdbcInstructions(
+							java.util.List.of(),
+							java.util.List.of(),
+							jdbcSelect.getMaxRows() == Integer.MAX_VALUE ? null : jdbcSelect.getMaxRows(),
+							jdbcSelect.getRowsToSkip()
+					)
+			);
+		}
+		final var session = executionContext.getSession();
+		final var jdbcServices = session.getJdbcServices();
+		final var dialect = jdbcServices.getDialect();
+		final var limit = queryOptions.getLimit();
+		final var parameterMarkerStrategy = jdbcServices.getParameterMarkerStrategy();
+		final var paginationRequest = new PaginationRequest(
+				jdbcSelect.getSqlString(),
+				limit.getFirstRow(),
+				limit.getMaxRows(),
+				jdbcParameterBindings.getBindings().size(),
+				isStandardRenderer( parameterMarkerStrategy ) ? null : parameterMarkerStrategy
+		);
+		final var limitHandler = jdbcSelect.getPaginationApplication() == JdbcPaginationApplication.RAW_SQL
+				&& !paginationRequest.isEmpty()
+				? dialect.getLimitHandler()
+				: NoopLimitHandler.INSTANCE;
+		return finalizeSql(
+				jdbcSelect.getSqlString(),
+				jdbcSelect.getPaginationApplication(),
+				jdbcSelect.getRowsToSkip(),
+				jdbcSelect.getMaxRows(),
+				paginationRequest,
+				limitHandler,
+				jdbcSelect.getLockingApplication(),
+				queryOptions.getLockOptions(),
+				limit,
+				dialect.getLockingSupport(),
+				jdbcSelect.getLoadedValuesCollectorFactory() != null,
+				dialect,
+				queryOptions,
+				session.getFactory().getSessionFactoryOptions().isCommentsEnabled()
+		);
 	}
 
 	/// Finalizes execution-time SQL and returns its immutable JDBC pagination
@@ -118,7 +177,11 @@ public final class JdbcSelectSqlFinalizer {
 		}
 
 		return switch ( lockingApplication ) {
-			case NONE, RENDERED, FOLLOW_ON -> new Result( sql, lockingApplication );
+			case NONE, RENDERED -> new Result( sql, lockingApplication );
+			case FOLLOW_ON -> {
+				LockingHelper.validateFollowOnLocking( lockOptions );
+				yield new Result( sql, lockingApplication );
+			}
 			case RAW_SQL -> finalizeRawSqlLocking(
 					sql,
 					lockOptions,
@@ -147,10 +210,10 @@ public final class JdbcSelectSqlFinalizer {
 		final boolean rewriteUnsupported = rewriteResult.outcome() == LockingSqlRewriteResult.Outcome.UNSUPPORTED;
 
 		return switch ( lockOptions.getFollowOnStrategy() ) {
-			case FORCE -> followOn( sql, supportsFollowOnLocking );
+			case FORCE -> followOn( sql, supportsFollowOnLocking, lockOptions );
 			case ALLOW -> policyRequiresFollowOn || rewriteUnsupported
 					? supportsFollowOnLocking
-							? followOn( sql, true )
+							? followOn( sql, true, lockOptions )
 							: new Result( sql, JdbcLockingApplication.NONE )
 					: rewritten( rewriteResult );
 			case DISALLOW -> {
@@ -167,12 +230,13 @@ public final class JdbcSelectSqlFinalizer {
 		};
 	}
 
-	private static Result followOn(String sql, boolean supported) {
+	private static Result followOn(String sql, boolean supported, LockOptions lockOptions) {
 		if ( !supported ) {
 			throw new IllegalQueryOperationException(
 					"Follow-on locking is required but the JDBC select plan does not provide follow-on actions"
 			);
 		}
+		LockingHelper.validateFollowOnLocking( lockOptions );
 		return new Result( sql, JdbcLockingApplication.FOLLOW_ON );
 	}
 

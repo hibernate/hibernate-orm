@@ -5,14 +5,18 @@ import java.sql.SQLException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.UnaryOperator;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Table;
 import jakarta.persistence.Timeout;
 
 import org.hibernate.Session;
+import org.hibernate.Locking;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.lock.internal.H2LockingSupport;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
@@ -146,6 +150,37 @@ class LockTimeoutExecutionIntegrationTest {
 						} ).getSingleResult() ).isSameAs( original );
 				assertThat( session.doReturningWork( LockTimeoutExecutionIntegrationTest::readTimeout ) ).isEqualTo( 1000 );
 				assertThat( original.getSuppressed() ).isEmpty();
+			}
+			finally {
+				session.doWork( connection -> setTimeout( connection, originalTimeout ) );
+				transaction.rollback();
+			}
+		}
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-21027")
+	void missingFollowOnRowRestoresActualConnectionSetting(SessionFactoryScope scope) {
+		final var selects = new AtomicInteger();
+		final UnaryOperator<String> inspector = sql -> {
+			if ( sql.startsWith( "select " ) && sql.contains( "timeout_execution_item" )
+					&& selects.incrementAndGet() == 2 ) {
+				scope.inTransaction( writer -> assertThat( writer.createMutationQuery( "delete from TimeoutExecutionItem where id = 1" )
+						.executeUpdate() ).isEqualTo( 1 ) );
+			}
+			return sql;
+		};
+		try ( var session = scope.getSessionFactory().withOptions().statementInspector( inspector ).openSession() ) {
+			final var transaction = session.beginTransaction();
+			final int originalTimeout = session.doReturningWork( LockTimeoutExecutionIntegrationTest::readTimeout );
+			try {
+				session.doWork( connection -> setTimeout( connection, 1000 ) );
+				assertThatThrownBy( () -> session.createQuery( HQL, Item.class ).setParameter( "id", 1 )
+						.setLockMode( PESSIMISTIC_WRITE ).setLockTimeout( Timeout.milliseconds( 500 ) )
+						.setFollowOnStrategy( Locking.FollowOn.FORCE ).getSingleResult() )
+						.isInstanceOf( OptimisticLockException.class ).hasCauseInstanceOf( StaleObjectStateException.class );
+				assertThat( selects.get() ).isEqualTo( 2 );
+				assertThat( session.doReturningWork( LockTimeoutExecutionIntegrationTest::readTimeout ) ).isEqualTo( 1000 );
 			}
 			finally {
 				session.doWork( connection -> setTimeout( connection, originalTimeout ) );

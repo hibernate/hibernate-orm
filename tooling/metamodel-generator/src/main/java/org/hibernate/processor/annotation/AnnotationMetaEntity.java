@@ -72,7 +72,9 @@ import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNullElse;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.grammars.hql.HqlLexer.SELECT;
@@ -4891,7 +4893,9 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 					if ( !checkConstructorReturn( (DeclaredType) returnType, selection ) ) {
 						message( method, mirror, value,
 								"return type '" + returnType
-								+ "' of method has no constructor matching query selection list",
+								+ "' of method has no constructor matching query selection list"
+								+ " with types " + selectionTypes( selection )
+								+ "; available constructor parameter lists: " + constructorParameterLists( (DeclaredType) returnType ),
 								Diagnostic.Kind.ERROR );
 					}
 					yield true;
@@ -4971,6 +4975,20 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 			public void other(char character) {
 			}
 		} );
+	}
+
+	private static String selectionTypes(JpaSelection<?> selection) {
+		return selection.getSelectionItems().stream()
+				.map( item -> item == null ? "?" : requireNonNullElse( item.getJavaTypeName(), "?" ) )
+				.collect( joining( ", ", "(", ")" ) );
+	}
+
+	private static String constructorParameterLists(DeclaredType returnType) {
+		return constructorsIn( returnType.asElement().getEnclosedElements() ).stream()
+				.map( constructor -> constructor.getParameters().stream()
+						.map( parameter -> parameter.asType().toString() )
+						.collect( joining( ", ", "(", ")" ) ) )
+				.collect( joining( ", ", "[", "]" ) );
 	}
 
 	private static boolean checkConstructorReturn(DeclaredType returnType, JpaSelection<?> selection) {

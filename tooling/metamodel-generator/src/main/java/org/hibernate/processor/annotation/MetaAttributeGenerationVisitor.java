@@ -159,7 +159,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 		final var boxedType =
 				type.getKind().isPrimitive()
 						? typeUtils().boxedClass( (PrimitiveType) type ).asType()
-						: typeUtils().erasure( type );
+						: type;
 		if ( isSameType( boxedType, String.class.getName() ) ) {
 			return TEXT_ATTRIBUTE;
 		}
@@ -201,7 +201,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 	private boolean isAssignableToComparable(TypeMirror type, TypeMirror comparableArgument) {
 		final var typeElement = context.getTypeElementForFullyQualifiedName( Comparable.class.getName() );
 		return typeElement != null
-				&& typeUtils().isAssignable(
+				&& typeUtils().isSubtype(
 						type,
 						typeUtils().getDeclaredType( typeElement, comparableArgument )
 				);

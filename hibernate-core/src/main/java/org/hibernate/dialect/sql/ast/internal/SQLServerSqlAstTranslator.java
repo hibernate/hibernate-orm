@@ -72,6 +72,18 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	}
 
 	@Override
+	protected void renderInsertConflictMergeTarget(NamedTableReference targetTable) {
+		// Without holdlock, two transactions can both find no matching row and both insert,
+		// so that one of them fails with a unique constraint violation.
+		// The hint keeps the key range locked until the end of the transaction.
+		// In a merge, the table hint goes between the table name and the alias.
+		appendSql( targetTable.getTableExpression() );
+		registerAffectedTable( targetTable );
+		appendSql( " with (holdlock)" );
+		renderTableReferenceIdentificationVariable( targetTable );
+	}
+
+	@Override
 	protected void renderDeleteClause(DeleteStatement statement) {
 		appendSql( "delete" );
 		renderTableReferenceIdentificationVariable( statement.getTargetTable() );

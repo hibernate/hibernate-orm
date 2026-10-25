@@ -1,6 +1,7 @@
 package org.hibernate.processor.test.jpa4;
 
 import java.io.Serializable;
+import java.time.temporal.Temporal;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,6 +14,10 @@ class ParameterizedComparableEntity {
 	Value<String> value;
 
 	Child inherited;
+
+	NumericValue<String> number;
+
+	TemporalValue<String> temporal;
 
 	static class Value<T> implements Comparable<Value<T>>, Serializable {
 		@Override
@@ -29,5 +34,11 @@ class ParameterizedComparableEntity {
 	}
 
 	static class Child extends Base<String> {
+	}
+
+	abstract static class NumericValue<T> extends Number implements Comparable<NumericValue<T>> {
+	}
+
+	abstract static class TemporalValue<T> implements Temporal, Comparable<TemporalValue<T>>, Serializable {
 	}
 }

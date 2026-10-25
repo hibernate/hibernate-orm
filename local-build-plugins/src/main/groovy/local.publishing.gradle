@@ -70,7 +70,16 @@ publishingExtension.repositories {
 publishingExtension.publications.register("publishedArtifacts", MavenPublication) {
     pom {
         name = "Hibernate ORM - ${project.name}"
-        description = project.provider { project.description }
+    }
+}
+// The module build script sets `description` after applying this plugin, so read it once the
+// project is evaluated; a provider closure over the project cannot be stored by the configuration cache.
+project.afterEvaluate {
+    def projectDescription = project.description
+    publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
+        pom {
+            description = projectDescription
+        }
     }
 }
 
@@ -88,24 +97,48 @@ tasks.register('showPublications') {
     }
 }
 
-tasks.withType(PublishToMavenLocal).configureEach {
-    doFirst {
-        logger.lifecycle("PublishToMavenLocal ({})", publication.name)
-        logger.lifecycle("    - {} : {} : {} ", publication.groupId, publication.artifactId, publication.pom.packaging)
-        logger.lifecycle("    - artifacts ({})...", publication.artifacts.size())
-        publication.artifacts.forEach {
-            logger.lifecycle("        - artifact ({}) : {} ({})" , it.classifier, it.file, it.file.size())
-        }
-    }
+// The `publication` and `repository` properties of the publish tasks are not available while the task
+// executes when the configuration cache is used.  So the details to log are captured once the task graph is
+// ready (when the properties are assigned) and the actions only use plain values (strings and files).
+def publicationDetails = { publication ->
+    [
+            name      : publication.name,
+            groupId   : publication.groupId,
+            artifactId: publication.artifactId,
+            packaging : publication.pom.packaging,
+            artifacts : publication.artifacts.collect { [classifier: it.classifier, file: it.file] }
+    ]
 }
 
-tasks.withType(PublishToMavenRepository).configureEach {
-    doFirst {
-        logger.lifecycle("PublishToMavenRepository ({} : {})", publication.name, repository.name)
-        logger.lifecycle("    - {} : {} : {} ", publication.groupId, publication.artifactId, publication.pom.packaging)
-        logger.lifecycle("    - artifacts ({})...", publication.artifacts.size())
-        publication.artifacts.forEach {
-            logger.lifecycle("        - artifact ({}) : {} ({})" , it.classifier, it.file, it.file.size())
+gradle.taskGraph.whenReady { graph ->
+    graph.allTasks.each { publishTask ->
+        if ( !publishTask.project.is( project ) ) {
+            return
+        }
+        if ( publishTask instanceof PublishToMavenLocal ) {
+            def details = publicationDetails( publishTask.publication )
+            publishTask.doFirst {
+                def log = Logging.getLogger( PublishToMavenLocal )
+                log.lifecycle( "PublishToMavenLocal ({})", details.name )
+                log.lifecycle( "    - {} : {} : {} ", details.groupId, details.artifactId, details.packaging )
+                log.lifecycle( "    - artifacts ({})...", details.artifacts.size() )
+                details.artifacts.forEach {
+                    log.lifecycle( "        - artifact ({}) : {} ({})", it.classifier, it.file, it.file.size() )
+                }
+            }
+        }
+        else if ( publishTask instanceof PublishToMavenRepository ) {
+            def details = publicationDetails( publishTask.publication )
+            def repositoryName = publishTask.repository.name
+            publishTask.doFirst {
+                def log = Logging.getLogger( PublishToMavenRepository )
+                log.lifecycle( "PublishToMavenRepository ({} : {})", details.name, repositoryName )
+                log.lifecycle( "    - {} : {} : {} ", details.groupId, details.artifactId, details.packaging )
+                log.lifecycle( "    - artifacts ({})...", details.artifacts.size() )
+                details.artifacts.forEach {
+                    log.lifecycle( "        - artifact ({}) : {} ({})", it.classifier, it.file, it.file.size() )
+                }
+            }
         }
     }
 }

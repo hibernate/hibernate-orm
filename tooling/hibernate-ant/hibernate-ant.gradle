@@ -44,7 +44,3 @@ tasks.register('legacyTest', Test) {
 }
 
 test.dependsOn legacyTest
-
-tasks.named( "compileJava", JavaCompile ) {
-    notCompatibleWithConfigurationCache( "org.hibernate.build.version-injection plugin call project in execution time" )
-}

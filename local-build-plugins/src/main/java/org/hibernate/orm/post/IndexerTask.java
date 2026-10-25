@@ -73,7 +73,7 @@ public abstract class IndexerTask extends DefaultTask {
 		return String.join( ":", group, module, version, Boolean.toString( hibernateOrmModule ) );
 	}
 
-	private static ClassificationMetadata.Artifact decode(String fileName, String encoded) {
+	static ClassificationMetadata.Artifact decode(String fileName, String encoded) {
 		final String[] parts = encoded.split( ":", -1 );
 		if ( parts.length != 4 ) {
 			throw new IllegalStateException( "Malformed artifact coordinates for " + fileName + ": " + encoded );

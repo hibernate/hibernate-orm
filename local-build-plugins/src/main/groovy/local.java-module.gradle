@@ -164,6 +164,11 @@ tasks.withType( JavaCompile ).configureEach {
     }
 }
 
+interface InjectedFileOps {
+    @Inject FileSystemOperations getFileSystem()
+}
+def injectedFileOps = objects.newInstance( InjectedFileOps )
+
 processTestResources {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
@@ -171,23 +176,32 @@ processTestResources {
     inputs.property( "dbHost", dbHost )
     inputs.property( "dbConfig", dbBundle[db])
 
+    // resolved here so the action does not touch the project model (configuration cache)
+    def fileSystem = injectedFileOps.fileSystem
+    def testJavaSources = sourceSets.test.java.srcDirs
+    def testClassesDir = sourceSets.test.java.classesDirectory
+    def testResourcesDir = layout.projectDirectory.dir( 'src/test/resources' ).asFile
+    def testHibernateProperties = layout.projectDirectory.file( 'src/test/resources/hibernate.properties' ).asFile
+    def processedResourcesDir = layout.buildDirectory.dir( "resources/test" )
+    def dbTokens = dbBundle[db]
+
     doLast {
-        copy {
-            from( sourceSets.test.java.srcDirs ) {
+        fileSystem.copy {
+            from( testJavaSources ) {
                 include '**/*.properties'
                 include '**/*.xml'
             }
-            into sourceSets.test.java.classesDirectory
+            into testClassesDir
         }
-        copy {
-            from file( 'src/test/resources' )
-            into layout.buildDirectory.dir("resources/test").get().asFile
+        fileSystem.copy {
+            from testResourcesDir
+            into processedResourcesDir
             exclude 'src/test/resources/hibernate.properties'
         }
-        copy {
-            from file( 'src/test/resources/hibernate.properties' )
-            into layout.buildDirectory.dir("resources/test").get().asFile
-            filter( ReplaceTokens, tokens: dbBundle[db] )
+        fileSystem.copy {
+            from testHibernateProperties
+            into processedResourcesDir
+            filter( ReplaceTokens, tokens: dbTokens )
         }
     }
 }

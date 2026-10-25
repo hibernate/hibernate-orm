@@ -87,6 +87,7 @@ project.afterEvaluate {
 // Ancillary tasks
 
 tasks.register('showPublications') {
+    notCompatibleWithConfigurationCache( "Prints the publications of the project model" )
     doFirst {
         project.publishing.publications.each { publication ->
             println "Publication (${publication.name}): ${publication.groupId}:${publication.artifactId}:${publication.version}"

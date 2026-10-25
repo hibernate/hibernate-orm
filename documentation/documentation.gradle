@@ -1104,7 +1104,7 @@ def buildDocsForPublishingTask = tasks.register( 'buildDocsForPublishing' ) { ta
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tasks.withType(AsciidoctorTask).configureEach {
-    notCompatibleWithConfigurationCache( "AsciiDoctor v4 is not compatible with CC yet, remove with stable release of v5" )
+    notCompatibleWithConfigurationCache( "Classic AsciiDoctor tasks are not CC compatible even in v5; only the new model5 is, migrate to remove this" )
     baseDirFollowsSourceDir()
     outputOptions {
         separateOutputDirs = false
@@ -1119,7 +1119,7 @@ tasks.withType(AsciidoctorTask).configureEach {
 }
 
 tasks.withType(AsciidoctorPdfTask).configureEach {
-    notCompatibleWithConfigurationCache( "AsciiDoctor v4 is not compatible with CC yet, remove with stable release of v5" )
+    notCompatibleWithConfigurationCache( "Classic AsciiDoctor tasks are not CC compatible even in v5; only the new model5 is, migrate to remove this" )
     // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
     executionMode = ExecutionMode.JAVA_EXEC
 

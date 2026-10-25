@@ -148,9 +148,8 @@ def instrumentationTest = tasks.register('instrumentationTest', Test) {
     useJUnitPlatform {
         includeEngines 'junit-jupiter'
     }
-    doFirst {
-        jvmArgs "-javaagent:${instrumentationTestAgent.get().archiveFile.get().asFile.absolutePath}"
-    }
+    def agentJar = instrumentationTestAgent.flatMap { it.archiveFile }
+    jvmArgumentProviders.add( new LazyArgumentsProvider( arguments: agentJar.map { ["-javaagent:${it.asFile.absolutePath}".toString()] } ) )
 }
 
 tasks.named('check') {

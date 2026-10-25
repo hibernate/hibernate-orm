@@ -13,6 +13,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Internal;
@@ -32,7 +33,6 @@ import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 public abstract class ClassificationReportsTask extends DefaultTask {
 	private static final Pattern RELEASE_FAMILY = Pattern.compile( "[0-9]+\\.[0-9]+" );
 
-	private final Provider<ClassificationMetadataManager> metadataManager;
 	private final RegularFileProperty classificationMetadataFile;
 	private final RegularFileProperty internalsReportFile;
 	private final RegularFileProperty incubationReportFile;
@@ -43,9 +43,6 @@ public abstract class ClassificationReportsTask extends DefaultTask {
 	public ClassificationReportsTask() {
 		setGroup( TASK_GROUP_NAME );
 		setDescription( "Generates all human classification and lifecycle reports" );
-		metadataManager = getProject().provider(
-				() -> getProject().getExtensions().getByType( ClassificationMetadataManager.class )
-		);
 		classificationMetadataFile = getProject().getObjects().fileProperty();
 		classificationMetadataFile.convention(
 				getProject().getLayout().getBuildDirectory().file( "orm/reports/classifications.json" )
@@ -57,9 +54,13 @@ public abstract class ClassificationReportsTask extends DefaultTask {
 		removalReportFile = reportFile( "removal.txt" );
 	}
 
+	/// Set by [ReportGenerationPlugin] to the project's shared [ClassificationMetadataManager] service.
+	@Internal
+	public abstract Property<ClassificationMetadataManager> getMetadataManagerReference();
+
 	@Internal
 	protected ClassificationMetadataManager getMetadataManager() {
-		return metadataManager.get();
+		return getMetadataManagerReference().get();
 	}
 
 	@InputFile

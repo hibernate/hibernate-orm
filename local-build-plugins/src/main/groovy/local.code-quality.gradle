@@ -42,18 +42,22 @@ def enforceRulesTask = tasks.register('enforceRules') {
     inputs.dir(mainSources).optional()
     onlyIf{mainSources.exists()}
 
+    // resolved here so the action does not reference the project (configuration cache)
+    def sourceTree = fileTree("src/main/java/")
+    sourceTree.include "**/*.java"
+    def rootDirPathLength = rootDir.path.length()
+
     doLast {
+        def logger = Logging.getLogger( "enforceRules" )
         def illegalImport = ~/^import (sun|java.awt|org.slf4j)/
         def missingNewline = ~/^\s*}\s*(else|catch|finally)/
         def lowerEll = ~/\b\d+l\b/
         def equals = ~/boolean +equals\((@?\w+ )*Object \w+\)/
         def hashCode = ~/int +hashCode\(\)/
         def errors = 0
-        def tree = fileTree("src/main/java/")
-        tree.include "**/*.java"
-        tree.each { file ->
+        sourceTree.each { file ->
             def lineNum = 0
-            def shortName = file.path.substring(rootDir.path.length())
+            def shortName = file.path.substring(rootDirPathLength)
             def equalsMinusHashcode = 0
             file.eachLine { line ->
                 lineNum++

@@ -1,6 +1,24 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.14.Final (October 25, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40492
+
+
+** Bug
+    * HHH-20976 Follow-on locking doesn't work with scrollable results
+    * HHH-20934 SQL Server date_trunc() emulation for versions before 2022 (16.x) issues
+    * HHH-20931 Unnesting array, JSON or XML with HANA in subquery fails
+    * HHH-20850 MySQL enum column gets ALTERed on every startup with hbm2ddl.auto=update, even with no schema change
+    * HHH-20818 Missing join on parent class table in criteria
+    * HHH-20787 NPEs in criteria multiselect when producing enum parameters
+    * HHH-20646 ClassCastException when selecting an entity from a lateral derived table
+    * HHH-19959 `default-cascade` in hbm.xml is ignored in Hibernate 7
+    * HHH-14702 NPE in JPA Criteria when use selectCase that return an enumerated
+    * HHH-12184 NPE selectCase LiteralExpression enumerated value
+
 Changes in 7.4.13.Final (October 11, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

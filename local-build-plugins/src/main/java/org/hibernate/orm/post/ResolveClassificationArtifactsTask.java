@@ -35,6 +35,12 @@ public abstract class ResolveClassificationArtifactsTask extends DefaultTask {
 	@OutputDirectory
 	public abstract DirectoryProperty getArtifactsDirectory();
 
+	public ResolveClassificationArtifactsTask() {
+		// The exact modules to resolve are only known from the metadata file read during execution, so
+		// resolution has to go through the live dependency model.
+		notCompatibleWithConfigurationCache( "Resolves dependencies declared in a file read at execution time" );
+	}
+
 	@TaskAction
 	public void resolve() {
 		final ClassificationMetadata metadata = new ClassificationMetadataJson().read(

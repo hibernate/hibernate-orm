@@ -245,7 +245,7 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 					task.getBaselineClassificationMetadataFile().set( resolvedBaselineMetadata );
 					task.getBaselineArtifacts().from(
 						baselineArtifactsTask.flatMap( ResolveClassificationArtifactsTask::getArtifactsDirectory )
-								.map( directory -> project.fileTree( directory ).matching( pattern -> pattern.include( "*.jar" ) ) )
+								.map( directory -> directory.getAsFileTree().matching( pattern -> pattern.include( "*.jar" ) ) )
 					);
 					task.getCurrentArtifacts().from( migrationCompatibilityArtifacts );
 				}
@@ -302,7 +302,7 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 					);
 					task.getBaselineArtifacts().from(
 						reviewArtifactsTask.flatMap( ResolveClassificationArtifactsTask::getArtifactsDirectory )
-								.map( directory -> project.fileTree( directory ).matching( pattern -> pattern.include( "*.jar" ) ) )
+								.map( directory -> directory.getAsFileTree().matching( pattern -> pattern.include( "*.jar" ) ) )
 					);
 					task.getCurrentArtifacts().from( migrationCompatibilityArtifacts );
 				}

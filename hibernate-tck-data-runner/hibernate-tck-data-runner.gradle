@@ -84,9 +84,13 @@ def ignoredTckTests = [
 // Warn about @Standalone TCK test classes that don't have a wrapper in our runner
 def checkMissingWrappers = tasks.register('checkMissingTckWrappers') {
     dependsOn extractTckSources
+    // resolved here so the action does not use the project (configuration cache)
+    def tckSourcesDir = layout.buildDirectory.dir("tck-sources").get().asFile
+    def testSourceDirs = sourceSets.test.java.srcDirs
+    def tckSourcesTree = fileTree(tckSourcesDir) { include '**/*.java' }
     doLast {
-        def tckSourcesDir = layout.buildDirectory.dir("tck-sources").get().asFile
-        def wrappersDir = sourceSets.test.java.srcDirs.collect {
+        def logger = Logging.getLogger( "checkMissingTckWrappers" )
+        def wrappersDir = testSourceDirs.collect {
             new File(it, "org/hibernate/orm/jakarta/data/tck/runner/test")
         }.find { it.isDirectory() }
         def existingWrappers = (wrappersDir.listFiles() ?: []).collectMany { file ->
@@ -95,7 +99,7 @@ def checkMissingWrappers = tasks.register('checkMissingTckWrappers') {
         }.toSet()
 
         def missing = []
-        fileTree(tckSourcesDir).matching { include '**/*.java' }.each { file ->
+        tckSourcesTree.each { file ->
             if (file.text.contains('@Standalone')) {
                 def fqcn = tckSourcesDir.toPath().relativize(file.toPath()).toString()
                         .replace('/', '.').replace('.java', '')
@@ -156,7 +160,8 @@ test {
         events "passed", "skipped", "failed"
     }
 
+    def dataTckRequested = project.hasProperty('rundatatck')
     onlyIf {
-        project.hasProperty('rundatatck')
+        dataTckRequested
     }
 }

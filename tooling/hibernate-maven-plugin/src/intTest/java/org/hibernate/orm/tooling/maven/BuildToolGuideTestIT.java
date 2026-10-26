@@ -41,7 +41,7 @@ class BuildToolGuideTestIT extends AbstractMavenTestIT {
 	@Test
 	void reverseEngineeredSourcesParticipateInCompilation() throws Exception {
 		prepare( "reveng" );
-		String url = "jdbc:h2:" + directory.resolve( "guide" ).toAbsolutePath();
+		String url = "jdbc:h2:" + directory.resolve( "guide" ).toAbsolutePath().toString().replace( '\\', '/' );
 		try ( var connection = DriverManager.getConnection( url, "sa", "" ); var statement = connection.createStatement() ) {
 			statement.execute( "create table BOOK (ID bigint not null primary key, TITLE varchar(255))" );
 		}

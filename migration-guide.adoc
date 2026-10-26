@@ -1620,6 +1620,14 @@ Generated unique constraints for `Set` collection tables with nullable element c
 This prevents duplicate elements whose corresponding columns contain nulls.
 Before applying the new constraint to an existing table, remove any such duplicates.
 
+[[validation-column-length]]
+=== Column lengths derived from validation constraints
+
+When validation constraints are applied to DDL, Hibernate ORM now uses the smallest
+explicit `max` among multiple `@Size` and Hibernate Validator `@Length` constraints
+applying to the same property, including constraints inherited from overridden getters.
+Previously, the column length depended on the iteration order of the constraints and
+may have resulted in a different constraint being applied.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Dependency changes

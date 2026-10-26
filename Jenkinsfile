@@ -23,7 +23,8 @@ stage('Configure') {
 	// This Jenkinsfile retains only:
 	// - s390x (architecture-specific hardware)
 	// - Label-triggered tests requiring Jenkins infrastructure
-	//   (HANA Cloud lockable resource, sybase_jconn proprietary driver)
+	//   (HANA Cloud lockable resource)
+	//   CockroachDB: Dedicated Jenkins worker node
 	this.environments = [
 		new BuildEnvironment( node: 's390x' )
 	];
@@ -34,9 +35,6 @@ stage('Configure') {
 		}
 		if ( pullRequest.labels.contains( 'hana' ) ) {
 			this.environments.add( new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ) )
-		}
-		if ( pullRequest.labels.contains( 'sybase' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'sybase_jconn' ) )
 		}
 	}
 
@@ -115,11 +113,6 @@ stage('Build') {
 					tryFinally({
 						stage('Start database') {
 							switch (buildEnv.dbName) {
-								case "sybase_jconn":
-									docker.image('nguoianphu/docker-sybase').pull()
-									sh "./db.sh sybase"
-									state[buildEnv.tag]['containerName'] = "sybase"
-									break;
 								case "cockroachdb":
 									docker.image('cockroachdb/cockroach:v26.3.2').pull()
 									sh "./db.sh cockroachdb"
@@ -132,12 +125,9 @@ stage('Build') {
 							withEnv(["RDBMS=${buildEnv.dbName}", 'CI_SYSTEM=jenkins']) {
 								tryFinally({
 									if (buildEnv.dbLockableResource == null) {
-										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
-											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
-											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												ciBuild buildEnv, args
-											}
-										}
+                                        timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+                                            ciBuild buildEnv, args
+                                        }
 									}
 									else {
 										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {

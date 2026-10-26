@@ -123,7 +123,7 @@ elif [ "$RDBMS" == "mssql_2017" ]; then
   containerName=mssql
 # Exclude some Sybase tests on CI because they use `xmltable` function which has a memory leak on the DB version in CI
 elif [ "$RDBMS" == "sybase" ]; then
-  goal="-Pdb=sybase -PexcludeTests=**.GenerateSeriesTest*"
+  goal="-Pdb=sybase_jconn -PexcludeTests=**.GenerateSeriesTest*"
   containerName=sybase
 elif [ "$RDBMS" == "sybase_jconn" ]; then
   goal="-Pdb=sybase_jconn -PexcludeTests=**.GenerateSeriesTest*"

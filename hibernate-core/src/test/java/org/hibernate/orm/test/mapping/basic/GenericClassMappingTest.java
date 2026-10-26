@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,8 +37,10 @@ public class GenericClassMappingTest {
 		final var entity = scope.getSessionFactory().getMappingMetamodel()
 				.getEntityDescriptor( GenericEntity.class );
 		final var attribute = (BasicAttributeMapping) entity.findAttributeMapping( "clazz" );
+		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory().getTypeConfiguration()
+				.getJdbcTypeRegistry();
 		assertSame( Class.class, attribute.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() );
-		assertEquals( Types.VARCHAR, attribute.getJdbcMapping().getJdbcType().getJdbcTypeCode() );
+		assertEquals( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ), attribute.getJdbcMapping().getJdbcType() );
 	}
 
 	@Test

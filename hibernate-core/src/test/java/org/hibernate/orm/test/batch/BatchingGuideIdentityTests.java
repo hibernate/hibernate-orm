@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// Verifies identity insert eligibility separately so unsupported dialects skip before bootstrap.
 ///
 /// @author Steve Ebersole
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsBatchIdentityReturn.class)
 @DomainModel(annotatedClasses = BatchingGuideIdentityTests.IdentityPerson.class)
 @ServiceRegistry(settings = @Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "2"))
 @SessionFactory(useCollectingStatementObserver = true)
@@ -52,5 +52,6 @@ class BatchingGuideIdentityTests {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		Long id;
+		String name;
 	}
 }

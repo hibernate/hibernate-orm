@@ -24,7 +24,12 @@ public class GaussDBMModeDatabaseCleaner extends PostgreSQLDatabaseCleaner {
 
 	@Override
 	public boolean isApplicable(Connection connection) {
-		return GaussDBDatabaseCleaner.isMCompatibilityMode( connection );
+		// datcompatibility only exists on GaussDB (PostgreSQL has no such column on pg_database,
+		// and other databases do not have the pg_catalog at all), so a successful probe means
+		// the connection is to a GaussDB: without this check, this cleaner would apply to any
+		// database that is not PostgreSQL-compatible.
+		final String mode = GaussDBDatabaseCleaner.compatibilityMode( connection );
+		return "M".equals( mode ) || "B".equals( mode );
 	}
 
 	/**

@@ -20,7 +20,12 @@ public class GaussDBDatabaseCleaner extends PostgreSQLDatabaseCleaner {
 
 	@Override
 	public boolean isApplicable(Connection connection) {
-		return !isMCompatibilityMode( connection );
+		// datcompatibility only exists on GaussDB (PostgreSQL has no such column on pg_database,
+		// and other databases do not have the pg_catalog at all), so a successful probe means
+		// the connection is to a GaussDB: without this check, this cleaner would apply to any
+		// database that is not PostgreSQL-compatible.
+		final String mode = compatibilityMode( connection );
+		return mode != null && !"M".equals( mode ) && !"B".equals( mode );
 	}
 
 	/**
@@ -55,18 +60,20 @@ public class GaussDBDatabaseCleaner extends PostgreSQLDatabaseCleaner {
 		return true;
 	}
 
-	static boolean isMCompatibilityMode(Connection connection) {
+	/**
+	 * The datcompatibility mode of the connected database, or {@code null} if the connection is
+	 * not to a GaussDB: the pg_database.datcompatibility column is GaussDB-specific, so the probe
+	 * fails (no such table, or no such column as on PostgreSQL) for every other database.
+	 */
+	static String compatibilityMode(Connection connection) {
 		try (Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(
 						"select datcompatibility from pg_database where datname = current_database()" )) {
-			if ( rs.next() ) {
-				final String mode = rs.getString( 1 );
-				return "M".equals( mode ) || "B".equals( mode );
-			}
+			return rs.next() ? rs.getString( 1 ) : null;
 		}
 		catch (SQLException e) {
-			// not GaussDB or the probe failed
+			// not GaussDB
+			return null;
 		}
-		return false;
 	}
 }

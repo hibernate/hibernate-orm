@@ -11,7 +11,6 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -39,7 +38,7 @@ class ElementCollectionMixedAccessTest {
 		assertThat( metamodel.entity( Owner.class ).getAttribute( "details" ).getJavaMember() )
 				.isInstanceOf( Field.class );
 		assertThat( metamodel.entity( Owner.class ).getAttributes() ).extracting( attribute -> attribute.getName() )
-				.containsExactlyInAnyOrder( "id", "details" );
+				.containsExactlyInAnyOrder( "id", "name", "details" );
 		assertThat( metamodel.embeddable( Detail.class ).getAttribute( "description" ).getJavaMember() )
 				.isInstanceOf( Field.class );
 
@@ -61,9 +60,10 @@ class ElementCollectionMixedAccessTest {
 	@Entity( name = "MixedAccessOwner" )
 	public static class Owner {
 		@Id
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@GeneratedValue
 		@Access( AccessType.PROPERTY )
 		private Long id;
+		private String name;
 
 		@ElementCollection
 		private Set<Detail> details = new HashSet<>();

@@ -1,5 +1,6 @@
 package org.hibernate.testing.orm.junit;
 
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 
@@ -53,6 +54,7 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.dialect.sql.ast.spi.CteSupport;
 import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
 import org.hibernate.dialect.DB2Dialect;
@@ -270,6 +272,15 @@ abstract public class DialectFeatureChecks {
 				return false;
 			}
 			return dialect.getIdentityColumnSupport().supportsIdentityColumns();
+		}
+	}
+
+	public static class SupportsBatchIdentityReturn implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return new SupportsIdentityColumns().apply( dialect )
+				&& (dialect.getGeneratedValuesSupport().getCapabilities().contains( GeneratedValuesSupport.Capability.INSERT_RETURNING )
+				|| dialect.getGeneratedValuesSupport().getCapabilities().contains( GeneratedValuesSupport.Capability.ARBITRARY_GENERATED_KEYS )
+					|| "true".equals( dialect.getDefaultProperties().get( JdbcSettings.USE_GET_GENERATED_KEYS ) ));
 		}
 	}
 

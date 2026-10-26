@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: ${DB_IMAGE_MYSQL_9_5:-docker.io/library/mysql:9.5@sha256:57c892ddeb17e6c7dddf219914db017b2cf3e2797806a75424444b83622cc8ef}
+    image: ${DB_IMAGE_MYSQL_8_4:-docker.io/library/mysql:8.4@sha256:76f0358884cb92d9a086d24e5671c38048d3fef40f2588703d73eb55392d6b69}
     container_name: mysql
     environment:
       MYSQL_USER: hibernate_orm_test

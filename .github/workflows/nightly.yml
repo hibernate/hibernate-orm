@@ -57,7 +57,7 @@ jobs:
           { "name": "cockroachdb", "rdbms": "cockroachdb",
             "timeout": 300 },
           { "name": "hsqldb 2.6", "rdbms": "hsqldb_2_6" },
-          { "name": "mysql 8.0", "rdbms": "mysql_8_0" },
+          { "name": "mysql 8.4", "rdbms": "mysql_8_4" },
           { "name": "mariadb 10.6", "rdbms": "mariadb_10_6" },
           { "name": "postgis 14", "rdbms": "postgis_14" },
           { "name": "edb 14", "rdbms": "edb_14" },

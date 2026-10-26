@@ -1,6 +1,5 @@
 package org.hibernate.orm.test.mapping.fetch.depth;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,9 +96,6 @@ public class NoDepthTests {
 					s.createSelectionQuery( "from SysModule2", SysModule2.class ).list();
 				});
 			}
-		}
-		catch (IOException e) {
-			throw new RuntimeException( "re-throw", e );
 		}
 	}
 

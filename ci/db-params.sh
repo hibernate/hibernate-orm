@@ -21,8 +21,8 @@ elif [ "$RDBMS" == "hsqldb_2_6" ]; then
 elif [ "$RDBMS" == "mysql" ]; then
   goal="-Pdb=mysql"
   containerName=mysql
-elif [ "$RDBMS" == "mysql_8_0" ]; then
-  goal="-Pdb=mysql -PdbVersion=${DB_VERSION:-8.0}"
+elif [ "$RDBMS" == "mysql_8_4" ]; then
+  goal="-Pdb=mysql -PdbVersion=${DB_VERSION:-8.4}"
   containerName=mysql
 elif [ "$RDBMS" == "mariadb" ]; then
   goal="-Pdb=mariadb"

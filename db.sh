@@ -141,51 +141,9 @@ mysql() {
     mysql_9_7
 }
 
-mysql_8_0() {
-    compose_down "mysql"
-    compose_up "versioned/mysql-8.0/docker-compose.yaml"
-    mysql_post_setup
-}
-
-mysql_8_1() {
-    compose_down "mysql"
-    compose_up "versioned/mysql-8.1/docker-compose.yaml"
-    mysql_post_setup
-}
-
-mysql_8_2() {
-    compose_down "mysql"
-    compose_up "versioned/mysql-8.2/docker-compose.yaml"
-    mysql_post_setup
-}
-
 mysql_8_4() {
-    compose_down "versioned/mysql-8.4/docker-compose.yaml" "mysql"
+    compose_down "mysql"
     compose_up "versioned/mysql-8.4/docker-compose.yaml"
-    mysql_post_setup
-}
-
-mysql_9_2() {
-    compose_down "mysql"
-    compose_up "versioned/mysql-9.2/docker-compose.yaml"
-    mysql_post_setup
-}
-
-mysql_9_4() {
-    compose_down "mysql"
-    compose_up "versioned/mysql-9.4/docker-compose.yaml"
-    mysql_post_setup
-}
-
-mysql_9_5() {
-    compose_down "mysql"
-    compose_up "versioned/mysql-9.5/docker-compose.yaml"
-    mysql_post_setup
-}
-
-mysql_9_6() {
-    compose_down "mysql"
-    compose_up "versioned/mysql-9.6/docker-compose.yaml"
     mysql_post_setup
 }
 
@@ -1299,14 +1257,7 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
     echo -e "\tmysql_9_7"
-    echo -e "\tmysql_9_6"
-    echo -e "\tmysql_9_5"
-    echo -e "\tmysql_9_4"
-    echo -e "\tmysql_9_2"
     echo -e "\tmysql_8_4"
-    echo -e "\tmysql_8_2"
-    echo -e "\tmysql_8_1"
-    echo -e "\tmysql_8_0"
     echo -e "\toracle"
     echo -e "\toracle_23"
     echo -e "\toracle_21"

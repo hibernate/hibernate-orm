@@ -91,3 +91,11 @@ tasks.register('copyDependenciesSonar', Copy) {
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+// Apply workaround for Spotless clean bug: https://github.com/diffplug/spotless/issues/2850#issuecomment-5207457291
+allprojects {
+    def everyClean = rootProject.allprojects.collect { p -> p.tasks.matching { it.name == 'clean' } }
+    tasks.matching { it.name.startsWith('spotless') }.configureEach {
+        mustRunAfter everyClean
+    }
+}

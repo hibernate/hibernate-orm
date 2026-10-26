@@ -20,9 +20,8 @@ stage('Configure') {
 	this.environments = [
 		// Most environments have been moved to GitHub Actions (nightly.yml).
 		// This Jenkinsfile retains only jobs requiring Jenkins infrastructure:
-		// - sybase_jconn: proprietary jConnect driver stored as Jenkins credential
+		// - cockroachdb: Dedicated Jenkins worker node
 		// - hana_cloud: HANA Cloud lockable resource for exclusive access coordination
-		new BuildEnvironment( dbName: 'sybase_jconn' ),
 		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ),
 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true )
 	];
@@ -91,10 +90,6 @@ stage('Build') {
 					tryFinally({
 						stage('Start database') {
 							switch (buildEnv.dbName) {
-								case "sybase_jconn":
-									sh "./db.sh sybase"
-									state[buildEnv.tag]['containerName'] = "sybase"
-									break;
 								case "cockroachdb":
 									sh "./db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"
@@ -106,12 +101,9 @@ stage('Build') {
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
 								tryFinally({
 									if (buildEnv.dbLockableResource == null) {
-										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
-											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
-											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												ciBuild buildEnv, args
-											}
-										}
+                                        timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+                                            ciBuild buildEnv, args
+                                        }
 									}
 									else {
 										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {

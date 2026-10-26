@@ -23,6 +23,7 @@ stage('Configure') {
 		// - sybase_jconn: proprietary jConnect driver stored as Jenkins credential
 		// - hana_cloud: HANA Cloud lockable resource for exclusive access coordination
 		new BuildEnvironment( dbName: 'sybase_jconn' ),
+		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ),
 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true )
 	];
 
@@ -93,6 +94,10 @@ stage('Build') {
 								case "sybase_jconn":
 									sh "./db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
+									break;
+								case "cockroachdb":
+									sh "./db.sh cockroachdb"
+									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}
 						}

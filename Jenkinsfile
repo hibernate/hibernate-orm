@@ -29,6 +29,9 @@ stage('Configure') {
 	];
 
 	if ( env.CHANGE_ID ) {
+		if ( pullRequest.labels.contains( 'cockroachdb' ) ) {
+			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ) )
+		}
 		if ( pullRequest.labels.contains( 'hana' ) ) {
 			this.environments.add( new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ) )
 		}
@@ -116,6 +119,11 @@ stage('Build') {
 									docker.image('nguoianphu/docker-sybase').pull()
 									sh "./db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
+									break;
+								case "cockroachdb":
+									docker.image('cockroachdb/cockroach:v26.3.2').pull()
+									sh "./db.sh cockroachdb"
+									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}
 						}

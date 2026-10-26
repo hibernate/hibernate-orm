@@ -54,8 +54,6 @@ jobs:
       # -- generally that requires upgrading bytebuddy after the JDK goes GA.
       matrix-json: >-
         [
-          { "name": "cockroachdb", "rdbms": "cockroachdb",
-            "timeout": 300 },
           { "name": "hsqldb 2.6", "rdbms": "hsqldb_2_6" },
           { "name": "mysql 8.4", "rdbms": "mysql_8_4" },
           { "name": "mariadb 10.6", "rdbms": "mariadb_10_6" },

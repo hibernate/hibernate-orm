@@ -103,7 +103,6 @@ jobs:
           { "name": "Data TCK - postgresql", "rdbms": "postgresql",
             "build-script": "ci/build-data-tck-github.sh",
             "runs-on": "runs-on/fleet=linux-standard/env=ibm" }
-          ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'cockroachdb') && ', { "name": "cockroachdb", "rdbms": "cockroachdb", "timeout": 300 }' || '' }}
           ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'tidb') && ', { "name": "tidb", "rdbms": "tidb" }' || '' }}
           ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'informix') && ', { "name": "informix", "rdbms": "informix", "gradle-args": "-Ptest.threads=1" }' || '' }}
           ${{ github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'jdk') || contains(github.event.pull_request.labels.*.name, 'jdk-27')) && ', { "name": "JDK", "java-test-version": "27", "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny", "gradle-args": "-PskipJacoco=true" }' || '' }}

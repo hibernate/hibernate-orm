@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.H2Dialect;
@@ -112,19 +113,25 @@ public class InformationExtractionSupportTests {
 			}
 
 			@Override
-			public <T> T getSetting(String name, Converter<T> converter) {
+			public <T> @Nullable T getSetting(@Nonnull String name, @Nonnull Converter<T> converter) {
 				return null;
 			}
 
 			@Override
 			@Nonnull
-			public <T> T getSetting(String name, Converter<T> converter, @Nonnull T defaultValue) {
+			public <T> T getSetting(
+					@Nonnull String name,
+					@Nonnull Converter<T> converter,
+					@Nonnull T defaultValue) {
 				return defaultValue;
 			}
 
 			@Override
 			@Nonnull
-			public <T> T getSetting(String name, Class<T> expected, @Nonnull T defaultValue) {
+			public <T> T getSetting(
+					@Nonnull String name,
+					@Nonnull Class<T> expected,
+					@Nonnull T defaultValue) {
 				return defaultValue;
 			}
 		};

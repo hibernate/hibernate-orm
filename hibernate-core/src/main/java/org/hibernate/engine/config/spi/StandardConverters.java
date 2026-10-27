@@ -1,6 +1,6 @@
 package org.hibernate.engine.config.spi;
 
-
+import jakarta.annotation.Nonnull;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
@@ -14,7 +14,7 @@ import static org.hibernate.engine.config.spi.ConfigurationService.Converter;
 public class StandardConverters {
 	public static final Converter<Boolean> BOOLEAN = StandardConverters::asBoolean;
 
-	public static Boolean asBoolean(Object value) {
+	public static @Nonnull Boolean asBoolean(@Nonnull Object value) {
 		return value instanceof Boolean bool
 				? bool
 				: parseBoolean( value.toString() );
@@ -22,13 +22,13 @@ public class StandardConverters {
 
 	public static final Converter<String> STRING = StandardConverters::asString;
 
-	public static String asString(Object value) {
+	public static @Nonnull String asString(@Nonnull Object value) {
 		return value.toString();
 	}
 
 	public static final Converter<Integer> INTEGER = StandardConverters::asInteger;
 
-	public static Integer asInteger(Object value) {
+	public static @Nonnull Integer asInteger(@Nonnull Object value) {
 		return value instanceof Number number
 				? number.intValue()
 				: parseInt( value.toString() );

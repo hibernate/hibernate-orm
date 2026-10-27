@@ -2,6 +2,8 @@ package org.hibernate.tool.schema.extract.spi;
 
 import java.sql.Types;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 
 /**
@@ -13,9 +15,10 @@ import org.hibernate.Incubating;
 @Incubating(since = "6.1")
 public interface ColumnTypeInformation {
 
+	@Nonnull
 	ColumnTypeInformation EMPTY = new ColumnTypeInformation() {
 		@Override
-		public Boolean getNullable() {
+		public @Nullable Boolean getNullable() {
 			return null;
 		}
 
@@ -25,7 +28,7 @@ public interface ColumnTypeInformation {
 		}
 
 		@Override
-		public String getTypeName() {
+		public @Nullable String getTypeName() {
 			return null;
 		}
 
@@ -47,7 +50,7 @@ public interface ColumnTypeInformation {
 	 *
 	 * @return nullability, if known
 	 */
-	Boolean getNullable();
+	@Nullable Boolean getNullable();
 
 	/**
 	 * The JDBC type-code.
@@ -61,7 +64,7 @@ public interface ColumnTypeInformation {
 	 *
 	 * @return Type name
 	 */
-	String getTypeName();
+	@Nullable String getTypeName();
 
 	// todo : wrap these in org.hibernate.metamodel.spi.relational.Size
 

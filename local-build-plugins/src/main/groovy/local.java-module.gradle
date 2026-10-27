@@ -65,8 +65,6 @@ dependencies {
 
     //Databases
     testRuntimeOnly libs.jdbc.h2
-    testRuntimeOnly libs.jdbc.derby
-    testRuntimeOnly libs.jdbc.derbyTools
     testRuntimeOnly libs.jdbc.hsqldb
     testRuntimeOnly libs.jdbc.postgresql
     testRuntimeOnly libs.jdbc.edb
@@ -93,6 +91,10 @@ dependencies {
     }
     else if ( db.startsWith( 'mariadb' ) ) {
         testRuntimeOnly libs.jdbc.mariadb
+    }
+    else if ( db.startsWith( 'derby' ) ) {
+        testRuntimeOnly libs.jdbc.derby
+        testRuntimeOnly libs.jdbc.derbyTools
     }
     else if ( db.startsWith( 'firebird' ) ) {
         testRuntimeOnly libs.jdbc.firebird
@@ -357,3 +359,25 @@ configurations.configureEach {
     }
 }
 
+
+tasks.register( "ciCheck" ) {
+    // Task used by CI builds
+    group = "verification"
+    description = "Checks for CI environments"
+    dependsOn tasks.check
+}
+
+gradle.taskGraph.whenReady {
+    if ( it.hasTask( tasks.ciCheck ) ) {
+        // These are already enforced by the formatChecks task
+        if (tasks.findByName('spotlessApply') != null) {
+            tasks.spotlessApply.enabled = false
+        }
+        if (tasks.findByName('spotlessJavaApply') != null) {
+            tasks.spotlessJavaApply.enabled = false
+        }
+        if (tasks.findByName('enforceRules') != null) {
+            tasks.enforceRules.enabled = false
+        }
+    }
+}

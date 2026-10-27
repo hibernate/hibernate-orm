@@ -11,22 +11,6 @@ if (!skipErrorProne) {
     plugins.apply( 'net.ltgt.nullaway' )
 }
 
-tasks.register( "ciCheck" ) {
-    // Task used by CI builds
-    group = "verification"
-    description = "Checks for CI environments"
-    dependsOn tasks.check
-}
-
-gradle.taskGraph.whenReady {
-    if ( it.hasTask( tasks.ciCheck ) ) {
-        // These are already enforced by the formatChecks task
-        tasks.spotlessApply.enabled = false
-        tasks.spotlessJavaApply.enabled = false
-        tasks.enforceRules.enabled = false
-    }
-}
-
 tasks.register( "formatChecks" ) {
     // Only runs static code analysis, doesn't require compilation
     group = "verification"

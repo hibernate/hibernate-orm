@@ -4,6 +4,9 @@
  */
 package org.hibernate.temporal.audit;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -12,6 +15,7 @@ import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
+import org.hibernate.type.YesNoConverter;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -33,7 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 @DomainModel(annotatedClasses = {
 		AuditExcludedDefaultValueTest.BoxedEntity.class,
-		AuditExcludedDefaultValueTest.PrimitiveEntity.class
+		AuditExcludedDefaultValueTest.PrimitiveEntity.class,
+		AuditExcludedDefaultValueTest.PropertyEntity.class
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditExcludedDefaultValueTest$TxIdSupplier"))
@@ -67,6 +72,11 @@ class AuditExcludedDefaultValueTest {
 			primitive.enabled = true;
 			primitive.marker = 'X';
 			session.persist( primitive );
+
+			final var property = new PropertyEntity();
+			property.setId( 3 );
+			property.setName( "property" );
+			session.persist( property );
 		} );
 	}
 
@@ -111,6 +121,28 @@ class AuditExcludedDefaultValueTest {
 	}
 
 	@Test
+	void excludedConvertedPropertiesUseDeclaredTypes(SessionFactoryScope scope) {
+		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
+			assertPropertyDefaults( auditLog.find( PropertyEntity.class, 3, 1 ) );
+		}
+	}
+
+	@Test
+	void excludedConvertedPropertiesUseDeclaredTypesInQuery(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( 1 ).openSession()) {
+			assertPropertyDefaults( session.createSelectionQuery(
+					"from AuditPropertyDefaults", PropertyEntity.class ).getSingleResult() );
+		}
+	}
+
+	private void assertPropertyDefaults(PropertyEntity entity) {
+		assertNotNull( entity );
+		assertEquals( "property", entity.getName() );
+		assertFalse( entity.isEnabled() );
+		assertNull( entity.getOptionalEnabled() );
+	}
+
+	@Test
 	void currentEntitiesRetainExcludedValues(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var boxed = session.find( BoxedEntity.class, 1 );
@@ -124,6 +156,11 @@ class AuditExcludedDefaultValueTest {
 			assertEquals( 9, primitive.counter );
 			assertTrue( primitive.enabled );
 			assertEquals( 'X', primitive.marker );
+
+			final var property = session.find( PropertyEntity.class, 3 );
+			assertNotNull( property );
+			assertTrue( property.isEnabled() );
+			assertTrue( property.getOptionalEnabled() );
 		} );
 	}
 
@@ -148,10 +185,58 @@ class AuditExcludedDefaultValueTest {
 		Integer id;
 		String name;
 		@Audited.Excluded
-		int counter;
+		int counter = 7;
 		@Audited.Excluded
-		boolean enabled;
+		boolean enabled = true;
 		@Audited.Excluded
-		char marker;
+		char marker = 'Y';
+	}
+
+	@Audited
+	@Entity(name = "AuditPropertyDefaults")
+	@Access(AccessType.PROPERTY)
+	static class PropertyEntity {
+		private Integer id;
+		private String name;
+		// The mapped getter is primitive even though its backing field is boxed.
+		private Boolean enabled = true;
+		private Boolean optionalEnabled = true;
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Audited.Excluded
+		@Convert(converter = YesNoConverter.class)
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		@Audited.Excluded
+		@Convert(converter = YesNoConverter.class)
+		public Boolean getOptionalEnabled() {
+			return optionalEnabled;
+		}
+
+		public void setOptionalEnabled(Boolean optionalEnabled) {
+			this.optionalEnabled = optionalEnabled;
+		}
 	}
 }

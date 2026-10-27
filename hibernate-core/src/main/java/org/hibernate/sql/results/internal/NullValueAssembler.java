@@ -20,7 +20,7 @@ public class NullValueAssembler<J> implements DomainResultAssembler<J> {
 
 	@Override
 	public J assemble(RowProcessingState rowProcessingState) {
-		return javaType.getDefaultValue();
+		return null;
 	}
 
 	@Override

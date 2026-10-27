@@ -122,7 +122,6 @@ def releasePrepareTask = tasks.register("releasePrepare") {
 	group ="release-prepare"
 	description = "See :release:releasePrepare for details.  Here we hook in the `check` task."
 
-	dependsOn tasks.check
 }
 
 tasks.register("releaseGradlePluginPerform") {

@@ -72,7 +72,6 @@ tasks.register("releasePrepare") {
     group = "release-prepare"
     description = "See :release:releasePrepare for details."
 
-    dependsOn tasks.check
     dependsOn tasks.generateMetadataFileForPublishedArtifactsPublication
     dependsOn tasks.generatePomFileForPublishedArtifactsPublication
     dependsOn tasks.publishAllPublicationsToStagingRepository

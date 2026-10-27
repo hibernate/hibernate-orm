@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -102,12 +103,12 @@ public class OracleDialectSequenceInformationTest {
 		return jdbcEnvironment.getDialect().getSequenceInformationExtractor().extractMetadata(
 				new ExtractionContext.EmptyExtractionContext() {
 					@Override
-					public Connection getJdbcConnection() {
+					public @Nonnull Connection getJdbcConnection() {
 						return connection;
 					}
 
 					@Override
-					public JdbcEnvironment getJdbcEnvironment() {
+					public @Nonnull JdbcEnvironment getJdbcEnvironment() {
 						return jdbcEnvironment;
 					}
 				}

@@ -74,14 +74,12 @@ public class ModuleLevelEntityListenerIT {
 	}
 
 	@Test
-	void excludeDefaultListenersDoesNotExcludeModuleOrPackageLevelEntityListeners() {
+	void excludeDefaultListenersExcludesModuleAndPackageLevelEntityListeners() {
 		sessionFactory.inTransaction( session -> {
 			session.persist( new ExcludingEntity( 1L ) );
 		} );
 
 		assertThat( EventTracker.events ).containsExactly(
-				"module:ExcludingEntity",
-				"package:ExcludingEntity",
 				"entity-callback:ExcludingEntity"
 		);
 	}

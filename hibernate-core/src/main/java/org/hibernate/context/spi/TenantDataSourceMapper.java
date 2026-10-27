@@ -16,10 +16,11 @@ import org.hibernate.Incubating;
  * @param <T> The type of the tenant id
  *
  * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_DATASOURCE_MAPPER
- * @see org.hibernate.cfg.Configuration#setTenantDataSourceMapper
  * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String)
  *
  * @since 8.0
+ *
+ * @author Gavin King
  */
 @Incubating(since = "8.0")
 public interface TenantDataSourceMapper<T> {

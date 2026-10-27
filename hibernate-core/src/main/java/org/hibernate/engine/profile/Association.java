@@ -8,7 +8,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class Association {
-	private final EntityPersister owner;
+	private final EntityPersister<?> owner;
 	private final String associationPath;
 	private final String role;
 
@@ -19,7 +19,7 @@ public class Association {
 	 * @param associationPath The path of the association, from the entity
 	 */
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public Association(EntityPersister owner, String associationPath) {
+	public Association(EntityPersister<?> owner, String associationPath) {
 		this.owner = owner;
 		this.associationPath = associationPath;
 		this.role = owner.getEntityName() + '.' + associationPath;
@@ -29,7 +29,7 @@ public class Association {
 	 * The persister of the owning entity.
 	 */
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public EntityPersister getOwner() {
+	public EntityPersister<?> getOwner() {
 		return owner;
 	}
 

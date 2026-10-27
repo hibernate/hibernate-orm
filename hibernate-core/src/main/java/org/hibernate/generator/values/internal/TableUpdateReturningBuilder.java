@@ -19,7 +19,7 @@ public class TableUpdateReturningBuilder
 	final List<ColumnReference> generatedColumns;
 
 	public TableUpdateReturningBuilder(
-			EntityPersister mutationTarget,
+			EntityPersister<?> mutationTarget,
 			MutatingTableReference tableReference,
 			List<ColumnReference> generatedColumns,
 			SessionFactoryImplementor sessionFactory) {
@@ -28,8 +28,8 @@ public class TableUpdateReturningBuilder
 	}
 
 	@Override
-	protected EntityPersister getMutationTarget() {
-		return (EntityPersister) super.getMutationTarget();
+	protected EntityPersister<?> getMutationTarget() {
+		return (EntityPersister<?>) super.getMutationTarget();
 	}
 
 	@Override

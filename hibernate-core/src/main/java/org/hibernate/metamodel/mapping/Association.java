@@ -9,12 +9,12 @@ import org.hibernate.sql.results.graph.Fetchable;
  *
  * @author Steve Ebersole
  */
-public interface Association extends Fetchable {
+public interface Association<J, M, R> extends Fetchable<J, M, R> {
 	/**
 	 * The descriptor, allowing access to column(s), etc
 	 */
 	@Nonnull
-	ForeignKeyDescriptor getForeignKeyDescriptor();
+	ForeignKeyDescriptor<?, ?, ?> getForeignKeyDescriptor();
 
 	/**
 	 * Indicates which "side" of the foreign-key this association describes

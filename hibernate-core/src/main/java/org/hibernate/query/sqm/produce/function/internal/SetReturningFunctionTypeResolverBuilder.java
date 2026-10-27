@@ -118,7 +118,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 					new SelectableMapping[typeResolvers.length + (withOrdinality ? 1 : 0)];
 			int i = 0;
 			for ( TypeResolver typeResolver : typeResolvers ) {
-				final JdbcMapping jdbcMapping = typeResolver.resolveFunctionReturnType( arguments, converter );
+				final JdbcMapping<?> jdbcMapping = typeResolver.resolveFunctionReturnType( arguments, converter );
 				selectableMappings[i] = new SelectableMappingImpl(
 						"",
 						typeResolver.selectionExpression(),
@@ -193,7 +193,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 
 		SqmBindableType<?> resolveTupleType(List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration);
 
-		JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker);
+		JdbcMapping<?> resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker);
 	}
 
 	private record BasicTypeReferenceTypeResolver(
@@ -208,7 +208,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 			}
 
 			@Override
-			public JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker) {
+			public JdbcMapping<?> resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker) {
 				return walker.getCreationContext().getTypeConfiguration().getBasicTypeRegistry().resolve( basicTypeReference );
 			}
 		}
@@ -225,7 +225,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 			}
 
 			@Override
-			public JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker) {
+			public JdbcMapping<?> resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker) {
 				return basicType;
 			}
 		}
@@ -242,7 +242,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 			}
 
 			@Override
-			public JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker) {
+			public JdbcMapping<?> resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker) {
 				return ((Expression) arguments.get( argPosition )).getExpressionType().getSingleJdbcMapping();
 			}
 		}

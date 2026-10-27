@@ -9,7 +9,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 public class TemporaryTableSessionUidColumn extends TemporaryTableColumn {
 	public TemporaryTableSessionUidColumn(
 			TemporaryTable containingTable,
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			String sqlTypeName,
 			Size size) {
 		super(

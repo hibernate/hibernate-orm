@@ -26,7 +26,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  */
 public class GlobalTemporaryTableMutationStrategy extends GlobalTemporaryTableStrategy implements SqmMultiTableMutationStrategy {
 
-	public GlobalTemporaryTableMutationStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+	public GlobalTemporaryTableMutationStrategy(EntityMappingType<?> rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
 				rootEntityDescriptor,
 				requireGlobalTemporaryTableStrategy( runtimeModelCreationContext.getDialect() ),
@@ -35,7 +35,7 @@ public class GlobalTemporaryTableMutationStrategy extends GlobalTemporaryTableSt
 	}
 
 	private GlobalTemporaryTableMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			TemporaryTableStrategy temporaryTableStrategy,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
@@ -90,7 +90,7 @@ public class GlobalTemporaryTableMutationStrategy extends GlobalTemporaryTableSt
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext context,
 			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
-		final EntityPersister rootDescriptor = context.getSession().getFactory().getMappingMetamodel()
+		final EntityPersister<?> rootDescriptor = context.getSession().getFactory().getMappingMetamodel()
 				.getEntityDescriptor( sqmDelete.getRoot().getEntityName() );
 		if ( rootDescriptor.getSoftDeleteMapping() != null ) {
 			return new TableBasedSoftDeleteHandler(

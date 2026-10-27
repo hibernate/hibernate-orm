@@ -24,7 +24,7 @@ public interface AssemblerCreationState {
 
 	Initializer<?> resolveInitializer(
 			NavigablePath navigablePath,
-			ModelPart fetchedModelPart,
+			ModelPart<?, ?, ?> fetchedModelPart,
 			Supplier<Initializer<?>> producer);
 
 	<P extends FetchParent> Initializer<?> resolveInitializer(

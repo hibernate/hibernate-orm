@@ -44,7 +44,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	public EntityIdentityInsertAction(
 			final @Nonnull Object[] state,
 			final @Nonnull Object instance,
-			final @Nonnull EntityPersister persister,
+			final @Nonnull EntityPersister<?> persister,
 			final @Nonnull EventSource session,
 			final boolean isDelayed) {
 		this( state, instance, persister, session, isDelayed, isDelayed );
@@ -53,7 +53,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	private EntityIdentityInsertAction(
 			final @Nonnull Object[] state,
 			final @Nonnull Object instance,
-			final @Nonnull EntityPersister persister,
+			final @Nonnull EntityPersister<?> persister,
 			final @Nonnull EventSource session,
 			final boolean isDelayed,
 			final boolean useDelayedIdentifier) {
@@ -208,11 +208,11 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	@Nullable
 	private static Object compositeGeneratedId(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity,
 			@Nonnull GeneratedValues generatedValues,
 			@Nonnull SharedSessionContractImplementor session) {
-		if ( persister.getIdentifierMapping() instanceof CompositeIdentifierMapping compositeIdentifier ) {
+		if ( persister.getIdentifierMapping() instanceof CompositeIdentifierMapping<?, ?, ?> compositeIdentifier ) {
 			final var idMapping = compositeIdentifier.getMappedIdEmbeddableTypeDescriptor();
 			final var generatedMapping = compositeIdentifier.getEmbeddableTypeDescriptor();
 			final Object currentId = persister.getIdentifier( entity, session );
@@ -249,8 +249,8 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 */
 	@Nonnull
 	public static Object[] defaultedPrimitiveIds(
-			@Nonnull EmbeddableMappingType generatedMapping,
-			@Nonnull EmbeddableMappingType idMapping) {
+			@Nonnull EmbeddableMappingType<?, ?, ?> generatedMapping,
+			@Nonnull EmbeddableMappingType<?, ?, ?> idMapping) {
 		final int attributeCount = generatedMapping.getNumberOfAttributeMappings();
 		final var values = new Object[attributeCount];
 		for ( int i = 0; i < attributeCount; i++ ) {
@@ -264,7 +264,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	private static boolean unpackGeneratedValues(
 			@Nonnull GeneratedValues generatedValues,
-			@Nonnull EmbeddableMappingType generatedMapping,
+			@Nonnull EmbeddableMappingType<?, ?, ?> generatedMapping,
 			@Nonnull Object[] values) {
 		final int attributeCount =
 				generatedMapping.getNumberOfAttributeMappings();

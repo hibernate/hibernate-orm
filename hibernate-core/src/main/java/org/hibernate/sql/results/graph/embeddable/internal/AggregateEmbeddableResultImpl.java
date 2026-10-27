@@ -33,13 +33,13 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent
 					InitializerProducer<AggregateEmbeddableResultImpl<T>> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
-	private final EmbeddableMappingType fetchContainer;
+	private final EmbeddableMappingType<?, ?, ?> fetchContainer;
 	private final BasicFetch<?> discriminatorFetch;
 	private final int[] aggregateValuesArrayPositions;
 
 	public AggregateEmbeddableResultImpl(
 			NavigablePath navigablePath,
-			EmbeddableValuedModelPart embeddedPartDescriptor,
+			EmbeddableValuedModelPart<?, ?, ?> embeddedPartDescriptor,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		/*
@@ -120,7 +120,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent
 	}
 
 	@Override
-	public EmbeddableMappingType getFetchContainer() {
+	public EmbeddableMappingType<?, ?, ?> getFetchContainer() {
 		return this.fetchContainer;
 	}
 
@@ -130,12 +130,12 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent
 	}
 
 	@Override
-	public EmbeddableMappingType getReferencedMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getReferencedMappingType() {
 		return getFetchContainer();
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getReferencedMappingContainer() {
+	public EmbeddableValuedModelPart<?, ?, ?> getReferencedMappingContainer() {
 		return getFetchContainer().getEmbeddedValueMapping();
 	}
 

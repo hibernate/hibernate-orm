@@ -158,7 +158,7 @@ public class CascadeTraversalBenchmark {
 
 		private SessionFactory sessionFactory;
 		private EventSource session;
-		private EntityPersister persister;
+		private EntityPersister<?> persister;
 		private Object root;
 		private CascadingAction<Object> action;
 		private CascadePoint cascadePoint;
@@ -190,7 +190,7 @@ public class CascadeTraversalBenchmark {
 					: createEnhancedRoot( factory, fixtureShape, session );
 			action = routeKind.action();
 			cascadePoint = routeKind.cascadePoint();
-			propertySelection = persister instanceof AbstractEntityPersister abstractPersister
+			propertySelection = persister instanceof AbstractEntityPersister<?> abstractPersister
 					? abstractPersister.getCascadePropertySelection( action )
 					: CascadePropertySelection.all();
 			ordinaryPropertySelection = CascadePropertySelection.all();
@@ -224,7 +224,7 @@ public class CascadeTraversalBenchmark {
 		}
 
 		private PropertySelectionKind resolvePropertySelection() {
-			return persister instanceof AbstractEntityPersister abstractPersister
+			return persister instanceof AbstractEntityPersister<?> abstractPersister
 					? abstractPersister.getCascadePropertySelection( action ).getKind()
 					: PropertySelectionKind.ALL;
 		}
@@ -527,10 +527,10 @@ public class CascadeTraversalBenchmark {
 		return root;
 	}
 
-	private static EntityPersister findEnhancedPersister(
+	private static EntityPersister<?> findEnhancedPersister(
 			SessionFactoryImplementor factory,
 			String mappedClassName) {
-		final EntityPersister[] match = new EntityPersister[1];
+		final EntityPersister<?>[] match = new EntityPersister<?>[1];
 		factory.getMappingMetamodel().forEachEntityDescriptor( candidate -> {
 			if ( candidate.getMappedClass().getName().equals( mappedClassName ) ) {
 				match[0] = candidate;

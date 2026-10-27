@@ -124,12 +124,12 @@ public class ArrayTupleType
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		throw new UnsupportedOperationException();
 	}
 }

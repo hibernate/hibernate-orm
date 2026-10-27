@@ -73,7 +73,7 @@ public interface JdbcParameterBindings {
 			JdbcParametersList jdbcParameters,
 			SharedSessionContractImplementor session) {
 		return bindable.forEachJdbcValue(
-				bindable instanceof BasicValuedMapping basicValuedMapping
+				bindable instanceof BasicValuedMapping<?> basicValuedMapping
 						? basicValuedMapping.getJdbcMapping().getMappedJavaType().wrap( value, session )
 						: value,
 				offset,
@@ -89,7 +89,7 @@ public interface JdbcParameterBindings {
 			JdbcParametersList params,
 			TypeConfiguration typeConfiguration,
 			Object jdbcValue,
-			JdbcMapping type) {
+			JdbcMapping<?> type) {
 		addBinding(
 				params.get( selectionIndex ),
 				new JdbcParameterBindingImpl( resolveBindType( jdbcValue, type, typeConfiguration ), jdbcValue )

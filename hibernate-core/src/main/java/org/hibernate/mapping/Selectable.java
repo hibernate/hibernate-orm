@@ -70,7 +70,7 @@ public sealed interface Selectable permits Column, Formula {
 
 	@Incubating(since = "6.2")
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	default String getWriteExpr(JdbcMapping jdbcMapping, Dialect dialect, MappingContext mappingContext) {
+	default String getWriteExpr(JdbcMapping<?> jdbcMapping, Dialect dialect, MappingContext mappingContext) {
 		final Size size = this instanceof Column column ? column.getColumnSize( dialect, mappingContext ) : null;
 		return jdbcMapping.getJdbcType().wrapWriteExpression( getWriteExpr(), size, dialect );
 	}

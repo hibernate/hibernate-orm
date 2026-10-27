@@ -24,8 +24,8 @@ public class MultiKeyLoadHelper {
 	}
 
 	@Nonnull
-	public static JdbcMapping resolveArrayJdbcMapping(
-			@Nonnull JdbcMapping keyMapping,
+	public static JdbcMapping<?> resolveArrayJdbcMapping(
+			@Nonnull JdbcMapping<?> keyMapping,
 			@Nonnull Class<?> elementClass,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var arrayBasicType =

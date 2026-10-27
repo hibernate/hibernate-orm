@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.type.descriptor.java.JavaType;
+
 import jakarta.annotation.Nonnull;
 
 import java.util.Collections;
@@ -56,13 +58,18 @@ import static org.hibernate.metamodel.mapping.internal.ParentPropertyAccessHelpe
 /**
  * @author Steve Ebersole
  */
-public class EmbeddedAttributeMapping
-		extends AbstractSingularAttributeMapping
-		implements EmbeddableValuedFetchable, Fetchable {
+public class EmbeddedAttributeMapping<M, R>
+		extends AbstractSingularAttributeMapping<M, M, R>
+		implements EmbeddableValuedFetchable<M, M, R>, Fetchable<M, M, R> {
+	@Override
+	public JavaType<M> getJavaType() {
+		return embeddableMappingType.getMappedJavaType();
+	}
+
 	private final NavigableRole navigableRole;
 
 	private final String tableExpression;
-	private final EmbeddableMappingType embeddableMappingType;
+	private final EmbeddableMappingType<?, M, ?> embeddableMappingType;
 	@Nullable private final PropertyAccess parentInjectionAttributePropertyAccess;
 	private final boolean selectable;
 
@@ -77,8 +84,8 @@ public class EmbeddedAttributeMapping
 			String parentInjectionAttributeName,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
-			EmbeddableMappingType embeddableMappingType,
-			@Nullable ManagedMappingType declaringType,
+			EmbeddableMappingType<?, M, R> embeddableMappingType,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable PropertyAccess propertyAccess) {
 		this(
 			name,
@@ -106,8 +113,8 @@ public class EmbeddedAttributeMapping
 			@Nullable PropertyAccess parentInjectionAttributePropertyAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
-			EmbeddableMappingType embeddableMappingType,
-			@Nullable ManagedMappingType declaringType,
+			EmbeddableMappingType<?, M, R> embeddableMappingType,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable PropertyAccess propertyAccess) {
 		super(
 				name,
@@ -133,11 +140,11 @@ public class EmbeddedAttributeMapping
 
 	// Constructor is only used for creating the inverse attribute mapping
 	EmbeddedAttributeMapping(
-			@Nullable ManagedMappingType keyDeclaringType,
-			TableGroupProducer declaringTableGroupProducer,
+			@Nullable ManagedMappingType<?, ?, ?> keyDeclaringType,
+			TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
-			EmbeddableValuedModelPart inverseModelPart,
-			EmbeddableMappingType embeddableTypeDescriptor,
+			EmbeddableValuedModelPart<?, M, R> inverseModelPart,
+			EmbeddableMappingType<?, M, ?> embeddableTypeDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		super(
 				inverseModelPart.getFetchableName(),
@@ -179,13 +186,13 @@ public class EmbeddedAttributeMapping
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getMappedType() {
+	public EmbeddableMappingType<?, M, ?> getMappedType() {
 		return getEmbeddableTypeDescriptor();
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType<?, M, ?> getEmbeddableTypeDescriptor() {
 		return embeddableMappingType;
 	}
 
@@ -203,7 +210,7 @@ public class EmbeddedAttributeMapping
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<R> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -237,7 +244,7 @@ public class EmbeddedAttributeMapping
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		embeddableMappingType.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
@@ -366,7 +373,7 @@ public class EmbeddedAttributeMapping
 
 	@Nonnull
 	@Override
-	public EmbeddedAttributeMapping asEmbeddedAttributeMapping() {
+	public EmbeddedAttributeMapping<?, ?> asEmbeddedAttributeMapping() {
 		return this;
 	}
 
@@ -386,11 +393,11 @@ public class EmbeddedAttributeMapping
 				.containsTableReference( tableExpression );
 	}
 
-	private static TableGroupProducer tableGroupProducer(ManagedMappingType declaringType) {
-		if ( declaringType instanceof TableGroupProducer tableGroupProducer ) {
+	private static TableGroupProducer<?, ?, ?> tableGroupProducer(ManagedMappingType<?, ?, ?> declaringType) {
+		if ( declaringType instanceof TableGroupProducer<?, ?, ?> tableGroupProducer ) {
 			return tableGroupProducer;
 		}
-		else if ( declaringType instanceof EmbeddableMappingType embeddableMappingType ) {
+		else if ( declaringType instanceof EmbeddableMappingType<?, ?, ?> embeddableMappingType ) {
 			return embeddableMappingType.getEmbeddedValueMapping();
 		}
 		else {

@@ -32,7 +32,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		this.selectableMappings = selectableMappings;
 	}
 
-	private static void resolveJdbcMappings(List<JdbcMapping> jdbcMappings, MappingContext mapping, Type valueType) {
+	private static void resolveJdbcMappings(List<JdbcMapping<?>> jdbcMappings, MappingContext mapping, Type valueType) {
 		final var keyType =
 				valueType instanceof EntityType entityType
 						? entityType.getIdentifierOrUniqueKeyType( mapping )
@@ -43,7 +43,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			}
 		}
 		else {
-			jdbcMappings.add( (JdbcMapping) keyType );
+			jdbcMappings.add( (JdbcMapping<?>) keyType );
 		}
 	}
 
@@ -56,7 +56,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			boolean[] insertable,
 			boolean[] updateable,
 			RuntimeModelCreationContext creationContext) {
-		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
+		final List<JdbcMapping<?>> jdbcMappings = new ArrayList<>();
 		resolveJdbcMappings( jdbcMappings, creationContext.getMetadata(), value.getType() );
 
 		final var selectables = value.getVirtualSelectables();
@@ -79,7 +79,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		return new SelectableMappingsImpl( selectableMappings );
 	}
 
-	public static SelectableMappings from(EmbeddableMappingType embeddableMappingType) {
+	public static SelectableMappings from(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		final int propertySpan = embeddableMappingType.getNumberOfAttributeMappings();
 		final List<SelectableMapping> selectableMappings = arrayList( propertySpan );
 		embeddableMappingType.forEachAttributeMapping(

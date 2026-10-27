@@ -37,9 +37,9 @@ public class NonAggregatedIdentifierMappingInitializer
 		implements EmbeddableInitializer<NonAggregatedIdentifierMappingInitializer.NonAggregatedIdentifierMappingInitializerData> {
 
 	private final NavigablePath navigablePath;
-	private final NonAggregatedIdentifierMapping embedded;
-	private final EmbeddableMappingType virtualIdEmbeddable;
-	private final EmbeddableMappingType representationEmbeddable;
+	private final NonAggregatedIdentifierMapping<?, ?> embedded;
+	private final EmbeddableMappingType<?, ?, ?> virtualIdEmbeddable;
+	private final EmbeddableMappingType<?, ?, ?> representationEmbeddable;
 	private final EmbeddableInstantiator embeddableInstantiator;
 	private final @Nullable InitializerParent<?> parent;
 	private final boolean isResultInitializer;
@@ -117,7 +117,7 @@ public class NonAggregatedIdentifierMappingInitializer
 
 		navigablePath = resultDescriptor.getNavigablePath();
 		embedded =
-				(NonAggregatedIdentifierMapping)
+				(NonAggregatedIdentifierMapping<?, ?>)
 						resultDescriptor.getReferencedMappingContainer();
 
 		virtualIdEmbeddable = embedded.getEmbeddableTypeDescriptor();
@@ -187,7 +187,7 @@ public class NonAggregatedIdentifierMappingInitializer
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getInitializedPart() {
+	public EmbeddableValuedModelPart<?, ?, ?> getInitializedPart() {
 		return embedded;
 	}
 
@@ -383,8 +383,8 @@ public class NonAggregatedIdentifierMappingInitializer
 				if ( hasIdClass ) {
 					final var virtualIdAttribute = virtualIdEmbeddable.getAttributeMapping( i );
 					final var mappedIdAttribute = representationEmbeddable.getAttributeMapping( i );
-					if ( virtualIdAttribute instanceof ToOneAttributeMapping toOneAttributeMapping
-							&& !( mappedIdAttribute instanceof ToOneAttributeMapping ) ) {
+					if ( virtualIdAttribute instanceof ToOneAttributeMapping<?> toOneAttributeMapping
+							&& !( mappedIdAttribute instanceof ToOneAttributeMapping<?> ) ) {
 						final Object associationKey =
 								toOneAttributeMapping.getForeignKeyDescriptor()
 										.getAssociationKeyFromSide(

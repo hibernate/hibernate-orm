@@ -29,7 +29,7 @@ public class OracleBaseStructJdbcType extends StructJdbcType {
 		this( null, null, null );
 	}
 
-	protected OracleBaseStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
+	protected OracleBaseStructJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType, String typeName, int[] orderMapping) {
 		super(
 				embeddableMappingType,
 				typeName == null ? null : typeName.toUpperCase( Locale.ROOT ),
@@ -70,7 +70,7 @@ public class OracleBaseStructJdbcType extends StructJdbcType {
 		StringBuilder sb = null;
 		for ( Column column : udt.getColumns() ) {
 			final Type columnType = column.getValue().getType();
-			if ( columnType instanceof JdbcMapping jdbcMapping ) {
+			if ( columnType instanceof JdbcMapping<?> jdbcMapping ) {
 				final String extraCreateTableInfo = jdbcMapping.getJdbcType().getExtraCreateTableInfo(
 						jdbcMapping.getJavaTypeDescriptor(),
 						columnName + "." + column.getName(),

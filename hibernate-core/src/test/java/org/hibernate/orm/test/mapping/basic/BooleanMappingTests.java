@@ -68,11 +68,11 @@ public class BooleanMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfBooleans.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfBooleans.class);
 
 		{
-			final BasicAttributeMapping implicit = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("implicit");
-			final JdbcMapping jdbcMapping = implicit.getJdbcMapping();
+			final BasicAttributeMapping<?> implicit = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("implicit");
+			final JdbcMapping<?> jdbcMapping = implicit.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo(Boolean.class));
 			assertThat(
 					jdbcMapping.getJdbcType().getJdbcTypeCode(),
@@ -86,8 +86,8 @@ public class BooleanMappingTests {
 		// Converters
 
 		{
-			final BasicAttributeMapping convertedYesNo = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("convertedYesNo");
-			final JdbcMapping jdbcMapping = convertedYesNo.getJdbcMapping();
+			final BasicAttributeMapping<?> convertedYesNo = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("convertedYesNo");
+			final JdbcMapping<?> jdbcMapping = convertedYesNo.getJdbcMapping();
 			assertThat( jdbcMapping, instanceOf( ConvertedBasicTypeImpl.class ) );
 			assertThat( jdbcMapping.getJdbcJavaType().getJavaType(), equalTo( Character.class ) );
 			assertThat(
@@ -98,8 +98,8 @@ public class BooleanMappingTests {
 		}
 
 		{
-			final BasicAttributeMapping convertedTrueFalse = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("convertedTrueFalse");
-			final JdbcMapping jdbcMapping = convertedTrueFalse.getJdbcMapping();
+			final BasicAttributeMapping<?> convertedTrueFalse = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("convertedTrueFalse");
+			final JdbcMapping<?> jdbcMapping = convertedTrueFalse.getJdbcMapping();
 			assertThat( jdbcMapping, instanceOf( ConvertedBasicTypeImpl.class ) );
 			assertThat( jdbcMapping.getJdbcJavaType().getJavaType(), equalTo( Character.class ) );
 			assertThat(
@@ -110,8 +110,8 @@ public class BooleanMappingTests {
 		}
 
 		{
-			final BasicAttributeMapping convertedNumeric = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("convertedNumeric");
-			final JdbcMapping jdbcMapping = convertedNumeric.getJdbcMapping();
+			final BasicAttributeMapping<?> convertedNumeric = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("convertedNumeric");
+			final JdbcMapping<?> jdbcMapping = convertedNumeric.getJdbcMapping();
 			assertThat( jdbcMapping, instanceOf( ConvertedBasicTypeImpl.class ) );
 			assertThat( jdbcMapping.getJdbcJavaType().getJavaType(), equalTo( Integer.class ) );
 			assertThat(

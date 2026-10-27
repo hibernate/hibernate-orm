@@ -44,7 +44,7 @@ public class PreferredUuidJdbcTypeTest {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(
 				EntityWithUuid.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 

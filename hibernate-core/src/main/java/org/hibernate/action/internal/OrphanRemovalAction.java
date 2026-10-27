@@ -13,7 +13,7 @@ public final class OrphanRemovalAction extends EntityDeleteAction {
 			@Nullable Object[] state,
 			@Nullable Object version,
 			@Nonnull Object instance,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean isCascadeDeleteEnabled,
 			@Nonnull EventSource session) {
 		super( id, state, version, instance, persister, isCascadeDeleteEnabled, session );

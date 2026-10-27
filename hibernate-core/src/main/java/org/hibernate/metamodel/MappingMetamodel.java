@@ -44,7 +44,7 @@ public interface MappingMetamodel extends Metamodel {
 	/**
 	 * Visit all entity mapping descriptors defined in the model
 	 */
-	void forEachEntityDescriptor(Consumer<EntityPersister> action);
+	void forEachEntityDescriptor(Consumer<EntityPersister<?>> action);
 
 	/**
 	 * Get an entity mapping descriptor based on its Hibernate entity-name
@@ -53,7 +53,7 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findEntityDescriptor
 	 */
-	EntityPersister getEntityDescriptor(String entityName);
+	EntityPersister<?> getEntityDescriptor(String entityName);
 
 	/**
 	 * Get an entity mapping descriptor based on its NavigableRole.
@@ -62,7 +62,7 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findEntityDescriptor
 	 */
-	EntityPersister getEntityDescriptor(NavigableRole name);
+	EntityPersister<?> getEntityDescriptor(NavigableRole name);
 
 	/**
 	 * Get an EmbeddableMappingType based on its NavigableRole.
@@ -72,7 +72,7 @@ public interface MappingMetamodel extends Metamodel {
 	 * @see #findEntityDescriptor
 	 */
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	EmbeddableValuedModelPart getEmbeddableValuedModelPart(NavigableRole role);
+	EmbeddableValuedModelPart<?, ?, ?> getEmbeddableValuedModelPart(NavigableRole role);
 
 
 	/**
@@ -82,21 +82,21 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findEntityDescriptor
 	 */
-	EntityPersister getEntityDescriptor(Class<?> entityJavaType);
+	EntityPersister<?> getEntityDescriptor(Class<?> entityJavaType);
 
 	/**
 	 * Find an entity mapping descriptor based on its Hibernate entity name.
 	 *
 	 * @apiNote Returns {@code null} rather than throwing exception
 	 */
-	EntityPersister findEntityDescriptor(String entityName);
+	EntityPersister<?> findEntityDescriptor(String entityName);
 
 	/**
 	 * Find an entity mapping descriptor based on its Class.
 	 *
 	 * @apiNote Returns {@code null} rather than throwing exception
 	 */
-	EntityPersister findEntityDescriptor(Class<?> entityJavaType);
+	EntityPersister<?> findEntityDescriptor(Class<?> entityJavaType);
 
 	boolean isEntityClass(Class<?> entityJavaType);
 

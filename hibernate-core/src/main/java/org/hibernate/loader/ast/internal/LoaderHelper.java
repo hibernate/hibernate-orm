@@ -171,7 +171,7 @@ public class LoaderHelper {
 	@Nonnull
 	public static <K> K[] normalizeKeys(
 			@Nonnull K[] keys,
-			@Nonnull BasicValuedModelPart keyPart,
+			@Nonnull BasicValuedModelPart<?, ?, ?> keyPart,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		assert keys.getClass().isArray();
 
@@ -225,10 +225,10 @@ public class LoaderHelper {
 			@Nonnull SelectStatement sqlAst,
 			@Nonnull JdbcSelect jdbcOperation,
 			@Nonnull JdbcParameter jdbcParameter,
-			@Nonnull JdbcMapping arrayJdbcMapping,
+			@Nonnull JdbcMapping<?> arrayJdbcMapping,
 			@Nullable Object entityId,
 			@Nullable Object entityInstance,
-			@Nullable EntityMappingType rootEntityDescriptor,
+			@Nullable EntityMappingType<?> rootEntityDescriptor,
 			@Nonnull LockOptions lockOptions,
 			@Nullable Boolean readOnly,
 			@Nonnull SharedSessionContractImplementor session) {

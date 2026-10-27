@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 public interface SingleEntityLoader<T> extends EntityLoader {
 	@Nonnull
 	@Override
-	EntityMappingType getLoadable();
+	EntityMappingType<?> getLoadable();
 
 	/**
 	 * Load an entity by a primary or unique key value.

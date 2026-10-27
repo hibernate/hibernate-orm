@@ -33,18 +33,18 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Steve Ebersole
  */
-public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierDescriptor, FetchOptions {
+public class CollectionIdentifierDescriptorImpl<J, C> implements CollectionIdentifierDescriptor<J, C>, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final String containingTableName;
 	private final String columnName;
-	private final BasicType<?> type;
+	private final BasicType<J> type;
 
 	public CollectionIdentifierDescriptorImpl(
 			CollectionPersister collectionDescriptor,
 			String containingTableName,
 			String columnName,
-			BasicType<?> type) {
+			BasicType<J> type) {
 		this.navigableRole =
 				collectionDescriptor.getNavigableRole()
 						.append( Nature.ID.getName() );
@@ -62,8 +62,9 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getCollectionAttribute() {
-		return collectionDescriptor.getAttributeMapping();
+	@SuppressWarnings("unchecked")
+	public PluralAttributeMapping<C> getCollectionAttribute() {
+		return (PluralAttributeMapping<C>) collectionDescriptor.getAttributeMapping();
 	}
 
 	@Nonnull
@@ -145,25 +146,25 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return type;
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return type;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return type;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return getMappedType().getMappedJavaType();
 	}
 
@@ -175,12 +176,12 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<C> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
 			@Nonnull DomainResultCreationState creationState) {
-		return collectionDescriptor.getAttributeMapping().createDomainResult(
+		return getCollectionAttribute().createDomainResult(
 				navigablePath,
 				tableGroup,
 				resultVariable,
@@ -201,7 +202,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		collectionDescriptor.getAttributeMapping().applySqlSelections(
 				navigablePath,
 				tableGroup,
@@ -224,7 +225,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
@@ -244,7 +245,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
@@ -302,7 +303,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 						.getTypeConfiguration()
 		);
 
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				null,
 				type,

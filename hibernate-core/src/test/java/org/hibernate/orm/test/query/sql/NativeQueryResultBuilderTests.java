@@ -368,16 +368,16 @@ public class NativeQueryResultBuilderTests {
 
 	@BeforeAll
 	public void verifyModel(SessionFactoryScope scope) {
-		final EntityMappingType entityDescriptor = scope.getSessionFactory()
+		final EntityMappingType<?> entityDescriptor = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( EntityOfBasics.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory()
 				.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-		final ModelPart part = entityDescriptor.findSubPart( "convertedGender", null );
+		final ModelPart<?, ?, ?> part = entityDescriptor.findSubPart( "convertedGender", null );
 		assertThat( part, instanceOf( BasicAttributeMapping.class ) );
-		final BasicAttributeMapping attrMapping = (BasicAttributeMapping) part;
+		final BasicAttributeMapping<?> attrMapping = (BasicAttributeMapping<?>) part;
 
 		assertThat( attrMapping.getJavaType().getJavaTypeClass(), equalTo( EntityOfBasics.Gender.class ) );
 

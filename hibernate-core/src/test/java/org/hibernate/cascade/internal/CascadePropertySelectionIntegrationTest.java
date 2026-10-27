@@ -224,7 +224,7 @@ class CascadePropertySelectionIntegrationTest {
 	}
 
 	private record Fixture(
-			AbstractEntityPersister persister,
+			AbstractEntityPersister<?> persister,
 			EventSource session,
 			Object root) {
 	}

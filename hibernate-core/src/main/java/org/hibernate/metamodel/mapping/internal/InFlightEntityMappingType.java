@@ -7,7 +7,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  *
  * @author Steve Ebersole
  */
-public interface InFlightEntityMappingType extends EntityMappingType {
+public interface InFlightEntityMappingType<J> extends EntityMappingType<J> {
 	/**
 	 * Link an entity type with its super-type, if one.
 	 */
@@ -19,7 +19,7 @@ public interface InFlightEntityMappingType extends EntityMappingType {
 	 * Called from {@link #linkWithSuperType}.  A callback from the entity-type to
 	 * the super-type it resolved.
 	 */
-	default void linkWithSubType(EntityMappingType sub, MappingModelCreationProcess creationProcess) {
+	default void linkWithSubType(EntityMappingType<?> sub, MappingModelCreationProcess creationProcess) {
 		// by default do nothing - support for legacy impls
 	}
 

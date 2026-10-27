@@ -49,16 +49,16 @@ public class JoinedSubclassWithIgnoredExplicitDiscriminatorTest {
 
 	@Test
 	public void metadataAssertions(SessionFactoryScope scope) {
-		EntityPersister p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Dog.class.getName());
+		EntityPersister<?> p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Dog.class.getName());
 		assertNotNull( p );
-		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
+		final JoinedSubclassEntityPersister<?> dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "integer", dogPersister.getDiscriminatorType().getName() );
 		assertEquals( "clazz_", dogPersister.getDiscriminatorColumnName() );
 		assertTrue( dogPersister.getDiscriminatorValue() instanceof Literal l && l.value() instanceof Integer );
 
 		p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Cat.class.getName());
 		assertNotNull( p );
-		final JoinedSubclassEntityPersister catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
+		final JoinedSubclassEntityPersister<?> catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "integer", catPersister.getDiscriminatorType().getName() );
 		assertEquals( "clazz_", catPersister.getDiscriminatorColumnName() );
 		assertTrue( catPersister.getDiscriminatorValue() instanceof Literal l && l.value() instanceof Integer );

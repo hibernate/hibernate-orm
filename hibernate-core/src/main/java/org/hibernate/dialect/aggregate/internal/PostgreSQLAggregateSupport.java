@@ -192,7 +192,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 		return extractArguments;
 	}
 
-	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping<?> jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
@@ -216,7 +216,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 		}
 	}
 
-	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping<?> jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
@@ -450,7 +450,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 				AggregateXmlWriteExpression currentAggregate = this;
 				for ( int i = 1; i < parts.length - 1; i++ ) {
 					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) currentAggregate.selectableMapping.getJdbcMapping().getJdbcType();
-					final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+					final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
@@ -471,7 +471,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 
 		protected void passThroughUnsetSubExpressions(SelectableMapping aggregateColumn) {
 			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) aggregateColumn.getJdbcMapping().getJdbcType();
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
 				final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );

@@ -21,7 +21,7 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 	public CollectionTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
-			PluralAttributeMapping tableGroupProducer,
+			PluralAttributeMapping<?> tableGroupProducer,
 			boolean fetched,
 			String sourceAlias,
 			TableReference primaryTableReference,
@@ -46,8 +46,8 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 	}
 
 	@Override
-	public PluralAttributeMapping getModelPart() {
-		return (PluralAttributeMapping) super.getModelPart();
+	public PluralAttributeMapping<?> getModelPart() {
+		return (PluralAttributeMapping<?>) super.getModelPart();
 	}
 
 	@Override

@@ -54,14 +54,14 @@ import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.F
 public class GeneratedValuesProcessor {
 	@Nullable private final SelectStatement selectStatement;
 	@Nullable private final JdbcSelect jdbcSelect;
-	private final List<AttributeMapping> generatedValuesToSelect;
+	private final List<AttributeMapping<?, ?, ?>> generatedValuesToSelect;
 	@Nullable private final JdbcParametersList jdbcParameters;
 
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister<?> entityDescriptor;
 
 	public GeneratedValuesProcessor(
-			EntityPersister entityDescriptor,
-			List<AttributeMapping> generatedAttributes,
+			EntityPersister<?> entityDescriptor,
+			List<AttributeMapping<?, ?, ?>> generatedAttributes,
 			EventType timing,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
@@ -94,7 +94,7 @@ public class GeneratedValuesProcessor {
 		}
 	}
 
-	private boolean needsSubsequentSelect(EventType timing, List<AttributeMapping> generatedAttributes) {
+	private boolean needsSubsequentSelect(EventType timing, List<AttributeMapping<?, ?, ?>> generatedAttributes) {
 		if ( hasFormula( generatedAttributes ) ) {
 			return true;
 		}
@@ -110,8 +110,8 @@ public class GeneratedValuesProcessor {
 		}
 	}
 
-	private static boolean hasFormula(List<AttributeMapping> generatedAttributes) {
-		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
+	private static boolean hasFormula(List<AttributeMapping<?, ?, ?>> generatedAttributes) {
+		for ( AttributeMapping<?, ?, ?> generatedAttribute : generatedAttributes ) {
 			if ( generatedAttribute instanceof SelectableMapping selectableMapping
 					&& selectableMapping.isFormula() ) {
 				return true;
@@ -135,11 +135,11 @@ public class GeneratedValuesProcessor {
 	 *
 	 * @return a list of {@link AttributeMapping}s.
 	 */
-	public static List<AttributeMapping> getGeneratedAttributes(EntityMappingType entityDescriptor, EventType timing) {
+	public static List<AttributeMapping<?, ?, ?>> getGeneratedAttributes(EntityMappingType<?> entityDescriptor, EventType timing) {
 		// todo (6.0): For now, we rely on the entity metamodel as composite attributes report
 		//             no generation timing even if they have attributes that would need generation
 		final var generators = entityDescriptor.getEntityPersister().getGenerators();
-		final List<AttributeMapping> generatedValuesToSelect = new ArrayList<>();
+		final List<AttributeMapping<?, ?, ?>> generatedValuesToSelect = new ArrayList<>();
 		entityDescriptor.forEachAttributeMapping( mapping -> {
 			final var generator = generators[ mapping.getStateArrayPosition() ];
 			if ( generator != null
@@ -222,7 +222,7 @@ public class GeneratedValuesProcessor {
 		return selectStatement;
 	}
 
-	public List<AttributeMapping> getGeneratedValuesToSelect() {
+	public List<AttributeMapping<?, ?, ?>> getGeneratedValuesToSelect() {
 		return generatedValuesToSelect;
 	}
 
@@ -231,7 +231,7 @@ public class GeneratedValuesProcessor {
 		return jdbcParameters;
 	}
 
-	public EntityMappingType getEntityDescriptor() {
+	public EntityMappingType<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 

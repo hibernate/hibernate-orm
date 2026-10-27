@@ -17,9 +17,9 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 	private final @Nullable Integer precision;
 	private final @Nullable Integer scale;
 	private final @Nullable Integer temporalPrecision;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 
-	public SqlTypedMappingImpl(JdbcMapping jdbcMapping) {
+	public SqlTypedMappingImpl(JdbcMapping<?> jdbcMapping) {
 		this( null, null, null, null, null, jdbcMapping );
 	}
 
@@ -28,7 +28,7 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 			@Nullable Integer precision,
 			@Nullable Integer scale,
 			@Nullable Integer temporalPrecision,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<?> jdbcMapping) {
 		this( length, null, precision, scale, temporalPrecision, jdbcMapping );
 	}
 
@@ -38,7 +38,7 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 			@Nullable Integer precision,
 			@Nullable Integer scale,
 			@Nullable Integer temporalPrecision,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<?> jdbcMapping) {
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -74,7 +74,7 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 }

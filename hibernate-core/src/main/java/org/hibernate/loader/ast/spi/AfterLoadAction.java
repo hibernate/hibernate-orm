@@ -14,5 +14,5 @@ public interface AfterLoadAction {
 	/**
 	 * The action trigger - the {@code entity} is being loaded
 	 */
-	void afterLoad(@Nonnull Object entity, @Nonnull EntityMappingType entityMappingType, @Nonnull SharedSessionContractImplementor session);
+	void afterLoad(@Nonnull Object entity, @Nonnull EntityMappingType<?> entityMappingType, @Nonnull SharedSessionContractImplementor session);
 }

@@ -110,7 +110,7 @@ public final class IdentifierGeneratorHelper {
 	}
 
 	private static Object associatedEntity(
-			String entityName, String propertyName, Object object, EntityPersister entityDescriptor) {
+			String entityName, String propertyName, Object object, EntityPersister<?> entityDescriptor) {
 		final Object associatedObject = entityDescriptor.getPropertyValue( object, propertyName );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException( "Could not assign id from null association '" + propertyName
@@ -141,7 +141,7 @@ public final class IdentifierGeneratorHelper {
 		}
 	}
 
-	private static EntityType entityType(String propertyName, EntityPersister entityDescriptor) {
+	private static EntityType entityType(String propertyName, EntityPersister<?> entityDescriptor) {
 		if ( entityDescriptor.getPropertyType( propertyName ) instanceof EntityType entityType ) {
 			// the normal case
 			return entityType;

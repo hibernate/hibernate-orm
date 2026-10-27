@@ -20,13 +20,13 @@ public class OracleXmlJdbcType extends XmlJdbcType {
 
 	public static final OracleXmlJdbcType INSTANCE = new OracleXmlJdbcType( null );
 
-	private OracleXmlJdbcType(EmbeddableMappingType embeddableMappingType) {
+	private OracleXmlJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 	}
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new OracleXmlJdbcType( mappingType );

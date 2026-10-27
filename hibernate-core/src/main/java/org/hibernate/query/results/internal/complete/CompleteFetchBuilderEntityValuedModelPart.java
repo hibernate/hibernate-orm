@@ -26,12 +26,12 @@ import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpre
 public class CompleteFetchBuilderEntityValuedModelPart
 		implements CompleteFetchBuilder, ModelPartReferenceEntity {
 	private final NavigablePath navigablePath;
-	private final EntityValuedFetchable modelPart;
+	private final EntityValuedFetchable<?> modelPart;
 	private final List<String> columnAliases;
 
 	public CompleteFetchBuilderEntityValuedModelPart(
 			NavigablePath navigablePath,
-			EntityValuedFetchable modelPart,
+			EntityValuedFetchable<?> modelPart,
 			List<String> columnAliases) {
 		this.navigablePath = navigablePath;
 		this.modelPart = modelPart;
@@ -53,7 +53,7 @@ public class CompleteFetchBuilderEntityValuedModelPart
 	}
 
 	@Override
-	public EntityValuedFetchable getReferencedPart() {
+	public EntityValuedFetchable<?> getReferencedPart() {
 		return modelPart;
 	}
 
@@ -97,7 +97,7 @@ public class CompleteFetchBuilderEntityValuedModelPart
 				resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
-						tableGroup.resolveTableReference( navigablePath, (ValuedModelPart) modelPart,
+						tableGroup.resolveTableReference( navigablePath, (ValuedModelPart<?, ?, ?>) modelPart,
 								selectableMapping.getContainingTableExpression() ),
 						selectableMapping,
 						columnAliases.get( selectionIndex )

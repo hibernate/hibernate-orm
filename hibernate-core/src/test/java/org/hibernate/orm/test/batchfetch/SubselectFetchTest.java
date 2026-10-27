@@ -61,11 +61,11 @@ public class SubselectFetchTest {
 	public void testSubselectFetchOnlyCreatedIfEnabled(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EntityPersister employeePersister = session.getSessionFactory()
+					EntityPersister<?> employeePersister = session.getSessionFactory()
 							.getRuntimeMetamodels()
 							.getMappingMetamodel()
 							.getEntityDescriptor( Employee.class );
-					EntityPersister taskPersister = session.getSessionFactory()
+					EntityPersister<?> taskPersister = session.getSessionFactory()
 							.getRuntimeMetamodels()
 							.getMappingMetamodel()
 							.getEntityDescriptor( Task.class );

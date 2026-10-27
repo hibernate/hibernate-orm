@@ -25,7 +25,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 
 	public AbstractNonJoinCollectionInitializer(
 			NavigablePath collectionPath,
-			PluralAttributeMapping collectionAttributeMapping,
+			PluralAttributeMapping<?> collectionAttributeMapping,
 			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			boolean isResultInitializer,

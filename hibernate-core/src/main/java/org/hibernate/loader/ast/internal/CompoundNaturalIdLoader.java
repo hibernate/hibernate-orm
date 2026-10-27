@@ -23,8 +23,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 public class CompoundNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 
 	public CompoundNaturalIdLoader(
-			@Nonnull CompoundNaturalIdMapping naturalIdMapping,
-			@Nonnull EntityMappingType entityDescriptor) {
+			@Nonnull CompoundNaturalIdMapping<?> naturalIdMapping,
+			@Nonnull EntityMappingType<?> entityDescriptor) {
 		super( naturalIdMapping, entityDescriptor );
 	}
 

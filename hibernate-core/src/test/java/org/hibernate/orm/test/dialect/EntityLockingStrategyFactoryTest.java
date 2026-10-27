@@ -115,7 +115,7 @@ public class EntityLockingStrategyFactoryTest {
 
 	@Test
 	void requestExposesOnlyStableTargetFactsAndPropagatesScope() throws Exception {
-		final EntityPersister persister = mock( EntityPersister.class );
+		final EntityPersister<?> persister = mock( EntityPersister.class );
 		when( persister.getEntityName() ).thenReturn( "Book" );
 		when( persister.isVersioned() ).thenReturn( true );
 		final EntityLockingStrategyRequestImpl request = new EntityLockingStrategyRequestImpl(
@@ -138,7 +138,7 @@ public class EntityLockingStrategyFactoryTest {
 
 	@Test
 	void requestRejectsInvalidKindsAndTargets() {
-		final EntityPersister unversioned = mock( EntityPersister.class );
+		final EntityPersister<?> unversioned = mock( EntityPersister.class );
 		when( unversioned.getEntityName() ).thenReturn( "LogEntry" );
 		final EntityLockingStrategyRequestImpl readRequest = new EntityLockingStrategyRequestImpl(
 				unversioned,
@@ -193,7 +193,7 @@ public class EntityLockingStrategyFactoryTest {
 
 	@Test
 	void createsEverySupportedStockKindAndMode(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister<?> persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( VersionedEntity.class );
 
@@ -273,10 +273,10 @@ public class EntityLockingStrategyFactoryTest {
 
 	@Test
 	void persisterCachesNormalScopeAndRejectsNullFactoryResults(SessionFactoryScope scope) {
-		final EntityPersister first = scope.getSessionFactory()
+		final EntityPersister<?> first = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( VersionedEntity.class );
-		final EntityPersister second = scope.getSessionFactory()
+		final EntityPersister<?> second = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( UnversionedEntity.class );
 
@@ -314,19 +314,19 @@ public class EntityLockingStrategyFactoryTest {
 	}
 
 	private static void assertStrategy(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			LockMode lockMode,
 			EntityLockingStrategyKind kind,
 			Class<? extends LockingStrategy> expectedType) {
 		assertThat( request( persister, lockMode ).createStrategy( kind ) ).isExactlyInstanceOf( expectedType );
 	}
 
-	private static EntityLockingStrategyRequest request(EntityPersister persister, LockMode lockMode) {
+	private static EntityLockingStrategyRequest request(EntityPersister<?> persister, LockMode lockMode) {
 		return new EntityLockingStrategyRequestImpl( persister, lockMode, PessimisticLockScope.NORMAL );
 	}
 
 	private static LockingStrategy locker(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			LockMode lockMode,
 			PessimisticLockScope scope) {
 		try {

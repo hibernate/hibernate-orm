@@ -97,7 +97,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	protected void doEvict(
 			@Nonnull final Object object,
 			@Nonnull final EntityKey key,
-			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityPersister<?> persister,
 			@Nonnull final EventSource session)
 			throws HibernateException {
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {

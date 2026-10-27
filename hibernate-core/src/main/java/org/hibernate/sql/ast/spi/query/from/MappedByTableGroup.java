@@ -15,7 +15,7 @@ import org.hibernate.spi.NavigablePath;
 public class MappedByTableGroup extends DelegatingTableGroup implements VirtualTableGroup {
 
 	private final NavigablePath navigablePath;
-	private final TableGroupProducer producer;
+	private final TableGroupProducer<?, ?, ?> producer;
 	private final TableGroup underlyingTableGroup;
 	private final boolean fetched;
 	private final TableGroup parentTableGroup;
@@ -23,7 +23,7 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 
 	public MappedByTableGroup(
 			NavigablePath navigablePath,
-			TableGroupProducer producer,
+			TableGroupProducer<?, ?, ?> producer,
 			TableGroup underlyingTableGroup,
 			boolean fetched,
 			TableGroup parentTableGroup,
@@ -52,7 +52,7 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 	}
 
 	@Override
-	public ModelPartContainer getExpressionType() {
+	public ModelPartContainer<?, ?, ?> getExpressionType() {
 		return getModelPart();
 	}
 
@@ -68,7 +68,7 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 	}
 
 	@Override
-	public ModelPartContainer getModelPart() {
+	public ModelPartContainer<?, ?, ?> getModelPart() {
 		return producer;
 	}
 
@@ -138,7 +138,7 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 	@Override
 	public TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression) {
 		assert modelPart != null;
 
@@ -179,13 +179,13 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression,
 			boolean resolve) {
 		if ( parentTableGroupUseChecker.canUseParentTableGroup( producer, navigablePath, modelPart ) ) {
 			final TableReference reference = parentTableGroup.getTableReference(
 					navigablePath,
-					(ValuedModelPart) producer,
+					(ValuedModelPart<?, ?, ?>) producer,
 					tableExpression,
 					resolve
 			);

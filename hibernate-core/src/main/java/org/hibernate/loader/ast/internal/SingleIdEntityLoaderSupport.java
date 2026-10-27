@@ -15,7 +15,7 @@ import static org.hibernate.binder.internal.TenantIdBinder.PARAMETER_NAME;
  * @author Steve Ebersole
  */
 public abstract class SingleIdEntityLoaderSupport<T> implements SingleIdEntityLoader<T> {
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 	protected final SessionFactoryImplementor sessionFactory;
 
 	@Nullable
@@ -23,14 +23,14 @@ public abstract class SingleIdEntityLoaderSupport<T> implements SingleIdEntityLo
 	@Nullable
 	private DatabaseSnapshotExecutor tenantDatabaseSnapshotExecutor;
 
-	public SingleIdEntityLoaderSupport(@Nonnull EntityMappingType entityDescriptor, @Nonnull SessionFactoryImplementor sessionFactory) {
+	public SingleIdEntityLoaderSupport(@Nonnull EntityMappingType<?> entityDescriptor, @Nonnull SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = sessionFactory;
 	}
 
 	@Nonnull
 	@Override
-	public EntityMappingType getLoadable() {
+	public EntityMappingType<?> getLoadable() {
 		return entityDescriptor;
 	}
 

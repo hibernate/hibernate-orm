@@ -48,7 +48,7 @@ public abstract class BaseSqmUnitTest
 	}
 
 	@Override
-	public void invokeAfterLoadActions(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session) {
+	public void invokeAfterLoadActions(Object entity, EntityMappingType<?> entityMappingType, SharedSessionContractImplementor session) {
 	}
 
 	@Override

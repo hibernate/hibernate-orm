@@ -17,5 +17,5 @@ public interface ModelPartReference {
 	/**
 	 * The part of the domain model that is referenced
 	 */
-	ModelPart getReferencedPart();
+	ModelPart<?, ?, ?> getReferencedPart();
 }

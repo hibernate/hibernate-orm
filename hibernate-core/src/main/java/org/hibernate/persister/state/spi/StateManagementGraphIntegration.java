@@ -26,7 +26,7 @@ public interface StateManagementGraphIntegration {
 
 	/// Creates the entity mutation-plan contributor for the given persister.
 	@Nonnull
-	default EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
+	default EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister<?> persister) {
 		return EntityMutationPlanContributor.STANDARD;
 	}
 

@@ -30,7 +30,7 @@ public final class BasicMetadataGenerator {
 			SimpleMapperBuilder mapper,
 			boolean insertable,
 			boolean key) {
-		if ( value.getType() instanceof BasicType ) {
+		if ( value.getType() instanceof BasicType<?> ) {
 			if ( attributeContainer != null ) {
 				BasicAttribute attribute = buildProperty( propertyAuditingData, value, insertable, key );
 				attributeContainer.addAttribute( attribute );

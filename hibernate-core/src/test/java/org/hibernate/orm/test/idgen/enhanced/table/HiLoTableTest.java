@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class HiLoTableTest {
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister<?> persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
 		assertThat( persister.getGenerator() ).isInstanceOf( TableGenerator.class );

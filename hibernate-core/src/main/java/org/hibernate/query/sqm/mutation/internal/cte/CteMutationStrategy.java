@@ -47,18 +47,18 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 	public static final String SHORT_NAME = "cte";
 	public static final String ID_TABLE_NAME = "id_cte";
 
-	private final EntityPersister rootDescriptor;
+	private final EntityPersister<?> rootDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
 	private final CteTable idCteTable;
 
 	public CteMutationStrategy(
-			EntityMappingType rootEntityType,
+			EntityMappingType<?> rootEntityType,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this( rootEntityType.getEntityPersister(), runtimeModelCreationContext );
 	}
 
 	public CteMutationStrategy(
-			EntityPersister rootDescriptor,
+			EntityPersister<?> rootDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.rootDescriptor = rootDescriptor;
 		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
@@ -126,7 +126,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 
 	protected void checkMatch(SqmDeleteOrUpdateStatement<?> sqmStatement) {
 		final String targetEntityName = sqmStatement.getTarget().getEntityName();
-		final EntityPersister targetEntityDescriptor =
+		final EntityPersister<?> targetEntityDescriptor =
 				sessionFactory.getMappingMetamodel()
 						.getEntityDescriptor( targetEntityName );
 
@@ -143,7 +143,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 
 	}
 
-	protected EntityPersister getRootDescriptor() {
+	protected EntityPersister<?> getRootDescriptor() {
 		return rootDescriptor;
 	}
 

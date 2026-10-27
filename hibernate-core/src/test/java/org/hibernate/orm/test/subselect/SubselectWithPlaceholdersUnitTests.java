@@ -34,13 +34,13 @@ public class SubselectWithPlaceholdersUnitTests {
 		final RuntimeMetamodelsImplementor runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
 		final MappingMetamodelImplementor mappingMetamodel = runtimeMetamodels.getMappingMetamodel();
 
-		final EntityPersister entityInCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalog.class );
+		final EntityPersister<?> entityInCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalog.class );
 		assertThat( entityInCatalogDescriptor.getTableName() ).endsWith( " from table_in_catalog )" );
 
-		final EntityPersister entityInSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInSchema.class );
+		final EntityPersister<?> entityInSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInSchema.class );
 		assertThat( entityInSchemaDescriptor.getTableName() ).endsWith( " from table_in_schema )" );
 
-		final EntityPersister entityInCatalogAndSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalogAndSchema.class );
+		final EntityPersister<?> entityInCatalogAndSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalogAndSchema.class );
 		assertThat( entityInCatalogAndSchemaDescriptor.getTableName() ).endsWith( " from table_in_both )" );
 	}
 
@@ -55,16 +55,16 @@ public class SubselectWithPlaceholdersUnitTests {
 		final RuntimeMetamodelsImplementor runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
 		final MappingMetamodelImplementor mappingMetamodel = runtimeMetamodels.getMappingMetamodel();
 
-		final EntityPersister entityInCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalog.class );
+		final EntityPersister<?> entityInCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalog.class );
 		assertThat( entityInCatalogDescriptor.getTableName() ).endsWith( " from the_catalog.table_in_catalog )" );
 
-		final EntityPersister entityInSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInSchema.class );
+		final EntityPersister<?> entityInSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInSchema.class );
 		assertThat( entityInSchemaDescriptor.getTableName() ).endsWith( " from table_in_schema )" );
 
-		final EntityPersister entityInCatalogAndSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalogAndSchema.class );
+		final EntityPersister<?> entityInCatalogAndSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalogAndSchema.class );
 		assertThat( entityInCatalogAndSchemaDescriptor.getTableName() ).endsWith( " from the_catalog.table_in_both )" );
 
-		final EntityPersister entityInLocalCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInLocalCatalog.class );
+		final EntityPersister<?> entityInLocalCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInLocalCatalog.class );
 		assertThat( entityInLocalCatalogDescriptor.getTableName() ).endsWith( " from local_catalog.table_in_local_catalog )" );
 	}
 
@@ -80,16 +80,16 @@ public class SubselectWithPlaceholdersUnitTests {
 		final MappingMetamodelImplementor mappingMetamodel = runtimeMetamodels.getMappingMetamodel();
 
 
-		final EntityPersister entityInCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalog.class );
+		final EntityPersister<?> entityInCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalog.class );
 		assertThat( entityInCatalogDescriptor.getTableName() ).endsWith( " from table_in_catalog )" );
 
-		final EntityPersister entityInSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInSchema.class );
+		final EntityPersister<?> entityInSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInSchema.class );
 		assertThat( entityInSchemaDescriptor.getTableName() ).endsWith( " from the_schema.table_in_schema )" );
 
-		final EntityPersister entityInCatalogAndSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalogAndSchema.class );
+		final EntityPersister<?> entityInCatalogAndSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalogAndSchema.class );
 		assertThat( entityInCatalogAndSchemaDescriptor.getTableName() ).endsWith( " from the_schema.table_in_both )" );
 
-		final EntityPersister entityInLocalCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInLocalCatalog.class );
+		final EntityPersister<?> entityInLocalCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInLocalCatalog.class );
 		assertThat( entityInLocalCatalogDescriptor.getTableName() ).endsWith( " from local_catalog.table_in_local_catalog )" );
 	}
 
@@ -105,16 +105,16 @@ public class SubselectWithPlaceholdersUnitTests {
 		final RuntimeMetamodelsImplementor runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
 		final MappingMetamodelImplementor mappingMetamodel = runtimeMetamodels.getMappingMetamodel();
 
-		final EntityPersister entityInCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalog.class );
+		final EntityPersister<?> entityInCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalog.class );
 		assertThat( entityInCatalogDescriptor.getTableName() ).endsWith( " from the_catalog.table_in_catalog )" );
 
-		final EntityPersister entityInSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInSchema.class );
+		final EntityPersister<?> entityInSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInSchema.class );
 		assertThat( entityInSchemaDescriptor.getTableName() ).endsWith( " from the_schema.table_in_schema )" );
 
-		final EntityPersister entityInCatalogAndSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalogAndSchema.class );
+		final EntityPersister<?> entityInCatalogAndSchemaDescriptor = mappingMetamodel.getEntityDescriptor( EntityInCatalogAndSchema.class );
 		assertThat( entityInCatalogAndSchemaDescriptor.getTableName() ).endsWith( " from the_catalog.the_schema.table_in_both )" );
 
-		final EntityPersister entityInLocalCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInLocalCatalog.class );
+		final EntityPersister<?> entityInLocalCatalogDescriptor = mappingMetamodel.getEntityDescriptor( EntityInLocalCatalog.class );
 		assertThat( entityInLocalCatalogDescriptor.getTableName() ).endsWith( " from local_catalog.table_in_local_catalog )" );
 	}
 

@@ -30,7 +30,7 @@ final class ToOneRestrictions {
 		this.filters = filters;
 	}
 
-	static ToOneRestrictions create(ToOne bootMapping, EntityMappingType target) {
+	static ToOneRestrictions create(ToOne bootMapping, EntityMappingType<?> target) {
 		final String restriction = bootMapping.getSqlRestriction();
 		final var configurations = bootMapping.getFilters();
 		if ( (restriction == null || restriction.isBlank()) && configurations.isEmpty() ) {
@@ -62,7 +62,7 @@ final class ToOneRestrictions {
 		return filters != null && filters.isAffectedBy( influencers.getEnabledFilters() );
 	}
 
-	void apply(Consumer<Predicate> consumer, EntityMappingType target, TableGroup tableGroup,
+	void apply(Consumer<Predicate> consumer, EntityMappingType<?> target, TableGroup tableGroup,
 			SqlAstCreationState creationState) {
 		if ( sqlTemplate != null ) {
 			var rendering = sqlRendering;

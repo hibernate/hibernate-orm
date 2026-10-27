@@ -30,8 +30,8 @@ public class CorrelatedPluralTableGroup extends CorrelatedTableGroup implements 
 	}
 
 	@Override
-	public PluralAttributeMapping getModelPart() {
-		return (PluralAttributeMapping) super.getModelPart();
+	public PluralAttributeMapping<?> getModelPart() {
+		return (PluralAttributeMapping<?>) super.getModelPart();
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public class CorrelatedPluralTableGroup extends CorrelatedTableGroup implements 
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression,
 			boolean resolve) {
 		final TableReference tableReference = super.getTableReference(

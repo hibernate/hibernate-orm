@@ -19,7 +19,7 @@ public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements 
 	final UpdateCoordinator currentUpdateCoordinator;
 
 	public UpdateCoordinatorAudit(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull UpdateCoordinator currentUpdateCoordinator) {
 		super( entityPersister, factory );

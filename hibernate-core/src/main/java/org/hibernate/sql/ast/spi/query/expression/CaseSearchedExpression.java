@@ -19,17 +19,17 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  * @author Steve Ebersole
  */
 public class CaseSearchedExpression implements Expression, DomainResultProducer {
-	private final BasicValuedMapping type;
+	private final BasicValuedMapping<?> type;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
 
-	public CaseSearchedExpression(MappingModelExpressible type) {
-		this.type = (BasicValuedMapping) type;
+	public CaseSearchedExpression(MappingModelExpressible<?> type) {
+		this.type = (BasicValuedMapping<?>) type;
 	}
 
-	public CaseSearchedExpression(MappingModelExpressible type, List<WhenFragment> whenFragments, Expression otherwise) {
-		this.type = (BasicValuedMapping) type;
+	public CaseSearchedExpression(MappingModelExpressible<?> type, List<WhenFragment> whenFragments, Expression otherwise) {
+		this.type = (BasicValuedMapping<?>) type;
 		this.whenFragments = whenFragments;
 		this.otherwise = otherwise;
 	}
@@ -52,7 +52,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<?> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
 
@@ -65,7 +65,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 						creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 				);
 
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				type.getJdbcMapping()
@@ -90,7 +90,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return type;
 	}
 

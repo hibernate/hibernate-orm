@@ -439,11 +439,11 @@ public class DefaultCatalogAndSchemaTest
 		// so many methods that allow retrieving the entity persister or entity metamodel from the entity class no longer work,
 		// because these methods generally assume the native entity name is the FQCN.
 		// Thus we use custom code.
-		final var persisterReference = new AtomicReference<AbstractEntityPersister>();
+		final var persisterReference = new AtomicReference<AbstractEntityPersister<?>>();
 		sessionFactory.getRuntimeMetamodels().getMappingMetamodel().forEachEntityDescriptor(
 				p -> {
 					if ( p.getMappedClass().equals( entityClass ) ) {
-						persisterReference.set( (AbstractEntityPersister) p );
+						persisterReference.set( (AbstractEntityPersister<?>) p );
 					}
 				}
 		);
@@ -591,7 +591,7 @@ public class DefaultCatalogAndSchemaTest
 	}
 
 	private <T extends Generator> T idGenerator(Class<T> expectedType, Class<?> entityClass) {
-		final AbstractEntityPersister persister = (AbstractEntityPersister) factoryScope.getSessionFactory().getRuntimeMetamodels()
+		final AbstractEntityPersister<?> persister = (AbstractEntityPersister<?>) factoryScope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityClass );
 		final Generator generator = persister.getGenerator() instanceof GenericGeneratorGeneration genericGenerator

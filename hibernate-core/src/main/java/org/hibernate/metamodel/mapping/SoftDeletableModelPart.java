@@ -8,12 +8,12 @@ import jakarta.annotation.Nullable;
  *
  * @author Steve Ebersole
  */
-public interface SoftDeletableModelPart extends ModelPartContainer {
+public interface SoftDeletableModelPart<J, M, R> extends ModelPartContainer<J, M, R> {
 	/**
 	 * Get the mapping of the soft-delete indicator
 	 */
 	@Nullable
-	SoftDeleteMapping getSoftDeleteMapping();
+	SoftDeleteMapping<?> getSoftDeleteMapping();
 
 	/**
 	 * Details about the table which holds the soft-delete column.

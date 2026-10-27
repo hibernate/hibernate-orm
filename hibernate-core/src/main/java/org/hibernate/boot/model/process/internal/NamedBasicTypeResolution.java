@@ -32,7 +32,7 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return basicType;
 	}
 

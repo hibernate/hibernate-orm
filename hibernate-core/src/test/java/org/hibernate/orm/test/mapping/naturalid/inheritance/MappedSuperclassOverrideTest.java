@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class MappedSuperclassOverrideTest {
 	@Test
 	public void testModel(SessionFactoryScope scope) {
-		final EntityPersister entityPersister = scope.getSessionFactory()
+		final EntityPersister<?> entityPersister = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( MyEntity.class )

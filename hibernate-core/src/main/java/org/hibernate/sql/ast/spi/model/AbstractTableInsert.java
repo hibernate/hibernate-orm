@@ -18,7 +18,7 @@ public abstract class AbstractTableInsert extends AbstractTableMutation<JdbcInse
 	public AbstractTableInsert(
 			MutatingTableReference mutatingTable,
 			MutationTarget mutationTarget,
-			List<ColumnValueParameter> parameters,
+			List<ColumnValueParameter<?>> parameters,
 			List<ColumnValueBinding> valueBindings) {
 		this(
 				mutatingTable,
@@ -33,7 +33,7 @@ public abstract class AbstractTableInsert extends AbstractTableMutation<JdbcInse
 			MutatingTableReference mutatingTable,
 			MutationTarget mutationTarget,
 			String comment,
-			List<ColumnValueParameter> parameters,
+			List<ColumnValueParameter<?>> parameters,
 			List<ColumnValueBinding> valueBindings) {
 		super( mutatingTable, mutationTarget, comment, parameters );
 		this.valueBindings = valueBindings;

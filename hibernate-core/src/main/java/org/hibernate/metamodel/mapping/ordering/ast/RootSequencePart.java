@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 public class RootSequencePart implements SequencePart {
 	private final PluralAttributePath pluralAttributePath;
 
-	public RootSequencePart(PluralAttributeMapping pluralAttributeMapping) {
+	public RootSequencePart(PluralAttributeMapping<?> pluralAttributeMapping) {
 		this.pluralAttributePath = new PluralAttributePath( pluralAttributeMapping );
 	}
 

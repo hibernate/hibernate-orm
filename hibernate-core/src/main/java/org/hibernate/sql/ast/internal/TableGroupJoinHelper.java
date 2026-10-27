@@ -26,7 +26,7 @@ public class TableGroupJoinHelper {
 			// prefer to apply predicates on the last table group join
 			final TableGroupJoin lastTableGroupJoin = mainTableGroup.getTableGroupJoins()
 					.get( mainTableGroup.getTableGroupJoins().size() - 1 );
-			if ( lastTableGroupJoin.getJoinedGroup().getModelPart() instanceof EmbeddedCollectionPart ) {
+			if ( lastTableGroupJoin.getJoinedGroup().getModelPart() instanceof EmbeddedCollectionPart<?> ) {
 				// If the table group join refers to an embedded collection part,
 				// then the underlying table group *is* the main table group.
 				// Applying predicates on the join referring to the virtual table group would be a problem though,

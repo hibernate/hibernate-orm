@@ -38,7 +38,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 */
 	public StandardCacheEntryImpl(
 			@Nonnull final Object[] state,
-			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityPersister<?> persister,
 			@Nullable final Object version,
 			@Nonnull final SharedSessionContractImplementor session,
 			@Nullable final Object owner) {
@@ -128,7 +128,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	public Object[] assemble(
 			@Nonnull final Object instance,
 			@Nonnull final Object id,
-			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityPersister<?> persister,
 			@Nonnull final Interceptor interceptor,
 			@Nonnull final SharedSessionContractImplementor session) throws HibernateException {
 		if ( !persister.getEntityName().equals( subclass ) ) {

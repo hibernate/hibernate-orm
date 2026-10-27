@@ -37,14 +37,14 @@ public class BigDecimalMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( EntityOfBigDecimals.class );
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor( EntityOfBigDecimals.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("wrapper");
 			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( BigDecimal.class));
 
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BigDecimal.class));
 			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.NUMERIC)));
 		}

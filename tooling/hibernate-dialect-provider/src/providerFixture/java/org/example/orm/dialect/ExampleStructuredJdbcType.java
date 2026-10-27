@@ -32,7 +32,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public final class ExampleStructuredJdbcType implements StructuredJdbcType {
 	public static final AggregateJdbcType INSTANCE = new ExampleStructuredJdbcType();
 
-	private final EmbeddableMappingType mappingType;
+	private final EmbeddableMappingType<?, ?, ?> mappingType;
 	private final String typeName;
 	private final AggregateJdbcValueOrder valueOrder;
 
@@ -41,7 +41,7 @@ public final class ExampleStructuredJdbcType implements StructuredJdbcType {
 	}
 
 	private ExampleStructuredJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String typeName,
 			AggregateJdbcValueOrder valueOrder) {
 		this.mappingType = mappingType;
@@ -50,14 +50,14 @@ public final class ExampleStructuredJdbcType implements StructuredJdbcType {
 	}
 
 	static ExampleStructuredJdbcType mapped(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			AggregateJdbcValueOrder valueOrder) {
 		return new ExampleStructuredJdbcType( mappingType, "example_document", valueOrder );
 	}
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new ExampleStructuredJdbcType(
@@ -68,7 +68,7 @@ public final class ExampleStructuredJdbcType implements StructuredJdbcType {
 	}
 
 	@Override
-	public EmbeddableMappingType getEmbeddableMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getEmbeddableMappingType() {
 		return mappingType;
 	}
 

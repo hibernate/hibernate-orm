@@ -63,11 +63,11 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression source = (Expression) arguments.get( 0 );
-		final JdbcMapping sourceMapping = source.getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> sourceMapping = source.getExpressionType().getSingleJdbcMapping();
 		final CastType sourceType = getCastType( sourceMapping );
 
 		final CastTarget castTarget = (CastTarget) arguments.get( 1 );
-		final JdbcMapping targetJdbcMapping = castTarget.getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> targetJdbcMapping = castTarget.getExpressionType().getSingleJdbcMapping();
 		final CastType targetType = getCastType( targetJdbcMapping );
 
 		if ( sourceType == CastType.OTHER && targetType == CastType.STRING
@@ -143,7 +143,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		}
 	}
 
-	private CastType getCastType(JdbcMapping sourceMapping) {
+	private CastType getCastType(JdbcMapping<?> sourceMapping) {
 		final CastType castType = sourceMapping.getCastType();
 		return castType == CastType.BOOLEAN ? booleanCastType : castType;
 	}

@@ -11,11 +11,11 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 public class SimpleForeignKeyDescriptorSide implements ForeignKeyDescriptor.Side {
 
 	private final ForeignKeyDescriptor.Nature nature;
-	private final BasicValuedModelPart modelPart;
+	private final BasicValuedModelPart<?, ?, ?> modelPart;
 
 	public SimpleForeignKeyDescriptorSide(
 			ForeignKeyDescriptor.Nature nature,
-			BasicValuedModelPart modelPart) {
+			BasicValuedModelPart<?, ?, ?> modelPart) {
 		this.nature = nature;
 		this.modelPart = modelPart;
 	}
@@ -28,7 +28,7 @@ public class SimpleForeignKeyDescriptorSide implements ForeignKeyDescriptor.Side
 
 	@Nonnull
 	@Override
-	public BasicValuedModelPart getModelPart() {
+	public BasicValuedModelPart<?, ?, ?> getModelPart() {
 		return modelPart;
 	}
 }

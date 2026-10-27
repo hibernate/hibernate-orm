@@ -27,12 +27,12 @@ import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableExpressionR
 public class EmbeddableValuedExpression<T> implements Expression, DomainResultProducer<T>, Assignable, SqlTupleContainer {
 
 	private final NavigablePath navigablePath;
-	private final EmbeddableValuedModelPart mapping;
+	private final EmbeddableValuedModelPart<?, ?, ?> mapping;
 	private final SqlTuple sqlExpression;
 
 	public EmbeddableValuedExpression(
 			NavigablePath baseNavigablePath,
-			EmbeddableValuedModelPart mapping,
+			EmbeddableValuedModelPart<?, ?, ?> mapping,
 			SqlTuple sqlExpression) {
 		assert mapping != null;
 		assert sqlExpression != null;
@@ -43,7 +43,7 @@ public class EmbeddableValuedExpression<T> implements Expression, DomainResultPr
 	}
 
 	@Override
-	public ModelPart getExpressionType() {
+	public ModelPart<?, ?, ?> getExpressionType() {
 		return mapping;
 	}
 
@@ -69,7 +69,7 @@ public class EmbeddableValuedExpression<T> implements Expression, DomainResultPr
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final var attributeMapping = mappingType.getAttributeMapping( i );
-			assert attributeMapping instanceof BasicAttributeMapping;
+			assert attributeMapping instanceof BasicAttributeMapping<?>;
 			sqlExpressionResolver.resolveSqlSelection(
 					sqlExpression.getExpressions().get( i ),
 					attributeMapping.getJavaType(),

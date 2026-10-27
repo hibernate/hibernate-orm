@@ -110,7 +110,7 @@ public class AttributeConverterTest {
 			assertNotNull( type );
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final var jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping<?>) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 
@@ -166,7 +166,7 @@ public class AttributeConverterTest {
 
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final var jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping<?>) type;
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), Matchers.equalTo( String.class ) );
 			final var jdbcType = jdbcMapping.getJdbcType();
 			assertThat( jdbcType, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
@@ -197,7 +197,7 @@ public class AttributeConverterTest {
 			assertNotNull( type );
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final var jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping<?>) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 			assertThat( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), equalTo( Clob.class ) );
@@ -233,7 +233,7 @@ public class AttributeConverterTest {
 				fail( "AttributeConverter not applied" );
 			}
 
-			final var jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping<?>) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 			assertThat( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), equalTo( Clob.class ) );
@@ -339,7 +339,7 @@ public class AttributeConverterTest {
 			assertNotNull( type );
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final JdbcMapping jdbcMapping = (JdbcMapping) type;
+			final JdbcMapping<?> jdbcMapping = (JdbcMapping<?>) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Integer.class ) );
 			assertThat( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), equalTo( String.class ) );
@@ -406,7 +406,7 @@ public class AttributeConverterTest {
 			assertNotNull( type );
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final var jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping<?>) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor(), instanceOf( EnumJavaType.class ) );
 			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) ) );

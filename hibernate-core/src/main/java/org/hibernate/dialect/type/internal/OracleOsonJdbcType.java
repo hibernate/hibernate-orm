@@ -40,7 +40,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 
 	static final OracleJsonFactory OSON_JSON_FACTORY = new OracleJsonFactory();
 
-	private OracleOsonJdbcType(EmbeddableMappingType embeddableMappingType) {
+	private OracleOsonJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 	}
 
@@ -51,7 +51,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new OracleOsonJdbcType( mappingType );

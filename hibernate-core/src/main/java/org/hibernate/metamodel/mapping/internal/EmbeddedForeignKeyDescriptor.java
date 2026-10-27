@@ -53,10 +53,11 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 /**
  * @author Andrea Boriero
  */
-public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
+public class EmbeddedForeignKeyDescriptor<J, M, R> implements ForeignKeyDescriptor<J, M, R> {
 
-	private final EmbeddedForeignKeyDescriptorSide keySide;
-	private final EmbeddedForeignKeyDescriptorSide targetSide;
+	private final EmbeddedForeignKeyDescriptorSide<?, ?, R> keySide;
+	private final EmbeddedForeignKeyDescriptorSide<J, ?, ?> targetSide;
+	private final MappingType<M> targetPartMappingType;
 	private final String keyTable;
 	private final SelectableMappings keySelectableMappings;
 	private final String targetTable;
@@ -64,16 +65,16 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	private final AssociationKey associationKey;
 	private final boolean hasConstraint;
 
-	public EmbeddedForeignKeyDescriptor(
+	public static <J, R> EmbeddedForeignKeyDescriptor<J, ?, R> create(
 			String keyTable,
 			SelectableMappings keySelectableMappings,
-			EmbeddableValuedModelPart keyMappingType,
+			EmbeddableValuedModelPart<?, ?, R> keyMappingType,
 			String targetTable,
 			SelectableMappings targetSelectableMappings,
-			EmbeddableValuedModelPart targetMappingType,
+			EmbeddableValuedModelPart<J, ?, ?> targetMappingType,
 			boolean hasConstraint,
 			MappingModelCreationProcess creationProcess) {
-		this(
+		return create(
 				keyMappingType,
 				targetMappingType,
 				keyTable,
@@ -85,21 +86,37 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		);
 	}
 
-	public EmbeddedForeignKeyDescriptor(
-			EmbeddableValuedModelPart keyMappingType,
-			EmbeddableValuedModelPart targetMappingType,
+	public static <J, R> EmbeddedForeignKeyDescriptor<J, ?, R> create(
+			EmbeddableValuedModelPart<?, ?, R> keyMappingType,
+			EmbeddableValuedModelPart<J, ?, ?> targetMappingType,
 			String keyTable,
 			SelectableMappings keySelectableMappings,
 			String targetTable,
 			SelectableMappings targetSelectableMappings,
 			boolean hasConstraint,
 			MappingModelCreationProcess creationProcess) {
+		return new EmbeddedForeignKeyDescriptor<>( keyMappingType, targetMappingType,
+				targetMappingType.getPartMappingType(), keyTable, keySelectableMappings,
+				targetTable, targetSelectableMappings, hasConstraint, creationProcess );
+	}
+
+	private EmbeddedForeignKeyDescriptor(
+			EmbeddableValuedModelPart<?, ?, R> keyMappingType,
+			EmbeddableValuedModelPart<J, ?, ?> targetMappingType,
+			MappingType<M> targetPartMappingType,
+			String keyTable,
+			SelectableMappings keySelectableMappings,
+			String targetTable,
+			SelectableMappings targetSelectableMappings,
+			boolean hasConstraint,
+			MappingModelCreationProcess creationProcess) {
+		this.targetPartMappingType = targetPartMappingType;
 		this.keyTable = keyTable;
 		this.keySelectableMappings = keySelectableMappings;
 		this.targetTable = targetTable;
 		this.targetSelectableMappings = targetSelectableMappings;
-		this.targetSide = new EmbeddedForeignKeyDescriptorSide( Nature.TARGET, targetMappingType );
-		this.keySide = new EmbeddedForeignKeyDescriptorSide( Nature.KEY, keyMappingType );
+		this.targetSide = new EmbeddedForeignKeyDescriptorSide<>( Nature.TARGET, targetMappingType );
+		this.keySide = new EmbeddedForeignKeyDescriptorSide<>( Nature.KEY, keyMappingType );
 		final List<String> columns =
 				new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
 		keySelectableMappings.forEachSelectable(
@@ -120,43 +137,31 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	private EmbeddedForeignKeyDescriptor(
-			EmbeddedForeignKeyDescriptor original,
+			EmbeddedForeignKeyDescriptor<J, M, ?> original,
+			EmbeddableValuedModelPart<?, ?, R> keyPart,
 			String keyTable,
-			@Nullable ManagedMappingType keyDeclaringType,
-			TableGroupProducer keyDeclaringTableGroupProducer,
-			SelectableMappings keySelectableMappings,
-			MappingModelCreationProcess creationProcess) {
+			SelectableMappings keySelectableMappings) {
 		this.keyTable = keyTable;
 		this.keySelectableMappings = keySelectableMappings;
 		this.targetTable = original.targetTable;
 		this.targetSelectableMappings = original.targetSelectableMappings;
 		this.targetSide = original.targetSide;
-		this.keySide = new EmbeddedForeignKeyDescriptorSide(
-				Nature.KEY,
-				createInverseModelPart(
-						original.targetSide.getModelPart(),
-						keyDeclaringType,
-						keyDeclaringTableGroupProducer,
-						keySelectableMappings,
-						creationProcess
-				)
-		);
-		final List<String> columns =
-				new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
-		keySelectableMappings.forEachSelectable(
-				(columnIndex, selection) -> columns.add( selection.getSelectionExpression() )
-		);
+		this.targetPartMappingType = original.targetPartMappingType;
+		this.keySide = new EmbeddedForeignKeyDescriptorSide<>( Nature.KEY, keyPart );
+		final List<String> columns = new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
+		keySelectableMappings.forEachSelectable( (index, selection) -> columns.add( selection.getSelectionExpression() ) );
 		this.associationKey = new AssociationKey( keyTable, columns );
 		this.hasConstraint = original.hasConstraint;
 	}
 
-	private EmbeddedForeignKeyDescriptor(EmbeddedForeignKeyDescriptor original, EmbeddableValuedModelPart targetPart) {
+	private EmbeddedForeignKeyDescriptor(EmbeddedForeignKeyDescriptor<?, ?, R> original, EmbeddableValuedModelPart<J, ?, ?> targetPart, MappingType<M> targetPartMappingType) {
 		this.keyTable = original.keyTable;
 		this.keySelectableMappings = original.keySelectableMappings;
 		this.keySide = original.keySide;
+		this.targetPartMappingType = targetPartMappingType;
 		this.targetTable = targetPart.getContainingTableExpression();
 		this.targetSelectableMappings = targetPart;
-		this.targetSide = new EmbeddedForeignKeyDescriptorSide( Nature.TARGET, targetPart );
+		this.targetSide = new EmbeddedForeignKeyDescriptorSide<>( Nature.TARGET, targetPart );
 		this.associationKey = original.associationKey;
 		this.hasConstraint = original.hasConstraint;
 	}
@@ -175,26 +180,26 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Nonnull
 	@Override
-	public EmbeddableValuedModelPart getKeyPart() {
+	public EmbeddableValuedModelPart<?, ?, ?> getKeyPart() {
 		return keySide.getModelPart().getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableValuedModelPart getTargetPart() {
+	public EmbeddableValuedModelPart<?, ?, ?> getTargetPart() {
 		return targetSide.getModelPart().getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
 	}
 
 	@Override
-	public boolean isKeyPart(@Nonnull ValuedModelPart modelPart) {
-		final EmbeddableValuedModelPart keyPart = getKeyPart();
+	public boolean isKeyPart(@Nonnull ValuedModelPart<?, ?, ?> modelPart) {
+		final EmbeddableValuedModelPart<?, ?, ?> keyPart = getKeyPart();
 		if ( this == modelPart || keyPart == modelPart ) {
 			return true;
 		}
 		else {
 			var attributeMapping = modelPart.asAttributeMapping();
 			while ( attributeMapping != null
-					&& attributeMapping.getDeclaringType() instanceof EmbeddableMappingType embeddableMappingType ) {
+					&& attributeMapping.getDeclaringType() instanceof EmbeddableMappingType<?, ?, ?> embeddableMappingType ) {
 				final var declaringModelPart = embeddableMappingType.getEmbeddedValueMapping();
 				if ( declaringModelPart == keyPart ) {
 					return true;
@@ -224,29 +229,31 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Nonnull
 	@Override
-	public ForeignKeyDescriptor withKeySelectionMapping(
-			@Nullable ManagedMappingType declaringType,
-			@Nonnull TableGroupProducer declaringTableGroupProducer,
+	public ForeignKeyDescriptor<?, ?, ?> withKeySelectionMapping(
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
+			@Nonnull TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			@Nonnull IntFunction<SelectableMapping> selectableMappingAccess,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var selectionMappings = new SelectableMapping[keySelectableMappings.getJdbcTypeCount()];
 		for ( int i = 0; i < selectionMappings.length; i++ ) {
 			selectionMappings[i] = selectableMappingAccess.apply( i );
 		}
-		return new EmbeddedForeignKeyDescriptor(
-				this,
-				selectionMappings[0].getContainingTableExpression(),
-				declaringType,
-				declaringTableGroupProducer,
-				new SelectableMappingsImpl( selectionMappings ),
-				creationProcess
-		);
+		final var keySelections = new SelectableMappingsImpl( selectionMappings );
+		return new EmbeddedForeignKeyDescriptor<>( this,
+				createInverseModelPart( targetSide.getModelPart(), declaringType,
+						declaringTableGroupProducer, keySelections, creationProcess ),
+				selectionMappings[0].getContainingTableExpression(), keySelections );
 	}
 
 	@Nonnull
 	@Override
-	public ForeignKeyDescriptor withTargetPart(@Nonnull ValuedModelPart targetPart) {
-		return new EmbeddedForeignKeyDescriptor( this, (EmbeddableValuedModelPart) targetPart );
+	public ForeignKeyDescriptor<?, ?, ?> withTargetPart(@Nonnull ValuedModelPart<?, ?, ?> targetPart) {
+		return withTargetPart( this, (EmbeddableValuedModelPart<?, ?, ?>) targetPart );
+	}
+
+	private static <J, R> EmbeddedForeignKeyDescriptor<J, ?, R> withTargetPart(
+			EmbeddedForeignKeyDescriptor<?, ?, R> original, EmbeddableValuedModelPart<J, ?, ?> targetPart) {
+		return new EmbeddedForeignKeyDescriptor<>( original, targetPart, targetPart.getPartMappingType() );
 	}
 
 	@Nonnull
@@ -308,7 +315,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<R> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup targetTableGroup,
 			@Nullable String resultVariable,
@@ -319,6 +326,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				targetTableGroup,
 				resultVariable,
 				Nature.KEY,
+				keySide.getModelPart(),
 				null,
 				creationState
 		);
@@ -328,8 +336,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		tableGroup = getUnderlyingTableGroup( tableGroup );
 		final var tableGroupProducer =
 				tableGroup instanceof OneToManyTableGroup oneToManyTableGroup
-					? (TableGroupProducer) oneToManyTableGroup.getElementTableGroup().getModelPart()
-					: (TableGroupProducer) tableGroup.getModelPart();
+					? (TableGroupProducer<?, ?, ?>) oneToManyTableGroup.getElementTableGroup().getModelPart()
+					: (TableGroupProducer<?, ?, ?>) tableGroup.getModelPart();
 		return tableGroupProducer.containsTableReference( targetSide.getModelPart().getContainingTableExpression() );
 	}
 
@@ -354,8 +362,19 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		throw new UnsupportedOperationException();
+	}
+
+	private DomainResult<?> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			@Nullable String resultVariable,
+			Nature nature,
+			@Nullable FetchParent fetchParent,
+			DomainResultCreationState creationState) {		return nature == Nature.KEY
+				? createDomainResult( navigablePath, tableGroup, resultVariable, nature, keySide.getModelPart(), fetchParent, creationState )
+				: createDomainResult( navigablePath, tableGroup, resultVariable, nature, targetSide.getModelPart(), fetchParent, creationState );
 	}
 
 	private <T> DomainResult<T> createDomainResult(
@@ -363,16 +382,14 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			TableGroup tableGroup,
 			@Nullable String resultVariable,
 			Nature nature,
+			EmbeddableValuedModelPart<?, ?, T> modelPart,
 			@Nullable FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		final EmbeddableValuedModelPart modelPart;
 		final NavigablePath resultNavigablePath;
 		if ( nature == Nature.KEY ) {
-			modelPart = keySide.getModelPart();
 			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.PART_NAME );
 		}
 		else {
-			modelPart = targetSide.getModelPart();
 			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME );
 		}
 
@@ -551,19 +568,19 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<M> getMappedType() {
 		return getPartMappingType();
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
-		return targetSide.getModelPart().getPartMappingType();
+	public MappingType<M> getPartMappingType() {
+		return targetPartMappingType;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return targetSide.getModelPart().getJavaType();
 	}
 
@@ -623,12 +640,12 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			@Nullable Object targetObject,
 			@Nonnull ForeignKeyDescriptor.Side side,
 			@Nullable SharedSessionContractImplementor session) {
-		final ModelPart modelPart = side.getModelPart();
+		final ModelPart<?, ?, ?> modelPart = side.getModelPart();
 		// If the mapping type has an identifier type, that identifier is the key
-		if ( modelPart instanceof SingleAttributeIdentifierMapping singleAttributeIdentifierMapping ) {
+		if ( modelPart instanceof SingleAttributeIdentifierMapping<?, ?, ?> singleAttributeIdentifierMapping ) {
 			return singleAttributeIdentifierMapping.getIdentifierIfNotUnsaved( targetObject, session );
 		}
-		else if ( modelPart instanceof CompositeIdentifierMapping compositeIdentifierMapping ) {
+		else if ( modelPart instanceof CompositeIdentifierMapping<?, ?, ?> compositeIdentifierMapping ) {
 			return compositeIdentifierMapping.getIdentifierIfNotUnsaved( targetObject, session );
 		}
 		else {
@@ -639,18 +656,18 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return targetSide.getModelPart().findContainingEntityMapping();
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(final int index) {
+	public JdbcMapping<?> getJdbcMapping(final int index) {
 		return targetSide.getModelPart().getJdbcMapping( index );
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return targetSide.getModelPart().forEachJdbcType( offset, action );
 	}
 

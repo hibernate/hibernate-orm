@@ -26,7 +26,7 @@ public class Distinct implements Expression, SqlExpressible, SqlAstNode {
 
 	@Nullable
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		if ( expression instanceof SqlExpressible sqlExpressible) {
 			return sqlExpressible.getJdbcMapping();
 		}
@@ -55,7 +55,7 @@ public class Distinct implements Expression, SqlExpressible, SqlAstNode {
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

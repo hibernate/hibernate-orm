@@ -19,7 +19,7 @@ public class MySQLVarbinaryJdbcType extends VarbinaryJdbcType {
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
+	public @Nullable String castFromPattern(JdbcMapping<?> sourceMapping, @Nullable Size size) {
 		if ( size != null && size.getLength() != null ) {
 			return "cast(substr(cast(?1 as binary),1," + size.getLength() + ") as binary)";
 		}

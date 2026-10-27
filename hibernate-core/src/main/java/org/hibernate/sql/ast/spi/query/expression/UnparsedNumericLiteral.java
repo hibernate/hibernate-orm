@@ -28,9 +28,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class UnparsedNumericLiteral<N extends Number> implements Literal, DomainResultProducer<N> {
 	private final String literalValue;
 	private final NumericTypeCategory typeCategory;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 
-	public UnparsedNumericLiteral(String literalValue, NumericTypeCategory typeCategory, JdbcMapping jdbcMapping) {
+	public UnparsedNumericLiteral(String literalValue, NumericTypeCategory typeCategory, JdbcMapping<?> jdbcMapping) {
 		this.literalValue = literalValue;
 		this.typeCategory = typeCategory;
 		this.jdbcMapping = jdbcMapping;
@@ -64,7 +64,7 @@ public class UnparsedNumericLiteral<N extends Number> implements Literal, Domain
 		return typeCategory;
 	}
 
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 

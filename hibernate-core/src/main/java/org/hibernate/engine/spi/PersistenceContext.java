@@ -108,7 +108,7 @@ public interface PersistenceContext {
 	 *
 	 * @see #getCachedDatabaseSnapshot
 	 */
-	Object[] getDatabaseSnapshot(Object id, EntityPersister persister);
+	Object[] getDatabaseSnapshot(Object id, EntityPersister<?> persister);
 
 	/**
 	 * Retrieve the cached database snapshot for the requested entity key.
@@ -135,7 +135,7 @@ public interface PersistenceContext {
 	 *
 	 * @return The current (non-cached) snapshot of the entity's natural id state.
 	 */
-	Object getNaturalIdSnapshot(Object id, EntityPersister persister);
+	Object getNaturalIdSnapshot(Object id, EntityPersister<?> persister);
 
 	/**
 	 * Add a canonical mapping from entity key to entity instance
@@ -234,7 +234,7 @@ public interface PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister);
+			final EntityPersister<?> persister);
 
 	/**
 	 * Generates an appropriate EntityEntry instance and adds it
@@ -249,7 +249,7 @@ public interface PersistenceContext {
 			@Nullable final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister);
+			final EntityPersister<?> persister);
 
 	EntityEntry addReferenceEntry(
 			final Object entity,
@@ -318,14 +318,14 @@ public interface PersistenceContext {
 	 * @param object (optional) the actual proxied entity instance.
 	 * @return An appropriately narrowed instance.
 	 */
-	Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object);
+	Object narrowProxy(Object proxy, EntityPersister<?> persister, EntityKey key, Object object);
 
 	/**
 	 * Return the existing proxy associated with the given {@code EntityKey}, or the
 	 * third argument (the entity associated with the key) if no proxy exists. Init
 	 * the proxy to the target implementation, if necessary.
 	 */
-	Object proxyFor(EntityPersister persister, EntityKey key, Object impl);
+	Object proxyFor(EntityPersister<?> persister, EntityKey key, Object impl);
 
 	/**
 	 * Return the existing proxy associated with the given {@code EntityKey}, or the
@@ -339,7 +339,7 @@ public interface PersistenceContext {
 	 * the given {@link EntityHolder}, or the {@linkplain EntityHolder#getEntity() entity}
 	 * if no proxy exists.
 	 */
-	Object proxyFor(EntityHolder holder, EntityPersister persister);
+	Object proxyFor(EntityHolder holder, EntityPersister<?> persister);
 
 	/**
 	 * Cross between {@link #addEntity(EntityKey, Object)} and {@link #addProxy(EntityKey, Object)}
@@ -809,7 +809,7 @@ public interface PersistenceContext {
 	 *  @param persister The entity persister
 	 * @param id The id
 	 */
-	void registerInsertedKey(EntityPersister persister, Object id);
+	void registerInsertedKey(EntityPersister<?> persister, Object id);
 
 	/**
 	 * Allows callers to check to see if the identified entity was inserted during the current transaction.
@@ -819,7 +819,7 @@ public interface PersistenceContext {
 	 *
 	 * @return True if inserted during this transaction, false otherwise.
 	 */
-	boolean wasInsertedDuringTransaction(EntityPersister persister, Object id);
+	boolean wasInsertedDuringTransaction(EntityPersister<?> persister, Object id);
 
 	/**
 	 * Checks if a certain {@link EntityKey} was registered as nullifiable on this {@link PersistenceContext}.

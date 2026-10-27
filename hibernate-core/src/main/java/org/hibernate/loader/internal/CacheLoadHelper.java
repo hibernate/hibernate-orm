@@ -130,7 +130,7 @@ public class CacheLoadHelper {
 			@Nonnull final SharedSessionContractImplementor source,
 			@Nullable final Object entity,
 			@Nonnull final LockMode lockMode,
-			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityPersister<?> persister,
 			@Nonnull final EntityKey entityKey) {
 		final boolean useCache =
 				source.getCacheMode().isGetEnabled()
@@ -157,7 +157,7 @@ public class CacheLoadHelper {
 	@Nullable
 	private static Object getFromSharedCache(
 			@Nonnull final Object entityId,
-			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityPersister<?> persister,
 			@Nonnull final SharedSessionContractImplementor source,
 			@Nonnull final EntityDataAccess cache) {
 		final var factory = source.getFactory();
@@ -180,7 +180,7 @@ public class CacheLoadHelper {
 	@Nullable
 	private static Object processCachedEntry(
 			@Nullable final Object instanceToLoad,
-			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityPersister<?> persister,
 			@Nonnull final Object cacheEntry,
 			@Nonnull final SharedSessionContractImplementor source,
 			@Nonnull final EntityKey entityKey) {
@@ -264,7 +264,7 @@ public class CacheLoadHelper {
 			@Nonnull CacheEntry entry,
 			@Nonnull Object entityId,
 			@Nonnull SharedSessionContractImplementor source,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nullable Object instanceToLoad,
 			@Nonnull EntityKey entityKey) {
 
@@ -462,7 +462,7 @@ public class CacheLoadHelper {
 	static void addUninitializedCachedEntity(
 			@Nonnull final EntityKey key,
 			@Nonnull final Object object,
-			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityPersister<?> persister,
 			@Nonnull final LockMode lockMode,
 			@Nullable final Object version,
 			@Nonnull final SharedSessionContractImplementor session) {

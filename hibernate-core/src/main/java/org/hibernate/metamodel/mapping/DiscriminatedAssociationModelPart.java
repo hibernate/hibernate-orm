@@ -18,18 +18,18 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  *
  * @author Steve Ebersole
  */
-public interface DiscriminatedAssociationModelPart extends Discriminable, Fetchable, FetchableContainer, TableGroupJoinProducer {
+public interface DiscriminatedAssociationModelPart<J> extends Discriminable, Fetchable<J, J, J>, FetchableContainer<J, J, J>, TableGroupJoinProducer<J, J, J> {
 	@Nonnull
 	@Override
-	DiscriminatorMapping getDiscriminatorMapping();
+	DiscriminatorMapping<?> getDiscriminatorMapping();
 
 	@Nonnull
-	BasicValuedModelPart getKeyPart();
+	BasicValuedModelPart<?, ?, ?> getKeyPart();
 
 	@Nullable
-	EntityMappingType resolveDiscriminatorValue(@Nullable Object discriminatorValue);
+	EntityMappingType<?> resolveDiscriminatorValue(@Nullable Object discriminatorValue);
 	@Nullable
-	Object resolveDiscriminatorForEntityType(@Nonnull EntityMappingType entityMappingType);
+	Object resolveDiscriminatorForEntityType(@Nonnull EntityMappingType<?> entityMappingType);
 
 	@Override
 	default boolean isSimpleJoinPredicate(@Nullable Predicate predicate) {

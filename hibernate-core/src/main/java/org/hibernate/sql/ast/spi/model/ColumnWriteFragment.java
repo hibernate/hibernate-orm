@@ -25,7 +25,7 @@ import org.hibernate.sql.ast.spi.query.expression.SqlTypedExpression;
  */
 public class ColumnWriteFragment implements SqlTypedExpression {
 	private final String fragment;
-	private final List<ColumnValueParameter> parameters;
+	private final List<ColumnValueParameter<?>> parameters;
 	private final SelectableMapping selectableMapping;
 	private final Expression expression;
 
@@ -33,12 +33,12 @@ public class ColumnWriteFragment implements SqlTypedExpression {
 		this( fragment, Collections.emptyList(), selectableMapping );
 	}
 
-	public ColumnWriteFragment(String fragment, ColumnValueParameter parameter, SelectableMapping selectableMapping) {
+	public ColumnWriteFragment(String fragment, ColumnValueParameter<?> parameter, SelectableMapping selectableMapping) {
 		this( fragment, Collections.singletonList( parameter ), selectableMapping );
 		assert !fragment.contains( "?" ) || parameter != null;
 	}
 
-	public ColumnWriteFragment(String fragment, List<ColumnValueParameter> parameters, SelectableMapping selectableMapping) {
+	public ColumnWriteFragment(String fragment, List<ColumnValueParameter<?>> parameters, SelectableMapping selectableMapping) {
 		this.fragment = fragment;
 		this.parameters = parameters;
 		this.selectableMapping = selectableMapping;
@@ -46,7 +46,7 @@ public class ColumnWriteFragment implements SqlTypedExpression {
 	}
 
 	public ColumnWriteFragment(
-			List<ColumnValueParameter> parameters,
+			List<ColumnValueParameter<?>> parameters,
 			SelectableMapping selectableMapping,
 			Expression expression) {
 		this.fragment = null;
@@ -59,7 +59,7 @@ public class ColumnWriteFragment implements SqlTypedExpression {
 		return fragment;
 	}
 
-	public Collection<ColumnValueParameter> getParameters() {
+	public Collection<ColumnValueParameter<?>> getParameters() {
 		return parameters;
 	}
 
@@ -69,7 +69,7 @@ public class ColumnWriteFragment implements SqlTypedExpression {
 	}
 
 	@Override
-	public JdbcMapping getExpressionType() {
+	public JdbcMapping<?> getExpressionType() {
 		return selectableMapping.getJdbcMapping();
 	}
 

@@ -12,7 +12,7 @@ import org.hibernate.sql.model.MutationTarget;
 @Incubating(since = "8.0", group = "action-queue")
 public interface CollectionMutationTarget extends MutationTarget<CollectionTableMapping, CollectionTableDescriptor> {
 	@Override
-	PluralAttributeMapping getTargetPart();
+	PluralAttributeMapping<?> getTargetPart();
 
 	CollectionTableMapping getCollectionTableMapping();
 

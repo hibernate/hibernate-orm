@@ -33,7 +33,7 @@ public class SimpleOverriddenConverterTest {
 	 */
 	@Test
 	public void testSimpleConvertOverrides(SessionFactoryScope scope) {
-		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Sub.class.getName());
+		final EntityPersister<?> ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Sub.class.getName());
 		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory().getTypeConfiguration().getJdbcTypeRegistry();
 
 		BasicType<?> type = (BasicType<?>) ep.getPropertyType( "it" );

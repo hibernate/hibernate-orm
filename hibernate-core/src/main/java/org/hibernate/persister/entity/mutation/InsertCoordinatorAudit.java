@@ -20,7 +20,7 @@ public class InsertCoordinatorAudit extends AbstractAuditCoordinator implements 
 	private final InsertCoordinator currentInsertCoordinator;
 
 	public InsertCoordinatorAudit(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull InsertCoordinator currentInsertCoordinator) {
 		super( entityPersister, factory );

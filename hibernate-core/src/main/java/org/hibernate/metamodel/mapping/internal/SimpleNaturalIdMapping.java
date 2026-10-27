@@ -41,21 +41,26 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlAr
 /**
  * Single-attribute NaturalIdMapping implementation
  */
-public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
-		implements BasicValuedMapping {
-	private final SingularAttributeMapping attribute;
+public class SimpleNaturalIdMapping<J, M, R> extends AbstractNaturalIdMapping<J, M, R>
+		implements BasicValuedMapping<M> {
+	@Override
+	public JavaType<M> getExpressibleJavaType() {
+		return getMappedType().getMappedJavaType();
+	}
+
+	private final SingularAttributeMapping<J, M, R> attribute;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public SimpleNaturalIdMapping(
-			SingularAttributeMapping attribute,
-			EntityMappingType declaringType,
+			SingularAttributeMapping<J, M, R> attribute,
+			EntityMappingType<?> declaringType,
 			MappingModelCreationProcess creationProcess) {
 		super( declaringType, castNonNull( attribute.getAttributeMetadata() ).isUpdatable() );
 		this.attribute = attribute;
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
-	public SingularAttributeMapping getAttribute() {
+	public SingularAttributeMapping<J, M, R> getAttribute() {
 		return attribute;
 	}
 
@@ -176,7 +181,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	@Nonnull
 	@Override
-	public List<SingularAttributeMapping> getNaturalIdAttributes() {
+	public List<SingularAttributeMapping<?, ?, ?>> getNaturalIdAttributes() {
 		return Collections.singletonList( attribute );
 	}
 
@@ -188,19 +193,19 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<?> getPartMappingType() {
 		return attribute.getPartMappingType();
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return attribute.getJavaType();
 	}
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<R> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -221,7 +226,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		attribute.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
@@ -237,24 +242,24 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		return attribute.getJdbcMapping( index );
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping<?> getSingleJdbcMapping() {
 		return attribute.getSingleJdbcMapping();
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return attribute.getSingleJdbcMapping();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return attribute.forEachJdbcType( offset, action );
 	}
 
@@ -304,14 +309,14 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	@Nonnull
 	@Override
-	public NaturalIdLoader<?> makeLoader(@Nonnull EntityMappingType entityDescriptor) {
+	public NaturalIdLoader<?> makeLoader(@Nonnull EntityMappingType<?> entityDescriptor) {
 		return new SimpleNaturalIdLoader<>( this, entityDescriptor );
 	}
 
 	@Nonnull
 	@Override
-	public MultiNaturalIdLoader<?> makeMultiLoader(@Nonnull EntityMappingType entityDescriptor) {
-		return supportsSqlArrayType( getDialect() ) && attribute instanceof BasicAttributeMapping
+	public MultiNaturalIdLoader<?> makeMultiLoader(@Nonnull EntityMappingType<?> entityDescriptor) {
+		return supportsSqlArrayType( getDialect() ) && attribute instanceof BasicAttributeMapping<?>
 				? new MultiNaturalIdLoaderArrayParam<>( entityDescriptor )
 				: new MultiNaturalIdLoaderInPredicate<>( entityDescriptor );
 	}
@@ -322,7 +327,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	@Nullable
 	@Override
-	public AttributeMapping asAttributeMapping() {
+	public AttributeMapping<J, M, R> asAttributeMapping() {
 		return getAttribute();
 	}
 
@@ -333,7 +338,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<M> getMappedType() {
 		return attribute.getMappedType();
 	}
 }

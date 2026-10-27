@@ -47,7 +47,7 @@ public class BasicAttributeMutabilityTests {
 		final PersistentClass persistentClass = domainModelScope
 				.getDomainModel()
 				.getEntityBinding( TheEntity.class.getName() );
-		final EntityPersister entityDescriptor = sfSessionFactoryScope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = sfSessionFactoryScope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( TheEntity.class );
@@ -55,13 +55,13 @@ public class BasicAttributeMutabilityTests {
 		// `@Immutable`
 		final Property theDateProperty = persistentClass.getProperty( "theDate" );
 		assertThat( theDateProperty.isUpdatable() ).isFalse();
-		final AttributeMapping theDateAttribute = entityDescriptor.findAttributeMapping( "theDate" );
+		final AttributeMapping<?, ?, ?> theDateAttribute = entityDescriptor.findAttributeMapping( "theDate" );
 		assertThat( theDateAttribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 
 		// `@Mutability(Immutability.class)`
 		final Property anotherDateProperty = persistentClass.getProperty( "anotherDate" );
 		assertThat( anotherDateProperty.isUpdatable() ).isTrue();
-		final AttributeMapping anotherDateAttribute = entityDescriptor.findAttributeMapping( "anotherDate" );
+		final AttributeMapping<?, ?, ?> anotherDateAttribute = entityDescriptor.findAttributeMapping( "anotherDate" );
 		assertThat( anotherDateAttribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 	}
 

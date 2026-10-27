@@ -168,7 +168,7 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return the inferred mapping model expressible or {@code null}
 	 */
-	@Nullable MappingModelExpressible<T> getType();
+	@Nullable MappingModelExpressible<?> getType();
 
 	/**
 	 * Sets the mapping model expressible for this parameter.
@@ -176,5 +176,5 @@ public interface QueryParameterBinding<T> {
 	 * @param type The mapping model expressible
 	 * @return Whether the binding type was actually changed
 	 */
-	boolean setType(@Nullable MappingModelExpressible<T> type);
+	boolean setType(@Nullable MappingModelExpressible<?> type);
 }

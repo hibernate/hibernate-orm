@@ -7,5 +7,5 @@ import org.hibernate.metamodel.CollectionClassification;
  *
  * @author Steve Ebersole
  */
-public interface CollectionIdentifierDescriptor extends CollectionPart, BasicValuedModelPart {
+public interface CollectionIdentifierDescriptor<J, C> extends CollectionPart<J, J, C>, BasicValuedModelPart<J, J, C> {
 }

@@ -23,7 +23,7 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 
 	public SelectEagerCollectionFetch(
 			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedAttribute,
+			PluralAttributeMapping<?> fetchedAttribute,
 			DomainResult<?> collectionKeyDomainResult,
 			FetchParent fetchParent,
 			FetchOptions fetchOptions) {

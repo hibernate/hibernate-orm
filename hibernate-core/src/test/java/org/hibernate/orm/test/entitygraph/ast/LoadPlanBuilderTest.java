@@ -45,7 +45,7 @@ public class LoadPlanBuilderTest {
 	@Test
 	public void testSimpleBuild(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
+		final EntityPersister<?> entityDescriptor = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Message.class );
 
@@ -81,7 +81,7 @@ public class LoadPlanBuilderTest {
 	@Test
 	public void testCascadeBasedBuild(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel()
+		final EntityPersister<?> entityDescriptor = sessionFactory.getMappingMetamodel()
 				.getEntityDescriptor( Message.class );
 
 		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
@@ -122,10 +122,10 @@ public class LoadPlanBuilderTest {
 	@Test
 	public void testCollectionInitializerCase(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister posterEntityDescriptor = sessionFactory.getRuntimeMetamodels()
+		final EntityPersister<?> posterEntityDescriptor = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Poster.class );
-		final PluralAttributeMapping messages = (PluralAttributeMapping) posterEntityDescriptor.findAttributeMapping( "messages" );
+		final PluralAttributeMapping<?> messages = (PluralAttributeMapping<?>) posterEntityDescriptor.findAttributeMapping( "messages" );
 
 		final CollectionLoaderSingleKey loader = new CollectionLoaderSingleKey(
 				messages,

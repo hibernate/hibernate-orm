@@ -23,14 +23,14 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableTypeLiteral
-		implements Expression, DomainResultProducer<Object>, BasicValuedMapping {
+public class EmbeddableTypeLiteral<J>
+		implements Expression, DomainResultProducer<Object>, BasicValuedMapping<J> {
 	private final Class<?> embeddableClass;
-	private final BasicType<?> basicType;
+	private final BasicType<J> basicType;
 
 	public EmbeddableTypeLiteral(
 			EmbeddableDomainType<?> embeddableDomainType,
-			BasicType<?> basicType) {
+			BasicType<J> basicType) {
 		this.embeddableClass = embeddableDomainType.getJavaType();
 		this.basicType = basicType;
 	}
@@ -50,13 +50,13 @@ public class EmbeddableTypeLiteral
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return basicType;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return basicType;
 	}
 
@@ -67,18 +67,18 @@ public class EmbeddableTypeLiteral
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		return basicType.getJdbcMapping( index );
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping<?> getSingleJdbcMapping() {
 		return basicType.getSingleJdbcMapping();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return basicType.forEachJdbcType( offset, action );
 	}
 
@@ -149,7 +149,7 @@ public class EmbeddableTypeLiteral
 
 	@Nonnull
 	@Override
-	public JavaType getExpressibleJavaType() {
+	public JavaType<J> getExpressibleJavaType() {
 		return basicType.getExpressibleJavaType();
 	}
 }

@@ -8,7 +8,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
  */
 public interface PluralTableGroup extends TableGroup {
 
-	PluralAttributeMapping getModelPart();
+	PluralAttributeMapping<?> getModelPart();
 
 	TableGroup getElementTableGroup();
 

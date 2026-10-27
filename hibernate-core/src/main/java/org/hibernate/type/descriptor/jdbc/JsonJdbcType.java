@@ -33,11 +33,11 @@ public class JsonJdbcType implements AggregateJdbcType {
 	 */
 	public static final JsonJdbcType INSTANCE = new JsonJdbcType( null );
 
-	private final EmbeddableMappingType embeddableMappingType;
+	private final EmbeddableMappingType<?, ?, ?> embeddableMappingType;
 
 	/// Create a prototype or mapping-specific JSON descriptor.
 	@SPI(IMPLEMENT)
-	protected JsonJdbcType(EmbeddableMappingType embeddableMappingType) {
+	protected JsonJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		this.embeddableMappingType = embeddableMappingType;
 	}
 
@@ -64,14 +64,14 @@ public class JsonJdbcType implements AggregateJdbcType {
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new JsonJdbcType( mappingType );
 	}
 
 	@Override
-	public EmbeddableMappingType getEmbeddableMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getEmbeddableMappingType() {
 		return embeddableMappingType;
 	}
 

@@ -21,10 +21,10 @@ import jakarta.persistence.metamodel.Attribute;
 /**
  * @author Christian Beikov
  */
-public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupleEmbeddableValuedModelPart
-		implements CompositeIdentifierMapping, SingleAttributeIdentifierMapping {
+public class AnonymousTupleEmbeddedEntityIdentifierMapping<E, M, I> extends AnonymousTupleEmbeddableValuedModelPart<E, M, I>
+		implements CompositeIdentifierMapping<E, M, I>, SingleAttributeIdentifierMapping<E, M, I> {
 
-	private final CompositeIdentifierMapping delegate;
+	private final CompositeIdentifierMapping<M, ?, I> delegate;
 
 	public AnonymousTupleEmbeddedEntityIdentifierMapping(
 			SqmExpressible<?> sqmExpressible,
@@ -33,8 +33,8 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
 			Set<? extends Attribute<?, ?>> attributes,
-			DomainType<?> domainType,
-			CompositeIdentifierMapping delegate,
+			DomainType<E> domainType,
+			CompositeIdentifierMapping<M, ?, I> delegate,
 			boolean generateColumnNames) {
 		super(
 				sqmExpressible,
@@ -90,12 +90,12 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	@Nonnull
 	@Override
 	public PropertyAccess getPropertyAccess() {
-		return ((SingleAttributeIdentifierMapping) delegate).getPropertyAccess();
+		return ((SingleAttributeIdentifierMapping<?, ?, ?>) delegate).getPropertyAccess();
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getPartMappingType() {
+	public EmbeddableMappingType<E, M, ?> getPartMappingType() {
 		return this;
 	}
 
@@ -117,13 +117,13 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType<?, ?, ?> getMappedIdEmbeddableTypeDescriptor() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getMappedType() {
+	public EmbeddableMappingType<E, M, ?> getMappedType() {
 		return this;
 	}
 

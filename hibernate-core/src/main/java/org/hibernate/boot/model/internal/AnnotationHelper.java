@@ -36,7 +36,7 @@ public class AnnotationHelper {
 		return paramMap;
 	}
 
-	public static JdbcMapping resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
+	public static JdbcMapping<?> resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
 		final var bootstrapContext = context.getBootstrapContext();
 		final var userType =
 				context.getBuildingOptions().isAllowExtensionsInCdi()
@@ -45,7 +45,7 @@ public class AnnotationHelper {
 		return new CustomType<>( userType, bootstrapContext.getTypeConfiguration() );
 	}
 
-	public static <X,Y> JdbcMapping resolveAttributeConverter(
+	public static <X,Y> JdbcMapping<?> resolveAttributeConverter(
 			Class<? extends AttributeConverter<? extends X,? extends Y>> type,
 			MetadataBuildingContext context) {
 		final var bootstrapContext = context.getBootstrapContext();
@@ -119,7 +119,7 @@ public class AnnotationHelper {
 		}
 	}
 
-	public static JdbcMapping resolveJavaType(Class<JavaType<?>> type, MetadataBuildingContext context) {
+	public static JdbcMapping<?> resolveJavaType(Class<JavaType<?>> type, MetadataBuildingContext context) {
 		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 		final var jtd = getJavaType( type, context, typeConfiguration );
 		final var jdbcType = jtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );

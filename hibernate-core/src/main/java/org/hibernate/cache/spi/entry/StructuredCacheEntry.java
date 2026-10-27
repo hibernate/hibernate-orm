@@ -20,14 +20,14 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	public static final String SUBCLASS_KEY = "_subclass";
 	public static final String VERSION_KEY = "_version";
 
-	private final EntityPersister persister;
+	private final EntityPersister<?> persister;
 
 	/**
 	 * Constructs a StructuredCacheEntry strategy
 	 *
 	 * @param persister The persister whose data needs to be structured.
 	 */
-	public StructuredCacheEntry(@Nonnull EntityPersister persister) {
+	public StructuredCacheEntry(@Nonnull EntityPersister<?> persister) {
 		this.persister = persister;
 	}
 

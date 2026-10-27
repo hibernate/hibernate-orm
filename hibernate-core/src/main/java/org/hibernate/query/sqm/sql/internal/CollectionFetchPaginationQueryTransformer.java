@@ -95,7 +95,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	public QuerySpec transform(CteContainer cteContainer, QuerySpec querySpec, SqmToSqlAstConverter converter) {
 		final var primaryRoot = primaryRoot( querySpec.getFromClause().getRoots() );
 		if ( primaryRoot instanceof AbstractTableGroup
-				&& primaryRoot.getModelPart() instanceof EntityMappingType primaryEntity
+				&& primaryRoot.getModelPart() instanceof EntityMappingType<?> primaryEntity
 				&& primaryRoot.getPrimaryTableReference() instanceof NamedTableReference primaryNamed ) {
 			return transform( querySpec, converter, primaryEntity, primaryNamed, primaryRoot );
 		}
@@ -107,7 +107,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	private QuerySpec transform(
 			QuerySpec querySpec,
 			SqmToSqlAstConverter converter,
-			EntityMappingType primaryEntity,
+			EntityMappingType<?> primaryEntity,
 			NamedTableReference primaryTableReference,
 			TableGroup primaryRoot) {
 		final String primaryAlias = primaryTableReference.getIdentificationVariable();
@@ -342,7 +342,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		final var predicate = join.getPredicate();
 		if ( predicate != null ) {
 			final var modelPart = join.getJoinedGroup().getModelPart();
-			if ( !(modelPart instanceof TableGroupJoinProducer joinProducer)
+			if ( !(modelPart instanceof TableGroupJoinProducer<?, ?, ?> joinProducer)
 					|| !joinProducer.isSimpleJoinPredicate( predicate ) ) {
 				return false;
 			}
@@ -372,7 +372,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 
 	private static List<String> rebuildInnerSelect(
 			QuerySpec querySpec,
-			EntityMappingType primaryEntity,
+			EntityMappingType<?> primaryEntity,
 			String primaryTableExpr,
 			String primaryAlias,
 			Map<AbsorbedKey, AbsorbedColumn> absorption) {
@@ -391,7 +391,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 
 	private static void addPrimaryTableSelections(
 			QuerySpec querySpec,
-			EntityMappingType primaryEntity,
+			EntityMappingType<?> primaryEntity,
 			String primaryTableExpr,
 			String primaryAlias,
 			List<String> columnNames) {
@@ -627,7 +627,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			List<SortSpecification> originalSortSpecifications,
 			Set<String> outerAliases,
 			String primaryAlias,
-			EntityMappingType primaryEntity,
+			EntityMappingType<?> primaryEntity,
 			ColumnReferenceRewriter rewriter) {
 		// Scroll()/getResultStream() groups fetched rows into a logical result only
 		// while the root entity key stays consecutive. When collection ordering
@@ -673,7 +673,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	private static void addOwnerIdentifierSortSpecifications(
 			QuerySpec outer,
 			String primaryAlias,
-			EntityMappingType primaryEntity) {
+			EntityMappingType<?> primaryEntity) {
 		primaryEntity.getIdentifierMapping().forEachSelectable( (selectionIndex, selectableMapping) -> {
 			final var identifierColumn = new ColumnReference( primaryAlias, selectableMapping );
 			if ( !hasSortExpression( outer.getSortSpecifications(), identifierColumn ) ) {
@@ -811,10 +811,10 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	}
 
 	private static class AbsorbedColumn {
-		final JdbcMapping jdbcMapping;
+		final JdbcMapping<?> jdbcMapping;
 		final String readExpression;
 		String exposedName;
-		private AbsorbedColumn(JdbcMapping jdbcMapping, String readExpression) {
+		private AbsorbedColumn(JdbcMapping<?> jdbcMapping, String readExpression) {
 			this.jdbcMapping = jdbcMapping;
 			this.readExpression = readExpression;
 		}

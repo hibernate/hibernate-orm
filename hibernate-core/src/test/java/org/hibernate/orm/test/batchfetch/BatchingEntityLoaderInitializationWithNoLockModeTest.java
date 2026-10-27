@@ -47,7 +47,7 @@ public class BatchingEntityLoaderInitializationWithNoLockModeTest {
 		} );
 
 		scope.inTransaction( em -> {
-			final EntityPersister entityPersister = em.getEntityManagerFactory()
+			final EntityPersister<?> entityPersister = em.getEntityManagerFactory()
 					.unwrap( SessionFactoryImplementor.class )
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()

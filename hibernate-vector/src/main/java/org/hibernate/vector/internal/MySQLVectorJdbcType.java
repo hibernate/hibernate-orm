@@ -71,12 +71,12 @@ public class MySQLVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
+	public @Nullable String castFromPattern(JdbcMapping<?> sourceMapping, @Nullable Size size) {
 		return sourceMapping.getJdbcType().isStringLike() ? "string_to_vector(?1)" : null;
 	}
 
 	@Override
-	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
+	public @Nullable String castToPattern(JdbcMapping<?> targetJdbcMapping, @Nullable Size size) {
 		return targetJdbcMapping.getJdbcType().isStringLike() ? "vector_to_string(?1)" : null;
 	}
 

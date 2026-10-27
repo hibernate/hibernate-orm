@@ -24,13 +24,13 @@ import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToV
  */
 public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 	private final NavigablePath navigablePath;
-	private final BasicValuedModelPart modelPart;
+	private final BasicValuedModelPart<?, ?, ?> modelPart;
 	private final Integer valuesArrayPosition;
 	private final TableGroup tableGroup;
 
 	public GeneratedValueBasicResultBuilder(
 			NavigablePath navigablePath,
-			BasicValuedModelPart modelPart,
+			BasicValuedModelPart<?, ?, ?> modelPart,
 			TableGroup tableGroup,
 			Integer valuesArrayPosition) {
 		this.navigablePath = navigablePath;
@@ -96,11 +96,11 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 		);
 	}
 
-	public BasicValuedModelPart getModelPart() {
+	public BasicValuedModelPart<?, ?, ?> getModelPart() {
 		return modelPart;
 	}
 
-	private static int columnIndex(JdbcValuesMetadata jdbcResultsMetadata, BasicValuedModelPart modelPart) {
+	private static int columnIndex(JdbcValuesMetadata jdbcResultsMetadata, BasicValuedModelPart<?, ?, ?> modelPart) {
 		if ( jdbcResultsMetadata.getColumnCount() == 1 ) {
 			assert modelPart.isEntityIdentifierMapping()
 				|| getColumnPosition( jdbcResultsMetadata, modelPart ) == 1;
@@ -111,7 +111,7 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 		}
 	}
 
-	private static int getColumnPosition(JdbcValuesMetadata valuesMetadata, BasicValuedModelPart modelPart) {
+	private static int getColumnPosition(JdbcValuesMetadata valuesMetadata, BasicValuedModelPart<?, ?, ?> modelPart) {
 		return valuesMetadata.resolveColumnPosition( getActualGeneratedModelPart( modelPart ).getSelectionExpression() );
 	}
 }

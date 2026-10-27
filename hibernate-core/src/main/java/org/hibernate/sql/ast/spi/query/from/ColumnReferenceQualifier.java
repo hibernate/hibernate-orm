@@ -51,7 +51,7 @@ public interface ColumnReferenceQualifier {
 
 	default TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression) {
 		assert modelPart != null;
 
@@ -98,7 +98,7 @@ public interface ColumnReferenceQualifier {
 			boolean resolve);
 	default TableReference getTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression,
 			boolean resolve) {
 		return getTableReference( navigablePath, tableExpression, resolve );

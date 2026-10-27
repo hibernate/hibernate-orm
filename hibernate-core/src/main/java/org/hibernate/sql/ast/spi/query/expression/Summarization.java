@@ -27,7 +27,7 @@ public class Summarization implements Expression {
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return null;
 	}
 

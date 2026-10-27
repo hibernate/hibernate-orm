@@ -117,7 +117,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	@Override
-	MockEntityPersister createMockEntityPersister(String entityName) {
+	MockEntityPersister<?> createMockEntityPersister(String entityName) {
 		final var type = findEntityClass(entityName);
 		return type == null ? null : entityPersister.make(entityName, type, this);
 	}
@@ -379,7 +379,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 	}
 
-	public static abstract class EntityPersister extends MockEntityPersister {
+	public static abstract class EntityPersister extends MockEntityPersister<Object> {
 		private final TypeElement type;
 		private final Types typeUtil;
 		private final ProcessorSessionFactory factory;
@@ -409,13 +409,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 
 		@Override
-		boolean isSamePersister(MockEntityPersister entityPersister) {
+		boolean isSamePersister(MockEntityPersister<?> entityPersister) {
 			final var persister = (EntityPersister) entityPersister;
 			return typeUtil.isSameType( persister.type.asType(), type.asType() );
 		}
 
 		@Override
-		boolean isSubclassPersister(MockEntityPersister entityPersister) {
+		boolean isSubclassPersister(MockEntityPersister<?> entityPersister) {
 			final var persister = (EntityPersister) entityPersister;
 			return typeUtil.isSubtype( persister.type.asType(), type.asType() );
 		}
@@ -1073,7 +1073,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	//						else if (type instanceof CompositeCustomType) {
 	//							typeClass = ((Component) ((CompositeCustomType) type).getUserType()).type;
 	//						}
-							else if (type instanceof BasicType) {
+							else if (type instanceof BasicType<?>) {
 								final String className;
 								//TODO: custom impl of getReturnedClassName()
 								//      for many more Hibernate types!

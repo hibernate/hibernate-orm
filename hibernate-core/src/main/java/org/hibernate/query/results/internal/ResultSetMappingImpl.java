@@ -42,7 +42,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	private final String mappingIdentifier;
 	private final boolean isDynamic;
 	private List<ResultBuilder> resultBuilders;
-	private Map<String, Map<Fetchable, LegacyFetchBuilder>> legacyFetchBuilders;
+	private Map<String, Map<Fetchable<?, ?, ?>, LegacyFetchBuilder>> legacyFetchBuilders;
 
 	public ResultSetMappingImpl(String mappingIdentifier) {
 		this( mappingIdentifier, false );
@@ -70,10 +70,10 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			this.legacyFetchBuilders = null;
 		}
 		else {
-			final Map<String, Map<Fetchable, LegacyFetchBuilder>> builders =
+			final Map<String, Map<Fetchable<?, ?, ?>, LegacyFetchBuilder>> builders =
 					new HashMap<>( original.legacyFetchBuilders.size() );
 			for ( var entry : original.legacyFetchBuilders.entrySet() ) {
-				final Map<Fetchable, LegacyFetchBuilder> newValue =
+				final Map<Fetchable<?, ?, ?>, LegacyFetchBuilder> newValue =
 						new HashMap<>( entry.getValue().size() );
 				for ( var builderEntry : entry.getValue().entrySet() ) {
 					newValue.put( builderEntry.getKey(),
@@ -136,7 +136,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 	@Override
 	public void addLegacyFetchBuilder(LegacyFetchBuilder fetchBuilder) {
-		final Map<Fetchable, LegacyFetchBuilder> existingFetchBuildersByOwner;
+		final Map<Fetchable<?, ?, ?>, LegacyFetchBuilder> existingFetchBuildersByOwner;
 
 		if ( legacyFetchBuilders == null ) {
 			legacyFetchBuilders = new HashMap<>();
@@ -146,7 +146,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			existingFetchBuildersByOwner = legacyFetchBuilders.get( fetchBuilder.getOwnerAlias() );
 		}
 
-		final Map<Fetchable, LegacyFetchBuilder> fetchBuildersByOwner;
+		final Map<Fetchable<?, ?, ?>, LegacyFetchBuilder> fetchBuildersByOwner;
 		if ( existingFetchBuildersByOwner == null ) {
 			fetchBuildersByOwner = new HashMap<>();
 			legacyFetchBuilders.put( fetchBuilder.getOwnerAlias(), fetchBuildersByOwner );
@@ -337,7 +337,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 		final var sqlSelection =
 				new ResultSetMappingSqlSelection( valuesArrayPosition,
-						(BasicValuedMapping) jdbcMapping );
+						(BasicValuedMapping<?>) jdbcMapping );
 		sqlSelectionConsumer.accept( sqlSelection );
 
 		return new BasicResult<>(

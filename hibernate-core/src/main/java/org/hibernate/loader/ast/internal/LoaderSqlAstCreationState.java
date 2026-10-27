@@ -273,7 +273,7 @@ public class LoaderSqlAstCreationState
 
 	@Nonnull
 	@Override
-	public ModelPart resolveModelPart(@Nonnull NavigablePath navigablePath) {
+	public ModelPart<?, ?, ?> resolveModelPart(@Nonnull NavigablePath navigablePath) {
 		// for now, let's assume that the navigable-path refers to TableGroup
 		return fromClauseAccess.findTableGroup( navigablePath ).getModelPart();
 	}

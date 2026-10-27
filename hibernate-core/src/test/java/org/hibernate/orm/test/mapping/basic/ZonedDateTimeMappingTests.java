@@ -36,10 +36,10 @@ public class ZonedDateTimeMappingTests {
 		final SessionFactoryImplementor sf = scope.getSessionFactory();
 
 		final MappingMetamodelImplementor mappingMetamodel = sf.getRuntimeMetamodels().getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithZonedDateTime.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithZonedDateTime.class);
 
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("zonedDateTime");
-		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
+		final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("zonedDateTime");
+		final JdbcMapping<?> jdbcMapping = attributeMapping.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(ZonedDateTime.class));
 
 		final Matcher<Integer> expectedJdbcType;

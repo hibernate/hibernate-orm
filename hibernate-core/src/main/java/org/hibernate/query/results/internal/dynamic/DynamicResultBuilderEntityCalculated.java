@@ -22,13 +22,13 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilderEntity, NativeQuery.RootReturn {
 	private final NavigablePath navigablePath;
-	private final EntityMappingType entityMapping;
+	private final EntityMappingType<?> entityMapping;
 
 	private final String tableAlias;
 	private final LockMode explicitLockMode;
 
 	public DynamicResultBuilderEntityCalculated(
-			EntityMappingType entityMapping,
+			EntityMappingType<?> entityMapping,
 			String tableAlias,
 			LockMode explicitLockMode) {
 		this.entityMapping = entityMapping;
@@ -44,7 +44,7 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 
 	@Override
 	@Nonnull
-	public EntityMappingType getEntityMapping() {
+	public EntityMappingType<?> getEntityMapping() {
 		return entityMapping;
 	}
 

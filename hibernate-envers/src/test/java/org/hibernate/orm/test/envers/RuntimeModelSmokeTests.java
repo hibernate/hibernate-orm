@@ -40,7 +40,7 @@ public class RuntimeModelSmokeTests {
 	public void basicTest(SessionFactoryScope scope) {
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
 
-		final EntityPersister mappingType = runtimeMetamodels.getMappingMetamodel().findEntityDescriptor( FULL_NAME );
+		final EntityPersister<?> mappingType = runtimeMetamodels.getMappingMetamodel().findEntityDescriptor( FULL_NAME );
 		assertThat( mappingType, notNullValue() );
 	}
 

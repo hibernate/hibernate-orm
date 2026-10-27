@@ -31,7 +31,7 @@ public abstract class AbstractEntityDataAccess
 	@Nonnull
 	public Object generateCacheKey(
 			@Nonnull Object id,
-			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull EntityPersister<?> rootEntityDescriptor,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nullable String tenantIdentifier) {
 		return cacheKeysFactory.createEntityKey(

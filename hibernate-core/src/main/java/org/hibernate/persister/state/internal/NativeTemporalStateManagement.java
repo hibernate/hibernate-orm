@@ -28,7 +28,7 @@ public final class NativeTemporalStateManagement extends AbstractStateManagement
 	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull RootClass rootClass,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return TemporalStateManagement.INSTANCE.createAuxiliaryMapping( persister, rootClass, creationProcess);
@@ -37,7 +37,7 @@ public final class NativeTemporalStateManagement extends AbstractStateManagement
 	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull PluralAttributeMapping<?> pluralAttributeMapping,
 			@Nonnull Collection bootDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return TemporalStateManagement.INSTANCE.createAuxiliaryMapping( pluralAttributeMapping, bootDescriptor, creationProcess);

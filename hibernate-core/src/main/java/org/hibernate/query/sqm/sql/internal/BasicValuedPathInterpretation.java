@@ -50,14 +50,14 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		final var tableGroupModelPart = tableGroup.getModelPart();
 
 		final var mappingMetamodel = creationContext.getMappingMetamodel();
-		final EntityMappingType treatTarget;
-		final ModelPartContainer modelPartContainer;
+		final EntityMappingType<?> treatTarget;
+		final ModelPartContainer<?, ?, ?> modelPartContainer;
 		if ( lhs instanceof SqmTreatedPath<?, ?> treatedPath
 				&& treatedPath.getTreatTarget().getPersistenceType() == ENTITY ) {
 			final var treatTargetDomainType = (EntityDomainType<?>) treatedPath.getTreatTarget();
 			final var treatEntityDescriptor =
 					mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
-			if ( tableGroupModelPart.getPartMappingType() instanceof EntityMappingType entityMappingType
+			if ( tableGroupModelPart.getPartMappingType() instanceof EntityMappingType<?> entityMappingType
 					&& treatEntityDescriptor.isTypeOrSuperType( entityMappingType ) ) {
 				modelPartContainer = tableGroupModelPart;
 				treatTarget = treatEntityDescriptor;
@@ -130,7 +130,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 	public BasicValuedPathInterpretation(
 			ColumnReference columnReference,
 			NavigablePath navigablePath,
-			BasicValuedModelPart mapping,
+			BasicValuedModelPart<?, ?, ?> mapping,
 			TableGroup tableGroup) {
 		this( columnReference, navigablePath, mapping, tableGroup,
 				determineAffectedTableName( tableGroup, mapping ) );
@@ -139,7 +139,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 	public BasicValuedPathInterpretation(
 			ColumnReference columnReference,
 			NavigablePath navigablePath,
-			BasicValuedModelPart mapping,
+			BasicValuedModelPart<?, ?, ?> mapping,
 			TableGroup tableGroup,
 			@Nullable String affectedTableName) {
 		super( navigablePath, mapping, tableGroup );

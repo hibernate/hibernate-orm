@@ -14,11 +14,11 @@ import org.hibernate.metamodel.spi.ValueAccess;
 public class EmbeddableInstantiatorDynamicMap
 		extends AbstractDynamicMapInstantiator
 		implements StandardEmbeddableInstantiator {
-	private final Supplier<EmbeddableMappingType> runtimeDescriptorAccess;
+	private final Supplier<EmbeddableMappingType<?, ?, ?>> runtimeDescriptorAccess;
 
 	public EmbeddableInstantiatorDynamicMap(
 			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess) {
+			Supplier<EmbeddableMappingType<?, ?, ?>> runtimeDescriptorAccess) {
 		super( bootDescriptor.getRoleName() );
 		this.runtimeDescriptorAccess = runtimeDescriptorAccess;
 	}

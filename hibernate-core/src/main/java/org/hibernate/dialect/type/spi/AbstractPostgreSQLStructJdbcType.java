@@ -98,7 +98,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	private final int[] orderMapping;
 	private final int[] inverseOrderMapping;
 	private final AggregateJdbcValueOrder valueOrder;
-	private final EmbeddableMappingType embeddableMappingType;
+	private final EmbeddableMappingType<?, ?, ?> embeddableMappingType;
 
 	/// Create the unresolved descriptor used for reading untyped values.
 	@SPI(IMPLEMENT)
@@ -110,7 +110,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	/// attribute order from the supplied runtime-model context.
 	@SPI(IMPLEMENT)
 	protected AbstractPostgreSQLStructJdbcType(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			String typeName,
 			RuntimeModelCreationContext creationContext) {
 		this(
@@ -125,7 +125,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	private AbstractPostgreSQLStructJdbcType(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			String typeName,
 			int[] orderMapping) {
 		this.typeName = typeName;
@@ -156,7 +156,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	@Override
-	public EmbeddableMappingType getEmbeddableMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getEmbeddableMappingType() {
 		return embeddableMappingType;
 	}
 
@@ -674,7 +674,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		return isBinary( getJdbcValueSelectable( column ).getJdbcMapping() );
 	}
 
-	private static boolean isBinary(JdbcMapping jdbcMapping) {
+	private static boolean isBinary(JdbcMapping<?> jdbcMapping) {
 		return switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 			case SqlTypes.BINARY, SqlTypes.VARBINARY, SqlTypes.LONGVARBINARY, SqlTypes.LONG32VARBINARY -> true;
 			default -> false;
@@ -1053,7 +1053,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		return false;
 	}
 
-	private static Object fromString(JdbcMapping jdbcMapping, CharSequence charSequence, int start, int end) {
+	private static Object fromString(JdbcMapping<?> jdbcMapping, CharSequence charSequence, int start, int end) {
 		if ( jdbcMapping.getJdbcType() instanceof JavaTimeJdbcType ) {
 			final CharSequence value = CharSequenceHelper.subSequence( charSequence, start, end );
 			final Class<?> javaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
@@ -1085,7 +1085,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		);
 	}
 
-	private static Object fromRawObject(JdbcMapping jdbcMapping, Object raw, WrapperOptions options) {
+	private static Object fromRawObject(JdbcMapping<?> jdbcMapping, Object raw, WrapperOptions options) {
 		return jdbcMapping.getJdbcJavaType().wrap(
 				raw,
 				options
@@ -1222,7 +1222,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	private void serializeConvertedBasicTo(
 			PostgreSQLAppender appender,
 			WrapperOptions options,
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			Object subValue) throws SQLException {
 		//noinspection unchecked
 		final JavaType<Object> jdbcJavaType = (JavaType<Object>) jdbcMapping.getJdbcJavaType();
@@ -1357,7 +1357,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	private StructAttributeValues getAttributeValues(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			int[] orderMapping,
 			Object[] rawJdbcValues,
 			WrapperOptions options) throws SQLException {
@@ -1391,7 +1391,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	private int injectAttributeValue(
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			StructAttributeValues attributeValues,
 			int attributeIndex,
 			Object[] rawJdbcValues,
@@ -1400,7 +1400,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		final var mappedType = modelPart.getMappedType();
 		final int jdbcValueCount;
 		final Object rawJdbcValue = rawJdbcValues[jdbcIndex];
-		if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
+		if ( mappedType instanceof EmbeddableMappingType<?, ?, ?> embeddableMappingType ) {
 			if ( embeddableMappingType.getAggregateMapping() != null ) {
 				jdbcValueCount = 1;
 				attributeValues.setAttributeValue( attributeIndex, rawJdbcValue );
@@ -1431,7 +1431,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		return jdbcValueCount;
 	}
 
-	private void appendTemporal(SqlAppender appender, JdbcMapping jdbcMapping, Object value, WrapperOptions options) {
+	private void appendTemporal(SqlAppender appender, JdbcMapping<?> jdbcMapping, Object value, WrapperOptions options) {
 		final TimeZone jdbcTimeZone = getJdbcTimeZone( options );
 		//noinspection unchecked
 		final JavaType<Object> javaType = (JavaType<Object>) jdbcMapping.getJdbcJavaType();

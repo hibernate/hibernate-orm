@@ -32,10 +32,10 @@ public class LocalDateMappingTests {
 		final SessionFactoryImplementor sf = scope.getSessionFactory();
 
 		final MappingMetamodelImplementor mappingMetamodel = sf.getRuntimeMetamodels().getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithLocalDate.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithLocalDate.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("localDate");
-		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
+		final BasicAttributeMapping<?> duration = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("localDate");
+		final JdbcMapping<?> jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(LocalDate.class));
 
 		final int expectedJdbcType = sf.getSessionFactoryOptions().isDirectJavaTimeJdbcAccessEnabled( LocalDate.class )

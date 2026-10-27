@@ -18,7 +18,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.noO
 public class UpdateCoordinatorNoOp implements UpdateCoordinator {
 	private final MutationOperationGroup operationGroup;
 
-	public UpdateCoordinatorNoOp(@Nonnull EntityPersister entityPersister) {
+	public UpdateCoordinatorNoOp(@Nonnull EntityPersister<?> entityPersister) {
 		operationGroup = noOperations( MutationType.UPDATE, entityPersister );
 	}
 

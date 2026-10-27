@@ -149,7 +149,7 @@ public class EnumResolutionTests {
 //		assertThat( resolution.getRelationalJavaType().getJavaTypeClass(), equalTo( javaType ) );
 		assertThat( resolution.getDomainJavaType().getJavaTypeClass(), equalTo( Values.class ) );
 
-		final JdbcMapping jdbcMapping = resolution.getJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = resolution.getJdbcMapping();
 		assertThat( jdbcMapping.getJdbcType(), equalTo( resolution.getJdbcType() ) );
 		assertThat( jdbcMapping.getJdbcJavaType(), equalTo( resolution.getRelationalJavaType() ) );
 

@@ -26,14 +26,14 @@ import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 ///
 /// @author Steve Ebersole
 public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPlanContributor {
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final SessionFactoryImplementor sessionFactory;
 	private final TableUpdate<?> softDeleteOperation;
 
 	public SoftDeleteEntityMutationPlanContributor(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory) {
-		this.entityPersister = entityPersister instanceof UnionSubclassEntityPersister
+		this.entityPersister = entityPersister instanceof UnionSubclassEntityPersister<?>
 				? entityPersister
 				: entityPersister.getRootEntityDescriptor().getEntityPersister();
 		this.sessionFactory = sessionFactory;
@@ -106,7 +106,7 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 	}
 
 	private void applySoftDelete(
-			SoftDeleteMapping softDeleteMapping,
+			SoftDeleteMapping<?> softDeleteMapping,
 			TableUpdateBuilder<?> tableUpdateBuilder) {
 		final var softDeleteColumnReference = new ColumnReference(
 				tableUpdateBuilder.getMutatingTable(),

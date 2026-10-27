@@ -16,19 +16,19 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractAttributeMapping implements AttributeMapping {
+public abstract class AbstractAttributeMapping<J, M, R> implements AttributeMapping<J, M, R> {
 	@Nullable private final String name;
 	private final int fetchableIndex;
 	private final int stateArrayPosition;
 
-	@Nullable private final ManagedMappingType declaringType;
+	@Nullable private final ManagedMappingType<?, ?, ?> declaringType;
 	@Nullable private final AttributeMetadata attributeMetadata;
 	@Nullable private final PropertyAccess propertyAccess;
 
 	public AbstractAttributeMapping(
 			@Nullable String name,
 			int fetchableIndex,
-			@Nullable ManagedMappingType declaringType,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable AttributeMetadata attributeMetadata,
 			int stateArrayPosition,
 			@Nullable PropertyAccess propertyAccess) {
@@ -43,7 +43,7 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	/**
 	 * For Hibernate Reactive
 	 */
-	protected AbstractAttributeMapping(AbstractAttributeMapping original) {
+	protected AbstractAttributeMapping(AbstractAttributeMapping<J, M, R> original) {
 		this(
 				original.name,
 				original.fetchableIndex,
@@ -56,7 +56,7 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 
 	@Nullable
 	@Override
-	public ManagedMappingType getDeclaringType() {
+	public ManagedMappingType<?, ?, ?> getDeclaringType() {
 		return declaringType;
 	}
 
@@ -90,16 +90,14 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<M> getPartMappingType() {
 		return getMappedType();
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
-		return getMappedType().getMappedJavaType();
-	}
+	public abstract JavaType<J> getJavaType();
 
-	void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor){
+	void setForeignKeyDescriptor(ForeignKeyDescriptor<?, ?, ?> foreignKeyDescriptor){
 	}
 }

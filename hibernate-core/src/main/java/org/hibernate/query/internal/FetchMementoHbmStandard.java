@@ -30,7 +30,7 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 
 	public interface FetchParentMemento {
 		NavigablePath getNavigablePath();
-		FetchableContainer getFetchableContainer();
+		FetchableContainer<?, ?, ?> getFetchableContainer();
 	}
 
 	private final NavigablePath navigablePath;
@@ -40,7 +40,7 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 	private final LockMode lockMode;
 	private final FetchParentMemento parent;
 	private final Map<String, FetchMemento> fetchMementoMap;
-	private final Fetchable fetchable;
+	private final Fetchable<?, ?, ?> fetchable;
 
 	public FetchMementoHbmStandard(
 			NavigablePath navigablePath,
@@ -50,7 +50,7 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 			LockMode lockMode,
 			FetchParentMemento parent,
 			Map<String, FetchMemento> fetchMementoMap,
-			Fetchable fetchable) {
+			Fetchable<?, ?, ?> fetchable) {
 		this.navigablePath = navigablePath;
 		this.ownerTableAlias = ownerTableAlias;
 		this.tableAlias = tableAlias;
@@ -76,10 +76,10 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 			Parent parent,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		if ( fetchable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			return resolve( pluralAttributeMapping, querySpaceConsumer, context );
 		}
-		else if ( fetchable instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+		else if ( fetchable instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 			return resolve( toOneAttributeMapping, querySpaceConsumer, context );
 		}
 		else {
@@ -88,18 +88,18 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 	}
 
 	private FetchBuilder resolve(
-			PluralAttributeMapping pluralAttributeMapping,
+			PluralAttributeMapping<?> pluralAttributeMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		final DynamicResultBuilderEntityStandard resultBuilder;
-		EntityMappingType partMappingType = (EntityMappingType) pluralAttributeMapping.getElementDescriptor()
+		EntityMappingType<?> partMappingType = (EntityMappingType<?>) pluralAttributeMapping.getElementDescriptor()
 				.getPartMappingType();
 		resultBuilder = new DynamicResultBuilderEntityStandard(
 				partMappingType,
 				tableAlias,
 				navigablePath
 		);
-		final Map<Fetchable, FetchBuilder> fetchBuilderMap = new HashMap<>();
+		final Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap = new HashMap<>();
 		fetchMementoMap.forEach(
 				(attrName, fetchMemento) -> {
 					final FetchBuilder fetchBuilder = fetchMemento.resolve( this, querySpaceConsumer, context );
@@ -130,12 +130,12 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 					}
 					else if ( attrName.startsWith( ELEMENT_PREFIX ) ) {
 						final var attributeMapping =
-								(Fetchable) partMappingType.findByPath( attrName.substring( ELEMENT_PREFIX_LENGTH ) );
+								(Fetchable<?, ?, ?>) partMappingType.findByPath( attrName.substring( ELEMENT_PREFIX_LENGTH ) );
 						resultBuilder.addFetchBuilder( attributeMapping, fetchBuilder );
 						fetchBuilderMap.put( attributeMapping, fetchBuilder );
 					}
 					else {
-						final var attributeMapping = (Fetchable) partMappingType.findByPath( attrName );
+						final var attributeMapping = (Fetchable<?, ?, ?>) partMappingType.findByPath( attrName );
 						resultBuilder.addFetchBuilder( attributeMapping, fetchBuilder );
 						fetchBuilderMap.put( attributeMapping, fetchBuilder );
 					}
@@ -152,14 +152,14 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 	}
 
 	private FetchBuilder resolve(
-			ToOneAttributeMapping toOneAttributeMapping,
+			ToOneAttributeMapping<?> toOneAttributeMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final Map<Fetchable, FetchBuilder> fetchBuilderMap = new HashMap<>();
+		final Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap = new HashMap<>();
 		fetchMementoMap.forEach(
 				(attrName, fetchMemento) ->
 						fetchBuilderMap.put(
-								(Fetchable) toOneAttributeMapping.findSubPart( attrName ),
+								(Fetchable<?, ?, ?>) toOneAttributeMapping.findSubPart( attrName ),
 								fetchMemento.resolve( this, querySpaceConsumer, context )
 						)
 		);

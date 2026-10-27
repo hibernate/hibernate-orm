@@ -138,7 +138,7 @@ public class CustomDirtinessStrategyTest {
 		int canDirtyCheckCount = 0;
 
 		@Override
-		public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
+		public boolean canDirtyCheck(Object entity, EntityPersister<?> persister, Session session) {
 			canDirtyCheckCount++;
 			System.out.println( "canDirtyCheck called" );
 			return entity instanceof Thing;
@@ -147,7 +147,7 @@ public class CustomDirtinessStrategyTest {
 		int isDirtyCount = 0;
 
 		@Override
-		public boolean isDirty(Object entity, EntityPersister persister, Session session) {
+		public boolean isDirty(Object entity, EntityPersister<?> persister, Session session) {
 			isDirtyCount++;
 			System.out.println( "isDirty called" );
 			return ! ((Thing) entity).changedValues.isEmpty();
@@ -156,7 +156,7 @@ public class CustomDirtinessStrategyTest {
 		int resetDirtyCount = 0;
 
 		@Override
-		public void resetDirty(Object entity, EntityPersister persister, Session session) {
+		public void resetDirty(Object entity, EntityPersister<?> persister, Session session) {
 			resetDirtyCount++;
 			System.out.println( "resetDirty called" );
 			((Thing) entity).changedValues.clear();
@@ -165,7 +165,7 @@ public class CustomDirtinessStrategyTest {
 		int findDirtyCount = 0;
 
 		@Override
-		public void findDirty(final Object entity, EntityPersister persister, Session session, DirtyCheckContext dirtyCheckContext) {
+		public void findDirty(final Object entity, EntityPersister<?> persister, Session session, DirtyCheckContext dirtyCheckContext) {
 			findDirtyCount++;
 			System.out.println( "findDirty called" );
 			dirtyCheckContext.doDirtyChecking(

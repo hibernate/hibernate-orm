@@ -35,7 +35,7 @@ public class XmlTest {
 
 	@Test
 	public void testXmlMappingWithCacheable(EntityManagerFactoryScope scope) {
-		EntityPersister entityPersister = scope.getEntityManagerFactory()
+		EntityPersister<?> entityPersister = scope.getEntityManagerFactory()
 				.unwrap( SessionFactoryImplementor.class )
 				.getMappingMetamodel()
 				.getEntityDescriptor( Lighter.class );

@@ -19,8 +19,8 @@ import org.hibernate.sql.results.spi.RowTransformer;
 public class SingleIdArrayLoadPlan extends SingleIdLoadPlan<Object[]> {
 
 	public SingleIdArrayLoadPlan(
-			@Nonnull EntityMappingType entityMappingType,
-			@Nonnull ModelPart restrictivePart,
+			@Nonnull EntityMappingType<?> entityMappingType,
+			@Nonnull ModelPart<?, ?, ?> restrictivePart,
 			@Nonnull SelectStatement sqlAst,
 			@Nonnull JdbcParametersList jdbcParameters,
 			@Nonnull LockOptions lockOptions,

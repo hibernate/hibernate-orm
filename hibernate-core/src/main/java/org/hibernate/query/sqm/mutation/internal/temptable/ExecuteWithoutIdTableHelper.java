@@ -23,7 +23,7 @@ public final class ExecuteWithoutIdTableHelper {
 			NavigablePath navigablePath,
 			TableReference rootTableReference,
 			Predicate predicate,
-			EntityPersister rootEntityPersister,
+			EntityPersister<?> rootEntityPersister,
 			SqlExpressionResolver sqlExpressionResolver,
 			SessionFactoryImplementor sessionFactory) {
 		/*

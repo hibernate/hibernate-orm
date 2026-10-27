@@ -34,8 +34,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  *
  * @author Steve Ebersole
  */
-public interface PluralAttributeMapping
-		extends AttributeMapping, TableGroupJoinProducer, FetchableContainer, Loadable, Restrictable, SoftDeletableModelPart {
+public interface PluralAttributeMapping<J>
+		extends AttributeMapping<J, J, J>, TableGroupJoinProducer<J, J, J>, FetchableContainer<J, J, J>, Loadable<J, J, J>, Restrictable, SoftDeletableModelPart<J, J, J> {
 	@Nonnull
 	@Override
 	NavigableRole getNavigableRole();
@@ -45,14 +45,14 @@ public interface PluralAttributeMapping
 	CollectionPersister getCollectionDescriptor();
 
 	@Nonnull
-	ForeignKeyDescriptor getKeyDescriptor();
+	ForeignKeyDescriptor<?, ?, ?> getKeyDescriptor();
 
 	@Nullable
-	CollectionPart getIndexDescriptor();
+	CollectionPart<?, ?, ?> getIndexDescriptor();
 
 	@Nonnull
 	@Override
-	CollectionMappingType<?> getMappedType();
+	CollectionMappingType<J> getMappedType();
 
 	@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 	@FunctionalInterface
@@ -71,7 +71,7 @@ public interface PluralAttributeMapping
 
 	interface IndexMetadata {
 		@Nullable
-		CollectionPart getIndexDescriptor();
+		CollectionPart<?, ?, ?> getIndexDescriptor();
 		int getListIndexBase();
 		@Nullable
 		String getIndexPropertyName();
@@ -81,17 +81,17 @@ public interface PluralAttributeMapping
 	IndexMetadata getIndexMetadata();
 
 	@Nonnull
-	CollectionPart getElementDescriptor();
+	CollectionPart<?, ?, ?> getElementDescriptor();
 
 	@Nullable
-	CollectionIdentifierDescriptor getIdentifierDescriptor();
+	CollectionIdentifierDescriptor<?, ?> getIdentifierDescriptor();
 
 	/**
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
 	@Nullable
 	@Incubating(since = "5.4")
-	default SoftDeleteMapping getSoftDeleteMapping() {
+	default SoftDeleteMapping<?> getSoftDeleteMapping() {
 		return null;
 	}
 
@@ -119,8 +119,8 @@ public interface PluralAttributeMapping
 	OrderByFragment getManyToManyOrderByFragment();
 
 	@Override
-	default void visitKeyFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
-		final CollectionPart indexDescriptor = getIndexDescriptor();
+	default void visitKeyFetchables(@Nonnull Consumer<? super Fetchable<?, ?, ?>> fetchableConsumer, @Nullable EntityMappingType<?> treatTargetType) {
+		final CollectionPart<?, ?, ?> indexDescriptor = getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			fetchableConsumer.accept( indexDescriptor );
 		}
@@ -133,8 +133,8 @@ public interface PluralAttributeMapping
 
 	@Nonnull
 	@Override
-	default Fetchable getKeyFetchable(int position) {
-		final CollectionPart indexDescriptor = getIndexDescriptor();
+	default Fetchable<?, ?, ?> getKeyFetchable(int position) {
+		final CollectionPart<?, ?, ?> indexDescriptor = getIndexDescriptor();
 		if ( indexDescriptor != null && position == 0 ) {
 			return indexDescriptor;
 		}
@@ -142,15 +142,15 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
-	default void visitKeyFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
-		final CollectionPart indexDescriptor = getIndexDescriptor();
+	default void visitKeyFetchables(@Nonnull IndexedConsumer<? super Fetchable<?, ?, ?>> fetchableConsumer, @Nullable EntityMappingType<?> treatTargetType) {
+		final CollectionPart<?, ?, ?> indexDescriptor = getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			fetchableConsumer.accept( 0, indexDescriptor );
 		}
 	}
 
 	@Override
-	default void visitFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
+	default void visitFetchables(@Nonnull Consumer<? super Fetchable<?, ?, ?>> fetchableConsumer, @Nullable EntityMappingType<?> treatTargetType) {
 		fetchableConsumer.accept( getElementDescriptor() );
 	}
 
@@ -165,13 +165,13 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
-	default void visitFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
+	default void visitFetchables(@Nonnull IndexedConsumer<? super Fetchable<?, ?, ?>> fetchableConsumer, @Nullable EntityMappingType<?> treatTargetType) {
 		fetchableConsumer.accept( 0, getElementDescriptor() );
 	}
 
 	@Nonnull
 	@Override
-	default Fetchable getFetchable(int position) {
+	default Fetchable<?, ?, ?> getFetchable(int position) {
 		if ( position == 0 ) {
 			return getElementDescriptor();
 		}
@@ -182,7 +182,7 @@ public interface PluralAttributeMapping
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
-	default <T> DomainResult<T> createSnapshotDomainResult(
+	default DomainResult<?> createSnapshotDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup parentTableGroup,
 			@Nullable String resultVariable,
@@ -194,7 +194,7 @@ public interface PluralAttributeMapping
 	String getSeparateCollectionTable();
 
 	@org.hibernate.Internal
-	boolean isBidirectionalAttributeName(@Nonnull NavigablePath fetchablePath, @Nonnull ToOneAttributeMapping modelPart);
+	boolean isBidirectionalAttributeName(@Nonnull NavigablePath fetchablePath, @Nonnull ToOneAttributeMapping<?> modelPart);
 
 	@Override
 	default boolean incrementFetchDepth(){
@@ -265,7 +265,7 @@ public interface PluralAttributeMapping
 
 	@Nonnull
 	@Override
-	default PluralAttributeMapping asPluralAttributeMapping() {
+	default PluralAttributeMapping<?> asPluralAttributeMapping() {
 		return this;
 	}
 

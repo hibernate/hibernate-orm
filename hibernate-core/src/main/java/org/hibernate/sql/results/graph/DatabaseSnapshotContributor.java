@@ -10,7 +10,7 @@ import org.hibernate.sql.ast.spi.query.from.TableGroup;
  * @author Steve Ebersole
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
-public interface DatabaseSnapshotContributor extends Fetchable {
+public interface DatabaseSnapshotContributor<J, M, R> extends Fetchable<J, M, R> {
 
 	/**
 	 * Create a DomainResult to be used when selecting snapshots from the database.
@@ -18,7 +18,7 @@ public interface DatabaseSnapshotContributor extends Fetchable {
 	 * By default, simply use {@link #createDomainResult}
 	 */
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
-	default <T> DomainResult<T> createSnapshotDomainResult(
+	default DomainResult<?> createSnapshotDomainResult(
 			NavigablePath navigablePath,
 			TableGroup parentTableGroup,
 			String resultVariable,

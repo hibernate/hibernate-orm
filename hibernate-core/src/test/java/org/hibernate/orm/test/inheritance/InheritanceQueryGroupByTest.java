@@ -103,7 +103,7 @@ public class InheritanceQueryGroupByTest {
 			).getSingleResult();
 			assertThat( myPojo.getAmount() ).isEqualTo( 3L );
 			assertThat( myPojo.getParent().getName() ).isEqualTo( parentName );
-			final EntityMappingType entityMappingType = scope.getSessionFactory()
+			final EntityMappingType<?> entityMappingType = scope.getSessionFactory()
 					.getMappingMetamodel()
 					.findEntityDescriptor( parentEntityClass );
 			final int expectedCount = supportsFunctionalDependency( scope, entityMappingType ) ?
@@ -186,7 +186,7 @@ public class InheritanceQueryGroupByTest {
 			).getSingleResult();
 			assertThat( myPojo.getAmount() ).isEqualTo( 3L );
 			assertThat( myPojo.getParent().getName() ).isEqualTo( parentName );
-			final EntityMappingType entityMappingType = scope.getSessionFactory()
+			final EntityMappingType<?> entityMappingType = scope.getSessionFactory()
 					.getMappingMetamodel()
 					.findEntityDescriptor( parentEntityClass );
 			final int expectedCount = supportsFunctionalDependency( scope, entityMappingType ) ?
@@ -238,7 +238,7 @@ public class InheritanceQueryGroupByTest {
 
 	private static boolean supportsFunctionalDependency(
 			SessionFactoryScope scope,
-			EntityMappingType entityMappingType) {
+			EntityMappingType<?> entityMappingType) {
 		final FunctionalDependencyAnalysisSupport analysisSupport = scope.getSessionFactory()
 				.getJdbcServices()
 				.getDialect()
@@ -251,7 +251,7 @@ public class InheritanceQueryGroupByTest {
 				return analysisSupport.supportsTableGroups() && ( analysisSupport.supportsConstants() ||
 						// Union entity persisters use a literal 'clazz_' column as a discriminator
 						// that breaks functional dependency for dialects that don't support constants
-						!( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister ) );
+						!( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister<?> ) );
 			}
 		}
 		return false;

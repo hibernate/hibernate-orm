@@ -24,7 +24,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 
 	public DelayedCollectionFetch(
 			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedAttribute,
+			PluralAttributeMapping<?> fetchedAttribute,
 			FetchParent fetchParent,
 			DomainResult<?> collectionKeyResult,
 			boolean unfetched,

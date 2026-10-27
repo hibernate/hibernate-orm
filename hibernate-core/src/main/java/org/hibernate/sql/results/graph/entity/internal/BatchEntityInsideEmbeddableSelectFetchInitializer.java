@@ -25,7 +25,7 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchEntityInsideEmbeddableSelectFetchInitializer.BatchEntityInsideEmbeddableSelectFetchInitializerData> {
 	protected final PropertyValueAccessor referencedModelPartSetter;
-	protected final AttributeMapping[] rootEmbeddableAttributes;
+	protected final AttributeMapping<?, ?, ?>[] rootEmbeddableAttributes;
 	protected final PropertyValueAccessor[] rootEmbeddableGetters;
 	protected final Type[] rootEmbeddablePropertyTypes;
 
@@ -56,9 +56,9 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 
 	public BatchEntityInsideEmbeddableSelectFetchInitializer(
 			InitializerParent<?> parentAccess,
-			ToOneAttributeMapping referencedModelPart,
+			ToOneAttributeMapping<?> referencedModelPart,
 			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
+			EntityPersister<?> concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			FetchOptions fetchOptions,
@@ -98,7 +98,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 		return attributeTypes;
 	}
 
-	protected void initializeAttributeType(Type[] attributeTypes, EntityPersister entityDescriptor, String attributeName) {
+	protected void initializeAttributeType(Type[] attributeTypes, EntityPersister<?> entityDescriptor, String attributeName) {
 		final int subclassId = entityDescriptor.getSubclassId();
 		if ( rootEmbeddableAttributes[subclassId] != null ) {
 			attributeTypes[subclassId] = entityDescriptor.getPropertyType( attributeName );
@@ -202,7 +202,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 	protected static String getRootEmbeddablePropertyName(
 			EntityInitializer<?> firstEntityInitializer,
 			InitializerParent<?> parent,
-			ToOneAttributeMapping referencedModelPart) {
+			ToOneAttributeMapping<?> referencedModelPart) {
 		final NavigablePath entityPath = firstEntityInitializer.getNavigablePath();
 		NavigablePath navigablePath = parent.getNavigablePath();
 		if ( navigablePath == entityPath ) {

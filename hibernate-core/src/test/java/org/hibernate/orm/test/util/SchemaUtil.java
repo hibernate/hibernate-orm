@@ -61,7 +61,7 @@ public abstract class SchemaUtil {
 
 	public static Set<String> getColumnNames(EntityManagerFactory entityManagerFactory, Class<?> entityType) {
 		Set<String> result = new HashSet<>();
-		AbstractEntityPersister persister = (AbstractEntityPersister) entityManagerFactory
+		AbstractEntityPersister<?> persister = (AbstractEntityPersister<?>) entityManagerFactory
 				.unwrap( SessionFactoryImplementor.class )
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityType );

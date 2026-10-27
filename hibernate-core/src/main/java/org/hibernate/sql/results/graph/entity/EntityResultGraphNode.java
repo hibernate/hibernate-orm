@@ -21,7 +21,7 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 	@Override
 	NavigablePath getNavigablePath();
 
-	EntityValuedModelPart getEntityValuedModelPart();
+	EntityValuedModelPart<?> getEntityValuedModelPart();
 
 	default FetchOptions getFetchOptions() {
 		return FetchOptions.NONE;
@@ -38,7 +38,7 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 	}
 
 	@Override
-	default EntityMappingType getReferencedMappingContainer() {
+	default EntityMappingType<?> getReferencedMappingContainer() {
 		return getEntityValuedModelPart().getEntityMappingType();
 	}
 

@@ -7,5 +7,5 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
  */
 public interface ModelPartReferenceBasic extends ModelPartReference {
 	@Override
-	BasicValuedModelPart getReferencedPart();
+	BasicValuedModelPart<?, ?, ?> getReferencedPart();
 }

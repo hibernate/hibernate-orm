@@ -74,7 +74,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
 		@Nonnull
 		@Override
-		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister<?> persister) {
 			return new AuditEntityMutationPlanContributor( persister, persister.getFactory() );
 		}
 
@@ -96,28 +96,28 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 
 	@Nonnull
 	@Override
-	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister persister) {
+	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new InsertCoordinatorAudit( persister, persister.getFactory(),
 				standardLegacyIntegration.createInsertCoordinator( persister ) );
 	}
 
 	@Nonnull
 	@Override
-	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister persister) {
+	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new UpdateCoordinatorAudit( persister, persister.getFactory(),
 				standardLegacyIntegration.createUpdateCoordinator( persister ) );
 	}
 
 	@Nonnull
 	@Override
-	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister persister) {
+	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new MergeCoordinatorAudit( persister, persister.getFactory(),
 				standardLegacyIntegration.createMergeCoordinator( persister ) );
 	}
 
 	@Nonnull
 	@Override
-	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister) {
+	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new DeleteCoordinatorAudit( persister, persister.getFactory(),
 				standardLegacyIntegration.createDeleteCoordinator( persister ) );
 	}
@@ -182,10 +182,10 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	@Nullable
 	@Override
 	public AuditMapping createAuxiliaryMapping(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull RootClass rootClass,
 			@Nonnull MappingModelCreationProcess creationProcess) {
-		final var aep = (AbstractEntityPersister) persister;
+		final var aep = (AbstractEntityPersister<?>) persister;
 		final var tableAuditInfoMap = buildTableAuditInfoMap( rootClass, aep, creationProcess );
 		return new AuditMappingImpl( tableAuditInfoMap, persister, creationProcess );
 	}
@@ -193,7 +193,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	@Nonnull
 	private static Map<String, AuditMappingImpl.TableAuditInfo> buildTableAuditInfoMap(
 			@Nonnull RootClass rootClass,
-			@Nonnull AbstractEntityPersister persister,
+			@Nonnull AbstractEntityPersister<?> persister,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
@@ -223,7 +223,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		// (the tableNameResolver lambda captures the map, so it resolves lazily)
 		final Function<String, String> tableNameResolver;
 		final List<String> extraColumns;
-		if ( persister instanceof UnionSubclassEntityPersister ) {
+		if ( persister instanceof UnionSubclassEntityPersister<?> ) {
 			tableNameResolver = originalName -> map.get( originalName ).auditTableName();
 			final var rootInfo = map.values().iterator().next();
 			final var extras = new ArrayList<>( List.of(
@@ -292,7 +292,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			@Nullable List<String> extraColumns,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		assert !bootClass.getSubclasses().isEmpty();
-		final var unionPersister = (UnionSubclassEntityPersister)
+		final var unionPersister = (UnionSubclassEntityPersister<?>)
 				creationProcess.getEntityPersister( bootClass.getEntityName() );
 		final var rootInfo = map.values().iterator().next();
 		final String originalSubquery = unionPersister.getTableName();
@@ -318,9 +318,9 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			@Nonnull Table originalTable,
 			@Nonnull Table auditTable,
 			@Nonnull AuxiliaryTableHolder holder,
-			@Nonnull AbstractEntityPersister persister,
-			@Nonnull JdbcMapping csIdJdbcMapping,
-			@Nonnull JdbcMapping modTypeJdbcMapping,
+			@Nonnull AbstractEntityPersister<?> persister,
+			@Nonnull JdbcMapping<?> csIdJdbcMapping,
+			@Nonnull JdbcMapping<?> modTypeJdbcMapping,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final String originalTableName = persister.determineTableName( originalTable );
 		final String auditTableName = persister.determineTableName( auditTable );
@@ -334,8 +334,8 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	private static AuditMappingImpl.TableAuditInfo createTableAuditInfo(
 			@Nonnull String auditTableName,
 			@Nonnull AuxiliaryTableHolder holder,
-			@Nonnull JdbcMapping csIdJdbcMapping,
-			@Nonnull JdbcMapping modTypeJdbcMapping,
+			@Nonnull JdbcMapping<?> csIdJdbcMapping,
+			@Nonnull JdbcMapping<?> modTypeJdbcMapping,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return new AuditMappingImpl.TableAuditInfo(
 				auditTableName,
@@ -363,7 +363,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	private static @Nullable SelectableMapping toSelectableMapping(
 			@Nonnull String tableName,
 			@Nullable Column column,
-			@Nonnull JdbcMapping jdbcMapping,
+			@Nonnull JdbcMapping<?> jdbcMapping,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		if ( column == null ) {
 			return null;
@@ -385,7 +385,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	}
 
 	@Nonnull
-	private static JdbcMapping resolveJdbcMapping(@Nonnull TypeConfiguration typeConfiguration, @Nonnull Class<?> javaType) {
+	private static JdbcMapping<?> resolveJdbcMapping(@Nonnull TypeConfiguration typeConfiguration, @Nonnull Class<?> javaType) {
 		final var basicType = typeConfiguration.getBasicTypeForJavaType( javaType );
 		return basicType != null ? basicType : typeConfiguration.standardBasicTypeForJavaType( javaType );
 	}
@@ -393,7 +393,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	@Nullable
 	@Override
 	public AuditMapping createAuxiliaryMapping(
-			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull PluralAttributeMapping<?> pluralAttributeMapping,
 			@Nonnull Collection bootDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var auditTable = bootDescriptor.getAuxiliaryTable();

@@ -43,7 +43,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface BasicType<T>
-		extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping, SqmDomainType<T> {
+		extends Type, BasicDomainType<T>, MappingType<T>, BasicValuedMapping<T>, JdbcMapping<T>, SqmDomainType<T> {
 	/**
 	 * Get the names under which this type should be registered in the type registry.
 	 *
@@ -59,7 +59,7 @@ public interface BasicType<T>
 
 	@Nonnull
 	@Override
-	default MappingType getMappedType() {
+	default MappingType<T> getMappedType() {
 		return this;
 	}
 
@@ -76,14 +76,14 @@ public interface BasicType<T>
 	}
 
 	@Override
-	default int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( 0, this );
 		return 1;
 	}
 
 	@Nonnull
 	@Override
-	default JdbcMapping getJdbcMapping() {
+	default JdbcMapping<T> getJdbcMapping() {
 		return this;
 	}
 
@@ -94,7 +94,7 @@ public interface BasicType<T>
 
 	@Nonnull
 	@Override
-	default JdbcMapping getJdbcMapping(int index) {
+	default JdbcMapping<T> getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );
 		}
@@ -103,7 +103,7 @@ public interface BasicType<T>
 
 	@Nonnull
 	@Override
-	default JdbcMapping getSingleJdbcMapping() {
+	default JdbcMapping<T> getSingleJdbcMapping() {
 		return this;
 	}
 
@@ -139,7 +139,7 @@ public interface BasicType<T>
 	}
 
 	@Override
-	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

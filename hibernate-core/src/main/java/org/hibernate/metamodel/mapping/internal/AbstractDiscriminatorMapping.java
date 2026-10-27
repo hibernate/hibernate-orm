@@ -36,16 +36,16 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractDiscriminatorMapping implements EntityDiscriminatorMapping {
+public abstract class AbstractDiscriminatorMapping<J> implements EntityDiscriminatorMapping<J> {
 	private final NavigableRole role;
 
 	private final BasicType<Object> underlyingJdbcMapping;
-	private final DiscriminatorType<Object> discriminatorType;
-	private final ManagedMappingType mappingType;
+	private final DiscriminatorType<J> discriminatorType;
+	private final ManagedMappingType<?, ?, ?> mappingType;
 
 	public AbstractDiscriminatorMapping(
-			ManagedMappingType mappingType,
-			DiscriminatorType<Object> discriminatorType,
+			ManagedMappingType<?, ?, ?> mappingType,
+			DiscriminatorType<J> discriminatorType,
 			BasicType<Object> underlyingJdbcMapping) {
 		this.underlyingJdbcMapping = underlyingJdbcMapping;
 		this.mappingType = mappingType;
@@ -54,7 +54,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	}
 
 	@Nullable
-	public EntityMappingType getEntityDescriptor() {
+	public EntityMappingType<?> getEntityDescriptor() {
 		return mappingType.asEntityMappingType();
 	}
 
@@ -82,32 +82,31 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return discriminatorType;
 	}
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return mappingType.findContainingEntityMapping();
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return getJdbcMapping();
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return getJdbcMapping().getJavaTypeDescriptor();
 	}
 
 	@Nonnull
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -122,7 +121,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		);
 
 		// return a BasicResult with conversion the entity class or entity-name
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				discriminatorType.getJavaTypeDescriptor(),
@@ -135,7 +134,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
-			JdbcMapping jdbcMappingToUse,
+			JdbcMapping<?> jdbcMappingToUse,
 			TableGroup tableGroup,
 			@Nullable FetchParent fetchParent,
 			SqlAstCreationState creationState) {
@@ -203,7 +202,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		selectionConsumer.accept(
 				resolveSqlSelection( navigablePath, underlyingJdbcMapping, tableGroup, null, creationState.getSqlAstCreationState() ),
 				getJdbcMapping()
@@ -223,7 +222,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, underlyingJdbcMapping );
 		return getJdbcTypeCount();
 	}

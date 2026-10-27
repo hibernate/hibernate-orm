@@ -71,7 +71,7 @@ public class InsertDecomposerTest {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Test";
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
@@ -109,7 +109,7 @@ public class InsertDecomposerTest {
 			entity.primaryField = "Primary";
 			entity.secondaryField = "Secondary";
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithSecondaryTable.class );
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
@@ -141,7 +141,7 @@ public class InsertDecomposerTest {
 			entity.parentField = "Parent";
 			entity.childField = "Child";
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( ChildEntity.class );
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
@@ -173,7 +173,7 @@ public class InsertDecomposerTest {
 			entity.field1 = "Value1";
 			// field2 is null - should not be included in dynamic insert
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( DynamicInsertEntity.class );
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
@@ -205,7 +205,7 @@ public class InsertDecomposerTest {
 			entity.embedded.field1 = "Embedded1";
 			entity.embedded.field2 = "Embedded2";
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithEmbedded.class );
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
@@ -243,7 +243,7 @@ public class InsertDecomposerTest {
 			entity.field = "Field";
 			entity.target = target;
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithAssociation.class );
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
@@ -268,7 +268,7 @@ public class InsertDecomposerTest {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
@@ -292,7 +292,7 @@ public class InsertDecomposerTest {
 			EntityWithGeneratedValue entity = new EntityWithGeneratedValue();
 			entity.name = "Test";
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithGeneratedValue.class );
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
@@ -320,7 +320,7 @@ public class InsertDecomposerTest {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Test";
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
@@ -342,7 +342,7 @@ public class InsertDecomposerTest {
 	private EntityInsertAction createInsertAction(
 			Object entity,
 			SessionImplementor session,
-			EntityPersister persister) {
+			EntityPersister<?> persister) {
 		Object id = persister.getIdentifier( entity, session );
 		Object[] state = persister.getValues( entity );
 

@@ -27,12 +27,12 @@ import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 ///
 /// @author Steve Ebersole
 public class AuditEntityMutationPlanContributor implements EntityMutationPlanContributor {
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final EntityAuditSupport entityAuditSupport;
 	private final boolean[] auditedPropertyMask;
 
 	public AuditEntityMutationPlanContributor(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityPersister = entityPersister;
 		this.entityAuditSupport = new EntityAuditSupport( entityPersister, sessionFactory );

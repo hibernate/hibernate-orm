@@ -56,10 +56,10 @@ public class InstantiationTests {
 	public void runtimeModelTest(SessionFactoryScope scope) {
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
 		final MappingMetamodel mappingMetamodel = runtimeMetamodels.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( Person.class );
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor( Person.class );
 
-		final EmbeddedAttributeMapping nameEmbedded = (EmbeddedAttributeMapping) entityDescriptor.findAttributeMapping( "name" );
-		final EmbeddableMappingType nameEmbeddable = nameEmbedded.getEmbeddableTypeDescriptor();
+		final EmbeddedAttributeMapping<?, ?> nameEmbedded = (EmbeddedAttributeMapping<?, ?>) entityDescriptor.findAttributeMapping( "name" );
+		final EmbeddableMappingType<?, ?, ?> nameEmbeddable = nameEmbedded.getEmbeddableTypeDescriptor();
 		final EmbeddableRepresentationStrategy nameRepStrategy = nameEmbeddable.getRepresentationStrategy();
 		assertThat( nameRepStrategy.getMode() ).isEqualTo( RepresentationMode.POJO );
 		assertThat( nameRepStrategy.getInstantiator() ).isInstanceOf( NameInstantiator.class );

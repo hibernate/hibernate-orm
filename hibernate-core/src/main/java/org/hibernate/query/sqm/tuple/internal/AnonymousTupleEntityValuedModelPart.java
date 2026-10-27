@@ -75,25 +75,30 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /**
  * @author Christian Beikov
  */
-public class AnonymousTupleEntityValuedModelPart
-		implements EntityValuedModelPart, EntityMappingType, TableGroupJoinProducer, ValuedModelPart,
+public class AnonymousTupleEntityValuedModelPart<J>
+		implements EntityValuedModelPart<J>, EntityMappingType<J>, TableGroupJoinProducer<J, J, J>, ValuedModelPart<J, J, J>,
 		LazyTableGroup.ParentTableGroupUseChecker {
+	@Override
+	public JavaType<J> getExpressibleJavaType() {
+		return getMappedJavaType();
+	}
 
-	private final EntityIdentifierMapping identifierMapping;
-	private final DomainType<?> domainType;
-	private final EntityValuedModelPart delegate;
+
+	private final EntityIdentifierMapping<?, ?, ?> identifierMapping;
+	private final DomainType<J> domainType;
+	private final EntityValuedModelPart<J> delegate;
 //	private final Set<String> targetKeyPropertyNames;
 //	private final int fetchableIndex;
 
 	public AnonymousTupleEntityValuedModelPart(
-			EntityIdentifierMapping identifierMapping,
-			DomainType<?> domainType,
-			EntityValuedModelPart delegate,
+			EntityIdentifierMapping<?, ?, ?> identifierMapping,
+			DomainType<J> domainType,
+			EntityValuedModelPart<J> delegate,
 			int fetchableIndex) {
 		this.identifierMapping = identifierMapping;
 		this.domainType = domainType;
 		this.delegate = delegate;
-		final EntityPersister persister = ((EntityMappingType) delegate.getPartMappingType())
+		final EntityPersister<?> persister = ((EntityMappingType<?>) delegate.getPartMappingType())
 				.getEntityPersister();
 		final Set<String> targetKeyPropertyNames = new HashSet<>();
 		targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
@@ -107,21 +112,21 @@ public class AnonymousTupleEntityValuedModelPart
 //		this.fetchableIndex = fetchableIndex;
 	}
 
-	public ModelPart getForeignKeyPart() {
+	public ModelPart<?, ?, ?> getForeignKeyPart() {
 		// todo: naming?
 		return identifierMapping;
 	}
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping<?, ?, ?> ) {
 			if ( identifierMapping.getAttributeName().equals( name ) ) {
 				return identifierMapping;
 			}
 		}
 		else {
-			final ModelPart subPart = ( (CompositeIdentifierMapping) identifierMapping ).getPartMappingType().findSubPart(
+			final ModelPart<?, ?, ?> subPart = ( (CompositeIdentifierMapping<?, ?, ?>) identifierMapping ).getPartMappingType().findSubPart(
 					name,
 					treatTargetType
 			);
@@ -133,25 +138,25 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTargetType) {
 		delegate.visitSubParts( consumer, treatTargetType );
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return getPartMappingType();
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return domainType.getExpressibleJavaType();
 	}
 
@@ -179,7 +184,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Nonnull
 	@Override
-	public AttributeMapping getAttributeMapping(int position) {
+	public AttributeMapping<?, ?, ?> getAttributeMapping(int position) {
 		return delegate.getEntityMappingType().getAttributeMapping( position );
 	}
 
@@ -190,7 +195,7 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		delegate.getEntityMappingType().forEachAttributeMapping( action );
 	}
 
@@ -218,13 +223,13 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		return identifierMapping.getJdbcMapping( index );
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping<?> getSingleJdbcMapping() {
 		return identifierMapping.getSingleJdbcMapping();
 	}
 
@@ -246,7 +251,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Nonnull
 	@Override
-	public JavaType<?> getMappedJavaType() {
+	public JavaType<J> getMappedJavaType() {
 		return delegate.getJavaType();
 	}
 
@@ -300,11 +305,11 @@ public class AnonymousTupleEntityValuedModelPart
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
-		if ( delegate instanceof OneToManyCollectionPart oneToMany ) {
-			final PluralAttributeMapping pluralAttribute = oneToMany.getCollectionDescriptor().getAttributeMapping();
+		if ( delegate instanceof OneToManyCollectionPart<?> oneToMany ) {
+			final PluralAttributeMapping<?> pluralAttribute = oneToMany.getCollectionDescriptor().getAttributeMapping();
 
-			final ModelPart keyPart = pluralAttribute.getKeyDescriptor().getKeyPart();
-			final ModelPart keyTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
+			final ModelPart<?, ?, ?> keyPart = pluralAttribute.getKeyDescriptor().getKeyPart();
+			final ModelPart<?, ?, ?> keyTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
 
 			keyMappings = arrayList( keyPart.getJdbcTypeCount() );
 			keyPart.forEachSelectable( (selectionIndex, selectableMapping) -> keyMappings.add( selectableMapping ) );
@@ -312,10 +317,10 @@ public class AnonymousTupleEntityValuedModelPart
 			targetMappings = arrayList( keyTargetPart.getJdbcTypeCount() );
 			keyTargetPart.forEachSelectable( (selectionIndex, selectableMapping) -> targetMappings.add( selectableMapping ) );
 		}
-		else if ( delegate instanceof EntityAssociationMapping associationMapping
+		else if ( delegate instanceof EntityAssociationMapping<?> associationMapping
 				&& associationMapping.isReferenceToPrimaryKey()
 				&& associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
-			final ModelPart targetJoinModelPart = associationMapping.getForeignKeyDescriptor()
+			final ModelPart<?, ?, ?> targetJoinModelPart = associationMapping.getForeignKeyDescriptor()
 					.getPart( associationMapping.getSideNature().inverse() );
 			targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
 			targetJoinModelPart.forEachSelectable(
@@ -333,7 +338,7 @@ public class AnonymousTupleEntityValuedModelPart
 		else {
 			// Either an association referring to a non-primary key or the target side of an association,
 			// or an entity which is not an association at all, e.g. the root of a derived table or CTE
-			final ModelPart targetJoinModelPart = delegate.getEntityMappingType().getIdentifierMapping();
+			final ModelPart<?, ?, ?> targetJoinModelPart = delegate.getEntityMappingType().getIdentifierMapping();
 			targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
 			targetJoinModelPart.forEachSelectable(
 					0,
@@ -416,7 +421,7 @@ public class AnonymousTupleEntityValuedModelPart
 			String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
-		final EntityMappingType entityMappingType = delegate.getEntityMappingType();
+		final EntityMappingType<?> entityMappingType = delegate.getEntityMappingType();
 		final TableReference primaryTableReference = entityMappingType.createPrimaryTableReference(
 				sqlAliasBase,
 				creationState
@@ -489,9 +494,9 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart) {
-		final ModelPart foreignKeyPart = getForeignKeyPart();
-		if ( foreignKeyPart instanceof AnonymousTupleNonAggregatedEntityIdentifierMapping identifierMapping ) {
+	public boolean canUseParentTableGroup(TableGroupProducer<?, ?, ?> producer, NavigablePath navigablePath, ValuedModelPart<?, ?, ?> valuedModelPart) {
+		final ModelPart<?, ?, ?> foreignKeyPart = getForeignKeyPart();
+		if ( foreignKeyPart instanceof AnonymousTupleNonAggregatedEntityIdentifierMapping<?, ?> identifierMapping ) {
 			final int numberOfFetchables = identifierMapping.getNumberOfFetchables();
 			for ( int i = 0; i< numberOfFetchables; i++ ) {
 				if ( valuedModelPart == identifierMapping.getFetchable( i ) ) {
@@ -508,7 +513,7 @@ public class AnonymousTupleEntityValuedModelPart
 	public String getSqlAliasStem() {
 		// The delegate is either an association, or the entity persister itself
 		// when the derived table or CTE selects the root of its query
-		return ( (TableGroupProducer) delegate ).getSqlAliasStem();
+		return ( (TableGroupProducer<?, ?, ?>) delegate ).getSqlAliasStem();
 	}
 
 	@Override
@@ -524,13 +529,13 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Nonnull
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -551,7 +556,7 @@ public class AnonymousTupleEntityValuedModelPart
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		identifierMapping.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
@@ -600,13 +605,13 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return delegate.forEachJdbcType( offset, action );
 	}
 
 	@Nonnull
 	@Override
-	public EntityPersister getEntityPersister() {
+	public EntityPersister<J> getEntityPersister() {
 		return delegate.getEntityMappingType().getEntityPersister();
 	}
 
@@ -640,7 +645,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Nullable
 	@Override
-	public AttributeMapping findDeclaredAttributeMapping(@Nonnull String name) {
+	public AttributeMapping<?, ?, ?> findDeclaredAttributeMapping(@Nonnull String name) {
 		return delegate.getEntityMappingType().findDeclaredAttributeMapping( name );
 	}
 
@@ -651,19 +656,19 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public void visitDeclaredAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
+	public void visitDeclaredAttributeMappings(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		delegate.getEntityMappingType().visitDeclaredAttributeMappings( action );
 	}
 
 	@Nonnull
 	@Override
-	public EntityIdentifierMapping getIdentifierMapping() {
+	public EntityIdentifierMapping<?, ?, ?> getIdentifierMapping() {
 		return delegate.getEntityMappingType().getIdentifierMapping();
 	}
 
 	@Nullable
 	@Override
-	public EntityDiscriminatorMapping getDiscriminatorMapping() {
+	public EntityDiscriminatorMapping<?> getDiscriminatorMapping() {
 		return delegate.getEntityMappingType().getDiscriminatorMapping();
 	}
 
@@ -681,7 +686,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Nullable
 	@Override
-	public EntityVersionMapping getVersionMapping() {
+	public EntityVersionMapping<?> getVersionMapping() {
 		return delegate.getEntityMappingType().getVersionMapping();
 	}
 
@@ -693,19 +698,19 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Nullable
 	@Override
-	public NaturalIdMapping getNaturalIdMapping() {
+	public NaturalIdMapping<?, ?, ?> getNaturalIdMapping() {
 		return delegate.getEntityMappingType().getNaturalIdMapping();
 	}
 
 	@Nullable
 	@Override
-	public EntityRowIdMapping getRowIdMapping() {
+	public EntityRowIdMapping<Object> getRowIdMapping() {
 		return delegate.getEntityMappingType().getRowIdMapping();
 	}
 
 	@Nullable
 	@Override
-	public SoftDeleteMapping getSoftDeleteMapping() {
+	public SoftDeleteMapping<?> getSoftDeleteMapping() {
 		return delegate.getEntityMappingType().getSoftDeleteMapping();
 	}
 
@@ -740,26 +745,26 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Nonnull
 	@Override
-	public EntityMappingType getEntityMappingType() {
+	public EntityMappingType<J> getEntityMappingType() {
 		return this;
 	}
 
 	@Override
 	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
-		return delegate instanceof TableGroupJoinProducer
-				? ( (TableGroupJoinProducer) delegate ).getDefaultSqlAstJoinType( parentTableGroup )
+		return delegate instanceof TableGroupJoinProducer<?, ?, ?>
+				? ( (TableGroupJoinProducer<?, ?, ?>) delegate ).getDefaultSqlAstJoinType( parentTableGroup )
 				: null;
 	}
 
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
-		return delegate instanceof TableGroupJoinProducer
-			&& ( (TableGroupJoinProducer) delegate ).isSimpleJoinPredicate(predicate);
+		return delegate instanceof TableGroupJoinProducer<?, ?, ?>
+			&& ( (TableGroupJoinProducer<?, ?, ?>) delegate ).isSimpleJoinPredicate(predicate);
 	}
 
 	@Override
 	public boolean containsTableReference(String tableExpression) {
-		return ( (TableGroupProducer) delegate ).containsTableReference( tableExpression );
+		return ( (TableGroupProducer<?, ?, ?>) delegate ).containsTableReference( tableExpression );
 	}
 
 	@Override

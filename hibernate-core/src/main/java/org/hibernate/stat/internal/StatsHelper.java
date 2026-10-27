@@ -10,7 +10,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class StatsHelper {
 
-	public static NavigableRole getRootEntityRole(EntityPersister entityDescriptor) {
+	public static NavigableRole getRootEntityRole(EntityPersister<?> entityDescriptor) {
 		final String rootEntityName = entityDescriptor.getRootEntityName();
 		return entityDescriptor.getEntityName().equals( rootEntityName )
 				? entityDescriptor.getNavigableRole()

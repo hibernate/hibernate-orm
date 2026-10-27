@@ -21,8 +21,8 @@ public class EntitySelectFetchInitializerBuilder {
 
 	public static EntityInitializer<?> createInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping fetchedAttribute,
-			EntityPersister entityPersister,
+			ToOneAttributeMapping<?> fetchedAttribute,
+			EntityPersister<?> entityPersister,
 			DomainResult<?> keyResult,
 			NavigablePath navigablePath,
 			boolean selectByUniqueKey,
@@ -110,9 +110,9 @@ public class EntitySelectFetchInitializerBuilder {
 	}
 
 	private static BatchMode determineBatchMode(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			InitializerParent<?> parent,
-			ToOneAttributeMapping fetchedAttribute,
+			ToOneAttributeMapping<?> fetchedAttribute,
 			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		final var batchSize = fetchOptions.batchSize();
@@ -152,7 +152,7 @@ public class EntitySelectFetchInitializerBuilder {
 			}
 		}
 		if ( parent != null ) {
-			assert parent.getInitializedPart() instanceof EntityValuedModelPart;
+			assert parent.getInitializedPart() instanceof EntityValuedModelPart<?>;
 			final var parentPersister = parent.asEntityInitializer().getEntityDescriptor();
 			final var cacheAccess = parentPersister.getCacheAccessStrategy();
 			if ( cacheAccess != null ) {
@@ -166,7 +166,7 @@ public class EntitySelectFetchInitializerBuilder {
 		return BATCH_LOAD;
 	}
 
-	private static boolean canBatchInitializeBeUsed(EntityPersister entityPersister) {
+	private static boolean canBatchInitializeBeUsed(EntityPersister<?> entityPersister) {
 		//  we need to create a Proxy in order to use batch initialize
 		return entityPersister.getRepresentationStrategy().getProxyFactory() != null;
 	}

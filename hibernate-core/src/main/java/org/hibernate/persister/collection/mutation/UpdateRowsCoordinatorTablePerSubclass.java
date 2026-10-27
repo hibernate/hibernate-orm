@@ -108,7 +108,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 	}
 
 	@Nonnull
-	private SubclassEntry getDeleteSubclassEntry( @Nonnull EntityPersister elementPersister) {
+	private SubclassEntry getDeleteSubclassEntry( @Nonnull EntityPersister<?> elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
 		final var subclassEntry = deleteSubclassEntries[subclassId];
 		if ( subclassEntry != null ) {
@@ -122,7 +122,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 	}
 
 	@Nonnull
-	private MutationOperationGroup resolveDeleteGroup(@Nonnull EntityPersister elementPersister) {
+	private MutationOperationGroup resolveDeleteGroup(@Nonnull EntityPersister<?> elementPersister) {
 		final var collectionTableMapping = getMutationTarget().getCollectionTableMapping();
 		final var operation = rowMutationOperations.getDeleteRowOperation(
 				new CollectionTableMapping(
@@ -193,7 +193,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 	}
 
 	@Nonnull
-	private SubclassEntry getInsertSubclassEntry( @Nonnull EntityPersister elementPersister) {
+	private SubclassEntry getInsertSubclassEntry( @Nonnull EntityPersister<?> elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
 		final var subclassEntry = insertSubclassEntries[subclassId];
 		if ( subclassEntry != null ) {
@@ -210,7 +210,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 	}
 
 	@Nonnull
-	private MutationOperationGroup resolveInsertGroup(@Nonnull EntityPersister elementPersister) {
+	private MutationOperationGroup resolveInsertGroup(@Nonnull EntityPersister<?> elementPersister) {
 		final var collectionTableMapping = getMutationTarget().getCollectionTableMapping();
 		final var operation = rowMutationOperations.getInsertRowOperation(
 				new CollectionTableMapping(

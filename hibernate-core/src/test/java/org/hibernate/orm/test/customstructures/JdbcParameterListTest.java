@@ -22,7 +22,7 @@ public class JdbcParameterListTest {
 
 	@Test
 	public void singleton() {
-		final JdbcParameterImpl element = makeJdbcParameterElement();
+		final JdbcParameterImpl<?> element = makeJdbcParameterElement();
 		final JdbcParametersList singleton = JdbcParametersList.singleton( element );
 		expectsSize( 1, singleton );
 		assertThat( singleton.get( 0 ) ).isSameAs( element );
@@ -49,7 +49,7 @@ public class JdbcParameterListTest {
 	}
 
 	private void verifyAsSingletonBuilder(JdbcParametersList.Builder builder) {
-		final JdbcParameterImpl element = makeJdbcParameterElement();
+		final JdbcParameterImpl<?> element = makeJdbcParameterElement();
 		builder.add( element );
 		final JdbcParametersList built = builder.build();
 		expectsSize( 1, built );
@@ -83,7 +83,7 @@ public class JdbcParameterListTest {
 	}
 
 	private void verifyNparamBuilder(final int size, final JdbcParametersList.Builder builder) {
-		final JdbcParameterImpl[] elements = new JdbcParameterImpl[size];
+		final JdbcParameterImpl<?>[] elements = new JdbcParameterImpl<?>[size];
 		for ( int i = 0; i < size; i++ ) {
 			elements[i] = makeJdbcParameterElement();
 		}
@@ -115,8 +115,8 @@ public class JdbcParameterListTest {
 		assertThrows( ArrayIndexOutOfBoundsException.class, () -> list.get( size ) );
 	}
 
-	private static JdbcParameterImpl makeJdbcParameterElement() {
-		return new JdbcParameterImpl( null );
+	private static JdbcParameterImpl<?> makeJdbcParameterElement() {
+		return new JdbcParameterImpl<>( null );
 	}
 
 }

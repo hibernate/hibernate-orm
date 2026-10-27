@@ -42,7 +42,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public GetGeneratedKeysDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			boolean inferredKeys,
 			EventType timing) {
 		super( persister, timing, !inferredKeys, false );

@@ -26,7 +26,7 @@ import jakarta.annotation.Nullable;
  */
 public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	private final NavigablePath navigablePath;
-	private final ToOneAttributeMapping fetchedModelPart;
+	private final ToOneAttributeMapping<?> fetchedModelPart;
 	private final FetchParent fetchParent;
 	private final @Nullable DomainResult<?> keyResult;
 	private final FetchTiming timing;
@@ -36,7 +36,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 			FetchTiming timing,
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
-			ToOneAttributeMapping referencedModelPart,
+			ToOneAttributeMapping<?> referencedModelPart,
 			NavigablePath referencedNavigablePath,
 			@Nullable DomainResult<?> keyResult) {
 		this.navigablePath = navigablePath;
@@ -53,7 +53,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	}
 
 	@Override
-	public ToOneAttributeMapping getFetchedMapping() {
+	public ToOneAttributeMapping<?> getFetchedMapping() {
 		return fetchedModelPart;
 	}
 

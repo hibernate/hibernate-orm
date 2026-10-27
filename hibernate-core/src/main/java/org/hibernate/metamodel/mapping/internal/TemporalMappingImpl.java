@@ -61,7 +61,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	private final String tableName;
 	private final SelectableMapping startingColumnMapping;
 	private final SelectableMapping endingColumnMapping;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 	@Nullable private final String currentTimestampFunctionName;
 	@Nullable private final Expression currentTimestampExpression;
 	private final TemporalTableStrategy temporalTableStrategy;
@@ -165,7 +165,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 
@@ -192,8 +192,8 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		final Expression startingTemporalValue;
 		final Expression endingTemporalValue;
 		if ( currentTimestampExpression == null || temporalValue != null ) {
-			startingTemporalValue = new TemporalJdbcParameter( startingColumnMapping );
-			endingTemporalValue = new TemporalJdbcParameter( endingColumnMapping );
+			startingTemporalValue = TemporalJdbcParameter.create( startingColumnMapping );
+			endingTemporalValue = TemporalJdbcParameter.create( endingColumnMapping );
 		}
 		else {
 			startingTemporalValue = currentTimestampExpression;
@@ -233,7 +233,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 				currentTimestampFunctionName != null
 						? new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), columnMapping )
 						: new ColumnWriteFragment( "?",
-								new ColumnValueParameter( endingColumnReference ),
+								ColumnValueParameter.create( endingColumnReference ),
 								columnMapping ) );
 	}
 
@@ -254,7 +254,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	}
 
 	@Override
-	public void addToInsertGroup(@Nonnull MutationGroupBuilder insertGroupBuilder, @Nonnull EntityPersister persister) {
+	public void addToInsertGroup(@Nonnull MutationGroupBuilder insertGroupBuilder, @Nonnull EntityPersister<?> persister) {
 		if ( temporalTableStrategy == TemporalTableStrategy.SINGLE_TABLE ) {
 			final TableInsertBuilder insertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( persister.getIdentifierTableName() );
@@ -270,7 +270,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Override
 	public void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityMappingType,
+			@Nonnull EntityMappingType<?> associatedEntityMappingType,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull LazyTableGroup lazyTableGroup,
 			@Nonnull NavigablePath navigablePath,
@@ -289,7 +289,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Override
 	public void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityDescriptor,
+			@Nonnull EntityMappingType<?> associatedEntityDescriptor,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -306,7 +306,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Override
 	public void applyPredicate(
-			@Nonnull PluralAttributeMapping associatedEntityDescriptor,
+			@Nonnull PluralAttributeMapping<?> associatedEntityDescriptor,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -337,7 +337,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull SqlAstCreationState creationState,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull NamedTableReference rootTableReference,
-			@Nonnull EntityMappingType entityMappingType) {
+			@Nonnull EntityMappingType<?> entityMappingType) {
 		if ( useTemporalRestriction( creationState ) ) {
 			final var tableReference =
 					tableGroup.resolveTableReference( getTableName() );

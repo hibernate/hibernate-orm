@@ -56,7 +56,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	@Nullable
 	private final BatchKey batchKey;
 
-	public InsertCoordinatorStandard(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	public InsertCoordinatorStandard(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
 		batchKey =
@@ -365,10 +365,10 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			@Nullable Object value,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings,
-			@Nonnull AttributeMapping mapping,
+			@Nonnull AttributeMapping<?, ?, ?> mapping,
 			@Nullable Generator generator,
 			@Nonnull Object entity) {
-		if ( !(mapping instanceof PluralAttributeMapping) ) {
+		if ( !(mapping instanceof PluralAttributeMapping<?>) ) {
 			final OnExecutionGenerator onExecutionGenerator;
 			final String[] columnValues;
 			final boolean[] columnInclusions;
@@ -484,7 +484,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	 * true when the property is insertable and non-null
 	 */
 	@Nonnull
-	static boolean[] getPropertiesToInsert(@Nonnull EntityPersister persister, @Nonnull Object[] fields) {
+	static boolean[] getPropertiesToInsert(@Nonnull EntityPersister<?> persister, @Nonnull Object[] fields) {
 		final var notNull = new boolean[fields.length];
 		final var insertable = persister.getPropertyInsertability();
 		for ( int i = 0; i < fields.length; i++ ) {

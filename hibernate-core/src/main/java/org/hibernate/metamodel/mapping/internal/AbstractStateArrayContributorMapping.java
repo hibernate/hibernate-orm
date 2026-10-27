@@ -13,8 +13,8 @@ import org.hibernate.sql.results.graph.FetchOptions;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractStateArrayContributorMapping
-		extends AbstractAttributeMapping
+public abstract class AbstractStateArrayContributorMapping<J, M, R>
+		extends AbstractAttributeMapping<J, M, R>
 		implements FetchOptions {
 
 	private final FetchTiming fetchTiming;
@@ -27,7 +27,7 @@ public abstract class AbstractStateArrayContributorMapping
 			FetchStyle fetchStyle,
 			int stateArrayPosition,
 			int fetchableIndex,
-			@Nullable ManagedMappingType declaringType,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable PropertyAccess propertyAccess) {
 		super( name, fetchableIndex, declaringType, attributeMetadata, stateArrayPosition, propertyAccess );
 		this.fetchTiming = fetchTiming;
@@ -40,7 +40,7 @@ public abstract class AbstractStateArrayContributorMapping
 			FetchOptions mappedFetchOptions,
 			int stateArrayPosition,
 			int fetchableIndex,
-			@Nullable ManagedMappingType declaringType,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable PropertyAccess propertyAccess) {
 		this(
 				name,
@@ -57,7 +57,7 @@ public abstract class AbstractStateArrayContributorMapping
 	/**
 	 * For Hibernate Reactive
 	 */
-	protected AbstractStateArrayContributorMapping(AbstractStateArrayContributorMapping original) {
+	protected AbstractStateArrayContributorMapping(AbstractStateArrayContributorMapping<J, M, R> original) {
 		super( original );
 		this.fetchTiming = original.fetchTiming;
 		this.fetchStyle = original.fetchStyle;

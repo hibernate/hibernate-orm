@@ -54,8 +54,8 @@ public class CastTargetReturnTypeResolver implements FunctionReturnTypeResolver 
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public BasicValuedMapping resolveFunctionReturnType(
-			Supplier<BasicValuedMapping> impliedTypeAccess,
+	public BasicValuedMapping<?> resolveFunctionReturnType(
+			Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 			List<? extends SqlAstNode> arguments) {
 		if ( arguments.size() > 2 ) {
 			int castTargetIndex = 0;
@@ -66,7 +66,7 @@ public class CastTargetReturnTypeResolver implements FunctionReturnTypeResolver 
 				}
 			}
 			if ( castTargetIndex != 0 ) {
-				final BasicValuedMapping specifiedArgType = extractArgumentValuedMapping( arguments, castTargetIndex );
+				final BasicValuedMapping<?> specifiedArgType = extractArgumentValuedMapping( arguments, castTargetIndex );
 				return useImpliedTypeIfPossible( specifiedArgType, impliedTypeAccess.get() );
 			}
 		}

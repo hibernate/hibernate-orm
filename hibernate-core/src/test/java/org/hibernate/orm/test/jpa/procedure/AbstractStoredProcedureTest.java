@@ -39,7 +39,7 @@ public abstract class AbstractStoredProcedureTest {
 			ProcedureParameterImplementor parameterImplementor = memento.resolve( (SharedSessionContractImplementor) em );
 			assertEquals( "p11", parameterImplementor.getName() );
 			assertEquals( jakarta.persistence.ParameterMode.IN, parameterImplementor.getMode() );
-			BasicType hibernateType = (BasicType) parameterImplementor.getHibernateType();
+			BasicType<?> hibernateType = (BasicType<?>) parameterImplementor.getHibernateType();
 			assertEquals( IntegerJavaType.INSTANCE, hibernateType.getJavaTypeDescriptor() );
 			assertEquals( Integer.class, parameterImplementor.getParameterType() );
 
@@ -47,7 +47,7 @@ public abstract class AbstractStoredProcedureTest {
 			parameterImplementor = memento.resolve( (SharedSessionContractImplementor) em );
 			assertEquals( "p12", parameterImplementor.getName() );
 			assertEquals( jakarta.persistence.ParameterMode.IN, parameterImplementor.getMode() );
-			hibernateType = (BasicType) parameterImplementor.getHibernateType();
+			hibernateType = (BasicType<?>) parameterImplementor.getHibernateType();
 			assertEquals( IntegerJavaType.INSTANCE, hibernateType.getJavaTypeDescriptor() );
 			assertEquals( Integer.class, parameterImplementor.getParameterType() );
 
@@ -63,7 +63,7 @@ public abstract class AbstractStoredProcedureTest {
 			parameterImplementor = memento.resolve( (SharedSessionContractImplementor) em );
 			assertEquals( Integer.valueOf( 1 ), parameterImplementor.getPosition() );
 			assertEquals( jakarta.persistence.ParameterMode.INOUT, parameterImplementor.getMode() );
-			hibernateType = (BasicType) parameterImplementor.getHibernateType();
+			hibernateType = (BasicType<?>) parameterImplementor.getHibernateType();
 
 			assertEquals( StringJavaType.INSTANCE, hibernateType.getJavaTypeDescriptor() );
 			assertEquals( String.class, parameterImplementor.getParameterType() );
@@ -73,7 +73,7 @@ public abstract class AbstractStoredProcedureTest {
 
 			assertEquals( Integer.valueOf( 2 ), parameterImplementor.getPosition() );
 			assertEquals( jakarta.persistence.ParameterMode.INOUT, parameterImplementor.getMode() );
-			hibernateType = (BasicType) parameterImplementor.getHibernateType();
+			hibernateType = (BasicType<?>) parameterImplementor.getHibernateType();
 
 			assertEquals( LongJavaType.INSTANCE, hibernateType.getJavaTypeDescriptor() );
 			assertEquals( Long.class, parameterImplementor.getParameterType() );

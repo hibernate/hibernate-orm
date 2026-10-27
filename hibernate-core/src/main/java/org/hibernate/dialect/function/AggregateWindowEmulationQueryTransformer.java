@@ -105,7 +105,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 		// Create the expressions/selections for the outer query and the columnNames list
 		// for the QueryPartTableGroup within which the subquery spec is embedded
 		for ( int i = 0; i < subSelections.size(); i++ ) {
-			final BasicValuedMapping mapping = (BasicValuedMapping) subSelections.get( i )
+			final BasicValuedMapping<?> mapping = (BasicValuedMapping<?>) subSelections.get( i )
 					.getExpressionType();
 			final String columnName = "col" + i;
 			final ColumnReference columnReference = new ColumnReference(
@@ -173,7 +173,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 					// so we need to introduce an intermediate selection item
 					final int valuesPosition = selectClause.getSqlSelections().size();
 					final String columnName = "col" + valuesPosition;
-					final JdbcMapping jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
+					final JdbcMapping<?> jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
 					final ColumnReference columnReference = new ColumnReference(
 							identifierVariable,
 							columnName,
@@ -233,7 +233,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 							// so we need to introduce an intermediate selection item
 							final int valuesPosition = selectClause.getSqlSelections().size();
 							final String columnName = "col" + valuesPosition;
-							final JdbcMapping jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
+							final JdbcMapping<?> jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
 							final ColumnReference columnReference = new ColumnReference(
 									identifierVariable,
 									columnName,
@@ -294,7 +294,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 						// so we need to introduce an intermediate selection item
 						final int valuesPosition = selectClause.getSqlSelections().size();
 						final String columnName = "col" + valuesPosition;
-						final JdbcMapping jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
+						final JdbcMapping<?> jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
 						final ColumnReference columnReference = new ColumnReference(
 								identifierVariable,
 								columnName,
@@ -337,7 +337,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 		for ( int i = 0; i < withinGroup.size(); i++ ) {
 			final int valueIndex = selectionOffset + i;
 			final Expression sortExpression = withinGroup.get( i ).getSortExpression();
-			final BasicValuedMapping mapping = (BasicValuedMapping) sortExpression.getExpressionType();
+			final BasicValuedMapping<?> mapping = (BasicValuedMapping<?>) sortExpression.getExpressionType();
 			final String columnName = "col" + valueIndex;
 			final int oldValueIndex = subSelectClause.getSqlSelections().size();
 			columnNames.add( columnName );

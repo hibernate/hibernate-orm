@@ -138,7 +138,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		this.sessionUidParameter =
 				sessionUidColumn == null
 						? null
-						: new SqlTypedMappingJdbcParameter( sessionUidColumn );
+						: SqlTypedMappingJdbcParameter.create( sessionUidColumn );
 		final var executionContext = omittingLockingAndPaging( context );
 		final var entityDescriptor = getEntityDescriptor();
 		final var sqmConverter = new MultiTableSqmMutationConverter(
@@ -323,7 +323,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		}
 
 		final var updatingModelPart = insertingTableGroup.getModelPart();
-		assert updatingModelPart instanceof EntityMappingType;
+		assert updatingModelPart instanceof EntityMappingType<?>;
 
 		final Map<String, List<Assignment>> assignmentsByTable =
 				mapOfSize( insertingTableGroup.getTableReferenceJoins().size() + 1 );
@@ -536,7 +536,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 						.getJdbcEnvironment().getSqlAstTranslatorFactory();
 		if ( !assignsId && generator.generatedOnExecution() ) {
 			final var identifierMapping =
-					(BasicEntityIdentifierMapping)
+					(BasicEntityIdentifierMapping<?, ?, ?>)
 							getEntityDescriptor().getIdentifierMapping();
 			final var idSelectQuerySpec = new QuerySpec( true );
 			idSelectQuerySpec.getFromClause().addRoot( temporaryTableGroup );
@@ -591,7 +591,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					new ComparisonPredicate(
 							columnReference,
 							ComparisonOperator.EQUAL,
-							new SqlTypedMappingJdbcParameter( identifierMapping )
+							SqlTypedMappingJdbcParameter.create( identifierMapping )
 					)
 			);
 		}
@@ -627,8 +627,8 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					);
 				}
 				if ( needsIdentifierGeneration( generator, assignsId ) ) {
-					final var basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
-					final var rootIdentity = new SqlTypedMappingJdbcParameter( basicIdentifierMapping );
+					final var basicIdentifierMapping = (BasicEntityIdentifierMapping<?, ?, ?>) identifierMapping;
+					final var rootIdentity = SqlTypedMappingJdbcParameter.create( basicIdentifierMapping );
 					final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
 					final var idColumnReference = new ColumnReference( (String) null, basicIdentifierMapping );
 					temporaryTableAssignments.add( new Assignment( idColumnReference, rootIdentity ) );
@@ -636,7 +636,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					final int rowNumberIndex =
 							entityTable.getColumns().size() - (entityTable.getSessionUidColumn() == null ? 1 : 2);
 					final var rowNumberColumn = entityTable.getColumns().get( rowNumberIndex );
-					final var rowNumber = new SqlTypedMappingJdbcParameter( rowNumberColumn );
+					final var rowNumber = SqlTypedMappingJdbcParameter.create( rowNumberColumn );
 
 					final var updateStatement = new UpdateStatement(
 							temporaryTableReference,
@@ -722,15 +722,15 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			final var identifierDelegate = (InsertGeneratedIdentifierDelegate) insertDelegate;
 			rootTableInsertWithReturningSql = identifierDelegate.prepareIdentifierGeneratingInsert( rootTableInsert.getSqlString() );
 			final var identifierMapping =
-					(BasicEntityIdentifierMapping)
+					(BasicEntityIdentifierMapping<?, ?, ?>)
 							getEntityDescriptor().getIdentifierMapping();
 
 			final var primaryKeyTableColumns =
 					getPrimaryKeyTableColumns( getEntityDescriptor(), entityTable );
 			assert primaryKeyTableColumns.size() == 1;
 
-			final var entityIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
-			final var rootIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
+			final var entityIdentity = SqlTypedMappingJdbcParameter.create( identifierMapping );
+			final var rootIdentity = SqlTypedMappingJdbcParameter.create( identifierMapping );
 			final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
 			temporaryTableAssignments.add(
 					new Assignment(
@@ -878,7 +878,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				.translate( null, executionContext.getQueryOptions() );
 	}
 
-	private List<TemporaryTableColumn> getPrimaryKeyTableColumns(EntityPersister entityPersister, TemporaryTable entityTable) {
+	private List<TemporaryTableColumn> getPrimaryKeyTableColumns(EntityPersister<?> entityPersister, TemporaryTable entityTable) {
 		final boolean identityColumn = entityPersister.getGenerator().generatedOnExecution();
 		final int startIndex = identityColumn ? 1 : 0;
 		final int endIndex = startIndex + entityPersister.getIdentifierMapping().getJdbcTypeCount();
@@ -1136,7 +1136,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				final var parameterBinders = rootTableInserter.temporaryTableIdUpdate.getParameterBinders();
 				final var rootIdentity = (JdbcParameter) parameterBinders.get( 0 );
 				final var rowNumber = (JdbcParameter) parameterBinders.get( 1 );
-				final var basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
+				final var basicIdentifierMapping = (BasicEntityIdentifierMapping<?, ?, ?>) identifierMapping;
 				rowNumberStream.forEach( rowNumberValue -> {
 					updateBindings.addBinding(
 							rowNumber,
@@ -1167,7 +1167,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 
 		if ( rootTableInserter.rootTableInsertWithReturningSql != null ) {
 			final var insertDelegate = entityPersister.getEntityPersister().getInsertDelegate();
-			final var basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
+			final var basicIdentifierMapping = (BasicEntityIdentifierMapping<?, ?, ?>) identifierMapping;
 			// todo 7.0 : InsertGeneratedIdentifierDelegate will be removed once we're going to handle
 			//            generated values within the jdbc insert operaetion itself
 			final var identifierDelegate = (InsertGeneratedIdentifierDelegate) insertDelegate;

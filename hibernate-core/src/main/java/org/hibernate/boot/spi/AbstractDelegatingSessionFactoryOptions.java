@@ -155,13 +155,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 
 	@Override
 	@Nullable
-	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(@Nonnull EntityMappingType rootEntityDescriptor, @Nonnull RuntimeModelCreationContext creationContext) {
+	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(@Nonnull EntityMappingType<?> rootEntityDescriptor, @Nonnull RuntimeModelCreationContext creationContext) {
 		return delegate.resolveCustomSqmMultiTableMutationStrategy( rootEntityDescriptor, creationContext );
 	}
 
 	@Override
 	@Nullable
-	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(@Nonnull EntityMappingType rootEntityDescriptor, @Nonnull RuntimeModelCreationContext creationContext) {
+	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(@Nonnull EntityMappingType<?> rootEntityDescriptor, @Nonnull RuntimeModelCreationContext creationContext) {
 		return delegate.resolveCustomSqmMultiTableInsertStrategy( rootEntityDescriptor, creationContext );
 	}
 

@@ -21,7 +21,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 public class InsertCoordinatorTemporal extends InsertCoordinatorStandard {
 	private final TemporalMapping temporalMapping;
 
-	public InsertCoordinatorTemporal(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	public InsertCoordinatorTemporal(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
 	}

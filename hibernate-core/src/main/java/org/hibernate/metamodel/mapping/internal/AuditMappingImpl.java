@@ -84,19 +84,19 @@ public class AuditMappingImpl implements AuditMapping {
 
 	private final Map<String, TableAuditInfo> tableAuditInfoMap;
 
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 	private final BasicType<?> changesetIdBasicType;
 	@Nullable private final String currentTimestampFunctionName;
 	private final FunctionRenderer maxFunctionDescriptor;
 	private final AuditStrategy auditStrategy;
 
-	private final EntityMappingType entityMappingType;
+	private final EntityMappingType<?> entityMappingType;
 	private final SessionFactoryImplementor sessionFactory;
 	@Nullable private AuditEntityLoader entityLoader;
 
 	public AuditMappingImpl(
 			Map<String, TableAuditInfo> tableAuditInfoMap,
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			MappingModelCreationProcess creationProcess) {
 		this.tableAuditInfoMap = Map.copyOf( tableAuditInfoMap );
 		this.entityMappingType = entityMappingType;
@@ -189,20 +189,20 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 
 	private Expression resolveDefaultUpperBound(TableAuditInfo info) {
 		return currentTimestampFunctionName != null
 				? new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping )
-				: new TemporalJdbcParameter( info.changesetIdMapping );
+				: TemporalJdbcParameter.create( info.changesetIdMapping );
 	}
 
 	@Nonnull
 	@Override
 	public Predicate createRestriction(
-			@Nonnull TableGroupProducer tableGroupProducer,
+			@Nonnull TableGroupProducer<?, ?, ?> tableGroupProducer,
 			@Nonnull TableReference tableReference,
 			@Nonnull List<SelectableMapping> keySelectables,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -232,7 +232,7 @@ public class AuditMappingImpl implements AuditMapping {
 	 * @param includeDeletions if {@code true}, omit the {@code REVTYPE <> DEL} filter
 	 */
 	private Predicate createRestriction(
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			TableReference tableReference,
 			List<SelectableMapping> keySelectables,
 			SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -354,7 +354,7 @@ public class AuditMappingImpl implements AuditMapping {
 		throw new IllegalStateException( "Function 'max' is not a self rendering function" );
 	}
 
-	private static JdbcMapping resolveJdbcMapping(
+	private static JdbcMapping<?> resolveJdbcMapping(
 			TypeConfiguration typeConfiguration,
 			Class<?> javaType) {
 		final var basicType = typeConfiguration.getBasicTypeForJavaType( javaType );
@@ -372,7 +372,7 @@ public class AuditMappingImpl implements AuditMapping {
 				: basicType;
 	}
 
-	private static List<SelectableMapping> collectEntityKeySelectables(EntityMappingType entityDescriptor) {
+	private static List<SelectableMapping> collectEntityKeySelectables(EntityMappingType<?> entityDescriptor) {
 		final var keySelectables = new ArrayList<SelectableMapping>();
 		entityDescriptor.getIdentifierMapping().forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
@@ -384,7 +384,7 @@ public class AuditMappingImpl implements AuditMapping {
 		return keySelectables;
 	}
 
-	private List<SelectableMapping> collectCollectionRowKeySelectables(PluralAttributeMapping collectionDescriptor) {
+	private List<SelectableMapping> collectCollectionRowKeySelectables(PluralAttributeMapping<?> collectionDescriptor) {
 		final var keySelectables = new ArrayList<SelectableMapping>();
 		final var identifierDescriptor = collectionDescriptor.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
@@ -416,7 +416,7 @@ public class AuditMappingImpl implements AuditMapping {
 					}
 			);
 		}
-		else if ( collectionDescriptor.getElementDescriptor() instanceof OneToManyCollectionPart oneToMany ) {
+		else if ( collectionDescriptor.getElementDescriptor() instanceof OneToManyCollectionPart<?> oneToMany ) {
 			oneToMany.getAssociatedEntityMappingType().getIdentifierMapping().forEachSelectable(
 					(selectionIndex, selectableMapping) -> {
 						if ( !selectableMapping.isFormula() ) {
@@ -439,7 +439,7 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityMappingType,
+			@Nonnull EntityMappingType<?> associatedEntityMappingType,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull LazyTableGroup lazyTableGroup,
 			@Nonnull NavigablePath navigablePath,
@@ -476,7 +476,7 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityDescriptor,
+			@Nonnull EntityMappingType<?> associatedEntityDescriptor,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -498,7 +498,7 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public void applyPredicate(
-			@Nonnull PluralAttributeMapping collectionDescriptor,
+			@Nonnull PluralAttributeMapping<?> collectionDescriptor,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -521,7 +521,7 @@ public class AuditMappingImpl implements AuditMapping {
 	@Override
 	public void applyPredicate(@Nonnull TableGroupJoin tableGroupJoin, @Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		if ( hasTemporalPredicate( loadQueryInfluencers )
-				&& tableGroupJoin.getJoinedGroup().getModelPart() instanceof EntityValuedModelPart entityPart ) {
+				&& tableGroupJoin.getJoinedGroup().getModelPart() instanceof EntityValuedModelPart<?> entityPart ) {
 			final var entityDescriptor = entityPart.getEntityMappingType();
 			final var persister = entityDescriptor.getEntityPersister();
 			final var info = resolveInfo( persister.getTableName() );
@@ -543,7 +543,7 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull SqlAstCreationState creationState,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull NamedTableReference rootTableReference,
-			@Nonnull EntityMappingType entityMappingType) {
+			@Nonnull EntityMappingType<?> entityMappingType) {
 		if ( hasTemporalPredicate( creationState.getLoadQueryInfluencers() ) ) {
 			final String originalTable = entityMappingType.getEntityPersister().getTableName();
 			final var info = resolveInfo( originalTable );
@@ -564,7 +564,7 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull TableReferenceJoin tableReferenceJoin,
 			@Nonnull NamedTableReference primaryTableReference,
 			@Nonnull String originalTableName,
-			@Nonnull EntityMappingType entityMappingType,
+			@Nonnull EntityMappingType<?> entityMappingType,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
 		if ( influencers.getTemporalIdentifier() != null ) {
@@ -603,7 +603,7 @@ public class AuditMappingImpl implements AuditMapping {
 		final var parentTableGroup = creationState.getFromClauseAccess()
 				.findTableGroup( parentPath );
 		if ( parentTableGroup != null
-				&& parentTableGroup.getModelPart() instanceof EntityValuedModelPart entityPart ) {
+				&& parentTableGroup.getModelPart() instanceof EntityValuedModelPart<?> entityPart ) {
 			final var parentAuditMapping = entityPart.getEntityMappingType().getAuditMapping();
 			if ( parentAuditMapping != null ) {
 				final String parentTable = entityPart.getEntityMappingType().getMappedTableDetails().getTableName();

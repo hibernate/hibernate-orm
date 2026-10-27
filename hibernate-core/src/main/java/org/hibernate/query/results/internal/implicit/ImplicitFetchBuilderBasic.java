@@ -23,10 +23,10 @@ import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpre
  */
 public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBuilderBasicValued {
 	private final NavigablePath fetchPath;
-	private final BasicValuedModelPart fetchable;
+	private final BasicValuedModelPart<?, ?, ?> fetchable;
 	private final FetchBuilder fetchBuilder;
 
-	public ImplicitFetchBuilderBasic(NavigablePath fetchPath, BasicValuedModelPart fetchable) {
+	public ImplicitFetchBuilderBasic(NavigablePath fetchPath, BasicValuedModelPart<?, ?, ?> fetchable) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
 		this.fetchBuilder = null;
@@ -34,7 +34,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 
 	public ImplicitFetchBuilderBasic(
 			NavigablePath fetchPath,
-			BasicValuedModelPart fetchable,
+			BasicValuedModelPart<?, ?, ?> fetchable,
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
@@ -128,7 +128,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable<?, ?, ?>, FetchBuilder> consumer) {
 		if ( fetchBuilder != null ) {
 			consumer.accept( fetchable, fetchBuilder );
 		}

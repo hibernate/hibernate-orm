@@ -31,14 +31,14 @@ public class GeographyMappingTest {
 
 	@Test
 	public void testSimpleEntity(SessionFactoryScope scope) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( PointEntity.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
 				.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 
-		BasicValuedModelPart part = (BasicValuedModelPart) entityDescriptor.findSubPart( "location" );
+		BasicValuedModelPart<?, ?, ?> part = (BasicValuedModelPart<?, ?, ?>) entityDescriptor.findSubPart( "location" );
 		assertThat( part.getJdbcMapping().getJdbcType(), equalTo( jdbcTypeRegistry.getDescriptor( SqlTypes.GEOGRAPHY ) ) );
 		scope.inTransaction(
 				s -> {

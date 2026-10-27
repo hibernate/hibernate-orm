@@ -70,7 +70,7 @@ final class CollectionUniqueKeyValueExtractor {
 	}
 
 	private static void collectValues(
-			ModelPart modelPart,
+			ModelPart<?, ?, ?> modelPart,
 			Object domainValue,
 			Map<ColumnKey, Object> valuesByColumn,
 			SharedSessionContractImplementor session) {

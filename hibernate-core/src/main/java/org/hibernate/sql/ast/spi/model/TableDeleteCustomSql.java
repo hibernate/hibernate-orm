@@ -23,7 +23,7 @@ public class TableDeleteCustomSql extends AbstractTableDelete implements CustomS
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters) {
+			List<ColumnValueParameter<?>> parameters) {
 		this(
 				mutatingTable,
 				mutatingTable.getTableMapping().getDeleteDetails(),
@@ -42,7 +42,7 @@ public class TableDeleteCustomSql extends AbstractTableDelete implements CustomS
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters) {
+			List<ColumnValueParameter<?>> parameters) {
 		super( mutatingTable, mutationTarget, sqlComment, keyRestrictionBindings,
 				optLockRestrictionBindings, parameters );
 		this.mutationDetails = mutationDetails;

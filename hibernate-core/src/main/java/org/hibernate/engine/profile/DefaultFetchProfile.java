@@ -35,9 +35,9 @@ public class DefaultFetchProfile extends FetchProfile {
 		final int last = role.lastIndexOf('.');
 		final String entityName = role.substring( 0, last );
 		final String property = role.substring( last + 1 );
-		final EntityMappingType entity = metamodels.getEntityDescriptor( entityName );
+		final EntityMappingType<?> entity = metamodels.getEntityDescriptor( entityName );
 		if ( entity != null ) {
-			final AttributeMapping attributeMapping = entity.findAttributeMapping( property );
+			final AttributeMapping<?, ?, ?> attributeMapping = entity.findAttributeMapping( property );
 			if ( attributeMapping != null && !attributeMapping.isPluralAttributeMapping() ) {
 				final FetchOptions fetchOptions = attributeMapping.getMappedFetchOptions();
 				if ( fetchOptions.getStyle() == JOIN && fetchOptions.getTiming() == IMMEDIATE ) {
@@ -50,10 +50,10 @@ public class DefaultFetchProfile extends FetchProfile {
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public boolean hasSubselectLoadableCollectionsEnabled(EntityPersister persister) {
+	public boolean hasSubselectLoadableCollectionsEnabled(EntityPersister<?> persister) {
 		final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			AttributeMapping attributeMapping = attributeMappings.get( i );
+			AttributeMapping<?, ?, ?> attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping.getMappedFetchOptions().getStyle() == SUBSELECT ) {
 				return true;
 			}

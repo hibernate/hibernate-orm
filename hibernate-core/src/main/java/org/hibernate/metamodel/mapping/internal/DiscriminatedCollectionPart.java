@@ -47,17 +47,17 @@ import static java.util.Objects.requireNonNullElse;
 /**
  * @author Steve Ebersole
  */
-public class DiscriminatedCollectionPart implements DiscriminatedAssociationModelPart, CollectionPart {
+public class DiscriminatedCollectionPart<J> implements DiscriminatedAssociationModelPart<J>, CollectionPart<J, J, J> {
 	private final Nature nature;
 
 	private final NavigableRole partRole;
 	private final CollectionPersister collectionDescriptor;
-	private final DiscriminatedAssociationMapping associationMapping;
+	private final DiscriminatedAssociationMapping<J> associationMapping;
 
 	public DiscriminatedCollectionPart(
 			Nature nature,
 			CollectionPersister collectionDescriptor,
-			JavaType<Object> baseAssociationJtd,
+			JavaType<J> baseAssociationJtd,
 			Any bootValueMapping,
 			AnyType anyType,
 			MappingModelCreationProcess creationProcess) {
@@ -82,13 +82,13 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getCollectionAttribute() {
+	public PluralAttributeMapping<?> getCollectionAttribute() {
 		return collectionDescriptor.getAttributeMapping();
 	}
 
 	@Nonnull
 	@Override
-	public DiscriminatorMapping getDiscriminatorMapping() {
+	public DiscriminatorMapping<?> getDiscriminatorMapping() {
 		return associationMapping.getDiscriminatorMapping();
 	}
 
@@ -99,19 +99,19 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Nonnull
 	@Override
-	public BasicValuedModelPart getKeyPart() {
+	public BasicValuedModelPart<?, ?, ?> getKeyPart() {
 		return associationMapping.getKeyPart();
 	}
 
 	@Nullable
 	@Override
-	public EntityMappingType resolveDiscriminatorValue(@Nullable Object discriminatorValue) {
+	public EntityMappingType<?> resolveDiscriminatorValue(@Nullable Object discriminatorValue) {
 		return associationMapping.resolveDiscriminatorValueToEntityMapping( discriminatorValue );
 	}
 
 	@Nullable
 	@Override
-	public Object resolveDiscriminatorForEntityType(@Nonnull EntityMappingType entityMappingType) {
+	public Object resolveDiscriminatorForEntityType(@Nonnull EntityMappingType<?> entityMappingType) {
 		return associationMapping.resolveDiscriminatorValueToEntityMapping( entityMappingType );
 	}
 
@@ -168,7 +168,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -194,31 +194,31 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		associationMapping.getDiscriminatorMapping().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return associationMapping;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return associationMapping.getJavaType();
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return getPartMappingType();
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getExpressibleJavaType() {
+	public JavaType<J> getExpressibleJavaType() {
 		return getJavaType();
 	}
 
@@ -230,24 +230,24 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		return associationMapping.findSubPart( name, treatTargetType );
 	}
 
 	@Override
-	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTarget) {
 		consumer.accept( 0, getDiscriminatorMapping() );
 		consumer.accept( 1, getKeyPart() );
 	}
 
 	@Override
-	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTargetType) {
 		consumer.accept( getDiscriminatorMapping() );
 		consumer.accept( getKeyPart() );
 	}
@@ -258,7 +258,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
-	public Fetchable getFetchable(int position) {
+	public Fetchable<?, ?, ?> getFetchable(int position) {
 		return switch ( position ) {
 			case 0 -> getDiscriminatorMapping();
 			case 1 -> getKeyPart();
@@ -279,7 +279,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(final int index) {
+	public JdbcMapping<?> getJdbcMapping(final int index) {
 		final int base = getDiscriminatorMapping().getJdbcTypeCount();
 		return index >= base
 				? getKeyPart().getJdbcMapping( index - base )
@@ -344,7 +344,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		int span = getDiscriminatorMapping().forEachJdbcType( offset, action );
 		return span + getKeyPart().forEachJdbcType( offset + span, action );
 	}

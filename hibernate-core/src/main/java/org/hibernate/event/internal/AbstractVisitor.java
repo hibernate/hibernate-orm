@@ -104,7 +104,7 @@ public abstract class AbstractVisitor {
 	 * Walk the tree starting from the given entity.
 	 *
 	 */
-	public void process(@Nonnull Object object, @Nonnull EntityPersister persister) {
+	public void process(@Nonnull Object object, @Nonnull EntityPersister<?> persister) {
 		processEntityPropertyValues( persister.getValues( object ), persister.getPropertyTypes() );
 	}
 

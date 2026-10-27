@@ -42,7 +42,7 @@ public class ColumnBuilder<T> extends AbstractMappingElementBuilder<T> implement
 						createColumnReferenceKey( columnName ),
 						processingState -> new ResultSetMappingSqlSelection(
 								jdbcPositionToValuesArrayPosition( jdbcPosition ),
-								(BasicValuedMapping) jdbcResultsMetadata.resolveType( jdbcPosition, javaType, typeConfiguration )
+								(BasicValuedMapping<?>) jdbcResultsMetadata.resolveType( jdbcPosition, javaType, typeConfiguration )
 						)
 				),
 				javaType,

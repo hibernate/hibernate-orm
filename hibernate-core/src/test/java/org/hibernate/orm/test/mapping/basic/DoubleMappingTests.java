@@ -35,13 +35,13 @@ public class DoubleMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfDoubles.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfDoubles.class);
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("wrapper");
 			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Double.class));
 
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
 			assertThat(
 					jdbcMapping.getJdbcType().getJdbcTypeCode(),
@@ -50,10 +50,10 @@ public class DoubleMappingTests {
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("primitive");
 			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Double.class));
 
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
 			assertThat(
 					jdbcMapping.getJdbcType().getJdbcTypeCode(),

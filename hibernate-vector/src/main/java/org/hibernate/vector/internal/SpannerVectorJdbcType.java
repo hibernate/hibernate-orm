@@ -77,7 +77,7 @@ public class SpannerVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
+	public @Nullable String castFromPattern(JdbcMapping<?> sourceMapping, @Nullable Size size) {
 		if ( sourceMapping.getJdbcType().isStringLike() ) {
 			return "CASE WHEN ?1 IS NULL THEN NULL ELSE ARRAY(SELECT CAST(x AS " + baseType + ") FROM UNNEST(JSON_VALUE_ARRAY(?1)) x) END";
 		}
@@ -85,7 +85,7 @@ public class SpannerVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
+	public @Nullable String castToPattern(JdbcMapping<?> targetJdbcMapping, @Nullable Size size) {
 		if ( targetJdbcMapping.getJdbcType().isStringLike() ) {
 			return "CASE WHEN ?1 IS NULL THEN NULL ELSE FORMAT('%T', ?1) END";
 		}

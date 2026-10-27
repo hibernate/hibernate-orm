@@ -96,7 +96,7 @@ public class MappingMetamodelImpl
 	private final Map<String, CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
 	private final Map<String, Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
 
-	private final Map<NavigableRole, EmbeddableValuedModelPart> embeddableValuedModelPart = new ConcurrentHashMap<>();
+	private final Map<NavigableRole, EmbeddableValuedModelPart<?, ?, ?>> embeddableValuedModelPart = new ConcurrentHashMap<>();
 
 	private ConstraintModel constraintModel;
 
@@ -304,7 +304,7 @@ public class MappingMetamodelImpl
 	}
 
 	private static void registerEntityNameResolvers(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Set<EntityNameResolver> entityNameResolvers) {
 		final var representationStrategy = persister.getRepresentationStrategy();
 		if ( representationStrategy != null ) {
@@ -335,14 +335,14 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public void forEachEntityDescriptor(Consumer<EntityPersister> action) {
+	public void forEachEntityDescriptor(Consumer<EntityPersister<?>> action) {
 		for ( var value : entityPersisterMap.values() ) {
 			action.accept( value );
 		}
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor(String entityName) {
+	public EntityPersister<?> getEntityDescriptor(String entityName) {
 		final var entityPersister = entityPersisterMap.get( entityName );
 		if ( entityPersister == null ) {
 			throw new UnknownEntityTypeException( entityName );
@@ -351,12 +351,12 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor(NavigableRole name) {
+	public EntityPersister<?> getEntityDescriptor(NavigableRole name) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getEmbeddableValuedModelPart(NavigableRole role){
+	public EmbeddableValuedModelPart<?, ?, ?> getEmbeddableValuedModelPart(NavigableRole role){
 		final var embeddableMappingType = embeddableValuedModelPart.get( role );
 		if ( embeddableMappingType == null ) {
 			throw new IllegalArgumentException( "Unable to locate EmbeddableValuedModelPart: " + role );
@@ -365,12 +365,12 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public EntityPersister findEntityDescriptor(String entityName) {
+	public EntityPersister<?> findEntityDescriptor(String entityName) {
 		return entityPersisterMap.get( entityName );
 	}
 
 	@Override
-	public EntityPersister findEntityDescriptor(Class<?> entityJavaType) {
+	public EntityPersister<?> findEntityDescriptor(Class<?> entityJavaType) {
 		return findEntityDescriptor( entityJavaType.getName() );
 	}
 
@@ -380,11 +380,11 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor(Class<?> entityJavaType) {
+	public EntityPersister<?> getEntityDescriptor(Class<?> entityJavaType) {
 		return getEntityPersister( entityJavaType );
 	}
 
-	private EntityPersister getEntityPersister(Class<?> byClass) {
+	private EntityPersister<?> getEntityPersister(Class<?> byClass) {
 		final var entityPersister = entityPersisterMap.get( byClass.getName() );
 		if ( entityPersister != null ) {
 			return entityPersister;

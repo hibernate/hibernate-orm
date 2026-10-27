@@ -12,5 +12,5 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 public interface EntityLoader extends Loader {
 	@Nonnull
 	@Override
-	EntityMappingType getLoadable();
+	EntityMappingType<?> getLoadable();
 }

@@ -13,8 +13,8 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 /**
  * @author Steve Ebersole
  */
-public interface SingleAttributeIdentifierMapping extends EntityIdentifierMapping, PropertyBasedMapping,
-		SingularAttributeMapping, AttributeMetadata {
+public interface SingleAttributeIdentifierMapping<J, M, R> extends EntityIdentifierMapping<J, M, R>, PropertyBasedMapping,
+		SingularAttributeMapping<J, M, R>, AttributeMetadata {
 	/**
 	 * Access to the identifier attribute's PropertyAccess
 	 */
@@ -49,7 +49,7 @@ public interface SingleAttributeIdentifierMapping extends EntityIdentifierMappin
 
 	@Nonnull
 	@Override
-	default ManagedMappingType getDeclaringType() {
+	default ManagedMappingType<?, ?, ?> getDeclaringType() {
 		return castNonNull( findContainingEntityMapping() );
 	}
 

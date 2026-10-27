@@ -29,7 +29,7 @@ public class Every implements Expression, DomainResultProducer {
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return type;
 	}
 
@@ -42,7 +42,7 @@ public class Every implements Expression, DomainResultProducer {
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JdbcMapping jdbcMapping = type.getSingleJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = type.getSingleJdbcMapping();
 		return new BasicResult<>(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,

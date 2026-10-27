@@ -20,7 +20,7 @@ import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
  *
  * @author Steve Ebersole
  */
-public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, VirtualModelPart, SqlExpressible {
+public interface SoftDeleteMapping<J> extends AuxiliaryMapping, SelectableMapping, VirtualModelPart<J, J, J>, SqlExpressible {
 	String ROLE_NAME = "{soft-delete}";
 
 	/**

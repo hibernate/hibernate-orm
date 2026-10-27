@@ -60,7 +60,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	private final Map<String, NativeQuery.ResultNode> alias2Return = new HashMap<>();
 	private final Map<String, String> alias2OwnerAlias = new HashMap<>();
 
-	private final Map<String, EntityPersister> alias2Persister = new HashMap<>();
+	private final Map<String, EntityPersister<?>> alias2Persister = new HashMap<>();
 	private final Map<String, String> alias2Suffix = new HashMap<>();
 
 	private final Map<String, CollectionPersister> alias2CollectionPersister = new HashMap<>();
@@ -115,7 +115,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		return this;
 	}
 
-	private void processFetchBuilder(Fetchable attributeName, FetchBuilder fetchBuilder) {
+	private void processFetchBuilder(Fetchable<?, ?, ?> attributeName, FetchBuilder fetchBuilder) {
 		if ( fetchBuilder instanceof LegacyFetchBuilder legacyFetchBuilder ) {
 			resultSetMapping.addLegacyFetchBuilder( legacyFetchBuilder );
 		}
@@ -250,7 +250,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			else {
 				final String collectionSuffix = alias2CollectionSuffix.get( tableAlias );
 				if ( collectionPersister.hasIndex() ) {
-					final var fetchable = (PluralAttributeMapping) fetchBuilder.getFetchable();
+					final var fetchable = (PluralAttributeMapping<?>) fetchBuilder.getFetchable();
 					resultBuilder.addProperty( fetchable.getIndexDescriptor(),
 							collectionPersister.getIndexColumnAliases( collectionSuffix ) );
 				}
@@ -299,7 +299,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private DynamicResultBuilderEntityStandard createSuffixedResultBuilder(
-			EntityMappingType entityMapping,
+			EntityMappingType<?> entityMapping,
 			String tableAlias,
 			String suffix,
 			LockMode lockMode,
@@ -327,7 +327,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 								identifierAliases,
 								fetchable,
 								persister.getSubclassPropertyColumnAliases( index, suffix ),
-								persister instanceof SingleTableEntityPersister singleTableEntityPersister
+								persister instanceof SingleTableEntityPersister<?> singleTableEntityPersister
 										? singleTableEntityPersister.getSubclassPropertyType( index )
 										: persister.getPropertyType( fetchable.getFetchableName() )
 						);
@@ -340,11 +340,11 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private void addFetchBuilder(
 			String suffix,
-			EntityPersister loadable,
+			EntityPersister<?> loadable,
 			DynamicFetchBuilderContainer resultBuilderEntity,
 			String tableAlias,
 			String[] identifierAliases,
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			String[] columnAliases,
 			Type propertyType) {
 		if ( propertyType instanceof CollectionType collectionType ) {
@@ -382,7 +382,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		}
 		else if ( columnAliases.length != 0 ) {
 			if ( propertyType instanceof EntityType ) {
-				final var toOne = (ToOneAttributeMapping) fetchable;
+				final var toOne = (ToOneAttributeMapping<?>) fetchable;
 				if ( !toOne.getIdentifyingColumnsTableExpression().equals( loadable.getTableName() ) ) {
 					// The to-one has a join-table, use the plain join column name instead of the alias
 					assert columnAliases.length == 1;
@@ -495,7 +495,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		// else already processed
 	}
 
-	private void addPersister(String alias, Map<String, String[]> propertyResult, EntityPersister persister) {
+	private void addPersister(String alias, Map<String, String[]> propertyResult, EntityPersister<?> persister) {
 		alias2Persister.put( alias, persister );
 		alias2Suffix.put( alias, generateEntitySuffix() );
 		entityPropertyResultMaps.put( alias, propertyResult );
@@ -579,7 +579,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	@Override
-	public EntityPersister getEntityPersister(String alias) {
+	public EntityPersister<?> getEntityPersister(String alias) {
 		return alias2Persister.get( alias );
 	}
 

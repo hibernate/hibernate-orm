@@ -18,13 +18,13 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 
 	private final MutabilityPlan<J> mutabilityPlan;
 
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 
 	private final BasicType<J> legacyType;
 	private BasicType<J> updatedType;
 
 	public InferredBasicValueResolution(
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			JavaType<J> domainJtd,
 			JavaType<T> relationalJtd,
 			JdbcType jdbcType,
@@ -39,7 +39,7 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return updatedType == null ? jdbcMapping : updatedType;
 	}
 

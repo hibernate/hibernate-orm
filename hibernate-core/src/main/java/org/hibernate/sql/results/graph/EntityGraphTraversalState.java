@@ -79,7 +79,7 @@ public interface EntityGraphTraversalState {
 	 * Traverses to the next part of the Jakarta Persistence entity graph relating to
 	 * the given {@link Fetchable}.
 	 */
-	TraversalResult traverse(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
+	TraversalResult traverse(FetchParent parent, Fetchable<?, ?, ?> fetchable, boolean exploreKeySubgraph);
 
 	/**
 	 * Backtrack to previous entity graph status before last traversal.

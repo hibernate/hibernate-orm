@@ -40,9 +40,9 @@ public class NationalizedJsonMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( entityClass );
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor( entityClass );
 
-		final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+		final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 				attributeName );
 		final JdbcType jdbcType = attribute.getJdbcMapping().getJdbcType();
 

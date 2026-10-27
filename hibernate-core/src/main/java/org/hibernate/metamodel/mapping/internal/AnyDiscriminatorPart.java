@@ -44,11 +44,11 @@ import java.util.function.BiConsumer;
  *
  * @author Steve Ebersole
  */
-public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions {
+public class AnyDiscriminatorPart<J> implements DiscriminatorMapping<J>, FetchOptions {
 	public static final String ROLE_NAME = EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 	private final NavigableRole navigableRole;
-	private final DiscriminatedAssociationModelPart declaringType;
+	private final DiscriminatedAssociationModelPart<?> declaringType;
 
 	private final String table;
 	private final String column;
@@ -64,12 +64,12 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	private final boolean updateable;
 	private final boolean partitioned;
 
-	private final BasicType<?> underlyingJdbcMapping;
+	private final BasicType<J> underlyingJdbcMapping;
 	private final DiscriminatorConverter<?,?> valueConverter;
 
 	public AnyDiscriminatorPart(
 			NavigableRole partRole,
-			DiscriminatedAssociationModelPart declaringType,
+			DiscriminatedAssociationModelPart<?> declaringType,
 			String table,
 			String column,
 			SelectablePath selectablePath,
@@ -82,7 +82,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,
-			BasicType<?> underlyingJdbcMapping,
+			BasicType<J> underlyingJdbcMapping,
 			Map<DiscriminatorValue,String> valueToEntityNameMap,
 			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
@@ -111,9 +111,9 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		);
 	}
 
-	public static DiscriminatorConverter<?, ?> determineDiscriminatorConverter(
+	public static <J> DiscriminatorConverter<?, J> determineDiscriminatorConverter(
 			NavigableRole partRole,
-			BasicType<?> underlyingJdbcMapping,
+			BasicType<J> underlyingJdbcMapping,
 			Map<DiscriminatorValue, String> valueToEntityNameMap,
 			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
@@ -132,7 +132,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		return valueConverter;
 	}
 
-	public JdbcMapping jdbcMapping() {
+	public JdbcMapping<J> jdbcMapping() {
 		return underlyingJdbcMapping;
 	}
 
@@ -222,13 +222,13 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return jdbcMapping();
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return jdbcMapping().getMappedJavaType();
 	}
 
@@ -246,7 +246,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 
 	@Nonnull
 	@Override
-	public JdbcMapping getUnderlyingJdbcMapping() {
+	public JdbcMapping<?> getUnderlyingJdbcMapping() {
 		return underlyingJdbcMapping;
 	}
 
@@ -287,13 +287,13 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return declaringType.findContainingEntityMapping();
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return getJdbcMapping();
 	}
 
@@ -313,7 +313,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, jdbcMapping() );
 		return getJdbcTypeCount();
 	}
@@ -380,13 +380,13 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
 			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping(),
@@ -400,7 +400,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	@Override
 	public Expression resolveSqlExpression(
 			@Nonnull NavigablePath navigablePath,
-			@Nullable JdbcMapping jdbcMappingToUse,
+			@Nullable JdbcMapping<?> jdbcMappingToUse,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAstCreationState creationState) {
 		final var tableReference =
@@ -423,7 +423,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, creationState ), getJdbcMapping() );
 	}
 

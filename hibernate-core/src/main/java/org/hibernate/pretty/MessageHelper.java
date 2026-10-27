@@ -66,7 +66,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			@Nullable EntityPersister persister,
+			@Nullable EntityPersister<?> persister,
 			@Nullable Object id,
 			@Nullable SessionFactoryImplementor factory) {
 		final StringBuilder info = new StringBuilder();
@@ -113,7 +113,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			@Nullable EntityPersister persister,
+			@Nullable EntityPersister<?> persister,
 			@Nullable Object id,
 			Type identifierType,
 			SessionFactoryImplementor factory) {
@@ -146,7 +146,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#&lt;1,2,3&gt;]
 	 */
 	public static String infoString(
-			@Nullable EntityPersister persister,
+			@Nullable EntityPersister<?> persister,
 			Object[] ids,
 			SessionFactoryImplementor factory) {
 		final StringBuilder info = new StringBuilder();
@@ -177,7 +177,7 @@ public final class MessageHelper {
 	 * @param persister The persister.
 	 * @return An info string, in the form [FooBar]
 	 */
-	public static String infoString(@Nullable EntityPersister persister) {
+	public static String infoString(@Nullable EntityPersister<?> persister) {
 		final StringBuilder info = new StringBuilder();
 		info.append( '[' );
 		if ( persister == null ) {
@@ -385,13 +385,13 @@ public final class MessageHelper {
 		return info.toString();
 	}
 
-	public static String collectionInfoString(PluralAttributeMapping loadable, Object key) {
+	public static String collectionInfoString(PluralAttributeMapping<?> loadable, Object key) {
 		final CollectionPersister collectionDescriptor = loadable.getCollectionDescriptor();
 		return collectionInfoString( collectionDescriptor, key, collectionDescriptor.getFactory() );
 	}
 
-	public static String infoString(EntityMappingType loadable, Object id) {
-		final EntityPersister persister = loadable.getEntityPersister();
+	public static String infoString(EntityMappingType<?> loadable, Object id) {
+		final EntityPersister<?> persister = loadable.getEntityPersister();
 		return infoString( persister, id, persister.getFactory() );
 	}
 }

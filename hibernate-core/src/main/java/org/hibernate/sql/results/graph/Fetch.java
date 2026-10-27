@@ -46,7 +46,7 @@ public interface Fetch extends DomainResultGraphNode {
 	/**
 	 * The value mapping being fetched
 	 */
-	Fetchable getFetchedMapping();
+	Fetchable<?, ?, ?> getFetchedMapping();
 
 	/**
 	 * immediate or delayed?

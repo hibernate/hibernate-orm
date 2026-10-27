@@ -62,7 +62,7 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	@Nonnull
 	public Object generateCacheKey(
 			@Nonnull Object id,
-			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull EntityPersister<?> rootEntityDescriptor,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nullable String tenantIdentifier) {
 		return keysFactory.createEntityKey( id, rootEntityDescriptor, factory, tenantIdentifier );

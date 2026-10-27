@@ -134,7 +134,7 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 	@Override
 	public CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,

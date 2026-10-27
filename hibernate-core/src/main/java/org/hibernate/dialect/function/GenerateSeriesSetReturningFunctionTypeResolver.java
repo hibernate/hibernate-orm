@@ -70,7 +70,7 @@ public class GenerateSeriesSetReturningFunctionTypeResolver implements SetReturn
 				start.getExpressionType(),
 				stop.getExpressionType()
 		);
-		JdbcMapping type = expressionType.getSingleJdbcMapping();
+		JdbcMapping<?> type = expressionType.getSingleJdbcMapping();
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Couldn't determine types of arguments to function 'generate_series'" );
 		}

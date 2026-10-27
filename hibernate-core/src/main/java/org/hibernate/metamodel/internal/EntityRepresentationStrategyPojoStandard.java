@@ -66,7 +66,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	public EntityRepresentationStrategyPojoStandard(
 			PersistentClass bootDescriptor,
-			EntityPersister runtimeDescriptor,
+			EntityPersister<?> runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final var registry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 
@@ -150,7 +150,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	private ProxyFactory resolveProxyFactory(
 			PersistentClass bootDescriptor,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			JavaType<?> proxyJavaType,
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
@@ -228,7 +228,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	/*
 	 * Used by Hibernate Reactive
 	 */
-	protected EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityPersister persister) {
+	protected EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityPersister<?> persister) {
 		final var accessorService = persister.getFactory().getServiceRegistry()
 				.requireService( PropertyAccessorService.class );
 		final var mappedClass = mappedJtd.getJavaTypeClass();

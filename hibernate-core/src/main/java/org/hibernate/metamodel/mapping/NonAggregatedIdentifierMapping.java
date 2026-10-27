@@ -26,26 +26,26 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
  *
  * @author Steve Ebersole
  */
-public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMapping, EmbeddableValuedFetchable, FetchOptions, VirtualModelPart {
+public interface NonAggregatedIdentifierMapping<E, I> extends CompositeIdentifierMapping<E, E, I>, EmbeddableValuedFetchable<E, E, I>, FetchOptions, VirtualModelPart<E, E, I> {
 	/**
 	 * The virtual-id representation of this id mapping
 	 */
 	@Nonnull
 	@org.hibernate.Internal
-	VirtualIdEmbeddable getVirtualIdEmbeddable();
+	VirtualIdEmbeddable<E> getVirtualIdEmbeddable();
 
 	/**
 	 * The id-class representation of this id mapping
 	 */
 	@Nullable
 	@org.hibernate.Internal
-	IdClassEmbeddable getIdClassEmbeddable();
+	IdClassEmbeddable<I> getIdClassEmbeddable();
 
 	/**
 	 * The id-class, if there is one, otherwise the virtual-id.
 	 */
 	@Nonnull
-	IdentifierValueMapper getIdentifierValueMapper();
+	IdentifierValueMapper<I> getIdentifierValueMapper();
 
 	@Override
 	default int getFetchableKey() {
@@ -56,9 +56,9 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 	 * Think of an AttributeConverter for id values to account for representation
 	 * difference between virtual and id-class mappings
 	 */
-	interface IdentifierValueMapper extends EmbeddableMappingType {
+	interface IdentifierValueMapper<J> extends EmbeddableMappingType<J, J, J> {
 		@Nonnull
-		EmbeddableValuedModelPart getEmbeddedPart();
+		EmbeddableValuedModelPart<?, ?, ?> getEmbeddedPart();
 
 		/**
 		 * Extract the identifier out of the given entity, returning the mapper's
@@ -76,7 +76,7 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 		/**
 		 * Convenience method to iterate the attributes for this mapper's representation
 		 */
-		default void forEachAttribute(@Nonnull IndexedConsumer<SingularAttributeMapping> consumer) {
+		default void forEachAttribute(@Nonnull IndexedConsumer<SingularAttributeMapping<?, ?, ?>> consumer) {
 			//noinspection unchecked,rawtypes
 			getEmbeddedPart().getEmbeddableTypeDescriptor().forEachAttributeMapping( (IndexedConsumer) consumer );
 		}

@@ -15,7 +15,7 @@ public class EntityInstantiatorPojoOptimized extends AbstractEntityInstantiatorP
 	private final Instantiator<?> instantiator;
 
 	public EntityInstantiatorPojoOptimized(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			PersistentClass persistentClass,
 			JavaType<?> javaType,
 			Instantiator<?> instantiator) {

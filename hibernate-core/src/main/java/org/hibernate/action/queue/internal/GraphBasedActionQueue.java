@@ -86,7 +86,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	public GraphBasedActionQueue(
 			ConstraintModel constraintModel,
 			PlanningOptions planningOptions,
-			Map<String, EntityPersister> entityPersistersByTable,
+			Map<String, EntityPersister<?>> entityPersistersByTable,
 			boolean deferIdentityInserts,
 			SessionImplementor session) {
 		this.session = session;

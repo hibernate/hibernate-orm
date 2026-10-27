@@ -154,7 +154,7 @@ public abstract class AbstractSaveEventListener<C> {
 			@Nonnull Object entity,
 			@Nonnull EventSource source,
 			@Nonnull BeforeExecutionGenerator generator,
-			@Nonnull EntityPersister persister) {
+			@Nonnull EntityPersister<?> persister) {
 		final Object currentValue = generator.allowAssignedIdentifiers() ? persister.getIdentifier( entity ) : null;
 		final Object id = generator.generate( source, entity, currentValue, INSERT );
 		if ( id == null ) {
@@ -191,7 +191,7 @@ public abstract class AbstractSaveEventListener<C> {
 	protected Object performSave(
 			@Nonnull Object entity,
 			@Nullable Object id,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean useIdentityColumn,
 			@Nonnull C context,
 			@Nonnull EventSource source,
@@ -232,7 +232,7 @@ public abstract class AbstractSaveEventListener<C> {
 	}
 
 	@Nonnull
-	private static EntityKey entityKey(@Nonnull Object id, @Nonnull EntityPersister persister, @Nonnull EventSource source) {
+	private static EntityKey entityKey(@Nonnull Object id, @Nonnull EntityPersister<?> persister, @Nonnull EventSource source) {
 		final var key = source.generateEntityKey( id, persister );
 		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object old = persistenceContext.getEntity( key );
@@ -269,7 +269,7 @@ public abstract class AbstractSaveEventListener<C> {
 	protected Object performSaveOrReplicate(
 			@Nonnull Object entity,
 			@Nullable EntityKey key,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean useIdentityColumn,
 			@Nonnull C context,
 			@Nonnull EventSource source,
@@ -356,7 +356,7 @@ public abstract class AbstractSaveEventListener<C> {
 	@Nonnull
 	private Object[] cloneAndSubstituteValues(
 			@Nonnull Object entity,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull C context,
 			@Nonnull EventSource source,
 			@Nullable Object id) {
@@ -387,7 +387,7 @@ public abstract class AbstractSaveEventListener<C> {
 			@Nonnull Object[] values,
 			@Nullable Object id,
 			@Nonnull Object entity,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean useIdentityColumn,
 			@Nonnull EventSource source,
 			boolean delayIdentityInserts) {
@@ -452,7 +452,7 @@ public abstract class AbstractSaveEventListener<C> {
 			@Nonnull Object entity,
 			@Nullable Object id,
 			@Nonnull Object[] values,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SessionImplementor source) {
 		boolean substitute = source.callInterceptorCallback(
 				() -> source.getInterceptor().onPersist(
@@ -479,7 +479,7 @@ public abstract class AbstractSaveEventListener<C> {
 	 */
 	protected void cascadeBeforeSave(
 			@Nonnull EventSource source,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity,
 			@Nonnull C context) {
 		// cascade save to many-to-one BEFORE the parent is saved
@@ -510,7 +510,7 @@ public abstract class AbstractSaveEventListener<C> {
 	 */
 	protected void cascadeAfterSave(
 			@Nonnull EventSource source,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity,
 			@Nonnull C context) {
 		// cascade save to collections AFTER the collection owner was saved

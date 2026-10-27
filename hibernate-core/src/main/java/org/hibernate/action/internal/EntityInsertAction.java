@@ -50,7 +50,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			final @Nonnull Object[] state,
 			final @Nonnull Object instance,
 			final @Nullable Object version,
-			final @Nonnull EntityPersister persister,
+			final @Nonnull EntityPersister<?> persister,
 			final @Nonnull EventSource session) {
 		super( id, state, instance, persister, session );
 		this.version = version;
@@ -204,7 +204,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected boolean cacheInsert(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EntityDataAccess cache,
 			@Nonnull Object cacheKey,
 			Object entry) {
@@ -337,7 +337,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected boolean isCachePutEnabled(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session) {
 		return persister.canWriteToCache()
 			&& !persister.isCacheInvalidationRequired()

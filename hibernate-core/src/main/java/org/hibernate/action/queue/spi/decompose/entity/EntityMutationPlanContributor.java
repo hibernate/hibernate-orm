@@ -109,7 +109,7 @@ public interface EntityMutationPlanContributor {
 
 	/// Context passed to [#contributeAdditionalInsert(InsertContext, Consumer)].
 	record InsertContext(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			AbstractEntityInsertAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
@@ -122,7 +122,7 @@ public interface EntityMutationPlanContributor {
 
 	/// Context passed to update contribution hooks.
 	record UpdateContext(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			EntityUpdateAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
@@ -139,7 +139,7 @@ public interface EntityMutationPlanContributor {
 
 	/// Context passed to delete contribution hooks.
 	record DeleteContext(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			EntityDeleteAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,

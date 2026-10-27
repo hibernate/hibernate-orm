@@ -30,14 +30,14 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 	@Override
 	public <T> EntityBatchLoader<T> createEntityBatchLoader(
 			int domainBatchSize,
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull LoadQueryInfluencers influencers) {
 		final var factory = influencers.getSessionFactory();
 		// NOTE: don't use the EntityIdentifierMapping here because it will not be known until later
 		final var identifierType = entityDescriptor.getEntityPersister().getIdentifierType();
 		if ( identifierType.getColumnSpan( factory.getRuntimeMetamodels() ) == 1
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() )
-				&& identifierType instanceof BasicType ) {
+				&& identifierType instanceof BasicType<?> ) {
 			// we can use a single ARRAY parameter to send all the ids
 			return new EntityBatchLoaderArrayParam<>( domainBatchSize, entityDescriptor, influencers );
 		}
@@ -51,7 +51,7 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 	public CollectionBatchLoader createCollectionBatchLoader(
 			int domainBatchSize,
 			@Nonnull LoadQueryInfluencers influencers,
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull SessionFactoryImplementor factory) {
 		if ( attributeMapping.getKeyDescriptor().getJdbcTypeCount() == 1
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {

@@ -49,7 +49,7 @@ public class GeometryConverterTest {
 
 				// todo (5.3) : what to assert wrt to SqlTypeDescriptor?  Anything?
 
-				final EntityPersister entityPersister = sessionFactory.getMappingMetamodel()
+				final EntityPersister<?> entityPersister = sessionFactory.getMappingMetamodel()
 						.getEntityDescriptor( MyEntity.class );
 				Type geometryAttributeType = entityPersister.getPropertyType( "geometry" );
 				assertThat( geometryAttributeType ).isInstanceOf( ConvertedBasicTypeImpl.class );

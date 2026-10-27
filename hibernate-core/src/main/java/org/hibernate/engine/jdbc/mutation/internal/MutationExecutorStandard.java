@@ -176,7 +176,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		// Execute and check it before the self-executing secondary-table mutations.
 		// Stateless mutations already check ownership before reaching this executor.
 		return session instanceof SessionImplementor
-			&& mutationOperationGroup.getMutationTarget() instanceof EntityPersister persister
+			&& mutationOperationGroup.getMutationTarget() instanceof EntityPersister<?> persister
 			&& TenantIdHelper.needsMultiTableUpdateCheck( persister, session )
 			&& TenantIdHelper.checksTenantId( persister, operation );
 	}

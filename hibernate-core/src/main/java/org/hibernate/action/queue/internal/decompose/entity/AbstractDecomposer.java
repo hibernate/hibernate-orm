@@ -15,10 +15,10 @@ import org.hibernate.persister.entity.EntityPersister;
 ///
 /// @author Steve Ebersole
 public abstract class AbstractDecomposer<T extends EntityAction> implements EntityActionDecomposer<T> {
-	protected final EntityPersister entityPersister;
+	protected final EntityPersister<?> entityPersister;
 	protected final SessionFactoryImplementor sessionFactory;
 
-	public AbstractDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
+	public AbstractDecomposer(EntityPersister<?> entityPersister, SessionFactoryImplementor sessionFactory) {
 		this.entityPersister = entityPersister;
 		this.sessionFactory = sessionFactory;
 	}

@@ -65,7 +65,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private final List<ColumnValueBinding> valueBindings;
 	private final List<ColumnValueBinding> keyBindings;
 	private final List<ColumnValueBinding> optimisticLockBindings;
-	private final List<ColumnValueParameter> parameters;
+	private final List<ColumnValueParameter<?>> parameters;
 
 	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
 
@@ -122,7 +122,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		return optimisticLockBindings;
 	}
 
-	protected final List<ColumnValueParameter> getParameters() {
+	protected final List<ColumnValueParameter<?>> getParameters() {
 		return parameters;
 	}
 
@@ -396,7 +396,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private JdbcMutationOperation createJdbcUpdate(
 			SharedSessionContractImplementor session,
 			List<ColumnValueBinding> updateValueBindings,
-			List<ColumnValueParameter> updateParameters) {
+			List<ColumnValueParameter<?>> updateParameters) {
 		final var updateDetails = tableMapping.getUpdateDetails();
 		final String comment = "upsert update for " + mutationTarget.getRolePath();
 		final var table = new MutatingTableReference( tableMapping );
@@ -584,7 +584,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private List<ColumnValueParameter> collectUpdateParameters(
+	private List<ColumnValueParameter<?>> collectUpdateParameters(
 			List<ColumnValueBinding> updateValueBindings) {
 		return AbstractTableUpdate.collectParameters(
 				updateValueBindings,
@@ -596,7 +596,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private void bindUpdateValues(
 			JdbcValueBindings jdbcValueBindings,
 			PreparedStatement statement,
-			List<ColumnValueParameter> updateParameters,
+			List<ColumnValueParameter<?>> updateParameters,
 			String sql,
 			SharedSessionContractImplementor session) {
 		final var bindingGroup =
@@ -639,7 +639,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private static Binding findBinding(BindingGroup bindingGroup, ColumnValueParameter parameter) {
+	private static Binding findBinding(BindingGroup bindingGroup, ColumnValueParameter<?> parameter) {
 		final String columnName = parameter.getColumnReference().getColumnExpression();
 		for ( var binding : bindingGroup.getBindings() ) {
 			if ( binding.getValueDescriptor()

@@ -28,13 +28,13 @@ import java.util.function.Consumer;
  */
 public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento.Parent {
 	private final NavigablePath navigablePath;
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 	private final LockMode lockMode;
 	private final FetchMementoBasic discriminatorMemento;
 	private final Map<String, FetchMemento> explicitFetchMementoMap;
 
 	public ResultMementoEntityJpa(
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			LockMode lockMode,
 			FetchMementoBasic discriminatorMemento,
 			Map<String, FetchMemento> explicitFetchMementoMap) {
@@ -48,7 +48,7 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 	}
 	public ResultMementoEntityJpa(
 			NavigablePath navigablePath,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			LockMode lockMode,
 			FetchMementoBasic discriminatorMemento,
 			Map<String, FetchMemento> explicitFetchMementoMap) {
@@ -74,14 +74,14 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 
-		final HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap = new HashMap<>();
+		final HashMap<Fetchable<?, ?, ?>, FetchBuilder> explicitFetchBuilderMap = new HashMap<>();
 
 		// If there are no explicit fetches, we don't register DELAYED
 		// builders to get implicit fetching of all basic fetchables
 		if ( !explicitFetchMementoMap.isEmpty() ) {
 			explicitFetchMementoMap.forEach(
 					(relativePath, fetchMemento) -> explicitFetchBuilderMap.put(
-							(Fetchable) entityDescriptor.findByPath( relativePath ),
+							(Fetchable<?, ?, ?>) entityDescriptor.findByPath( relativePath ),
 							fetchMemento.resolve( this, querySpaceConsumer, context )
 					)
 			);

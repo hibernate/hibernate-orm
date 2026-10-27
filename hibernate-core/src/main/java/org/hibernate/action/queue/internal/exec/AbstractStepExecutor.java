@@ -240,7 +240,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 
 	private static GeneratedValuesMutationDelegate generatedValuesDelegate(FlushOperation flushOperation) {
 		var mutationTarget = flushOperation.getJdbcOperation().getMutationTarget();
-		if ( mutationTarget instanceof EntityPersister entityPersister ) {
+		if ( mutationTarget instanceof EntityPersister<?> entityPersister ) {
 			return flushOperation.getKind() == MutationKind.INSERT
 					? entityPersister.getInsertDelegate()
 					: entityPersister.getUpdateDelegate();

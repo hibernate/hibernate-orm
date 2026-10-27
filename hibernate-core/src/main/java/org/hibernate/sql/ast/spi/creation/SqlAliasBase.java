@@ -21,7 +21,7 @@ public interface SqlAliasBase {
 	static SqlAliasBase from(
 			SqlAliasBase explicitBase,
 			String explicitSourceAlias,
-			TableGroupProducer producer,
+			TableGroupProducer<?, ?, ?> producer,
 			SqlAliasBaseGenerator generator) {
 		if ( explicitBase != null ) {
 			return explicitBase;

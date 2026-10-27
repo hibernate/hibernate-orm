@@ -32,7 +32,7 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 	private final boolean nationalized;
 	private final int ddlTypeCode;
 
-	public XmlAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType embeddableMappingType) {
+	public XmlAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 		this.ddlTypeCode = ddlTypeCode;
 		this.nationalized = ddlTypeCode == SqlTypes.LONG32NVARCHAR
@@ -41,7 +41,7 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new XmlAsStringJdbcType( ddlTypeCode, mappingType );

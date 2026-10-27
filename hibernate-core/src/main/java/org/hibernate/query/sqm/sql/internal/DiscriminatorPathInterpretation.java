@@ -17,8 +17,6 @@ import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.query.PathInterpretation;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveMappingModelExpressible;
 
@@ -32,7 +30,7 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 
 	public DiscriminatorPathInterpretation(
 			NavigablePath navigablePath,
-			DiscriminatorMapping mapping,
+			DiscriminatorMapping<?> mapping,
 			TableGroup tableGroup,
 			SqlAstCreationState sqlAstCreationState) {
 		super( navigablePath, mapping, tableGroup );
@@ -43,7 +41,7 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 
 	public DiscriminatorPathInterpretation(
 			NavigablePath navigablePath,
-			EntityMappingType mapping,
+			EntityMappingType<?> mapping,
 			TableGroup tableGroup,
 			SqlAstCreationState sqlAstCreationState) {
 		super( navigablePath, mapping.getDiscriminatorMapping(), tableGroup );
@@ -68,7 +66,7 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 		else if ( path instanceof EmbeddedDiscriminatorSqmPath<?> embeddedDiscriminatorSqmPath ) {
 			return new DiscriminatorPathInterpretation<>(
 					navigablePath,
-					(DiscriminatorMapping)
+					(DiscriminatorMapping<?>)
 							resolveMappingModelExpressible(
 									embeddedDiscriminatorSqmPath,
 									converter.getCreationContext().getMappingMetamodel(),
@@ -83,30 +81,25 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 		}
 	}
 
-	private static EntityMappingType entityMappingType(ModelPartContainer modelPart) {
-		if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+	private static EntityMappingType<?> entityMappingType(ModelPartContainer<?, ?, ?> modelPart) {
+		if ( modelPart instanceof EntityValuedModelPart<?> entityValuedModelPart ) {
 			return entityValuedModelPart.getEntityMappingType();
 		}
-		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping) {
-			return  (EntityMappingType) pluralAttributeMapping.getElementDescriptor().getPartMappingType();
+		else if ( modelPart instanceof PluralAttributeMapping<?> pluralAttributeMapping) {
+			return  (EntityMappingType<?>) pluralAttributeMapping.getElementDescriptor().getPartMappingType();
 		}
 		else {
 			throw new AssertionFailure( "Unrecognized model part type" );
 		}
 	}
 
-	public EntityDiscriminatorMapping getDiscriminatorMapping() {
-		return (EntityDiscriminatorMapping) super.getExpressionType();
+	public EntityDiscriminatorMapping<?> getDiscriminatorMapping() {
+		return (EntityDiscriminatorMapping<?>) super.getExpressionType();
 	}
 
 	@Override
-	public EntityDiscriminatorMapping getExpressionType() {
+	public EntityDiscriminatorMapping<?> getExpressionType() {
 		return getDiscriminatorMapping();
-	}
-
-	@Override
-	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		return getDiscriminatorMapping().createDomainResult( getNavigablePath(), getTableGroup(), resultVariable, creationState );
 	}
 
 	@Override

@@ -53,7 +53,7 @@ public class ExampleSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		super( request );
 	}
 
-	public EntityVersionMapping versionSeedMapping(Expression expression) {
+	public EntityVersionMapping<?> versionSeedMapping(Expression expression) {
 		return getVersionSeedMapping( expression );
 	}
 

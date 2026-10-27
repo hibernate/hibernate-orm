@@ -34,17 +34,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class EntityWithBidirectionalAssociationTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister parentDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> parentDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( Parent.class );
 
-		final ModelPart childAssociation = parentDescriptor.findSubPart( "child" );
+		final ModelPart<?, ?, ?> childAssociation = parentDescriptor.findSubPart( "child" );
 
 		assertThat( childAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final ToOneAttributeMapping childAttributeMapping = (ToOneAttributeMapping) childAssociation;
+		final ToOneAttributeMapping<?> childAttributeMapping = (ToOneAttributeMapping<?>) childAssociation;
 
-		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
+		ForeignKeyDescriptor<?, ?, ?> foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "PARENT" ) );
@@ -59,15 +59,15 @@ public class EntityWithBidirectionalAssociationTest {
 				}
 		);
 
-		final EntityPersister childDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> childDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( Child.class );
 
-		final ModelPart parentAssociation = childDescriptor.findSubPart( "parent" );
+		final ModelPart<?, ?, ?> parentAssociation = childDescriptor.findSubPart( "parent" );
 
 		assertThat( parentAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final ToOneAttributeMapping parentAttributeMapping = (ToOneAttributeMapping) parentAssociation;
+		final ToOneAttributeMapping<?> parentAttributeMapping = (ToOneAttributeMapping<?>) parentAssociation;
 
 		foreignKeyDescriptor = parentAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(

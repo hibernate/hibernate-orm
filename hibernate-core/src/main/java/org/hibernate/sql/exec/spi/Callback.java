@@ -22,7 +22,7 @@ public interface Callback {
 	/**
 	 * Invoke all {@linkplain #registerAfterLoadAction registered} actions
 	 */
-	void invokeAfterLoadActions(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session);
+	void invokeAfterLoadActions(Object entity, EntityMappingType<?> entityMappingType, SharedSessionContractImplementor session);
 
 	boolean hasAfterLoadActions();
 }

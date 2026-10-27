@@ -22,9 +22,9 @@ public class AnyDiscriminatorPathInterpretation<T> extends AbstractSqmPathInterp
 						.findTableGroup( lhs.getNavigablePath() );
 		final var subPart = tableGroup.getModelPart();
 		final var mapping =
-				subPart instanceof PluralAttributeMapping pluralAttributeMapping
-						? (DiscriminatedAssociationModelPart) pluralAttributeMapping.getElementDescriptor()
-						: (DiscriminatedAssociationModelPart) subPart;
+				subPart instanceof PluralAttributeMapping<?> pluralAttributeMapping
+						? (DiscriminatedAssociationModelPart<?>) pluralAttributeMapping.getElementDescriptor()
+						: (DiscriminatedAssociationModelPart<?>) subPart;
 		final var expression =
 				converter.getSqlExpressionResolver()
 						.resolveSqlExpression(
@@ -41,7 +41,7 @@ public class AnyDiscriminatorPathInterpretation<T> extends AbstractSqmPathInterp
 
 	public AnyDiscriminatorPathInterpretation(
 			NavigablePath navigablePath,
-			ModelPart mapping,
+			ModelPart<?, ?, ?> mapping,
 			TableGroup tableGroup,
 			Expression expression) {
 		super( navigablePath, mapping, tableGroup );

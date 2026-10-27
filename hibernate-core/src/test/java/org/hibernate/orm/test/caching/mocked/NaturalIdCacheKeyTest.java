@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 public class NaturalIdCacheKeyTest {
@@ -32,15 +33,15 @@ public class NaturalIdCacheKeyTest {
 
 		final RuntimeMetamodelsImplementor runtimeMetamodels = mock( RuntimeMetamodelsImplementor.class );
 		final MappingMetamodelImplementor mappingMetamodel = mock( MappingMetamodelImplementor.class );
-		final EntityPersister entityPersister = mock( EntityPersister.class );
-		final NaturalIdMapping naturalIdMapping = mock( NaturalIdMapping.class );
+		final EntityPersister<?> entityPersister = mock( EntityPersister.class );
+		final NaturalIdMapping<?, ?, ?> naturalIdMapping = mock( NaturalIdMapping.class );
 
 		when( sessionImplementor.getFactory() ).thenReturn( sessionFactoryImplementor );
 		when( sessionFactoryImplementor.getRuntimeMetamodels()).thenReturn( runtimeMetamodels );
 		when( runtimeMetamodels.getMappingMetamodel() ).thenReturn( mappingMetamodel );
-		when( mappingMetamodel.getEntityDescriptor( anyString() ) ).thenReturn( entityPersister );
+		doReturn( entityPersister ).when( mappingMetamodel ).getEntityDescriptor( anyString() );
 		when( entityPersister.getRootEntityName() ).thenReturn( "EntityName" );
-		when( entityPersister.getNaturalIdMapping() ).thenReturn( naturalIdMapping );
+		doReturn( naturalIdMapping ).when( entityPersister ).getNaturalIdMapping();
 		when( naturalIdMapping.disassemble( any(), eq( sessionImplementor ) ) ).thenAnswer( invocation -> invocation.getArguments()[0] );
 		when( naturalIdMapping.calculateHashCode( any() ) ).thenAnswer( invocation -> invocation.getArguments()[0].hashCode() );
 

@@ -86,11 +86,11 @@ public class FilterPredicate implements Predicate {
 	public static class FilterFragmentParameter {
 		private final String filterName;
 		private final String parameterName;
-		private final JdbcMapping valueMapping;
+		private final JdbcMapping<?> valueMapping;
 		private final Object value;
 		private JdbcParameter jdbcParameter;
 
-		FilterFragmentParameter(String filterName, String parameterName, JdbcMapping valueMapping, Object value) {
+		FilterFragmentParameter(String filterName, String parameterName, JdbcMapping<?> valueMapping, Object value) {
 			this.filterName = filterName;
 			this.parameterName = parameterName;
 			this.valueMapping = valueMapping;
@@ -105,7 +105,7 @@ public class FilterPredicate implements Predicate {
 			return parameterName;
 		}
 
-		public JdbcMapping getValueMapping() {
+		public JdbcMapping<?> getValueMapping() {
 			return valueMapping;
 		}
 

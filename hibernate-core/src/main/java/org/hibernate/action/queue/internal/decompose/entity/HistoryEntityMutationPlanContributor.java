@@ -53,7 +53,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRA
 ///
 /// @author Steve Ebersole
 public class HistoryEntityMutationPlanContributor implements EntityMutationPlanContributor {
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final SessionFactoryImplementor sessionFactory;
 	private final TemporalMapping temporalMapping;
 	private final EntityTableDescriptor historyTableDescriptor;
@@ -62,7 +62,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 	private final MutationOperation staticHistoryEndOperation;
 
 	public HistoryEntityMutationPlanContributor(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityPersister = entityPersister;
 		this.sessionFactory = sessionFactory;
@@ -452,7 +452,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 
 	private void addSqlGeneratedValue(
 			AssigningTableMutationBuilder<?> builder,
-			AttributeMapping attributeMapping,
+			AttributeMapping<?, ?, ?> attributeMapping,
 			OnExecutionGenerator generator,
 			org.hibernate.generator.EventType eventType) {
 		final boolean writePropertyValue = generator.writePropertyValue( eventType );
@@ -546,7 +546,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			bindKey( identifier, valueBindings, session, ParameterUsage.SET );
 			for ( final var attribute : historyTableDescriptor.attributes() ) {
 				final int attributeIndex = attribute.getStateArrayPosition();
-				if ( inclusions[attributeIndex] && !( attribute instanceof PluralAttributeMapping ) ) {
+				if ( inclusions[attributeIndex] && !( attribute instanceof PluralAttributeMapping<?> ) ) {
 					attribute.decompose(
 							state[attributeIndex],
 							0,
@@ -732,7 +732,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			bindPartitionRestrictions( loadedState, valueBindings, session );
 			for ( int attributeIndex : attributeIndexes ) {
 				final var attribute = entityPersister.getAttributeMapping( attributeIndex );
-				if ( !( attribute instanceof PluralAttributeMapping ) ) {
+				if ( !( attribute instanceof PluralAttributeMapping<?> ) ) {
 					attribute.decompose(
 							state[attributeIndex],
 							0,

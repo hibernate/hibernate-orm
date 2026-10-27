@@ -32,7 +32,7 @@ import java.util.function.BiConsumer;
 ///@author Steve Ebersole
 public class FixupTableUpdate {
 	private final EntityTableDescriptor tableDescriptor;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final List<ColumnDescriptor> fixupColumnDescriptors;
 	private final List<ColumnDescriptor> pkColumnDescriptors;
 
@@ -46,7 +46,7 @@ public class FixupTableUpdate {
 	/// @param pkColumnDescriptors The pk columns for the table used for restriction.
 	public FixupTableUpdate(
 			EntityTableDescriptor tableDescriptor,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			List<ColumnDescriptor> fixupColumnDescriptors,
 			List<ColumnDescriptor> pkColumnDescriptors) {
 		// todo (ActionQueue2) : not sure we need to actually pass in the pk column details here

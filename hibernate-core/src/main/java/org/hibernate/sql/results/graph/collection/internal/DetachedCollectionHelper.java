@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
  */
 public final class DetachedCollectionHelper {
 	public static Object loadAndCopy(
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			Object collectionKey,
 			SharedSessionContractImplementor session,
 			CollectionPart.Nature selectedPartNature) {

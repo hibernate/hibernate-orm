@@ -45,8 +45,8 @@ public class UuidAsCharAnnotationTest {
 	@Test
 	public void testUsage(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Node.class );
-		final JdbcMapping jdbcMapping = entityDescriptor.getIdentifierMapping().getSingleJdbcMapping();
+		final EntityPersister<?> entityDescriptor = domainModel.findEntityDescriptor( Node.class );
+		final JdbcMapping<?> jdbcMapping = entityDescriptor.getIdentifierMapping().getSingleJdbcMapping();
 		assertThat( jdbcMapping.getJdbcType().isString(), is( true ) );
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {

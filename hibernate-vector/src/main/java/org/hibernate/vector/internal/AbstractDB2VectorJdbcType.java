@@ -34,12 +34,12 @@ public abstract class AbstractDB2VectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
+	public @Nullable String castToPattern(JdbcMapping<?> targetJdbcMapping, @Nullable Size size) {
 		return targetJdbcMapping.getJdbcType().isStringLike() ? "vector_serialize(?1 returning ?2)" : null;
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
+	public @Nullable String castFromPattern(JdbcMapping<?> sourceMapping, @Nullable Size size) {
 		return sourceMapping.getJdbcType().isStringLike() ? "vector(?1," + getVectorParameters( size ) + ")" : null;
 	}
 

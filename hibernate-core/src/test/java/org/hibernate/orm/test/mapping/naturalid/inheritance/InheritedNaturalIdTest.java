@@ -36,14 +36,14 @@ public class InheritedNaturalIdTest {
 	@JiraKey( value = "HHH-10360")
 	public void verifyMappingModel(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityMappingType userMapping = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
+		final EntityMappingType<?> userMapping = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
 
-		final SingularAttributeMapping uidMapping = ((SimpleNaturalIdMapping) userMapping.getNaturalIdMapping()).getAttribute();
+		final SingularAttributeMapping<?, ?, ?> uidMapping = ((SimpleNaturalIdMapping<?, ?, ?>) userMapping.getNaturalIdMapping()).getAttribute();
 		assertThat( uidMapping.getAttributeName(), is ("uid" ) );
 		final AttributeMetadata uidMetadata = uidMapping.getAttributeMetadata();
 		assertThat( uidMetadata.isNullable(), is( true ) );
 
-		final EntityPersister rootEntityPersister = userMapping.getEntityPersister();
+		final EntityPersister<?> rootEntityPersister = userMapping.getEntityPersister();
 		final int uidLegacyPropertyIndex = rootEntityPersister.getPropertyIndex( "uid" );
 		assertThat( uidLegacyPropertyIndex, is ( 0 ) );
 		assertThat( rootEntityPersister.getPropertyNullability()[ uidLegacyPropertyIndex ], is( true ) );

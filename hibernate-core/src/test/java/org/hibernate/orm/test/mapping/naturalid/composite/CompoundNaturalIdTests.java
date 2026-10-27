@@ -77,21 +77,21 @@ public class CompoundNaturalIdTests {
 		assertThat( system.isNaturalIdentifier(), is( true ) );
 
 		final MappingMetamodel mappingMetamodel = factoryScope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
-		final EntityPersister accountMapping = mappingMetamodel.findEntityDescriptor( Account.class );
+		final EntityPersister<?> accountMapping = mappingMetamodel.findEntityDescriptor( Account.class );
 		assertThat( accountMapping.hasNaturalIdentifier(), is( true ) );
-		final NaturalIdMapping naturalIdMapping = accountMapping.getNaturalIdMapping();
+		final NaturalIdMapping<?, ?, ?> naturalIdMapping = accountMapping.getNaturalIdMapping();
 		assertThat( naturalIdMapping, notNullValue() );
 
-		final List<SingularAttributeMapping> attributes = naturalIdMapping.getNaturalIdAttributes();
+		final List<SingularAttributeMapping<?, ?, ?>> attributes = naturalIdMapping.getNaturalIdAttributes();
 		assertThat( attributes.size(), is( 2 ) );
 
 		// alphabetical matching overall processing
 
-		final SingularAttributeMapping first = attributes.get( 0 );
+		final SingularAttributeMapping<?, ?, ?> first = attributes.get( 0 );
 		assertThat( first, notNullValue() );
 		assertThat( first.getAttributeName(), is( "system" ) );
 
-		final SingularAttributeMapping second = attributes.get( 1 );
+		final SingularAttributeMapping<?, ?, ?> second = attributes.get( 1 );
 		assertThat( second, notNullValue() );
 		assertThat( second.getAttributeName(), is( "username" ) );
 	}
@@ -100,8 +100,8 @@ public class CompoundNaturalIdTests {
 	public void testGetReference(SessionFactoryScope scope) {
 		scope.inTransaction(session -> {
 			final MappingMetamodel mappingMetamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
-			final EntityPersister accountMapping = mappingMetamodel.findEntityDescriptor( Account.class );
-			final NaturalIdMapping naturalIdMapping = accountMapping.getNaturalIdMapping();
+			final EntityPersister<?> accountMapping = mappingMetamodel.findEntityDescriptor( Account.class );
+			final NaturalIdMapping<?, ?, ?> naturalIdMapping = accountMapping.getNaturalIdMapping();
 
 			// test load by array
 			var id = accountMapping.getNaturalIdLoader().resolveNaturalIdToId(

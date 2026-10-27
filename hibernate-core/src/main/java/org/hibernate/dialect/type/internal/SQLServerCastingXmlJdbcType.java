@@ -18,13 +18,13 @@ public class SQLServerCastingXmlJdbcType extends XmlJdbcType {
 	 */
 	public static final XmlJdbcType INSTANCE = new SQLServerCastingXmlJdbcType( null );
 
-	public SQLServerCastingXmlJdbcType(EmbeddableMappingType embeddableMappingType) {
+	public SQLServerCastingXmlJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 	}
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new SQLServerCastingXmlJdbcType( mappingType );

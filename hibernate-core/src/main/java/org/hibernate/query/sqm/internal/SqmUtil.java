@@ -210,8 +210,8 @@ public class SqmUtil {
 		}
 	}
 
-	public static @Nullable String determineAffectedTableName(TableGroup tableGroup, ValuedModelPart mapping) {
-		return tableGroup.getModelPart() instanceof EntityAssociationMapping associationMapping
+	public static @Nullable String determineAffectedTableName(TableGroup tableGroup, ValuedModelPart<?, ?, ?> mapping) {
+		return tableGroup.getModelPart() instanceof EntityAssociationMapping<?> associationMapping
 			&& !associationMapping.containsTableReference( mapping.getContainingTableExpression() )
 				? associationMapping.getAssociatedEntityMappingType().getMappedTableDetails().getTableName()
 				: null;
@@ -222,9 +222,9 @@ public class SqmUtil {
 	 * be dereferenced using the target table, i.e. when the path's lhs is an explicit join that is used in the
 	 * group by clause, or defaults to the provided {@code modelPartContainer} otherwise.
 	 */
-	public static ModelPartContainer getTargetMappingIfNeeded(
+	public static ModelPartContainer<?, ?, ?> getTargetMappingIfNeeded(
 			SqmPath<?> sqmPath,
-			ModelPartContainer modelPartContainer,
+			ModelPartContainer<?, ?, ?> modelPartContainer,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		if ( sqlAstCreationState.getLoadQueryInfluencers().hasEnabledFilters() ) {
 			final var filteredMapping = getFilteredTargetMapping( sqmPath, modelPartContainer, sqlAstCreationState );
@@ -237,10 +237,10 @@ public class SqmUtil {
 				&& modelPartContainer.getPartMappingType() != modelPartContainer
 				&& sqmPath.getLhs() instanceof SqmFrom<?, ?> ) {
 			final var modelPart =
-					modelPartContainer instanceof PluralAttributeMapping plural
+					modelPartContainer instanceof PluralAttributeMapping<?> plural
 							? getCollectionPart( plural, castNonNull( sqmPath.getNavigablePath().getParent() ) )
 							: modelPartContainer;
-			if ( modelPart instanceof EntityAssociationMapping association
+			if ( modelPart instanceof EntityAssociationMapping<?> association
 					&& shouldRenderTargetSide( sqmPath, association, sqlAstCreationState ) ) {
 				return association.getAssociatedEntityMappingType();
 			}
@@ -248,14 +248,14 @@ public class SqmUtil {
 		return modelPartContainer;
 	}
 
-	private static ModelPartContainer getFilteredTargetMapping(
+	private static ModelPartContainer<?, ?, ?> getFilteredTargetMapping(
 			SqmPath<?> sqmPath,
-			ModelPartContainer modelPartContainer,
+			ModelPartContainer<?, ?, ?> modelPartContainer,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		if ( isAssociationAffectedByEnabledFilters( modelPartContainer, sqlAstCreationState ) ) {
-			return ( (EntityAssociationMapping) modelPartContainer ).getAssociatedEntityMappingType();
+			return ( (EntityAssociationMapping<?>) modelPartContainer ).getAssociatedEntityMappingType();
 		}
-		if ( modelPartContainer instanceof EmbeddableValuedModelPart
+		if ( modelPartContainer instanceof EmbeddableValuedModelPart<?, ?, ?>
 				&& sqmPath.getLhs() != null && sqmPath.getLhs().getLhs() != null ) {
 			// Resolve nested identifier parts through the same target mapping as the complete key.
 			final var parentGroup = sqlAstCreationState.getFromClauseAccess()
@@ -264,7 +264,7 @@ public class SqmUtil {
 				final var parentMapping = getFilteredTargetMapping(
 						sqmPath.getLhs(), parentGroup.getModelPart(), sqlAstCreationState );
 				if ( parentMapping != parentGroup.getModelPart() ) {
-					return (ModelPartContainer) parentMapping.findSubPart(
+					return (ModelPartContainer<?, ?, ?>) parentMapping.findSubPart(
 							sqmPath.getLhs().getReferencedPathSource().getPathName(), null );
 				}
 			}
@@ -274,15 +274,15 @@ public class SqmUtil {
 
 	/** A filtered target's key must be read from the joined target, not the owner's foreign key. */
 	public static boolean isAssociationAffectedByEnabledFilters(
-			ModelPart modelPart, SqmToSqlAstConverter creationState) {
-		return modelPart instanceof ToOneAttributeMapping toOne
+			ModelPart<?, ?, ?> modelPart, SqmToSqlAstConverter creationState) {
+		return modelPart instanceof ToOneAttributeMapping<?> toOne
 				&& toOne.hasFilterForLoadByKey()
 				&& toOne.isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers() );
 	}
 
 	private static boolean shouldRenderTargetSide(
 			SqmPath<?> sqmPath,
-			EntityAssociationMapping association,
+			EntityAssociationMapping<?> association,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		if ( !association.getTargetKeyPropertyNames().contains( sqmPath.getReferencedPathSource().getPathName() ) ) {
 			return false;
@@ -309,7 +309,7 @@ public class SqmUtil {
 		return Boolean.TRUE.equals( found );
 	}
 
-	private static CollectionPart getCollectionPart(PluralAttributeMapping attribute, NavigablePath path) {
+	private static CollectionPart<?, ?, ?> getCollectionPart(PluralAttributeMapping<?> attribute, NavigablePath path) {
 		final var nature = CollectionPart.Nature.fromNameExact( path.getLocalName() );
 		return nature == null ? null : switch ( nature ) {
 			case ELEMENT -> attribute.getElementDescriptor();
@@ -351,7 +351,7 @@ public class SqmUtil {
 	 * i.e. a join that's neither {@linkplain SqmJoinType#INNER} nor {@linkplain SqmJoinType#LEFT}
 	 * or one that has an explicit on clause predicate.
 	 */
-	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath, EntityAssociationMapping associationMapping) {
+	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath, EntityAssociationMapping<?> associationMapping) {
 		// By default, never allow the FK optimization if the path is a join, unless the association has a join table
 		// Hibernate ORM has no way for users to refer to collection/join table rows,
 		// so referring the columns of these rows by default when requesting FK column attributes is sensible.
@@ -374,17 +374,17 @@ public class SqmUtil {
 		return false;
 	}
 
-	private static boolean hasJoinTable(EntityAssociationMapping associationMapping) {
-		if ( associationMapping instanceof CollectionPart collectionPart ) {
+	private static boolean hasJoinTable(EntityAssociationMapping<?> associationMapping) {
+		if ( associationMapping instanceof CollectionPart<?, ?, ?> collectionPart ) {
 			return !collectionPart.getCollectionAttribute().getCollectionDescriptor().isOneToMany();
 		}
-		else if ( associationMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+		else if ( associationMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 			return toOneAttributeMapping.hasJoinTable();
 		}
 		return false;
 	}
 
-	private static boolean isFiltered(EntityAssociationMapping associationMapping) {
+	private static boolean isFiltered(EntityAssociationMapping<?> associationMapping) {
 			final var entityMappingType = associationMapping.getAssociatedEntityMappingType();
 			return !associationMapping.isFkOptimizationAllowed()
 				// When the identifier mappings are different we have a joined subclass entity
@@ -392,14 +392,14 @@ public class SqmUtil {
 				|| entityMappingType.getIdentifierMappingForJoin() != entityMappingType.getIdentifierMapping();
 	}
 
-	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmJoin<?, ?> sqmJoin) {
+	private static @Nullable EntityAssociationMapping<?> resolveAssociationMapping(SqmJoin<?, ?> sqmJoin) {
 		return sqmJoin instanceof SqmSingularJoin<?, ?> singularJoin
 			&& singularJoin.getAttribute().getPathType() instanceof EntityDomainType<?>
 				? resolveAssociationMapping( singularJoin )
 				: null;
 	}
 
-	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmSingularJoin<?, ?> sqmJoin) {
+	private static @Nullable EntityAssociationMapping<?> resolveAssociationMapping(SqmSingularJoin<?, ?> sqmJoin) {
 		final var metamodel = sqmJoin.nodeBuilder().getMappingMetamodel();
 		var attribute = sqmJoin.getAttribute();
 		var declaringType = attribute.getDeclaringType();
@@ -421,12 +421,12 @@ public class SqmUtil {
 			} while ( declaringType.getPersistenceType() != Type.PersistenceType.ENTITY );
 			pathBuilder.insert(0, '.');
 			pathBuilder.insert( 0, attribute.getName() );
-			return (EntityAssociationMapping)
+			return (EntityAssociationMapping<?>)
 					metamodel.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() )
 							.findByPath( pathBuilder.toString() );
 		}
 		else {
-			return (EntityAssociationMapping)
+			return (EntityAssociationMapping<?>)
 					metamodel.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() )
 							.findAttributeMapping( attribute.getName() );
 		}
@@ -747,12 +747,12 @@ public class SqmUtil {
 		return checkedSqmParameter;
 	}
 
-	private static <T> JdbcMapping jdbcMapping(QueryParameterBinding<T> domainParamBinding) {
-		if ( domainParamBinding.getType() instanceof JdbcMapping mapping ) {
+	private static <T> JdbcMapping<?> jdbcMapping(QueryParameterBinding<T> domainParamBinding) {
+		if ( domainParamBinding.getType() instanceof JdbcMapping<?> mapping ) {
 			return mapping;
 		}
-		else if ( domainParamBinding.getBindType() instanceof BasicValuedMapping ) {
-			return ( (BasicValuedMapping) domainParamBinding.getBindType() ).getJdbcMapping();
+		else if ( domainParamBinding.getBindType() instanceof BasicValuedMapping<?> ) {
+			return ( (BasicValuedMapping<?>) domainParamBinding.getBindType() ).getJdbcMapping();
 		}
 		else {
 			return null;
@@ -795,13 +795,13 @@ public class SqmUtil {
 
 	private static Object bindValue(
 			Bindable parameterType, Object bindValue, SharedSessionContractImplementor session) {
-		if ( parameterType instanceof EntityIdentifierMapping identifierMapping ) {
+		if ( parameterType instanceof EntityIdentifierMapping<?, ?, ?> identifierMapping ) {
 			return getIdentifier( bindValue, session, identifierMapping );
 		}
-		else if ( parameterType instanceof EntityMappingType entityMappingType ) {
+		else if ( parameterType instanceof EntityMappingType<?> entityMappingType ) {
 			return getIdentifier( bindValue, session, entityMappingType.getIdentifierMapping() );
 		}
-		else if ( parameterType instanceof EntityAssociationMapping association ) {
+		else if ( parameterType instanceof EntityAssociationMapping<?> association ) {
 			// If the association is the target, we must use the identifier of the EntityMappingType
 			return getIdentifier( bindValue, session, association );
 		}
@@ -811,7 +811,7 @@ public class SqmUtil {
 	}
 
 	private static Object getIdentifier
-			(Object bindValue, SharedSessionContractImplementor session, EntityAssociationMapping association) {
+			(Object bindValue, SharedSessionContractImplementor session, EntityAssociationMapping<?> association) {
 		return association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
 				? association.getAssociatedEntityMappingType()
 				.getIdentifierMapping().getIdentifier( bindValue )
@@ -820,7 +820,7 @@ public class SqmUtil {
 	}
 
 	private static Object getIdentifier
-			(Object bindValue, SharedSessionContractImplementor session, EntityIdentifierMapping identifierMapping) {
+			(Object bindValue, SharedSessionContractImplementor session, EntityIdentifierMapping<?, ?, ?> identifierMapping) {
 		return identifierMapping.findContainingEntityMapping().getRepresentationStrategy()
 						.getInstantiator().isInstance( bindValue )
 				? identifierMapping.getIdentifierIfNotUnsaved( bindValue, session )
@@ -829,18 +829,18 @@ public class SqmUtil {
 
 	private static @Nullable Bindable parameterType(
 			QueryParameterBinding<?> domainParamBinding, Bindable parameterType) {
-		if ( parameterType instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		if ( parameterType instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			// Default to the collection element
 			parameterType = pluralAttributeMapping.getElementDescriptor();
 		}
 
-		if ( parameterType instanceof EntityIdentifierMapping ) {
+		if ( parameterType instanceof EntityIdentifierMapping<?, ?, ?> ) {
 			return parameterType;
 		}
-		else if ( parameterType instanceof EntityMappingType entityMappingType ) {
+		else if ( parameterType instanceof EntityMappingType<?> entityMappingType ) {
 			return entityMappingType.getIdentifierMapping();
 		}
-		else if ( parameterType instanceof EntityAssociationMapping association ) {
+		else if ( parameterType instanceof EntityAssociationMapping<?> association ) {
 			// If the association is the target, we must use the identifier of the EntityMappingType
 			return association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
 					? association.getAssociatedEntityMappingType().getIdentifierMapping()

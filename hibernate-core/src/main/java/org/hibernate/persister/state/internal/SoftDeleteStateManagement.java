@@ -28,7 +28,7 @@ public final class SoftDeleteStateManagement extends AbstractStateManagement {
 	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
 		@Nonnull
 		@Override
-		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister<?> persister) {
 			return new SoftDeleteEntityMutationPlanContributor( persister, persister.getFactory() );
 		}
 	};
@@ -52,14 +52,14 @@ public final class SoftDeleteStateManagement extends AbstractStateManagement {
 
 	@Nonnull
 	@Override
-	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister) {
+	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new DeleteCoordinatorSoft( persister, persister.getFactory() );
 	}
 
 	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull RootClass rootClass,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return resolveSoftDeleteMapping( persister, rootClass, persister.getIdentifierTableName(), creationProcess );
@@ -68,7 +68,7 @@ public final class SoftDeleteStateManagement extends AbstractStateManagement {
 	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull PluralAttributeMapping<?> pluralAttributeMapping,
 			@Nonnull Collection bootDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return resolveSoftDeleteMapping( pluralAttributeMapping, bootDescriptor,

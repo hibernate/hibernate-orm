@@ -10,7 +10,7 @@ import org.hibernate.sql.results.graph.InitializerParent;
 public class NonAggregatedIdentifierMappingResult<T> extends EmbeddableResultImpl<T> {
 	public NonAggregatedIdentifierMappingResult(
 			NavigablePath navigablePath,
-			NonAggregatedIdentifierMapping modelPart,
+			NonAggregatedIdentifierMapping<?, T> modelPart,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		super( navigablePath, modelPart, resultVariable, creationState );

@@ -39,7 +39,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return expressible.getJdbcMapping();
 	}
 

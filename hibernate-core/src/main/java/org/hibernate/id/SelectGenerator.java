@@ -93,7 +93,7 @@ public class SelectGenerator
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public String[] getUniqueKeyPropertyNames(EntityPersister persister) {
+	public String[] getUniqueKeyPropertyNames(EntityPersister<?> persister) {
 		return uniqueKeyPropertyName != null
 				? new String[] { uniqueKeyPropertyName }
 				: getNaturalIdPropertyNames( persister );

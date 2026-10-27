@@ -33,12 +33,12 @@ public class MaterializedBlobTest {
 	@SkipForDialect(dialectClass = CockroachDialect.class,
 			reason = "Blob in CockroachDB is same as a varbinary, to assertions will fail")
 	public void testTypeSelection(SessionFactoryScope scope) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory().getRuntimeMetamodels()
+		final EntityPersister<?> entityDescriptor = scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( MaterializedBlobEntity.class.getName() );
-		final AttributeMapping theBytesAttr = entityDescriptor.findAttributeMapping( "theBytes" );
+		final AttributeMapping<?, ?, ?> theBytesAttr = entityDescriptor.findAttributeMapping( "theBytes" );
 		assertThat( theBytesAttr ).isInstanceOf( BasicValuedModelPart.class );
-		final JdbcMapping mapping = ((BasicValuedModelPart) theBytesAttr).getJdbcMapping();
+		final JdbcMapping<?> mapping = ((BasicValuedModelPart<?, ?, ?>) theBytesAttr).getJdbcMapping();
 		assertThat( mapping.getJavaTypeDescriptor() ).isInstanceOf( PrimitiveByteArrayJavaType.class );
 		assertThat( mapping.getJdbcType() ).isInstanceOf( BlobJdbcType.class );
 	}

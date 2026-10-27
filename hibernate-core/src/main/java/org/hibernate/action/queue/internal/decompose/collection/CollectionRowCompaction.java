@@ -27,7 +27,7 @@ final class CollectionRowCompaction {
 		commonInsertPlacement = mutationPlanContributor == CollectionMutationPlanContributor.STANDARD
 				&& !tableHasNonPrimaryUniqueConstraints
 				&& !persister.getCollectionTableDescriptor().isSelfReferential()
-				&& persister.getAttributeMapping().getElementDescriptor() instanceof BasicValuedCollectionPart;
+				&& persister.getAttributeMapping().getElementDescriptor() instanceof BasicValuedCollectionPart<?>;
 	}
 
 	/// A new owner's rows all depend on the same owner insert and cannot conflict

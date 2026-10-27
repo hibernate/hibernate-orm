@@ -20,7 +20,7 @@ public class PostUpsertEvent extends AbstractPostDatabaseOperationEvent {
 			@Nonnull Object id,
 			@Nonnull Object[] state,
 			@Nullable int[] dirtyProperties,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;

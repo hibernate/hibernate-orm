@@ -29,7 +29,7 @@ import java.util.Map;
 ///@author Steve Ebersole
 public class FixupJdbcUpdate implements PreparableMutationOperation {
 	private final String sql;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final TableDescriptor tableDescriptor;
 	private final Expectation expectation;
 
@@ -40,7 +40,7 @@ public class FixupJdbcUpdate implements PreparableMutationOperation {
 	public FixupJdbcUpdate(
 			String sql,
 			TableDescriptor tableDescriptor,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			Map<String, JdbcValueDescriptor> jdbcValueDescriptorMap) {
 		this.sql = sql;
 		this.tableDescriptor = tableDescriptor;
@@ -50,7 +50,7 @@ public class FixupJdbcUpdate implements PreparableMutationOperation {
 		this.jdbcValueDescriptorMap = jdbcValueDescriptorMap;
 		this.parameterBinders = CollectionHelper.arrayList( jdbcValueDescriptorMap.size() );
 		jdbcValueDescriptorMap.forEach( (column, jdbcValueDescriptor ) -> {
-			parameterBinders.add( new JdbcParameterImpl( jdbcValueDescriptor.getJdbcMapping() ) );
+			parameterBinders.add( new JdbcParameterImpl<>( jdbcValueDescriptor.getJdbcMapping() ) );
 	} );
 	}
 

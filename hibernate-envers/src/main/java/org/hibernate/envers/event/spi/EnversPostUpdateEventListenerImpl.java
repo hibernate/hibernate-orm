@@ -69,7 +69,7 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversUpdateEventList
 	private Object[] postUpdateDBState(PostUpdateEvent event) {
 		final Object[] newDbState = event.getState().clone();
 		if ( event.getOldState() != null ) {
-			final EntityPersister entityPersister = event.getPersister();
+			final EntityPersister<?> entityPersister = event.getPersister();
 			final Object entity = event.getEntity();
 			final BytecodeEnhancementMetadata instrumentationMetadata = entityPersister.getBytecodeEnhancementMetadata();
 			final LazyAttributeLoadingInterceptor lazyAttributeLoadingInterceptor;
@@ -100,7 +100,7 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversUpdateEventList
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(EntityPersister persister) {
+	public boolean requiresPostCommitHandling(EntityPersister<?> persister) {
 		return getEnversService().getEntitiesConfigurations().isVersioned( persister.getEntityName() );
 	}
 }

@@ -18,7 +18,7 @@ import jakarta.annotation.Nullable;
 public class TemporaryTableColumn implements TemporaryTableColumnDescriptor, SqlTypedMapping {
 	private final TemporaryTable containingTable;
 	private final String columnName;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 	private final String sqlTypeName;
 	private final Size size;
 	private final boolean nullable;
@@ -27,7 +27,7 @@ public class TemporaryTableColumn implements TemporaryTableColumnDescriptor, Sql
 	public TemporaryTableColumn(
 			TemporaryTable containingTable,
 			String columnName,
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			String sqlTypeName,
 			Size size,
 			boolean nullable) {
@@ -37,7 +37,7 @@ public class TemporaryTableColumn implements TemporaryTableColumnDescriptor, Sql
 	public TemporaryTableColumn(
 			TemporaryTable containingTable,
 			String columnName,
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			String sqlTypeName,
 			Size size,
 			boolean nullable,
@@ -62,7 +62,7 @@ public class TemporaryTableColumn implements TemporaryTableColumnDescriptor, Sql
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 

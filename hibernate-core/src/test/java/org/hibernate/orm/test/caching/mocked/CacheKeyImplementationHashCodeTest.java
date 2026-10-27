@@ -56,7 +56,7 @@ public class CacheKeyImplementationHashCodeTest {
 
 	private CacheKeyImplementation createCacheKeyImplementation(
 			int id,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SessionFactoryImplementor sfi) {
 		return (CacheKeyImplementation) DefaultCacheKeysFactory.staticCreateEntityKey( id, persister, sfi, "tenant" );
 	}

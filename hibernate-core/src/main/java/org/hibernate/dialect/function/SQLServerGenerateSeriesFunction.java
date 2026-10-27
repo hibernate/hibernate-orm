@@ -84,7 +84,7 @@ public class SQLServerGenerateSeriesFunction extends NumberSeriesGenerateSeriesF
 						withOrdinality,
 						walker
 				);
-				final ModelPart elementPart = functionTableGroup.getModelPart()
+				final ModelPart<?, ?, ?> elementPart = functionTableGroup.getModelPart()
 						.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null );
 				final boolean isTemporal = elementPart.getSingleJdbcMapping().getJdbcType().isTemporal();
 				// Only do this transformation if ordinality is requested
@@ -122,7 +122,7 @@ public class SQLServerGenerateSeriesFunction extends NumberSeriesGenerateSeriesF
 					start.getExpressionType(),
 					stop.getExpressionType()
 			);
-			final JdbcMapping type = expressionType.getSingleJdbcMapping();
+			final JdbcMapping<?> type = expressionType.getSingleJdbcMapping();
 			if ( type == null ) {
 				throw new IllegalArgumentException( "Couldn't determine types of arguments to function 'generate_series'" );
 			}
@@ -145,8 +145,8 @@ public class SQLServerGenerateSeriesFunction extends NumberSeriesGenerateSeriesF
 			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
-		final ModelPart elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
-		final ModelPart ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
+		final ModelPart<?, ?, ?> elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
+		final ModelPart<?, ?, ?> ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
 		final boolean isTemporal = elementPart.getSingleJdbcMapping().getJdbcType().isTemporal();
 
 		if ( ordinalityPart != null || isTemporal ) {

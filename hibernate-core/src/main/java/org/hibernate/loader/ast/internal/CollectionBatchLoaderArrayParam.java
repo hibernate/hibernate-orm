@@ -54,7 +54,7 @@ public class CollectionBatchLoaderArrayParam
 	public CollectionBatchLoaderArrayParam(
 			int domainBatchSize,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( domainBatchSize, loadQueryInfluencers, attributeMapping, sessionFactory );
 
@@ -85,7 +85,7 @@ public class CollectionBatchLoaderArrayParam
 
 		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
 
-		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
+		jdbcParameter = SqlTypedMappingJdbcParameter.create( arraySqlTypedMapping );
 		sqlSelect = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				keyDescriptor.getKeyPart(),
@@ -131,7 +131,7 @@ public class CollectionBatchLoaderArrayParam
 	private PersistentCollection<?> loadWithConversion(
 			@Nonnull Object keyBeingLoaded,
 			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull ForeignKeyDescriptor keyDescriptor) {
+			@Nonnull ForeignKeyDescriptor<?, ?, ?> keyDescriptor) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.batchFetchingCollection(
 					collectionInfoString( getLoadable(), keyBeingLoaded ) );

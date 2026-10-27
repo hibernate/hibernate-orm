@@ -8,5 +8,5 @@ package org.hibernate.metamodel.mapping;
  *
  * @author Steve Ebersole
  */
-public interface AggregatedIdentifierMapping extends SingleAttributeIdentifierMapping {
+public interface AggregatedIdentifierMapping<J, M, R> extends SingleAttributeIdentifierMapping<J, M, R> {
 }

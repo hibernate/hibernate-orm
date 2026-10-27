@@ -295,7 +295,7 @@ public class MapBinder extends CollectionBinder {
 		// 'holder' is the CollectionPropertyHolder.
 		// 'property' is the collection XProperty
 		propertyHolder.startingProperty( property );
-		holder.prepare( property, !( collection.getKey().getType() instanceof BasicType ) );
+		holder.prepare( property, !( collection.getKey().getType() instanceof BasicType<?> ) );
 		return holder;
 	}
 

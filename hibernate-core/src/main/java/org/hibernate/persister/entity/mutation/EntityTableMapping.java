@@ -18,11 +18,11 @@ import java.util.List;
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EntityTableMapping extends TableMapping {
 	@Nonnull
-	static EntityTableMappingImpl.KeyMapping createKeyMapping(@Nonnull List<EntityTableMappingImpl.KeyColumn> keyColumns, @Nonnull ModelPart identifierPart) {
-		if ( identifierPart instanceof EmbeddableValuedModelPart embeddedModelPart ) {
+	static EntityTableMappingImpl.KeyMapping createKeyMapping(@Nonnull List<EntityTableMappingImpl.KeyColumn> keyColumns, @Nonnull ModelPart<?, ?, ?> identifierPart) {
+		if ( identifierPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddedModelPart ) {
 			return new EntityTableMappingImpl.CompositeKeyMapping( keyColumns, embeddedModelPart );
 		}
-		else if ( identifierPart instanceof BasicValuedModelPart basicModelPart ) {
+		else if ( identifierPart instanceof BasicValuedModelPart<?, ?, ?> basicModelPart ) {
 			assert keyColumns.size() == 1;
 			return new EntityTableMappingImpl.SimpleKeyMapping( keyColumns, basicModelPart );
 		}

@@ -46,9 +46,9 @@ public class BitSetConverterMutabilityTests {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(Product.class);
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("bitSet");
-		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(Product.class);
+		final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("bitSet");
+		final JdbcMapping<?> jdbcMapping = attributeMapping.getJdbcMapping();
 
 		assertThat( attributeMapping.getJavaType().getJavaTypeClass(), equalTo( BitSet.class ) );
 

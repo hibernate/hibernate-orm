@@ -31,7 +31,7 @@ public class ImprovedModifiedColumnNamingStrategy extends LegacyModifiedColumnNa
 			AttributeContainer mapping,
 			PropertyAuditingData propertyAuditingData) {
 
-		boolean basicType = value.getType() instanceof BasicType;
+		boolean basicType = value.getType() instanceof BasicType<?>;
 		boolean toOneType = value.getType() instanceof ManyToOneType || value.getType() instanceof OneToOneType;
 
 		if ( basicType || toOneType ) {

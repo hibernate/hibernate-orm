@@ -18,7 +18,7 @@ public class FkDomainPathContinuation extends DomainPathContinuation {
 	public FkDomainPathContinuation(
 			NavigablePath navigablePath,
 			DomainPath lhs,
-			ToOneAttributeMapping referencedModelPart) {
+			ToOneAttributeMapping<?> referencedModelPart) {
 		super( navigablePath, lhs, referencedModelPart );
 		this.possiblePaths = referencedModelPart.getTargetKeyPropertyNames();
 	}
@@ -26,7 +26,7 @@ public class FkDomainPathContinuation extends DomainPathContinuation {
 	public FkDomainPathContinuation(
 			NavigablePath navigablePath,
 			DomainPath lhs,
-			ModelPart referencedModelPart,
+			ModelPart<?, ?, ?> referencedModelPart,
 			Set<String> possiblePaths) {
 		super( navigablePath, lhs, referencedModelPart );
 		this.possiblePaths = possiblePaths;
@@ -50,7 +50,7 @@ public class FkDomainPathContinuation extends DomainPathContinuation {
 				furtherPaths.add( possiblePath.substring( name.length() + 2 ) );
 			}
 		}
-		final var subPart = ( (ModelPartContainer) referencedModelPart ).findSubPart( name, null );
+		final var subPart = ( (ModelPartContainer<?, ?, ?>) referencedModelPart ).findSubPart( name, null );
 		if ( subPart == null ) {
 			throw new PathResolutionException( name );
 		}

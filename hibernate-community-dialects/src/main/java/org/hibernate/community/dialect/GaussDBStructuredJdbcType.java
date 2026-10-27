@@ -31,7 +31,7 @@ public class GaussDBStructuredJdbcType extends AbstractPostgreSQLStructJdbcType 
 	}
 
 	private GaussDBStructuredJdbcType(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			String typeName,
 			RuntimeModelCreationContext creationContext) {
 		super( embeddableMappingType, typeName, creationContext );
@@ -39,7 +39,7 @@ public class GaussDBStructuredJdbcType extends AbstractPostgreSQLStructJdbcType 
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new GaussDBStructuredJdbcType(

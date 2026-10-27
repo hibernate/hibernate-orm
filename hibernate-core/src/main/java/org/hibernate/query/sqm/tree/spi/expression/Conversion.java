@@ -25,12 +25,12 @@ public class Conversion
 		implements Expression, DomainResultProducer {
 	private final Duration duration;
 	private final TemporalUnit unit;
-	private final BasicValuedMapping type;
+	private final BasicValuedMapping<?> type;
 
 	public Conversion(
 			Duration duration,
 			TemporalUnit unit,
-			BasicValuedMapping type) {
+			BasicValuedMapping<?> type) {
 		this.duration = duration;
 		this.unit = unit;
 		this.type = type;
@@ -79,7 +79,7 @@ public class Conversion
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return type;
 	}
 }

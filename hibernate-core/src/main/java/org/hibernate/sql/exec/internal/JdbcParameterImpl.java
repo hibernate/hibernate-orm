@@ -5,13 +5,13 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 /**
  * @author Steve Ebersole
  */
-public class JdbcParameterImpl extends AbstractJdbcParameter {
+public class JdbcParameterImpl<J> extends AbstractJdbcParameter<J> {
 
-	public JdbcParameterImpl(JdbcMapping jdbcMapping) {
+	public JdbcParameterImpl(JdbcMapping<J> jdbcMapping) {
 		super( jdbcMapping );
 	}
 
-	public JdbcParameterImpl(JdbcMapping jdbcMapping, Integer parameterId) {
+	public JdbcParameterImpl(JdbcMapping<J> jdbcMapping, Integer parameterId) {
 		super( jdbcMapping, parameterId );
 	}
 }

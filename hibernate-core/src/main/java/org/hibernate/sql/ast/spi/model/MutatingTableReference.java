@@ -76,7 +76,7 @@ public class MutatingTableReference implements TableReference {
 	@Override
 	public TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression) {
 		if ( getTableName().equals( tableExpression ) ) {
 			return this;
@@ -100,7 +100,7 @@ public class MutatingTableReference implements TableReference {
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression,
 			boolean resolve) {
 		return getTableName().equals( tableExpression ) ? this : null;

@@ -42,10 +42,10 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 public class InPredicateRestrictionProducer implements MatchingIdRestrictionProducer {
 
 	@Override
-	public List<Expression> produceIdExpressionList(List<Object> idsAndFks, EntityMappingType entityDescriptor) {
+	public List<Expression> produceIdExpressionList(List<Object> idsAndFks, EntityMappingType<?> entityDescriptor) {
 		final List<Expression> inListExpressions = new ArrayList<>( idsAndFks.size() );
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		if ( identifierMapping instanceof BasicValuedModelPart basicValuedModelPart ) {
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityDescriptor.getIdentifierMapping();
+		if ( identifierMapping instanceof BasicValuedModelPart<?, ?, ?> basicValuedModelPart ) {
 			for ( int i = 0; i < idsAndFks.size(); i++ ) {
 				inListExpressions.add( new QueryLiteral<>( idsAndFks.get( i ), basicValuedModelPart ) );
 			}
@@ -57,7 +57,7 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 				final List<Expression> tupleElements = new ArrayList<>( jdbcTypeCount );
 				inListExpressions.add( new SqlTuple( tupleElements, identifierMapping ) );
 				identifierMapping.forEachJdbcType( (index, jdbcMapping) -> {
-					tupleElements.add( new QueryLiteral<>( id[index], (BasicValuedMapping) jdbcMapping ) );
+					tupleElements.add( new QueryLiteral<>( id[index], (BasicValuedMapping<?>) jdbcMapping ) );
 				} );
 			}
 		}
@@ -67,23 +67,23 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 	@Override
 	public InListPredicate produceRestriction(
 			List<Expression> matchingIdValueExpressions,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			int valueIndex,
-			ModelPart valueModelPart,
+			ModelPart<?, ?, ?> valueModelPart,
 			TableReference mutatingTableReference,
 			Supplier<Consumer<SelectableConsumer>> columnsToMatchVisitationSupplier,
 			ExecutionContext executionContext) {
 		assert matchingIdValueExpressions != null;
 		assert ! matchingIdValueExpressions.isEmpty();
 
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityDescriptor.getIdentifierMapping();
 		final int idColumnCount = identifierMapping.getJdbcTypeCount();
 		assert idColumnCount > 0;
 
 		final InListPredicate predicate;
 
 		if ( idColumnCount == 1 ) {
-			final BasicValuedModelPart basicIdMapping = castNonNull( identifierMapping.asBasicValuedModelPart() );
+			final BasicValuedModelPart<?, ?, ?> basicIdMapping = castNonNull( identifierMapping.asBasicValuedModelPart() );
 			final String idColumn = basicIdMapping.getSelectionExpression();
 			final Expression inFixture = new ColumnReference(
 					mutatingTableReference,

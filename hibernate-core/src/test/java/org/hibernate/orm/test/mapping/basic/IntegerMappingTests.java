@@ -35,22 +35,22 @@ public class IntegerMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityOfIntegers.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityOfIntegers.class);
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("wrapper");
 			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Integer.class));
 
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
 			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), is( Types.INTEGER));
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("primitive");
 			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Integer.class));
 
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
 			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), is( Types.INTEGER));
 		}

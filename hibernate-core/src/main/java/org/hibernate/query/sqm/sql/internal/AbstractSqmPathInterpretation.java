@@ -13,19 +13,20 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 public abstract class AbstractSqmPathInterpretation<T> implements PathInterpretation<T> {
 
 	private final NavigablePath navigablePath;
-	private final ModelPart mapping;
+	private final ModelPart<?, ?, T> mapping;
 	private final TableGroup tableGroup;
 
+	@SuppressWarnings("unchecked")
 	public AbstractSqmPathInterpretation(
 			NavigablePath navigablePath,
-			ModelPart mapping,
+			ModelPart<?, ?, ?> mapping,
 			TableGroup tableGroup) {
 		assert navigablePath != null;
 		assert mapping != null;
 		assert tableGroup != null;
 
 		this.navigablePath = navigablePath;
-		this.mapping = mapping;
+		this.mapping = (ModelPart<?, ?, T>) mapping;
 		this.tableGroup = tableGroup;
 	}
 
@@ -35,7 +36,7 @@ public abstract class AbstractSqmPathInterpretation<T> implements PathInterpreta
 	}
 
 	@Override
-	public ModelPart getExpressionType() {
+	public ModelPart<?, ?, ?> getExpressionType() {
 		return mapping;
 	}
 

@@ -10,22 +10,22 @@ public interface DynamicFetchBuilderContainer {
 	/**
 	 * Locate an explicit fetch definition for the named fetchable
 	 */
-	FetchBuilder findFetchBuilder(Fetchable fetchable);
+	FetchBuilder findFetchBuilder(Fetchable<?, ?, ?> fetchable);
 
 	/**
 	 * Add a property mapped to a single column.
 	 */
-	DynamicFetchBuilderContainer addProperty(Fetchable fetchable, String columnAlias);
+	DynamicFetchBuilderContainer addProperty(Fetchable<?, ?, ?> fetchable, String columnAlias);
 
 	/**
 	 * Add a property mapped to multiple columns
 	 */
-	DynamicFetchBuilderContainer addProperty(Fetchable fetchable, String... columnAliases);
+	DynamicFetchBuilderContainer addProperty(Fetchable<?, ?, ?> fetchable, String... columnAliases);
 
 	/**
 	 * Add a property whose columns can later be defined using {@link DynamicFetchBuilder#addColumnAlias}
 	 */
-	DynamicFetchBuilder addProperty(Fetchable fetchable);
+	DynamicFetchBuilder addProperty(Fetchable<?, ?, ?> fetchable);
 
-	void addFetchBuilder(Fetchable fetchable, FetchBuilder fetchBuilder);
+	void addFetchBuilder(Fetchable<?, ?, ?> fetchable, FetchBuilder fetchBuilder);
 }

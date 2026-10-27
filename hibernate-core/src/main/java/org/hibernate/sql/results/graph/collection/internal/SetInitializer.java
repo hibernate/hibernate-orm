@@ -30,7 +30,7 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer<Abstr
 
 	public SetInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping setDescriptor,
+			PluralAttributeMapping<?> setDescriptor,
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,

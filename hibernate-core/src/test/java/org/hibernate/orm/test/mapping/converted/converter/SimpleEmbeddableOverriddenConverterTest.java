@@ -36,7 +36,7 @@ public class SimpleEmbeddableOverriddenConverterTest {
 	 */
 	@Test
 	public void testSimpleConvertOverrides(SessionFactoryScope scope) {
-		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Person.class.getName());
+		final EntityPersister<?> ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Person.class.getName());
 		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory().getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		CompositeType homeAddressType = assertTyping( CompositeType.class, ep.getPropertyType( "homeAddress" ) );

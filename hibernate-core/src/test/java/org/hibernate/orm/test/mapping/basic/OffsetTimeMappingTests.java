@@ -35,10 +35,10 @@ public class OffsetTimeMappingTests {
 		final SessionFactoryImplementor sf = scope.getSessionFactory();
 
 		final MappingMetamodelImplementor mappingMetamodel = sf.getRuntimeMetamodels().getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithOffsetTime.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithOffsetTime.class);
 
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("offsetTime");
-		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
+		final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("offsetTime");
+		final JdbcMapping<?> jdbcMapping = attributeMapping.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(OffsetTime.class));
 
 		final Matcher<Integer> expectedJdbcType = sf.getSessionFactoryOptions().isDirectJavaTimeJdbcAccessEnabled( OffsetTime.class )

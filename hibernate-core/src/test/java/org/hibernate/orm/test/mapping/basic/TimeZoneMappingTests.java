@@ -36,10 +36,10 @@ public class TimeZoneMappingTests {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		final JdbcTypeRegistry jdbcRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithTimeZone.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithTimeZone.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("timeZone");
-		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
+		final BasicAttributeMapping<?> duration = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("timeZone");
+		final JdbcMapping<?> jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(TimeZone.class));
 		assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR)));
 

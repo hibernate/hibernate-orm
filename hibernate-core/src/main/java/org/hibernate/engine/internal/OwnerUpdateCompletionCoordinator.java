@@ -21,7 +21,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /// @since 8.0
 /// @author Steve Ebersole
 final class OwnerUpdateCompletionCoordinator {
-	static boolean isNeeded(EntityPersister persister) {
+	static boolean isNeeded(EntityPersister<?> persister) {
 		final var callbacks = persister.getEntityCallbacks();
 		return callbacks.hasRegisteredCallbacks( CallbackType.PRE_UPDATE )
 				|| callbacks.hasRegisteredCallbacks( CallbackType.POST_UPDATE );
@@ -52,7 +52,7 @@ final class OwnerUpdateCompletionCoordinator {
 		this.session = session;
 	}
 
-	void registerEntityMutation(Object owner, EntityPersister persister) {
+	void registerEntityMutation(Object owner, EntityPersister<?> persister) {
 		final var callbacks = persister.getEntityCallbacks();
 		final var state = ownerStates.computeIfAbsent( owner, ignored -> new OwnerState( callbacks ) );
 		checkNotSealed( state );

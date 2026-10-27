@@ -160,7 +160,7 @@ public abstract class AbstractCollectionPersister
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
-	private final EntityPersister ownerPersister;
+	private final EntityPersister<?> ownerPersister;
 	private final SessionFactoryImplementor factory;
 
 	protected final String qualifiedTableName;
@@ -241,7 +241,7 @@ public abstract class AbstractCollectionPersister
 	@Nullable
 	private final BeforeExecutionGenerator identifierGenerator;
 	@Nullable
-	private final EntityPersister elementPersister;
+	private final EntityPersister<?> elementPersister;
 	private final @Nullable CollectionDataAccess cacheAccessStrategy;
 	private final @Nonnull CacheEntryStructure cacheEntryStructure;
 	private final boolean useShallowQueryCacheLayout;
@@ -270,7 +270,7 @@ public abstract class AbstractCollectionPersister
 	private CollectionElementLoaderByIndex collectionElementLoaderByIndex;
 
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
-	private PluralAttributeMapping attributeMapping;
+	private PluralAttributeMapping<?> attributeMapping;
 	@Nullable
 	private volatile Set<String> affectingFetchProfiles;
 
@@ -549,7 +549,7 @@ public abstract class AbstractCollectionPersister
 
 	@Nullable
 	private FilterHelper filterHelper(
-			@Nonnull Collection collection, @Nullable EntityPersister elementPersister, @Nonnull RuntimeModelCreationContext context) {
+			@Nonnull Collection collection, @Nullable EntityPersister<?> elementPersister, @Nonnull RuntimeModelCreationContext context) {
 		final var filters = collection.getFilters();
 		return filters.isEmpty()
 				? null
@@ -558,7 +558,7 @@ public abstract class AbstractCollectionPersister
 
 	@Nullable
 	private static Map<String, String> entityNameByTableNameMap(
-			@Nullable EntityPersister elementPersister, @Nonnull RuntimeModelCreationContext context) {
+			@Nullable EntityPersister<?> elementPersister, @Nonnull RuntimeModelCreationContext context) {
 		return elementPersister == null
 				? null
 				: AbstractEntityPersister.getEntityNameByTableNameMap(
@@ -635,7 +635,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private void delayedWhereFragmentProcessing(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull String mappedByProperty,
 			@Nonnull Collection bootDescriptor,
 			@Nonnull RuntimeModelCreationContext creationContext) {
@@ -651,12 +651,12 @@ public abstract class AbstractCollectionPersister
 
 	@Nullable
 	private String getWhere(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull String mappedByProperty,
 			@Nonnull Collection collectionBootDescriptor,
 			@Nonnull RuntimeModelCreationContext creationContext) {
 		if ( resolveMappedBy( entityPersister, mappedByProperty )
-					instanceof DiscriminatedAssociationAttributeMapping anyMapping ) {
+					instanceof DiscriminatedAssociationAttributeMapping<?> anyMapping ) {
 			final var discriminatorMapping = anyMapping.getDiscriminatorMapping();
 			final var discriminatorValueDetails =
 					discriminatorMapping.getValueConverter()
@@ -688,7 +688,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Nullable
-	private static AttributeMapping resolveMappedBy(@Nonnull EntityPersister entityPersister, @Nonnull String mappedByProperty) {
+	private static AttributeMapping<?, ?, ?> resolveMappedBy(@Nonnull EntityPersister<?> entityPersister, @Nonnull String mappedByProperty) {
 		final var propertyPathParts = new StringTokenizer( mappedByProperty, ".", false );
 		final int tokenCount = propertyPathParts.countTokens();
 		assert tokenCount > 0;
@@ -696,14 +696,14 @@ public abstract class AbstractCollectionPersister
 			return entityPersister.findAttributeMapping( propertyPathParts.nextToken() );
 		}
 		else {
-			ManagedMappingType source = entityPersister;
+			ManagedMappingType<?, ?, ?> source = entityPersister;
 			while ( propertyPathParts.hasMoreTokens() ) {
 				final String partName = propertyPathParts.nextToken();
 				final var namedPart = source.findAttributeMapping( partName );
 				if ( !propertyPathParts.hasMoreTokens() ) {
 					return namedPart;
 				}
-				source = (ManagedMappingType) namedPart.getPartMappingType();
+				source = (ManagedMappingType<?, ?, ?>) namedPart.getPartMappingType();
 			}
 			throw new MappingException(
 					String.format(
@@ -1240,7 +1240,7 @@ public abstract class AbstractCollectionPersister
 
 	@Nonnull
 	@Override
-	public EntityPersister getOwnerEntityPersister() {
+	public EntityPersister<?> getOwnerEntityPersister() {
 		return ownerPersister;
 	}
 
@@ -1401,7 +1401,7 @@ public abstract class AbstractCollectionPersister
 
 	@Nonnull
 	@Override
-	public EntityPersister getElementPersister() {
+	public EntityPersister<?> getElementPersister() {
 		if ( elementPersister == null ) {
 			throw new AssertionFailure( "not an association" );
 		}
@@ -1409,7 +1409,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Nullable
-	protected EntityPersister getElementPersisterInternal() {
+	protected EntityPersister<?> getElementPersisterInternal() {
 		return elementPersister;
 	}
 
@@ -1649,13 +1649,13 @@ public abstract class AbstractCollectionPersister
 	 * {@link org.hibernate.metamodel.mapping.EmbeddableMappingType} and {@link EmbeddableValuedModelPart}.
 	 */
 	@Override
-	public void injectAttributeMapping(@Nonnull PluralAttributeMapping attributeMapping) {
+	public void injectAttributeMapping(@Nonnull PluralAttributeMapping<?> attributeMapping) {
 		this.attributeMapping = attributeMapping;
 	}
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getAttributeMapping() {
+	public PluralAttributeMapping<?> getAttributeMapping() {
 		return attributeMapping;
 	}
 
@@ -1699,7 +1699,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(
-			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull Set<ManagedMappingType<?, ?, ?>> visitedTypes,
 			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKeyFilters) {
 		assert influencers.hasEnabledFilters();
@@ -1710,7 +1710,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private boolean isKeyOrElementAffectedByFilters(
-			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull Set<ManagedMappingType<?, ?, ?>> visitedTypes,
 			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		return isAffectedByFilters( visitedTypes, attributeMapping.getIndexDescriptor(), influencers, onlyApplyForLoadByKey )
@@ -1718,15 +1718,15 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private boolean isAffectedByFilters(
-			@Nonnull Set<ManagedMappingType> visitedTypes,
-			@Nonnull CollectionPart collectionPart,
+			@Nonnull Set<ManagedMappingType<?, ?, ?>> visitedTypes,
+			@Nonnull CollectionPart<?, ?, ?> collectionPart,
 			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
-		if ( collectionPart instanceof EntityCollectionPart entityCollectionPart ) {
+		if ( collectionPart instanceof EntityCollectionPart<?> entityCollectionPart ) {
 			return entityCollectionPart.getEntityMappingType()
 					.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
 		}
-		else if ( collectionPart instanceof EmbeddedCollectionPart embeddedCollectionPart ) {
+		else if ( collectionPart instanceof EmbeddedCollectionPart<?> embeddedCollectionPart ) {
 			return embeddedCollectionPart.getEmbeddableTypeDescriptor()
 					.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
 		}
@@ -1753,7 +1753,7 @@ public abstract class AbstractCollectionPersister
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getTargetPart() {
+	public PluralAttributeMapping<?> getTargetPart() {
 		return attributeMapping;
 	}
 
@@ -1803,7 +1803,7 @@ public abstract class AbstractCollectionPersister
 	@Nonnull
 	private static CollectionTableDescriptor buildCollectionTableDescriptor(
 			@Nonnull CollectionTableMapping tableMapping,
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull SessionFactoryImplementor factory) {
 		final String qualifiedTableName = tableMapping.getTableName();
 		// NOTE: if ActionQueue is not the graph-based one, isSelfReferential will have no impact
@@ -1838,7 +1838,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Nonnull
-	private static TableKeyDescriptor buildTableKeyDescriptor(@Nonnull PluralAttributeMapping attributeMapping) {
+	private static TableKeyDescriptor buildTableKeyDescriptor(@Nonnull PluralAttributeMapping<?> attributeMapping) {
 		var keyColumns = new ArrayList<ColumnDescriptor>();
 		attributeMapping.getKeyDescriptor().visitKeySelectables( (index, selectableMapping)
 				-> keyColumns.add( ColumnDescriptor.from( selectableMapping ) ) );

@@ -17,7 +17,6 @@ import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Describes the mapping of an embeddable (composite).
@@ -26,35 +25,29 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @see jakarta.persistence.EmbeddedId
  * @see jakarta.persistence.Embeddable
  */
-public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, FetchableContainer, TableGroupJoinProducer {
+public interface EmbeddableValuedModelPart<J, M, R> extends ValuedModelPart<J, M, R>, Fetchable<J, M, R>, FetchableContainer<J, M, R>, TableGroupJoinProducer<J, M, R> {
 	@Nonnull
-	EmbeddableMappingType getEmbeddableTypeDescriptor();
+	EmbeddableMappingType<?, M, ?> getEmbeddableTypeDescriptor();
 
 	@Nonnull
 	@Override
-	default EmbeddableMappingType getMappedType() {
+	default EmbeddableMappingType<?, M, ?> getMappedType() {
 		return getEmbeddableTypeDescriptor();
-	}
-
-	@Nonnull
-	@Override
-	default JavaType<?> getJavaType() {
-		return getEmbeddableTypeDescriptor().getJavaType();
 	}
 
 	@Nullable
 	@Override
-	default ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	default ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		return getEmbeddableTypeDescriptor().findSubPart( name, treatTargetType );
 	}
 
 	@Override
-	default void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
+	default void forEachSubPart(@Nonnull IndexedConsumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTarget) {
 		getEmbeddableTypeDescriptor().forEachSubPart( consumer, treatTarget );
 	}
 
 	@Override
-	default void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
+	default void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTargetType) {
 		getEmbeddableTypeDescriptor().visitSubParts( consumer, treatTargetType );
 	}
 
@@ -65,12 +58,12 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 
 	@Nonnull
 	@Override
-	default JdbcMapping getJdbcMapping(int index) {
+	default JdbcMapping<?> getJdbcMapping(int index) {
 		return getEmbeddableTypeDescriptor().getJdbcMapping( index );
 	}
 
 	@Override
-	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return getEmbeddableTypeDescriptor().forEachJdbcType( offset, action );
 	}
 
@@ -114,7 +107,7 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 
 	@Nonnull
 	@Override
-	default Fetchable getFetchable(int position) {
+	default Fetchable<?, ?, ?> getFetchable(int position) {
 		return getEmbeddableTypeDescriptor().getFetchable( position );
 	}
 

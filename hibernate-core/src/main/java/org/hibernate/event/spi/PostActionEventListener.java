@@ -32,7 +32,7 @@ public interface PostActionEventListener {
 	 *
 	 * @return {@code true} if after transaction callbacks should be added.
 	 */
-	default boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+	default boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 		return false;
 	}
 }

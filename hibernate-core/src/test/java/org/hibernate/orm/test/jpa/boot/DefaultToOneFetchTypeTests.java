@@ -68,7 +68,7 @@ public class DefaultToOneFetchTypeTests {
 				.managedClass( Post.class )
 				.createEntityManagerFactory() ) {
 			var postDescriptor = emf.unwrap( SessionFactoryImplementor.class ).getMappingMetamodel().getEntityDescriptor( Post.class );
-			final AttributeMapping authorAttribute = postDescriptor.findAttributeMapping( "author" );
+			final AttributeMapping<?, ?, ?> authorAttribute = postDescriptor.findAttributeMapping( "author" );
 			assertThat( authorAttribute.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
 		}
 	}
@@ -81,7 +81,7 @@ public class DefaultToOneFetchTypeTests {
 				.managedClass( Post.class )
 				.createEntityManagerFactory() ) {
 			var postDescriptor = emf.unwrap( SessionFactoryImplementor.class ).getMappingMetamodel().getEntityDescriptor( Post.class );
-			final AttributeMapping authorAttribute = postDescriptor.findAttributeMapping( "author" );
+			final AttributeMapping<?, ?, ?> authorAttribute = postDescriptor.findAttributeMapping( "author" );
 			assertThat( authorAttribute.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.DELAYED );
 			assertThat( postDescriptor.findAttributeMapping( "eagerAuthor" ).getMappedFetchOptions().getTiming() )
 					.isEqualTo( FetchTiming.IMMEDIATE );
@@ -109,7 +109,7 @@ public class DefaultToOneFetchTypeTests {
 				.managedClass( Post.class )
 				.createEntityManagerFactory() ) {
 			var postDescriptor = emf.unwrap( SessionFactoryImplementor.class ).getMappingMetamodel().getEntityDescriptor( Post.class );
-			final AttributeMapping authorAttribute = postDescriptor.findAttributeMapping( "author" );
+			final AttributeMapping<?, ?, ?> authorAttribute = postDescriptor.findAttributeMapping( "author" );
 			assertThat( authorAttribute.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
 		}
 	}

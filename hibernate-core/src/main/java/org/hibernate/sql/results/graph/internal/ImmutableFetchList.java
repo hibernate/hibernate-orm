@@ -44,7 +44,7 @@ public final class ImmutableFetchList implements FetchList {
 	}
 
 	@Override
-	public Fetch get(Fetchable fetchable) {
+	public Fetch get(Fetchable<?, ?, ?> fetchable) {
 		return fetches == null ? null : fetches[fetchable.getFetchableKey()];
 	}
 
@@ -113,7 +113,7 @@ public final class ImmutableFetchList implements FetchList {
 	public static class Builder {
 		private final Fetch[] fetches;
 
-		public Builder(FetchableContainer container) {
+		public Builder(FetchableContainer<?, ?, ?> container) {
 			this.fetches = new Fetch[container.getNumberOfFetchableKeys()];
 		}
 

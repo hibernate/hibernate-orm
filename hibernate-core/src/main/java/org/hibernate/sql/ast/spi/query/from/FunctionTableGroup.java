@@ -20,7 +20,7 @@ public class FunctionTableGroup extends AbstractTableGroup {
 
 	public FunctionTableGroup(
 			NavigablePath navigablePath,
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			FunctionExpression functionExpression,
 			String sourceAlias,
 			List<String> columnNames,

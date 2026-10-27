@@ -379,7 +379,7 @@ public class DefaultMergeEventListener
 			@Nonnull MergeContext copyCache,
 			@Nonnull Object entity,
 			@Nonnull EventSource session,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nullable Object id) {
 		final Object existingCopy = copyCache.get( entity );
 		if ( existingCopy != null ) {
@@ -543,7 +543,7 @@ public class DefaultMergeEventListener
 	}
 
 	private void verifyImmutableAttributes(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object[] sourceValues,
 			@Nonnull Object[] targetValues,
 			@Nonnull EventSource session) {
@@ -565,7 +565,7 @@ public class DefaultMergeEventListener
 	private static Object targetEntity(
 			@Nonnull MergeEvent event,
 			@Nonnull Object entity,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nullable Object id,
 			@Nonnull Object result) {
 		final var source = event.getSession();
@@ -597,7 +597,7 @@ public class DefaultMergeEventListener
 	private static Object getDetachedEntityId(
 			@Nonnull MergeEvent event,
 			@Nullable Object originalId,
-			@Nonnull EntityPersister persister) {
+			@Nonnull EntityPersister<?> persister) {
 		final var source = event.getSession();
 		final Object id = event.getRequestedId();
 		if ( id == null ) {
@@ -616,7 +616,7 @@ public class DefaultMergeEventListener
 	private static Object unproxyManagedForDetachedMerging(
 			@Nonnull Object incoming,
 			@Nonnull Object managed,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EventSource source) {
 		if ( isHibernateProxy( managed ) ) {
 			return assertInitialized( managed );
@@ -674,7 +674,7 @@ public class DefaultMergeEventListener
 	private static boolean isVersionChanged(
 			@Nonnull Object entity,
 			@Nonnull EventSource source,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object target) {
 		if ( persister.isVersioned() ) {
 			// for merging of versioned entities, we consider the version having
@@ -702,7 +702,7 @@ public class DefaultMergeEventListener
 	private static boolean existsInDatabase(
 			@Nonnull Object entity,
 			@Nonnull EventSource source,
-			@Nonnull EntityPersister persister) {
+			@Nonnull EntityPersister<?> persister) {
 		final var persistenceContext = source.getPersistenceContextInternal();
 		var entry = persistenceContext.getEntry( entity );
 		if ( entry == null ) {
@@ -727,7 +727,7 @@ public class DefaultMergeEventListener
 	 */
 	protected void cascadeOnMerge(
 			@Nonnull final EventSource source,
-			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityPersister<?> persister,
 			@Nonnull final Object entity,
 			@Nonnull final MergeContext copyCache) {
 		final var persistenceContext = source.getPersistenceContextInternal();
@@ -749,7 +749,7 @@ public class DefaultMergeEventListener
 
 	private static void firePreMergeCallbacks(
 			@Nonnull EventSource session,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity) {
 		final var callbacks = persister.getEntityCallbacks();
 		if ( callbacks.hasRegisteredCallbacks( CallbackType.PRE_MERGE ) ) {
@@ -768,7 +768,7 @@ public class DefaultMergeEventListener
 	@Override
 	protected void cascadeAfterSave(
 			@Nonnull EventSource source,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity,
 			@Nonnull MergeContext anything) {}
 
@@ -778,7 +778,7 @@ public class DefaultMergeEventListener
 	@Override
 	protected void cascadeBeforeSave(
 			@Nonnull EventSource source,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity,
 			@Nonnull MergeContext anything) {}
 }

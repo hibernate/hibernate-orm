@@ -74,7 +74,7 @@ class EmbeddableBatchingTest {
 
 					EntityEntry entry = ( (SessionImplementor) entityManager ).getPersistenceContext().getEntry( entityA );
 					Object[] loadedState = entry.getLoadedState();
-					EntityPersister persister = ( (SessionImplementor) entityManager ).getEntityPersister(
+					EntityPersister<?> persister = ( (SessionImplementor) entityManager ).getEntityPersister(
 							"EntityA",
 							entityA
 					);

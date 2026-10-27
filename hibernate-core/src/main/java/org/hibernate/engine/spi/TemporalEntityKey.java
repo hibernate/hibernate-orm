@@ -26,7 +26,7 @@ public final class TemporalEntityKey extends EntityKey {
 	 * @param persister The entity persister
 	 * @param changesetId The changeset identifier (must not be null)
 	 */
-	public TemporalEntityKey(@Nullable Object id, EntityPersister persister, Object changesetId) {
+	public TemporalEntityKey(@Nullable Object id, EntityPersister<?> persister, Object changesetId) {
 		super( id, persister, changesetId.hashCode() );
 		this.changesetId = changesetId;
 	}

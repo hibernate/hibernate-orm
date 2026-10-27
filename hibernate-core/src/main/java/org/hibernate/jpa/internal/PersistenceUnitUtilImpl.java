@@ -135,7 +135,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 		return getPersister( entity ).getVersion( entity );
 	}
 
-	private EntityPersister getPersister(Object entity) {
+	private EntityPersister<?> getPersister(Object entity) {
 		final var entityClass = Hibernate.getClass( entity );
 		try {
 			final var entityPersister =

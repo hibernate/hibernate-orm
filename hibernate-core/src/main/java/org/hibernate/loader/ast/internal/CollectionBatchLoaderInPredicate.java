@@ -40,7 +40,7 @@ public class CollectionBatchLoaderInPredicate
 	public CollectionBatchLoaderInPredicate(
 			int domainBatchSize,
 			@Nonnull LoadQueryInfluencers influencers,
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( domainBatchSize, influencers, attributeMapping, sessionFactory );
 

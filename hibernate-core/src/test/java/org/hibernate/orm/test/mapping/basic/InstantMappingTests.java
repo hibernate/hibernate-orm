@@ -31,10 +31,10 @@ public class InstantMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithInstant.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithInstant.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("instant");
-		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
+		final BasicAttributeMapping<?> duration = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("instant");
+		final JdbcMapping<?> jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Instant.class));
 		assertThat(
 				jdbcMapping.getJdbcType(),

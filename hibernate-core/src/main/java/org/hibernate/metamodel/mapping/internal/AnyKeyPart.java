@@ -33,14 +33,14 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
+public class AnyKeyPart<J> implements BasicValuedModelPart<J, J, J>, FetchOptions {
 	public static final String KEY_NAME = "{key}";
 
 	private final NavigableRole navigableRole;
 	private final String table;
 	private final String column;
 	private final SelectablePath selectablePath;
-	private final DiscriminatedAssociationModelPart anyPart;
+	private final DiscriminatedAssociationModelPart<?> anyPart;
 	private final @Nullable String customReadExpression;
 	private final @Nullable String customWriteExpression;
 	private final @Nullable Long length;
@@ -51,11 +51,11 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final boolean insertable;
 	private final boolean updateable;
 	private final boolean partitioned;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<J> jdbcMapping;
 
 	public AnyKeyPart(
 			NavigableRole navigableRole,
-			DiscriminatedAssociationModelPart anyPart,
+			DiscriminatedAssociationModelPart<?> anyPart,
 			String table,
 			String column,
 			SelectablePath selectablePath,
@@ -68,7 +68,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<J> jdbcMapping) {
 		this(
 				navigableRole,
 				anyPart,
@@ -91,7 +91,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	public AnyKeyPart(
 			NavigableRole navigableRole,
-			DiscriminatedAssociationModelPart anyPart,
+			DiscriminatedAssociationModelPart<?> anyPart,
 			String table,
 			String column,
 			SelectablePath selectablePath,
@@ -105,7 +105,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<J> jdbcMapping) {
 		this.navigableRole = navigableRole;
 		this.table = table;
 		this.column = column;
@@ -210,13 +210,13 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return jdbcMapping;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return jdbcMapping.getMappedJavaType();
 	}
 
@@ -234,13 +234,13 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return anyPart.findContainingEntityMapping();
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return jdbcMapping;
 	}
 
@@ -317,7 +317,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();
 	}
@@ -336,7 +336,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );
 		}
@@ -345,7 +345,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping<?> getSingleJdbcMapping() {
 		return jdbcMapping;
 	}
 
@@ -369,13 +369,13 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
 			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping,
@@ -398,7 +398,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, creationState ), getJdbcMapping() );
 	}
 

@@ -80,7 +80,7 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 		return implicitValueStrategy;
 	}
 
-	private DiscriminatorValueDetails register(DiscriminatorValue value, EntityMappingType entityMapping) {
+	private DiscriminatorValueDetails register(DiscriminatorValue value, EntityMappingType<?> entityMapping) {
 		final var details = new DiscriminatorValueDetailsImpl( value, entityMapping );
 		detailsByValue.put( value, details );
 		detailsByEntityName.put( entityMapping.getEntityName(), details );

@@ -39,23 +39,23 @@ public class ByteMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfBytes.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfBytes.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("wrapper");
 			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Byte.class));
 
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
 			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.TINYINT)));
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("primitive");
 			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Byte.class));
 
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
 			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.TINYINT)));
 		}

@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.spi.query.from.TableReference;
 /**
  * An array list for {@link ColumnValueParameter} that implements {@link SelectableConsumer} to add new parameters.
  */
-public class ColumnValueParameterList extends ArrayList<ColumnValueParameter> implements SelectableConsumer {
+public class ColumnValueParameterList extends ArrayList<ColumnValueParameter<?>> implements SelectableConsumer {
 
 	private final TableReference tableReference;
 	private final ParameterUsage parameterUsage;
@@ -34,9 +34,9 @@ public class ColumnValueParameterList extends ArrayList<ColumnValueParameter> im
 		addColumValueParameter( selectableMapping );
 	}
 
-	public ColumnValueParameter addColumValueParameter(SelectableMapping selectableMapping) {
-		final ColumnValueParameter columnValueParameter =
-				new ColumnValueParameter( new ColumnReference( tableReference, selectableMapping ), parameterUsage );
+	public ColumnValueParameter<?> addColumValueParameter(SelectableMapping selectableMapping) {
+		final ColumnValueParameter<?> columnValueParameter =
+				ColumnValueParameter.create( new ColumnReference( tableReference, selectableMapping ), parameterUsage );
 		add( columnValueParameter );
 		return columnValueParameter;
 	}
@@ -46,7 +46,7 @@ public class ColumnValueParameterList extends ArrayList<ColumnValueParameter> im
 			addAll( columnValueParameters );
 		}
 		else {
-			add( (ColumnValueParameter) parameterRef );
+			add( (ColumnValueParameter<?>) parameterRef );
 		}
 	}
 }

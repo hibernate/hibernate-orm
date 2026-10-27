@@ -31,15 +31,15 @@ import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingsMap;
 @Incubating(since = "5.4")
 public interface AttributeMappingsMap {
 
-	void forEachValue(@Nonnull Consumer<? super AttributeMapping> action);
+	void forEachValue(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action);
 
 	int size();
 
 	@Nullable
-	AttributeMapping get(@Nonnull String name);
+	AttributeMapping<?, ?, ?> get(@Nonnull String name);
 
 	@Nonnull
-	Iterable<AttributeMapping> valueIterator();
+	Iterable<AttributeMapping<?, ?, ?>> valueIterator();
 
 	@Nonnull
 	static Builder builder() {
@@ -50,9 +50,9 @@ public interface AttributeMappingsMap {
 
 		private Builder(){}
 
-		@Nullable private LinkedHashMap<String,AttributeMapping> storage;
+		@Nullable private LinkedHashMap<String,AttributeMapping<?, ?, ?>> storage;
 
-		public void put(@Nonnull final String name, @Nonnull final AttributeMapping mapping) {
+		public void put(@Nonnull final String name, @Nonnull final AttributeMapping<?, ?, ?> mapping) {
 			Objects.requireNonNull( name );
 			Objects.requireNonNull( mapping );
 			if ( storage == null ) {

@@ -193,7 +193,7 @@ public class BatchFetchQueue {
 			final int domainBatchSize,
 			IndexedConsumer<T> collector,
 			final @Nonnull T loadingId,
-			final EntityMappingType entityDescriptor) {
+			final EntityMappingType<?> entityDescriptor) {
 		// make sure we load the id being loaded in the batch!
 		collector.accept( 0, loadingId );
 
@@ -239,7 +239,7 @@ public class BatchFetchQueue {
 	 * the given key.
 	 */
 	public Object [] getBatchLoadableEntityIds(
-			final EntityMappingType entityDescriptor,
+			final EntityMappingType<?> entityDescriptor,
 			final Object loadingId,
 			final int maxBatchSize) {
 
@@ -331,7 +331,7 @@ public class BatchFetchQueue {
 			int batchSize,
 			IndexedConsumer<T> collector,
 			@Nonnull T keyBeingLoaded,
-			PluralAttributeMapping pluralAttributeMapping) {
+			PluralAttributeMapping<?> pluralAttributeMapping) {
 		collector.accept( 0, keyBeingLoaded );
 
 		if ( batchLoadableCollections != null ) {
@@ -474,7 +474,7 @@ public class BatchFetchQueue {
 		}
 	}
 
-	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
+	private boolean isCached(EntityKey entityKey, EntityPersister<?> persister) {
 		final var session = getSession();
 		if ( session.getCacheMode().isGetEnabled() ) {
 			return readingFromCache( persister, cache -> {

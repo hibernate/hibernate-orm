@@ -39,8 +39,8 @@ public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 	private Map<String, IdentitySet<Object>> circularityTracker;
 
 	@Override
-	protected void serializeEntity(Object value, EntityMappingType entityType, WrapperOptions options, JsonDocumentWriter writer) {
-		final EntityIdentifierMapping identifierMapping = entityType.getIdentifierMapping();
+	protected void serializeEntity(Object value, EntityMappingType<?> entityType, WrapperOptions options, JsonDocumentWriter writer) {
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityType.getIdentifierMapping();
 		trackingEntity( value, entityType, shouldProcessEntity -> {
 			try {
 				writer.startObject();
@@ -58,7 +58,7 @@ public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 		} );
 	}
 
-	private void trackingEntity(Object entity, EntityMappingType entityType, Consumer<Boolean> action) {
+	private void trackingEntity(Object entity, EntityMappingType<?> entityType, Consumer<Boolean> action) {
 		if ( circularityTracker == null ) {
 			circularityTracker = new HashMap<>();
 		}
@@ -94,7 +94,7 @@ public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 
 	@Override
 	protected void serializeModelPart(
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			Object value,
 			WrapperOptions options,
 			JsonDocumentWriter writer) throws IOException {
@@ -104,15 +104,15 @@ public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 			writer.objectKey( modelPart.getPartName() );
 			visit( modelPart.getMappedType(), value, options, writer );
 		}
-		else if ( modelPart instanceof EmbeddedAttributeMapping embeddedAttribute ) {
+		else if ( modelPart instanceof EmbeddedAttributeMapping<?, ?> embeddedAttribute ) {
 			writer.objectKey( embeddedAttribute.getAttributeName() );
 			visit( embeddedAttribute.getMappedType(), value, options, writer );
 		}
-		else if ( modelPart instanceof EntityValuedModelPart entityPart ) {
+		else if ( modelPart instanceof EntityValuedModelPart<?> entityPart ) {
 			writer.objectKey( entityPart.getPartName() );
 			visit( entityPart.getEntityMappingType(), value, options, writer );
 		}
-		else if ( modelPart instanceof PluralAttributeMapping plural ) {
+		else if ( modelPart instanceof PluralAttributeMapping<?> plural ) {
 			writer.objectKey( plural.getPartName() );
 			serializePluralAttribute( value, plural, options, writer );
 		}
@@ -127,7 +127,7 @@ public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 
 	private void serializePluralAttribute(
 			Object value,
-			PluralAttributeMapping plural,
+			PluralAttributeMapping<?> plural,
 			WrapperOptions options,
 			JsonDocumentWriter writer) throws IOException {
 		if ( handleNullOrLazy( value, writer ) ) {
@@ -135,7 +135,7 @@ public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 			return;
 		}
 
-		final CollectionPart element = plural.getElementDescriptor();
+		final CollectionPart<?, ?, ?> element = plural.getElementDescriptor();
 		final CollectionSemantics<?, ?> collectionSemantics = plural.getMappedType().getCollectionSemantics();
 		switch ( collectionSemantics.getCollectionClassification() ) {
 			case MAP:
@@ -165,8 +165,8 @@ public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 	 */
 	private <K, E> void serializePersistentMap(
 			PersistentMap<K, E> map,
-			CollectionPart key,
-			CollectionPart value,
+			CollectionPart<?, ?, ?> key,
+			CollectionPart<?, ?, ?> value,
 			WrapperOptions options,
 			JsonDocumentWriter writer) throws IOException {
 		writer.startArray();
@@ -187,7 +187,7 @@ public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 	private <E> void serializePersistentCollection(
 			PersistentCollection<E> collection,
 			CollectionPersister persister,
-			CollectionPart element,
+			CollectionPart<?, ?, ?> element,
 			WrapperOptions options,
 			JsonDocumentWriter appender) throws IOException {
 		appender.startArray();
@@ -200,10 +200,10 @@ public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 
 	private void serializeCollectionPart(
 			Object value,
-			CollectionPart collectionPart,
+			CollectionPart<?, ?, ?> collectionPart,
 			WrapperOptions options,
 			JsonDocumentWriter appender) throws IOException {
-		if ( collectionPart instanceof BasicValuedCollectionPart basic ) {
+		if ( collectionPart instanceof BasicValuedCollectionPart<?> basic ) {
 			appender.serializeJsonValue( value, basic.getJavaType(), basic.getJdbcMapping().getJdbcType(), options );
 		}
 		else {

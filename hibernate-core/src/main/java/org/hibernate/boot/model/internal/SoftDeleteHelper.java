@@ -126,14 +126,14 @@ public class SoftDeleteHelper {
 		softDeleteColumn.setName( physicalColumnName.render( database.getDialect() ) );
 	}
 
-	public static SoftDeleteMappingImpl resolveSoftDeleteMapping(
-			SoftDeletableModelPart softDeletableModelPart,
+	public static SoftDeleteMappingImpl<?> resolveSoftDeleteMapping(
+			SoftDeletableModelPart<?, ?, ?> softDeletableModelPart,
 			SoftDeletable bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {
 		return bootMapping.getSoftDeleteColumn() == null
 				? null
-				: new SoftDeleteMappingImpl( softDeletableModelPart, bootMapping, tableName, creationProcess );
+				: SoftDeleteMappingImpl.create( softDeletableModelPart, bootMapping, tableName, creationProcess );
 	}
 
 }

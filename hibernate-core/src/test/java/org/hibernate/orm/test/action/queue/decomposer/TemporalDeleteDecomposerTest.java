@@ -54,7 +54,7 @@ public class TemporalDeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( TemporalEntity.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( TemporalEntity.class );
 
 			final EntityDeleteAction action = createDeleteAction( entity, session, persister );
 			final List<FlushOperation> operations = new ArrayList<>();
@@ -68,7 +68,7 @@ public class TemporalDeleteDecomposerTest {
 	private static EntityDeleteAction createDeleteAction(
 			Object entity,
 			SessionImplementor session,
-			EntityPersister persister) {
+			EntityPersister<?> persister) {
 		return new EntityDeleteAction(
 				persister.getIdentifier( entity, session ),
 				persister.getValues( entity ),

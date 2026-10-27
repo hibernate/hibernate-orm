@@ -71,8 +71,8 @@ public class AttributeOrderingTests {
 		);
 	}
 
-	public void verifyRuntimeEntityMapping(EntityMappingType entityMappingType) {
-		final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
+	public void verifyRuntimeEntityMapping(EntityMappingType<?> entityMappingType) {
+		final NaturalIdMapping<?, ?, ?> naturalIdMapping = entityMappingType.getNaturalIdMapping();
 		assertThat( naturalIdMapping, notNullValue() );
 		assertThat( naturalIdMapping.getNaturalIdAttributes().size(), is( 2 ) );
 		assertThat( naturalIdMapping.getNaturalIdAttributes().get( 0 ).getAttributeName(), is( "assignment" ) );
@@ -87,11 +87,11 @@ public class AttributeOrderingTests {
 		assertThat( attributeMappings.get( 1 ).getAttributeName(), is( "name" ) );
 		assertThat( entityMappingType.getEntityPersister().getPropertyNames()[ 1 ], is( "name" ) );
 
-		final EmbeddedAttributeMapping theComponentAttrMapping = (EmbeddedAttributeMapping) attributeMappings.get( 2 );
+		final EmbeddedAttributeMapping<?, ?> theComponentAttrMapping = (EmbeddedAttributeMapping<?, ?>) attributeMappings.get( 2 );
 		assertThat( theComponentAttrMapping.getAttributeName(), is( "theComponent" ) );
 		assertThat( entityMappingType.getEntityPersister().getPropertyNames()[ 2 ], is( "theComponent" ) );
 
-		final EmbeddableMappingType embeddable = theComponentAttrMapping.getMappedType();
+		final EmbeddableMappingType<?, ?, ?> embeddable = theComponentAttrMapping.getMappedType();
 		final AttributeMappingsList embeddableAttributeMappings = embeddable.getAttributeMappings();
 		assertThat( embeddableAttributeMappings.get( 0 ).getAttributeName(), is( "nestedAnything" ) );
 		assertThat( embeddableAttributeMappings.get( 1 ).getAttributeName(), is( "nestedName" ) );

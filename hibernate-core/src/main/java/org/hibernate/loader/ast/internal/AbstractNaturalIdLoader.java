@@ -67,29 +67,29 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	// todo (6.0) : account for nullable attributes that are part of the natural-id (is-null-or-equals)
 	// todo (6.0) : cache the SQL AST and JdbcParameter list
 
-	private final NaturalIdMapping naturalIdMapping;
-	private final EntityMappingType entityDescriptor;
+	private final NaturalIdMapping<?, ?, ?> naturalIdMapping;
+	private final EntityMappingType<?> entityDescriptor;
 
 	public AbstractNaturalIdLoader(
-			@Nonnull NaturalIdMapping naturalIdMapping,
-			@Nonnull EntityMappingType entityDescriptor) {
+			@Nonnull NaturalIdMapping<?, ?, ?> naturalIdMapping,
+			@Nonnull EntityMappingType<?> entityDescriptor) {
 		this.naturalIdMapping = naturalIdMapping;
 		this.entityDescriptor = entityDescriptor;
 	}
 
 	@Nonnull
-	protected EntityMappingType entityDescriptor() {
+	protected EntityMappingType<?> entityDescriptor() {
 		return entityDescriptor;
 	}
 
 	@Nonnull
-	protected NaturalIdMapping naturalIdMapping() {
+	protected NaturalIdMapping<?, ?, ?> naturalIdMapping() {
 		return naturalIdMapping;
 	}
 
 	@Nonnull
 	@Override
-	public EntityMappingType getLoadable() {
+	public EntityMappingType<?> getLoadable() {
 		return entityDescriptor();
 	}
 
@@ -408,7 +408,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			predicateConsumer.accept( new NullnessPredicate( columnReference ) );
 		}
 		else {
-			final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+			final var jdbcParameter = SqlTypedMappingJdbcParameter.create( jdbcValueMapping );
 			final var predicate =
 					new ComparisonPredicate( columnReference, ComparisonOperator.EQUAL, jdbcParameter );
 			predicateConsumer.accept( predicate );

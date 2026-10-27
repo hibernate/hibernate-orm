@@ -52,14 +52,14 @@ public class ExampleTypeAndLobSupportTest {
 	@Test
 	void suppliesTypedNullRowIdAndObjectNullPolicies() {
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
-		final JdbcMapping jdbcMapping = typeConfiguration.getBasicTypeForJavaType( String.class );
+		final JdbcMapping<?> jdbcMapping = typeConfiguration.getBasicTypeForJavaType( String.class );
 		final SqlTypedMapping mapping = new SqlTypedMapping() {
 			@Nonnull @Override public Long getLength() { return 64L; }
 			@Nullable @Override public Integer getArrayLength() { return null; }
 			@Nullable @Override public Integer getPrecision() { return null; }
 			@Nullable @Override public Integer getScale() { return null; }
 			@Nullable @Override public Integer getTemporalPrecision() { return null; }
-			@Nonnull @Override public JdbcMapping getJdbcMapping() { return jdbcMapping; }
+			@Nonnull @Override public JdbcMapping<?> getJdbcMapping() { return jdbcMapping; }
 		};
 		assertEquals( "cast(null as fixture_null_12)",
 				dialect.getSelectClauseNullString( mapping, typeConfiguration ) );

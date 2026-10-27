@@ -42,7 +42,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 
 	public EagerCollectionFetch(
 			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedAttribute,
+			PluralAttributeMapping<?> fetchedAttribute,
 			TableGroup collectionTableGroup,
 			boolean needsCollectionKeyResult,
 			FetchParent fetchParent,
@@ -91,7 +91,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 		//			referring : teacher_nicks.teacher_fk
 		//			target : teacher.id
 
-		final ForeignKeyDescriptor keyDescriptor = fetchedAttribute.getKeyDescriptor();
+		final ForeignKeyDescriptor<?, ?, ?> keyDescriptor = fetchedAttribute.getKeyDescriptor();
 		// The collection key must be fetched from the side of the declaring type of the attribute
 		// So that this is guaranteed to be not-null
 		if ( needsCollectionKeyResult ) {
@@ -165,7 +165,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
-	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
+	public NavigablePath resolveNavigablePath(Fetchable<?, ?, ?> fetchable) {
 		// Only CollectionPart is possible here
 		return getNavigablePath().append( fetchable.getFetchableName() );
 	}
@@ -206,7 +206,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 		if ( CollectionPart.Nature.ELEMENT.getName().equals( fetchable.getFetchableName() ) ) {
 			return elementFetch;
 		}

@@ -34,7 +34,7 @@ public class SubclassProxyInterfaceTest {
 		assertThat( entityBinding.getProxyInterfaceName() ).isEqualTo( IDoctor.class.getName() );
 
 		try (SessionFactoryImplementor sessionFactory = domainModel.buildSessionFactory()) {
-			final EntityPersister doctorPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( Doctor.class );
+			final EntityPersister<?> doctorPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( Doctor.class );
 			final EntityRepresentationStrategy representationStrategy = doctorPersister.getRepresentationStrategy();
 			assertThat( representationStrategy.getLoadJavaType().getJavaType() ).isEqualTo( Doctor.class );
 			assertThat( representationStrategy.getProxyJavaType().getJavaType() ).isEqualTo( IDoctor.class );

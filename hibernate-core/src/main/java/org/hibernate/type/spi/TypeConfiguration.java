@@ -964,7 +964,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	@SuppressWarnings("deprecation")
-	public static @Nullable TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
+	public static @Nullable TemporalType getSqlTemporalType(JdbcMapping<?> jdbcMapping) {
 		return getSqlTemporalType( jdbcMapping.getJdbcType() );
 	}
 
@@ -976,10 +976,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	@SuppressWarnings("deprecation")
 	public static @Nullable TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
-		if ( type instanceof BasicValuedMapping basicValuedMapping ) {
+		if ( type instanceof BasicValuedMapping<?> basicValuedMapping ) {
 			return getSqlTemporalType( basicValuedMapping.getJdbcMapping().getJdbcType() );
 		}
-		else if ( type instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+		else if ( type instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 			// Handle the special embeddables for emulated offset/timezone handling
 			final var javaTypeClass = embeddableValuedModelPart.getJavaType().getJavaTypeClass();
 			if ( javaTypeClass == OffsetDateTime.class

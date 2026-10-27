@@ -22,8 +22,8 @@ import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createCol
 /**
  * @author Steve Ebersole
  */
-public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminatorMapping
-		implements EmbeddableDiscriminatorMapping {
+public class ExplicitColumnDiscriminatorMappingImpl<J> extends AbstractDiscriminatorMapping<J>
+		implements EmbeddableDiscriminatorMapping<J> {
 	private final String name;
 	private final String tableExpression;
 	@Nullable private final String columnName;
@@ -37,7 +37,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	private final @Nullable Integer scale;
 
 	public ExplicitColumnDiscriminatorMappingImpl(
-			ManagedMappingType mappingType,
+			ManagedMappingType<?, ?, ?> mappingType,
 			String name,
 			String tableExpression,
 			String columnExpression,
@@ -48,7 +48,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			Long length,
 			Integer precision,
 			Integer scale,
-			DiscriminatorType<?> discriminatorType) {
+			DiscriminatorType<J> discriminatorType) {
 		this(
 				mappingType,
 				name,
@@ -66,7 +66,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	}
 
 	public ExplicitColumnDiscriminatorMappingImpl(
-			ManagedMappingType mappingType,
+			ManagedMappingType<?, ?, ?> mappingType,
 			String name,
 			String tableExpression,
 			String columnExpression,
@@ -78,10 +78,10 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			@Nullable Integer arrayLength,
 			@Nullable Integer precision,
 			@Nullable Integer scale,
-			DiscriminatorType<?> discriminatorType) {
+			DiscriminatorType<J> discriminatorType) {
 		//noinspection unchecked
 		super( mappingType,
-				(DiscriminatorType<Object>) discriminatorType,
+				discriminatorType,
 				(BasicType<Object>) discriminatorType.getUnderlyingJdbcMapping() );
 		this.name = name;
 		this.tableExpression = tableExpression;
@@ -105,8 +105,8 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 
 	@Nonnull
 	@Override
-	public DiscriminatorType<?> getMappedType() {
-		return (DiscriminatorType<?>) super.getMappedType();
+	public DiscriminatorType<J> getMappedType() {
+		return (DiscriminatorType<J>) super.getMappedType();
 	}
 
 	@Nonnull
@@ -119,7 +119,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	@Override
 	public Expression resolveSqlExpression(
 			@Nonnull NavigablePath navigablePath,
-			@Nullable JdbcMapping jdbcMappingToUse,
+			@Nullable JdbcMapping<?> jdbcMappingToUse,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAstCreationState creationState) {
 		final var tableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );

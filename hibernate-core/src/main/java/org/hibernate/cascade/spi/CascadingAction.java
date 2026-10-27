@@ -96,7 +96,7 @@ public interface CascadingAction<T> {
 	 *
 	 * @since 7
 	 */
-	boolean anythingToCascade(EntityPersister persister);
+	boolean anythingToCascade(EntityPersister<?> persister);
 
 	/**
 	 * Does this action have any work to do for fields of the given type with the given

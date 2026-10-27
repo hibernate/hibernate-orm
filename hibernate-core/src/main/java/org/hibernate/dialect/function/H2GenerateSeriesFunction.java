@@ -99,7 +99,7 @@ public class H2GenerateSeriesFunction extends NumberSeriesGenerateSeriesFunction
 				final boolean needsEmulation = needsEmulation( startExpression )
 						|| needsEmulation( stopExpression )
 						|| explicitStepExpression != null && needsEmulation( explicitStepExpression );
-				final ModelPart elementPart = functionTableGroup.getModelPart()
+				final ModelPart<?, ?, ?> elementPart = functionTableGroup.getModelPart()
 						.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null );
 				final boolean isTemporal = elementPart.getSingleJdbcMapping().getJdbcType().isTemporal();
 				// Only do this transformation if one of the arguments is anything but a literal or parameter,
@@ -147,7 +147,7 @@ public class H2GenerateSeriesFunction extends NumberSeriesGenerateSeriesFunction
 							? explicitStep.getColumnReference()
 							: null
 			);
-			final JdbcMapping type = expressionType.getSingleJdbcMapping();
+			final JdbcMapping<?> type = expressionType.getSingleJdbcMapping();
 			if ( type == null ) {
 				throw new IllegalArgumentException( "Couldn't determine types of arguments to function 'generate_series'" );
 			}
@@ -173,8 +173,8 @@ public class H2GenerateSeriesFunction extends NumberSeriesGenerateSeriesFunction
 		final boolean needsEmulation = needsEmulation( start )
 				|| needsEmulation( stop )
 				|| step != null && needsEmulation( step );
-		final ModelPart elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
-		final ModelPart ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
+		final ModelPart<?, ?, ?> elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
+		final ModelPart<?, ?, ?> ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
 		final boolean isTemporal = elementPart.getSingleJdbcMapping().getJdbcType().isTemporal();
 
 		if ( needsEmulation || ordinalityPart != null || isTemporal ) {

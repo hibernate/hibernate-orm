@@ -34,7 +34,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 	private final NavigablePath referencedNavigablePath;
 
 	public CircularFetchImpl(
-			ToOneAttributeMapping referencedModelPart,
+			ToOneAttributeMapping<?> referencedModelPart,
 			FetchTiming timing,
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
@@ -129,8 +129,8 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 
 	protected EntityInitializer<?> buildEntitySelectFetchInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping fetchable,
-			EntityPersister entityPersister,
+			ToOneAttributeMapping<?> fetchable,
+			EntityPersister<?> entityPersister,
 			DomainResult<?> keyResult,
 			NavigablePath navigablePath,
 			boolean selectByUniqueKey,
@@ -152,7 +152,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 	protected EntityInitializer<?> buildEntityDelayedFetchInitializer(
 			InitializerParent<?> parent,
 			NavigablePath referencedPath,
-			ToOneAttributeMapping fetchable,
+			ToOneAttributeMapping<?> fetchable,
 			boolean selectByUniqueKey,
 			DomainResult<?> keyResult,
 			BasicFetch<?> discriminatorFetch,

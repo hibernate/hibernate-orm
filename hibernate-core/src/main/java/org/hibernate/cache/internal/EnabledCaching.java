@@ -254,7 +254,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		return sessionFactory.getMappingMetamodel();
 	}
 
-	private EntityPersister getEntityDescriptor(String entityName) {
+	private EntityPersister<?> getEntityDescriptor(String entityName) {
 		return getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
@@ -262,13 +262,13 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		return getMappingMetamodel().getCollectionDescriptor( role );
 	}
 
-	protected void evictEntityData(EntityPersister entityDescriptor) {
+	protected void evictEntityData(EntityPersister<?> entityDescriptor) {
 		final var rootEntityDescriptor = rootEntityPersister( entityDescriptor );
 		evictEntityData( rootEntityDescriptor.getNavigableRole(),
 				rootEntityDescriptor.getCacheAccessStrategy() );
 	}
 
-	private static EntityPersister rootEntityPersister(EntityPersister entityDescriptor) {
+	private static EntityPersister<?> rootEntityPersister(EntityPersister<?> entityDescriptor) {
 		if ( entityDescriptor.isInherited()
 				&& !entityDescriptor.getEntityName().equals( entityDescriptor.getRootEntityName() ) ) {
 			return entityDescriptor.getRootEntityDescriptor().getEntityPersister();
@@ -304,7 +304,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		evictNaturalIdData( getEntityDescriptor( entityName ) );
 	}
 
-	private void evictNaturalIdData(EntityPersister rootEntityDescriptor) {
+	private void evictNaturalIdData(EntityPersister<?> rootEntityDescriptor) {
 		evictNaturalIdData( rootEntityDescriptor.getNavigableRole(),
 				rootEntityDescriptor.getNaturalIdCacheAccessStrategy() );
 	}

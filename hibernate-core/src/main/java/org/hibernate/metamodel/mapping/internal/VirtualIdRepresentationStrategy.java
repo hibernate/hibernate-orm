@@ -24,13 +24,13 @@ import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 /**
  * @author Steve Ebersole
  */
-public class VirtualIdRepresentationStrategy implements EmbeddableRepresentationStrategy {
-	private final EntityMappingType entityMappingType;
+public class VirtualIdRepresentationStrategy<J> implements EmbeddableRepresentationStrategy {
+	private final EntityMappingType<J> entityMappingType;
 	private final EmbeddableInstantiator instantiator;
 
 	public VirtualIdRepresentationStrategy(
-			VirtualIdEmbeddable virtualIdEmbeddable,
-			EntityMappingType entityMappingType,
+			VirtualIdEmbeddable<?> virtualIdEmbeddable,
+			EntityMappingType<J> entityMappingType,
 			Component bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		this.entityMappingType = entityMappingType;
@@ -72,7 +72,7 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaType() {
+	public JavaType<J> getMappedJavaType() {
 		return entityMappingType.getMappedJavaType();
 	}
 
@@ -82,10 +82,10 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	}
 
 	private static class InstantiatorAdapter implements StandardEmbeddableInstantiator {
-		private final VirtualIdEmbeddable virtualIdEmbeddable;
+		private final VirtualIdEmbeddable<?> virtualIdEmbeddable;
 		private final EntityInstantiator entityInstantiator;
 
-		public InstantiatorAdapter(VirtualIdEmbeddable virtualIdEmbeddable, EntityMappingType entityMappingType) {
+		public InstantiatorAdapter(VirtualIdEmbeddable<?> virtualIdEmbeddable, EntityMappingType<?> entityMappingType) {
 			this.virtualIdEmbeddable = virtualIdEmbeddable;
 			entityInstantiator = entityMappingType.getRepresentationStrategy().getInstantiator();
 		}

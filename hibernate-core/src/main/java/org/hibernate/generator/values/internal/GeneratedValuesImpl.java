@@ -17,9 +17,9 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Marco Belladelli
  */
 public class GeneratedValuesImpl implements GeneratedValues {
-	private final Map<ModelPart, Object> generatedValuesMap;
+	private final Map<ModelPart<?, ?, ?>, Object> generatedValuesMap;
 
-	public GeneratedValuesImpl(List<? extends ModelPart> generatedProperties) {
+	public GeneratedValuesImpl(List<? extends ModelPart<?, ?, ?>> generatedProperties) {
 		this( generatedProperties.size() );
 	}
 
@@ -28,17 +28,17 @@ public class GeneratedValuesImpl implements GeneratedValues {
 	}
 
 	@Override
-	public void addGeneratedValue(ModelPart modelPart, Object value) {
+	public void addGeneratedValue(ModelPart<?, ?, ?> modelPart, Object value) {
 		generatedValuesMap.put( modelPart, value );
 	}
 
 	@Override
-	public Object getGeneratedValue(ModelPart modelPart) {
+	public Object getGeneratedValue(ModelPart<?, ?, ?> modelPart) {
 		return generatedValuesMap.get( modelPart );
 	}
 
 	@Override
-	public List<Object> getGeneratedValues(List<? extends ModelPart> modelParts) {
+	public List<Object> getGeneratedValues(List<? extends ModelPart<?, ?, ?>> modelParts) {
 		if ( isEmpty( modelParts ) ) {
 			return emptyList();
 		}

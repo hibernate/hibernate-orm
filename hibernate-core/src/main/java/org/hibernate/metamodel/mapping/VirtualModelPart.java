@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping;
  *
  * @author Steve Ebersole
  */
-public interface VirtualModelPart extends ModelPart {
+public interface VirtualModelPart<J, M, R> extends ModelPart<J, M, R> {
 	@Override
 	default boolean isVirtual() {
 		return true;

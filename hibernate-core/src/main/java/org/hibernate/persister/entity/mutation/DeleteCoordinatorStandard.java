@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilderStandard;
 @org.hibernate.Internal
 public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 
-	public DeleteCoordinatorStandard(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	public DeleteCoordinatorStandard(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 	}
 

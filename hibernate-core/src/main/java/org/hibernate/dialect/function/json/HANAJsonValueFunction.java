@@ -51,7 +51,7 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 			JsonValueArguments arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		final JdbcMapping jdbcMapping = arguments.returningType() != null
+		final JdbcMapping<?> jdbcMapping = arguments.returningType() != null
 				? arguments.returningType().getJdbcMapping()
 				: null;
 		final int sqlTypeCode = jdbcMapping != null
@@ -63,7 +63,7 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 			case BOOLEAN:
 				sqlAppender.append( "case " );
 				super.render( sqlAppender, arguments, returnType, walker );
-				final JdbcMapping type = arguments.returningType().getJdbcMapping();
+				final JdbcMapping<?> type = arguments.returningType().getJdbcMapping();
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();
 				final SessionFactoryImplementor sessionFactory = walker.getSessionFactory();
@@ -151,7 +151,7 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 		}
 	}
 
-	static boolean isEncodedBoolean(JdbcMapping type) {
+	static boolean isEncodedBoolean(JdbcMapping<?> type) {
 		return type.getJdbcType().isBoolean();
 	}
 

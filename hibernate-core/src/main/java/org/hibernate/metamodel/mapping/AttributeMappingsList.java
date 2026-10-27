@@ -29,10 +29,10 @@ public interface AttributeMappingsList {
 	int size();
 
 	@Nonnull
-	AttributeMapping get(int i);
+	AttributeMapping<?, ?, ?> get(int i);
 
-	void forEach(@Nonnull Consumer<? super AttributeMapping> attributeMappingConsumer);
+	void forEach(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> attributeMappingConsumer);
 
-	void indexedForEach(@Nonnull IndexedConsumer<? super AttributeMapping> consumer);
+	void indexedForEach(@Nonnull IndexedConsumer<? super AttributeMapping<?, ?, ?>> consumer);
 
 }

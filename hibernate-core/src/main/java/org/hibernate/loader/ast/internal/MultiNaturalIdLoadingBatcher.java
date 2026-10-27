@@ -45,7 +45,7 @@ public class MultiNaturalIdLoadingBatcher {
 		Object resolveKeyToLoad(@Nonnull Object incoming, @Nonnull SharedSessionContractImplementor session);
 	}
 
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 
 	private final SelectStatement sqlSelect;
 	private final JdbcParametersList jdbcParameters;
@@ -57,8 +57,8 @@ public class MultiNaturalIdLoadingBatcher {
 	private final LockOptions lockOptions;
 
 	public MultiNaturalIdLoadingBatcher(
-			@Nonnull EntityMappingType entityDescriptor,
-			@Nonnull ModelPart restrictedPart,
+			@Nonnull EntityMappingType<?> entityDescriptor,
+			@Nonnull ModelPart<?, ?, ?> restrictedPart,
 			int batchSize,
 			@Nonnull KeyValueResolver keyValueResolver,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,

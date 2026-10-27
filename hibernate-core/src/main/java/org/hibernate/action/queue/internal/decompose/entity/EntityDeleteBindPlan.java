@@ -53,7 +53,7 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 			};
 
 	private final EntityTableDescriptor tableDescriptor;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final Object identifier;
 	private final Object rowId;
 	private final Object version;
@@ -68,7 +68,7 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 
 	public EntityDeleteBindPlan(
 			EntityTableDescriptor tableDescriptor,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			Object identifier,
 			Object rowId,
 			Object version,
@@ -214,7 +214,7 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	private void decomposeAttributeForRestriction(
 			Object value,
 			JdbcValueBindings jdbcValueBindings,
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			SharedSessionContractImplementor session) {
 		this.valueBindings = jdbcValueBindings;
 		try {

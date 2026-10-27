@@ -13,20 +13,20 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class VersionTypeSeedParameterSpecification extends AbstractJdbcParameter {
-	private final EntityVersionMapping versionMapping;
+public class VersionTypeSeedParameterSpecification<J> extends AbstractJdbcParameter<J> {
+	private final EntityVersionMapping<J> versionMapping;
 
 	/**
 	 * Constructs a version seed parameter bind specification.
 	 *
 	 * @param versionMapping The version mapping.
 	 */
-	public VersionTypeSeedParameterSpecification(EntityVersionMapping versionMapping) {
+	public VersionTypeSeedParameterSpecification(EntityVersionMapping<J> versionMapping) {
 		super( versionMapping.getJdbcMapping() );
 		this.versionMapping = versionMapping;
 	}
 
-	public EntityVersionMapping getVersionMapping() {
+	public EntityVersionMapping<?> getVersionMapping() {
 		return versionMapping;
 	}
 

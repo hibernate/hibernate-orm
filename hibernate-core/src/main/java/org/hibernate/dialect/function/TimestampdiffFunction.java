@@ -149,8 +149,8 @@ public class TimestampdiffFunction
 		}
 
 		@Override
-		public BasicValuedMapping resolveFunctionReturnType(
-				Supplier<BasicValuedMapping> impliedTypeAccess,
+		public BasicValuedMapping<?> resolveFunctionReturnType(
+				Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 				List<? extends SqlAstNode> arguments) {
 			final BasicType<?> invariantType;
 			if ( ( (SqmDurationUnit<?>) arguments.get( 0 ) ).getUnit() == TemporalUnit.SECOND ) {

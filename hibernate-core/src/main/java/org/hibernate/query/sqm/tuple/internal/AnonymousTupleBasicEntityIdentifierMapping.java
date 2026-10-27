@@ -17,29 +17,37 @@ import org.hibernate.query.sqm.spi.SqmExpressible;
 /**
  * @author Christian Beikov
  */
-public class AnonymousTupleBasicEntityIdentifierMapping
-		extends AnonymousTupleBasicValuedModelPart
-		implements BasicEntityIdentifierMapping {
+public class AnonymousTupleBasicEntityIdentifierMapping<E, I>
+		extends AnonymousTupleBasicValuedModelPart<E, I>
+		implements BasicEntityIdentifierMapping<E, E, I> {
 
-	private final BasicEntityIdentifierMapping delegate;
+	private final BasicEntityIdentifierMapping<?, ?, ?> delegate;
 
 	public AnonymousTupleBasicEntityIdentifierMapping(
-			MappingType declaringType,
+			MappingType<?> declaringType,
 			String selectionExpression,
-			SqmExpressible<?> expressible,
-			JdbcMapping jdbcMapping,
-			BasicEntityIdentifierMapping delegate) {
+			SqmExpressible<E> expressible,
+			JdbcMapping<I> jdbcMapping,
+			BasicEntityIdentifierMapping<?, ?, ?> delegate) {
 		super( declaringType, delegate.getAttributeName(), selectionExpression, expressible, jdbcMapping, -1 );
 		this.delegate = delegate;
 	}
 
 	public AnonymousTupleBasicEntityIdentifierMapping(
-			MappingType declaringType,
+			MappingType<?> declaringType,
 			SelectableMapping selectableMapping,
-			SqmExpressible<?> expressible,
-			BasicEntityIdentifierMapping delegate) {
-		super( declaringType, delegate.getAttributeName(), selectableMapping, expressible, -1 );
+			SqmExpressible<E> expressible,
+			BasicEntityIdentifierMapping<?, ?, ?> delegate,
+			JdbcMapping<I> jdbcMapping) {
+		super( declaringType, delegate.getAttributeName(), selectableMapping, expressible, -1, jdbcMapping );
 		this.delegate = delegate;
+	}
+
+	public static <E> AnonymousTupleBasicEntityIdentifierMapping<E, ?> create(
+			MappingType<?> declaringType, SelectableMapping selectableMapping,
+			SqmExpressible<E> expressible, BasicEntityIdentifierMapping<?, ?, ?> delegate) {
+		return new AnonymousTupleBasicEntityIdentifierMapping<>( declaringType, selectableMapping, expressible,
+				delegate, selectableMapping.getJdbcMapping() );
 	}
 
 	@Nonnull
@@ -91,7 +99,7 @@ public class AnonymousTupleBasicEntityIdentifierMapping
 
 	@Nonnull
 	@Override
-	public ManagedMappingType getDeclaringType() {
-		return (ManagedMappingType) super.getDeclaringType();
+	public ManagedMappingType<?, ?, ?> getDeclaringType() {
+		return (ManagedMappingType<?, ?, ?>) super.getDeclaringType();
 	}
 }

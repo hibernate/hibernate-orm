@@ -12,7 +12,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 public class NonAggregatedIdentifierMappingFetch extends EmbeddableFetchImpl {
 	public NonAggregatedIdentifierMappingFetch(
 			NavigablePath navigablePath,
-			NonAggregatedIdentifierMapping embeddedPartDescriptor,
+			NonAggregatedIdentifierMapping<?, ?> embeddedPartDescriptor,
 			FetchParent fetchParent,
 			FetchTiming fetchTiming,
 			boolean hasTableGroup,

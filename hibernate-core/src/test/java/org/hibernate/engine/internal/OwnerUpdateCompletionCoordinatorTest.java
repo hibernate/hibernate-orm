@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 class OwnerUpdateCompletionCoordinatorTest {
 	private final EventSource session = mock( EventSource.class );
 	private final EntityCallbacks callbacks = mock( EntityCallbacks.class );
-	private final EntityPersister persister = mock( EntityPersister.class );
+	private final EntityPersister<?> persister = mock( EntityPersister.class );
 	private final Object owner = new Object();
 
 	@BeforeEach

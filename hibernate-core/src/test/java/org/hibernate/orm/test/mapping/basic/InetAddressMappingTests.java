@@ -43,11 +43,11 @@ import static org.hamcrest.Matchers.is;
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithInetAddress.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithInetAddress.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("address");
-		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
+		final BasicAttributeMapping<?> duration = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("address");
+		final JdbcMapping<?> jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(InetAddress.class));
 		final JdbcType intervalType = jdbcTypeRegistry.getDescriptor(SqlTypes.INET);
 		final JdbcType realType;

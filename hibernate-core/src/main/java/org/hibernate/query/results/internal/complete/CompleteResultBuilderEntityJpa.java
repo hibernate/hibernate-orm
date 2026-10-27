@@ -29,17 +29,17 @@ import java.util.function.BiConsumer;
  */
 public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEntityValued {
 	private final NavigablePath navigablePath;
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 	private final LockMode lockMode;
 	private final FetchBuilderBasicValued discriminatorFetchBuilder;
-	private final HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap;
+	private final HashMap<Fetchable<?, ?, ?>, FetchBuilder> explicitFetchBuilderMap;
 
 	public CompleteResultBuilderEntityJpa(
 			NavigablePath navigablePath,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			LockMode lockMode,
 			FetchBuilderBasicValued discriminatorFetchBuilder,
-			HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap) {
+			HashMap<Fetchable<?, ?, ?>, FetchBuilder> explicitFetchBuilderMap) {
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
@@ -68,7 +68,7 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	}
 
 	@Override
-	public EntityMappingType getReferencedPart() {
+	public EntityMappingType<?> getReferencedPart() {
 		return entityDescriptor;
 	}
 
@@ -127,7 +127,7 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable<?, ?, ?>, FetchBuilder> consumer) {
 		explicitFetchBuilderMap.forEach( consumer );
 	}
 

@@ -29,7 +29,7 @@ public class NaturalIdLoadAccessImpl<T>
 
 	private final Map<String, Object> naturalIdParameters = new LinkedHashMap<>();
 
-	public NaturalIdLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityMappingType entityDescriptor) {
+	public NaturalIdLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityMappingType<?> entityDescriptor) {
 		super( context, entityDescriptor );
 	}
 

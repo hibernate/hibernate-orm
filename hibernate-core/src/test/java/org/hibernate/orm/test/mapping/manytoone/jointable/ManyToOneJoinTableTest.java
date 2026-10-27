@@ -39,17 +39,17 @@ public class ManyToOneJoinTableTest {
 
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister otherDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> otherDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( OtherEntity.class );
 
-		final ModelPart simpleEntityAssociation = otherDescriptor.findSubPart( "simpleEntity" );
+		final ModelPart<?, ?, ?> simpleEntityAssociation = otherDescriptor.findSubPart( "simpleEntity" );
 
 		assertThat( simpleEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final ToOneAttributeMapping simpleAttributeMapping = (ToOneAttributeMapping) simpleEntityAssociation;
+		final ToOneAttributeMapping<?> simpleAttributeMapping = (ToOneAttributeMapping<?>) simpleEntityAssociation;
 
-		ForeignKeyDescriptor foreignKeyDescriptor = simpleAttributeMapping.getForeignKeyDescriptor();
+		ForeignKeyDescriptor<?, ?, ?> foreignKeyDescriptor = simpleAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "other_simple" ) );
@@ -64,11 +64,11 @@ public class ManyToOneJoinTableTest {
 				}
 		);
 
-		final ModelPart anotherEntityAssociation = otherDescriptor.findSubPart( "anotherEntity" );
+		final ModelPart<?, ?, ?> anotherEntityAssociation = otherDescriptor.findSubPart( "anotherEntity" );
 
 		assertThat( anotherEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final ToOneAttributeMapping anotherAttributeMapping = (ToOneAttributeMapping) anotherEntityAssociation;
+		final ToOneAttributeMapping<?> anotherAttributeMapping = (ToOneAttributeMapping<?>) anotherEntityAssociation;
 
 		foreignKeyDescriptor = anotherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(
@@ -86,15 +86,15 @@ public class ManyToOneJoinTableTest {
 		);
 
 
-		final EntityPersister simpleDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> simpleDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( SimpleEntity.class );
 
-		ModelPart otherEntityEntityAssociation = simpleDescriptor.findSubPart( "other" );
+		ModelPart<?, ?, ?> otherEntityEntityAssociation = simpleDescriptor.findSubPart( "other" );
 
 		assertThat( otherEntityEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) otherEntityEntityAssociation;
+		ToOneAttributeMapping<?> otherAttributeMapping = (ToOneAttributeMapping<?>) otherEntityEntityAssociation;
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(
@@ -112,7 +112,7 @@ public class ManyToOneJoinTableTest {
 		);
 
 
-		final EntityPersister anotherDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> anotherDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( AnotherEntity.class );
 
@@ -120,7 +120,7 @@ public class ManyToOneJoinTableTest {
 
 		assertThat( otherEntityEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		otherAttributeMapping = (ToOneAttributeMapping) otherEntityEntityAssociation;
+		otherAttributeMapping = (ToOneAttributeMapping<?>) otherEntityEntityAssociation;
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(

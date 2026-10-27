@@ -101,7 +101,7 @@ public class EntityAuditSupport {
 	}
 
 
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final SessionFactoryImplementor factory;
 	private final AuditMapping auditMapping;
 	private final EntityTableMapping[] auditTableMappings;
@@ -115,7 +115,7 @@ public class EntityAuditSupport {
 	private final MutationGroup transactionEndUpdateMutationGroup;
 
 	public EntityAuditSupport(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory) {
 		this.entityPersister = entityPersister;
 		this.factory = factory;
@@ -141,7 +141,7 @@ public class EntityAuditSupport {
 	}
 
 	@Nonnull
-	public EntityPersister getEntityPersister() {
+	public EntityPersister<?> getEntityPersister() {
 		return entityPersister;
 	}
 
@@ -274,7 +274,7 @@ public class EntityAuditSupport {
 		for ( final int attributeIndex : sourceMappings[tableIndex].getAttributeIndexes() ) {
 			if ( propertyInclusions[attributeIndex] ) {
 				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( !( attributeMapping instanceof PluralAttributeMapping ) ) {
+				if ( !( attributeMapping instanceof PluralAttributeMapping<?> ) ) {
 					attributeMapping.decompose(
 							values[attributeIndex], 0, jdbcValueBindings, null,
 							(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
@@ -371,7 +371,7 @@ public class EntityAuditSupport {
 		for ( final int attributeIndex : sourceMappings[tableIndex].getAttributeIndexes() ) {
 			if ( propertyInclusions[attributeIndex] ) {
 				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( !( attributeMapping instanceof PluralAttributeMapping ) ) {
+				if ( !( attributeMapping instanceof PluralAttributeMapping<?> ) ) {
 					attributeMapping.decompose(
 							values[attributeIndex], 0, jdbcValueBindings, null,
 							(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
@@ -650,7 +650,7 @@ public class EntityAuditSupport {
 
 	private void addSqlGeneratedValue(
 			@Nonnull TableInsertBuilderStandard insertBuilder,
-			@Nonnull AttributeMapping attributeMapping,
+			@Nonnull AttributeMapping<?, ?, ?> attributeMapping,
 			@Nonnull OnExecutionGenerator generator) {
 		final boolean writePropertyValue = generator.writePropertyValue();
 		final String[] columnValues = writePropertyValue

@@ -54,21 +54,21 @@ public class MappingModelAccessTests {
 		final SessionFactoryImplementor sf = scope.getSessionFactory();
 		final MappingMetamodel mappingMetamodel = sf.unwrap( MappingMetamodel.class );
 
-		final EntityMappingType productMapping = mappingMetamodel.getEntityDescriptor( Product.class );
+		final EntityMappingType<?> productMapping = mappingMetamodel.getEntityDescriptor( Product.class );
 		assertThat( productMapping ).isNotNull();
 
-		final EntityIdentifierMapping productIdMapping = productMapping.getIdentifierMapping();
+		final EntityIdentifierMapping<?, ?, ?> productIdMapping = productMapping.getIdentifierMapping();
 		assertThat( productIdMapping ).isNotNull();
 		assertThat( productIdMapping.getJavaType().getJavaTypeClass() ).isEqualTo( Integer.class );
 
-		final EntityVersionMapping productVersionMapping = productMapping.getVersionMapping();
+		final EntityVersionMapping<?> productVersionMapping = productMapping.getVersionMapping();
 		assertThat( productVersionMapping ).isNotNull();
 		assertThat( productVersionMapping.getVersionAttribute().getAttributeName() ).isEqualTo( "version" );
 		assertThat( productVersionMapping.getVersionAttribute().getJavaType().getJavaTypeClass() ).isEqualTo( Instant.class );
 		assertThat( productVersionMapping.asAttributeMapping() ).isSameAs( productVersionMapping.getVersionAttribute() );
 
-		final var vendor = (ToOneAttributeMapping) productMapping.findAttributeMapping( "vendor" );
-		final var foreignKey = (BasicValuedModelPart) vendor.getForeignKeyDescriptor();
+		final var vendor = (ToOneAttributeMapping<?>) productMapping.findAttributeMapping( "vendor" );
+		final var foreignKey = (BasicValuedModelPart<?, ?, ?>) vendor.getForeignKeyDescriptor();
 		assertThat( foreignKey.getMappedType().getMappedJavaType().getJavaTypeClass() ).isEqualTo( Integer.class );
 	}
 
@@ -77,11 +77,11 @@ public class MappingModelAccessTests {
 		final SessionFactoryImplementor sf = scope.getSessionFactory();
 		final MappingMetamodel mappingMetamodel = sf.unwrap( MappingMetamodel.class );
 
-		final EntityMappingType paymentMapping = mappingMetamodel.getEntityDescriptor( Payment.class );
-		final EntityMappingType cardPaymentMapping = mappingMetamodel.getEntityDescriptor( CardPayment.class );
-		final EntityMappingType cashPaymentMapping = mappingMetamodel.getEntityDescriptor( CashPayment.class );
+		final EntityMappingType<?> paymentMapping = mappingMetamodel.getEntityDescriptor( Payment.class );
+		final EntityMappingType<?> cardPaymentMapping = mappingMetamodel.getEntityDescriptor( CardPayment.class );
+		final EntityMappingType<?> cashPaymentMapping = mappingMetamodel.getEntityDescriptor( CashPayment.class );
 
-		final EntityDiscriminatorMapping discriminatorMapping = paymentMapping.getDiscriminatorMapping();
+		final EntityDiscriminatorMapping<?> discriminatorMapping = paymentMapping.getDiscriminatorMapping();
 		assertThat( discriminatorMapping )
 				.isSameAs( cardPaymentMapping.getDiscriminatorMapping() )
 				.isSameAs( cashPaymentMapping.getDiscriminatorMapping() );
@@ -107,11 +107,11 @@ public class MappingModelAccessTests {
 		final SessionFactoryImplementor sf = scope.getSessionFactory();
 		final MappingMetamodel mappingMetamodel = sf.unwrap( MappingMetamodel.class );
 
-		final EntityMappingType vendorMapping = mappingMetamodel.getEntityDescriptor( Vendor.class );
-		final EntityMappingType domesticVendorMapping = mappingMetamodel.getEntityDescriptor( DomesticVendor.class );
-		final EntityMappingType foreignVendorMapping = mappingMetamodel.getEntityDescriptor( ForeignVendor.class );
+		final EntityMappingType<?> vendorMapping = mappingMetamodel.getEntityDescriptor( Vendor.class );
+		final EntityMappingType<?> domesticVendorMapping = mappingMetamodel.getEntityDescriptor( DomesticVendor.class );
+		final EntityMappingType<?> foreignVendorMapping = mappingMetamodel.getEntityDescriptor( ForeignVendor.class );
 
-		final EntityDiscriminatorMapping discriminatorMapping = vendorMapping.getDiscriminatorMapping();
+		final EntityDiscriminatorMapping<?> discriminatorMapping = vendorMapping.getDiscriminatorMapping();
 		assertThat( discriminatorMapping )
 				.isSameAs( domesticVendorMapping.getDiscriminatorMapping() )
 				.isSameAs( foreignVendorMapping.getDiscriminatorMapping() );

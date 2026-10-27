@@ -34,13 +34,13 @@ public class MappedSuperclassInheritanceTest {
 
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister customerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> customerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( Customer.class );
-		final EntityPersister domesticCustomerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> domesticCustomerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( DomesticCustomer.class );
-		final EntityPersister foreignCustomerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> foreignCustomerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( ForeignCustomer.class );
 

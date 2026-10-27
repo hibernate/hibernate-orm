@@ -22,7 +22,7 @@ public interface MatchingIdRestrictionProducer {
 	/**
 	 * Produces a list of expression for which a restriction can be produced per-table.
 	 */
-	List<Expression> produceIdExpressionList(List<Object> idsAndFks, EntityMappingType entityDescriptor);
+	List<Expression> produceIdExpressionList(List<Object> idsAndFks, EntityMappingType<?> entityDescriptor);
 
 	/**
 	 * Produce the restriction predicate
@@ -33,9 +33,9 @@ public interface MatchingIdRestrictionProducer {
 	 */
 	Predicate produceRestriction(
 			List<Expression> idExpressions,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			int valueIndex,
-			ModelPart valueModelPart,
+			ModelPart<?, ?, ?> valueModelPart,
 			TableReference mutatingTableReference,
 			Supplier<Consumer<SelectableConsumer>> columnsToMatchVisitationSupplier,
 			ExecutionContext executionContext);

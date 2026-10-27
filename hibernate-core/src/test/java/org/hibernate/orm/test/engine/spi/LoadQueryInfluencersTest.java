@@ -45,7 +45,7 @@ public class LoadQueryInfluencersTest {
 					LoadQueryInfluencers influencers = new LoadQueryInfluencers( nonTransactedSession.getSessionFactory() );
 					assertTrue( influencers.getBatchSize() > 1, "Expecting default batch size > 1" );
 
-					EntityPersister persister = nonTransactedSession.getSessionFactory()
+					EntityPersister<?> persister = nonTransactedSession.getSessionFactory()
 							.getRuntimeMetamodels()
 							.getMappingMetamodel()
 							.getEntityDescriptor( EntityWithBatchSize1.class );
@@ -67,7 +67,7 @@ public class LoadQueryInfluencersTest {
 					LoadQueryInfluencers influencers = new LoadQueryInfluencers( nonTransactedSession.getSessionFactory() );
 					assertTrue( influencers.getBatchSize() > 1, "Expecting default batch size > 1" );
 
-					EntityPersister entityPersister = nonTransactedSession.getSessionFactory()
+					EntityPersister<?> entityPersister = nonTransactedSession.getSessionFactory()
 							.getRuntimeMetamodels()
 							.getMappingMetamodel()
 							.getEntityDescriptor( EntityWithBatchSize1.class );

@@ -30,7 +30,7 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 	}
 
 	private PostgreSQLStructPGObjectJdbcType(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			String typeName,
 			RuntimeModelCreationContext creationContext) {
 		super( embeddableMappingType, typeName, creationContext );
@@ -39,7 +39,7 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new PostgreSQLStructPGObjectJdbcType(

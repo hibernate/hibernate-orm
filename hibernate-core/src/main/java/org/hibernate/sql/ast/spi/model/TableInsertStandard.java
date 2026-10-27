@@ -19,7 +19,7 @@ public class TableInsertStandard extends AbstractTableInsert implements TableIns
 			MutationTarget mutationTarget,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnReference> returningColumns,
-			List<ColumnValueParameter> parameters) {
+			List<ColumnValueParameter<?>> parameters) {
 		super( mutatingTable, mutationTarget, parameters, valueBindings );
 		this.returningColumns = returningColumns;
 	}

@@ -33,7 +33,7 @@ public class DomainModelHelper {
 		}
 	}
 
-	static ModelPart getEntityAttributeModelPart(
+	static ModelPart<?, ?, ?> getEntityAttributeModelPart(
 			PersistentAttribute<?, ?> attribute,
 			ManagedDomainType<?> domainType,
 			MappingMetamodel mappingMetamodel) {
@@ -42,7 +42,7 @@ public class DomainModelHelper {
 					.findSubPart( attribute.getName() );
 		}
 		else {
-			ModelPart candidate = null;
+			ModelPart<?, ?, ?> candidate = null;
 			for ( var subType : domainType.getSubTypes() ) {
 				final var modelPart = getEntityAttributeModelPart( attribute, subType, mappingMetamodel );
 				if ( modelPart != null ) {

@@ -207,7 +207,7 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 				withOrdinality,
 				walker
 		);
-		final AnonymousTupleTableGroupProducer tableGroupProducer = getType().resolveTableGroupProducer(
+		final AnonymousTupleTableGroupProducer<?> tableGroupProducer = getType().resolveTableGroupProducer(
 				identifierVariable,
 				selectableMappings,
 				walker.getFromClauseAccess()
@@ -237,7 +237,7 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 			String functionName,
 			SetReturningFunctionRenderer functionRenderer,
 			List<SqlAstNode> arguments,
-			AnonymousTupleTableGroupProducer tableGroupProducer,
+			AnonymousTupleTableGroupProducer<?> tableGroupProducer,
 			String tableIdentifierVariable
 	) implements SelfRenderingExpression, FunctionExpression {
 

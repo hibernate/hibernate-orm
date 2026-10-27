@@ -229,7 +229,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 							final MappingModelExpressible<?> expressible =
 									mappingMetamodel.resolveMappingExpressible( getNodeType(),
 											walker.getFromClauseAccess()::getTableGroup );
-							return (BasicValuedMapping) expressible;
+							return (BasicValuedMapping<?>) expressible;
 						}
 						catch (Exception e) {
 							return null; // this works at least approximately

@@ -62,7 +62,7 @@ public class ImplicitResultClassBuilder implements ResultBuilder {
 		return sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						createColumnReferenceKey( columnName ),
-						state -> new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping) basicType )
+						state -> new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping<?>) basicType )
 				),
 				basicType.getMappedJavaType(),
 				null,

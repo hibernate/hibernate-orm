@@ -126,7 +126,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	}
 
 	@Override
-	public void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingStateList) {
+	public void injectLoadedState(PluralAttributeMapping<?> attributeMapping, List<?> loadingStateList) {
 		assert isInitializing();
 		assert list == null;
 

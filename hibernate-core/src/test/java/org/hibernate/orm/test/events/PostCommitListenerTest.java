@@ -194,7 +194,7 @@ public class PostCommitListenerTest {
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(EntityPersister<?> persister) {
 			return true;
 		}
 	}
@@ -214,7 +214,7 @@ public class PostCommitListenerTest {
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(EntityPersister<?> persister) {
 			return true;
 		}
 	}
@@ -234,7 +234,7 @@ public class PostCommitListenerTest {
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(EntityPersister<?> persister) {
 			return true;
 		}
 	}

@@ -31,7 +31,7 @@ public interface GraphMutationTarget<TD extends TableDescriptor> {
 	/**
 	 * The ModelPart describing the mutation target
 	 */
-	ModelPartContainer getTargetPart();
+	ModelPartContainer<?, ?, ?> getTargetPart();
 
 	/**
 	 * Visit each mutable (non-inverse) table descriptor.

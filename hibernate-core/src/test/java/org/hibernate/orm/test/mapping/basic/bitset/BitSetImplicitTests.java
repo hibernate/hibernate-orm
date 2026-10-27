@@ -35,8 +35,8 @@ public class BitSetImplicitTests {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(Product.class);
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("bitSet");
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(Product.class);
+		final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("bitSet");
 
 		assertThat( attributeMapping.getJavaType().getJavaTypeClass(), equalTo( BitSet.class));
 

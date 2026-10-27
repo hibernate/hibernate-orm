@@ -43,8 +43,8 @@ public class EmbeddableInitializerImpl
 		implements EmbeddableInitializer<EmbeddableInitializerImpl.EmbeddableInitializerData> {
 
 	private final NavigablePath navigablePath;
-	private final EmbeddableValuedModelPart embedded;
-	private final EmbeddableMappingType embeddableMappingType;
+	private final EmbeddableValuedModelPart<?, ?, ?> embedded;
+	private final EmbeddableMappingType<?, ?, ?> embeddableMappingType;
 	private final @Nullable InitializerParent<InitializerData> parent;
 	private final boolean isResultInitializer;
 	private final boolean isPartOfKey;
@@ -197,14 +197,14 @@ public class EmbeddableInitializerImpl
 		Arrays.fill( initializers, Initializer.EMPTY_ARRAY );
 	}
 
-	private static boolean isEnhancedForLazyLoading(EmbeddableMappingType embeddableMappingType) {
+	private static boolean isEnhancedForLazyLoading(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		return isPersistentAttributeInterceptableType(
 				embeddableMappingType.getRepresentationStrategy().getMappedJavaType().getJavaTypeClass()
 		);
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getInitializedPart() {
+	public EmbeddableValuedModelPart<?, ?, ?> getInitializedPart() {
 		return embedded;
 	}
 
@@ -383,7 +383,7 @@ public class EmbeddableInitializerImpl
 			data.setState( State.INITIALIZED );
 
 			if ( embedded.getParentInjectionAttributePropertyAccess() != null
-					|| embedded instanceof VirtualModelPart ) {
+					|| embedded instanceof VirtualModelPart<?, ?, ?> ) {
 				handleParentInjection( data );
 
 				final var lazyInitializer = extractLazyInitializer( data.getInstance() );
@@ -437,7 +437,7 @@ public class EmbeddableInitializerImpl
 
 	@Override
 	public void initializeInstanceFromParent(Object parentInstance, EmbeddableInitializerData data) {
-		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
+		final AttributeMapping<?, ?, ?> attributeMapping = getInitializedPart().asAttributeMapping();
 		final Object instance = attributeMapping != null
 				? attributeMapping.getValue( parentInstance )
 				: parentInstance;
@@ -460,7 +460,7 @@ public class EmbeddableInitializerImpl
 		// Virtual model parts use the owning entity as container which the fetch parent access provides.
 		// For an identifier or foreign key this is called during the resolveKey phase of the fetch parent,
 		// so we can't use the fetch parent access in that case.
-		if ( parent != null && embedded instanceof VirtualModelPart && !isPartOfKey ) {
+		if ( parent != null && embedded instanceof VirtualModelPart<?, ?, ?> && !isPartOfKey ) {
 			final State state = data.getState();
 			if ( state != State.MISSING ) {
 				final InitializerData subData = parent.getData( data.getRowProcessingState() );

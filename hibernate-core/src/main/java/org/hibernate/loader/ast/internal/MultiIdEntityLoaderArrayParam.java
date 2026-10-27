@@ -53,12 +53,12 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	@AllowReflection
 	public MultiIdEntityLoaderArrayParam(
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityDescriptor.getIdentifierMapping();
 		final SelectableMapping selectable = identifierMapping.getSelectable( 0 );
-		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = selectable.getJdbcMapping();
 		final var idClass = identifierMapping.getJavaType().getJavaTypeClass();
 		idArray = (Object[]) Array.newInstance( idClass, 0 );
 		arraySqlTypedMapping = new SqlTypedMappingImpl(
@@ -73,13 +73,13 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 						sessionFactory
 				)
 		);
-		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
+		jdbcParameter = SqlTypedMappingJdbcParameter.create( arraySqlTypedMapping );
 	}
 
 	@Nonnull
 	@Override
-	public BasicEntityIdentifierMapping getIdentifierMapping() {
-		return (BasicEntityIdentifierMapping) super.getIdentifierMapping();
+	public BasicEntityIdentifierMapping<?, ?, ?> getIdentifierMapping() {
+		return (BasicEntityIdentifierMapping<?, ?, ?>) super.getIdentifierMapping();
 	}
 
 	@Override

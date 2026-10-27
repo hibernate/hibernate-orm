@@ -18,13 +18,13 @@ public class PostUpsertEventListenerStandardImpl implements PostUpsertEventListe
 
 	private void handlePostUpsert(
 			@Nonnull Object entity,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor source) {
 		source.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().postUpsert( entity ) );
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+	public boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 		return persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.POST_UPSERT );
 	}
 }

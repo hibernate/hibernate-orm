@@ -78,7 +78,7 @@ public class CacheKeySerializationTest {
 
 	private void testId(CacheKeysFactory cacheKeysFactory, String entityName, Object id) throws Exception {
 		final SessionFactoryImplementor sessionFactory = getSessionFactory( cacheKeysFactory.getClass().getName() );
-		final EntityPersister persister = sessionFactory.getRuntimeMetamodels().getMappingMetamodel()
+		final EntityPersister<?> persister = sessionFactory.getRuntimeMetamodels().getMappingMetamodel()
 				.getEntityDescriptor( entityName );
 		final Object key = cacheKeysFactory.createEntityKey(
 				id,

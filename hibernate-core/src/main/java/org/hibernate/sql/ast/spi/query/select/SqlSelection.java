@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 /// @author Steve Ebersole
 public interface SqlSelection extends SqlAstNode {
 	/// Get the extractor that can be used to extract JDBC values for this selection
-	ValueExtractor getJdbcValueExtractor();
+	ValueExtractor<?> getJdbcValueExtractor();
 
 	/// Get the position within the "JDBC values" array (0-based).  Negative indicates this is
 	/// not a "real" selection

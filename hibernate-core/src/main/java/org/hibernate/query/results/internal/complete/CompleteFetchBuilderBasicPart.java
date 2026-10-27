@@ -27,12 +27,12 @@ import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createCol
  */
 public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, FetchBuilderBasicValued, ModelPartReferenceBasic {
 	private final NavigablePath navigablePath;
-	private final BasicValuedModelPart referencedModelPart;
+	private final BasicValuedModelPart<?, ?, ?> referencedModelPart;
 	private final String selectionAlias;
 
 	public CompleteFetchBuilderBasicPart(
 			NavigablePath navigablePath,
-			BasicValuedModelPart referencedModelPart,
+			BasicValuedModelPart<?, ?, ?> referencedModelPart,
 			String selectionAlias) {
 		this.navigablePath = navigablePath;
 		this.referencedModelPart = referencedModelPart;
@@ -50,7 +50,7 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 	}
 
 	@Override
-	public BasicValuedModelPart getReferencedPart() {
+	public BasicValuedModelPart<?, ?, ?> getReferencedPart() {
 		return referencedModelPart;
 	}
 

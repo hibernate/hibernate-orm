@@ -452,17 +452,17 @@ public final class FullJoinEmulation {
 				true );
 	}
 
-	private static ValuedModelPart getValuedModelPart(ModelPartContainer modelPart) {
-		if ( modelPart instanceof EntityMappingType mappingType ) {
+	private static ValuedModelPart<?, ?, ?> getValuedModelPart(ModelPartContainer<?, ?, ?> modelPart) {
+		if ( modelPart instanceof EntityMappingType<?> mappingType ) {
 			return mappingType.getIdentifierMapping();
 		}
-		else if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+		else if ( modelPart instanceof EntityValuedModelPart<?> entityValuedModelPart ) {
 			return entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
 		}
-		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		else if ( modelPart instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			return pluralAttributeMapping.getKeyDescriptor();
 		}
-		else if ( modelPart instanceof ValuedModelPart directValuedModelPart ) {
+		else if ( modelPart instanceof ValuedModelPart<?, ?, ?> directValuedModelPart ) {
 			return directValuedModelPart;
 		}
 		else {
@@ -475,7 +475,7 @@ public final class FullJoinEmulation {
 
 	private Predicate createValuedModelPartNullnessPredicate(
 			TableGroup tableGroup,
-			ValuedModelPart valuedModelPart,
+			ValuedModelPart<?, ?, ?> valuedModelPart,
 			boolean negated) {
 		final List<ColumnReference> columnReferences = new ArrayList<>( valuedModelPart.getJdbcTypeCount() );
 		valuedModelPart.forEachSelectable( (selectionIndex, selectableMapping) -> {

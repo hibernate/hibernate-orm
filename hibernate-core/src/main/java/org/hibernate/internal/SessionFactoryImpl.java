@@ -489,7 +489,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private static <E> EntityListenerRegistration addListener(
 			Class<E> entityClass,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			CallbackType callbackType,
 			Consumer<? super E> callback) {
 		return persister.getEntityCallbacks().addListener(

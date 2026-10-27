@@ -52,8 +52,8 @@ public class ImmutabilityMapAsBasicTests {
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactoryScope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( TestEntity.class );
-		final AttributeMapping attribute = entityDescriptor.findAttributeMapping( "data" );
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor( TestEntity.class );
+		final AttributeMapping<?, ?, ?> attribute = entityDescriptor.findAttributeMapping( "data" );
 		assertThat( attribute.getAttributeMetadata().isUpdatable() ).isTrue();
 		assertThat( attribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 	}

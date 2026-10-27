@@ -183,7 +183,7 @@ public class FetchStrategyHelperTest {
 			@SuppressWarnings("SameParameterValue") Class<?> entityClass,
 			String path,
 			SessionFactoryImplementor sessionFactory) {
-		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
+		AbstractEntityPersister<?> entityPersister = (AbstractEntityPersister<?>)
 				sessionFactory.getMappingMetamodel().getEntityDescriptor(entityClass.getName());
 		//noinspection removal
 		int index = entityPersister.getPropertyIndex( path );
@@ -194,7 +194,7 @@ public class FetchStrategyHelperTest {
 			@SuppressWarnings("SameParameterValue") Class<?> entityClass,
 			String path,
 			SessionFactoryImplementor sessionFactory) {
-		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
+		AbstractEntityPersister<?> entityPersister = (AbstractEntityPersister<?>)
 				sessionFactory.getMappingMetamodel().getEntityDescriptor(entityClass.getName());
 		//noinspection removal
 		int index = entityPersister.getPropertyIndex( path );

@@ -25,10 +25,24 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 
 	private final BasicResultAssembler<T> assembler;
 
+	/**
+	 * Creates a result whose assembled type is fixed by its JDBC mapping.
+	 */
+	public static <T> BasicResult<T> fromJdbcMapping(
+			int valuesArrayPosition,
+			String resultVariable,
+			JdbcMapping<T> jdbcMapping,
+			NavigablePath navigablePath,
+			boolean coerceResultType,
+			boolean unwrapRowProcessingState) {
+		return new BasicResult<>( valuesArrayPosition, resultVariable, jdbcMapping,
+				navigablePath, coerceResultType, unwrapRowProcessingState );
+	}
+
 	public BasicResult(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<?> jdbcMapping) {
 		this(
 				jdbcValuesArrayPosition,
 				resultVariable,
@@ -42,7 +56,7 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	public BasicResult(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			NavigablePath navigablePath,
 			boolean coerceResultType,
 			boolean unwrapRowProcessingState) {

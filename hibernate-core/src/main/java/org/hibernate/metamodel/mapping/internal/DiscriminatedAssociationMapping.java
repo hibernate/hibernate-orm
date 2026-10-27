@@ -66,12 +66,12 @@ import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
  *
  * @author Steve Ebersole
  */
-public class DiscriminatedAssociationMapping implements MappingType, FetchOptions {
+public class DiscriminatedAssociationMapping<J> implements MappingType<J>, FetchOptions {
 
-	public static DiscriminatedAssociationMapping from(
+	public static <J> DiscriminatedAssociationMapping<J> from(
 			NavigableRole containerRole,
-			JavaType<?> baseAssociationJtd,
-			DiscriminatedAssociationModelPart declaringModelPart,
+			JavaType<J> baseAssociationJtd,
+			DiscriminatedAssociationModelPart<J> declaringModelPart,
 			AnyType anyType,
 			Any bootValueMapping,
 			MappingModelCreationProcess creationProcess) {
@@ -101,7 +101,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		final var metaSize = metaColumn.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
 		final var metaType = (MetaType) anyType.getDiscriminatorType();
-		final var discriminatorPart = new AnyDiscriminatorPart(
+		final var discriminatorPart = new AnyDiscriminatorPart<>(
 				containerRole.append( AnyDiscriminatorPart.ROLE_NAME ),
 				declaringModelPart,
 				tableName,
@@ -127,7 +127,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		final var keySize = keyColumn.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
 		final var keyType = (BasicType<?>) anyType.getIdentifierType();
-		final var keyPart = new AnyKeyPart(
+		final var keyPart = new AnyKeyPart<>(
 				containerRole.append( AnyKeyPart.KEY_NAME ),
 				declaringModelPart,
 				tableName,
@@ -148,7 +148,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				keyType
 		);
 
-		return new DiscriminatedAssociationMapping(
+		return new DiscriminatedAssociationMapping<>(
 				declaringModelPart,
 				discriminatorPart,
 				keyPart,
@@ -160,19 +160,19 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		);
 	}
 
-	private final DiscriminatedAssociationModelPart modelPart;
-	private final AnyDiscriminatorPart discriminatorPart;
-	private final BasicValuedModelPart keyPart;
-	private final JavaType<?> baseAssociationJtd;
+	private final DiscriminatedAssociationModelPart<J> modelPart;
+	private final AnyDiscriminatorPart<?> discriminatorPart;
+	private final BasicValuedModelPart<?, ?, ?> keyPart;
+	private final JavaType<J> baseAssociationJtd;
 	private final FetchTiming fetchTiming;
 	private final SessionFactoryImplementor sessionFactory;
 	@Nullable private AssociationKey associationKey;
 
 	public DiscriminatedAssociationMapping(
-			DiscriminatedAssociationModelPart modelPart,
-			AnyDiscriminatorPart discriminatorPart,
-			BasicValuedModelPart keyPart,
-			JavaType<?> baseAssociationJtd,
+			DiscriminatedAssociationModelPart<J> modelPart,
+			AnyDiscriminatorPart<?> discriminatorPart,
+			BasicValuedModelPart<?, ?, ?> keyPart,
+			JavaType<J> baseAssociationJtd,
 			FetchTiming fetchTiming,
 			SessionFactoryImplementor sessionFactory) {
 		this.modelPart = modelPart;
@@ -183,21 +183,21 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		this.sessionFactory = sessionFactory;
 	}
 
-	public DiscriminatedAssociationModelPart getModelPart() {
+	public DiscriminatedAssociationModelPart<?> getModelPart() {
 		return modelPart;
 	}
 
 	@Nonnull
-	public DiscriminatorMapping getDiscriminatorMapping() {
+	public DiscriminatorMapping<?> getDiscriminatorMapping() {
 		return discriminatorPart;
 	}
 
-	public BasicValuedModelPart getKeyPart() {
+	public BasicValuedModelPart<?, ?, ?> getKeyPart() {
 		return keyPart;
 	}
 
 	@Nullable
-	public Object resolveDiscriminatorValueToEntityMapping(EntityMappingType entityMappingType) {
+	public Object resolveDiscriminatorValueToEntityMapping(EntityMappingType<?> entityMappingType) {
 		final var details =
 				discriminatorPart.getValueConverter()
 						.getDetailsForEntityName( entityMappingType.getEntityName() );
@@ -205,7 +205,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	@Nullable
-	public EntityMappingType resolveDiscriminatorValueToEntityMapping(@Nullable Object discriminatorValue) {
+	public EntityMappingType<?> resolveDiscriminatorValueToEntityMapping(@Nullable Object discriminatorValue) {
 		final var details =
 				discriminatorPart.getValueConverter().
 						getDetailsForDiscriminatorValue( discriminatorValue );
@@ -263,7 +263,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return getDiscriminatorMapping().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 	}
 
-	private EntityMappingType determineConcreteType(Object entity, @Nullable SharedSessionContractImplementor session) {
+	private EntityMappingType<?> determineConcreteType(Object entity, @Nullable SharedSessionContractImplementor session) {
 		final String entityName =
 				session == null
 						? sessionFactory.bestGuessEntityName( entity )
@@ -273,7 +273,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	@Nullable
-	public ModelPart findSubPart(String name, @Nullable EntityMappingType treatTarget) {
+	public ModelPart<?, ?, ?> findSubPart(String name, @Nullable EntityMappingType<?> treatTarget) {
 		if ( AnyDiscriminatorPart.ROLE_NAME.equals( name ) ) {
 			return getDiscriminatorMapping();
 		}
@@ -304,14 +304,14 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	@Nullable
-	private ModelPart resolveAssociatedSubPart(String name, EntityMappingType entityMapping) {
+	private ModelPart<?, ?, ?> resolveAssociatedSubPart(String name, EntityMappingType<?> entityMapping) {
 		final var identifierMapping = entityMapping.getIdentifierMapping();
 
 		if ( identifierMapping.getPartName().equals( name ) ) {
 			return getKeyPart();
 		}
 
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping<?, ?, ?> ) {
 			final String idAttrName = identifierMapping.getAttributeName();
 			if ( name.equals( idAttrName ) ) {
 				return getKeyPart();
@@ -321,7 +321,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return entityMapping.findSubPart( name );
 	}
 
-	private void ensureMapped(EntityMappingType treatTarget) {
+	private void ensureMapped(EntityMappingType<?> treatTarget) {
 		assert treatTarget != null;
 
 		final var details =
@@ -339,17 +339,17 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 	}
 
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return this;
 	}
 
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return baseAssociationJtd;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getMappedJavaType() {
+	public JavaType<J> getMappedJavaType() {
 		return baseAssociationJtd;
 	}
 
@@ -412,7 +412,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return valueDetails;
 	}
 
-	public static NavigablePath concreteEntityPath(NavigablePath associationPath, EntityMappingType entityMappingType) {
+	public static NavigablePath concreteEntityPath(NavigablePath associationPath, EntityMappingType<?> entityMappingType) {
 		return associationPath.treatAs( entityMappingType.getEntityName() );
 	}
 
@@ -518,7 +518,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 	private void applyEntityRestrictions(
 			PredicateCollector predicateCollector,
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			TableGroup entityTableGroup,
 			org.hibernate.sql.ast.spi.creation.SqlAstCreationState creationState) {
 		final Map<String, org.hibernate.Filter> enabledFilters = creationState.getLoadQueryInfluencers().getEnabledFilters();
@@ -557,10 +557,10 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	private Predicate createAssociationPredicate(
 			TableGroup lhs,
 			TableGroup entityTableGroup,
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			DiscriminatorValueDetails valueDetail) {
 		final var identifierMapping = entityMappingType.getIdentifierMapping();
-		final BasicValuedModelPart identifierPart = identifierMapping.asBasicValuedModelPart();
+		final BasicValuedModelPart<?, ?, ?> identifierPart = identifierMapping.asBasicValuedModelPart();
 		if ( identifierPart == null ) {
 			throw new UnsupportedOperationException(
 					"Join fetching an @Any association is not supported for entity '" + entityMappingType.getEntityName()
@@ -603,7 +603,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				fetchablePath,
 				navigablePath -> {
 					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
-					final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) modelPart ).createTableGroupJoin(
+					final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer<?, ?, ?>) modelPart ).createTableGroupJoin(
 							navigablePath,
 							parentTableGroup,
 							resultVariable,
@@ -653,7 +653,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		);
 	}
 
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			@Nullable String resultVariable,

@@ -27,7 +27,7 @@ import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoor
 public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 	private final TemporalMapping temporalMapping;
 
-	public DeleteCoordinatorTemporal(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	public DeleteCoordinatorTemporal(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
 	}

@@ -38,7 +38,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected final void generateBidirectionalCollectionChangeWorkUnits(
 			AuditProcess auditProcess,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			String entityName,
 			Object[] newState,
 			Object[] oldState,

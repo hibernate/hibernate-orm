@@ -95,22 +95,22 @@ public class HHH11866Test {
 	public static class EntityDirtinessStrategy implements CustomEntityDirtinessStrategy {
 
 		@Override
-		public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
+		public boolean canDirtyCheck(Object entity, EntityPersister<?> persister, Session session) {
 			return entity instanceof SelfDirtyCheckingEntity;
 		}
 
 		@Override
-		public boolean isDirty(Object entity, EntityPersister persister, Session session) {
+		public boolean isDirty(Object entity, EntityPersister<?> persister, Session session) {
 			return !cast( entity ).getDirtyProperties().isEmpty();
 		}
 
 		@Override
-		public void resetDirty(Object entity, EntityPersister persister, Session session) {
+		public void resetDirty(Object entity, EntityPersister<?> persister, Session session) {
 			cast( entity ).clearDirtyProperties();
 		}
 
 		@Override
-		public void findDirty(Object entity, EntityPersister persister, Session session, DirtyCheckContext dirtyCheckContext) {
+		public void findDirty(Object entity, EntityPersister<?> persister, Session session, DirtyCheckContext dirtyCheckContext) {
 			final SelfDirtyCheckingEntity dirtyAware = cast( entity );
 			dirtyCheckContext.doDirtyChecking(
 					attributeInformation -> {

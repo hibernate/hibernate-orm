@@ -7,7 +7,7 @@ import jakarta.annotation.Nonnull;
  *
  * @see org.hibernate.annotations.RowId
  */
-public interface EntityRowIdMapping extends BasicValuedModelPart, VirtualModelPart, SelectableMapping {
+public interface EntityRowIdMapping<J> extends BasicValuedModelPart<J, J, J>, VirtualModelPart<J, J, J>, SelectableMapping {
 	@Nonnull
 	String getRowIdName();
 }

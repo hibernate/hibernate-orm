@@ -74,7 +74,7 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 		);
 	}
 
-	public boolean containsColumn(String columnName, JdbcMapping jdbcMapping) {
+	public boolean containsColumn(String columnName, JdbcMapping<?> jdbcMapping) {
 		final ColumnReference reference = new ColumnReference( mutatingTable, columnName, jdbcMapping );
 		for ( int i = 0; i < size(); i++ ) {
 			if ( get( i ).getColumnReference().equals( reference ) ) {

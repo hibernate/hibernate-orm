@@ -33,7 +33,7 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
-		final ModelPart ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
+		final ModelPart<?, ?, ?> ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
 		if ( ordinalityPart != null ) {
 			sqlAppender.appendSql( "(select t.*,row_number() over (order by (select null)) " );
 			sqlAppender.appendSql( ordinalityPart.asBasicValuedModelPart().getSelectionExpression() );

@@ -25,7 +25,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  */
 public abstract class AbstractCollectionBatchLoader implements CollectionBatchLoader {
 	private final int domainBatchSize;
-	private final PluralAttributeMapping attributeMapping;
+	private final PluralAttributeMapping<?> attributeMapping;
 	private final LoadQueryInfluencers influencers;
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -36,7 +36,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 	public AbstractCollectionBatchLoader(
 			int domainBatchSize,
 			@Nonnull LoadQueryInfluencers influencers,
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.domainBatchSize = domainBatchSize;
 		this.attributeMapping = attributeMapping;
@@ -55,7 +55,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getLoadable() {
+	public PluralAttributeMapping<?> getLoadable() {
 		return attributeMapping;
 	}
 

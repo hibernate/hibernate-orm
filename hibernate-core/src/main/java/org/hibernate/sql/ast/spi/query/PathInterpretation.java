@@ -21,7 +21,7 @@ public interface PathInterpretation<T> extends Expression, DomainResultProducer<
 	NavigablePath getNavigablePath();
 
 	@Override
-	ModelPart getExpressionType();
+	ModelPart<?, ?, ?> getExpressionType();
 
 	default Expression getSqlExpression() {
 		return this;

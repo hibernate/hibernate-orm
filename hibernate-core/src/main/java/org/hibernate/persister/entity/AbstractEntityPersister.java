@@ -320,9 +320,9 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  */
 @Internal
 @SuppressWarnings("deprecation")
-public abstract class AbstractEntityPersister
+public abstract class AbstractEntityPersister<J>
 		extends BaseEntityPersister
-		implements EntityPersister, InFlightEntityMappingType, LazyPropertyInitializer, FetchProfileAffectee, Joinable {
+		implements EntityPersister<J>, InFlightEntityMappingType<J>, LazyPropertyInitializer, FetchProfileAffectee, Joinable {
 
 	/**
 	 * The property name of the "special" identifier property in HQL
@@ -459,9 +459,9 @@ public abstract class AbstractEntityPersister
 	private volatile Set<String> affectingFetchProfileNames;
 
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
-	protected List<? extends ModelPart> insertGeneratedProperties;
+	protected List<? extends ModelPart<?, ?, ?>> insertGeneratedProperties;
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
-	protected List<? extends ModelPart> updateGeneratedProperties;
+	protected List<? extends ModelPart<?, ?, ?>> updateGeneratedProperties;
 	@Nullable
 	private GeneratedValuesProcessor insertGeneratedValuesProcessor;
 	@Nullable
@@ -474,31 +474,31 @@ public abstract class AbstractEntityPersister
 	@Nullable
 	private String identitySelectString;
 
-	private final JavaType<?> javaType;
+	private final JavaType<J> javaType;
 	private final EntityRepresentationStrategy representationStrategy;
 
 	@Nullable
-	private EntityPersister superMappingType;
+	private EntityPersister<?> superMappingType;
 	@Nullable
-	private SortedMap<String, EntityMappingType> subclassMappingTypes;
+	private SortedMap<String, EntityMappingType<?>> subclassMappingTypes;
 	private final boolean concreteProxy;
 	@Nullable
 	private EntityConcreteTypeLoader concreteTypeLoader;
 
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
-	private EntityIdentifierMapping identifierMapping;
+	private EntityIdentifierMapping<?, ?, ?> identifierMapping;
 	@Nullable
-	private NaturalIdMapping naturalIdMapping;
+	private NaturalIdMapping<?, ?, ?> naturalIdMapping;
 	@Nullable
-	private EntityVersionMapping versionMapping;
+	private EntityVersionMapping<?> versionMapping;
 	@Nullable
 	private TenantIdMapping tenantIdMapping;
 	@Nullable
 	private TenantIdLoader tenantIdLoader;
 	@Nullable
-	private EntityRowIdMapping rowIdMapping;
+	private EntityRowIdMapping<Object> rowIdMapping;
 	@Nullable
-	private EntityDiscriminatorMapping discriminatorMapping;
+	private EntityDiscriminatorMapping<?> discriminatorMapping;
 	@Nullable
 	private AuxiliaryMapping auxiliaryMapping;
 
@@ -598,7 +598,7 @@ public abstract class AbstractEntityPersister
 		representationStrategy =
 				creationContext.getBootstrapContext().getRepresentationStrategySelector()
 						.resolveStrategy( persistentClass, this, creationContext );
-		javaType = representationStrategy.getLoadJavaType();
+		javaType = (JavaType<J>) representationStrategy.getLoadJavaType();
 		assert javaType != null;
 		multiValueReader = representationStrategy.getMultiValueReader();
 		multiValueWriter = representationStrategy.getMultiValueWriter();
@@ -991,7 +991,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Nonnull
 	protected MultiIdEntityLoader<?> buildMultiIdLoader() {
-		return getIdentifierType() instanceof BasicType
+		return getIdentifierType() instanceof BasicType<?>
 			&& supportsSqlArrayType( getDialect() )
 				? new MultiIdEntityLoaderArrayParam<>( this, factory )
 				: new MultiIdEntityLoaderInPredicate<>( this, identifierColumnSpan, factory );
@@ -1381,7 +1381,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	private static List<UniqueKeyEntry> initUniqueKeyEntries(@Nonnull final AbstractEntityPersister persister) {
+	private static List<UniqueKeyEntry> initUniqueKeyEntries(@Nonnull final AbstractEntityPersister<?> persister) {
 		final ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList<>();
 		for ( var propertyType : persister.getPropertyTypes() ) {
 			if ( propertyType instanceof AssociationType associationType ) {
@@ -1432,7 +1432,7 @@ public abstract class AbstractEntityPersister
 
 	@Nullable
 	private SingleIdArrayLoadPlan createLazyLoadPlan(@Nonnull List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors) {
-		final List<ModelPart> partsToSelect = new ArrayList<>( fetchGroupAttributeDescriptors.size() );
+		final List<ModelPart<?, ?, ?>> partsToSelect = new ArrayList<>( fetchGroupAttributeDescriptors.size() );
 		for ( var lazyAttributeDescriptor : fetchGroupAttributeDescriptors ) {
 			// all this only really needs to consider properties
 			// of this class, not its subclasses, but since we
@@ -1444,7 +1444,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	private SingleIdArrayLoadPlan createLazyLoanPlan(@Nonnull List<ModelPart> partsToSelect) {
+	private SingleIdArrayLoadPlan createLazyLoanPlan(@Nonnull List<ModelPart<?, ?, ?>> partsToSelect) {
 		assert !partsToSelect.isEmpty();
 		final var lockOptions = new LockOptions();
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
@@ -1489,12 +1489,12 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
 			@Nonnull DomainResultCreationState creationState) {
-		final var entityResult = new EntityResultImpl<T>(
+		final var entityResult = new EntityResultImpl<J>(
 				navigablePath,
 				this,
 				tableGroup,
@@ -1521,7 +1521,7 @@ public abstract class AbstractEntityPersister
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		identifierMapping.applySqlSelections(
 				navigablePath.append( identifierMapping.getPartName() ),
 				tableGroup,
@@ -1532,7 +1532,7 @@ public abstract class AbstractEntityPersister
 
 	@Nullable
 	@Override
-	public NaturalIdMapping getNaturalIdMapping() {
+	public NaturalIdMapping<?, ?, ?> getNaturalIdMapping() {
 		return naturalIdMapping;
 	}
 
@@ -1933,7 +1933,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	private SingleIdArrayLoadPlan getOrCreateLazyLoadPlan(@Nonnull String fieldName, @Nonnull List<ModelPart> partsToSelect) {
+	private SingleIdArrayLoadPlan getOrCreateLazyLoadPlan(@Nonnull String fieldName, @Nonnull List<ModelPart<?, ?, ?>> partsToSelect) {
 		var plans = nonLazyPropertyLoadPlansByName;
 		if ( plans == null ) {
 			nonLazyPropertyLoadPlansByName = plans = new ConcurrentHashMap<>();
@@ -2183,13 +2183,13 @@ public abstract class AbstractEntityPersister
 		final int size = getNumberOfFetchables();
 		// getSubclassColumnAliasClosure contains the _identifierMapper columns when it has an id class,
 		// which need to be skipped
-		if ( identifierMapping instanceof NonAggregatedIdentifierMapping nonAggregatedIdentifierMapping
+		if ( identifierMapping instanceof NonAggregatedIdentifierMapping<?, ?> nonAggregatedIdentifierMapping
 				&& nonAggregatedIdentifierMapping.getIdClassEmbeddable() != null ) {
 			columnIndex = identifierSelectionSize;
 		}
 		for ( int j = 0; j < size; j++ ) {
 			final var fetchable = getFetchable( j );
-			if ( !(fetchable instanceof PluralAttributeMapping)
+			if ( !(fetchable instanceof PluralAttributeMapping<?>)
 					&& !skipFetchable( fetchable, fetchable.getMappedFetchOptions().getTiming() )
 					&& fetchable.isSelectable() ) {
 				final int jdbcTypeCount = fetchable.getJdbcTypeCount();
@@ -2283,7 +2283,7 @@ public abstract class AbstractEntityPersister
 		for ( int i = 0; i < size; i++ ) {
 			final var fetchable = fetchableContainer.getFetchable( i );
 			// Ignore plural attributes
-			if ( !( fetchable instanceof PluralAttributeMapping ) ) {
+			if ( !( fetchable instanceof PluralAttributeMapping<?> ) ) {
 				final var fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 				if ( !skipFetchable( fetchable, fetchTiming ) ) {
 					if ( fetchTiming == null ) {
@@ -2306,12 +2306,12 @@ public abstract class AbstractEntityPersister
 		return fetches.build();
 	}
 
-	private boolean skipFetchable(@Nonnull Fetchable fetchable, @Nonnull FetchTiming fetchTiming) {
+	private boolean skipFetchable(@Nonnull Fetchable<?, ?, ?> fetchable, @Nonnull FetchTiming fetchTiming) {
 		if ( fetchable.asBasicValuedModelPart() != null ) {
 			// Ignore lazy basic columns
 			return fetchTiming == FetchTiming.DELAYED;
 		}
-		else if ( fetchable instanceof Association association ) {
+		else if ( fetchable instanceof Association<?, ?, ?> association ) {
 			// Ignore the fetchable if the FK is on the other side
 			return association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
 				// Ensure the FK comes from the root table
@@ -2397,7 +2397,7 @@ public abstract class AbstractEntityPersister
 	@Nonnull
 	protected GeneratedValuesProcessor createGeneratedValuesProcessor(
 			@Nonnull EventType timing,
-			@Nonnull List<AttributeMapping> generatedAttributes) {
+			@Nonnull List<AttributeMapping<?, ?, ?>> generatedAttributes) {
 		return new GeneratedValuesProcessor( this, generatedAttributes, timing, getFactory() );
 	}
 
@@ -2520,7 +2520,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		return getIdentifierMapping().getJdbcMapping( index );
 	}
 
@@ -2712,7 +2712,7 @@ public abstract class AbstractEntityPersister
 		return subclassPropertyTypeClosure;
 	}
 
-	private static boolean isPrefix(@Nonnull final AttributeMapping attributeMapping, @Nonnull final String currentAttributeName) {
+	private static boolean isPrefix(@Nonnull final AttributeMapping<?, ?, ?> attributeMapping, @Nonnull final String currentAttributeName) {
 		final String attributeName = attributeMapping.getAttributeName();
 		final int nameLength = attributeName.length();
 		return currentAttributeName.startsWith( attributeName )
@@ -2720,7 +2720,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private static int skipDuplicateAndNestedAttributeNames(
-			@Nonnull final AttributeMapping attributeMapping,
+			@Nonnull final AttributeMapping<?, ?, ?> attributeMapping,
 			@Nonnull final String[] attributeNames,
 			int index) {
 		// The attributeNames array can contain the same attribute name multiple times,
@@ -2880,11 +2880,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nullable
-	private Map<SingularAttributeMapping, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
+	private Map<SingularAttributeMapping<?, ?, ?>, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
 
 	@Nonnull
 	protected SingleUniqueKeyEntityLoader<?> getUniqueKeyLoader(@Nonnull String attributeName, @Nonnull SharedSessionContractImplementor session) {
-		final var attribute = (SingularAttributeMapping) findByPath( attributeName );
+		final var attribute = (SingularAttributeMapping<?, ?, ?>) findByPath( attributeName );
 		final var influencers = session.getLoadQueryInfluencers();
 		// no subselect fetching for entities for now
 		if ( isAffectedByInfluencers( influencers, true ) ) {
@@ -2956,7 +2956,7 @@ public abstract class AbstractEntityPersister
 
 	@Nullable
 	private PropertyPath resolveNonAggregatedIdentifierPropertyPath(@Nonnull String propertyName) {
-		return getIdentifierMapping() instanceof NonAggregatedIdentifierMapping
+		return getIdentifierMapping() instanceof NonAggregatedIdentifierMapping<?, ?>
 				? resolveSubPropertyPath( getIdentifierType(), getIdentifierColumnNames(), propertyName )
 				: null;
 	}
@@ -3214,7 +3214,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public EntityPersister getTargetPart() {
+	public EntityPersister<?> getTargetPart() {
 		return this;
 	}
 
@@ -3253,7 +3253,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public ModelPart getIdentifierDescriptor() {
+	public ModelPart<?, ?, ?> getIdentifierDescriptor() {
 		return identifierMapping;
 	}
 
@@ -3587,7 +3587,7 @@ public abstract class AbstractEntityPersister
 				fragment.addValue( persister.getDiscriminatorSQLValue() );
 			}
 		}
-		final var rootEntityDescriptor = (AbstractEntityPersister) getRootEntityDescriptor();
+		final var rootEntityDescriptor = (AbstractEntityPersister<?>) getRootEntityDescriptor();
 		final var discriminatorSQLValues = rootEntityDescriptor.fullDiscriminatorSQLValues;
 		if ( fragment.getValues().size() == discriminatorSQLValues.length ) {
 			// Nothing to prune if we filter for all subtypes
@@ -3779,11 +3779,11 @@ public abstract class AbstractEntityPersister
 		filteredAssociationMapping = FilteredAssociationMapping.create( this );
 		tenantIdMapping = TenantIdMappingImpl.create( this );
 
-		final List<AttributeMapping> insertGeneratedAttributes =
+		final List<AttributeMapping<?, ?, ?>> insertGeneratedAttributes =
 				hasInsertGeneratedProperties()
 						? getGeneratedAttributes( this, INSERT )
 						: emptyList();
-		final List<AttributeMapping> updateGeneratedAttributes =
+		final List<AttributeMapping<?, ?, ?>> updateGeneratedAttributes =
 				hasUpdateGeneratedProperties()
 						? getGeneratedAttributes( this, UPDATE )
 						: emptyList();
@@ -3831,7 +3831,7 @@ public abstract class AbstractEntityPersister
 	@Nonnull
 	protected GeneratedValuesMutationDelegate createUpdateDelegate() {
 		if ( supportsDatabaseDirtinessCheck() ) {
-			final List<ModelPart> generatedProperties = new ArrayList<>( getUpdateGeneratedProperties() );
+			final List<ModelPart<?, ?, ?>> generatedProperties = new ArrayList<>( getUpdateGeneratedProperties() );
 			generatedProperties.add( getVersionMapping() );
 			return getDialect().getGeneratedValuesSupport().supports( UPDATE_RETURNING )
 					? new InsertReturningDelegate( this, UPDATE, generatedProperties )
@@ -3879,12 +3879,12 @@ public abstract class AbstractEntityPersister
 		return hasExcludedProperty;
 	}
 
-	private boolean isVersion(@Nonnull AttributeMapping attribute) {
+	private boolean isVersion(@Nonnull AttributeMapping<?, ?, ?> attribute) {
 		return attribute != getVersionMapping().getVersionAttribute();
 	}
 
-	private boolean supportsDatabaseDirtinessCheck(@Nonnull AttributeMapping attribute) {
-		if ( attribute instanceof SingularAttributeMapping singularAttribute ) {
+	private boolean supportsDatabaseDirtinessCheck(@Nonnull AttributeMapping<?, ?, ?> attribute) {
+		if ( attribute instanceof SingularAttributeMapping<?, ?, ?> singularAttribute ) {
 			for ( int j = 0; j < singularAttribute.getJdbcTypeCount(); j++ ) {
 				final var selectable = singularAttribute.getSelectable( j );
 				if ( !selectable.isFormula() && selectable.isUpdateable() ) {
@@ -3946,7 +3946,7 @@ public abstract class AbstractEntityPersister
 				-> applyAttribute( tableBuilderMap, attribute ) );
 	}
 
-	protected void applyAttribute(@Nonnull LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap, @Nonnull AttributeMapping attribute) {
+	protected void applyAttribute(@Nonnull LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap, @Nonnull AttributeMapping<?, ?, ?> attribute) {
 		if ( applyAttribute( attribute ) ) {
 			final var tableName = attribute.getContainingTableExpression();
 			final var builder = tableBuilderMap.get( tableName );
@@ -3958,7 +3958,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private boolean applyAttribute(@Nonnull AttributeMapping attribute) {
+	private boolean applyAttribute(@Nonnull AttributeMapping<?, ?, ?> attribute) {
 		return !attribute.isPluralAttributeMapping()
 			// - Skip identifier attributes - they're already represented in keyDescriptor
 			//	For composite identifiers (@IdClass), the individual attributes (e.g., productId, operator)
@@ -3969,12 +3969,12 @@ public abstract class AbstractEntityPersister
 			&& !isReadOnlyAttribute( attribute );
 	}
 
-	protected boolean isIdentifierAttribute(@Nonnull AttributeMapping attribute) {
+	protected boolean isIdentifierAttribute(@Nonnull AttributeMapping<?, ?, ?> attribute) {
 		return attribute.isEntityIdentifierMapping() // @Id or @EmbeddedId
 			|| IDENTIFIER_MAPPER_PROPERTY.equals( attribute.getAttributeName() ); // @IdClass
 	}
 
-	protected boolean isReadOnlyAttribute(@Nonnull AttributeMapping attribute) {
+	protected boolean isReadOnlyAttribute(@Nonnull AttributeMapping<?, ?, ?> attribute) {
 		for ( int i = 0; i < attribute.getJdbcTypeCount(); i++ ) {
 			final var selectable = attribute.getSelectable( i );
 			if ( selectable.isInsertable() || selectable.isUpdateable() ) {
@@ -4192,8 +4192,8 @@ public abstract class AbstractEntityPersister
 
 		private final TableKeyDescriptor keyDescriptor;
 		private final List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
-		private final List<AttributeMapping> attributes = new ArrayList<>();
-		private final Map<AttributeMapping,List<Integer>> attributeColumnIndexes = new HashMap<>();
+		private final List<AttributeMapping<?, ?, ?>> attributes = new ArrayList<>();
+		private final Map<AttributeMapping<?, ?, ?>,List<Integer>> attributeColumnIndexes = new HashMap<>();
 
 		public TableDescriptorBuilder(
 				@Nonnull String tableName,
@@ -4243,12 +4243,12 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		public int addAttribute(@Nonnull AttributeMapping attribute) {
+		public int addAttribute(@Nonnull AttributeMapping<?, ?, ?> attribute) {
 			attributes.add(attribute);
 			return attributes.size() - 1;
 		}
 
-		public void addColumn(@Nonnull AttributeMapping attribute, @Nonnull ColumnDescriptor from) {
+		public void addColumn(@Nonnull AttributeMapping<?, ?, ?> attribute, @Nonnull ColumnDescriptor from) {
 			// Check if this column already exists (e.g., multiple attributes mapping to same column)
 			int existingIndex = findColumnIndex( from.name() );
 			if ( existingIndex >= 0 ) {
@@ -4681,7 +4681,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(
-			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull Set<ManagedMappingType<?, ?, ?>> visitedTypes,
 			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		assert influencers.hasEnabledFilters();
@@ -5081,7 +5081,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public EntityPersister resolveConcreteProxyTypeForId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
+	public EntityPersister<?> resolveConcreteProxyTypeForId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		if ( !concreteProxy ) {
 			return this;
 		}
@@ -5309,12 +5309,12 @@ public abstract class AbstractEntityPersister
 		final boolean isBasePath = basePropertyName.length() == path.length();
 		final var attributeMapping = findAttributeMapping( basePropertyName );
 		final Object baseValue;
-		final MappingType baseValueType;
+		final MappingType<?> baseValueType;
 		if ( attributeMapping != null ) {
 			baseValue = accessorCache[ attributeMapping.getStateArrayPosition() ].get( object );
 			baseValueType = attributeMapping.getMappedType();
 		}
-		else if ( identifierMapping instanceof NonAggregatedIdentifierMapping nonAggregatedIdentifierMapping ) {
+		else if ( identifierMapping instanceof NonAggregatedIdentifierMapping<?, ?> nonAggregatedIdentifierMapping ) {
 			final var mapping =
 					nonAggregatedIdentifierMapping.findSubPart( path, null )
 							.asAttributeMapping();
@@ -5327,13 +5327,13 @@ public abstract class AbstractEntityPersister
 		}
 		return isBasePath
 				? baseValue
-				: getPropertyValue( baseValue, (ManagedMappingType) baseValueType, path, basePropertyName );
+				: getPropertyValue( baseValue, (ManagedMappingType<?, ?, ?>) baseValueType, path, basePropertyName );
 	}
 
 	@Nullable
 	private Object getPropertyValue(
 			@Nullable Object baseValue,
-			@Nullable ManagedMappingType baseValueType,
+			@Nullable ManagedMappingType<?, ?, ?> baseValueType,
 			@Nonnull String path,
 			@Nonnull String prefix) {
 		if ( baseValue == null || baseValueType == null ) {
@@ -5346,7 +5346,7 @@ public abstract class AbstractEntityPersister
 			final String pathSoFar = nextDotIndex < 0 ? path : path.substring( 0, nextDotIndex );
 			final var attributeMapping = baseValueType.findAttributeMapping( pathSoFar.substring( afterDot ) );
 			final var value = attributeMapping.getValue( baseValue );
-			final var type = nextDotIndex < 0 ? null : (ManagedMappingType) attributeMapping.getMappedType();
+			final var type = nextDotIndex < 0 ? null : (ManagedMappingType<?, ?, ?>) attributeMapping.getMappedType();
 			return getPropertyValue( value, type, path, pathSoFar );
 		}
 	}
@@ -5437,7 +5437,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public EntityPersister getSubclassEntityPersister(@Nullable Object instance, @Nonnull SessionFactoryImplementor factory) {
+	public EntityPersister<?> getSubclassEntityPersister(@Nullable Object instance, @Nonnull SessionFactoryImplementor factory) {
 		if ( instance != null
 				&& hasSubclasses()
 				&& !getRepresentationStrategy().getInstantiator().isSameClass( instance ) ) {
@@ -5497,9 +5497,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	protected List<? extends ModelPart> initInsertGeneratedProperties(@Nonnull List<AttributeMapping> generatedAttributes) {
+	protected List<? extends ModelPart<?, ?, ?>> initInsertGeneratedProperties(@Nonnull List<AttributeMapping<?, ?, ?>> generatedAttributes) {
 		final int originalSize = generatedAttributes.size();
-		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
+		final List<ModelPart<?, ?, ?>> generatedBasicAttributes = new ArrayList<>( originalSize );
 		for ( var generatedAttribute : generatedAttributes ) {
 			// todo (7.0) : support non selectable mappings? Component, ToOneAttributeMapping, ...
 			if ( generatedAttribute.asBasicValuedModelPart() != null
@@ -5508,7 +5508,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		final List<ModelPart> identifierList =
+		final List<ModelPart<?, ?, ?>> identifierList =
 				isIdentifierAssignedByInsert()
 						? List.of( getIdentifierMapping() )
 						: emptyList();
@@ -5519,7 +5519,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public List<? extends ModelPart> getInsertGeneratedProperties() {
+	public List<? extends ModelPart<?, ?, ?>> getInsertGeneratedProperties() {
 		return insertGeneratedProperties;
 	}
 
@@ -5537,9 +5537,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	protected List<? extends ModelPart> initUpdateGeneratedProperties(@Nonnull List<AttributeMapping> generatedAttributes) {
+	protected List<? extends ModelPart<?, ?, ?>> initUpdateGeneratedProperties(@Nonnull List<AttributeMapping<?, ?, ?>> generatedAttributes) {
 		final int originalSize = generatedAttributes.size();
-		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
+		final List<ModelPart<?, ?, ?>> generatedBasicAttributes = new ArrayList<>( originalSize );
 		for ( var generatedAttribute : generatedAttributes ) {
 			if ( generatedAttribute instanceof SelectableMapping selectableMapping
 					&& selectableMapping.getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
@@ -5553,7 +5553,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public List<? extends ModelPart> getUpdateGeneratedProperties() {
+	public List<? extends ModelPart<?, ?, ?>> getUpdateGeneratedProperties() {
 		return updateGeneratedProperties;
 	}
 
@@ -5679,7 +5679,7 @@ public abstract class AbstractEntityPersister
 				@Nonnull SharedSessionContractImplementor session);
 	}
 
-	private record StandardCacheEntryHelper(EntityPersister persister)
+	private record StandardCacheEntryHelper(EntityPersister<?> persister)
 			implements CacheEntryHelper {
 
 		@Override
@@ -5699,7 +5699,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private record ReferenceCacheEntryHelper(EntityPersister persister)
+	private record ReferenceCacheEntryHelper(EntityPersister<?> persister)
 			implements CacheEntryHelper {
 
 		@Override
@@ -5719,10 +5719,10 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private record StructuredCacheEntryHelper(EntityPersister persister, StructuredCacheEntry structure)
+	private record StructuredCacheEntryHelper(EntityPersister<?> persister, StructuredCacheEntry structure)
 			implements CacheEntryHelper {
 
-		private StructuredCacheEntryHelper(@Nonnull EntityPersister persister) {
+		private StructuredCacheEntryHelper(@Nonnull EntityPersister<?> persister) {
 			this( persister, new StructuredCacheEntry( persister ) );
 		}
 
@@ -5768,12 +5768,12 @@ public abstract class AbstractEntityPersister
 	// org.hibernate.metamodel.mapping.EntityMappingType
 
 	@Override
-	public void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		this.attributeMappings.forEach( action );
 	}
 
 	@Override
-	public void forEachAttributeMapping(@Nonnull IndexedConsumer<? super AttributeMapping> consumer) {
+	public void forEachAttributeMapping(@Nonnull IndexedConsumer<? super AttributeMapping<?, ?, ?>> consumer) {
 		attributeMappings.indexedForEach( consumer );
 	}
 
@@ -5826,7 +5826,7 @@ public abstract class AbstractEntityPersister
 	private void initializeSpecialAttributeMappings
 			(@Nonnull MappingModelCreationProcess creationProcess, @Nonnull PersistentClass bootEntityDescriptor) {
 		if ( superMappingType != null ) {
-			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
+			( (InFlightEntityMappingType<?>) superMappingType ).prepareMappingModel( creationProcess );
 			if ( shouldProcessSuperMapping() ) {
 				inheritSupertypeSpecialAttributeMappings();
 			}
@@ -5914,7 +5914,7 @@ public abstract class AbstractEntityPersister
 
 	private static @Nullable BeforeExecutionGenerator createVersionGenerator(
 			@Nullable BeforeExecutionGenerator configuredGenerator,
-			@Nullable EntityVersionMapping versionMapping) {
+			@Nullable EntityVersionMapping<?> versionMapping) {
 		if ( versionMapping != null ) {
 			return configuredGenerator == null ? new VersionGeneration( versionMapping ) : configuredGenerator;
 		}
@@ -6019,7 +6019,7 @@ public abstract class AbstractEntityPersister
 		auxiliaryMapping = rootClass == bootEntityDescriptor ?
 				stateManagement.createAuxiliaryMapping( this, rootClass, creationProcess ) :
 				castNonNull( superMappingType ).getAuxiliaryMapping();
-		if ( auxiliaryMapping instanceof SoftDeleteMapping && rootClass.getCustomSQLDelete() != null ) {
+		if ( auxiliaryMapping instanceof SoftDeleteMapping<?> && rootClass.getCustomSQLDelete() != null ) {
 			throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
 		}
 	}
@@ -6038,7 +6038,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	protected NaturalIdMapping generateNaturalIdMapping(
+	protected NaturalIdMapping<?, ?, ?> generateNaturalIdMapping(
 			@Nonnull MappingModelCreationProcess creationProcess,
 			@Nonnull PersistentClass bootEntityDescriptor) {
 		//noinspection AssertWithSideEffects
@@ -6052,8 +6052,8 @@ public abstract class AbstractEntityPersister
 				throw new UnsupportedMappingException( "NaturalIdClass not supported for simple naturaal-id mappings" );
 			}
 			final String propertyName = getPropertyNames()[ naturalIdAttributeIndexes[ 0 ] ];
-			final var attributeMapping = (SingularAttributeMapping) findAttributeMapping( propertyName );
-			return new SimpleNaturalIdMapping(
+			final var attributeMapping = (SingularAttributeMapping<?, ?, ?>) findAttributeMapping( propertyName );
+			return new SimpleNaturalIdMapping<>(
 					attributeMapping,
 					this,
 					creationProcess
@@ -6069,11 +6069,11 @@ public abstract class AbstractEntityPersister
 		// then iterate over the attribute mappings finding the ones having names
 		// in the collected names.  iterate here because it is already alphabetical
 
-		final List<SingularAttributeMapping> collectedAttrMappings = new ArrayList<>();
+		final List<SingularAttributeMapping<?, ?, ?>> collectedAttrMappings = new ArrayList<>();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final var attributeMapping = attributeMappings.get( i );
 			if ( attributeNames.contains( attributeMapping.getAttributeName() ) ) {
-				collectedAttrMappings.add( (SingularAttributeMapping) attributeMapping );
+				collectedAttrMappings.add( (SingularAttributeMapping<?, ?, ?>) attributeMapping );
 			}
 		}
 
@@ -6081,7 +6081,7 @@ public abstract class AbstractEntityPersister
 			throw new MappingException( "Expected multiple natural-id attributes, but found only one: " + getEntityName() );
 		}
 
-		return new CompoundNaturalIdMapping(
+		return new CompoundNaturalIdMapping<>(
 				this,
 				bootEntityDescriptor.getRootClass().getNaturalIdClass(),
 				collectedAttrMappings,
@@ -6091,7 +6091,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	protected static SqmMultiTableMutationStrategy interpretSqmMultiTableStrategy(
-			@Nonnull AbstractEntityPersister entityMappingDescriptor,
+			@Nonnull AbstractEntityPersister<?> entityMappingDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		assert entityMappingDescriptor.hasMultipleTables();
 		final var superMappingType = entityMappingDescriptor.getSuperMappingType();
@@ -6109,7 +6109,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	protected static SqmMultiTableInsertStrategy interpretSqmMultiTableInsertStrategy(
-			@Nonnull AbstractEntityPersister entityMappingDescriptor,
+			@Nonnull AbstractEntityPersister<?> entityMappingDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return creationProcess.getCreationContext().getServiceRegistry()
 				.requireService( SqmMultiTableMutationStrategyProvider.class )
@@ -6135,7 +6135,7 @@ public abstract class AbstractEntityPersister
 			return 0;
 		}
 		else {
-			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
+			( (InFlightEntityMappingType<?>) superMappingType ).prepareMappingModel( creationProcess );
 			return superMappingType.getNumberOfAttributeMappings();
 		}
 	}
@@ -6145,7 +6145,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nullable
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(@Nonnull PersistentClass bootEntityDescriptor) {
+	protected EntityDiscriminatorMapping<?> generateDiscriminatorMapping(@Nonnull PersistentClass bootEntityDescriptor) {
 		if ( getDiscriminatorType() == null ) {
 			return null;
 		}
@@ -6183,7 +6183,7 @@ public abstract class AbstractEntityPersister
 				precision = null;
 				scale = null;
 			}
-			return new ExplicitColumnDiscriminatorMappingImpl(
+			return new ExplicitColumnDiscriminatorMappingImpl<>(
 					this,
 					castNonNull( discriminatorColumnExpression ),
 					getTableName(),
@@ -6206,7 +6206,7 @@ public abstract class AbstractEntityPersister
 	public abstract BasicType<?> getDiscriminatorType();
 
 	@Nullable
-	protected EntityVersionMapping generateVersionMapping(
+	protected EntityVersionMapping<?> generateVersionMapping(
 			@Nullable Supplier<?> templateInstanceCreator,
 			@Nonnull PersistentClass bootEntityDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
@@ -6234,7 +6234,7 @@ public abstract class AbstractEntityPersister
 	public void linkWithSuperType(@Nonnull MappingModelCreationProcess creationProcess) {
 		if ( getMappedSuperclass() != null ) {
 			superMappingType = creationProcess.getEntityPersister( getMappedSuperclass() );
-			final var inFlightEntityMappingType = (InFlightEntityMappingType) superMappingType;
+			final var inFlightEntityMappingType = (InFlightEntityMappingType<?>) superMappingType;
 			inFlightEntityMappingType.linkWithSubType(this, creationProcess);
 			if ( subclassMappingTypes != null ) {
 				castNonNull( subclassMappingTypes ).values()
@@ -6244,13 +6244,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void linkWithSubType(@Nonnull EntityMappingType sub, @Nonnull MappingModelCreationProcess creationProcess) {
+	public void linkWithSubType(@Nonnull EntityMappingType<?> sub, @Nonnull MappingModelCreationProcess creationProcess) {
 		if ( subclassMappingTypes == null ) {
 			subclassMappingTypes = new TreeMap<>();
 		}
 		subclassMappingTypes.put( sub.getEntityName(), sub );
 		if ( superMappingType != null ) {
-			( (InFlightEntityMappingType) superMappingType ).linkWithSubType( sub, creationProcess );
+			( (InFlightEntityMappingType<?>) superMappingType ).linkWithSubType( sub, creationProcess );
 		}
 	}
 
@@ -6265,7 +6265,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public AttributeMapping getAttributeMapping(int position) {
+	public AttributeMapping<?, ?, ?> getAttributeMapping(int position) {
 		return attributeMappings.get( position );
 	}
 
@@ -6287,24 +6287,24 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitDeclaredAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
+	public void visitDeclaredAttributeMappings(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		declaredAttributeMappings.forEachValue( action );
 	}
 
 	@Nullable
 	@Override
-	public EntityPersister getSuperMappingType() {
+	public EntityPersister<?> getSuperMappingType() {
 		return superMappingType;
 	}
 
 	@Nonnull
 	@Override
-	public Collection<EntityMappingType> getSubMappingTypes() {
+	public Collection<EntityMappingType<?>> getSubMappingTypes() {
 		return subclassMappingTypes == null ? emptyList() : subclassMappingTypes.values();
 	}
 
 	@Override
-	public boolean isTypeOrSuperType(@Nullable EntityMappingType targetType) {
+	public boolean isTypeOrSuperType(@Nullable EntityMappingType<?> targetType) {
 		if ( targetType == null ) {
 			// todo (6.0) : need to think through what this ought to indicate (if we allow it at all)
 			//		- see `org.hibernate.metamodel.mapping.internal.AbstractManagedMappingType#isTypeOrSuperType`
@@ -6323,7 +6323,7 @@ public abstract class AbstractEntityPersister
 
 
 	@Nonnull
-	protected EntityIdentifierMapping generateIdentifierMapping(
+	protected EntityIdentifierMapping<?, ?, ?> generateIdentifierMapping(
 			@Nullable Supplier<?> templateInstanceCreator,
 			@Nonnull PersistentClass bootEntityDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
@@ -6375,7 +6375,7 @@ public abstract class AbstractEntityPersister
 
 		final var identifierProperty = bootEntityDescriptor.getIdentifierProperty();
 		final var value = identifierProperty.getValue();
-		return new BasicEntityIdentifierMappingImpl(
+		return new BasicEntityIdentifierMappingImpl<>(
 				this,
 				templateInstanceCreator,
 				identifierProperty.getName(),
@@ -6393,7 +6393,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
+	protected EntityIdentifierMapping<?, ?, ?> generateNonEncapsulatedCompositeIdentifierMapping(
 			@Nonnull MappingModelCreationProcess creationProcess,
 			@Nonnull PersistentClass bootEntityDescriptor) {
 		return buildNonEncapsulatedCompositeIdentifierMapping(
@@ -6411,8 +6411,8 @@ public abstract class AbstractEntityPersister
 	 * @param creationProcess The SF creation process - access to useful things
 	 */
 	@Nonnull
-	protected static EntityVersionMapping generateVersionMapping(
-			@Nonnull AbstractEntityPersister entityPersister,
+	protected static EntityVersionMapping<?> generateVersionMapping(
+			@Nonnull AbstractEntityPersister<?> entityPersister,
 			@Nullable Supplier<?> templateInstanceCreator,
 			@Nonnull PersistentClass bootModelRootEntityDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
@@ -6428,7 +6428,7 @@ public abstract class AbstractEntityPersister
 		final var precision = size.getPrecision();
 		final var scale = size.getScale();
 
-		return new EntityVersionMappingImpl(
+		return new EntityVersionMappingImpl<>(
 				bootModelRootEntityDescriptor.getRootClass(),
 				templateInstanceCreator,
 				bootModelRootEntityDescriptor.getVersion().getName(),
@@ -6445,7 +6445,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	protected AttributeMapping generateNonIdAttributeMapping(
+	protected AttributeMapping<?, ?, ?> generateNonIdAttributeMapping(
 			@Nonnull Property bootProperty,
 			int stateArrayPosition,
 			int fetchableIndex,
@@ -6469,7 +6469,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	protected AttributeMapping generateNonIdAttributeMapping(
+	protected AttributeMapping<?, ?, ?> generateNonIdAttributeMapping(
 			@Nonnull String attrName,
 			@Nonnull Type attrType,
 			@Nonnull CascadeStyle cascadeStyle,
@@ -6519,7 +6519,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		if ( attrType instanceof BasicType ) {
+		if ( attrType instanceof BasicType<?> ) {
 			final var role = getNavigableRole().append( bootProperty.getName() );
 			final String attrColumnExpression;
 			final boolean isAttrColumnExpressionFormula;
@@ -6568,7 +6568,7 @@ public abstract class AbstractEntityPersister
 							creationContext.getTypeConfiguration()
 					);
 					customWriteExpr = selectable.getWriteExpr(
-							(JdbcMapping) attrType,
+							(JdbcMapping<?>) attrType,
 							dialect,
 							creationContext.getBootModel()
 					);
@@ -6636,7 +6636,7 @@ public abstract class AbstractEntityPersister
 					bootProperty.isSelectable()
 			);
 
-			return new DiscriminatedAssociationAttributeMapping(
+			return new DiscriminatedAssociationAttributeMapping<>(
 					navigableRole.append( bootProperty.getName() ),
 					creationContext.getTypeConfiguration().getJavaTypeRegistry()
 							.resolveDescriptor( Object.class ),
@@ -6706,14 +6706,14 @@ public abstract class AbstractEntityPersister
 	 * For Hibernate Reactive
 	 */
 	@Nonnull
-	protected EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
+	protected EmbeddedAttributeMapping<?, ?> buildEmbeddedAttributeMapping(
 			@Nonnull String attrName,
 			int stateArrayPosition,
 			int fetchableIndex,
 			@Nonnull Property bootProperty,
 			@Nonnull DependantValue dependantValue,
 			int dependantColumnIndex,
-			@Nonnull ManagedMappingType declaringType,
+			@Nonnull ManagedMappingType<?, ?, ?> declaringType,
 			@Nonnull CompositeType attrType,
 			@Nonnull String tableExpression,
 			@Nullable String[] rootTableKeyColumnNames,
@@ -6741,14 +6741,14 @@ public abstract class AbstractEntityPersister
 	 * For Hibernate Reactive
 	 */
 	@Nonnull
-	protected AttributeMapping buildSingularAssociationAttributeMapping(
+	protected AttributeMapping<?, ?, ?> buildSingularAssociationAttributeMapping(
 			@Nonnull String attrName,
 			@Nonnull NavigableRole navigableRole,
 			int stateArrayPosition,
 			int fetchableIndex,
 			@Nonnull Property bootProperty,
-			@Nonnull ManagedMappingType declaringType,
-			@Nonnull EntityPersister declaringEntityPersister,
+			@Nonnull ManagedMappingType<?, ?, ?> declaringType,
+			@Nonnull EntityPersister<?> declaringEntityPersister,
 			@Nonnull EntityType attrType,
 			@Nonnull PropertyAccess propertyAccess,
 			@Nonnull CascadeStyle cascadeStyle,
@@ -6772,12 +6772,12 @@ public abstract class AbstractEntityPersister
 	 * For Hibernate Reactive
 	 */
 	@Nonnull
-	protected AttributeMapping buildPluralAttributeMapping(
+	protected AttributeMapping<?, ?, ?> buildPluralAttributeMapping(
 			@Nonnull String attrName,
 			int stateArrayPosition,
 			int fetchableIndex,
 			@Nonnull Property bootProperty,
-			@Nonnull ManagedMappingType declaringType,
+			@Nonnull ManagedMappingType<?, ?, ?> declaringType,
 			@Nonnull PropertyAccess propertyAccess,
 			@Nonnull CascadeStyle cascadeStyle,
 			@Nonnull FetchStyle fetchStyle,
@@ -6797,25 +6797,25 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public JavaType<?> getMappedJavaType() {
+	public JavaType<J> getMappedJavaType() {
 		return javaType;
 	}
 
 	@Nonnull
 	@Override
-	public EntityPersister getEntityPersister() {
+	public EntityPersister<J> getEntityPersister() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public EntityIdentifierMapping getIdentifierMapping() {
+	public EntityIdentifierMapping<?, ?, ?> getIdentifierMapping() {
 		return identifierMapping;
 	}
 
 	@Nullable
 	@Override
-	public EntityVersionMapping getVersionMapping() {
+	public EntityVersionMapping<?> getVersionMapping() {
 		return versionMapping;
 	}
 
@@ -6833,20 +6833,20 @@ public abstract class AbstractEntityPersister
 
 	@Nullable
 	@Override
-	public EntityRowIdMapping getRowIdMapping() {
+	public EntityRowIdMapping<Object> getRowIdMapping() {
 		return rowIdMapping;
 	}
 
 	@Nullable
 	@Override
-	public EntityDiscriminatorMapping getDiscriminatorMapping() {
+	public EntityDiscriminatorMapping<?> getDiscriminatorMapping() {
 		return discriminatorMapping;
 	}
 
 	@Nullable
 	@Override
-	public SoftDeleteMapping getSoftDeleteMapping() {
-		return auxiliaryMapping instanceof SoftDeleteMapping softDeleteMapping
+	public SoftDeleteMapping<?> getSoftDeleteMapping() {
+		return auxiliaryMapping instanceof SoftDeleteMapping<?> softDeleteMapping
 				? softDeleteMapping : null;
 	}
 
@@ -6903,13 +6903,13 @@ public abstract class AbstractEntityPersister
 
 	@Nullable
 	@Override
-	public AttributeMapping findDeclaredAttributeMapping(@Nonnull String name) {
+	public AttributeMapping<?, ?, ?> findDeclaredAttributeMapping(@Nonnull String name) {
 		return declaredAttributeMappings.get( name );
 	}
 
 	@Nullable
 	@Override
-	public AttributeMapping findAttributeMapping(@Nonnull String name) {
+	public AttributeMapping<?, ?, ?> findAttributeMapping(@Nonnull String name) {
 		final var declaredAttribute = declaredAttributeMappings.get( name );
 		if ( declaredAttribute != null ) {
 			return declaredAttribute;
@@ -6924,7 +6924,7 @@ public abstract class AbstractEntityPersister
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 
 		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
 			return discriminatorMapping;
@@ -6985,8 +6985,8 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			for ( var attribute : declaredAttributeMappings.valueIterator() ) {
-				if ( attribute instanceof EmbeddableValuedModelPart part
-						&& attribute instanceof VirtualModelPart ) {
+				if ( attribute instanceof EmbeddableValuedModelPart<?, ?, ?> part
+						&& attribute instanceof VirtualModelPart<?, ?, ?> ) {
 					final var subPart = part.findSubPart( name, null );
 					if ( subPart != null ) {
 						return subPart;
@@ -6998,13 +6998,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nullable
-	private ModelPart findSubPartInSubclassMappings(@Nonnull String name) {
+	private ModelPart<?, ?, ?> findSubPartInSubclassMappings(@Nonnull String name) {
 		final var declaredGenericAttribute = declaredGenericAttributeMappings.get( name );
 		if ( declaredGenericAttribute != null ) {
 			return declaredGenericAttribute;
 		}
 
-		ModelPart attribute = null;
+		ModelPart<?, ?, ?> attribute = null;
 		if ( isNotEmpty( subclassMappingTypes ) ) {
 			for ( var subMappingType : castNonNull( subclassMappingTypes ).values() ) {
 				final var subDefinedAttribute = subMappingType.findSubTypesSubPart( name, null );
@@ -7028,7 +7028,7 @@ public abstract class AbstractEntityPersister
 
 	@Nullable
 	@Override
-	public ModelPart findSubTypesSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	public ModelPart<?, ?, ?> findSubTypesSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		final var declaredAttribute = declaredAttributeMappings.get( name );
 		return declaredAttribute != null
 				? declaredAttribute
@@ -7036,9 +7036,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nullable
-	private ModelPart getIdentifierModelPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	private ModelPart<?, ?, ?> getIdentifierModelPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		final var identifierMapping = getIdentifierMappingForJoin();
-		if ( identifierMapping instanceof final NonAggregatedIdentifierMapping mapping ) {
+		if ( identifierMapping instanceof final NonAggregatedIdentifierMapping<?, ?> mapping ) {
 			final var subPart = mapping.findSubPart( name, treatTargetType );
 			if ( subPart != null ) {
 				return subPart;
@@ -7055,19 +7055,19 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void visitSubParts(
-			@Nonnull Consumer<ModelPart> consumer,
-			@Nullable EntityMappingType treatTargetType) {
+			@Nonnull Consumer<ModelPart<?, ?, ?>> consumer,
+			@Nullable EntityMappingType<?> treatTargetType) {
 		consumer.accept( identifierMapping );
 		declaredAttributeMappings.forEachValue( consumer );
 	}
 
 	@Override
-	public void visitKeyFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitKeyFetchables(@Nonnull Consumer<? super Fetchable<?, ?, ?>> fetchableConsumer, @Nullable EntityMappingType<?> treatTargetType) {
 		// No-op
 	}
 
 	@Override
-	public void visitKeyFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitKeyFetchables(@Nonnull IndexedConsumer<? super Fetchable<?, ?, ?>> fetchableConsumer, @Nullable EntityMappingType<?> treatTargetType) {
 		// No-op
 	}
 
@@ -7083,18 +7083,18 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	@Override
-	public Fetchable getKeyFetchable(int position) {
+	public Fetchable<?, ?, ?> getKeyFetchable(int position) {
 		throw new IndexOutOfBoundsException( position );
 	}
 
 	@Nonnull
 	@Override
-	public AttributeMapping getFetchable(int position) {
+	public AttributeMapping<?, ?, ?> getFetchable(int position) {
 		return getStaticFetchableList().get( position );
 	}
 
 	@Override
-	public void visitFetchables(@Nonnull Consumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitFetchables(@Nonnull Consumer<? super Fetchable<?, ?, ?>> fetchableConsumer, @Nullable EntityMappingType<?> treatTargetType) {
 		if ( treatTargetType == null ) {
 			getStaticFetchableList().forEach( fetchableConsumer );
 //			staticFetchableList.forEach( fetchableConsumer );
@@ -7110,7 +7110,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitFetchables(@Nonnull IndexedConsumer<? super Fetchable> fetchableConsumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitFetchables(@Nonnull IndexedConsumer<? super Fetchable<?, ?, ?>> fetchableConsumer, @Nullable EntityMappingType<?> treatTargetType) {
 		if ( treatTargetType == null ) {
 			getStaticFetchableList().indexedForEach( fetchableConsumer );
 		}
@@ -7136,12 +7136,12 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
+	public void visitAttributeMappings(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		attributeMappings.forEach( action );
 	}
 
 	@Override
-	public void visitSuperTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
+	public void visitSuperTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		if ( superMappingType != null ) {
 			superMappingType.visitSuperTypeAttributeMappings( action );
 		}
@@ -7158,7 +7158,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitSubTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
+	public void visitSubTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		forEachAttributeMapping( action );
 		if ( subclassMappingTypes != null ) {
 			for ( var subType : subclassMappingTypes.values() ) {
@@ -7176,7 +7176,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return getIdentifierMapping().forEachJdbcType( offset, action );
 	}
 

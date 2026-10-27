@@ -84,15 +84,15 @@ public class BindingTypeHelper {
 		}
 	}
 
-	public static JdbcMapping resolveBindType(JdbcMapping baseType, JdbcParameter jdbcParameter) {
+	public static JdbcMapping<?> resolveBindType(JdbcMapping<?> baseType, JdbcParameter jdbcParameter) {
 		return baseType instanceof NullType && jdbcParameter.getExpressionType() != null
 				? jdbcParameter.getExpressionType().getSingleJdbcMapping()
 				: baseType;
 	}
 
-	public static JdbcMapping resolveBindType(
+	public static JdbcMapping<?> resolveBindType(
 			Object value,
-			JdbcMapping baseType,
+			JdbcMapping<?> baseType,
 			TypeConfiguration typeConfiguration) {
 		if ( value == null || !isTemporal( baseType.getJdbcJavaType() ) ) {
 			return baseType;
@@ -103,9 +103,9 @@ public class BindingTypeHelper {
 			final var bindableType = (BindableType<?>) baseType;
 			// Cast individual arms of the switch to avoid a JDK 17 javac bug
 			return switch ( temporalJavaType.getPrecision() ) {
-				case TIMESTAMP -> (JdbcMapping) resolveTimestampTemporalTypeVariant( javaType, bindableType, typeConfiguration );
-				case DATE -> (JdbcMapping) resolveDateTemporalTypeVariant( javaType, bindableType, typeConfiguration );
-				case TIME -> (JdbcMapping) resolveTimeTemporalTypeVariant( javaType, bindableType, typeConfiguration );
+				case TIMESTAMP -> (JdbcMapping<?>) resolveTimestampTemporalTypeVariant( javaType, bindableType, typeConfiguration );
+				case DATE -> (JdbcMapping<?>) resolveDateTemporalTypeVariant( javaType, bindableType, typeConfiguration );
+				case TIME -> (JdbcMapping<?>) resolveTimeTemporalTypeVariant( javaType, bindableType, typeConfiguration );
 			};
 		}
 	}

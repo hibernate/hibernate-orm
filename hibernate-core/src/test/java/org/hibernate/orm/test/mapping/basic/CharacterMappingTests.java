@@ -36,22 +36,22 @@ public class CharacterMappingTests {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		final JdbcTypeRegistry jdbcRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfCharacters.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfCharacters.class);
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("wrapper");
 			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Character.class));
 
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Character.class));
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.CHAR)));
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("primitive");
 			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Character.class));
 
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Character.class));
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.CHAR)));
 		}

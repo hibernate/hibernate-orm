@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @BytecodeEnhanced
 public class InitFromCacheTest {
 
-	private EntityPersister persister;
+	private EntityPersister<?> persister;
 
 	private Long documentID;
 

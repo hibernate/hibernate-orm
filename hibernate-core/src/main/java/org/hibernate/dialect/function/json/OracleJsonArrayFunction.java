@@ -59,7 +59,7 @@ public class OracleJsonArrayFunction extends JsonArrayFunction {
 			sqlAppender.appendSql( " format json" );
 		}
 		else {
-			final JdbcMapping jdbcMapping = ( (Expression) value ).getExpressionType().getSingleJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = ( (Expression) value ).getExpressionType().getSingleJdbcMapping();
 			((OracleAggregateSupport) OracleAggregateSupport.valueOf( sessionFactory.getJdbcServices().getDialect() )).appendJsonWriteExpression(
 					sqlAppender,
 					() -> value.accept( walker ),

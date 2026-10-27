@@ -60,7 +60,7 @@ public interface StateManagement {
 	@Nullable
 	@org.hibernate.Internal
 	AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull RootClass bootDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess);
 
@@ -74,7 +74,7 @@ public interface StateManagement {
 	@Nullable
 	@org.hibernate.Internal
 	AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull PluralAttributeMapping<?> pluralAttributeMapping,
 			@Nonnull Collection bootDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess);
 

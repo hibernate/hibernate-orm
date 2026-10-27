@@ -43,7 +43,7 @@ public class GenericConverterHierarchyTest {
 
 	@Test
 	public void testConverterHierarchyWithSameGenericParameterName(SessionFactoryScope scope) {
-		final EntityPersister ep = scope.getSessionFactory()
+		final EntityPersister<?> ep = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( TestEntity.class.getName() );
 		final Type statusPropertyType = ep.getPropertyType( "status" );

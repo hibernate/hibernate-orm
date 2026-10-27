@@ -364,7 +364,7 @@ public interface SharedSessionContractImplementor
 	 * @return The entity key
 	 */
 	@Nonnull
-	EntityKey generateEntityKey(@Nonnull Object id, @Nonnull EntityPersister persister);
+	EntityKey generateEntityKey(@Nonnull Object id, @Nonnull EntityPersister<?> persister);
 
 	/**
 	 * Instantiate a {@link CollectionKey} with the given key and for the
@@ -426,7 +426,7 @@ public interface SharedSessionContractImplementor
 	 * @param object the entity instance
 	 */
 	@Nonnull
-	EntityPersister getEntityPersister(@Nullable String entityName, @Nonnull Object object);
+	EntityPersister<?> getEntityPersister(@Nullable String entityName, @Nonnull Object object);
 
 	/**
 	 * Get the entity instance associated with the given {@link EntityKey},
@@ -460,7 +460,7 @@ public interface SharedSessionContractImplementor
 	 * initializing the new instance with the given identifier.
 	 */
 	@Nonnull
-	Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id);
+	Object instantiate(@Nonnull EntityPersister<?> persister, @Nullable Object id);
 
 	/**
 	 * Are entities and proxies loaded by this session read-only by default?
@@ -674,7 +674,7 @@ public interface SharedSessionContractImplementor
 	 */
 	@Incubating(since = "7.0")
 	Object loadFromSecondLevelCache(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EntityKey entityKey,
 			@Nullable Object instanceToLoad,
 			@Nonnull LockMode lockMode);

@@ -205,7 +205,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 
 	@Override
 	public Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory) {
-		BasicValuedMapping integerType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		BasicValuedMapping<?> integerType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 		return new BinaryArithmeticExpression(
 				new BinaryArithmeticExpression(
 						databaseValue,

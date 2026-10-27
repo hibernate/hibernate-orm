@@ -1,5 +1,9 @@
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.function.BiFunction;
+
+import org.hibernate.type.descriptor.java.JavaType;
+
 import jakarta.annotation.Nonnull;
 
 import java.util.List;
@@ -48,71 +52,74 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  *
  * Can also be a single {@link jakarta.persistence.Id} with {@link jakarta.persistence.MapsId}
  */
-public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping implements NonAggregatedIdentifierMapping {
-	private final EntityPersister entityDescriptor;
+public class NonAggregatedIdentifierMappingImpl<E, I> extends AbstractCompositeIdentifierMapping<E, E, I> implements NonAggregatedIdentifierMapping<E, I> {
+	@Override
+	public JavaType<E> getJavaType() {
+		return virtualIdEmbeddable.getJavaType();
+	}
 
-	private final VirtualIdEmbeddable virtualIdEmbeddable;
-	@Nullable private final IdClassEmbeddable idClassEmbeddable;
+	private final EntityPersister<E> entityDescriptor;
 
-	private final IdentifierValueMapper identifierValueMapper;
+	private final VirtualIdEmbeddable<E> virtualIdEmbeddable;
+	@Nullable private final IdClassEmbeddable<I> idClassEmbeddable;
 
-	public NonAggregatedIdentifierMappingImpl(
-			EntityPersister entityPersister,
+	private final IdentifierValueMapper<I> identifierValueMapper;
+
+	public static <E> NonAggregatedIdentifierMappingImpl<E, ?> create(
+			EntityPersister<E> entityPersister,
 			RootClass bootEntityDescriptor,
 			String rootTableName,
 			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
-		super( entityPersister, rootTableName, creationProcess );
-		entityDescriptor = entityPersister;
-
 		final var identifierMapper = bootEntityDescriptor.getIdentifierMapper();
 		final var identifier = bootEntityDescriptor.getIdentifier();
 		if ( identifierMapper == null || identifierMapper == identifier ) {
-			// cid -> getIdentifier
-			// idClass -> null
-			final var virtualIdSource = (Component) identifier;
-			virtualIdEmbeddable = new VirtualIdEmbeddable(
-					virtualIdSource,
-					this,
-					entityPersister,
-					rootTableName,
-					rootTableKeyColumnNames,
-					creationProcess
-			);
-			idClassEmbeddable = null;
-			identifierValueMapper = virtualIdEmbeddable;
+			return new NonAggregatedIdentifierMappingImpl<E, E>( entityPersister,
+					(Component) identifier, rootTableName, rootTableKeyColumnNames, creationProcess,
+					(mapping, virtualId) -> virtualId );
 		}
-		else {
-			// cid = getIdentifierMapper
-			// idClass = getIdentifier
-			final var virtualIdSource = identifierMapper;
-			final var idClassSource = (Component) identifier;
-			virtualIdEmbeddable = new VirtualIdEmbeddable(
-					virtualIdSource,
-					this,
-					entityPersister,
-					rootTableName,
-					rootTableKeyColumnNames,
-					creationProcess
-			);
-			idClassEmbeddable = new IdClassEmbeddable(
-					idClassSource,
-					bootEntityDescriptor,
-					this,
-					entityPersister,
-					rootTableName,
-					rootTableKeyColumnNames,
-					virtualIdEmbeddable,
-					creationProcess
-			);
-			identifierValueMapper = idClassEmbeddable;
-		}
+		final var idClassSource = (Component) identifier;
+		return createWithIdClass( entityPersister, bootEntityDescriptor, identifierMapper,
+				idClassSource, rootTableName, rootTableKeyColumnNames, creationProcess,
+				creationProcess.getCreationContext().getTypeConfiguration().getJavaTypeRegistry()
+						.resolveManagedTypeDescriptor( idClassSource.getComponentClass() ) );
+	}
+
+	private static <E, I> NonAggregatedIdentifierMappingImpl<E, I> createWithIdClass(
+			EntityPersister<E> entityPersister,
+			RootClass bootEntityDescriptor,
+			Component virtualIdSource,
+			Component idClassSource,
+			String rootTableName,
+			String[] rootTableKeyColumnNames,
+			MappingModelCreationProcess creationProcess,
+			JavaType<I> idJavaType) {
+		return new NonAggregatedIdentifierMappingImpl<>( entityPersister, virtualIdSource,
+				rootTableName, rootTableKeyColumnNames, creationProcess,
+				(mapping, virtualId) -> new IdClassEmbeddable<>( idClassSource, bootEntityDescriptor,
+						mapping, entityPersister, rootTableName, rootTableKeyColumnNames,
+						virtualId, creationProcess, idJavaType ) );
+	}
+
+	private NonAggregatedIdentifierMappingImpl(
+			EntityPersister<E> entityPersister,
+			Component virtualIdSource,
+			String rootTableName,
+			String[] rootTableKeyColumnNames,
+			MappingModelCreationProcess creationProcess,
+			BiFunction<NonAggregatedIdentifierMappingImpl<E, I>, VirtualIdEmbeddable<E>, IdentifierValueMapper<I>> mapperFactory) {
+		super( entityPersister, rootTableName, creationProcess );
+		entityDescriptor = entityPersister;
+		virtualIdEmbeddable = new VirtualIdEmbeddable<>( virtualIdSource, this, entityPersister,
+				rootTableName, rootTableKeyColumnNames, creationProcess );
+		identifierValueMapper = mapperFactory.apply( this, virtualIdEmbeddable );
+		idClassEmbeddable = identifierValueMapper instanceof IdClassEmbeddable<I> idClass ? idClass : null;
 	}
 
 	/*
 	 * Used by Hibernate Reactive
 	 */
-	protected NonAggregatedIdentifierMappingImpl(NonAggregatedIdentifierMappingImpl original) {
+	protected NonAggregatedIdentifierMappingImpl(NonAggregatedIdentifierMappingImpl<E, I> original) {
 		super( original );
 		entityDescriptor = original.entityDescriptor;
 		virtualIdEmbeddable = original.virtualIdEmbeddable;
@@ -122,31 +129,31 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getMappedType() {
+	public EmbeddableMappingType<E, E, ?> getMappedType() {
 		return virtualIdEmbeddable;
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getPartMappingType() {
+	public EmbeddableMappingType<E, E, ?> getPartMappingType() {
 		return getMappedType();
 	}
 
 	@Nullable
 	@Override
-	public IdClassEmbeddable getIdClassEmbeddable() {
+	public IdClassEmbeddable<I> getIdClassEmbeddable() {
 		return idClassEmbeddable;
 	}
 
 	@Nonnull
 	@Override
-	public VirtualIdEmbeddable getVirtualIdEmbeddable() {
+	public VirtualIdEmbeddable<E> getVirtualIdEmbeddable() {
 		return virtualIdEmbeddable;
 	}
 
 	@Nonnull
 	@Override
-	public IdentifierValueMapper getIdentifierValueMapper() {
+	public IdentifierValueMapper<I> getIdentifierValueMapper() {
 		return identifierValueMapper;
 	}
 
@@ -157,7 +164,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType<?, ?, ?> getMappedIdEmbeddableTypeDescriptor() {
 		return identifierValueMapper;
 	}
 
@@ -258,15 +265,15 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 									: null;
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
-				else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
-						&& !( identifierValueMapper.getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
+				else if ( attributeMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping
+						&& !( identifierValueMapper.getAttributeMapping( i ) instanceof ToOneAttributeMapping<?> ) ) {
 					final Object toOne = getIfMerged( o, mergeContext );
 					final var targetPart =
 							toOneAttributeMapping.getForeignKeyDescriptor()
 									.getPart( toOneAttributeMapping.getSideNature().inverse() );
 					propertyValues[i] =
 							targetPart.isEntityIdentifierMapping()
-									? ((EntityIdentifierMapping) targetPart).getIdentifier( toOne, mergeContext )
+									? ((EntityIdentifierMapping<?, ?, ?>) targetPart).getIdentifier( toOne, mergeContext )
 									: toOne;
 				}
 				else {
@@ -299,8 +306,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			final var mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 			Object object = id == null ? mappedIdAttributeMapping.getExpressibleJavaType().getDefaultValue()
 					: mappedIdAttributeMapping.getValue( id );
-			if ( object != null && attribute instanceof ToOneAttributeMapping toOneAttributeMapping
-					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
+			if ( object != null && attribute instanceof ToOneAttributeMapping<?> toOneAttributeMapping
+					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping<?> ) ) {
 				final var entityPersister = toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 				final var entityKey = session.generateEntityKey( object, entityPersister );
 				final var persistenceContext = session.getPersistenceContext();
@@ -356,13 +363,13 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		identifierValueMapper.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<I> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -413,7 +420,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Nonnull
 	@Override
-	public Fetchable getFetchable(int position) {
+	public Fetchable<?, ?, ?> getFetchable(int position) {
 		return getPartMappingType().getFetchable( position );
 	}
 }

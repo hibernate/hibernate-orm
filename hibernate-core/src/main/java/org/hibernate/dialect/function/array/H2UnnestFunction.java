@@ -265,7 +265,7 @@ public class H2UnnestFunction extends UnnestFunction {
 				// For column references we render an emulation through system_range(),
 				// so we need to render an array access to get to the element
 				final String elementReadExpression = arrayColumnReference.getExpressionText() + "[" + Template.TEMPLATE + ".x]";
-				final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+				final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 				final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 				returnType = new SelectableMapping[jdbcValueCount + (indexMapping == null ? 0 : 1)];
 				for ( int i = 0; i < jdbcValueCount; i++ ) {

@@ -31,7 +31,7 @@ public abstract class AbstractReturningDelegate
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public AbstractReturningDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing,
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {
@@ -39,11 +39,11 @@ public abstract class AbstractReturningDelegate
 	}
 
 	public AbstractReturningDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing,
 			boolean supportsArbitraryValues,
 			boolean supportsRowId,
-			List<? extends ModelPart> generatedProperties) {
+			List<? extends ModelPart<?, ?, ?>> generatedProperties) {
 		super( persister, timing, supportsArbitraryValues, supportsRowId, generatedProperties );
 	}
 

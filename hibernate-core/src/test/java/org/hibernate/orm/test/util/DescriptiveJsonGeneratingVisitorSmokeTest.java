@@ -52,7 +52,7 @@ public class DescriptiveJsonGeneratingVisitorSmokeTest {
 	@Test
 	public void testCompany(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel()
+		final EntityPersister<?> entityDescriptor = sessionFactory.getMappingMetamodel()
 				.findEntityDescriptor( Company.class );
 
 		scope.inTransaction( session -> {
@@ -84,7 +84,7 @@ public class DescriptiveJsonGeneratingVisitorSmokeTest {
 	@Test
 	public void testCompanyFetchEmployees(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel()
+		final EntityPersister<?> entityDescriptor = sessionFactory.getMappingMetamodel()
 				.findEntityDescriptor( Company.class );
 
 		scope.inTransaction( session -> {
@@ -122,7 +122,7 @@ public class DescriptiveJsonGeneratingVisitorSmokeTest {
 	@Test
 	public void testEntityOfArrays(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel()
+		final EntityPersister<?> entityDescriptor = sessionFactory.getMappingMetamodel()
 				.findEntityDescriptor( EntityOfArrays.class );
 
 		scope.inTransaction( session -> {

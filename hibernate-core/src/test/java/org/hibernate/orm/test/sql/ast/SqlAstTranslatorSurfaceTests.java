@@ -132,6 +132,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -718,10 +719,10 @@ public class SqlAstTranslatorSurfaceTests {
 	private static SetReturningFunctionType setReturningFunctionType(boolean ordinality) {
 		final SetReturningFunctionType tupleType = mock( SetReturningFunctionType.class );
 		if ( ordinality ) {
-			final BasicValuedModelPart ordinalityPart = mock( BasicValuedModelPart.class );
-			when( ordinalityPart.asBasicValuedModelPart() ).thenReturn( ordinalityPart );
+			final BasicValuedModelPart<?, ?, ?> ordinalityPart = mock( BasicValuedModelPart.class );
+			doReturn( ordinalityPart ).when( ordinalityPart ).asBasicValuedModelPart();
 			when( ordinalityPart.getSelectionExpression() ).thenReturn( "ordinality_" );
-			when( tupleType.findSubPart( any() ) ).thenReturn( ordinalityPart );
+			doReturn( ordinalityPart ).when( tupleType ).findSubPart( any() );
 		}
 		return tupleType;
 	}
@@ -1143,7 +1144,7 @@ public class SqlAstTranslatorSurfaceTests {
 		assertNoDeclaredMethod( "visitInsertSource", InsertSelectStatement.class );
 
 		final NamedTableReference targetTable = new NamedTableReference( "example_table", "t" );
-		final JdbcMapping jdbcMapping = mock( JdbcMapping.class );
+		final JdbcMapping<?> jdbcMapping = mock( JdbcMapping.class );
 		final ColumnReference id = new ColumnReference( targetTable, "id", jdbcMapping );
 		final ColumnReference data = new ColumnReference( targetTable, "data", jdbcMapping );
 		final ColumnReference excludedData = new ColumnReference(

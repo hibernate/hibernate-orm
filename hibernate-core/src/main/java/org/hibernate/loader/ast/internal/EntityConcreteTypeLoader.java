@@ -34,11 +34,11 @@ import static java.util.Collections.singletonList;
  * @see ConcreteProxy
  */
 public class EntityConcreteTypeLoader {
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 	private final SelectStatement sqlSelect;
 	private final JdbcParametersList jdbcParameters;
 
-	public EntityConcreteTypeLoader(@Nonnull EntityMappingType entityDescriptor, @Nonnull SessionFactoryImplementor sessionFactory) {
+	public EntityConcreteTypeLoader(@Nonnull EntityMappingType<?> entityDescriptor, @Nonnull SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		final var builder = JdbcParametersList.newBuilder();
 		sqlSelect = LoaderSelectBuilder.createSelect(
@@ -57,7 +57,7 @@ public class EntityConcreteTypeLoader {
 	}
 
 	@Nonnull
-	public EntityPersister getConcreteType(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
+	public EntityPersister<?> getConcreteType(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getSessionFactory();
 		final var jdbcServices = factory.getJdbcServices();
 

@@ -14,7 +14,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 public class NaturalIdHelper {
 
-	public static String[] getNaturalIdPropertyNames(EntityPersister persister) {
+	public static String[] getNaturalIdPropertyNames(EntityPersister<?> persister) {
 		final int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
 		if ( naturalIdPropertyIndices == null ) {
 			throw new IdentifierGenerationException( "Entity '" + persister.getEntityName()
@@ -34,7 +34,7 @@ public class NaturalIdHelper {
 
 	public static void performAnyNeededCrossReferenceSynchronizations(
 			boolean synchronizationEnabled,
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			SharedSessionContractImplementor session) {
 		// first check if synchronization (this process) was disabled
 		if ( synchronizationEnabled

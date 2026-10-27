@@ -104,7 +104,7 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 	@Override
 	public CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,

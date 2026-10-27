@@ -18,7 +18,7 @@ public class TableInsertReturningBuilder extends AbstractTableInsertBuilder {
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public TableInsertReturningBuilder(
-			EntityPersister mutationTarget,
+			EntityPersister<?> mutationTarget,
 			MutatingTableReference tableReference,
 			List<ColumnReference> generatedColumns,
 			SessionFactoryImplementor sessionFactory) {
@@ -28,8 +28,8 @@ public class TableInsertReturningBuilder extends AbstractTableInsertBuilder {
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	protected EntityPersister getMutationTarget() {
-		return (EntityPersister) super.getMutationTarget();
+	protected EntityPersister<?> getMutationTarget() {
+		return (EntityPersister<?>) super.getMutationTarget();
 	}
 
 	@Override

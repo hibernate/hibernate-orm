@@ -202,7 +202,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	public void process(@Nonnull Object object, @Nonnull EntityPersister persister) {
+	public void process(@Nonnull Object object, @Nonnull EntityPersister<?> persister) {
 		final Object[] values = persister.getValues( object );
 		final Type[] types = persister.getPropertyTypes();
 		processEntityPropertyValues( values, types );

@@ -957,7 +957,7 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	protected void addSynchronizedQuerySpaces(EntityPersister persister) {
+	protected void addSynchronizedQuerySpaces(EntityPersister<?> persister) {
 		synchronizedQuerySpaces().addAll( asList( (String[]) persister.getQuerySpaces() ) );
 	}
 
@@ -1176,7 +1176,7 @@ public class ProcedureCallImpl<R>
 						throw new IllegalArgumentException( "The parameter at position " + parameter + " was not set" );
 					}
 				}
-				final var parameterType = (JdbcMapping) registration.getParameterType();
+				final var parameterType = (JdbcMapping<?>) registration.getParameterType();
 				jdbcParameterBindings.addBinding(
 						(JdbcParameter) parameterBinder,
 						new JdbcParameterBindingImpl( parameterType,

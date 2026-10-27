@@ -25,7 +25,7 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	private final Lock readLock;
 	private final Lock writeLock;
 
-	NaturalIdStatisticsImpl(EntityPersister rootEntityDescriptor) {
+	NaturalIdStatisticsImpl(EntityPersister<?> rootEntityDescriptor) {
 		super( () -> {
 			final var cache = rootEntityDescriptor.getNaturalIdCacheAccessStrategy();
 			return cache != null ? cache.getRegion() : null;

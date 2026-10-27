@@ -88,7 +88,7 @@ public class MultiTableMutationStrategyFactoryTests {
 	@Test
 	void globalCustomStrategiesTakePrecedenceWithoutConsultingTheDialect() {
 		final var provider = new SqmMultiTableMutationStrategyProviderStandard();
-		final EntityMappingType rootEntity = rootEntity();
+		final EntityMappingType<?> rootEntity = rootEntity();
 		final RuntimeModelCreationContext creationContext = creationContext();
 		final SessionFactoryOptions options = creationContext.getSessionFactoryOptions();
 		final SqmMultiTableMutationStrategy mutationStrategy = mock( SqmMultiTableMutationStrategy.class );
@@ -104,7 +104,7 @@ public class MultiTableMutationStrategyFactoryTests {
 	@Test
 	void entityCustomStrategiesTakePrecedenceWithoutConsultingTheDialect() {
 		final var provider = new SqmMultiTableMutationStrategyProviderStandard();
-		final EntityMappingType rootEntity = rootEntity();
+		final EntityMappingType<?> rootEntity = rootEntity();
 		final RuntimeModelCreationContext creationContext = creationContext();
 		final SessionFactoryOptions options = creationContext.getSessionFactoryOptions();
 		final SqmMultiTableMutationStrategy mutationStrategy = mock( SqmMultiTableMutationStrategy.class );
@@ -279,8 +279,8 @@ public class MultiTableMutationStrategyFactoryTests {
 		};
 	}
 
-	private static EntityMappingType rootEntity() {
-		final EntityMappingType rootEntity = mock( EntityMappingType.class );
+	private static EntityMappingType<?> rootEntity() {
+		final EntityMappingType<?> rootEntity = mock( EntityMappingType.class );
 		when( rootEntity.getEntityName() ).thenReturn( ENTITY_NAME );
 		return rootEntity;
 	}

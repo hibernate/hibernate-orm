@@ -37,27 +37,27 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class DynamicCompositeIdManyToOneTests {
 	@Test
 	void testBinding(SessionFactoryScope factoryScope) {
-		final EntityPersister entityDescriptor = factoryScope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = factoryScope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.findEntityDescriptor( "DynamicCompositeIdManyToOne" );
 
 		assertThat( entityDescriptor.getNumberOfAttributeMappings(), is( 1 ) );
 
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityDescriptor.getIdentifierMapping();
 		assertThat( identifierMapping, instanceOf( NonAggregatedIdentifierMapping.class ) );
-		final NonAggregatedIdentifierMapping cid = (NonAggregatedIdentifierMapping) identifierMapping;
+		final NonAggregatedIdentifierMapping<?, ?> cid = (NonAggregatedIdentifierMapping<?, ?>) identifierMapping;
 		assertThat( cid.getEmbeddableTypeDescriptor().getNumberOfAttributeMappings(), is( 2 ) );
 
-		final AttributeMapping key1 = cid.getEmbeddableTypeDescriptor().findAttributeMapping( "key1" );
+		final AttributeMapping<?, ?, ?> key1 = cid.getEmbeddableTypeDescriptor().findAttributeMapping( "key1" );
 		assertThat( key1, notNullValue() );
 		assertThat( key1, instanceOf( BasicAttributeMapping.class ) );
 
-		final AttributeMapping key2 = cid.getEmbeddableTypeDescriptor().findAttributeMapping( "key2" );
+		final AttributeMapping<?, ?, ?> key2 = cid.getEmbeddableTypeDescriptor().findAttributeMapping( "key2" );
 		assertThat( key2, notNullValue() );
 		assertThat( key2, instanceOf( ToOneAttributeMapping.class ) );
 
-		final AttributeMapping attr1 = entityDescriptor.findAttributeMapping( "attr1" );
+		final AttributeMapping<?, ?, ?> attr1 = entityDescriptor.findAttributeMapping( "attr1" );
 		assertThat( attr1, notNullValue() );
 		assertThat( attr1, instanceOf( BasicAttributeMapping.class ) );
 	}

@@ -275,11 +275,11 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	@Internal
 	public static class HbmFetchParentMemento implements FetchParentMemento {
 		private final NavigablePath navigablePath;
-		private final FetchableContainer fetchableContainer;
+		private final FetchableContainer<?, ?, ?> fetchableContainer;
 
 		public HbmFetchParentMemento(
 				NavigablePath navigablePath,
-				FetchableContainer fetchableContainer) {
+				FetchableContainer<?, ?, ?> fetchableContainer) {
 			this.navigablePath = navigablePath;
 			this.fetchableContainer = fetchableContainer;
 		}
@@ -290,7 +290,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		@Override
-		public FetchableContainer getFetchableContainer() {
+		public FetchableContainer<?, ?, ?> getFetchableContainer() {
 			return fetchableContainer;
 		}
 	}
@@ -621,14 +621,14 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			final FetchParentMemento fetchParentMemento = parent.resolveParentMemento( resolutionContext );
 
-			Fetchable fetchable = (Fetchable) fetchParentMemento.getFetchableContainer().findSubPart(
+			Fetchable<?, ?, ?> fetchable = (Fetchable<?, ?, ?>) fetchParentMemento.getFetchableContainer().findSubPart(
 					propertyPathParts[ 0 ],
 					null
 			);
 			NavigablePath navigablePath = fetchParentMemento.getNavigablePath().append( fetchable.getFetchableName() );
 
 			for ( int i = 1; i < propertyPathParts.length; i++ ) {
-				if ( ! ( fetchable instanceof FetchableContainer ) ) {
+				if ( ! ( fetchable instanceof FetchableContainer<?, ?, ?> ) ) {
 					throw new MappingException(
 							String.format(
 									Locale.ROOT,
@@ -637,11 +637,11 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 							)
 					);
 				}
-				fetchable = (Fetchable) ( (FetchableContainer) fetchable.getPartMappingType() ).findSubPart( propertyPathParts[i], null );
+				fetchable = (Fetchable<?, ?, ?>) ( (FetchableContainer<?, ?, ?>) fetchable.getPartMappingType() ).findSubPart( propertyPathParts[i], null );
 				navigablePath = navigablePath.append( fetchable.getFetchableName() );
 			}
 
-			final BasicValuedModelPart basicPart = fetchable.asBasicValuedModelPart();
+			final BasicValuedModelPart<?, ?, ?> basicPart = fetchable.asBasicValuedModelPart();
 			if ( basicPart != null ) {
 				return new FetchMementoBasicStandard(
 						navigablePath,
@@ -649,14 +649,14 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 						columnAliases.get( 0 )
 				);
 			}
-			else if ( fetchable instanceof EntityValuedFetchable entityValuedFetchable ) {
+			else if ( fetchable instanceof EntityValuedFetchable<?> entityValuedFetchable ) {
 				return new FetchMementoEntityStandard(
 						navigablePath,
 						entityValuedFetchable,
 						columnAliases
 				);
 			}
-			else if ( fetchable instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+			else if ( fetchable instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 				return new FetchMementoEmbeddableStandard(
 						navigablePath,
 						embeddableValuedModelPart,
@@ -737,7 +737,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 				final Map<String, FetchMemento> fetchDescriptorMap = new HashMap<>();
 				final List<String> keyColumnNames = new ArrayList<>();
-				final boolean isPlural = thisAsParentMemento.getFetchableContainer() instanceof PluralAttributeMapping;
+				final boolean isPlural = thisAsParentMemento.getFetchableContainer() instanceof PluralAttributeMapping<?>;
 				propertyFetchDescriptors.forEach(
 						hbmFetchDescriptor -> {
 							if ( isPlural && "key".equals( hbmFetchDescriptor.getFetchablePath() ) ) {
@@ -759,7 +759,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 						lockMode,
 						thisAsParentMemento,
 						fetchDescriptorMap,
-						(Fetchable) thisAsParentMemento.getFetchableContainer()
+						(Fetchable<?, ?, ?>) thisAsParentMemento.getFetchableContainer()
 				);
 			}
 
@@ -780,16 +780,16 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 				final var parts = split( ".", propertyPath );
 				NavigablePath navigablePath =
-						ownerMemento.getFetchableContainer() instanceof PluralAttributeMapping
+						ownerMemento.getFetchableContainer() instanceof PluralAttributeMapping<?>
 								? ownerMemento.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() )
 								: ownerMemento.getNavigablePath();
 				navigablePath = navigablePath.append( parts[ 0 ] );
-				FetchableContainer fetchable = (FetchableContainer)
+				FetchableContainer<?, ?, ?> fetchable = (FetchableContainer<?, ?, ?>)
 						ownerMemento.getFetchableContainer().findSubPart( parts[ 0 ], null );
 
 				for ( int i = 1; i < parts.length; i++ ) {
 					navigablePath = navigablePath.append( parts[ i ] );
-					fetchable = (FetchableContainer) fetchable.findSubPart( parts[ i ], null );
+					fetchable = (FetchableContainer<?, ?, ?>) fetchable.findSubPart( parts[ i ], null );
 				}
 
 				thisAsParentMemento = new HbmFetchParentMemento( navigablePath, fetchable );
@@ -861,7 +861,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				memento = new ResultMementoCollectionStandard(
 						tableAlias,
 						thisAsParentMemento.getNavigablePath(),
-						(PluralAttributeMapping) thisAsParentMemento.getFetchableContainer()
+						(PluralAttributeMapping<?>) thisAsParentMemento.getFetchableContainer()
 				);
 			}
 

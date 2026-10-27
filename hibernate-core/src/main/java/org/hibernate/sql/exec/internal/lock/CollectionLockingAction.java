@@ -142,8 +142,8 @@ public class CollectionLockingAction implements PostAction {
 	}
 
 	// Used by Hibernate Reactive
-	protected static Map<EntityMappingType, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
-		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
+	protected static Map<EntityMappingType<?>, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
+		final Map<EntityMappingType<?>, List<EntityKey>> map = new IdentityHashMap<>();
 		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedEntities(), map );
 		if ( map.isEmpty() ) {
 			// NOTE: this may happen with Session#lock routed through SqlAstBasedLockingStrategy.

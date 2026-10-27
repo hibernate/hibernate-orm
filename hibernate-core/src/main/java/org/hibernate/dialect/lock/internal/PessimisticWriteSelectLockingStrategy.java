@@ -28,7 +28,7 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
-	public PessimisticWriteSelectLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	public PessimisticWriteSelectLockingStrategy(EntityPersister<?> lockable, LockMode lockMode) {
 		super( lockable, lockMode );
 	}
 

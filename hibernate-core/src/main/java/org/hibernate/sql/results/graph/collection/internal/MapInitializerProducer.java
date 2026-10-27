@@ -15,12 +15,12 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
  * @author Steve Ebersole
  */
 public class MapInitializerProducer implements CollectionInitializerProducer {
-	private final PluralAttributeMapping mapDescriptor;
+	private final PluralAttributeMapping<?> mapDescriptor;
 	private final Fetch mapKeyFetch;
 	private final Fetch mapValueFetch;
 
 	public MapInitializerProducer(
-			PluralAttributeMapping mapDescriptor,
+			PluralAttributeMapping<?> mapDescriptor,
 			Fetch mapKeyFetch,
 			Fetch mapValueFetch) {
 		this.mapDescriptor = mapDescriptor;
@@ -31,7 +31,7 @@ public class MapInitializerProducer implements CollectionInitializerProducer {
 	@Override
 	public CollectionInitializer<?> produceInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attribute,
+			PluralAttributeMapping<?> attribute,
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,

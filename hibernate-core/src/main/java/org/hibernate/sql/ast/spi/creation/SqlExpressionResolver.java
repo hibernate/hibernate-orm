@@ -42,7 +42,7 @@ public interface SqlExpressionResolver {
 	 *
 	 * @see #resolveSqlExpression
 	 */
-	static ColumnReferenceKey createColumnReferenceKey(String tableExpression, String columnExpression, JdbcMapping jdbcMapping) {
+	static ColumnReferenceKey createColumnReferenceKey(String tableExpression, String columnExpression, JdbcMapping<?> jdbcMapping) {
 		return createColumnReferenceKey( tableExpression, new SelectablePath( columnExpression ), jdbcMapping );
 	}
 	/**
@@ -50,10 +50,10 @@ public interface SqlExpressionResolver {
 	 *
 	 * @see #resolveSqlExpression
 	 */
-	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, String columnExpression, JdbcMapping jdbcMapping) {
+	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, String columnExpression, JdbcMapping<?> jdbcMapping) {
 		return createColumnReferenceKey( tableReference, new SelectablePath( columnExpression ), jdbcMapping );
 	}
-	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, SelectablePath selectablePath, JdbcMapping jdbcMapping) {
+	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, SelectablePath selectablePath, JdbcMapping<?> jdbcMapping) {
 		assert tableReference != null : "tableReference expected to be non-null";
 		assert selectablePath != null : "selectablePath expected to be non-null";
 		assert tableReference.getIdentificationVariable() != null : "tableReference#identificationVariable expected to be non-null";
@@ -61,7 +61,7 @@ public interface SqlExpressionResolver {
 		return createColumnReferenceKey( qualifier, selectablePath, jdbcMapping );
 	}
 
-	static ColumnReferenceKey createColumnReferenceKey(String qualifier, SelectablePath selectablePath, JdbcMapping jdbcMapping) {
+	static ColumnReferenceKey createColumnReferenceKey(String qualifier, SelectablePath selectablePath, JdbcMapping<?> jdbcMapping) {
 		assert qualifier != null : "qualifier expected to be non-null";
 		assert selectablePath != null : "selectablePath expected to be non-null";
 		assert jdbcMapping != null : "jdbcMapping expected to be non-null";
@@ -95,7 +95,7 @@ public interface SqlExpressionResolver {
 	 * @deprecated Use {@link #createColumnReferenceKey(TableReference, SelectableMapping)} instead
 	 */
 	@Deprecated(forRemoval = true)
-	static ColumnReferenceKey createDiscriminatorColumnReferenceKey(TableReference tableReference, EntityDiscriminatorMapping discriminatorMapping) {
+	static ColumnReferenceKey createDiscriminatorColumnReferenceKey(TableReference tableReference, EntityDiscriminatorMapping<?> discriminatorMapping) {
 		assert tableReference.containsAffectedTableName( discriminatorMapping.getContainingTableExpression() )
 				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), discriminatorMapping.getContainingTableExpression() );
 		return createColumnReferenceKey( tableReference, discriminatorMapping.getSelectablePath(), discriminatorMapping.getJdbcMapping() );
@@ -132,9 +132,9 @@ public interface SqlExpressionResolver {
 	final class ColumnReferenceKey {
 		private final String tableQualifier;
 		private final SelectablePath selectablePath;
-		private final JdbcMapping jdbcMapping;
+		private final JdbcMapping<?> jdbcMapping;
 
-		public ColumnReferenceKey(String tableQualifier, SelectablePath selectablePath, JdbcMapping jdbcMapping) {
+		public ColumnReferenceKey(String tableQualifier, SelectablePath selectablePath, JdbcMapping<?> jdbcMapping) {
 			this.tableQualifier = tableQualifier;
 			this.selectablePath = selectablePath;
 			this.jdbcMapping = jdbcMapping;

@@ -46,7 +46,7 @@ public class DefaultCacheConcurrencyPropertyTest {
 					.isEqualTo( AccessType.READ_ONLY );
 
 			try (SessionFactoryImplementor sf = metadata.buildSessionFactory()) {
-				final EntityPersister persister = sf.getRuntimeMetamodels()
+				final EntityPersister<?> persister = sf.getRuntimeMetamodels()
 						.getMappingMetamodel()
 						.getEntityDescriptor( TheEntity.class.getName() );
 				assertThat( persister.canReadFromCache() ).isTrue();

@@ -175,12 +175,12 @@ public class TypeDefinition implements Serializable {
 				return new UserTypeResolution<>( customType, null, combinedTypeParameters );
 			}
 
-			if ( typeInstance instanceof BasicType ) {
+			if ( typeInstance instanceof BasicType<?> ) {
 				@SuppressWarnings("unchecked")
 				final BasicType<T> resolvedBasicType = (BasicType<T>) typeInstance;
 				return new BasicValue.Resolution<>() {
 					@Override
-					public JdbcMapping getJdbcMapping() {
+					public JdbcMapping<?> getJdbcMapping() {
 						return resolvedBasicType;
 					}
 
@@ -260,7 +260,7 @@ public class TypeDefinition implements Serializable {
 
 		return new BasicValue.Resolution<>() {
 			@Override
-			public JdbcMapping getJdbcMapping() {
+			public JdbcMapping<?> getJdbcMapping() {
 				return resolved;
 			}
 

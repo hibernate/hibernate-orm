@@ -29,7 +29,7 @@ import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
  */
 public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, InitializerProducer<EntityFetchJoinedImpl> {
 	private final FetchParent fetchParent;
-	private final EntityValuedFetchable fetchContainer;
+	private final EntityValuedFetchable<?> fetchContainer;
 	private final EntityResultImpl<?> entityResult;
 	private final DomainResult<?> keyResult;
 	private final NotFoundAction notFoundAction;
@@ -40,7 +40,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 
 	public EntityFetchJoinedImpl(
 			FetchParent fetchParent,
-			ToOneAttributeMapping toOneMapping,
+			ToOneAttributeMapping<?> toOneMapping,
 			TableGroup tableGroup,
 			DomainResult<?> keyResult,
 			boolean isAffectedByFilter,
@@ -64,7 +64,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 
 	public EntityFetchJoinedImpl(
 			FetchParent fetchParent,
-			EntityCollectionPart collectionPart,
+			EntityCollectionPart<?> collectionPart,
 			TableGroup tableGroup,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
@@ -99,22 +99,22 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	}
 
 	@Override
-	public EntityValuedFetchable getEntityValuedModelPart() {
+	public EntityValuedFetchable<?> getEntityValuedModelPart() {
 		return fetchContainer;
 	}
 
 	@Override
-	public EntityValuedFetchable getReferencedModePart() {
+	public EntityValuedFetchable<?> getReferencedModePart() {
 		return getEntityValuedModelPart();
 	}
 
 	@Override
-	public EntityValuedFetchable getReferencedMappingType() {
+	public EntityValuedFetchable<?> getReferencedMappingType() {
 		return getEntityValuedModelPart();
 	}
 
 	@Override
-	public EntityValuedFetchable getFetchedMapping() {
+	public EntityValuedFetchable<?> getFetchedMapping() {
 		return getEntityValuedModelPart();
 	}
 
@@ -193,7 +193,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 		return entityResult.findFetch( fetchable );
 	}
 

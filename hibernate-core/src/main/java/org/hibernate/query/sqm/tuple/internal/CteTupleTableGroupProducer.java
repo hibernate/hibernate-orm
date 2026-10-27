@@ -23,14 +23,14 @@ import org.hibernate.type.BasicType;
  *
  * @author Christian Beikov
  */
-public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer {
+public class CteTupleTableGroupProducer<J> extends AnonymousTupleTableGroupProducer<J> {
 
-	private final AnonymousTupleBasicValuedModelPart searchModelPart;
-	private final AnonymousTupleBasicValuedModelPart cycleMarkModelPart;
-	private final AnonymousTupleBasicValuedModelPart cyclePathModelPart;
+	private final AnonymousTupleBasicValuedModelPart<?, ?> searchModelPart;
+	private final AnonymousTupleBasicValuedModelPart<?, ?> cycleMarkModelPart;
+	private final AnonymousTupleBasicValuedModelPart<?, ?> cyclePathModelPart;
 
 	public CteTupleTableGroupProducer(
-			SqmCteTable<?> sqmCteTable,
+			SqmCteTable<J> sqmCteTable,
 			String aliasStem,
 			SqlTypedMapping[] sqlTypedMappings,
 			FromClauseAccess fromClauseAccess) {
@@ -50,12 +50,12 @@ public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer
 		this.cyclePathModelPart = createModelPart( this, cteStatement.getCyclePathAttributeName(), stringType );
 	}
 
-	private static AnonymousTupleBasicValuedModelPart createModelPart(
-			MappingType declaringType,
+	private static AnonymousTupleBasicValuedModelPart<?, ?> createModelPart(
+			MappingType<?> declaringType,
 			String attributeName,
 			BasicType<?> basicType) {
 		if ( attributeName != null ) {
-			return new AnonymousTupleBasicValuedModelPart(
+			return new AnonymousTupleBasicValuedModelPart<>(
 					declaringType,
 					attributeName,
 					attributeName,
@@ -84,8 +84,8 @@ public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
-		final ModelPart subPart = super.findSubPart( name, treatTargetType );
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
+		final ModelPart<?, ?, ?> subPart = super.findSubPart( name, treatTargetType );
 		if ( subPart != null ) {
 			return subPart;
 		}

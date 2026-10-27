@@ -32,7 +32,7 @@ public interface Bindable extends JdbcMappingContainer {
 	 * @apiNote Same as {@link #forEachJdbcType(int, IndexedConsumer)} starting from `0`
 	 */
 	@Override
-	default int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return forEachJdbcType( 0, action );
 	}
 
@@ -204,14 +204,14 @@ public interface Bindable extends JdbcMappingContainer {
 	@FunctionalInterface
 	interface JdbcValuesConsumer extends JdbcValuesBiConsumer<Object, Object> {
 		@Override
-		default void consume(int valueIndex, @Nullable Object o, @Nullable Object o2, @Nullable Object jdbcValue, @Nonnull JdbcMapping jdbcMapping) {
+		default void consume(int valueIndex, @Nullable Object o, @Nullable Object o2, @Nullable Object jdbcValue, @Nonnull JdbcMapping<?> jdbcMapping) {
 			consume( valueIndex, jdbcValue, jdbcMapping );
 		}
 
 		/**
 		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
 		 */
-		void consume(int valueIndex, @Nullable Object jdbcValue, @Nonnull JdbcMapping jdbcMapping);
+		void consume(int valueIndex, @Nullable Object jdbcValue, @Nonnull JdbcMapping<?> jdbcMapping);
 	}
 
 	/**
@@ -223,6 +223,6 @@ public interface Bindable extends JdbcMappingContainer {
 		/**
 		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
 		 */
-		void consume(int valueIndex, @Nullable X x, @Nullable Y y, @Nullable Object jdbcValue, @Nonnull JdbcMapping jdbcMapping);
+		void consume(int valueIndex, @Nullable X x, @Nullable Y y, @Nullable Object jdbcValue, @Nonnull JdbcMapping<?> jdbcMapping);
 	}
 }

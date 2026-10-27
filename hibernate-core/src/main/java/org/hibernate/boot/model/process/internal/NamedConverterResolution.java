@@ -179,7 +179,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	private final JpaAttributeConverter<J,?> valueConverter;
 	private final MutabilityPlan<J> mutabilityPlan;
 
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 
 	private final BasicType<J> legacyResolvedType;
 
@@ -271,7 +271,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 

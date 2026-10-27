@@ -18,12 +18,12 @@ public class EmbeddableInstantiatorPojoStandard
 		extends AbstractPojoInstantiator
 		implements StandardEmbeddableInstantiator {
 
-	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
+	private final Supplier<EmbeddableMappingType<?, ?, ?>> embeddableMappingAccess;
 	private final Constructor<?> constructor;
 
 	public EmbeddableInstantiatorPojoStandard(
 			Class<?> embeddableClass,
-			Supplier<EmbeddableMappingType> embeddableMappingAccess) {
+			Supplier<EmbeddableMappingType<?, ?, ?>> embeddableMappingAccess) {
 		super( embeddableClass );
 		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.constructor = resolveConstructor( embeddableClass );

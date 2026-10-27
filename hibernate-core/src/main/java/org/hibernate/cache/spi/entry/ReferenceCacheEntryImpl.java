@@ -15,7 +15,7 @@ import org.hibernate.persister.entity.EntityPersister;
 public class ReferenceCacheEntryImpl implements CacheEntry {
 	private final Object reference;
 	// passing the persister avoids a costly persister lookup by class name at cache retrieval time
-	private final EntityPersister subclassPersister;
+	private final EntityPersister<?> subclassPersister;
 
 	/**
 	 * Constructs a ReferenceCacheEntryImpl
@@ -23,7 +23,7 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 	 * @param reference The reference entity instance
 	 * @param subclassPersister The specific subclass persister
 	 */
-	public ReferenceCacheEntryImpl(@Nonnull Object reference, @Nonnull EntityPersister subclassPersister) {
+	public ReferenceCacheEntryImpl(@Nonnull Object reference, @Nonnull EntityPersister<?> subclassPersister) {
 		this.reference = reference;
 		this.subclassPersister = subclassPersister;
 	}
@@ -50,7 +50,7 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 	}
 
 	@Nonnull
-	public EntityPersister getSubclassPersister() {
+	public EntityPersister<?> getSubclassPersister() {
 		return subclassPersister;
 	}
 

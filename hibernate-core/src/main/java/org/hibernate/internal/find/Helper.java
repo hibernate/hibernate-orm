@@ -25,7 +25,7 @@ import java.util.List;
 public class Helper {
 	public static final FindOption[] NO_OPTIONS = new FindOption[0];
 
-	public static Object coerceId(EntityPersister entityPersister, Object id, SessionFactoryImplementor factory) {
+	public static Object coerceId(EntityPersister<?> entityPersister, Object id, SessionFactoryImplementor factory) {
 		final var identifierMapping = entityPersister.getIdentifierMapping();
 		if ( isLoadByIdComplianceEnabled( factory ) ) {
 			final var javaType = identifierMapping.getJavaType();
@@ -53,7 +53,7 @@ public class Helper {
 		}
 	}
 
-	public static Object[] coerceIds(EntityPersister entityPersister, List<?> keys, SharedSessionContractImplementor session) {
+	public static Object[] coerceIds(EntityPersister<?> entityPersister, List<?> keys, SharedSessionContractImplementor session) {
 		Object[] ids = null;
 		final int size = keys.size();
 		for ( int i = 0; i < size; i++ ) {
@@ -70,7 +70,7 @@ public class Helper {
 		return ids == null ? keys.toArray() : ids;
 	}
 
-	public static Object coerceNaturalId(EntityPersister entityPersister, Object key) {
+	public static Object coerceNaturalId(EntityPersister<?> entityPersister, Object key) {
 		var naturalIdMapping = entityPersister.getNaturalIdMapping();
 		assert naturalIdMapping != null;
 		try {

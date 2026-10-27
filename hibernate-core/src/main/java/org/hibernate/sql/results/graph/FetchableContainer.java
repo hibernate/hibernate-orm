@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
  * @author Steve Ebersole
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
-public interface FetchableContainer extends ModelPartContainer {
+public interface FetchableContainer<J, M, R> extends ModelPartContainer<J, M, R> {
 
 	/**
 	 * The number of key fetchables in the container
@@ -36,57 +36,57 @@ public interface FetchableContainer extends ModelPartContainer {
 		return getNumberOfFetchables();
 	}
 
-	default Fetchable getKeyFetchable(int position) {
-		List<Fetchable> fetchables = new ArrayList<>( getNumberOfKeyFetchables() );
+	default Fetchable<?, ?, ?> getKeyFetchable(int position) {
+		List<Fetchable<?, ?, ?>> fetchables = new ArrayList<>( getNumberOfKeyFetchables() );
 		visitKeyFetchables( fetchable -> fetchables.add( fetchable ), null );
 		return fetchables.get( position );
 	}
 
-	default Fetchable getFetchable(int position) {
-		List<Fetchable> fetchables = new ArrayList<>( getNumberOfFetchables() );
+	default Fetchable<?, ?, ?> getFetchable(int position) {
+		List<Fetchable<?, ?, ?>> fetchables = new ArrayList<>( getNumberOfFetchables() );
 		visitFetchables( fetchable -> fetchables.add( fetchable ), null );
 		return fetchables.get( position );
 	}
 
 	default void visitKeyFetchables(
-			Consumer<? super Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
+			Consumer<? super Fetchable<?, ?, ?>> fetchableConsumer,
+			EntityMappingType<?> treatTargetType) {
 		// by default, nothing to do
 	}
 
 	default void visitKeyFetchables(
-			IndexedConsumer<? super Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
+			IndexedConsumer<? super Fetchable<?, ?, ?>> fetchableConsumer,
+			EntityMappingType<?> treatTargetType) {
 		visitKeyFetchables( 0, fetchableConsumer, treatTargetType );
 	}
 
 	default void visitKeyFetchables(
 			int offset,
-			IndexedConsumer<? super Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
+			IndexedConsumer<? super Fetchable<?, ?, ?>> fetchableConsumer,
+			EntityMappingType<?> treatTargetType) {
 		// by default, nothing to do
 	}
 
 	default void visitFetchables(
-			Consumer<? super Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
+			Consumer<? super Fetchable<?, ?, ?>> fetchableConsumer,
+			EntityMappingType<?> treatTargetType) {
 		//noinspection unchecked
 		visitSubParts( (Consumer) fetchableConsumer, treatTargetType );
 	}
 
 	default void visitFetchables(
-			IndexedConsumer<? super Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
+			IndexedConsumer<? super Fetchable<?, ?, ?>> fetchableConsumer,
+			EntityMappingType<?> treatTargetType) {
 		visitFetchables( 0, fetchableConsumer, treatTargetType );
 	}
 
 	default void visitFetchables(
 			int offset,
-			IndexedConsumer<? super Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
+			IndexedConsumer<? super Fetchable<?, ?, ?>> fetchableConsumer,
+			EntityMappingType<?> treatTargetType) {
 		final MutableInteger index = new MutableInteger( offset );
 		visitSubParts(
-				modelPart -> fetchableConsumer.accept( index.getAndIncrement(), (Fetchable) modelPart ),
+				modelPart -> fetchableConsumer.accept( index.getAndIncrement(), (Fetchable<?, ?, ?>) modelPart ),
 				treatTargetType
 		);
 	}

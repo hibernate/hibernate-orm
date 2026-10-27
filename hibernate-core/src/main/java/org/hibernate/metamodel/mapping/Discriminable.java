@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.spi.query.predicate.Predicate;
  */
 public interface Discriminable {
 	@Nullable
-	DiscriminatorMapping getDiscriminatorMapping();
+	DiscriminatorMapping<?> getDiscriminatorMapping();
 
 	/**
 	 * Apply the discriminator as a predicate via the {@code predicateConsumer}

@@ -58,13 +58,13 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 		final String[] componentNames;
 		if ( elementType.getJdbcType() instanceof AggregateJdbcType aggregateJdbcType
 			&& aggregateJdbcType.getEmbeddableMappingType() != null ) {
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			componentTypes = determineComponentTypes( embeddableMappingType );
 			componentNames = new String[componentTypes.length];
 			final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
 			int index = 0;
 			for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-				final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
+				final AttributeMapping<?, ?, ?> attributeMapping = embeddableMappingType.getAttributeMapping( i );
 				if ( attributeMapping.getMappedType() instanceof SqmExpressible<?> ) {
 					componentNames[index++] = attributeMapping.getAttributeName();
 				}
@@ -121,7 +121,7 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 		final SelectableMapping[] returnType;
 		if ( elementType.getJdbcType() instanceof AggregateJdbcType aggregateJdbcType
 				&& aggregateJdbcType.getEmbeddableMappingType() != null ) {
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			returnType = new SelectableMapping[jdbcValueCount + (indexMapping == null ? 0 : 1)];
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
@@ -225,13 +225,13 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 		return returnType;
 	}
 
-	private static SqmBindableType<?>[] determineComponentTypes(EmbeddableMappingType embeddableMappingType) {
+	private static SqmBindableType<?>[] determineComponentTypes(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
 		final ArrayList<SqmBindableType<?>> expressibles = new ArrayList<>( numberOfAttributeMappings + 1 );
 
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
-			final MappingType mappedType = attributeMapping.getMappedType();
+			final AttributeMapping<?, ?, ?> attributeMapping = embeddableMappingType.getAttributeMapping( i );
+			final MappingType<?> mappedType = attributeMapping.getMappedType();
 			if ( mappedType instanceof SqmBindableType<?> sqmExpressible ) {
 				expressibles.add( sqmExpressible );
 			}

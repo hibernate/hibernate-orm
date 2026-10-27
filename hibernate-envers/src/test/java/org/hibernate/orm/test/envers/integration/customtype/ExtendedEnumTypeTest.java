@@ -159,13 +159,13 @@ public class ExtendedEnumTypeTest {
 		scope.inEntityManager( entityManager -> {
 			final SessionFactoryImplementor sessionFactory = entityManager.unwrap( SessionImplementor.class ).getSessionFactory();
 
-			final EntityPersister entityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityClass );
+			final EntityPersister<?> entityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityClass );
 			final EnversService enversService = sessionFactory.getServiceRegistry().getService( EnversService.class );
 
 			final String entityName = entityPersister.getEntityName();
 			final String auditEntityName = enversService.getConfig().getAuditEntityName( entityName );
 
-			final EntityPersister auditedEntityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( auditEntityName );
+			final EntityPersister<?> auditedEntityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( auditEntityName );
 
 			final org.hibernate.type.Type propertyType = auditedEntityPersister.getPropertyType( propertyName );
 			assertTyping( CustomType.class, propertyType );

@@ -30,7 +30,7 @@ public final class FilteredAssociationHydration {
 						// An @Any initializer resolves its target type from each row's discriminator.
 						// Only ordinary to-one mappings have a static target descriptor to inspect here.
 						final boolean affected = initializer instanceof EntityInitializer<?> entity
-								&& entity.getInitializedPart() instanceof ToOneAttributeMapping toOne
+								&& entity.getInitializedPart() instanceof ToOneAttributeMapping<?> toOne
 								&& FilteredAssociationMapping.isRestricted( toOne )
 								|| initializer instanceof EmbeddableInitializer<?> embedded
 								&& FilteredAssociationMapping.hasRestrictedAssociations(
@@ -64,7 +64,7 @@ public final class FilteredAssociationHydration {
 				if ( values[i] == null && initializer instanceof EntityInitializer<?> entityInitializer ) {
 					final Object key = entityInitializer.getFilteredAssociationKey( rowProcessingState );
 					if ( key != null ) {
-						state = mapping.record( state, (ToOneAttributeMapping) entityInitializer.getInitializedPart(), key );
+						state = mapping.record( state, (ToOneAttributeMapping<?>) entityInitializer.getInitializedPart(), key );
 					}
 				}
 				else if ( initializer instanceof EmbeddableInitializer<?> embedded ) {

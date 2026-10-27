@@ -30,7 +30,7 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 				converter.getFromClauseAccess()
 						.findTableGroup( sqmPath.getLhs().getNavigablePath() );
 		final var mapping =
-				(DiscriminatedAssociationModelPart)
+				(DiscriminatedAssociationModelPart<?>)
 						tableGroup.getModelPart().findSubPart(
 								sqmPath.getReferencedPathSource().getPathName(),
 								null
@@ -45,7 +45,7 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 
 	public static <T> DiscriminatedAssociationPathInterpretation<T> from(
 			NavigablePath navigablePath,
-			DiscriminatedAssociationModelPart mapping,
+			DiscriminatedAssociationModelPart<?> mapping,
 			TableGroup tableGroup,
 			SqmToSqlAstConverter converter) {
 		return new DiscriminatedAssociationPathInterpretation<>(
@@ -58,7 +58,7 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 
 	private static SqlTuple createSqlTuple(
 			NavigablePath navigablePath,
-			DiscriminatedAssociationModelPart mapping,
+			DiscriminatedAssociationModelPart<?> mapping,
 			TableGroup tableGroup,
 			SqmToSqlAstConverter converter) {
 		final List<Expression> tupleExpressions = new ArrayList<>();
@@ -79,7 +79,7 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 
 	private DiscriminatedAssociationPathInterpretation(
 			NavigablePath navigablePath,
-			ModelPart mapping,
+			ModelPart<?, ?, ?> mapping,
 			TableGroup tableGroup,
 			SqlTuple sqlTuple) {
 		super( navigablePath, mapping, tableGroup );

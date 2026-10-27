@@ -220,13 +220,13 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
-	private String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping<?> jdbcMapping) {
 		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
 		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
 		return sqlAppender.toString();
 	}
 
-	public void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
+	public void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping<?> jdbcMapping) {
 		switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() ) ) {
 			case BINARY:
 			case VARBINARY:
@@ -276,7 +276,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		}
 	}
 
-	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping<?> jdbcMapping) {
 		switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() ) ) {
 			case BOOLEAN:
 			case BIT:
@@ -334,7 +334,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 	}
 	private static class AggregateJsonWriteExpression implements JsonWriteExpression {
 		private final LinkedHashMap<String, JsonWriteExpression> subExpressions = new LinkedHashMap<>();
-		protected final EmbeddableMappingType embeddableMappingType;
+		protected final EmbeddableMappingType<?, ?, ?> embeddableMappingType;
 
 		public AggregateJsonWriteExpression(SelectableMapping selectableMapping, SQLServerAggregateSupport aggregateSupport) {
 			this.embeddableMappingType = ( (AggregateJdbcType) selectableMapping.getJdbcMapping().getJdbcType() )
@@ -349,7 +349,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 				final SelectablePath selectablePath = column.getSelectablePath();
 				final SelectablePath[] parts = selectablePath.getParts();
 				AggregateJsonWriteExpression currentAggregate = this;
-				EmbeddableMappingType currentMappingType = embeddableMappingType;
+				EmbeddableMappingType<?, ?, ?> currentMappingType = embeddableMappingType;
 				for ( int i = 1; i < parts.length - 1; i++ ) {
 					final SelectableMapping selectableMapping = currentMappingType.getJdbcValueSelectable(
 							currentMappingType.getSelectableIndex( parts[i].getSelectableName() )
@@ -499,7 +499,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 				AggregateXmlWriteExpression currentAggregate = this;
 				for ( int i = 1; i < parts.length - 1; i++ ) {
 					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) currentAggregate.selectableMapping.getJdbcMapping().getJdbcType();
-					final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+					final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
@@ -520,7 +520,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 
 		protected void passThroughUnsetSubExpressions(SelectableMapping aggregateColumn) {
 			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) aggregateColumn.getJdbcMapping().getJdbcType();
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
 				final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );

@@ -36,7 +36,7 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 
 	public BagInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping bagDescriptor,
+			PluralAttributeMapping<?> bagDescriptor,
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,

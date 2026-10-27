@@ -19,8 +19,8 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  *
  * @author Steve Ebersole
  */
-public interface AttributeMapping
-		extends OwnedValuedModelPart, Fetchable, DatabaseSnapshotContributor, PropertyBasedMapping, MutabilityPlanExposer {
+public interface AttributeMapping<J, M, R>
+		extends OwnedValuedModelPart<J, M, R>, Fetchable<J, M, R>, DatabaseSnapshotContributor<J, M, R>, PropertyBasedMapping, MutabilityPlanExposer {
 
 	/**
 	 * The name of the mapped attribute, or {@code null} for an unnamed synthetic attribute.
@@ -49,7 +49,7 @@ public interface AttributeMapping
 	 * The managed type that declares this attribute, or {@code null} for a synthetic attribute.
 	 */
 	@Nullable
-	ManagedMappingType getDeclaringType();
+	ManagedMappingType<?, ?, ?> getDeclaringType();
 
 	/**
 	 * The getter/setter access to this attribute, or {@code null} if it has no Java property.
@@ -82,7 +82,7 @@ public interface AttributeMapping
 
 	@Nullable
 	@Override
-	default EntityMappingType findContainingEntityMapping() {
+	default EntityMappingType<?> findContainingEntityMapping() {
 		final var declaringType = getDeclaringType();
 		return declaringType == null ? null : declaringType.findContainingEntityMapping();
 	}
@@ -112,7 +112,7 @@ public interface AttributeMapping
 
 	@Nonnull
 	@Override //Overrides multiple interfaces!
-	default AttributeMapping asAttributeMapping() {
+	default AttributeMapping<J, M, R> asAttributeMapping() {
 		return this;
 	}
 
@@ -122,7 +122,7 @@ public interface AttributeMapping
 	 * @return PluralAttributeMapping if this is an instance of PluralAttributeMapping otherwise {@code null}
 	 */
 	@Nullable
-	default PluralAttributeMapping asPluralAttributeMapping() {
+	default PluralAttributeMapping<?> asPluralAttributeMapping() {
 		return null;
 	}
 
@@ -137,7 +137,7 @@ public interface AttributeMapping
 	 */
 	@Nullable
 	@org.hibernate.Internal
-	default EmbeddedAttributeMapping asEmbeddedAttributeMapping(){
+	default EmbeddedAttributeMapping<?, ?> asEmbeddedAttributeMapping(){
 		return null;
 	}
 

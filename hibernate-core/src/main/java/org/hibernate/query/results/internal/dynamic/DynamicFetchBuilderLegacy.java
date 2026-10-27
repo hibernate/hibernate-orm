@@ -53,10 +53,10 @@ public class DynamicFetchBuilderLegacy
 	private final String tableAlias;
 
 	private final String ownerTableAlias;
-	private final Fetchable fetchable;
+	private final Fetchable<?, ?, ?> fetchable;
 
 	private final List<String> columnNames;
-	private final Map<Fetchable, FetchBuilder> fetchBuilderMap;
+	private final Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap;
 	private final DynamicResultBuilderEntityStandard resultBuilderEntity;
 
 	private LockMode lockMode;
@@ -64,18 +64,18 @@ public class DynamicFetchBuilderLegacy
 	public DynamicFetchBuilderLegacy(
 			String tableAlias,
 			String ownerTableAlias,
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			List<String> columnNames,
-			Map<Fetchable, FetchBuilder> fetchBuilderMap) {
+			Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap) {
 		this( tableAlias, ownerTableAlias, fetchable, columnNames, fetchBuilderMap, null );
 	}
 
 	public DynamicFetchBuilderLegacy(
 			String tableAlias,
 			String ownerTableAlias,
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			List<String> columnNames,
-			Map<Fetchable, FetchBuilder> fetchBuilderMap,
+			Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap,
 			DynamicResultBuilderEntityStandard resultBuilderEntity) {
 		this.tableAlias = tableAlias;
 		this.ownerTableAlias = ownerTableAlias;
@@ -99,7 +99,7 @@ public class DynamicFetchBuilderLegacy
 
 	@Override
 	@Nonnull
-	public Fetchable getFetchable() {
+	public Fetchable<?, ?, ?> getFetchable() {
 		return fetchable;
 	}
 
@@ -123,11 +123,11 @@ public class DynamicFetchBuilderLegacy
 		return this;
 	}
 
-	private Fetchable resolveFetchable(String propertyName) {
-		if ( fetchable instanceof EntityAssociationMapping attributeMapping ) {
-			return (Fetchable) attributeMapping.findByPath( propertyName );
+	private Fetchable<?, ?, ?> resolveFetchable(String propertyName) {
+		if ( fetchable instanceof EntityAssociationMapping<?> attributeMapping ) {
+			return (Fetchable<?, ?, ?>) attributeMapping.findByPath( propertyName );
 		}
-		else if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		else if ( fetchable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			if ( propertyName.equals( "key" ) ) {
 				return pluralAttributeMapping.getIndexDescriptor();
 			}
@@ -136,11 +136,11 @@ public class DynamicFetchBuilderLegacy
 			}
 			else {
 				final var elementDescriptor = pluralAttributeMapping.getElementDescriptor();
-				if ( elementDescriptor instanceof EntityCollectionPart entityCollectionPart ) {
+				if ( elementDescriptor instanceof EntityCollectionPart<?> entityCollectionPart ) {
 					if ( propertyName.startsWith( ELEMENT_PREFIX ) ) {
 						propertyName = propertyName.substring( ELEMENT_PREFIX_LENGTH );
 					}
-					return (Fetchable) entityCollectionPart.getEntityMappingType().findByPath( propertyName );
+					return (Fetchable<?, ?, ?>) entityCollectionPart.getEntityMappingType().findByPath( propertyName );
 				}
 			}
 		}
@@ -166,12 +166,12 @@ public class DynamicFetchBuilderLegacy
 		);
 	}
 
-	private Map<Fetchable, FetchBuilder> fetchBuilderMap() {
+	private Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap() {
 		if ( this.fetchBuilderMap == null ) {
 			return null;
 		}
 		else {
-			final Map<Fetchable, FetchBuilder> fetchBuilderMap =
+			final Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap =
 					new HashMap<>( this.fetchBuilderMap.size() );
 			for ( var entry : this.fetchBuilderMap.entrySet() ) {
 				fetchBuilderMap.put( entry.getKey(),
@@ -195,14 +195,14 @@ public class DynamicFetchBuilderLegacy
 					.registerLockMode( tableAlias, lockMode );
 		}
 		if ( columnNames != null ) {
-			if ( fetchable instanceof EmbeddedAttributeMapping embeddedAttributeMapping ) {
+			if ( fetchable instanceof EmbeddedAttributeMapping<?, ?> embeddedAttributeMapping ) {
 				embeddedAttributeMapping.forEachSelectable(
 						(selectionIndex, selectableMapping) ->
 								resolveSqlSelection(
 										columnNames.get( selectionIndex ),
 										tableGroup.resolveTableReference(
 												fetchPath,
-												(ValuedModelPart) selectableMapping,
+												(ValuedModelPart<?, ?, ?>) selectableMapping,
 												selectableMapping.getContainingTableExpression()
 										),
 										selectableMapping,
@@ -264,7 +264,7 @@ public class DynamicFetchBuilderLegacy
 			NavigablePath fetchPath,
 			TableGroup ownerTableGroup,
 			DomainResultCreationStateImpl creationState) {
-		if ( fetchable instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+		if ( fetchable instanceof TableGroupJoinProducer<?, ?, ?> tableGroupJoinProducer ) {
 			final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 					fetchPath,
 					ownerTableGroup,
@@ -285,11 +285,11 @@ public class DynamicFetchBuilderLegacy
 		}
 	}
 
-	private static ForeignKeyDescriptor getForeignKeyDescriptor(Fetchable fetchable) {
-		if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+	private static ForeignKeyDescriptor<?, ?, ?> getForeignKeyDescriptor(Fetchable<?, ?, ?> fetchable) {
+		if ( fetchable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			return pluralAttributeMapping.getKeyDescriptor();
 		}
-		else if ( fetchable instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+		else if ( fetchable instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 			return toOneAttributeMapping.getForeignKeyDescriptor();
 		}
 		else {
@@ -299,7 +299,7 @@ public class DynamicFetchBuilderLegacy
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable<?, ?, ?>, FetchBuilder> consumer) {
 		fetchBuilderMap.forEach( consumer );
 	}
 
@@ -339,26 +339,26 @@ public class DynamicFetchBuilderLegacy
 	}
 
 	@Override
-	public DynamicFetchBuilder addProperty(Fetchable fetchable) {
+	public DynamicFetchBuilder addProperty(Fetchable<?, ?, ?> fetchable) {
 		var fetchBuilder = new DynamicFetchBuilderStandard( fetchable );
 		fetchBuilderMap.put( fetchable, fetchBuilder );
 		return fetchBuilder;
 	}
 
 	@Override
-	public FetchBuilder findFetchBuilder(Fetchable fetchable) {
+	public FetchBuilder findFetchBuilder(Fetchable<?, ?, ?> fetchable) {
 		return fetchBuilderMap.get( fetchable );
 	}
 
 	@Override
-	public DynamicFetchBuilderContainer addProperty(Fetchable fetchable, String columnAlias) {
+	public DynamicFetchBuilderContainer addProperty(Fetchable<?, ?, ?> fetchable, String columnAlias) {
 		final var fetchBuilder = addProperty( fetchable );
 		fetchBuilder.addColumnAlias( columnAlias );
 		return this;
 	}
 
 	@Override
-	public DynamicFetchBuilderContainer addProperty(Fetchable fetchable, String... columnAliases) {
+	public DynamicFetchBuilderContainer addProperty(Fetchable<?, ?, ?> fetchable, String... columnAliases) {
 		final var fetchBuilder = addProperty( fetchable );
 		for ( String columnAlias : columnAliases ) {
 			fetchBuilder.addColumnAlias( columnAlias );
@@ -367,7 +367,7 @@ public class DynamicFetchBuilderLegacy
 	}
 
 	@Override
-	public void addFetchBuilder(Fetchable fetchable, FetchBuilder fetchBuilder) {
+	public void addFetchBuilder(Fetchable<?, ?, ?> fetchable, FetchBuilder fetchBuilder) {
 		fetchBuilderMap.put( fetchable, fetchBuilder );
 	}
 

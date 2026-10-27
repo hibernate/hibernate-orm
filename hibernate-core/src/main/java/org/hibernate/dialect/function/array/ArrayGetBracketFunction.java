@@ -31,7 +31,7 @@ public class ArrayGetBracketFunction extends AbstractArrayGetFunction {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
 		final JdbcMappingContainer arrayTypeContainer = arrayExpression.getExpressionType();
-		final JdbcMapping arrayType = arrayTypeContainer == null ? null : arrayTypeContainer.getSingleJdbcMapping();
+		final JdbcMapping<?> arrayType = arrayTypeContainer == null ? null : arrayTypeContainer.getSingleJdbcMapping();
 		final boolean isJson = arrayType instanceof BasicPluralType<?, ?> && arrayType.getJdbcType().isJson();
 		if ( isJson && !supportsJsonBracket ) {
 			// JSON arrays have 0-based indexed, so we have to adapt the 1-based array_get index

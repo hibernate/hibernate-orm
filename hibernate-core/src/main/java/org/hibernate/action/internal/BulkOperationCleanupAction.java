@@ -59,7 +59,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 */
 	public BulkOperationCleanupAction(
 			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull EntityPersister... affectedQueryables) {
+			@Nonnull EntityPersister<?>... affectedQueryables) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>();
 		for ( var persister : affectedQueryables ) {
 			addAll( spacesList, (String[]) persister.getQuerySpaces() );
@@ -130,7 +130,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	public static void schedule(
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull SqmDmlStatement<?> statement) {
-		final List<EntityPersister> entityPersisters = new ArrayList<>( 1 );
+		final List<EntityPersister<?>> entityPersisters = new ArrayList<>( 1 );
 		final var metamodel = session.getFactory().getMappingMetamodel();
 		if ( !( statement instanceof InsertSelectStatement ) ) {
 			entityPersisters.add( metamodel.getEntityDescriptor( statement.getTarget().getEntityName() ) );
@@ -141,12 +141,12 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		}
 
-		schedule( session, entityPersisters.toArray( new EntityPersister[0] ) );
+		schedule( session, entityPersisters.toArray( new EntityPersister<?>[0] ) );
 	}
 
 	public static void schedule(
 			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull EntityPersister... affectedQueryables) {
+			@Nonnull EntityPersister<?>... affectedQueryables) {
 		final var action = new BulkOperationCleanupAction( session, affectedQueryables );
 		if ( session.isEventSource() ) {
 			session.asEventSource().getActionQueue().addAction( action );

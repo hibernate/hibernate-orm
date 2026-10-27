@@ -26,7 +26,7 @@ import java.sql.SQLException;
 /// @author Steve Ebersole
 public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityTableDescriptor tableDescriptor;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final Object identifier;
 	private final Object version;
 	private final Object[] loadedState;
@@ -34,7 +34,7 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 
 	public EntitySoftDeleteBindPlan(
 			EntityTableDescriptor tableDescriptor,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			Object identifier,
 			Object version,
 			Object[] loadedState,

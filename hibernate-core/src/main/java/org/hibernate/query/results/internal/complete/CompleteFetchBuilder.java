@@ -10,7 +10,7 @@ import org.hibernate.sql.results.graph.Fetchable;
  */
 public interface CompleteFetchBuilder extends FetchBuilder, ModelPartReference {
 	@Override
-	Fetchable getReferencedPart();
+	Fetchable<?, ?, ?> getReferencedPart();
 
 	List<String> getColumnAliases();
 }

@@ -49,11 +49,11 @@ import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.fin
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractEntityCollectionPart implements EntityCollectionPart, FetchOptions, TableGroupProducer {
+public abstract class AbstractEntityCollectionPart<J> implements EntityCollectionPart<J>, FetchOptions, TableGroupProducer<J, J, J> {
 	private final NavigableRole navigableRole;
 	private final Nature nature;
 	private final CollectionPersister collectionDescriptor;
-	private final EntityMappingType associatedEntityTypeDescriptor;
+	private final EntityMappingType<J> associatedEntityTypeDescriptor;
 	private final NotFoundAction notFoundAction;
 
 	protected final Set<String> targetKeyPropertyNames;
@@ -62,7 +62,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			Nature nature,
 			Collection collectionBootDescriptor,
 			CollectionPersister collectionDescriptor,
-			EntityMappingType associatedEntityTypeDescriptor,
+			EntityMappingType<J> associatedEntityTypeDescriptor,
 			NotFoundAction notFoundAction,
 			MappingModelCreationProcess creationProcess) {
 		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
@@ -83,7 +83,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	/**
 	 * For Hibernate Reactive
 	 */
-	protected AbstractEntityCollectionPart(AbstractEntityCollectionPart original) {
+	protected AbstractEntityCollectionPart(AbstractEntityCollectionPart<J> original) {
 		this.navigableRole = original.navigableRole;
 		this.nature = original.nature;
 		this.collectionDescriptor = original.collectionDescriptor;
@@ -103,7 +103,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 	@Nonnull
 	@Override
-	public EntityMappingType getMappedType() {
+	public EntityMappingType<J> getMappedType() {
 		return getAssociatedEntityMappingType();
 	}
 
@@ -121,7 +121,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getCollectionAttribute() {
+	public PluralAttributeMapping<?> getCollectionAttribute() {
 		return collectionDescriptor.getAttributeMapping();
 	}
 
@@ -138,7 +138,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 	@Nonnull
 	@Override
-	public EntityMappingType getAssociatedEntityMappingType() {
+	public EntityMappingType<J> getAssociatedEntityMappingType() {
 		return associatedEntityTypeDescriptor;
 	}
 
@@ -180,7 +180,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
@@ -191,7 +191,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -240,7 +240,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	 */
 	protected EagerCollectionFetch buildEagerCollectionFetch(
 			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedAttribute,
+			PluralAttributeMapping<?> fetchedAttribute,
 			TableGroup collectionTableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
@@ -259,7 +259,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	 */
 	protected EntityFetch buildEntityFetchJoined(
 			FetchParent fetchParent,
-			AbstractEntityCollectionPart abstractEntityCollectionPart,
+			AbstractEntityCollectionPart<?> abstractEntityCollectionPart,
 			TableGroup partTableGroup,
 			NavigablePath fetchablePath,
 			DomainResultCreationState creationState) {
@@ -345,7 +345,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			Nature nature,
 			CollectionPersister collectionDescriptor,
 			Collection collectionBootDescriptor,
-			EntityMappingType elementTypeDescriptor,
+			EntityMappingType<?> elementTypeDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		final Value bootModelValue =
 				nature == Nature.INDEX

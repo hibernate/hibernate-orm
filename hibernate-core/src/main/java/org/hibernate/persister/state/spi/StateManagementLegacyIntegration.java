@@ -27,19 +27,19 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 public interface StateManagementLegacyIntegration {
 	/// Creates the entity insert coordinator for the given persister.
 	@Nonnull
-	InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister persister);
+	InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister<?> persister);
 
 	/// Creates the entity update coordinator for the given persister.
 	@Nonnull
-	UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister persister);
+	UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister<?> persister);
 
 	/// Creates the entity merge coordinator for the given persister.
 	@Nonnull
-	UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister persister);
+	UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister<?> persister);
 
 	/// Creates the entity delete coordinator for the given persister.
 	@Nonnull
-	DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister);
+	DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister<?> persister);
 
 	/// Creates the collection row-insert coordinator for the given persister.
 	@Nonnull

@@ -40,12 +40,12 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 	private final String origin;
 
-	public InsertDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
+	public InsertDecomposer(EntityPersister<?> entityPersister, SessionFactoryImplementor sessionFactory) {
 		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
 	}
 
 	public InsertDecomposer(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory,
 			EntityMutationPlanContributor mutationPlanContributor) {
 		super( entityPersister, sessionFactory );

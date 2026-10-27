@@ -56,7 +56,7 @@ public class SmokeTests {
 
 	@Test
 	public void testSimpleEntity(SessionFactoryScope scope) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( SimpleEntity.class );
@@ -64,23 +64,23 @@ public class SmokeTests {
 				.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityDescriptor.getIdentifierMapping();
 		assertThat(
 				identifierMapping.getMappedType().getMappedJavaType().getJavaTypeClass(),
 				sameInstance( Integer.class )
 		);
 
 		{
-			final ModelPart namePart = entityDescriptor.findSubPart( "name" );
-			assert namePart instanceof BasicAttributeMapping;
-			assert "mapping_simple_entity".equals( ( (BasicAttributeMapping) namePart ).getContainingTableExpression() );
-			assert "name".equals( ( (BasicAttributeMapping) namePart ).getSelectionExpression() );
+			final ModelPart<?, ?, ?> namePart = entityDescriptor.findSubPart( "name" );
+			assert namePart instanceof BasicAttributeMapping<?>;
+			assert "mapping_simple_entity".equals( ( (BasicAttributeMapping<?>) namePart ).getContainingTableExpression() );
+			assert "name".equals( ( (BasicAttributeMapping<?>) namePart ).getSelectionExpression() );
 		}
 
 		{
-			final ModelPart genderPart = entityDescriptor.findSubPart( "gender" );
-			assert genderPart instanceof BasicAttributeMapping;
-			final BasicAttributeMapping genderAttrMapping = (BasicAttributeMapping) genderPart;
+			final ModelPart<?, ?, ?> genderPart = entityDescriptor.findSubPart( "gender" );
+			assert genderPart instanceof BasicAttributeMapping<?>;
+			final BasicAttributeMapping<?> genderAttrMapping = (BasicAttributeMapping<?>) genderPart;
 			assert "mapping_simple_entity".equals( genderAttrMapping.getContainingTableExpression() );
 			assert "gender".equals( genderAttrMapping.getSelectionExpression() );
 
@@ -99,9 +99,9 @@ public class SmokeTests {
 		}
 
 		{
-			final ModelPart part = entityDescriptor.findSubPart( "gender2" );
-			assert part instanceof BasicAttributeMapping;
-			final BasicAttributeMapping attrMapping = (BasicAttributeMapping) part;
+			final ModelPart<?, ?, ?> part = entityDescriptor.findSubPart( "gender2" );
+			assert part instanceof BasicAttributeMapping<?>;
+			final BasicAttributeMapping<?> attrMapping = (BasicAttributeMapping<?>) part;
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
 			assert "gender2".equals( attrMapping.getSelectionExpression() );
 
@@ -120,9 +120,9 @@ public class SmokeTests {
 		}
 
 		{
-			final ModelPart part = entityDescriptor.findSubPart( "gender3" );
-			assert part instanceof BasicAttributeMapping;
-			final BasicAttributeMapping attrMapping = (BasicAttributeMapping) part;
+			final ModelPart<?, ?, ?> part = entityDescriptor.findSubPart( "gender3" );
+			assert part instanceof BasicAttributeMapping<?>;
+			final BasicAttributeMapping<?> attrMapping = (BasicAttributeMapping<?>) part;
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
 			assert "gender3".equals( attrMapping.getSelectionExpression() );
 
@@ -140,9 +140,9 @@ public class SmokeTests {
 		}
 
 		{
-			final ModelPart part = entityDescriptor.findSubPart( "component" );
-			assert part instanceof EmbeddedAttributeMapping;
-			final EmbeddedAttributeMapping attrMapping = (EmbeddedAttributeMapping) part;
+			final ModelPart<?, ?, ?> part = entityDescriptor.findSubPart( "component" );
+			assert part instanceof EmbeddedAttributeMapping<?, ?>;
+			final EmbeddedAttributeMapping<?, ?> attrMapping = (EmbeddedAttributeMapping<?, ?>) part;
 			assertThat( attrMapping.getContainingTableExpression(), is( "mapping_simple_entity" ) );
 			assertThat( attrMapping.getEmbeddableTypeDescriptor().getJdbcTypeCount(), is( 4 ) );
 			assertThat(
@@ -158,20 +158,20 @@ public class SmokeTests {
 
 	@Test
 	public void testEntityBasedManyToOne(SessionFactoryScope scope) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( OtherEntity.class );
 
-		final EntityPersister simpleEntityDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> simpleEntityDescriptor = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( SimpleEntity.class );
 
-		final ModelPart part = entityDescriptor.findSubPart( "simpleEntity" );
+		final ModelPart<?, ?, ?> part = entityDescriptor.findSubPart( "simpleEntity" );
 		assertThat( part, notNullValue() );
 		assertThat( part, instanceOf( ToOneAttributeMapping.class ) );
-		final ToOneAttributeMapping attrMapping = (ToOneAttributeMapping) part;
+		final ToOneAttributeMapping<?> attrMapping = (ToOneAttributeMapping<?>) part;
 		assertThat( attrMapping.getAttributeName(), is( "simpleEntity" ) );
 		assertThat( attrMapping.getMappedType(), is( simpleEntityDescriptor ) );
 		assertThat(

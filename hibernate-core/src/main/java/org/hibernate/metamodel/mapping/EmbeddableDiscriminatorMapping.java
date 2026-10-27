@@ -13,7 +13,7 @@ import org.hibernate.sql.results.graph.FetchOptions;
  * @author Marco Belladelli
  * @see EmbeddableMappingType#getDiscriminatorMapping()
  */
-public interface EmbeddableDiscriminatorMapping extends DiscriminatorMapping, FetchOptions {
+public interface EmbeddableDiscriminatorMapping<J> extends DiscriminatorMapping<J>, FetchOptions {
 	/**
 	 * Retrieve the relational discriminator value corresponding to the provided embeddable class name.
 	 *

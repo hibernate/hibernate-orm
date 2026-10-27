@@ -23,14 +23,14 @@ public class CteTable {
 	public static final String ENTITY_ROW_NUMBER_COLUMN = "rn_";
 
 	private final String cteName;
-	private final TableGroupProducer tableGroupProducer;
+	private final TableGroupProducer<?, ?, ?> tableGroupProducer;
 	private final List<CteColumn> cteColumns;
 
 	public CteTable(String cteName, List<CteColumn> cteColumns) {
 		this( cteName, null, cteColumns );
 	}
 
-	public CteTable(String cteName, TableGroupProducer tableGroupProducer, List<CteColumn> cteColumns) {
+	public CteTable(String cteName, TableGroupProducer<?, ?, ?> tableGroupProducer, List<CteColumn> cteColumns) {
 		assert cteName != null;
 		this.cteName = cteName;
 		this.tableGroupProducer = tableGroupProducer;
@@ -41,7 +41,7 @@ public class CteTable {
 		return cteName;
 	}
 
-	public TableGroupProducer getTableGroupProducer() {
+	public TableGroupProducer<?, ?, ?> getTableGroupProducer() {
 		return tableGroupProducer;
 	}
 
@@ -111,18 +111,18 @@ public class CteTable {
 		} );
 	}
 
-	private static void forEachCteColumn(String prefix, ModelPart modelPart, Consumer<CteColumn> consumer) {
+	private static void forEachCteColumn(String prefix, ModelPart<?, ?, ?> modelPart, Consumer<CteColumn> consumer) {
 		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, modelPart, (s, selectableMapping) -> {
 			consumer.accept( new CteColumn( s, selectableMapping.getJdbcMapping() ) );
 		} );
 	}
 
-	public List<CteColumn> findCteColumns(ModelPart modelPart) {
+	public List<CteColumn> findCteColumns(ModelPart<?, ?, ?> modelPart) {
 		final String prefix;
-		if ( modelPart instanceof AttributeMapping attributeMapping ) {
+		if ( modelPart instanceof AttributeMapping<?, ?, ?> attributeMapping ) {
 			prefix = attributeMapping.getAttributeName();
 		}
-		else if ( modelPart instanceof DiscriminatorMapping ) {
+		else if ( modelPart instanceof DiscriminatorMapping<?> ) {
 			prefix = "class";
 		}
 		else {

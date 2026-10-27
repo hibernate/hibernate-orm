@@ -28,18 +28,18 @@ import java.util.function.BiConsumer;
 public class CompleteResultBuilderEntityStandard implements CompleteResultBuilderEntityValued, NativeQuery.RootReturn {
 	private final String tableAlias;
 	private final NavigablePath navigablePath;
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 	private final LockMode lockMode;
 	private final FetchBuilderBasicValued discriminatorFetchBuilder;
-	private final HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap;
+	private final HashMap<Fetchable<?, ?, ?>, FetchBuilder> explicitFetchBuilderMap;
 
 	public CompleteResultBuilderEntityStandard(
 			String tableAlias,
 			NavigablePath navigablePath,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			LockMode lockMode,
 			FetchBuilderBasicValued discriminatorFetchBuilder,
-			HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap) {
+			HashMap<Fetchable<?, ?, ?>, FetchBuilder> explicitFetchBuilderMap) {
 		this.tableAlias = tableAlias;
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
@@ -60,7 +60,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	}
 
 	@Override
-	public EntityMappingType getReferencedPart() {
+	public EntityMappingType<?> getReferencedPart() {
 		return entityDescriptor;
 	}
 
@@ -78,7 +78,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 
 	@Override
 	@Nonnull
-	public EntityMappingType getEntityMapping() {
+	public EntityMappingType<?> getEntityMapping() {
 		return entityDescriptor;
 	}
 
@@ -168,7 +168,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable<?, ?, ?>, FetchBuilder> consumer) {
 		explicitFetchBuilderMap.forEach( consumer );
 	}
 

@@ -25,9 +25,9 @@ public class XmlJdbcType implements AggregateJdbcType {
 	 */
 	public static final XmlJdbcType INSTANCE = new XmlJdbcType( null );
 
-	private final EmbeddableMappingType embeddableMappingType;
+	private final EmbeddableMappingType<?, ?, ?> embeddableMappingType;
 
-	protected XmlJdbcType(EmbeddableMappingType embeddableMappingType) {
+	protected XmlJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		this.embeddableMappingType = embeddableMappingType;
 	}
 
@@ -49,14 +49,14 @@ public class XmlJdbcType implements AggregateJdbcType {
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new XmlJdbcType( mappingType );
 	}
 
 	@Override
-	public EmbeddableMappingType getEmbeddableMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getEmbeddableMappingType() {
 		return embeddableMappingType;
 	}
 

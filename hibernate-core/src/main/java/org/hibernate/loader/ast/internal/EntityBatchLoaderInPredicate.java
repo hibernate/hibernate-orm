@@ -50,7 +50,7 @@ public class EntityBatchLoaderInPredicate<T>
 	 */
 	public EntityBatchLoaderInPredicate(
 			int domainBatchSize,
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		super( entityDescriptor, loadQueryInfluencers );
 		this.domainBatchSize = domainBatchSize;
@@ -173,7 +173,7 @@ public class EntityBatchLoaderInPredicate<T>
 	}
 
 	@Nonnull
-	private MultiKeyLoadChunker<Object> getChunker(@Nonnull EntityIdentifierMapping identifierMapping) {
+	private MultiKeyLoadChunker<Object> getChunker(@Nonnull EntityIdentifierMapping<?, ?, ?> identifierMapping) {
 		return new MultiKeyLoadChunker<>(
 				sqlBatchSize,
 				identifierMapping.getJdbcTypeCount(),

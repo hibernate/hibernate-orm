@@ -16,7 +16,7 @@ public class OptionalTableInsert extends TableInsertStandard {
 			MutationTarget mutationTarget,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnReference> returningColumns,
-			List<ColumnValueParameter> parameters,
+			List<ColumnValueParameter<?>> parameters,
 			@Nullable String constraintName,
 			List<String> constraintColumnNames) {
 		super( mutatingTable, mutationTarget, valueBindings, returningColumns, parameters );

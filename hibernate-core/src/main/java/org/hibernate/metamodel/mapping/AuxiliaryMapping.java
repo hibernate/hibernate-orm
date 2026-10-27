@@ -62,7 +62,7 @@ public interface AuxiliaryMapping {
 	/// This form is used when table references may be created lazily as SQL AST
 	/// walking discovers which tables are needed for an entity-valued path.
 	void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityMappingType,
+			@Nonnull EntityMappingType<?> associatedEntityMappingType,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull LazyTableGroup lazyTableGroup,
 			@Nonnull NavigablePath navigablePath,
@@ -74,7 +74,7 @@ public interface AuxiliaryMapping {
 	/// group to rows visible under the supplied [LoadQueryInfluencers], such as
 	/// non-deleted rows or rows valid for the requested temporal identifier.
 	void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityDescriptor,
+			@Nonnull EntityMappingType<?> associatedEntityDescriptor,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -85,7 +85,7 @@ public interface AuxiliaryMapping {
 	/// This is the collection counterpart to the entity table-group overload and
 	/// is used for state-management rules attached to plural attributes.
 	void applyPredicate(
-			@Nonnull PluralAttributeMapping associatedEntityDescriptor,
+			@Nonnull PluralAttributeMapping<?> associatedEntityDescriptor,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -107,7 +107,7 @@ public interface AuxiliaryMapping {
 			@Nonnull Supplier<Consumer<Predicate>> predicateCollector,
 			@Nonnull SqlAstCreationState creationState,
 			@Nonnull TableGroup tableGroup,
-			@Nonnull NamedTableReference rootTableReference, @Nonnull EntityMappingType entityMappingType);
+			@Nonnull NamedTableReference rootTableReference, @Nonnull EntityMappingType<?> entityMappingType);
 
 	/// Applies the auxiliary restriction to a joined table reference.
 	///
@@ -119,7 +119,7 @@ public interface AuxiliaryMapping {
 			@Nonnull TableReferenceJoin tableReferenceJoin,
 			@Nonnull NamedTableReference primaryTableReference,
 			@Nonnull String originalTableName,
-			@Nonnull EntityMappingType entityMappingType,
+			@Nonnull EntityMappingType<?> entityMappingType,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
 	}
@@ -141,7 +141,7 @@ public interface AuxiliaryMapping {
 	/// This is used when SQL AST table references need to carry an as-of value
 	/// for dialects that support native temporal table syntax.
 	@Nonnull
-	JdbcMapping getJdbcMapping();
+	JdbcMapping<?> getJdbcMapping();
 
 	/// Whether this mapping should use its auxiliary table for the supplied
 	/// query influencers.

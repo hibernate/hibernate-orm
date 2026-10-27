@@ -1164,7 +1164,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	@Nullable
 	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(
-			@Nonnull EntityMappingType rootEntityDescriptor,
+			@Nonnull EntityMappingType<?> rootEntityDescriptor,
 			@Nonnull RuntimeModelCreationContext creationContext) {
 		if ( sqmMultiTableMutationStrategyConstructor != null ) {
 			try {
@@ -1186,7 +1186,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	@Nullable
 	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(
-			@Nonnull EntityMappingType rootEntityDescriptor,
+			@Nonnull EntityMappingType<?> rootEntityDescriptor,
 			@Nonnull RuntimeModelCreationContext creationContext) {
 		if ( sqmMultiTableInsertStrategyConstructor != null ) {
 			try {

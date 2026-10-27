@@ -36,7 +36,7 @@ public class DeleteCacheHandling {
 		}
 	}
 
-	private static Object currentVersion(EntityDeleteAction action, EntityPersister persister) {
+	private static Object currentVersion(EntityDeleteAction action, EntityPersister<?> persister) {
 		return persister.isVersionPropertyGenerated() && action.getInstance() != null
 				? persister.getVersion( action.getInstance() )
 				: action.getVersion();

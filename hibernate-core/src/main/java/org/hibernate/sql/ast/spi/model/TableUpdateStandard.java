@@ -63,7 +63,7 @@ public class TableUpdateStandard
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters) {
+			List<ColumnValueParameter<?>> parameters) {
 		this(
 				tableReference,
 				mutationTarget,
@@ -84,7 +84,7 @@ public class TableUpdateStandard
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters,
+			List<ColumnValueParameter<?>> parameters,
 			String whereFragment,
 			Expectation expectation) {
 		super( tableReference, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters );

@@ -59,83 +59,83 @@ public class NullableNaturalIdTest {
 		// NOTE: for each entity we check against both the runtime mapping API and the legacy persister API
 
 		{
-			final EntityMappingType entityMappingType = scope.getSessionFactory()
+			final EntityMappingType<?> entityMappingType = scope.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( A.class );
-			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
-			final EntityPersister persister = entityMappingType.getEntityPersister();
+			final NaturalIdMapping<?, ?, ?> naturalIdMapping = entityMappingType.getNaturalIdMapping();
+			final EntityPersister<?> persister = entityMappingType.getEntityPersister();
 
 			assertTrue( persister.getPropertyNullability()[persister.getPropertyIndex( "assC" )] );
 			assertTrue( persister.getPropertyNullability()[persister.getPropertyIndex( "myname" )] );
 			assertThat( naturalIdMapping.getNaturalIdAttributes().size(), is( 2 ) );
 
-			final SingularAttributeMapping firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
+			final SingularAttributeMapping<?, ?, ?> firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
 			assertThat( firstAttribute.getAttributeName(), is( "assC" ) );
 			assertThat( firstAttribute.getStateArrayPosition(), is( persister.getPropertyIndex( "assC" ) ) );
 
-			final SingularAttributeMapping secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
+			final SingularAttributeMapping<?, ?, ?> secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
 			assertThat( secondAttribute.getAttributeName(), is( "myname" ) );
 			assertThat( secondAttribute.getStateArrayPosition(), is( persister.getPropertyIndex( "myname" ) ) );
 		}
 
 		{
-			final EntityMappingType entityMappingType = scope.getSessionFactory()
+			final EntityMappingType<?> entityMappingType = scope.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( B.class );
-			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
-			final EntityPersister persister = entityMappingType.getEntityPersister();
+			final NaturalIdMapping<?, ?, ?> naturalIdMapping = entityMappingType.getNaturalIdMapping();
+			final EntityPersister<?> persister = entityMappingType.getEntityPersister();
 
 			assertTrue( persister.getPropertyNullability()[persister.getPropertyIndex( "assA" )] );
 			assertFalse( persister.getPropertyNullability()[persister.getPropertyIndex( "naturalid" )] );
 			assertThat( naturalIdMapping.getNaturalIdAttributes().size(), is( 2 ) );
 
-			final SingularAttributeMapping firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
+			final SingularAttributeMapping<?, ?, ?> firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
 			assertThat( firstAttribute.getAttributeName(), is( "assA" ) );
 			assertThat( firstAttribute.getStateArrayPosition(), is( persister.getPropertyIndex( "assA" ) ) );
 			assertTrue( firstAttribute.getAttributeMetadata().isNullable() );
 
-			final SingularAttributeMapping secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
+			final SingularAttributeMapping<?, ?, ?> secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
 			assertThat( secondAttribute.getAttributeName(), is( "naturalid" ) );
 			assertThat( secondAttribute.getStateArrayPosition(), is( persister.getPropertyIndex( "naturalid" ) ) );
 			assertFalse( secondAttribute.getAttributeMetadata().isNullable() );
 		}
 
 		{
-			final EntityMappingType entityMappingType = scope.getSessionFactory()
+			final EntityMappingType<?> entityMappingType = scope.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( C.class );
-			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
-			final EntityPersister persister = entityMappingType.getEntityPersister();
+			final NaturalIdMapping<?, ?, ?> naturalIdMapping = entityMappingType.getNaturalIdMapping();
+			final EntityPersister<?> persister = entityMappingType.getEntityPersister();
 
 			assertThat( naturalIdMapping.getNaturalIdAttributes().size(), is( 1 ) );
 			assertTrue( persister.getPropertyNullability()[persister.getPropertyIndex( "name" )] );
 
-			final SingularAttributeMapping attribute = naturalIdMapping.getNaturalIdAttributes().get(0);
+			final SingularAttributeMapping<?, ?, ?> attribute = naturalIdMapping.getNaturalIdAttributes().get(0);
 			assertThat( attribute.getStateArrayPosition(), is( persister.getPropertyIndex( "name" ) ) );
 			assertTrue( attribute.getAttributeMetadata().isNullable() );
 		}
 
 		{
-			final EntityMappingType entityMappingType = scope.getSessionFactory()
+			final EntityMappingType<?> entityMappingType = scope.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( D.class );
-			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
-			final EntityPersister persister = entityMappingType.getEntityPersister();
+			final NaturalIdMapping<?, ?, ?> naturalIdMapping = entityMappingType.getNaturalIdMapping();
+			final EntityPersister<?> persister = entityMappingType.getEntityPersister();
 
 			assertThat( naturalIdMapping.getNaturalIdAttributes().size(), is( 2 ) );
 			assertTrue( persister.getPropertyNullability()[persister.getPropertyIndex( "associatedC" )] );
 			assertTrue( persister.getPropertyNullability()[persister.getPropertyIndex( "name" )] );
 
-			final SingularAttributeMapping firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
+			final SingularAttributeMapping<?, ?, ?> firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
 			assertThat( firstAttribute.getAttributeName(), is( "associatedC" ) );
 			assertThat( firstAttribute.getStateArrayPosition(), is( persister.getPropertyIndex( "associatedC" ) ) );
 			assertTrue( firstAttribute.getAttributeMetadata().isNullable() );
 
-			final SingularAttributeMapping secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
+			final SingularAttributeMapping<?, ?, ?> secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
 			assertThat( secondAttribute.getAttributeName(), is( "name" ) );
 			assertThat( secondAttribute.getStateArrayPosition(), is( persister.getPropertyIndex( "name" ) ) );
 			assertTrue( secondAttribute.getAttributeMetadata().isNullable() );
@@ -144,29 +144,29 @@ public class NullableNaturalIdTest {
 		{
 			// User is mapped using hbm.xml; properties are explicitly mapped to be nullable
 
-			final EntityMappingType entityMappingType = scope.getSessionFactory()
+			final EntityMappingType<?> entityMappingType = scope.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( User.class );
-			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
-			final EntityPersister persister = entityMappingType.getEntityPersister();
+			final NaturalIdMapping<?, ?, ?> naturalIdMapping = entityMappingType.getNaturalIdMapping();
+			final EntityPersister<?> persister = entityMappingType.getEntityPersister();
 
 			assertThat( naturalIdMapping.getNaturalIdAttributes().size(), is( 3 ) );
 			assertTrue( persister.getPropertyNullability()[persister.getPropertyIndex( "intVal" )] );
 			assertTrue( persister.getPropertyNullability()[persister.getPropertyIndex( "name" )] );
 			assertTrue( persister.getPropertyNullability()[persister.getPropertyIndex( "org" )] );
 
-			final SingularAttributeMapping firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
+			final SingularAttributeMapping<?, ?, ?> firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
 			assertThat( firstAttribute.getAttributeName(), is( "intVal" ) );
 			assertThat( firstAttribute.getStateArrayPosition(), is( persister.getPropertyIndex( "intVal" ) ) );
 			assertTrue( firstAttribute.getAttributeMetadata().isNullable() );
 
-			final SingularAttributeMapping secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
+			final SingularAttributeMapping<?, ?, ?> secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
 			assertThat( secondAttribute.getAttributeName(), is( "name" ) );
 			assertThat( secondAttribute.getStateArrayPosition(), is( persister.getPropertyIndex( "name" ) ) );
 			assertTrue( secondAttribute.getAttributeMetadata().isNullable() );
 
-			final SingularAttributeMapping thirdAttribute = naturalIdMapping.getNaturalIdAttributes().get(2);
+			final SingularAttributeMapping<?, ?, ?> thirdAttribute = naturalIdMapping.getNaturalIdAttributes().get(2);
 			assertThat( thirdAttribute.getAttributeName(), is( "org" ) );
 			assertThat( thirdAttribute.getStateArrayPosition(), is( persister.getPropertyIndex( "org" ) ) );
 			assertTrue( thirdAttribute.getAttributeMetadata().isNullable() );

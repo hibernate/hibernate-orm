@@ -8,6 +8,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
  */
 @Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcParameterBinding {
-	JdbcMapping getBindType();
+	JdbcMapping<?> getBindType();
 	Object getBindValue();
 }

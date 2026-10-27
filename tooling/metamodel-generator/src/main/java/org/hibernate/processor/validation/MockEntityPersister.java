@@ -33,13 +33,13 @@ import static java.util.Collections.emptyMap;
  */
 @SuppressWarnings("NullAway")
 @org.hibernate.Internal
-public abstract class MockEntityPersister implements EntityPersister, Joinable {
+public abstract class MockEntityPersister<J> implements EntityPersister<J>, Joinable {
 
 	private static final String[] ID_COLUMN = {"id"};
 
 	private final String entityName;
 	private final MockSessionFactory factory;
-	private final List<MockEntityPersister> subclassPersisters = new ArrayList<>();
+	private final List<MockEntityPersister<?>> subclassPersisters = new ArrayList<>();
 	final AccessType defaultAccessType;
 	private final Map<String,Type> propertyTypesByName = new HashMap<>();
 
@@ -50,13 +50,13 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	}
 
 	void initSubclassPersisters() {
-		for (MockEntityPersister other: factory.getMockEntityPersisters()) {
+		for (MockEntityPersister<?> other: factory.getMockEntityPersisters()) {
 			other.addPersister(this);
 			this.addPersister(other);
 		}
 	}
 
-	private void addPersister(MockEntityPersister entityPersister) {
+	private void addPersister(MockEntityPersister<?> entityPersister) {
 		if (isSubclassPersister(entityPersister)) {
 			subclassPersisters.add(entityPersister);
 		}
@@ -70,9 +70,9 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 				.orElse(null);
 	}
 
-	abstract boolean isSamePersister(MockEntityPersister entityPersister);
+	abstract boolean isSamePersister(MockEntityPersister<?> entityPersister);
 
-	abstract boolean isSubclassPersister(MockEntityPersister entityPersister);
+	abstract boolean isSubclassPersister(MockEntityPersister<?> entityPersister);
 
 	@Override
 	public boolean isSubclassEntityName(@Nonnull String name) {
@@ -169,7 +169,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	@Override
 	public abstract String getRootEntityName();
 
-	public MockEntityPersister getRootEntityPersister() {
+	public MockEntityPersister<?> getRootEntityPersister() {
 		return factory.createMockEntityPersister(getRootEntityName());
 	}
 
@@ -178,7 +178,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	public Set<String> getSubclassEntityNames() {
 		final var names = new HashSet<String>();
 		names.add( entityName );
-		for (MockEntityPersister persister : factory.getMockEntityPersisters()) {
+		for (MockEntityPersister<?> persister : factory.getMockEntityPersisters()) {
 			if (persister.isSubclassPersister(this)) {
 				names.add(persister.entityName);
 			}
@@ -206,7 +206,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 
 	@Nonnull
 	@Override
-	public EntityPersister getEntityPersister() {
+	public EntityPersister<J> getEntityPersister() {
 		return this;
 	}
 

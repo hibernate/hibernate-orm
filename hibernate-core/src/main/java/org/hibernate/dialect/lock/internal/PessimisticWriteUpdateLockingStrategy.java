@@ -22,7 +22,7 @@ public class PessimisticWriteUpdateLockingStrategy extends AbstractPessimisticUp
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.  Note that read-locks are not valid for this strategy.
 	 */
-	public PessimisticWriteUpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	public PessimisticWriteUpdateLockingStrategy(EntityPersister<?> lockable, LockMode lockMode) {
 		super( lockable, lockMode );
 	}
 }

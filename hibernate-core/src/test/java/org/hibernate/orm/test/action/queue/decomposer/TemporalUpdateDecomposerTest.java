@@ -54,7 +54,7 @@ public class TemporalUpdateDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( TemporalEntity.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( TemporalEntity.class );
 
 			final Object[] previousState = persister.getValues( entity );
 			entity.name = "after";
@@ -74,7 +74,7 @@ public class TemporalUpdateDecomposerTest {
 			Object entity,
 			Object[] previousState,
 			SessionImplementor session,
-			EntityPersister persister) {
+			EntityPersister<?> persister) {
 		return new EntityUpdateAction(
 				persister.getIdentifier( entity, session ),
 				persister.getValues( entity ),

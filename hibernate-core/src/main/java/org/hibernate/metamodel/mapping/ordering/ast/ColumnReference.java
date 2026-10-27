@@ -107,8 +107,8 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 
 	@Nullable
 	TableReference getTableReference(TableGroup tableGroup) {
-		if ( tableGroup.getModelPart() instanceof PluralAttributeMapping pluralAttribute ) {
-			if ( pluralAttribute.getElementDescriptor().getPartMappingType() instanceof EntityPersister entityPersister
+		if ( tableGroup.getModelPart() instanceof PluralAttributeMapping<?> pluralAttribute ) {
+			if ( pluralAttribute.getElementDescriptor().getPartMappingType() instanceof EntityPersister<?> entityPersister
 				&& pluralAttribute.getCollectionDescriptor() instanceof AbstractCollectionPersister persister
 				&& !persister.isOneToMany() ) {
 				if ( containsColumn( persister.getIndexColumnNames(), columnExpression )

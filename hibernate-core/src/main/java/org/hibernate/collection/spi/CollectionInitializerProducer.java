@@ -39,7 +39,7 @@ public interface CollectionInitializerProducer {
 	 */
 	CollectionInitializer<?> produceInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attribute,
+			PluralAttributeMapping<?> attribute,
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,

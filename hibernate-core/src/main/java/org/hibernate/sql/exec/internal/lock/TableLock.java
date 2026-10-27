@@ -52,7 +52,7 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  */
 public class TableLock {
 	private final TableDetails tableDetails;
-	private final EntityMappingType entityMappingType;
+	private final EntityMappingType<?> entityMappingType;
 
 	// Used by Hibernate Reactive
 	protected final QuerySpec querySpec = new QuerySpec( true );
@@ -80,7 +80,7 @@ public class TableLock {
 
 	public TableLock(
 			TableDetails tableDetails,
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			List<EntityKey> entityKeys,
 			SharedSessionContractImplementor session) {
 		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
@@ -101,7 +101,7 @@ public class TableLock {
 						tableDetails.getKeyDetails()
 				);
 
-		if ( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister usp ) {
+		if ( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister<?> usp ) {
 			final var unionTableReference = new UnionTableReference(
 					tableDetails.getTableName(),
 					usp.getSynchronizedQuerySpaces(),
@@ -146,11 +146,11 @@ public class TableLock {
 		applyKeyRestrictions( entityKeys, session );
 	}
 
-	public void applyAttribute(int index, AttributeMapping attributeMapping) {
+	public void applyAttribute(int index, AttributeMapping<?, ?, ?> attributeMapping) {
 		final var attributePath = rootPath.append( attributeMapping.getPartName() );
-		final DomainResult<Object> domainResult;
+		final DomainResult<?> domainResult;
 		final ResultHandler resultHandler;
-		if ( attributeMapping instanceof ToOneAttributeMapping toOne ) {
+		if ( attributeMapping instanceof ToOneAttributeMapping<?> toOne ) {
 			domainResult =
 					toOne.getForeignKeyDescriptor().getKeyPart()
 							.createDomainResult(
@@ -198,7 +198,7 @@ public class TableLock {
 				entityKey.getIdentifierValue(),
 				(valueIndex, value, jdbcValueMapping) -> {
 					final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-					final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+					final var jdbcParameter = SqlTypedMappingJdbcParameter.create( jdbcValueMapping );
 					restriction.addExpression( jdbcParameter );
 					jdbcParameterBindings.addBinding( jdbcParameter,
 							new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -225,7 +225,7 @@ public class TableLock {
 					entityKey.getIdentifierValue(),
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+						final var jdbcParameter = SqlTypedMappingJdbcParameter.create( jdbcValueMapping );
 						valueParams.add( jdbcParameter );
 						jdbcParameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -300,9 +300,9 @@ public class TableLock {
 
 	// Used by Hibernate Reactive
 	protected static class ToOneResultHandler extends AbstractResultHandler {
-		protected final ToOneAttributeMapping toOne;
+		protected final ToOneAttributeMapping<?> toOne;
 
-		public ToOneResultHandler(Integer statePosition, ToOneAttributeMapping toOne) {
+		public ToOneResultHandler(Integer statePosition, ToOneAttributeMapping<?> toOne) {
 			super( statePosition );
 			this.toOne = toOne;
 		}

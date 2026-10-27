@@ -37,7 +37,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	@Nonnull
 	Object generateCacheKey(
 			@Nonnull Object id,
-			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull EntityPersister<?> rootEntityDescriptor,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nullable String tenantIdentifier);
 

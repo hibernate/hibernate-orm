@@ -31,8 +31,8 @@ public class FetchStrategyDeterminationTests {
 
 	@Test
 	public void testManyToOneDefaultFetch(SessionFactoryScope factoryScope) {
-		final EntityPersister entityDescriptor = factoryScope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
-		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "otherEntityDefault" );
+		final EntityPersister<?> entityDescriptor = factoryScope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
+		final AttributeMapping<?, ?, ?> attributeMapping = entityDescriptor.findAttributeMapping( "otherEntityDefault" );
 		final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
 		Assertions.assertEquals( FetchTiming.IMMEDIATE, mappedFetchOptions.getTiming() );
 		Assertions.assertEquals( FetchStyle.JOIN, mappedFetchOptions.getStyle() );
@@ -40,8 +40,8 @@ public class FetchStrategyDeterminationTests {
 
 	@Test
 	public void testManyToOneJoinFetch(SessionFactoryScope factoryScope) {
-		final EntityPersister entityDescriptor = factoryScope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
-		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "otherEntityJoin" );
+		final EntityPersister<?> entityDescriptor = factoryScope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
+		final AttributeMapping<?, ?, ?> attributeMapping = entityDescriptor.findAttributeMapping( "otherEntityJoin" );
 		final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
 		Assertions.assertEquals( FetchTiming.IMMEDIATE, mappedFetchOptions.getTiming() );
 		Assertions.assertEquals( FetchStyle.JOIN, mappedFetchOptions.getStyle() );
@@ -49,8 +49,8 @@ public class FetchStrategyDeterminationTests {
 
 	@Test
 	public void testManyToOneSelectFetch(SessionFactoryScope factoryScope) {
-		final EntityPersister entityDescriptor = factoryScope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
-		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "otherEntitySelect" );
+		final EntityPersister<?> entityDescriptor = factoryScope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
+		final AttributeMapping<?, ?, ?> attributeMapping = entityDescriptor.findAttributeMapping( "otherEntitySelect" );
 		final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
 		Assertions.assertEquals( FetchTiming.IMMEDIATE, mappedFetchOptions.getTiming() );
 		Assertions.assertEquals( FetchStyle.SELECT, mappedFetchOptions.getStyle() );

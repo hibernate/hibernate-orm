@@ -59,7 +59,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	private final Object id;
 	private Object[] loadedState;
 	private Object version;
-	private final EntityPersister persister; // permanent but we only need the entityName state in a non transient way
+	private final EntityPersister<?> persister; // permanent but we only need the entityName state in a non transient way
 	private transient EntityKey cachedEntityKey; // cached EntityKey (lazy-initialized)
 	private final transient Object rowId;
 	private final transient PersistenceContext persistenceContext;
@@ -100,7 +100,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
+			final EntityPersister<?> persister,
 			final PersistenceContext persistenceContext) {
 		setCompressedValue( STATUS, status );
 		// not useful strictly speaking but more explicit
@@ -239,7 +239,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public EntityPersister getPersister() {
+	public EntityPersister<?> getPersister() {
 		return persister;
 	}
 

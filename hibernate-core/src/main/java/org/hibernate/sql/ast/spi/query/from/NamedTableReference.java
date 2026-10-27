@@ -71,10 +71,10 @@ public class NamedTableReference extends AbstractTableReference {
 						);
 			}
 			else if ( mapping instanceof TemporalMapping temporalMapping ) {
-				asOfTransactionIdentifier = new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping() );
+				asOfTransactionIdentifier = TemporalJdbcParameter.create( temporalMapping.getEndingColumnMapping() );
 			}
 			else if ( mapping instanceof AuditMapping auditMapping ) {
-				asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getChangesetIdMapping( getTableExpression() ) );
+				asOfTransactionIdentifier = TemporalJdbcParameter.create( auditMapping.getChangesetIdMapping( getTableExpression() ) );
 			}
 			else {
 				asOfTransactionIdentifier = null;

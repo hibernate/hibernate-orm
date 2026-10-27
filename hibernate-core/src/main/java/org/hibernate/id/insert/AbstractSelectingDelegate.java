@@ -31,7 +31,7 @@ public abstract class AbstractSelectingDelegate
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected AbstractSelectingDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing,
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {

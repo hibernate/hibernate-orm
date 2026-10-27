@@ -15,12 +15,12 @@ import org.hibernate.query.sqm.tree.spi.domain.SqmEntityDomainType;
  */
 public class EntityDiscriminatorSqmPathSource<D> extends AbstractDiscriminatorSqmPathSource<D> {
 	private final SqmEntityDomainType<?> entityDomainType;
-	private final EntityMappingType entityMapping;
+	private final EntityMappingType<?> entityMapping;
 
 	public EntityDiscriminatorSqmPathSource(
 			SqmDomainType<D> discriminatorValueType,
 			SqmEntityDomainType<?> entityDomainType,
-			EntityMappingType entityMapping) {
+			EntityMappingType<?> entityMapping) {
 		super( discriminatorValueType );
 		this.entityDomainType = entityDomainType;
 		this.entityMapping = entityMapping;
@@ -30,7 +30,7 @@ public class EntityDiscriminatorSqmPathSource<D> extends AbstractDiscriminatorSq
 		return entityDomainType;
 	}
 
-	public EntityMappingType getEntityMapping() {
+	public EntityMappingType<?> getEntityMapping() {
 		return entityMapping;
 	}
 

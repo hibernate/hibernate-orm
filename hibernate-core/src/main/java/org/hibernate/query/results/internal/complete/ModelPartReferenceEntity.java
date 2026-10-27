@@ -7,5 +7,5 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
  */
 public interface ModelPartReferenceEntity extends ModelPartReference {
 	@Override
-	EntityValuedModelPart getReferencedPart();
+	EntityValuedModelPart<?> getReferencedPart();
 }

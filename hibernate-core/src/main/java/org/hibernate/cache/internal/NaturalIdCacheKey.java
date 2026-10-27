@@ -33,7 +33,7 @@ public class NaturalIdCacheKey implements Serializable {
 
 	public static NaturalIdCacheKey from(
 			Object naturalIdValues,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			String entityName,
 			SharedSessionContractImplementor session) {
 		final var builder = new NaturalIdCacheKeyBuilder( entityName, session.getTenantIdentifier(), persister );
@@ -51,7 +51,7 @@ public class NaturalIdCacheKey implements Serializable {
 
 	public static NaturalIdCacheKey from(
 			Object naturalIdValues,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SharedSessionContractImplementor session) {
 		return from( naturalIdValues, persister, persister.getRootEntityName(), session );
 	}
@@ -126,7 +126,7 @@ public class NaturalIdCacheKey implements Serializable {
 		private int hashCode;
 		private int naturalIdValueIndex;
 
-		public NaturalIdCacheKeyBuilder(String entityName, String tenantIdentifier, EntityPersister persister) {
+		public NaturalIdCacheKeyBuilder(String entityName, String tenantIdentifier, EntityPersister<?> persister) {
 			this.entityName = entityName;
 			this.tenantIdentifier = tenantIdentifier;
 			this.naturalIdValues = new Object[ persister.getNaturalIdMapping().getJdbcTypeCount() ];

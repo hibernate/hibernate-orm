@@ -188,7 +188,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 								.accept( walker );
 				final JdbcMappingContainer expressionType =
 						expression == null ? null : expression.getExpressionType();
-				if ( expressionType instanceof BasicValuedMapping basicValuedMapping ) {
+				if ( expressionType instanceof BasicValuedMapping<?> basicValuedMapping ) {
 					return basicValuedMapping;
 				}
 				try {

@@ -30,7 +30,7 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 	default DomainResult<Boolean> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final JdbcMapping jdbcMapping = getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = getExpressionType().getSingleJdbcMapping();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
 				jdbcMapping.getJdbcJavaType(),

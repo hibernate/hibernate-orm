@@ -82,7 +82,7 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 				sqlAppender.append( " as " );
 				sqlAppender.append( selectableMapping.getSelectionExpression() );
 			} );
-			final ModelPart elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
+			final ModelPart<?, ?, ?> elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
 			if ( elementPart != null && elementPart.getSingleJdbcMapping().getJdbcType().isStringLike() ) {
 				sqlAppender.appendSql( " from jsonb_array_elements_text(" );
 			}

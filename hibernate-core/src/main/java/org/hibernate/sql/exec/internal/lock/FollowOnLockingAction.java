@@ -173,10 +173,10 @@ public class FollowOnLockingAction implements PostAction {
 	public QueryOptions buildLockingOptions(
 			Map<String, TableLock> tableLocks,
 			Map<Object, EntityDetails> entityDetailsMap,
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			EffectiveEntityGraph effectiveEntityGraph,
 			List<EntityKey> entityKeys,
-			Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> collectionSegments,
+			Map<EntityMappingType<?>, Map<PluralAttributeMapping<?>, List<CollectionKey>>> collectionSegments,
 			SharedSessionContractImplementor session,
 			ExecutionContext executionContext,
 			LoadedValuesCollector loadedValuesCollector) {
@@ -193,7 +193,7 @@ public class FollowOnLockingAction implements PostAction {
 		entityMappingType.forEachAttributeMapping( (index, attributeMapping) -> {
 			// we need to handle collections specially (which we do below, so skip them here),
 			// and inverse to-one attributes have no columns here to select at all
-			if ( !(attributeMapping instanceof PluralAttributeMapping)
+			if ( !(attributeMapping instanceof PluralAttributeMapping<?>)
 					&& !isInverseToOne( attributeMapping ) ) {
 				final var tableLock = resolveTableLock( attributeMapping, tableLocks, entityMappingType );
 				if ( tableLock == null ) {
@@ -248,17 +248,17 @@ public class FollowOnLockingAction implements PostAction {
 	 * An inverse ({@code mappedBy}) to-one is mapped to the foreign-key columns of the
 	 * <em>associated</em> table rather than to any column of the table being locked.
 	 */
-	private static boolean isInverseToOne(AttributeMapping attributeMapping) {
-		return attributeMapping instanceof ToOneAttributeMapping toOne
+	private static boolean isInverseToOne(AttributeMapping<?, ?, ?> attributeMapping) {
+		return attributeMapping instanceof ToOneAttributeMapping<?> toOne
 			&& toOne.getSideNature() == ForeignKeyDescriptor.Nature.TARGET;
 	}
 
 	private TableLock resolveTableLock(
-			AttributeMapping attributeMapping,
+			AttributeMapping<?, ?, ?> attributeMapping,
 			Map<String, TableLock> tableSegments,
-			EntityMappingType entityMappingType) {
+			EntityMappingType<?> entityMappingType) {
 		final Object key =
-				entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister usp
+				entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister<?> usp
 						// In the union-subclass strategy, attributes defined on the
 						// super are reported as contained by the logical super table.
 						// See also the hacks in TableSegment to deal with this.
@@ -280,26 +280,26 @@ public class FollowOnLockingAction implements PostAction {
 	}
 
 	// Used by Hibernate Reactive
-	protected Map<EntityMappingType, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
-		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
+	protected Map<EntityMappingType<?>, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
+		final Map<EntityMappingType<?>, List<EntityKey>> map = new IdentityHashMap<>();
 		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedEntities().stream()
 				.filter( registration -> !registration.reloaded() ).toList(), map );
 		return map;
 	}
 
 	// Used by Hibernate Reactive
-	protected Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> segmentLoadedCollections(LoadedValuesCollector loadedValuesCollector) {
+	protected Map<EntityMappingType<?>, Map<PluralAttributeMapping<?>, List<CollectionKey>>> segmentLoadedCollections(LoadedValuesCollector loadedValuesCollector) {
 		if ( lockScope == PessimisticLockScope.NORMAL ) {
 			return emptyMap();
 		}
-		final Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> map = new HashMap<>();
+		final Map<EntityMappingType<?>, Map<PluralAttributeMapping<?>, List<CollectionKey>>> map = new HashMap<>();
 		LockingHelper.segmentLoadedCollections( loadedValuesCollector.getCollectedCollections(), lockScope, map );
 		return map;
 	}
 
 	// Used by Hibernate Reactive
 	protected Map<String, TableLock> prepareTableLocks(
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			List<EntityKey> entityKeys,
 			SharedSessionContractImplementor session) {
 		final Map<String, TableLock> segments = new HashMap<>();
@@ -311,7 +311,7 @@ public class FollowOnLockingAction implements PostAction {
 	}
 
 	// Used by Hibernate Reactive
-	protected TableLock createTableLock(TableDetails tableDetails, EntityMappingType entityMappingType, List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
+	protected TableLock createTableLock(TableDetails tableDetails, EntityMappingType<?> entityMappingType, List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
 		return new TableLock( tableDetails, entityMappingType, entityKeys, session );
 	}
 

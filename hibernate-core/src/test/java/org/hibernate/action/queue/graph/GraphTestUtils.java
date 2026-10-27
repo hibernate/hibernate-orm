@@ -103,7 +103,7 @@ public class GraphTestUtils {
 
 			@Nonnull
 	@Override
-			public JdbcMapping getJdbcMapping() {
+			public JdbcMapping<?> getJdbcMapping() {
 				throw new UnsupportedOperationException( "This graph test mapping has no JDBC type" );
 			}
 		};

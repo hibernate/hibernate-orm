@@ -20,7 +20,7 @@ import java.sql.SQLException;
 /// @author Steve Ebersole
 public class ForceVersionBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityTableDescriptor tableDescriptor;
-	private final EntityPersister persister;
+	private final EntityPersister<?> persister;
 	private final Object entity;
 	private final Object entityId;
 	private final Object oldVersion;
@@ -28,7 +28,7 @@ public class ForceVersionBindPlan implements BindPlan, OperationResultChecker {
 
 	public ForceVersionBindPlan(
 			EntityTableDescriptor tableDescriptor,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object entity,
 			Object entityId,
 			Object oldVersion,

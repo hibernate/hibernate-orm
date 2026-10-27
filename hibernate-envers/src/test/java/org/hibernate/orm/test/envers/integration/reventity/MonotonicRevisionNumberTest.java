@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MonotonicRevisionNumberTest {
 	@Test
 	public void testOracleSequenceOrder(SessionFactoryScope scope, DomainModelScope domainModelScope) {
-		EntityPersister persister = scope.getSessionFactory()
+		EntityPersister<?> persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( SequenceIdRevisionEntity.class.getName() );
 		Generator generator = persister.getGenerator();

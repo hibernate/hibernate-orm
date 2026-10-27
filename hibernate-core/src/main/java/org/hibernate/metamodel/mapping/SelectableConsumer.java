@@ -178,7 +178,7 @@ public interface SelectableConsumer {
 
 			@Nonnull
 			@Override
-			public JdbcMapping getJdbcMapping() {
+			public JdbcMapping<?> getJdbcMapping() {
 				return getDelegate().getJdbcMapping();
 			}
 
@@ -201,7 +201,7 @@ public interface SelectableConsumer {
 	 * Very limited functionality in terms of the visited SelectableMappings
 	 * will not have any defined JdbcMapping, etc
 	 */
-	default void accept(@Nonnull String tableName, @Nonnull String[] columnNames, @Nonnull IntFunction<JdbcMapping> jdbcMappings) {
+	default void accept(@Nonnull String tableName, @Nonnull String[] columnNames, @Nonnull IntFunction<JdbcMapping<?>> jdbcMappings) {
 		class SelectableMappingIterator implements SelectableMapping {
 
 			private int index;
@@ -280,7 +280,7 @@ public interface SelectableConsumer {
 
 			@Nonnull
 			@Override
-			public JdbcMapping getJdbcMapping() {
+			public JdbcMapping<?> getJdbcMapping() {
 				return jdbcMappings.apply( index );
 			}
 		}

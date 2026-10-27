@@ -375,13 +375,13 @@ public class AttributeFactory {
 		return metaModelType.getExpressibleJavaType();
 	}
 
-	private static EntityPersister getDeclaringEntity(
+	private static EntityPersister<?> getDeclaringEntity(
 			AbstractIdentifiableType<?> ownerType,
 			MetadataContext metadataContext) {
 		return getDeclarerEntityPersister( ownerType, metadataContext );
 	}
 
-	private static EntityPersister getDeclarerEntityPersister(
+	private static EntityPersister<?> getDeclarerEntityPersister(
 			AbstractIdentifiableType<?> ownerType,
 			MetadataContext metadataContext) {
 		final var metamodel = metadataContext.getMetamodel();
@@ -631,7 +631,7 @@ public class AttributeFactory {
 
 	private static EmbeddableRepresentationStrategy ownerRepresentationStrategy(
 			MetadataContext metadataContext,
-			EmbeddableValuedModelPart ownerMappingModelDescriptor,
+			EmbeddableValuedModelPart<?, ?, ?> ownerMappingModelDescriptor,
 			Component ownerBootDescriptor) {
 		if ( ownerMappingModelDescriptor == null ) {
 			// When an entity uses a type variable, bound by a mapped superclass, for an embedded id,
@@ -655,13 +655,13 @@ public class AttributeFactory {
 		return resolveVirtualIdentifierMember( attributeContext.getPropertyMapping(), declaringEntity );
 	};
 
-	private static Member resolveVirtualIdentifierMember( Property property, EntityPersister entityPersister) {
+	private static Member resolveVirtualIdentifierMember( Property property, EntityPersister<?> entityPersister) {
 		final var identifierMapping = entityPersister.getIdentifierMapping();
 		if ( identifierMapping.getNature() != EntityIdentifierMapping.Nature.VIRTUAL ) {
 			throw new IllegalArgumentException( "expecting IdClass mapping" );
 		}
 
-		final var cid = (CompositeIdentifierMapping) identifierMapping;
+		final var cid = (CompositeIdentifierMapping<?, ?, ?>) identifierMapping;
 		final var embeddable = cid.getPartMappingType();
 		final String attributeName = property.getName();
 		final var attributeMapping = embeddable.findAttributeMapping( attributeName );
@@ -697,7 +697,7 @@ public class AttributeFactory {
 		};
 	};
 
-	private static Member resolveEntityMember(Property property, EntityPersister declaringEntity) {
+	private static Member resolveEntityMember(Property property, EntityPersister<?> declaringEntity) {
 		final String propertyName = property.getName();
 		return !propertyName.equals( declaringEntity.getIdentifierPropertyName() )
 			&& declaringEntity.findAttributeMapping( propertyName ) == null && !property.isGeneric()
@@ -774,14 +774,14 @@ public class AttributeFactory {
 		}
 	};
 
-	private static Member getter(EntityPersister persister, Property property, String name, Class<?> type) {
+	private static Member getter(EntityPersister<?> persister, Property property, String name, Class<?> type) {
 		final Getter getter = getter( persister, property );
 		return getter instanceof PropertyAccessMapImpl.GetterImpl
 				? new MapMember( name, type )
 				: getter.getMember();
 	}
 
-	private static Getter getter(EntityPersister persister, Property property) {
+	private static Getter getter(EntityPersister<?> persister, Property property) {
 		return persister.getRepresentationStrategy()
 				.resolvePropertyAccess( property )
 				.getGetter();

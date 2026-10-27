@@ -73,13 +73,13 @@ public class CustomSqlNamespaceInjectionTests {
 		final SessionFactoryImplementor sessionFactory = sessionFactoryScope.getSessionFactory();
 
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
-		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entityClass );
+		final EntityPersister<?> persister = mappingMetamodel.getEntityDescriptor( entityClass );
 
 		verifySelectSql( sessionFactoryScope, persister, expectedTableName );
 		verifyDmlSql( sessionFactoryScope, persister, expectedTableName );
 	}
 
-	private static void verifyDmlSql(SessionFactoryScope sessionFactoryScope, EntityPersister persister, String expectedTableName) {
+	private static void verifyDmlSql(SessionFactoryScope sessionFactoryScope, EntityPersister<?> persister, String expectedTableName) {
 		verifyDmlSql( persister.getInsertCoordinator(), expectedTableName );
 		verifyDmlSql( persister.getUpdateCoordinator(), expectedTableName );
 		verifyDmlSql( persister.getDeleteCoordinator(), expectedTableName );
@@ -92,7 +92,7 @@ public class CustomSqlNamespaceInjectionTests {
 		assertThat( sql ).contains( expectedTableName );
 	}
 
-	private static void verifySelectSql(SessionFactoryScope sessionFactoryScope, EntityPersister persister, String expectedTableName) {
+	private static void verifySelectSql(SessionFactoryScope sessionFactoryScope, EntityPersister<?> persister, String expectedTableName) {
 		final CollectingStatementObserver sqlStatementCollector = sessionFactoryScope.getCollectingStatementObserver();
 		sqlStatementCollector.clear();
 

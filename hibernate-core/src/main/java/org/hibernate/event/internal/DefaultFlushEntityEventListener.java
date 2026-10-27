@@ -55,7 +55,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	 */
 	public void checkId(
 			@Nonnull Object object,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EntityEntry entry,
 			@Nonnull SessionImplementor session) {
 		final Object entryId = entry.getId();
@@ -79,7 +79,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	// Used by Hibernate Reactive
 	protected void throwIdentifiedAlteredException(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entryId,
 			@Nonnull Object currentId) {
 		throw new HibernateException( "Identifier of an instance of '" + persister.getEntityName()
@@ -87,7 +87,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private void checkNaturalId(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity,
 			@Nonnull EntityEntry entry,
 			@Nonnull Object[] current,
@@ -291,7 +291,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			@Nonnull Object[] values,
 			@Nullable int[] dirtyProperties,
 			@Nonnull Status status,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity,
 			@Nullable Object nextVersion) {
 		// schedule the update
@@ -340,7 +340,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			@Nonnull EntityEntry entry,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull Status status,
-			@Nonnull EntityPersister persister) {
+			@Nonnull EntityPersister<?> persister) {
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 			final String info = infoString( persister, entry.getId(), factory );
 			if ( status == Status.DELETED ) {
@@ -490,7 +490,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 	}
 
-	private static boolean hasDirtyCollections(@Nonnull FlushEntityEvent event, @Nonnull EntityPersister persister) {
+	private static boolean hasDirtyCollections(@Nonnull FlushEntityEvent event, @Nonnull EntityPersister<?> persister) {
 		final boolean includeNonVersionedCollections = hasUpdateCallbacks( persister );
 		final var visitor = new DirtyCollectionSearchVisitor(
 				event.getEntity(),
@@ -504,13 +504,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		return visitor.wasDirtyCollectionFound();
 	}
 
-	private boolean isCollectionDirtyCheckNecessary(@Nonnull EntityPersister persister, @Nonnull Status status) {
+	private boolean isCollectionDirtyCheckNecessary(@Nonnull EntityPersister<?> persister, @Nonnull Status status) {
 		return ( status == Status.MANAGED || status == Status.READ_ONLY )
 			&& persister.hasCollections()
 			&& ( persister.isVersioned() || persister.getAuditMapping() != null || hasUpdateCallbacks( persister ) );
 	}
 
-	private static boolean hasUpdateCallbacks(@Nonnull EntityPersister persister) {
+	private static boolean hasUpdateCallbacks(@Nonnull EntityPersister<?> persister) {
 		final var entityCallbacks = persister.getEntityCallbacks();
 		return entityCallbacks.hasRegisteredCallbacks( CallbackType.PRE_UPDATE )
 			|| entityCallbacks.hasRegisteredCallbacks( CallbackType.POST_UPDATE );
@@ -662,7 +662,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	private static int[] resolveDirtyAttributeIndex(
 			@Nonnull SelfDirtinessTracker tracker,
 			@Nonnull FlushEntityEvent event,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EntityEntry entry) {
 		return persister.resolveDirtyAttributeIndexes(
 				event.getPropertyValues(),
@@ -674,7 +674,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private static class DirtyCheckAttributeInfoImpl implements CustomEntityDirtinessStrategy.AttributeInformation {
 		private final FlushEntityEvent event;
-		private final EntityPersister persister;
+		private final EntityPersister<?> persister;
 		private final int numberOfAttributes;
 		private int index;
 
@@ -685,7 +685,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 
 		@Override
-		public @Nonnull EntityPersister getContainingPersister() {
+		public @Nonnull EntityPersister<?> getContainingPersister() {
 			return persister;
 		}
 
@@ -750,7 +750,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	@Nullable
 	private static Object[] getDatabaseSnapshot(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object id,
 			@Nonnull SessionImplementor session) {
 		final var persistenceContext = session.getPersistenceContextInternal();

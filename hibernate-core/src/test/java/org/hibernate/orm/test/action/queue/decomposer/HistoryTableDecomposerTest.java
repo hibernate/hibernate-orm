@@ -58,7 +58,7 @@ public class HistoryTableDecomposerTest {
 
 		scope.inTransaction( entityManager -> {
 			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryEntity.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryEntity.class );
 			final HistoryEntity entity = new HistoryEntity();
 			entity.id = 1L;
 			entity.name = "created";
@@ -95,7 +95,7 @@ public class HistoryTableDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryEntity.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryEntity.class );
 			final Object[] previousState = persister.getValues( entity );
 			entity.name = "after";
 
@@ -139,7 +139,7 @@ public class HistoryTableDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryEntity.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryEntity.class );
 			final EntityDeleteAction action = new EntityDeleteAction(
 					persister.getIdentifier( entity, session ),
 					persister.getValues( entity ),
@@ -167,7 +167,7 @@ public class HistoryTableDecomposerTest {
 
 		scope.inTransaction( entityManager -> {
 			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistorySecondaryEntity.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( HistorySecondaryEntity.class );
 			final HistorySecondaryEntity entity = new HistorySecondaryEntity();
 			entity.id = 4L;
 			entity.primaryName = "primary";
@@ -207,7 +207,7 @@ public class HistoryTableDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistorySecondaryEntity.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( HistorySecondaryEntity.class );
 			final Object[] previousState = persister.getValues( entity );
 			entity.primaryName = "primary-after";
 			entity.secondaryName = "secondary-after";
@@ -255,7 +255,7 @@ public class HistoryTableDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistorySecondaryEntity.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( HistorySecondaryEntity.class );
 			final EntityDeleteAction action = new EntityDeleteAction(
 					persister.getIdentifier( entity, session ),
 					persister.getValues( entity ),
@@ -284,7 +284,7 @@ public class HistoryTableDecomposerTest {
 
 		scope.inTransaction( entityManager -> {
 			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryJoinedChild.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryJoinedChild.class );
 			final HistoryJoinedChild entity = new HistoryJoinedChild();
 			entity.id = 7L;
 			entity.parentName = "parent";
@@ -324,7 +324,7 @@ public class HistoryTableDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryJoinedChild.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryJoinedChild.class );
 			final Object[] previousState = persister.getValues( entity );
 			entity.parentName = "parent-after";
 			entity.childName = "child-after";
@@ -372,7 +372,7 @@ public class HistoryTableDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryJoinedChild.class );
+			final EntityPersister<?> persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryJoinedChild.class );
 			final EntityDeleteAction action = new EntityDeleteAction(
 					persister.getIdentifier( entity, session ),
 					persister.getValues( entity ),

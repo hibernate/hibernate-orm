@@ -109,12 +109,12 @@ public class TableCommentTest {
 
 	private String getTableName(SessionFactoryScope factoryScope) {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
-		final EntityMappingType entityMappingType = sessionFactory
+		final EntityMappingType<?> entityMappingType = sessionFactory
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( TableWithComment.class );
 
-		return ( (AbstractEntityPersister) entityMappingType ).getTableName();
+		return ( (AbstractEntityPersister<?>) entityMappingType ).getTableName();
 	}
 
 	private void createSchema(DomainModelScope modelScope, File output) {

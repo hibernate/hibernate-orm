@@ -41,11 +41,11 @@ public class LocaleMappingTests {
 	public void basicAssertions(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory.getTypeConfiguration().getJdbcTypeRegistry();
-		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor(
+		final EntityPersister<?> entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor(
 				LocaleMappingTestEntity.class );
 
 		{
-			final BasicAttributeMapping localeAttribute = (BasicAttributeMapping) entityDescriptor
+			final BasicAttributeMapping<?> localeAttribute = (BasicAttributeMapping<?>) entityDescriptor
 					.findAttributeMapping("locale" );
 			assertThat( localeAttribute.getJdbcMapping().getJdbcType() )
 					.isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
@@ -54,9 +54,9 @@ public class LocaleMappingTests {
 		}
 
 		{
-			final PluralAttributeMapping localesAttribute = (PluralAttributeMapping) entityDescriptor
+			final PluralAttributeMapping<?> localesAttribute = (PluralAttributeMapping<?>) entityDescriptor
 					.findAttributeMapping( "locales" );
-			final BasicValuedCollectionPart elementDescriptor = (BasicValuedCollectionPart) localesAttribute.getElementDescriptor();
+			final BasicValuedCollectionPart<?> elementDescriptor = (BasicValuedCollectionPart<?>) localesAttribute.getElementDescriptor();
 			assertThat( elementDescriptor.getJdbcMapping().getJdbcType() )
 					.isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( elementDescriptor.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() )
@@ -64,9 +64,9 @@ public class LocaleMappingTests {
 		}
 
 		{
-			final PluralAttributeMapping countByLocaleAttribute = (PluralAttributeMapping) entityDescriptor
+			final PluralAttributeMapping<?> countByLocaleAttribute = (PluralAttributeMapping<?>) entityDescriptor
 					.findAttributeMapping("countByLocale" );
-			final BasicValuedCollectionPart keyDescriptor = (BasicValuedCollectionPart) countByLocaleAttribute.getIndexDescriptor();
+			final BasicValuedCollectionPart<?> keyDescriptor = (BasicValuedCollectionPart<?>) countByLocaleAttribute.getIndexDescriptor();
 			assertThat( keyDescriptor.getJdbcMapping().getJdbcType() )
 					.isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( keyDescriptor.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() )

@@ -48,7 +48,7 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters) {
+			List<ColumnValueParameter<?>> parameters) {
 		super(
 				tableReference,
 				mutationTarget,
@@ -60,11 +60,11 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 		this.valueBindings = valueBindings;
 	}
 
-	public static List<ColumnValueParameter> collectParameters(
+	public static List<ColumnValueParameter<?>> collectParameters(
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
-		final List<ColumnValueParameter> params = new ArrayList<>();
+		final List<ColumnValueParameter<?>> params = new ArrayList<>();
 
 		final BiConsumer<Integer,ColumnValueBinding> intermediateConsumer = (index, binding) -> {
 			final ColumnWriteFragment valueExpression = binding.getValueExpression();
@@ -101,9 +101,9 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 	}
 
 	@Override
-	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
+	public void forEachParameter(Consumer<ColumnValueParameter<?>> consumer) {
 		final BiConsumer<Integer,ColumnValueBinding> intermediateConsumer = (index, binding) -> {
-			for ( ColumnValueParameter parameter : binding.getValueExpression().getParameters() ) {
+			for ( ColumnValueParameter<?> parameter : binding.getValueExpression().getParameters() ) {
 				consumer.accept( parameter );
 			}
 		};

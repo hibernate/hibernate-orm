@@ -46,9 +46,9 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	}
 
 	@Override
-	public TraversalResult traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
-		assert !(fetchable instanceof CollectionPart);
-		if ( fetchable instanceof NonAggregatedIdentifierMapping ) {
+	public TraversalResult traverse(FetchParent fetchParent, Fetchable<?, ?, ?> fetchable, boolean exploreKeySubgraph) {
+		assert !(fetchable instanceof CollectionPart<?, ?, ?>);
+		if ( fetchable instanceof NonAggregatedIdentifierMapping<?, ?> ) {
 			return new TraversalResult( currentGraphContext,
 					new FetchStrategy( FetchTiming.IMMEDIATE, true ) );
 		}
@@ -66,7 +66,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	}
 
 	private FetchStrategy handleFetchType(
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			boolean exploreKeySubgraph,
 			AttributeNodeImplementor<?, ?, ?> attributeNode,
 			FetchOptions fetchOptions) {
@@ -76,7 +76,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 				case EAGER:
 					final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
 					final Class<?> subgraphMapKey;
-					if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+					if ( fetchable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 						if ( exploreKeySubgraph ) {
 							subgraphMap = attributeNode.getKeySubGraphs();
 							subgraphMapKey = getEntityCollectionPartJavaClass(
@@ -118,8 +118,8 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 				: fetchMethod == FetchMethod.JOIN;
 	}
 
-	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {
-		return collectionPart instanceof EntityCollectionPart entityCollectionPart
+	private Class<?> getEntityCollectionPartJavaClass(CollectionPart<?, ?, ?> collectionPart) {
+		return collectionPart instanceof EntityCollectionPart<?> entityCollectionPart
 				? entityCollectionPart.getEntityMappingType().getJavaType().getJavaTypeClass()
 				: null;
 	}

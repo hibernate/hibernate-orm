@@ -89,18 +89,18 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 	public static final String SHORT_NAME = "cte";
 
-	private final EntityPersister rootDescriptor;
+	private final EntityPersister<?> rootDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
 	private final CteTable entityCteTable;
 
 	public CteInsertStrategy(
-			EntityMappingType rootEntityType,
+			EntityMappingType<?> rootEntityType,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this( rootEntityType.getEntityPersister(), runtimeModelCreationContext );
 	}
 
 	public CteInsertStrategy(
-			EntityPersister rootDescriptor,
+			EntityPersister<?> rootDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.rootDescriptor = rootDescriptor;
 		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
@@ -149,7 +149,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 		return new MultiTableHandlerBuildResult( multiTableHandler, firstJdbcParameterBindings.get() );
 	}
 
-	protected EntityPersister getRootDescriptor() {
+	protected EntityPersister<?> getRootDescriptor() {
 		return rootDescriptor;
 	}
 

@@ -543,11 +543,11 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
+	public void visitEntityTypeLiteral(EntityTypeLiteral<?> expression) {
 	}
 
 	@Override
-	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral<?> expression) {
 	}
 
 	@Override

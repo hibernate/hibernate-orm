@@ -48,7 +48,7 @@ class ScalarDomainResultBuilder<T> implements ResultBuilder {
 									typeDescriptor,
 									typeConfiguration
 							);
-							return new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping) basicType );
+							return new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping<?>) basicType );
 						}
 				),
 				typeDescriptor,

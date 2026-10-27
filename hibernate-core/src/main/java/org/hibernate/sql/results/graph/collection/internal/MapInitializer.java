@@ -36,7 +36,7 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 
 	public MapInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,

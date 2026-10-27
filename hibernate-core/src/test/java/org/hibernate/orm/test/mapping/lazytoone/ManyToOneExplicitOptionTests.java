@@ -89,11 +89,11 @@ public class ManyToOneExplicitOptionTests {
 
 	@Test
 	public void testOwnerIsProxy(SessionFactoryScope scope) {
-		final EntityPersister orderDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Order.class );
+		final EntityPersister<?> orderDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Order.class );
 		final BytecodeEnhancementMetadata orderEnhancementMetadata = orderDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( orderEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
-		final EntityPersister customerDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
+		final EntityPersister<?> customerDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
 		final BytecodeEnhancementMetadata customerEnhancementMetadata = customerDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( customerEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 

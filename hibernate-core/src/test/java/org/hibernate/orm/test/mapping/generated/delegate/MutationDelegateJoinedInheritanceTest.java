@@ -211,7 +211,7 @@ public class MutationDelegateJoinedInheritanceTest {
 			SessionFactoryScope scope,
 			@SuppressWarnings( "SameParameterValue" ) Class<?> entityClass,
 			MutationType mutationType) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( entityClass );
 		return entityDescriptor.getMutationDelegate( mutationType );

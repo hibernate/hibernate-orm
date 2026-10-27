@@ -39,21 +39,22 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Christian Beikov
  */
-public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart, MappingType, BasicValuedModelPart {
+public class AnonymousTupleBasicValuedModelPart<J, R> implements OwnedValuedModelPart<J, J, R>, MappingType<J>, BasicValuedModelPart<J, J, R> {
 
 	private static final FetchOptions FETCH_OPTIONS = FetchOptions.valueOf( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
-	private final MappingType declaringType;
+	private final MappingType<?> declaringType;
 	private final String partName;
 	private final SelectableMapping selectableMapping;
-	private final SqmExpressible<?> expressible;
+	private final JdbcMapping<R> jdbcMapping;
+	private final SqmExpressible<J> expressible;
 	private final int fetchableIndex;
 
 	public AnonymousTupleBasicValuedModelPart(
-			MappingType declaringType,
+			MappingType<?> declaringType,
 			String partName,
 			String selectionExpression,
-			SqmExpressible<?> expressible,
-			JdbcMapping jdbcMapping,
+			SqmExpressible<J> expressible,
+			JdbcMapping<R> jdbcMapping,
 			int fetchableIndex) {
 		this(
 				declaringType,
@@ -78,44 +79,54 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 						jdbcMapping
 				),
 				expressible,
-				fetchableIndex
+				fetchableIndex,
+				jdbcMapping
 		);
 	}
 
 	public AnonymousTupleBasicValuedModelPart(
-			MappingType declaringType,
+			MappingType<?> declaringType,
 			String partName,
 			SelectableMapping selectableMapping,
-			SqmExpressible<?> expressible,
-			int fetchableIndex) {
+			SqmExpressible<J> expressible,
+			int fetchableIndex,
+			JdbcMapping<R> jdbcMapping) {
 		this.declaringType = declaringType;
 		this.partName = partName;
 		this.selectableMapping = selectableMapping;
 		this.expressible = expressible;
+		this.jdbcMapping = jdbcMapping;
 		this.fetchableIndex = fetchableIndex;
+	}
+
+	public static <J> AnonymousTupleBasicValuedModelPart<J, ?> create(
+			MappingType<?> declaringType, String partName, SelectableMapping selectableMapping,
+			SqmExpressible<J> expressible, int fetchableIndex) {
+		return new AnonymousTupleBasicValuedModelPart<>( declaringType, partName, selectableMapping,
+				expressible, fetchableIndex, selectableMapping.getJdbcMapping() );
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return expressible.getExpressibleJavaType();
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getMappedJavaType() {
+	public JavaType<J> getMappedJavaType() {
 		return expressible.getExpressibleJavaType();
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getDeclaringType() {
+	public MappingType<?> getDeclaringType() {
 		return declaringType;
 	}
 
@@ -133,7 +144,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return null;
 	}
 
@@ -157,8 +168,8 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
-		return selectableMapping.getJdbcMapping();
+	public JdbcMapping<R> getJdbcMapping() {
+		return jdbcMapping;
 	}
 
 	@Nonnull
@@ -240,7 +251,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return this;
 	}
 
@@ -261,7 +272,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<R> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -273,7 +284,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 				creationState.getSqlAstCreationState()
 		);
 
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				getJdbcMapping(),
@@ -348,7 +359,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		selectionConsumer.accept(
 				resolveSqlSelection( navigablePath, tableGroup, null, creationState.getSqlAstCreationState() ),
 				getJdbcMapping()
@@ -368,7 +379,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
@@ -419,7 +430,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 	}
 
 	@Override
-	public int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( 0, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

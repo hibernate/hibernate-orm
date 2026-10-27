@@ -21,11 +21,20 @@ import jakarta.annotation.Nullable;
 /// application's domain model: an attribute, an entity identifier,
 /// collection elements, and so on.
 ///
+/// The Java types exposed by a part are not necessarily identical.
+/// An ordinary attribute has `J = M = R`. A virtual identifier for an
+/// entity `E` with an ID class `I` has `J = M = E` and `R = I`.
+/// A tuple may also have `J != M`.
+///
+/// @param <J> the declared Java type returned by [#getJavaType()]
+/// @param <M> the mapped Java type returned by [#getExpressibleJavaType()]
+/// @param <R> the value assembled by [#createDomainResult]
+///
 /// @see DomainResultProducer
 /// @see jakarta.persistence.metamodel.Bindable
 ///
 /// @author Steve Ebersole
-public interface ModelPart extends MappingModelExpressible {
+public interface ModelPart<J, M, R> extends MappingModelExpressible<M> {
 
 	/// The path for this fetchable back to an entity in the domain model.  Acts as a unique
 	/// identifier for individual parts.
@@ -54,15 +63,16 @@ public interface ModelPart extends MappingModelExpressible {
 	@Nullable
 	String getPartName();
 
-	/// The type for this part.
+	/// A descriptor for this part. Its Java type may differ from the
+	/// mapped expression type `M`.
 	@Nonnull
-	MappingType getPartMappingType();
+	MappingType<?> getPartMappingType();
 
 	/// The Java type for this part.  Generally equivalent to
 	/// [MappingType#getMappedJavaType()] relative to
 	/// [#getPartMappingType()]
 	@Nonnull
-	JavaType<?> getJavaType();
+	JavaType<J> getJavaType();
 
 	/// Whether this model part describes something that physically
 	/// exists in the domain model.
@@ -85,7 +95,7 @@ public interface ModelPart extends MappingModelExpressible {
 	/// Create a [DomainResult] for a specific reference to this [ModelPart].
 	@Nonnull
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
-	<T> DomainResult<T> createDomainResult(
+	DomainResult<R> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -104,7 +114,7 @@ public interface ModelPart extends MappingModelExpressible {
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection,JdbcMapping> selectionConsumer);
+			@Nonnull BiConsumer<SqlSelection,JdbcMapping<?>> selectionConsumer);
 
 	/// Visits each physical (non-formula)  column.
 	default int forEachColumn(@Nonnull SelectableConsumer consumer) {
@@ -130,16 +140,16 @@ public interface ModelPart extends MappingModelExpressible {
 	}
 
 	@Nullable
-	default AttributeMapping asAttributeMapping() {
+	default AttributeMapping<J, M, R> asAttributeMapping() {
 		return null;
 	}
 
 	@Nullable
-	default EntityMappingType asEntityMappingType(){
+	default EntityMappingType<J> asEntityMappingType(){
 		return null;
 	}
 
-	@Nullable default BasicValuedModelPart asBasicValuedModelPart() {
+	@Nullable default BasicValuedModelPart<J, M, R> asBasicValuedModelPart() {
 		return null;
 	}
 
@@ -188,7 +198,7 @@ public interface ModelPart extends MappingModelExpressible {
 	}
 
 	@Nullable
-	EntityMappingType findContainingEntityMapping();
+	EntityMappingType<?> findContainingEntityMapping();
 
 	default boolean areEqual(@Nullable Object one, @Nullable Object other, @Nullable SharedSessionContractImplementor session) {
 		// NOTE : deepEquals to account for arrays (compound natural-id)

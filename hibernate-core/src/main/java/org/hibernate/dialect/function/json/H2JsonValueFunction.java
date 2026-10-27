@@ -96,7 +96,7 @@ public class H2JsonValueFunction extends JsonValueFunction {
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public static boolean needsHexDecoding(JdbcMapping jdbcMapping) {
+	public static boolean needsHexDecoding(JdbcMapping<?> jdbcMapping) {
 		return switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 			case BINARY, VARBINARY, LONG32VARBINARY -> true;
 			default -> false;

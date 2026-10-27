@@ -67,7 +67,7 @@ public final class OptimisticLockHelper {
 			Object nextVersion,
 			Object cacheKey,
 			EntityEntry entry,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EntityDataAccess cache,
 			SharedSessionContractImplementor session) {
 		if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
@@ -91,7 +91,7 @@ public final class OptimisticLockHelper {
 	}
 
 	private static boolean updateCache(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EntityDataAccess cache,
 			Object cacheEntry,
 			Object previousVersion,
@@ -121,7 +121,7 @@ public final class OptimisticLockHelper {
 	}
 
 	private static boolean isCacheInvalidationRequired(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SharedSessionContractImplementor session) {
 		return persister.isCacheInvalidationRequired()
 			// the cache has to be invalidated when CacheMode is GET or IGNORE
@@ -131,7 +131,7 @@ public final class OptimisticLockHelper {
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
 		private final EntityDataAccess cache;
 		private final Object cacheKey;
-		private final EntityPersister persister;
+		private final EntityPersister<?> persister;
 		private final Object previousVersion;
 		private final Object nextVersion;
 		private final SoftLock lock;
@@ -140,7 +140,7 @@ public final class OptimisticLockHelper {
 		private CacheCleanupProcess(
 				EntityDataAccess cache,
 				Object cacheKey,
-				EntityPersister persister,
+				EntityPersister<?> persister,
 				Object previousVersion,
 				Object nextVersion,
 				SoftLock lock,
@@ -164,7 +164,7 @@ public final class OptimisticLockHelper {
 			}
 		}
 
-		private static boolean cacheUpdateRequired(boolean success, EntityPersister persister, SharedSessionContractImplementor session) {
+		private static boolean cacheUpdateRequired(boolean success, EntityPersister<?> persister, SharedSessionContractImplementor session) {
 			return success
 				&& !persister.isCacheInvalidationRequired()
 				&& session.getCacheMode().isPutEnabled();

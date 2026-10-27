@@ -16,7 +16,7 @@ public interface SetReturningFunctionType {
 	///
 	/// @param name the part name
 	/// @return the named part, or `null` when there is no such part
-	@Nullable ModelPart findSubPart(String name);
+	@Nullable ModelPart<?, ?, ?> findSubPart(String name);
 
 	/// Visit the selectable mappings of the function result.
 	///

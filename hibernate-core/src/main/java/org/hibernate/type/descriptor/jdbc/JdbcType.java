@@ -409,7 +409,7 @@ public interface JdbcType extends Serializable {
 	 * @since 7.2
 	 */
 	@Incubating(since = "7.2")
-	default @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
+	default @Nullable String castFromPattern(JdbcMapping<?> sourceMapping, @Nullable Size size) {
 		return null;
 	}
 
@@ -422,7 +422,7 @@ public interface JdbcType extends Serializable {
 	 * @since 7.2
 	 */
 	@Incubating(since = "7.2")
-	default @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
+	default @Nullable String castToPattern(JdbcMapping<?> targetJdbcMapping, @Nullable Size size) {
 		return null;
 	}
 

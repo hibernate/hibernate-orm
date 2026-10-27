@@ -101,11 +101,11 @@ public class XmlAccessTest {
 
 
 	private void assertAccessType(SessionFactoryImplementor factory, Class<?> classUnderTest, AccessType accessType) {
-		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
+		final EntityPersister<?> entityDescriptor = factory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.findEntityDescriptor( classUnderTest.getName() );
 		final AttributeMappingsList attributeMappings = entityDescriptor.getAttributeMappings();
-		final AttributeMapping attributeMapping = attributeMappings.get( 0 );
+		final AttributeMapping<?, ?, ?> attributeMapping = attributeMappings.get( 0 );
 
 		final Getter accessGetter = attributeMapping.getPropertyAccess().getGetter();
 

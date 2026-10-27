@@ -125,7 +125,7 @@ public class UpdateCacheHandling {
 	}
 
 	private static boolean isCacheInvalidationRequired(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SharedSessionContractImplementor session) {
 		return persister.isCacheInvalidationRequired()
 			|| session.getCacheMode() == CacheMode.GET
@@ -135,7 +135,7 @@ public class UpdateCacheHandling {
 	private static boolean updateCache(
 			EntityUpdateAction action,
 			CacheUpdate cacheUpdate,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EntityDataAccess cache,
 			SharedSessionContractImplementor session) {
 		final var eventMonitor = session.getEventMonitor();
@@ -168,7 +168,7 @@ public class UpdateCacheHandling {
 
 	private static boolean cacheUpdateRequired(
 			boolean success,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			CacheUpdate cacheUpdate,
 			SharedSessionContractImplementor session) {
 		return success

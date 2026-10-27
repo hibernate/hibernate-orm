@@ -28,7 +28,7 @@ import jakarta.annotation.Nullable;
 public class FilterDefinition implements org.hibernate.engine.FilterDefinition, Serializable {
 	private final String filterName;
 	private final String defaultFilterCondition;
-	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
+	private final Map<String, JdbcMapping<?>> explicitParamJaMappings = new HashMap<>();
 	private final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap = new HashMap<>();
 	private final boolean autoEnabled;
 	private final boolean applyToLoadByKey;
@@ -38,7 +38,7 @@ public class FilterDefinition implements org.hibernate.engine.FilterDefinition, 
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
+	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping<?>> explicitParamJaMappings) {
 		this( name, defaultCondition, false, false, explicitParamJaMappings, Collections.emptyMap() );
 	}
 
@@ -47,7 +47,7 @@ public class FilterDefinition implements org.hibernate.engine.FilterDefinition, 
 			String defaultCondition,
 			boolean autoEnabled,
 			boolean applyToLoadByKey,
-			@Nullable Map<String, JdbcMapping> explicitParamJaMappings,
+			@Nullable Map<String, JdbcMapping<?>> explicitParamJaMappings,
 			@Nullable Map<String, ManagedBean<? extends  Supplier<?>>> parameterResolverMap) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
@@ -90,7 +90,7 @@ public class FilterDefinition implements org.hibernate.engine.FilterDefinition, 
 	 *
 	 * @return The type of the named parameter.
 	 */
-	public @Nullable JdbcMapping getParameterJdbcMapping(String parameterName) {
+	public @Nullable JdbcMapping<?> getParameterJdbcMapping(String parameterName) {
 		return explicitParamJaMappings.get( parameterName );
 	}
 

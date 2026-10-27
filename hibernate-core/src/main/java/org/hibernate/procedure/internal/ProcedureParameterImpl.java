@@ -224,7 +224,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 			);
 		}
 		else if ( typeToUse instanceof BasicType<?> basicType ) {
-			return new JdbcParameterImpl( basicType );
+			return new JdbcParameterImpl<>( basicType );
 		}
 		else {
 			throw new UnsupportedOperationException();

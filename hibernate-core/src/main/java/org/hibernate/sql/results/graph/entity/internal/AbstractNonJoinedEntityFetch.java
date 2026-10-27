@@ -26,7 +26,7 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 		InitializerProducer<AbstractNonJoinedEntityFetch> {
 	private final NavigablePath navigablePath;
-	private final ToOneAttributeMapping fetchedModelPart;
+	private final ToOneAttributeMapping<?> fetchedModelPart;
 	private final FetchParent fetchParent;
 	private final DomainResult<?> keyResult;
 	private final BasicFetch<?> discriminatorFetch;
@@ -35,7 +35,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 
 	public AbstractNonJoinedEntityFetch(
 			NavigablePath navigablePath,
-			ToOneAttributeMapping fetchedModelPart,
+			ToOneAttributeMapping<?> fetchedModelPart,
 			FetchParent fetchParent,
 			DomainResult<?> keyResult,
 			boolean selectDiscriminator,
@@ -52,7 +52,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 
 	protected AbstractNonJoinedEntityFetch(
 			NavigablePath navigablePath,
-			ToOneAttributeMapping fetchedModelPart,
+			ToOneAttributeMapping<?> fetchedModelPart,
 			FetchParent fetchParent,
 			DomainResult<?> keyResult,
 			BasicFetch<?> discriminatorFetch,
@@ -73,12 +73,12 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	}
 
 	@Override
-	public ToOneAttributeMapping getFetchedMapping() {
+	public ToOneAttributeMapping<?> getFetchedMapping() {
 		return fetchedModelPart;
 	}
 
 	@Override
-	public ToOneAttributeMapping getEntityValuedModelPart() {
+	public ToOneAttributeMapping<?> getEntityValuedModelPart() {
 		return fetchedModelPart;
 	}
 
@@ -98,7 +98,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 		return null;
 	}
 
@@ -128,7 +128,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	}
 
 	@Override
-	public EntityMappingType getReferencedMappingType() {
+	public EntityMappingType<?> getReferencedMappingType() {
 		return fetchedModelPart.getEntityMappingType();
 	}
 

@@ -177,7 +177,7 @@ public class LegacyPostCommitListenerTest {
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+		public boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 			return true;
 		}
 	}
@@ -191,7 +191,7 @@ public class LegacyPostCommitListenerTest {
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+		public boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 			return true;
 		}
 	}
@@ -205,7 +205,7 @@ public class LegacyPostCommitListenerTest {
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+		public boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 			return true;
 		}
 	}

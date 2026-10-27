@@ -30,7 +30,7 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 public class GraphBasedActionQueueFactory implements ActionQueueFactory, Serializable {
 	private final PlanningOptions planningOptions;
 	private final ConstraintModel constraintModel;
-	private final Map<String, EntityPersister> entityPersistersByTable;
+	private final Map<String, EntityPersister<?>> entityPersistersByTable;
 	private final boolean deferIdentityInserts;
 
 	public GraphBasedActionQueueFactory(SessionFactoryImplementor factory) {
@@ -52,7 +52,7 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 		return constraintModel;
 	}
 
-	public Map<String, EntityPersister> getEntityPersistersByTable() {
+	public Map<String, EntityPersister<?>> getEntityPersistersByTable() {
 		return entityPersistersByTable;
 	}
 

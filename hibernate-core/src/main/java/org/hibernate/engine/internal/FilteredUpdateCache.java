@@ -17,7 +17,7 @@ public final class FilteredUpdateCache<V> {
 	private volatile InternalCache<Key, V> cache;
 
 	/** These mappings have no value-dependent assignments or optimistic-lock predicates. */
-	public static boolean supports(EntityPersister persister) {
+	public static boolean supports(EntityPersister<?> persister) {
 		if ( persister.isDynamicUpdate() || !persister.isMutable()
 				|| persister.optimisticLockStyle().isAllOrDirty() ) {
 			return false;

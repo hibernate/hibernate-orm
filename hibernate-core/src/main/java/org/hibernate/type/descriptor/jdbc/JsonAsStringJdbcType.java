@@ -31,7 +31,7 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 
 	private final boolean nationalized;
 	private final int ddlTypeCode;
-	protected JsonAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType embeddableMappingType) {
+	protected JsonAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 		this.ddlTypeCode = ddlTypeCode;
 		this.nationalized = ddlTypeCode == SqlTypes.LONG32NVARCHAR
@@ -100,7 +100,7 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new JsonAsStringJdbcType( ddlTypeCode, mappingType );

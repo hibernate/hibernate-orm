@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 /// Tests the graph-safety boundary for compact collection-row execution.
@@ -58,7 +59,7 @@ class CollectionRowCompactionTest {
 
 	private static class Fixture {
 		private final BasicCollectionPersister persister = mock( BasicCollectionPersister.class );
-		private final PluralAttributeMapping attributeMapping = mock( PluralAttributeMapping.class );
+		private final PluralAttributeMapping<?> attributeMapping = mock( PluralAttributeMapping.class );
 		private final CollectionRowCompaction policy;
 
 		private Fixture() {
@@ -81,12 +82,12 @@ class CollectionRowCompactionTest {
 				boolean nonPrimaryUniqueConstraint,
 				boolean selfReferential,
 				CollectionMutationPlanContributor contributor,
-				CollectionPart elementDescriptor) {
+				CollectionPart<?, ?, ?> elementDescriptor) {
 			final var table = mock( CollectionTableDescriptor.class );
 			when( table.isSelfReferential() ).thenReturn( selfReferential );
 			when( persister.getCollectionTableDescriptor() ).thenReturn( table );
-			when( persister.getAttributeMapping() ).thenReturn( attributeMapping );
-			when( attributeMapping.getElementDescriptor() ).thenReturn( elementDescriptor );
+			doReturn( attributeMapping ).when( persister ).getAttributeMapping();
+			doReturn( elementDescriptor ).when( attributeMapping ).getElementDescriptor();
 			policy = new CollectionRowCompaction( persister, contributor, nonPrimaryUniqueConstraint );
 		}
 	}

@@ -250,7 +250,7 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 		return map.entrySet().iterator();
 	}
 
-	public void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingState) {
+	public void injectLoadedState(PluralAttributeMapping<?> attributeMapping, List<?> loadingState) {
 		assert isInitializing();
 		assert map == null;
 

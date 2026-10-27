@@ -118,7 +118,7 @@ public class TableBasedUpdateHandler
 		this.sessionUidParameter =
 				sessionUidColumn == null
 						? null
-						: new SqlTypedMappingJdbcParameter( sessionUidColumn );
+						: SqlTypedMappingJdbcParameter.create( sessionUidColumn );
 		final var sessionFactory = getSessionFactory();
 		final var domainModel = sessionFactory.getMappingMetamodel();
 		final var entityDescriptor =
@@ -272,9 +272,9 @@ public class TableBasedUpdateHandler
 	}
 
 	private static Predicate suppliedPredicate(
-			SoftDeleteMapping softDeleteMapping,
+			SoftDeleteMapping<?> softDeleteMapping,
 			TableGroup updatingTableGroup,
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			PredicateCollector predicateCollector) {
 		if ( softDeleteMapping != null ) {
 			final var rootTableReference =

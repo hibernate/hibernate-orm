@@ -134,7 +134,7 @@ public class ElementCollectionSortingTest {
 				.getMappingMetamodel()
 				.getCollectionDescriptor( roleName );
 		assertTrue( collectionPersister.hasOrdering() );
-		PluralAttributeMapping attributeMapping = collectionPersister.getAttributeMapping();
+		PluralAttributeMapping<?> attributeMapping = collectionPersister.getAttributeMapping();
 		assertThat( attributeMapping.getFetchableName(), is( propertyName ) );
 		OrderByFragmentImpl orderByFragment = (OrderByFragmentImpl) attributeMapping.getOrderByFragment();
 		List<OrderingSpecification> fragmentSpecs = orderByFragment.getFragmentSpecs();

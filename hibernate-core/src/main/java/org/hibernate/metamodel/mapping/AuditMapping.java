@@ -61,7 +61,7 @@ public interface AuditMapping extends AuxiliaryMapping {
 	 */
 	@Nonnull
 	Predicate createRestriction(
-			@Nonnull TableGroupProducer tableGroupProducer,
+			@Nonnull TableGroupProducer<?, ?, ?> tableGroupProducer,
 			@Nonnull TableReference tableReference,
 			@Nonnull List<SelectableMapping> keySelectables,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,

@@ -119,14 +119,14 @@ public class XmlHelper {
 	}
 
 	private static Object fromString(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			String string,
 			boolean returnEmbeddable,
 			WrapperOptions options,
 			int selectableIndex,
 			int start,
 			int end) throws SQLException {
-		final JdbcMapping jdbcMapping = embeddableMappingType.getJdbcValueSelectable( selectableIndex )
+		final JdbcMapping<?> jdbcMapping = embeddableMappingType.getJdbcValueSelectable( selectableIndex )
 				.getJdbcMapping();
 		return fromString(
 				jdbcMapping.getMappedJavaType(),
@@ -268,7 +268,7 @@ public class XmlHelper {
 	}
 
 	public static <X> X fromString(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			String string,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
@@ -425,7 +425,7 @@ public class XmlHelper {
 	}
 
 	private static int fromString(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			String string,
 			boolean returnEmbeddable,
 			WrapperOptions options,
@@ -472,7 +472,7 @@ public class XmlHelper {
 							);
 							final var jdbcType = selectable.getJdbcMapping().getJdbcType();
 							if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
-								final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
+								final EmbeddableMappingType<?, ?, ?> subMappingType = aggregateJdbcType.getEmbeddableMappingType();
 								final Object[] subValues;
 								final int end;
 								if ( aggregateJdbcType.getJdbcTypeCode() == SqlTypes.SQLXML || aggregateJdbcType.getDefaultSqlTypeCode() == SqlTypes.SQLXML ) {
@@ -633,7 +633,7 @@ public class XmlHelper {
 						else {
 							// Nested tag
 							if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
-								final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+								final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 								final Object[] array = new Object[embeddableMappingType.getJdbcValueCount() + ( embeddableMappingType.isPolymorphic() ? 1 : 0 )];
 								final int end = fromString( embeddableMappingType, string, returnEmbeddable, options, array, contentStart );
 
@@ -689,7 +689,7 @@ public class XmlHelper {
 	}
 
 	public static String toString(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			Object value,
 			WrapperOptions options) throws SQLException {
 		final StringBuilder sb = new StringBuilder();
@@ -699,7 +699,7 @@ public class XmlHelper {
 		return sb.toString();
 	}
 
-	public static String arrayToString(EmbeddableMappingType elementMappingType, Object[] values, WrapperOptions options) {
+	public static String arrayToString(EmbeddableMappingType<?, ?, ?> elementMappingType, Object[] values, WrapperOptions options) {
 		if ( values.length == 0 ) {
 			return EMPTY_COLLECTION_TAG;
 		}
@@ -747,7 +747,7 @@ public class XmlHelper {
 	}
 
 	private static void toString(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			@Nullable Object[] attributeValues,
 			WrapperOptions options,
 			XMLAppender sb) {
@@ -757,7 +757,7 @@ public class XmlHelper {
 		final int attributeCount = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < attributeCount; i++ ) {
 			final Object attributeValue = attributeValues == null ? null : attributeValues[i];
-			final ValuedModelPart attributeMapping = getSubPart( embeddableMappingType, i );
+			final ValuedModelPart<?, ?, ?> attributeMapping = getSubPart( embeddableMappingType, i );
 			if ( attributeMapping instanceof SelectableMapping selectable ) {
 				final String tagName = selectable.getSelectableName();
 				sb.append( '<' );
@@ -780,8 +780,8 @@ public class XmlHelper {
 					sb.append( '>' );
 				}
 			}
-			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
-				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
+			else if ( attributeMapping instanceof EmbeddedAttributeMapping<?, ?> ) {
+				final EmbeddableMappingType<?, ?, ?> mappingType = (EmbeddableMappingType<?, ?, ?>) attributeMapping.getMappedType();
 				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
 				final String tagName = aggregateMapping == null ? null : aggregateMapping.getSelectableName();
 				if ( tagName != null ) {
@@ -929,7 +929,7 @@ public class XmlHelper {
 					final var elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
 
 					if ( elementJdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
-						final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+						final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 						for ( int i = 0; i < length; i++ ) {
 							final Object arrayElement = Array.get( value, i );
 							if ( arrayElement == null ) {
@@ -964,7 +964,7 @@ public class XmlHelper {
 	}
 
 	private static int getSelectableMapping(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			String name) {
 		final int selectableIndex = embeddableMappingType.getSelectableIndex( name );
 		if ( selectableIndex == -1 ) {

@@ -19,7 +19,7 @@ public class DiscriminatedEntityResult<T> extends AbstractDiscriminatedEntityRes
 	public DiscriminatedEntityResult(
 			NavigablePath navigablePath,
 			JavaType<?> baseAssociationJtd,
-			DiscriminatedAssociationModelPart fetchedPart,
+			DiscriminatedAssociationModelPart<?> fetchedPart,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		super( navigablePath, fetchedPart, baseAssociationJtd );

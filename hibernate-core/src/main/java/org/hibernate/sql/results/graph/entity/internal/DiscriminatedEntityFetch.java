@@ -22,7 +22,7 @@ public class DiscriminatedEntityFetch extends AbstractDiscriminatedEntityResultG
 	public DiscriminatedEntityFetch(
 			NavigablePath navigablePath,
 			JavaType<?> baseAssociationJtd,
-			DiscriminatedAssociationModelPart fetchedPart,
+			DiscriminatedAssociationModelPart<?> fetchedPart,
 			FetchTiming fetchTiming,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
@@ -39,7 +39,7 @@ public class DiscriminatedEntityFetch extends AbstractDiscriminatedEntityResultG
 	}
 
 	@Override
-	public DiscriminatedAssociationModelPart getFetchedMapping() {
+	public DiscriminatedAssociationModelPart<?> getFetchedMapping() {
 		return getReferencedMappingContainer();
 	}
 

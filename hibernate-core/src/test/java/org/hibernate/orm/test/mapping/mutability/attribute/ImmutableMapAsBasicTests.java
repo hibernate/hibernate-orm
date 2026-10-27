@@ -53,7 +53,7 @@ public class ImmutableMapAsBasicTests {
 		final PersistentClass persistentClass = domainModelScope
 				.getDomainModel()
 				.getEntityBinding( TestEntity.class.getName() );
-		final EntityPersister entityDescriptor = sessionFactoryScope
+		final EntityPersister<?> entityDescriptor = sessionFactoryScope
 				.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
@@ -66,7 +66,7 @@ public class ImmutableMapAsBasicTests {
 		final BasicValue.Resolution<?> resolution = value.resolve();
 		assertThat( resolution.getMutabilityPlan().isMutable() ).isFalse();
 
-		final AttributeMapping attribute = entityDescriptor.findAttributeMapping( "data" );
+		final AttributeMapping<?, ?, ?> attribute = entityDescriptor.findAttributeMapping( "data" );
 		assertThat( attribute.getAttributeMetadata().isUpdatable() ).isFalse();
 		assertThat( attribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 	}

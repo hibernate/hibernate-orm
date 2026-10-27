@@ -28,7 +28,7 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 				sqlAstCreationState.getFromClauseAccess()
 						.findTableGroup( sqmPath.getLhs().getNavigablePath() );
 		final var mapping =
-				(NonAggregatedIdentifierMapping)
+				(NonAggregatedIdentifierMapping<?, ?>)
 						tableGroup.getModelPart()
 								.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 
@@ -52,7 +52,7 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 	private NonAggregatedCompositeValuedPathInterpretation(
 			SqlTuple sqlExpression,
 			NavigablePath navigablePath,
-			NonAggregatedIdentifierMapping mapping,
+			NonAggregatedIdentifierMapping<?, ?> mapping,
 			TableGroup tableGroup,
 			@Nullable String affectedTableName) {
 		super( navigablePath, mapping, tableGroup );

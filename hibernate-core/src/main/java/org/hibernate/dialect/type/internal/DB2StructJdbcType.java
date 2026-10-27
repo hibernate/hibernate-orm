@@ -39,7 +39,7 @@ public class DB2StructJdbcType implements StructuredJdbcType {
 	public static final DB2StructJdbcType INSTANCE = new DB2StructJdbcType();
 
 	private final String structTypeName;
-	private final EmbeddableMappingType embeddableMappingType;
+	private final EmbeddableMappingType<?, ?, ?> embeddableMappingType;
 	private final ValueExtractor<Object[]> objectArrayExtractor;
 
 	private DB2StructJdbcType() {
@@ -47,7 +47,7 @@ public class DB2StructJdbcType implements StructuredJdbcType {
 		this( null, null );
 	}
 
-	public DB2StructJdbcType(EmbeddableMappingType embeddableMappingType, String structTypeName) {
+	public DB2StructJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType, String structTypeName) {
 		this.embeddableMappingType = embeddableMappingType;
 		this.structTypeName = structTypeName;
 		// We cache the extractor for Object[] here
@@ -72,14 +72,14 @@ public class DB2StructJdbcType implements StructuredJdbcType {
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new DB2StructJdbcType( mappingType, sqlType );
 	}
 
 	@Override
-	public EmbeddableMappingType getEmbeddableMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getEmbeddableMappingType() {
 		return embeddableMappingType;
 	}
 

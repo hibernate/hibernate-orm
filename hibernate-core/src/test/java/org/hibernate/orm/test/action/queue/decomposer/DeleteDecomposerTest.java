@@ -73,7 +73,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
 			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
@@ -113,7 +113,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithVersion.class );
 			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
@@ -150,7 +150,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithSecondaryTable.class );
 			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
@@ -185,7 +185,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( ChildEntity.class );
 			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
@@ -219,7 +219,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteEntity.class );
 
 			// Verify soft delete is enabled
@@ -259,7 +259,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteWithVersion.class );
 
 			// Verify soft delete and version
@@ -295,7 +295,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithAllOptimisticLock.class );
 			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
@@ -323,7 +323,7 @@ public class DeleteDecomposerTest {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
 			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
@@ -344,7 +344,7 @@ public class DeleteDecomposerTest {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteEntity.class );
 			DeleteDecomposer decomposer = (DeleteDecomposer) persister.getDeleteDecomposer();
 
@@ -370,7 +370,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
 			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
@@ -405,7 +405,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithVersion.class );
 			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
@@ -447,7 +447,7 @@ public class DeleteDecomposerTest {
 			entityManager.persist( entity );
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( ChildEntity.class );
 			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
@@ -466,7 +466,7 @@ public class DeleteDecomposerTest {
 	private EntityDeleteAction createDeleteAction(
 			Object entity,
 			SessionImplementor session,
-			EntityPersister persister) {
+			EntityPersister<?> persister) {
 		Object id = persister.getIdentifier( entity, session );
 		Object[] state = persister.getValues( entity );
 		Object version = persister.getVersion( entity );

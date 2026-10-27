@@ -13,12 +13,12 @@ import org.hibernate.accessor.Instantiator;
 public class EmbeddableInstantiatorPojoOptimized
 		extends AbstractPojoInstantiator
 		implements StandardEmbeddableInstantiator {
-	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
+	private final Supplier<EmbeddableMappingType<?, ?, ?>> embeddableMappingAccess;
 	private final Instantiator<?> instantiator;
 
 	public EmbeddableInstantiatorPojoOptimized(
 			Class<?> embeddableClass,
-			Supplier<EmbeddableMappingType> embeddableMappingAccess,
+			Supplier<EmbeddableMappingType<?, ?, ?>> embeddableMappingAccess,
 			Instantiator<?> instantiator) {
 		super( embeddableClass );
 		this.embeddableMappingAccess = embeddableMappingAccess;

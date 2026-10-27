@@ -53,12 +53,12 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  */
 @Internal
 public abstract class AbstractMutationCoordinator {
-	protected final EntityPersister entityPersister;
+	protected final EntityPersister<?> entityPersister;
 	protected final SessionFactoryImplementor factory;
 	protected final MutationExecutorService mutationExecutorService;
 	protected final Dialect dialect;
 
-	public AbstractMutationCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	public AbstractMutationCoordinator(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		this.entityPersister = entityPersister;
 		this.factory = factory;
 		dialect = factory.getJdbcServices().getDialect();
@@ -146,7 +146,7 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	@Nonnull
-	protected EntityPersister entityPersister() {
+	protected EntityPersister<?> entityPersister() {
 		return entityPersister;
 	}
 
@@ -235,7 +235,7 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	protected void handleValueGeneration(
-			@Nonnull AttributeMapping attributeMapping,
+			@Nonnull AttributeMapping<?, ?, ?> attributeMapping,
 			@Nonnull MutationGroupBuilder mutationGroupBuilder,
 			@Nonnull OnExecutionGenerator generator,
 			@Nonnull EventType eventType) {
@@ -292,14 +292,14 @@ public abstract class AbstractMutationCoordinator {
 		}
 	}
 
-	protected static boolean needsRowId(@Nonnull EntityPersister entityPersister, @Nonnull EntityTableMapping tableMapping) {
+	protected static boolean needsRowId(@Nonnull EntityPersister<?> entityPersister, @Nonnull EntityTableMapping tableMapping) {
 		return entityPersister.getRowIdMapping() != null
 			&& tableMapping.isIdentifierTable();
 	}
 
 	protected static void applyKeyRestriction(
 			@Nullable Object rowId,
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull RestrictedTableMutationBuilder<?, ?> tableMutationBuilder,
 			@Nonnull EntityTableMapping tableMapping) {
 		if ( rowId != null && needsRowId( entityPersister, tableMapping ) ) {
@@ -396,7 +396,7 @@ public abstract class AbstractMutationCoordinator {
 	@Nonnull
 	public static EntityTableMapping createAuxiliaryTableMapping(
 			@Nonnull EntityTableMapping identifierTableMapping,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull String tableName) {
 		return new EntityTableMappingImpl(
 				tableName,

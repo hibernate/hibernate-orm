@@ -99,9 +99,9 @@ public class EntityInitializerImpl
 	//		the EntityDescriptor here to avoid chicken/egg issues in the creation of
 	// 		these
 
-	private final EntityValuedModelPart referencedModelPart;
-	private final EntityPersister entityDescriptor;
-	private final EntityPersister rootEntityDescriptor;
+	private final EntityValuedModelPart<?> referencedModelPart;
+	private final EntityPersister<?> entityDescriptor;
+	private final EntityPersister<?> rootEntityDescriptor;
 	private final @Nullable Type keyTypeForEqualsHashCode;
 	private final NavigablePath navigablePath;
 	private final String sourceAlias;
@@ -150,11 +150,11 @@ public class EntityInitializerImpl
 		protected final Type[] uniqueKeyPropertyTypes;
 		protected final boolean canUseEmbeddedIdentifierInstanceAsEntity;
 		protected final boolean hasCallbackActions;
-		protected final @Nullable EntityPersister defaultConcreteDescriptor;
+		protected final @Nullable EntityPersister<?> defaultConcreteDescriptor;
 		protected final boolean allRevisions;
 
 		// per-row state
-		protected @Nullable EntityPersister concreteDescriptor;
+		protected @Nullable EntityPersister<?> concreteDescriptor;
 		protected @Nullable EntityKey entityKey;
 		protected @Nullable Object entityInstanceForNotify;
 		protected @Nullable EntityHolder entityHolder;
@@ -211,7 +211,7 @@ public class EntityInitializerImpl
 	private static boolean hasConcreteDescriptor(
 			RowProcessingState rowProcessingState,
 			BasicResultAssembler<?> discriminatorAssembler,
-			EntityPersister entityDescriptor) {
+			EntityPersister<?> entityDescriptor) {
 		return discriminatorAssembler == null
 			|| rowProcessingState.isQueryCacheHit()
 				&& entityDescriptor.useShallowQueryCacheLayout()
@@ -238,7 +238,7 @@ public class EntityInitializerImpl
 
 		referencedModelPart = resultDescriptor.getEntityValuedModelPart();
 		affectedByRefreshCascade = hasCascadeRefresh( referencedModelPart );
-		entityDescriptor = (EntityPersister) referencedModelPart.getEntityMappingType();
+		entityDescriptor = (EntityPersister<?>) referencedModelPart.getEntityMappingType();
 
 		final String rootEntityName = entityDescriptor.getRootEntityName();
 		rootEntityDescriptor =
@@ -248,7 +248,7 @@ public class EntityInitializerImpl
 		keyTypeForEqualsHashCode = entityDescriptor.getIdentifierType().getTypeForEqualsHashCode();
 		// The id can only be the entity instance if this is a non-aggregated id that has no containing class
 		couldUseEmbeddedIdentifierInstanceAsEntity =
-				entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping composite
+				entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping<?, ?, ?> composite
 						&& !composite.hasContainingClass();
 
 		navigablePath = resultDescriptor.getNavigablePath();
@@ -340,7 +340,7 @@ public class EntityInitializerImpl
 		boolean hasLazySubInitializers = false;
 		boolean hasLazyInitializingSubAssemblers = false;
 		for ( int i = 0; i < fetchableCount; i++ ) {
-			final var attributeMapping = entityDescriptor.getFetchable( i ).asAttributeMapping();
+			final var attributeMapping = entityDescriptor.getFetchable( i );
 			final var fetch = resultDescriptor.findFetch( attributeMapping );
 			final var stateAssembler =
 					fetch == null
@@ -492,7 +492,7 @@ public class EntityInitializerImpl
 		this.affectedByFilter = affectedByFilter;
 	}
 
-	private static DomainResultAssembler<?> unfetchedAttributeAssembler(AttributeMapping attributeMapping) {
+	private static DomainResultAssembler<?> unfetchedAttributeAssembler(AttributeMapping<?, ?, ?> attributeMapping) {
 		final var javaType = attributeMapping.getMappedType().getMappedJavaType();
 		final var propertyAccess = attributeMapping.getPropertyAccess();
 		// Audit tables omit the columns of excluded attributes. When assembling an entity
@@ -504,12 +504,12 @@ public class EntityInitializerImpl
 				: new NullValueAssembler<>( javaType );
 	}
 
-	private static boolean hasCascadeRefresh(EntityValuedModelPart referencedModelPart) {
+	private static boolean hasCascadeRefresh(EntityValuedModelPart<?> referencedModelPart) {
 		final AttributeMetadata cascadeStyle;
-		if ( referencedModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+		if ( referencedModelPart instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 			cascadeStyle = toOneAttributeMapping.getAttributeMetadata();
 		}
-		else if ( referencedModelPart instanceof EntityCollectionPart collectionPart ) {
+		else if ( referencedModelPart instanceof EntityCollectionPart<?> collectionPart ) {
 			cascadeStyle = collectionPart.getCollectionAttribute().getAttributeMetadata();
 		}
 		else {
@@ -984,7 +984,7 @@ public class EntityInitializerImpl
 		return isResultInitializer;
 	}
 
-	private void deepCopy(EntityPersister containerDescriptor, Object[] source, Object[] target) {
+	private void deepCopy(EntityPersister<?> containerDescriptor, Object[] source, Object[] target) {
 		final var updatableAttributeMutabilityPlan =
 				updatableAttributeMutabilityPlans[containerDescriptor.getSubclassId()];
 		for ( int i = 0; i < updatableAttributeMutabilityPlan.length; i++ ) {
@@ -998,7 +998,7 @@ public class EntityInitializerImpl
 	}
 
 	@Override
-	public ModelPart getInitializedPart() {
+	public ModelPart<?, ?, ?> getInitializedPart() {
 		return referencedModelPart;
 	}
 
@@ -1012,7 +1012,7 @@ public class EntityInitializerImpl
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 
@@ -1041,16 +1041,16 @@ public class EntityInitializerImpl
 		return types;
 	}
 
-	protected void initializeAttributeType(Type[] attributeTypes, EntityPersister entityDescriptor, String attributeName) {
+	protected void initializeAttributeType(Type[] attributeTypes, EntityPersister<?> entityDescriptor, String attributeName) {
 		if ( entityDescriptor.findByPath( attributeName ) != null ) {
 			attributeTypes[entityDescriptor.getSubclassId()] = entityDescriptor.getPropertyType( attributeName );
 		}
 	}
 
-	public static @Nullable EntityPersister determineConcreteEntityDescriptor(
+	public static @Nullable EntityPersister<?> determineConcreteEntityDescriptor(
 			RowProcessingState rowProcessingState,
 			@Nullable BasicResultAssembler<?> discriminatorAssembler,
-			EntityPersister entityDescriptor)
+			EntityPersister<?> entityDescriptor)
 			throws WrongClassException {
 		if ( hasConcreteDescriptor( rowProcessingState, discriminatorAssembler, entityDescriptor ) ) {
 			return entityDescriptor;
@@ -1425,7 +1425,7 @@ public class EntityInitializerImpl
 
 	private boolean unwrapProxy(EntityInitializerData data, Object proxy) {
 		return proxy != null
-			&& referencedModelPart instanceof ToOneAttributeMapping toOneAttributeMapping
+			&& referencedModelPart instanceof ToOneAttributeMapping<?> toOneAttributeMapping
 			&& toOneAttributeMapping.isUnwrapProxy()
 			&& getConcreteDescriptor( data ).getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
@@ -2271,7 +2271,7 @@ public class EntityInitializerImpl
 	}
 
 	@Override
-	public EntityPersister getConcreteDescriptor(EntityInitializerData data) {
+	public EntityPersister<?> getConcreteDescriptor(EntityInitializerData data) {
 		assert data.getState() != State.UNINITIALIZED;
 		return data.concreteDescriptor == null ? entityDescriptor : data.concreteDescriptor;
 	}
@@ -2331,7 +2331,7 @@ public class EntityInitializerImpl
 	//#########################
 	// For Hibernate Reactive
 	//#########################
-	protected EntityPersister getRootEntityDescriptor() {
+	protected EntityPersister<?> getRootEntityDescriptor() {
 		return rootEntityDescriptor;
 	}
 

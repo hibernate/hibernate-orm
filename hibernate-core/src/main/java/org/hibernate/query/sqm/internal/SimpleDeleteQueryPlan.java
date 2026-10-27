@@ -37,12 +37,12 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
  */
 public class SimpleDeleteQueryPlan extends SimpleNonSelectQueryPlan {
 
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister<?> entityDescriptor;
 
 	private volatile List<JdbcOperationQueryMutation> collectionTableDeletes;
 
 	public SimpleDeleteQueryPlan(
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			SqmDeleteStatement<?> sqmDelete,
 			DomainParameterXref domainParameterXref) {
 		super( sqmDelete, domainParameterXref );

@@ -330,7 +330,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		private static FetchMementoBasic resolveDiscriminatorMemento(
-				EntityMappingType entityMapping,
+				EntityMappingType<?> entityMapping,
 				String discriminatorColumn,
 				NavigablePath entityPath) {
 			final var discriminatorMapping = entityMapping.getDiscriminatorMapping();
@@ -427,7 +427,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			var subPart = entityMapping.findSubPart( rootPropertyPathPart, null );
 			var navigablePath = rootNavigablePath( subPart, entityMapping, rootPropertyPathPart );
 			for ( int i = 1; i < propertyPathParts.length; i++ ) {
-				if ( subPart instanceof ModelPartContainer modelPartContainer ) {
+				if ( subPart instanceof ModelPartContainer<?, ?, ?> modelPartContainer ) {
 					final String propertyPathPart = propertyPathParts[i];
 					navigablePath = navigablePath.append( propertyPathPart );
 					subPart = modelPartContainer.findSubPart( propertyPathPart, null );
@@ -443,8 +443,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		private NavigablePath rootNavigablePath(
-				@Nonnull ModelPart parentSubPart,
-				@Nonnull EntityPersister entityMapping,
+				@Nonnull ModelPart<?, ?, ?> parentSubPart,
+				@Nonnull EntityPersister<?> entityMapping,
 				@Nonnull String rootPropertyPathPart) {
 			final var parentNavigableRole = parentSubPart.getNavigableRole().getParent();
 			final var parentNavigablePath =
@@ -460,16 +460,16 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		@Nonnull
-		private FetchMemento getFetchMemento(NavigablePath navigablePath, ModelPart subPart) {
+		private FetchMemento getFetchMemento(NavigablePath navigablePath, ModelPart<?, ?, ?> subPart) {
 			final var basicPart = subPart.asBasicValuedModelPart();
 			if ( basicPart != null ) {
 				assert columnNames.size() == 1;
 				return new FetchMementoBasicStandard( navigablePath, basicPart, columnNames.get( 0 ) );
 			}
-			else if ( subPart instanceof EntityValuedFetchable entityValuedFetchable ) {
+			else if ( subPart instanceof EntityValuedFetchable<?> entityValuedFetchable ) {
 				return new FetchMementoEntityStandard( navigablePath, entityValuedFetchable, columnNames );
 			}
-			else if( subPart instanceof EmbeddedAttributeMapping embeddedAttributeMapping ){
+			else if( subPart instanceof EmbeddedAttributeMapping<?, ?> embeddedAttributeMapping ){
 				return getFetchMemento( navigablePath,
 						embeddedAttributeMapping.findSubPart( unroot( propertyPath ), null ) );
 			}

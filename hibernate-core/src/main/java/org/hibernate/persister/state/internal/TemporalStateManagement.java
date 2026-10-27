@@ -46,7 +46,7 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
 		@Nonnull
 		@Override
-		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister<?> persister) {
 			return new TemporalEntityMutationPlanContributor( persister, persister.getFactory() );
 		}
 
@@ -76,25 +76,25 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 
 	@Nonnull
 	@Override
-	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister persister) {
+	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new InsertCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
 	@Nonnull
 	@Override
-	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister persister) {
+	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new UpdateCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
 	@Nonnull
 	@Override
-	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister persister) {
+	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new MergeCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
 	@Nonnull
 	@Override
-	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister) {
+	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new DeleteCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
@@ -119,13 +119,13 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 	@Nullable
 	@Override
 	public TemporalMapping createAuxiliaryMapping(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull RootClass rootClass,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var temporalTable = rootClass.getAuxiliaryTable();
 		final String tableName = temporalTable == null
 				? persister.getIdentifierTableName()
-				: ( (AbstractEntityPersister) persister )
+				: ( (AbstractEntityPersister<?>) persister )
 						.determineTableName( temporalTable );
 		return new TemporalMappingImpl( rootClass, tableName, creationProcess );
 	}
@@ -133,7 +133,7 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 	@Nullable
 	@Override
 	public TemporalMapping createAuxiliaryMapping(
-			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull PluralAttributeMapping<?> pluralAttributeMapping,
 			@Nonnull Collection bootDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var temporalTable = bootDescriptor.getAuxiliaryTable();

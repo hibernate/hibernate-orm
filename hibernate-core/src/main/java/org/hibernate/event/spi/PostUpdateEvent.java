@@ -22,7 +22,7 @@ public class PostUpdateEvent extends AbstractPostDatabaseOperationEvent {
 			@Nonnull Object[] state,
 			@Nullable Object[] oldState,
 			@Nullable int[] dirtyProperties,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;

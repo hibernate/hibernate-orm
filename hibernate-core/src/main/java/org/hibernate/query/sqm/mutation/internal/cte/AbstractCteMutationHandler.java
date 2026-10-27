@@ -89,7 +89,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		super( sqmStatement, sessionFactory );
 
 		final SessionFactoryImplementor factory = context.getSession().getFactory();
-		final EntityMappingType entityDescriptor = getEntityDescriptor();
+		final EntityMappingType<?> entityDescriptor = getEntityDescriptor();
 		final String explicitDmlTargetAlias;
 		// We need an alias because we try to acquire a WRITE lock for these rows in the CTE
 		if ( sqmStatement.getTarget().getExplicitAlias() == null ) {
@@ -264,7 +264,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 	protected Predicate createIdSubQueryPredicate(
 			List<? extends Expression> lhsExpressions,
 			CteStatement idSelectCte,
-			ModelPart fkModelPart,
+			ModelPart<?, ?, ?> fkModelPart,
 			SessionFactoryImplementor factory) {
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 		final QuerySpec subQuery = createIdSubQuery(
@@ -291,7 +291,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 	protected QuerySpec createIdSubQuery(
 			CteStatement idSelectCte,
-			ModelPart fkModelPart,
+			ModelPart<?, ?, ?> fkModelPart,
 			SessionFactoryImplementor factory) {
 		final NamedTableReference idSelectTableReference = new NamedTableReference(
 				idSelectCte.getCteTable().getTableExpression(),

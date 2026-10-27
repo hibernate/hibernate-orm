@@ -22,7 +22,7 @@ public interface SqlTypedMapping {
 		return getJdbcMapping().getJdbcType().isLob();
 	}
 	@Nonnull
-	JdbcMapping getJdbcMapping();
+	JdbcMapping<?> getJdbcMapping();
 
 	@Nonnull
 	default Size toSize() {

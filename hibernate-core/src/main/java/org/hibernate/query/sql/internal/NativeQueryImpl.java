@@ -142,7 +142,7 @@ public class NativeQueryImpl<R>
 	private final Class<?> resultMappingType;
 	private final ResultSetMapping resultSetMapping;
 	private final boolean resultMappingSuppliedToCtor;
-	private final HashMap<String, EntityMappingType> entityMappingTypeByTableAlias = new HashMap<>();
+	private final HashMap<String, EntityMappingType<?>> entityMappingTypeByTableAlias = new HashMap<>();
 
 	private Boolean startsWithSelect;
 	private Set<String> querySpaces;
@@ -1554,22 +1554,22 @@ public class NativeQueryImpl<R>
 	public FetchReturn addFetch(@Nonnull String tableAlias, @Nonnull String ownerTableAlias, @Nonnull String joinPropertyName) {
 		final var subPart = entityMappingTypeByTableAlias.get( ownerTableAlias ).findSubPart( joinPropertyName );
 		addEntityMappingType( tableAlias, subPart );
-		final var fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, (Fetchable) subPart );
+		final var fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, (Fetchable<?, ?, ?>) subPart );
 		resultSetMapping.addLegacyFetchBuilder( fetchBuilder );
 		return fetchBuilder;
 	}
 
-	private void addEntityMappingType(String tableAlias, ModelPart part) {
-		if ( part instanceof PluralAttributeMapping pluralAttributeMapping ) {
+	private void addEntityMappingType(String tableAlias, ModelPart<?, ?, ?> part) {
+		if ( part instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			final var partMappingType = pluralAttributeMapping.getElementDescriptor().getPartMappingType();
-			if ( partMappingType instanceof EntityMappingType entityMappingType ) {
+			if ( partMappingType instanceof EntityMappingType<?> entityMappingType ) {
 				entityMappingTypeByTableAlias.put( tableAlias, entityMappingType );
 			}
 		}
-		else if ( part instanceof EntityAssociationMapping entityAssociationMapping ) {
+		else if ( part instanceof EntityAssociationMapping<?> entityAssociationMapping ) {
 			entityMappingTypeByTableAlias.put( tableAlias, entityAssociationMapping.asEntityMappingType() );
 		}
-		else if ( part instanceof EmbeddedAttributeMapping ) {
+		else if ( part instanceof EmbeddedAttributeMapping<?, ?> ) {
 			throw new UnsupportedOperationException();
 		}
 	}

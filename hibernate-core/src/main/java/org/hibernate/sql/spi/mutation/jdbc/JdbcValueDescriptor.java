@@ -30,7 +30,7 @@ public interface JdbcValueDescriptor {
 	/**
 	 * The JDBC mapping (type, etc.) for the parameter
 	 */
-	JdbcMapping getJdbcMapping();
+	JdbcMapping<?> getJdbcMapping();
 
 	default boolean matches(String columnName, ParameterUsage usage) {
 		return getColumnName().equals( columnName )

@@ -22,7 +22,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  */
 final class HistoryCollectionRowMutationHelper {
 	private final CollectionMutationTarget mutationTarget;
-	private final PluralAttributeMapping attributeMapping;
+	private final PluralAttributeMapping<?> attributeMapping;
 	private final TemporalMapping temporalMapping;
 	private final String historyTableName;
 	private final String currentTableName;

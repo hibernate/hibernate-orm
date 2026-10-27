@@ -24,7 +24,7 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	protected abstract TableGroup getTableGroup();
 
 	@Override
-	public ModelPart getExpressionType() {
+	public ModelPart<?, ?, ?> getExpressionType() {
 		return getTableGroup().getExpressionType();
 	}
 
@@ -65,7 +65,7 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression,
 			boolean resolve) {
 		return getTableGroup().getTableReference( navigablePath, modelPart, tableExpression, resolve );
@@ -82,7 +82,7 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	}
 
 	@Override
-	public ModelPartContainer getModelPart() {
+	public ModelPartContainer<?, ?, ?> getModelPart() {
 		return getTableGroup().getModelPart();
 	}
 

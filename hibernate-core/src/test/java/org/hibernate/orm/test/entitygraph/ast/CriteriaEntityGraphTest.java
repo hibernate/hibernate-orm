@@ -207,7 +207,7 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 						expectedFetchClassByAttributeName.put( "pets", DelayedCollectionFetch.class );
 						expectedFetchClassByAttributeName.put( "company", EntityFetchJoinedImpl.class );
 						assertThat( fetchClassByAttributeName, is( expectedFetchClassByAttributeName ) );
-						Fetchable fetchable = getFetchable( "company", Person.class );
+						Fetchable<?, ?, ?> fetchable = getFetchable( "company", Person.class );
 
 						final Fetch companyFetch = ownerEntityResult.findFetch( fetchable );
 						assertThat( companyFetch, notNullValue() );
@@ -223,15 +223,15 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 		);
 	}
 
-	private Fetchable getFetchable(String attributeName, Class entityClass) {
-		EntityPersister person = scope.getSessionFactory()
+	private Fetchable<?, ?, ?> getFetchable(String attributeName, Class entityClass) {
+		EntityPersister<?> person = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.findEntityDescriptor( entityClass.getName() );
 		AttributeMappingsList attributeMappings = person.getAttributeMappings();
-		Fetchable fetchable = null;
+		Fetchable<?, ?, ?> fetchable = null;
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			AttributeMapping mapping = attributeMappings.get( i );
+			AttributeMapping<?, ?, ?> mapping = attributeMappings.get( i );
 			if ( mapping.getAttributeName().equals( attributeName ) ) {
 				fetchable = mapping;
 			}

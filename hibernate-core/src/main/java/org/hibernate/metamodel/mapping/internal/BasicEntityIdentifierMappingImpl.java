@@ -47,7 +47,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *
  * @author Andrea Boriero
  */
-public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMapping, FetchOptions {
+public class BasicEntityIdentifierMappingImpl<J> implements BasicEntityIdentifierMapping<J, J, J>, FetchOptions {
 
 	private final NavigableRole idRole;
 	private final String attributeName;
@@ -55,7 +55,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private final IdentifierValue unsavedStrategy;
 
 	private final PropertyAccess propertyAccess;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 
 	private final String rootTable;
 	private final String pkColumnName;
@@ -66,12 +66,12 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private final boolean insertable;
 	private final boolean updateable;
 
-	private final BasicType<Object> idType;
+	private final BasicType<J> idType;
 
 	private final SessionFactoryImplementor sessionFactory;
 
 	public BasicEntityIdentifierMappingImpl(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			@Nullable Supplier<?> instanceCreator,
 			String attributeName,
 			String rootTable,
@@ -82,7 +82,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			@Nullable Integer scale,
 			boolean insertable,
 			boolean updateable,
-			BasicType<?> idType,
+			BasicType<J> idType,
 			MappingModelCreationProcess creationProcess) {
 		this.length = length;
 		this.arrayLength = arrayLength;
@@ -95,7 +95,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		this.rootTable = rootTable;
 		this.pkColumnName = pkColumnName;
 		//noinspection unchecked
-		this.idType = (BasicType<Object>) idType;
+		this.idType = (BasicType<J>) idType;
 		this.entityPersister = entityPersister;
 
 		final var bootEntityDescriptor =
@@ -168,13 +168,13 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return getJdbcMapping()::getJavaTypeDescriptor;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return getJdbcMapping()::getJavaTypeDescriptor;
 	}
 
@@ -192,19 +192,19 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Nonnull
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return entityPersister;
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, idType );
 		return getJdbcTypeCount();
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return getMappedType().getMappedJavaType();
 	}
 
@@ -216,17 +216,17 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
 			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection =
 				resolveSqlSelection( navigablePath, tableGroup, null, creationState );
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				entityPersister.getIdentifierMapping().getSingleJdbcMapping(),
+				getJdbcMapping(),
 				navigablePath,
 				false,
 				!sqlSelection.isVirtual()
@@ -246,7 +246,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		selectionConsumer.accept(
 				resolveSqlSelection( navigablePath, tableGroup, null, creationState ),
 				getJdbcMapping()
@@ -365,7 +365,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return idType;
 	}
 

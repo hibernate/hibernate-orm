@@ -170,7 +170,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 						: jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType, typeConfiguration );
 		return new ResultSetMappingSqlSelection(
 				jdbcPositionToValuesArrayPosition( jdbcPosition ),
-				(BasicValuedMapping) basicType
+				(BasicValuedMapping<?>) basicType
 		);
 	}
 

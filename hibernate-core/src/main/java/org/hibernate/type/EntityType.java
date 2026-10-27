@@ -56,7 +56,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @see #getAssociatedEntityPersister
 	 */
-	private transient volatile EntityPersister associatedEntityPersister;
+	private transient volatile EntityPersister<?> associatedEntityPersister;
 
 	private transient Class<?> returnedClass;
 
@@ -382,13 +382,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
-	private Object getUniqueKey(Object entity, Type keyType, EntityPersister persister) {
+	private Object getUniqueKey(Object entity, Type keyType, EntityPersister<?> persister) {
 		return keyType.getReturnedClass().isInstance( entity )
 				? entity
 				: persister.getPropertyValue( entity, uniqueKeyPropertyName );
 	}
 
-	private static Object getId(Object entity, EntityPersister persister) {
+	private static Object getId(Object entity, EntityPersister<?> persister) {
 		final var lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
@@ -418,7 +418,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return null;
 	}
 
-	public EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
+	public EntityPersister<?> getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
 		final var persister = associatedEntityPersister;
 		//The following branch implements a simple lazy-initialization, but rather than the canonical
 		//form it returns the local variable to avoid a second volatile read: associatedEntityPersister
@@ -527,7 +527,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				: loggableString( value, getAssociatedEntityPersister( factory ) );
 	}
 
-	private String loggableString(Object entity, EntityPersister persister) {
+	private String loggableString(Object entity, EntityPersister<?> persister) {
 		if ( !persister.isInstance( entity )
 			// it should be the id type...
 			&& persister.getIdentifierType().getReturnedClass().isInstance( entity ) ) {
@@ -542,7 +542,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
-	private static String identifierString(Object entity, EntityPersister persister) {
+	private static String identifierString(Object entity, EntityPersister<?> persister) {
 		final var lazyInitializer = extractLazyInitializer( entity );
 		final Object id =
 				lazyInitializer != null

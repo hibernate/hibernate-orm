@@ -23,7 +23,7 @@ import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 @org.hibernate.Internal
 public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 
-	public MergeCoordinatorStandard(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	public MergeCoordinatorStandard(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 	}
 
@@ -59,7 +59,7 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 		return selectable.isUpdateable() || selectable.isInsertable();
 	}
 
-	private static boolean isInsertableOrUpdatable(@Nonnull AttributeMapping attribute) {
+	private static boolean isInsertableOrUpdatable(@Nonnull AttributeMapping<?, ?, ?> attribute) {
 		final var attributeMetadata = attribute.getAttributeMetadata();
 		return attributeMetadata.isUpdatable()
 			|| attributeMetadata.isInsertable();
@@ -74,7 +74,7 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 	@Override
 	protected boolean includeInStaticUpdate(
 			int index,
-			@Nonnull AttributeMapping attribute,
+			@Nonnull AttributeMapping<?, ?, ?> attribute,
 			@Nonnull boolean[] propertyUpdateability) {
 		return isInsertableOrUpdatable( attribute )
 			|| super.includeInStaticUpdate( index, attribute, propertyUpdateability );
@@ -109,7 +109,7 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 		return result;
 	}
 	@Override
-	protected void forEachUpdatable(@Nonnull AttributeMapping attributeMapping, @Nonnull TableUpdateBuilder<?> tableUpdateBuilder) {
+	protected void forEachUpdatable(@Nonnull AttributeMapping<?, ?, ?> attributeMapping, @Nonnull TableUpdateBuilder<?> tableUpdateBuilder) {
 		attributeMapping.forEachSelectable( tableUpdateBuilder );
 	}
 

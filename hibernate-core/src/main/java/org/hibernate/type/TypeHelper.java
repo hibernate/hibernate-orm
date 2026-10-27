@@ -95,7 +95,7 @@ public class TypeHelper {
 	 *
 	 */
 	public static void replace(
-			final EntityPersister persister,
+			final EntityPersister<?> persister,
 			final Object entity,
 			final SharedSessionContractImplementor session,
 			final Object owner,

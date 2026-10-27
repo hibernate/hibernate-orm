@@ -48,7 +48,7 @@ public class ComponentBasicProxyTest {
 		sfScope.getSessionFactory();
 		final PersistentClass personDescriptor = domainModelScope.getDomainModel().getEntityBinding( Person.class.getName() );
 		final CompositeTypeImplementor componentType = (CompositeTypeImplementor) personDescriptor.getIdentifierMapper().getType();
-		final EmbeddableValuedModelPart embedded = componentType.getMappingModelPart();
+		final EmbeddableValuedModelPart<?, ?, ?> embedded = componentType.getMappingModelPart();
 		final EmbeddableInstantiator instantiator = embedded.getEmbeddableTypeDescriptor()
 				.getRepresentationStrategy()
 				.getInstantiator();

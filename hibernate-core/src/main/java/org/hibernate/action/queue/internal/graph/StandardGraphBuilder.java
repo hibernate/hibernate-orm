@@ -35,7 +35,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 	private final ConstraintModel constraintModel;
 	private final PlanningOptions planningOptions;
 	private final SharedSessionContractImplementor session;
-	private Map<String, EntityPersister> entityPersistersByTable;
+	private Map<String, EntityPersister<?>> entityPersistersByTable;
 
 	public StandardGraphBuilder(
 			ConstraintModel constraintModel,
@@ -48,7 +48,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 			ConstraintModel constraintModel,
 			PlanningOptions planningOptions,
 			SharedSessionContractImplementor session,
-			Map<String, EntityPersister> entityPersistersByTable) {
+			Map<String, EntityPersister<?>> entityPersistersByTable) {
 		this.constraintModel = constraintModel;
 		this.planningOptions = planningOptions;
 		this.session = session;
@@ -211,7 +211,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 		return false;
 	}
 
-	private Map<String, EntityPersister> getEntityPersistersByTable() {
+	private Map<String, EntityPersister<?>> getEntityPersistersByTable() {
 		if ( entityPersistersByTable.isEmpty() ) {
 			entityPersistersByTable = UniqueSlotExtractor.buildPersisterMap( session );
 		}

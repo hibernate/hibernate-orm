@@ -107,7 +107,7 @@ public class TableBasedDeleteHandler
 		this.sessionUidParameter =
 				sessionUidColumn == null
 						? null
-						: new SqlTypedMappingJdbcParameter( sessionUidColumn );
+						: SqlTypedMappingJdbcParameter.create( sessionUidColumn );
 
 		final var converter = new MultiTableSqmMutationConverter(
 				getEntityDescriptor(),
@@ -643,7 +643,7 @@ public class TableBasedDeleteHandler
 				);
 			}
 
-			if ( getEntityDescriptor() instanceof UnionSubclassEntityPersister ) {
+			if ( getEntityDescriptor() instanceof UnionSubclassEntityPersister<?> ) {
 				int rows = 0;
 				for ( var delete : deletes ) {
 					rows += jdbcMutationExecutor.execute(

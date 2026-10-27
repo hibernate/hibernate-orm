@@ -17,7 +17,7 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 	public EntityDelayedFetchImpl(
 			FetchParent fetchParent,
-			ToOneAttributeMapping fetchedAttribute,
+			ToOneAttributeMapping<?> fetchedAttribute,
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey,

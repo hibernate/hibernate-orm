@@ -9,6 +9,6 @@ import org.hibernate.type.CompositeType;
  */
 @org.hibernate.Internal
 public interface CompositeTypeImplementor extends CompositeType {
-	void injectMappingModelPart(EmbeddableValuedModelPart part, MappingModelCreationProcess process);
-	EmbeddableValuedModelPart getMappingModelPart();
+	void injectMappingModelPart(EmbeddableValuedModelPart<?, ?, ?> part, MappingModelCreationProcess process);
+	EmbeddableValuedModelPart<?, ?, ?> getMappingModelPart();
 }

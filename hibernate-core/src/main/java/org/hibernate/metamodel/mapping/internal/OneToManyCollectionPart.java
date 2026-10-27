@@ -46,7 +46,7 @@ import static java.util.Objects.requireNonNullElse;
  *
  * @author Steve Ebersole
  */
-public class OneToManyCollectionPart extends AbstractEntityCollectionPart implements TableGroupJoinProducer {
+public class OneToManyCollectionPart<J> extends AbstractEntityCollectionPart<J> implements TableGroupJoinProducer<J, J, J> {
 	@Nullable private final String mapKeyPropertyName;
 	@Nullable private AssociationKey fetchAssociationKey;
 
@@ -54,7 +54,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			Nature nature,
 			Collection bootCollectionDescriptor,
 			CollectionPersister collectionDescriptor,
-			EntityMappingType elementTypeDescriptor,
+			EntityMappingType<J> elementTypeDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		this( nature, bootCollectionDescriptor, collectionDescriptor, elementTypeDescriptor, NotFoundAction.EXCEPTION, creationProcess );
 	}
@@ -63,7 +63,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			Nature nature,
 			Collection bootCollectionDescriptor,
 			CollectionPersister collectionDescriptor,
-			EntityMappingType elementTypeDescriptor,
+			EntityMappingType<J> elementTypeDescriptor,
 			NotFoundAction notFoundAction,
 			MappingModelCreationProcess creationProcess) {
 		super( nature, bootCollectionDescriptor, collectionDescriptor, elementTypeDescriptor, notFoundAction, creationProcess );
@@ -76,7 +76,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 	/**
 	 * For Hibernate Reactive
 	 */
-	protected OneToManyCollectionPart(OneToManyCollectionPart original) {
+	protected OneToManyCollectionPart(OneToManyCollectionPart<J> original) {
 		super( original );
 		this.mapKeyPropertyName = original.mapKeyPropertyName;
 		this.fetchAssociationKey = original.fetchAssociationKey;
@@ -105,7 +105,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		);
 	}
 
-	private ForeignKeyDescriptor getKeyDescriptor() {
+	private ForeignKeyDescriptor<?, ?, ?> getKeyDescriptor() {
 		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor();
 	}
 
@@ -225,11 +225,11 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			SqlAstCreationState creationState) {
 		if ( mapKeyPropertyName != null ) {
 			final var elementPart =
-					(EntityCollectionPart)
+					(EntityCollectionPart<?>)
 							getCollectionDescriptor().getAttributeMapping()
 									.getElementDescriptor();
 			if ( elementPart.getAssociatedEntityMappingType().findAttributeMapping( mapKeyPropertyName )
-					instanceof ToOneAttributeMapping toOne ) {
+					instanceof ToOneAttributeMapping<?> toOne ) {
 				final var mapKeyPropertyPath = navigablePath.append( mapKeyPropertyName );
 				final var mapKeyJoin = toOne.createTableGroupJoin(
 						mapKeyPropertyPath,
@@ -314,7 +314,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(final int index) {
+	public JdbcMapping<?> getJdbcMapping(final int index) {
 		return getEntityMappingType().getJdbcMapping( index );
 	}
 

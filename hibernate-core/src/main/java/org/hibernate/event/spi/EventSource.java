@@ -26,7 +26,7 @@ public interface EventSource extends SessionImplementor {
 	 * or the given persister
 	 */
 	@Nonnull
-	Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) throws HibernateException;
+	Object instantiate(@Nonnull EntityPersister<?> persister, @Nullable Object id) throws HibernateException;
 
 	/**
 	 * Obtain the best estimate of the entity name of the given entity

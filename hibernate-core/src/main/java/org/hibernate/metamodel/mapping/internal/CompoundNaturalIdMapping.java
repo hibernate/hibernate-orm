@@ -62,13 +62,19 @@ import static java.util.Collections.emptyMap;
 /**
  * Multi-attribute NaturalIdMapping implementation
  */
-public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implements MappingType, FetchableContainer {
+public class CompoundNaturalIdMapping<J> extends AbstractNaturalIdMapping<J, J, Object[]> implements MappingType<J>, FetchableContainer<J, J, Object[]> {
+	@Override
+	public JavaType<J> getExpressibleJavaType() {
+		return javaType;
+	}
 
-	private final List<SingularAttributeMapping> attributes;
+
+	private final List<SingularAttributeMapping<?, ?, ?>> attributes;
 	private final ValueNormalizer valueNormalizer;
+	private final JavaType<J> javaType;
 
 	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
-	private List<JdbcMapping> jdbcMappings;
+	private List<JdbcMapping<?>> jdbcMappings;
 	/*
 		This value is used to determine the size of the array used to create the ImmutableFetchList (see org.hibernate.sql.results.graph.internal.ImmutableFetchList#Builder)
 		The Fetch is inserted into the array at a position corresponding to its Fetchable key value.
@@ -78,11 +84,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	private final SessionFactoryImplementor sessionFactory;
 
 	public CompoundNaturalIdMapping(
-			EntityMappingType declaringType,
+			EntityMappingType<J> declaringType,
 			ClassDetails naturalIdClass,
-			List<SingularAttributeMapping> attributes,
+			List<SingularAttributeMapping<?, ?, ?>> attributes,
 			MappingModelCreationProcess creationProcess) {
 		super( declaringType, isMutable( attributes ) );
+		javaType = declaringType.getJavaType();
 		this.valueNormalizer = createValueNormalizer( naturalIdClass, attributes, creationProcess );
 		this.attributes = attributes;
 
@@ -97,7 +104,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		creationProcess.registerInitializationCallback(
 				"Determine compound natural-id JDBC mappings ( " + declaringType.getEntityName() + ")",
 				() -> {
-					final List<JdbcMapping> jdbcMappings = new ArrayList<>();
+					final List<JdbcMapping<?>> jdbcMappings = new ArrayList<>();
 					attributes.forEach( attribute -> attribute.forEachJdbcType(
 							(index, jdbcMapping) -> jdbcMappings.add( jdbcMapping )
 					) );
@@ -109,7 +116,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
-	private static boolean isMutable(List<SingularAttributeMapping> attributes) {
+	private static boolean isMutable(List<SingularAttributeMapping<?, ?, ?>> attributes) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			if ( castNonNull( attributes.get( i ).getAttributeMetadata() ).isUpdatable() ) {
 				return true;
@@ -268,38 +275,38 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Nonnull
 	@Override
-	public List<SingularAttributeMapping> getNaturalIdAttributes() {
+	public List<SingularAttributeMapping<?, ?, ?>> getNaturalIdAttributes() {
 		return attributes;
 	}
 
 	@Nonnull
 	@Override
-	public NaturalIdLoader<?> makeLoader(@Nonnull EntityMappingType entityDescriptor) {
+	public NaturalIdLoader<?> makeLoader(@Nonnull EntityMappingType<?> entityDescriptor) {
 		return new CompoundNaturalIdLoader<>( this, entityDescriptor );
 	}
 
 	@Nonnull
 	@Override
-	public MultiNaturalIdLoader<?> makeMultiLoader(@Nonnull EntityMappingType entityDescriptor) {
+	public MultiNaturalIdLoader<?> makeMultiLoader(@Nonnull EntityMappingType<?> entityDescriptor) {
 		return new MultiNaturalIdLoaderInPredicate<>( entityDescriptor );
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		// the JavaType is the entity itself
-		return getDeclaringType().getJavaType();
+		return javaType;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getMappedJavaType() {
+	public JavaType<J> getMappedJavaType() {
 		return getJavaType();
 	}
 
@@ -319,7 +326,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nullable String resultVariable, @Nonnull DomainResultCreationState creationState) {
+	public DomainResult<Object[]> createDomainResult(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nullable String resultVariable, @Nonnull DomainResultCreationState creationState) {
 		assert navigablePath.getLocalName().equals( NaturalIdMapping.PART_NAME );
 
 		final var objectArrayJavaType =
@@ -331,7 +338,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		creationState.getSqlAstCreationState().getFromClauseAccess()
 				.resolveTableGroup( navigablePath, np -> tableGroup );
 
-		return (DomainResult<T>) new DomainResultImpl(
+		return new DomainResultImpl(
 				navigablePath,
 				this,
 				objectArrayJavaType,
@@ -348,7 +355,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public void applySqlSelections(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nonnull DomainResultCreationState creationState, @Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+	public void applySqlSelections(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nonnull DomainResultCreationState creationState, @Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			attributes.get( i ).applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 		}
@@ -408,12 +415,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		return jdbcMappings.get( index );
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		int span = 0;
 		for ( ; span < jdbcMappings.size(); span++ ) {
 			action.accept( span + offset, jdbcMappings.get( span ) );
@@ -534,13 +541,13 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public Fetchable getFetchable(int position) {
+	public Fetchable<?, ?, ?> getFetchable(int position) {
 		return attributes.get( position );
 	}
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			if ( name.equals( attributes.get( i ).getAttributeName() ) ) {
 				return attributes.get( i );
@@ -550,14 +557,14 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTarget) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			consumer.accept( i, attributes.get( i ) );
 		}
 	}
 
 	@Override
-	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTargetType) {
 		attributes.forEach( consumer );
 	}
 
@@ -568,7 +575,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	public static class DomainResultImpl implements DomainResult<Object[]>, FetchParent {
 		private final NavigablePath navigablePath;
-		private final CompoundNaturalIdMapping naturalIdMapping;
+		private final CompoundNaturalIdMapping<?> naturalIdMapping;
 		private final JavaType<Object[]> arrayJtd;
 
 		private final org.hibernate.sql.results.graph.FetchList fetches;
@@ -579,7 +586,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		public DomainResultImpl(
 				NavigablePath navigablePath,
-				CompoundNaturalIdMapping naturalIdMapping,
+				CompoundNaturalIdMapping<?> naturalIdMapping,
 				JavaType<Object[]> arrayJtd,
 				@Nullable String resultVariable,
 				DomainResultCreationState creationState) {
@@ -623,12 +630,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public FetchableContainer getReferencedMappingContainer() {
+		public FetchableContainer<?, ?, ?> getReferencedMappingContainer() {
 			return getReferencedMappingType();
 		}
 
 		@Override
-		public FetchableContainer getReferencedMappingType() {
+		public FetchableContainer<?, ?, ?> getReferencedMappingType() {
 			return naturalIdMapping;
 		}
 
@@ -643,7 +650,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public Fetch findFetch(Fetchable fetchable) {
+		public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 			assert fetchable != null;
 			return fetches.get( fetchable );
 		}
@@ -716,7 +723,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	private static <T> ValueNormalizer createValueNormalizer(
 			ClassDetails naturalIdClassDetails,
-			List<SingularAttributeMapping> keyAttributes,
+			List<SingularAttributeMapping<?, ?, ?>> keyAttributes,
 			MappingModelCreationProcess creationProcess) {
 		if ( naturalIdClassDetails == null ) {
 			return new ValueNormalizerSupport( keyAttributes );
@@ -748,7 +755,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			//		ideally we'd eventually support usage of the associated key entity's
 			//		id and then there would.  see the note in ToOneAttributeMapperImpl#extractFrom
 			final var attrMapper =
-					keyAttribute instanceof ToOneAttributeMapping
+					keyAttribute instanceof ToOneAttributeMapping<?>
 							? new ToOneAttributeMapperImpl<T>( keyAttribute, extractor )
 							: new BasicAttributeMapperImpl<T>( keyAttribute, extractor );
 			attributeMappers.add( attrMapper );
@@ -759,9 +766,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	static class ValueNormalizerSupport implements ValueNormalizer {
-		private final List<SingularAttributeMapping> naturalIdAttributes;
+		private final List<SingularAttributeMapping<?, ?, ?>> naturalIdAttributes;
 
-		public ValueNormalizerSupport(List<SingularAttributeMapping> naturalIdAttributes) {
+		public ValueNormalizerSupport(List<SingularAttributeMapping<?, ?, ?>> naturalIdAttributes) {
 			this.naturalIdAttributes = naturalIdAttributes;
 		}
 
@@ -797,7 +804,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		private final List<AttributeMapper<Object, T>> idClassAttributeMappers;
 
 		public KeyClassNormalizer(
-				List<SingularAttributeMapping> naturalIdAttributes,
+				List<SingularAttributeMapping<?, ?, ?>> naturalIdAttributes,
 				Class<T> idClassType,
 				List<AttributeMapper<Object, T>> idClassAttributeMappers) {
 			super( naturalIdAttributes );
@@ -850,7 +857,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	private static <T> PropertyValueAccessor resolveMatchingExtractor(
 			Class<T> naturalIdClass,
-			AttributeMapping keyAttribute,
+			AttributeMapping<?, ?, ?> keyAttribute,
 			Function<String, Method> getterMethodAccess,
 			Map<String, RecordComponent> naturalIdClassComponents,
 			AccessorFactory hibernateAccessorFactory) {
@@ -928,7 +935,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	/// AttributeMapper for both basic and embedded values
-	public record BasicAttributeMapperImpl<T>(AttributeMapping entityAttribute, PropertyValueAccessor keyClassExtractor)
+	public record BasicAttributeMapperImpl<T>(AttributeMapping<?, ?, ?> entityAttribute, PropertyValueAccessor keyClassExtractor)
 			implements AttributeMapper<Object, T> {
 		@Nullable
 		@Override
@@ -938,7 +945,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	/// AttributeMapper for to-one values
-	public record ToOneAttributeMapperImpl<T>(AttributeMapping entityAttribute, PropertyValueAccessor keyClassExtractor)
+	public record ToOneAttributeMapperImpl<T>(AttributeMapping<?, ?, ?> entityAttribute, PropertyValueAccessor keyClassExtractor)
 			implements AttributeMapper<Object, T> {
 		@Nullable
 		@Override

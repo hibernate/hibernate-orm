@@ -41,7 +41,7 @@ public class CacheEntryHelper {
 			@Nullable final boolean[] nonCacheable,
 			@Nonnull final SharedSessionContractImplementor session,
 			@Nonnull final Object owner,
-			@Nullable final EntityPersister persister) {
+			@Nullable final EntityPersister<?> persister) {
 		final Serializable[] disassembled = new Serializable[types.length];
 		for ( int i = 0; i < row.length; i++ ) {
 			if ( nonCacheable!=null && nonCacheable[i] ) {
@@ -122,7 +122,7 @@ public class CacheEntryHelper {
 			@Nonnull Object entity,
 			@Nullable Object version,
 			@Nonnull Object[] state,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session) {
 		return persister.getCacheEntryStructure()
 				.structure( persister.buildCacheEntry( entity, state, version, session ) );

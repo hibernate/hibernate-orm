@@ -77,7 +77,7 @@ public class EntityTableMappingsTests {
 				.getMappingMetamodel();
 
 		// root
-		final EntityPersister rootDescriptor = mappingMetamodel.getEntityDescriptor( UnionRoot.class );
+		final EntityPersister<?> rootDescriptor = mappingMetamodel.getEntityDescriptor( UnionRoot.class );
 		verifyTableMappings(
 				rootDescriptor,
 				"UnionRoot",
@@ -85,7 +85,7 @@ public class EntityTableMappingsTests {
 		);
 
 		// sub1
-		final EntityPersister sub1Descriptor = mappingMetamodel.getEntityDescriptor( UnionSub1.class );
+		final EntityPersister<?> sub1Descriptor = mappingMetamodel.getEntityDescriptor( UnionSub1.class );
 		verifyTableMappings(
 				sub1Descriptor,
 				"unions_subs1",
@@ -93,7 +93,7 @@ public class EntityTableMappingsTests {
 		);
 
 		// sub2
-		final EntityPersister sub2Descriptor = mappingMetamodel.getEntityDescriptor( UnionSub2.class );
+		final EntityPersister<?> sub2Descriptor = mappingMetamodel.getEntityDescriptor( UnionSub2.class );
 		verifyTableMappings(
 				sub2Descriptor,
 				"unions_subs2",
@@ -101,12 +101,12 @@ public class EntityTableMappingsTests {
 		);
 	}
 
-	private void verifyTableMappings(EntityMappingType entityDescriptor, String tableName) {
+	private void verifyTableMappings(EntityMappingType<?> entityDescriptor, String tableName) {
 		verifyTableMappings( entityDescriptor, tableName, tableName );
 	}
 
 	private void verifyTableMappings(
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			String identifierTableName,
 			String mappedTableName) {
 		final TableDetails idTable = entityDescriptor.getIdentifierTableDetails();

@@ -1,11 +1,12 @@
 package org.hibernate.sql.results.graph;
 
+
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -16,7 +17,7 @@ import org.hibernate.spi.NavigablePath;
  */
 @Incubating(since = "6.0", group = "result-processing")
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
-public interface Fetchable extends ModelPart {
+public interface Fetchable<J, M, R> extends ModelPart<J, M, R> {
 	/**
 	 * The name of the fetchable.  This is the part's "local name".
 	 *

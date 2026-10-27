@@ -46,7 +46,7 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	@Nonnull
 	Object generateCacheKey(
 			@Nonnull Object naturalIdValues,
-			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull EntityPersister<?> rootEntityDescriptor,
 			@Nonnull SharedSessionContractImplementor session);
 
 	/**

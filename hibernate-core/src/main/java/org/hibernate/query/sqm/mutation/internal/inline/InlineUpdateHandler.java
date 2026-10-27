@@ -251,7 +251,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 	private TableUpdater createTableUpdater(
 			String tableExpression,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			TableGroup updatingTableGroup,
 			Map<TableReference, List<Assignment>> assignmentsByTable,
 			ExecutionContext executionContext) {
@@ -272,12 +272,12 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 		// create the in-subquery predicate to restrict the updates to just
 		// matching ids
 
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityDescriptor.getIdentifierMapping();
 		final int idColumnCount = identifierMapping.getJdbcTypeCount();
 		assert idColumnCount > 0;
 		final Expression keyExpression;
 		if ( idColumnCount == 1 ) {
-			final BasicValuedModelPart basicIdMapping = castNonNull( identifierMapping.asBasicValuedModelPart() );
+			final BasicValuedModelPart<?, ?, ?> basicIdMapping = castNonNull( identifierMapping.asBasicValuedModelPart() );
 			final String idColumn = basicIdMapping.getSelectionExpression();
 			keyExpression = new ColumnReference(
 					updatingTableReference,
@@ -306,7 +306,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 
 		// Otherwise we have to check if the table is nullable, and if so, insert into that table
-		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
+		final EntityPersister<?> entityPersister = entityDescriptor.getEntityPersister();
 		boolean isNullable = false;
 		for (int i = 0; i < entityPersister.getTableSpan(); i++) {
 			if ( tableExpression.equals( entityPersister.getTableName( i ) ) && entityPersister.isNullableTable( i ) ) {
@@ -382,7 +382,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 						ComparisonOperator.EQUAL,
 						new ColumnReference(
 								rootTableGroup.getPrimaryTableReference(),
-								( (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping() ).getSelectionExpression(),
+								( (BasicEntityIdentifierMapping<?, ?, ?>) entityDescriptor.getIdentifierMapping() ).getSelectionExpression(),
 								false,
 								null,
 								columnReference.getJdbcMapping()
@@ -541,7 +541,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 				(ValuesTableGroup) originalQuerySpec.getFromClause().getRoots().get( 0 );
 		final ValuesTableGroup valuesTableGroup = new ValuesTableGroup(
 				originalValuesTableGroup.getNavigablePath(),
-				(TableGroupProducer) originalValuesTableGroup.getModelPart(),
+				(TableGroupProducer<?, ?, ?>) originalValuesTableGroup.getModelPart(),
 				valuesList,
 				originalValuesTableGroup.getNavigablePath().getLocalName(),
 				originalValuesTableGroup.getPrimaryTableReference().getColumnNames(),

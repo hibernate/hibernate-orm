@@ -148,7 +148,7 @@ public class SmokeTests {
 					final ColumnReference columnReference = (ColumnReference) selectedExpression;
 					assertThat( columnReference.getExpressionText(), is( "se1_0.gender" ) );
 
-					final JdbcMapping selectedExpressible = selectedExpression.getExpressionType().getSingleJdbcMapping();
+					final JdbcMapping<?> selectedExpressible = selectedExpression.getExpressionType().getSingleJdbcMapping();
 					assertThat( selectedExpressible.getJdbcType().isInteger(), is( true ) );
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );

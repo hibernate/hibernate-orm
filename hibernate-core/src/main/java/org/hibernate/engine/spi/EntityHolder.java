@@ -16,7 +16,7 @@ import jakarta.annotation.Nullable;
 @Incubating(since = "6.4")
 public interface EntityHolder {
 	EntityKey getEntityKey();
-	EntityPersister getDescriptor();
+	EntityPersister<?> getDescriptor();
 
 	/**
 	 * The entity object, or {@code null} if no entity object was registered yet.

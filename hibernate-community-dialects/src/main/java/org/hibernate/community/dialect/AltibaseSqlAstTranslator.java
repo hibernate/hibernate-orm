@@ -288,7 +288,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 					return;
 				}
 				// Render generated version seed values as SQL expressions such as 0 or current timestamp.
-				final EntityVersionMapping versionMapping = getVersionSeedMapping( expression );
+				final EntityVersionMapping<?> versionMapping = getVersionSeedMapping( expression );
 				if ( versionMapping != null && renderVersionSeedParameter( versionMapping ) ) {
 					return;
 				}
@@ -398,7 +398,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	// Renders optimistic-lock version seeds through the JDBC literal formatter when possible.
 	@SuppressWarnings("unchecked")
-	private boolean renderVersionSeedParameter(EntityVersionMapping versionMapping) {
+	private boolean renderVersionSeedParameter(EntityVersionMapping<?> versionMapping) {
 		final JdbcLiteralFormatter<Object> literalFormatter = (JdbcLiteralFormatter<Object>) versionMapping.getJdbcMapping()
 				.getJdbcType()
 				.getJdbcLiteralFormatter( versionMapping.getJavaType() );
@@ -410,7 +410,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return true;
 	}
 
-	private Object getVersionSeedValue(EntityVersionMapping versionMapping) {
+	private Object getVersionSeedValue(EntityVersionMapping<?> versionMapping) {
 		final int precision = getVersionSeedPrecision( versionMapping );
 		return versionMapping.getJavaType().seed(
 				versionMapping.getLength(),
@@ -420,7 +420,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		);
 	}
 
-	private int getVersionSeedPrecision(EntityVersionMapping versionMapping) {
+	private int getVersionSeedPrecision(EntityVersionMapping<?> versionMapping) {
 		final Integer precision = versionMapping.getTemporalPrecision() != null
 				? versionMapping.getTemporalPrecision()
 				: versionMapping.getPrecision();

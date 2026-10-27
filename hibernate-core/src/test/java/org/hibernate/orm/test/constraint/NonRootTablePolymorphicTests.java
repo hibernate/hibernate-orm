@@ -167,23 +167,23 @@ public class NonRootTablePolymorphicTests {
 
 	@Test
 	public void verifyRuntimeModel(SessionFactoryScope scope) {
-		final EntityMappingType rootEntity = scope.getSessionFactory()
+		final EntityMappingType<?> rootEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Root.class );
-		final EntityMappingType subEntity = scope.getSessionFactory()
+		final EntityMappingType<?> subEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Sub.class );
-		final EntityMappingType leafEntity = scope.getSessionFactory()
+		final EntityMappingType<?> leafEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Leaf.class );
-		final EntityMappingType childEntity = scope.getSessionFactory()
+		final EntityMappingType<?> childEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( SubChild.class );
-		final EntityMappingType parentEntity = scope.getSessionFactory()
+		final EntityMappingType<?> parentEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( SubParent.class );
@@ -191,8 +191,8 @@ public class NonRootTablePolymorphicTests {
 
 		// check Sub#child fk
 
-		final ToOneAttributeMapping childAttribute = (ToOneAttributeMapping) subEntity.findAttributeMapping( "child" );
-		final SimpleForeignKeyDescriptor childFk = (SimpleForeignKeyDescriptor) childAttribute.getForeignKeyDescriptor();
+		final ToOneAttributeMapping<?> childAttribute = (ToOneAttributeMapping<?>) subEntity.findAttributeMapping( "child" );
+		final SimpleForeignKeyDescriptor<?, ?, ?> childFk = (SimpleForeignKeyDescriptor<?, ?, ?>) childAttribute.getForeignKeyDescriptor();
 
 		assertThat( childFk.getKeyTable(), is( "sub" ) );
 		assertThat( childFk.getTargetTable(), is( "sub_child" ) );
@@ -204,8 +204,8 @@ public class NonRootTablePolymorphicTests {
 
 		// check Parent#sub fk
 
-		final ToOneAttributeMapping subAttribute = (ToOneAttributeMapping) parentEntity.findAttributeMapping( "sub" );
-		final SimpleForeignKeyDescriptor subFk = (SimpleForeignKeyDescriptor) subAttribute.getForeignKeyDescriptor();
+		final ToOneAttributeMapping<?> subAttribute = (ToOneAttributeMapping<?>) parentEntity.findAttributeMapping( "sub" );
+		final SimpleForeignKeyDescriptor<?, ?, ?> subFk = (SimpleForeignKeyDescriptor<?, ?, ?>) subAttribute.getForeignKeyDescriptor();
 
 		assertThat( subFk.getKeyTable(), is( "sub_parent" ) );
 		assertThat( subFk.getTargetTable(), is( "sub" ) );

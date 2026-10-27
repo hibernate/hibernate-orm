@@ -654,7 +654,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			// If the binding has no explicit type, fall back to the SQL AST parameter's expression type.
-			final JdbcMapping bindType = binding.getBindType() == null
+			final JdbcMapping<?> bindType = binding.getBindType() == null
 					? parameter.getExpressionType().getSingleJdbcMapping()
 					: binding.getBindType();
 			//noinspection unchecked
@@ -1674,13 +1674,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected boolean isStruct(JdbcMappingContainer expressionType) {
-		if ( expressionType instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
-			final EmbeddableMappingType embeddableMappingType = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
+		if ( expressionType instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
 			return embeddableMappingType.getAggregateMapping() != null
 				&& embeddableMappingType.getAggregateMapping().getJdbcMapping().getJdbcType()
 						.getDefaultSqlTypeCode() == SqlTypes.STRUCT;
 		}
-		else if ( expressionType instanceof BasicValuedMapping basicValuedMapping ) {
+		else if ( expressionType instanceof BasicValuedMapping<?> basicValuedMapping ) {
 			return basicValuedMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() == SqlTypes.STRUCT;
 		}
 		return false;
@@ -1993,8 +1993,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( " on " );
 		final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
 		assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
-		final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
-		final EntityRowIdMapping rowIdMapping = entityMappingType == null ? null : entityMappingType.getRowIdMapping();
+		final EntityMappingType<?> entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
+		final EntityRowIdMapping<?> rowIdMapping = entityMappingType == null ? null : entityMappingType.getRowIdMapping();
 		final String rowIdExpression = dialect.getRowIdSupport().resolveExpression( null );
 		if ( rowIdMapping != null ) {
 			appendSql( "t." );
@@ -2053,8 +2053,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( !correlated ) {
 			final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
 			assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
-			final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
-			final EntityRowIdMapping rowIdMapping =
+			final EntityMappingType<?> entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
+			final EntityRowIdMapping<?> rowIdMapping =
 					entityMappingType == null ? null : entityMappingType.getRowIdMapping();
 			final String rowIdExpression = dialect.getRowIdSupport().resolveExpression( null );
 			if ( rowIdMapping != null ) {
@@ -2552,7 +2552,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					final Expression expression;
 					if ( assignable.getColumnReferences().size() == 1 ) {
 						expression = new CaseSearchedExpression(
-								(MappingModelExpressible) assignedValue.getExpressionType(),
+								(MappingModelExpressible<?>) assignedValue.getExpressionType(),
 								List.of( new CaseSearchedExpression.WhenFragment( predicate, assignedValue ) ),
 								assignable.getColumnReferences().get( 0 )
 						);
@@ -2576,7 +2576,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						}
 						expression = new SqlTuple(
 								tupleExpressions,
-								(MappingModelExpressible) assignedValue.getExpressionType()
+								(MappingModelExpressible<?>) assignedValue.getExpressionType()
 						);
 					}
 					visitSetAssignment( new Assignment( assignable, expression ) );
@@ -3815,7 +3815,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * This is because the translation from the types to strings is not guaranteed to result in the same ordering.
 	 */
 	private SqlAstNode wrapRowComponentAsOrderPreservingConcatArgument(Expression expression) {
-		final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 		return switch ( jdbcMapping.getCastType() ) {
 			case STRING -> expression;
 			case BOOLEAN, INTEGER_BOOLEAN, TF_BOOLEAN, YN_BOOLEAN -> castToString( expression );
@@ -3848,7 +3848,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private int wrapRowComponentAsOrderPreservingConcatArgumentSizeEstimate(Expression expression) {
-		final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 		switch ( jdbcMapping.getCastType() ) {
 			case STRING:
 				if ( expression.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping ) {
@@ -3891,7 +3891,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * This is because the translation from the types to strings is not guaranteed to preserve equality.
 	 */
 	private SqlAstNode wrapRowComponentAsEqualityPreservingConcatArgument(Expression expression) {
-		final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 		switch ( jdbcMapping.getCastType() ) {
 			case STRING:
 				return expression;
@@ -3935,7 +3935,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private int wrapRowComponentAsEqualityPreservingConcatArgumentSizeEstimate(Expression expression) {
-		final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 		switch ( jdbcMapping.getCastType() ) {
 			case STRING:
 				if ( expression.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping ) {
@@ -6434,8 +6434,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	///
 	/// @since 8.0
 	@SPI(USE)
-	protected final @Nullable EntityVersionMapping getVersionSeedMapping(Expression expression) {
-		return expression instanceof VersionTypeSeedParameterSpecification versionSeedParameter
+	protected final @Nullable EntityVersionMapping<?> getVersionSeedMapping(Expression expression) {
+		return expression instanceof VersionTypeSeedParameterSpecification<?> versionSeedParameter
 				? versionSeedParameter.getVersionMapping()
 				: null;
 	}
@@ -6742,8 +6742,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			TableGroup dmlTargetTableGroup,
 			String lhsAlias,
 			String rhsAlias) {
-		final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
-		final EntityRowIdMapping rowIdMapping = entityMappingType == null ? null : entityMappingType.getRowIdMapping();
+		final EntityMappingType<?> entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
+		final EntityRowIdMapping<?> rowIdMapping = entityMappingType == null ? null : entityMappingType.getRowIdMapping();
 		final String rowIdExpression = dialect.getRowIdSupport().resolveExpression( null );
 		if ( rowIdMapping != null ) {
 			return new ComparisonPredicate(
@@ -6813,7 +6813,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		renderTableReferenceJoins( tableGroup, LockMode.NONE );
 		processNestedTableGroupJoins( tableGroup, null );
 		processTableGroupJoins( tableGroup );
-		if ( tableGroup.getModelPart() instanceof EntityPersister persister ) {
+		if ( tableGroup.getModelPart() instanceof EntityPersister<?> persister ) {
 			final String[] querySpaces = (String[]) persister.getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
@@ -6857,7 +6857,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			processTableGroupJoins( tableGroup );
 		}
-		if ( tableGroup.getModelPart() instanceof EntityPersister persister ) {
+		if ( tableGroup.getModelPart() instanceof EntityPersister<?> persister ) {
 			final String[] querySpaces = (String[]) persister.getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
@@ -6988,8 +6988,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			processTableGroupJoins( tableGroup );
 		}
 
-		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof EntityPersister persister ) {
+		ModelPartContainer<?, ?, ?> modelPart = tableGroup.getModelPart();
+		if ( modelPart instanceof EntityPersister<?> persister ) {
 			final String[] querySpaces = (String[]) persister.getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
@@ -8155,7 +8155,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// ... x(c) on exists(select 1 from (...) synth_(c) where x.c distinct from synth_.c)
 				final QueryPartTableGroup subTableGroup = new QueryPartTableGroup(
 						tableGroup.getNavigablePath(),
-						(TableGroupProducer) tableGroup.getModelPart(),
+						(TableGroupProducer<?, ?, ?>) tableGroup.getModelPart(),
 						new SelectStatement( statement.getQueryPart() ),
 						"synth_",
 						columnNames,
@@ -8664,7 +8664,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final String parameterMarker = parameterMarkerStrategy.createMarker( position, jdbcType );
 		final Size size = jdbcParameter.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping
 				? sqlTypedMapping.toSize()
-				: jdbcParameter instanceof SqlTypedMappingJdbcParameter parameter
+				: jdbcParameter instanceof SqlTypedMappingJdbcParameter<?> parameter
 						? parameter.getSqlTypedMapping().toSize()
 						: null;
 		jdbcType.appendWriteExpression( parameterMarker, size, this, dialect );
@@ -8836,13 +8836,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
+	public void visitEntityTypeLiteral(EntityTypeLiteral<?> expression) {
 		appendSql( expression.getEntityTypeDescriptor().getDiscriminatorSQLValue() );
 	}
 
 	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	@Override
-	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral<?> expression) {
 		final BasicValueConverter valueConverter = expression.getJdbcMapping().getValueConverter();
 		appendSql( jdbcLiteral(
 				valueConverter != null
@@ -9148,11 +9148,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderAsLiteral(JdbcParameter jdbcParameter, Object literalValue) {
 		if ( literalValue == null ) {
-			renderNull( new QueryLiteral<>( null, (BasicValuedMapping) jdbcParameter.getExpressionType() ) );
+			renderNull( new QueryLiteral<>( null, (BasicValuedMapping<?>) jdbcParameter.getExpressionType() ) );
 		}
 		else {
 			assert jdbcParameter.getExpressionType().getJdbcTypeCount() == 1;
-			final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getSingleJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = jdbcParameter.getExpressionType().getSingleJdbcMapping();
 			//noinspection unchecked
 			final JdbcLiteralFormatter<Object> literalFormatter = jdbcMapping.getJdbcLiteralFormatter();
 			if ( literalFormatter == null ) {
@@ -9267,7 +9267,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( sqlFragment.substring( startPosition, markerStart ) );
 
 		final Object value = parameter.getValue();
-		final JdbcMapping valueMapping = parameter.getValueMapping();
+		final JdbcMapping<?> valueMapping = parameter.getValueMapping();
 
 		if ( parameter.getJdbcParameter() != null ) {
 			visitParameterAsParameter( parameter.getJdbcParameter() );
@@ -9283,11 +9283,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return markerStart + marker.length();
 	}
 
-	private void processSingularFilterParameterValue(JdbcMapping valueMapping, Object value) {
+	private void processSingularFilterParameterValue(JdbcMapping<?> valueMapping, Object value) {
 		visitParameterAsParameter( new FilterJdbcParameter( valueMapping, value ) );
 	}
 
-	private void processIterableFilterParameterValue(JdbcMapping valueMapping, Iterator<?> iterator) {
+	private void processIterableFilterParameterValue(JdbcMapping<?> valueMapping, Iterator<?> iterator) {
 		while ( iterator.hasNext() ) {
 			processSingularFilterParameterValue( valueMapping, iterator.next() );
 			if ( iterator.hasNext() ) {
@@ -9297,10 +9297,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private static final class FilterJdbcParameter implements JdbcParameter, JdbcParameterBinder {
-		private final JdbcMapping jdbcMapping;
+		private final JdbcMapping<?> jdbcMapping;
 		private final Object jdbcParameterValue;
 
-		private FilterJdbcParameter(JdbcMapping jdbcMapping, Object jdbcParameterValue) {
+		private FilterJdbcParameter(JdbcMapping<?> jdbcMapping, Object jdbcParameterValue) {
 			this.jdbcMapping = jdbcMapping;
 			this.jdbcParameterValue = jdbcParameterValue;
 		}
@@ -9973,7 +9973,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// HQL has different semantics for the not null check on embedded attribute mappings
 			// as the embeddable is not considered as null, if at least one sub-part is not null
 			if ( nullnessPredicate.isNegated()
-					&& expression.getExpressionType() instanceof AttributeMapping ) {
+					&& expression.getExpressionType() instanceof AttributeMapping<?, ?, ?> ) {
 				appendSql( '(' );
 				for ( Expression exp : tuple.getExpressions() ) {
 					appendSql( separator );
@@ -10573,7 +10573,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final String sqlFragment = columnWriteFragment.getFragment();
 		int lastEnd = 0;
 
-		for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
+		for ( ColumnValueParameter<?> parameter : columnWriteFragment.getParameters() ) {
 			final int markerStart = sqlFragment.indexOf( '?', lastEnd );
 
 			// append the part of the fragment from the last-end position (start of string for first pass)

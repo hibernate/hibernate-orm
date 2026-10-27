@@ -38,7 +38,7 @@ public class DeleteCoordinatorHistory
 	private final MutationOperationGroup historyEndUpdateGroup;
 
 	public DeleteCoordinatorHistory(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull DeleteCoordinator currentDeleteCoordinator) {
 		super( entityPersister, factory );

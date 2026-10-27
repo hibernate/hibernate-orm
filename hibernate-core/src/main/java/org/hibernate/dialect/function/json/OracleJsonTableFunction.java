@@ -81,7 +81,7 @@ public class OracleJsonTableFunction extends JsonTableFunction {
 		};
 	}
 
-	private boolean isJson(JdbcMapping jdbcMapping) {
+	private boolean isJson(JdbcMapping<?> jdbcMapping) {
 		return jdbcMapping.getJdbcType().isJson();
 	}
 
@@ -109,7 +109,7 @@ public class OracleJsonTableFunction extends JsonTableFunction {
 		}
 
 		@Override
-		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping type, SqmToSqlAstConverter converter) {
+		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping<?> type, SqmToSqlAstConverter converter) {
 			if ( isEncodedBoolean( type ) ) {
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();

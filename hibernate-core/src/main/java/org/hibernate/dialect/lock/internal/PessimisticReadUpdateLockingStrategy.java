@@ -23,7 +23,7 @@ public class PessimisticReadUpdateLockingStrategy extends AbstractPessimisticUpd
 	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
-	public PessimisticReadUpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	public PessimisticReadUpdateLockingStrategy(EntityPersister<?> lockable, LockMode lockMode) {
 		super( lockable, lockMode );
 	}
 }

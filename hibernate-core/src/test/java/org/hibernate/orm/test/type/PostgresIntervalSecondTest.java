@@ -48,7 +48,7 @@ public class PostgresIntervalSecondTest {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(
 				PostgresIntervalSecondTest.EntityWithIntervalSecondDuration.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 

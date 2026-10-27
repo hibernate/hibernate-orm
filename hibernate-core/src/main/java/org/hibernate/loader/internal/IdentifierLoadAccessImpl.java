@@ -40,7 +40,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 // Hibernate Reactive extends this class: see ReactiveIdentifierLoadAccessImpl
 public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 	private final StatefulLoadAccessContext context;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 
 	@Nullable
 	private LockOptions lockOptions;
@@ -57,7 +57,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 	@Nullable
 	private Set<String> disabledFetchProfiles;
 
-	public IdentifierLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityPersister entityPersister) {
+	public IdentifierLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityPersister<?> entityPersister) {
 		this.context = context;
 		this.entityPersister = entityPersister;
 	}
@@ -302,7 +302,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 	}
 
 	@Nonnull
-	protected EntityPersister getEntityPersister() {
+	protected EntityPersister<?> getEntityPersister() {
 		return entityPersister;
 	}
 

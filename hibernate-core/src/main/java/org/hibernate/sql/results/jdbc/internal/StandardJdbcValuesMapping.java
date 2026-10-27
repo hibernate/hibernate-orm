@@ -196,7 +196,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		@Override
 		public Initializer<?> resolveInitializer(
 				NavigablePath navigablePath,
-				ModelPart fetchedModelPart,
+				ModelPart<?, ?, ?> fetchedModelPart,
 				Supplier<Initializer<?>> producer) {
 			return resolveInitializer(
 					navigablePath,
@@ -223,7 +223,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 		public <T extends FetchParent> Initializer<?> resolveInitializer(
 				NavigablePath navigablePath,
-				ModelPart fetchedModelPart,
+				ModelPart<?, ?, ?> fetchedModelPart,
 				T resultGraphNode,
 				InitializerParent<?> parent,
 				InitializerProducer<T> producer) {

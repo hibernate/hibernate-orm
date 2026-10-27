@@ -100,7 +100,7 @@ public class IntegralTimestampaddFunction
 	}
 
 	private Expression convertedArgument(DurationUnit field, TemporalUnit unit, Expression magnitude) {
-		final BasicValuedMapping expressionType = (BasicValuedMapping) magnitude.getExpressionType();
+		final BasicValuedMapping<?> expressionType = (BasicValuedMapping<?>) magnitude.getExpressionType();
 		final String conversionFactor = field.getUnit().conversionFactorFull( unit, dialect );
 		return conversionFactor.isEmpty()
 				? magnitude

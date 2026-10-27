@@ -49,7 +49,7 @@ public class OracleUnnestFunction extends UnnestFunction {
 			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
-		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
+		final ModelPart<?, ?, ?> ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
 		final boolean withOrdinality = ordinalitySubPart != null;
 		if ( withOrdinality ) {
 			sqlAppender.appendSql( "lateral (select t.*, rownum " );

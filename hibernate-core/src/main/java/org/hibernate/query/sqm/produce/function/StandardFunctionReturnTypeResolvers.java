@@ -56,8 +56,8 @@ public class StandardFunctionReturnTypeResolvers {
 			}
 
 			@Override
-			public @Nonnull BasicValuedMapping resolveFunctionReturnType(
-					Supplier<BasicValuedMapping> impliedTypeAccess,
+			public @Nonnull BasicValuedMapping<?> resolveFunctionReturnType(
+					Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 					List<? extends SqlAstNode> arguments) {
 				return useImpliedTypeIfPossible( invariantType, impliedTypeAccess.get() );
 			}
@@ -83,8 +83,8 @@ public class StandardFunctionReturnTypeResolvers {
 			}
 
 			@Override
-			public @Nonnull BasicValuedMapping resolveFunctionReturnType(
-					Supplier<BasicValuedMapping> impliedTypeAccess,
+			public @Nonnull BasicValuedMapping<?> resolveFunctionReturnType(
+					Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 					List<? extends SqlAstNode> arguments) {
 				final var specifiedArgType = extractArgumentValuedMapping( arguments, argPosition );
 				return useImpliedTypeIfPossible( specifiedArgType, impliedTypeAccess.get() );
@@ -96,12 +96,12 @@ public class StandardFunctionReturnTypeResolvers {
 		return new FunctionReturnTypeResolver() {
 			@Nullable
 			@Override
-			public BasicValuedMapping resolveFunctionReturnType(
-					Supplier<BasicValuedMapping> impliedTypeAccess,
+			public BasicValuedMapping<?> resolveFunctionReturnType(
+					Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 					List<? extends SqlAstNode> arguments) {
 				for ( SqlAstNode arg: arguments ) {
 					if ( arg instanceof Expression expression
-							&& expression.getExpressionType() instanceof BasicValuedMapping argType ) {
+							&& expression.getExpressionType() instanceof BasicValuedMapping<?> argType ) {
 						return useImpliedTypeIfPossible( argType, impliedTypeAccess.get() );
 					}
 				}
@@ -148,7 +148,7 @@ public class StandardFunctionReturnTypeResolvers {
 	}
 
 	@Internal
-	public static boolean isAssignableTo(JdbcMapping defined, JdbcMapping implied) {
+	public static boolean isAssignableTo(JdbcMapping<?> defined, JdbcMapping<?> implied) {
 		//This list of cases defines legal promotions from a SQL function return
 		//type specified in the function template (i.e. in the Dialect) and a type
 		//that is determined by how the function is used in the HQL query. In essence
@@ -162,7 +162,7 @@ public class StandardFunctionReturnTypeResolvers {
 	}
 
 	@Internal
-	public static BasicValuedMapping useImpliedTypeIfPossible(BasicValuedMapping defined, BasicValuedMapping implied) {
+	public static BasicValuedMapping<?> useImpliedTypeIfPossible(BasicValuedMapping<?> defined, BasicValuedMapping<?> implied) {
 		if ( defined == null ) {
 			return implied;
 		}
@@ -174,7 +174,7 @@ public class StandardFunctionReturnTypeResolvers {
 		}
 	}
 
-	private static boolean areCompatible(BasicValuedMapping defined, BasicValuedMapping implied) {
+	private static boolean areCompatible(BasicValuedMapping<?> defined, BasicValuedMapping<?> implied) {
 		if ( defined == null || implied == null) {
 			return true;
 		}
@@ -251,13 +251,13 @@ public class StandardFunctionReturnTypeResolvers {
 //	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public static BasicValuedMapping extractArgumentValuedMapping(List<? extends SqlAstNode> arguments, int position) {
+	public static BasicValuedMapping<?> extractArgumentValuedMapping(List<? extends SqlAstNode> arguments, int position) {
 		final SqlAstNode specifiedArgument = arguments.get( position-1 );
 		final var specifiedArgType =
 				specifiedArgument instanceof Expression expression
 						? expression.getExpressionType()
 						: null;
-		if ( specifiedArgType instanceof BasicValuedMapping basicValuedMapping ) {
+		if ( specifiedArgType instanceof BasicValuedMapping<?> basicValuedMapping ) {
 			return basicValuedMapping;
 		}
 		else {

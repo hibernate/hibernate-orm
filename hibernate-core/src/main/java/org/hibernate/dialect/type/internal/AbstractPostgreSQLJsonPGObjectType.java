@@ -23,7 +23,7 @@ import org.postgresql.util.PGobject;
 public abstract class AbstractPostgreSQLJsonPGObjectType extends JsonJdbcType {
 
 	private final boolean jsonb;
-	protected AbstractPostgreSQLJsonPGObjectType(EmbeddableMappingType embeddableMappingType, boolean jsonb) {
+	protected AbstractPostgreSQLJsonPGObjectType(EmbeddableMappingType<?, ?, ?> embeddableMappingType, boolean jsonb) {
 		super( embeddableMappingType );
 		this.jsonb = jsonb;
 	}

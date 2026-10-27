@@ -14,13 +14,13 @@ import static org.hibernate.internal.find.Helper.coerceId;
 ///
 /// @author Steve Ebersole
 public class StatefulGetReferenceOperation<T> implements GetReferenceOperation<T> {
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister<?> entityDescriptor;
 	private final StatefulLoadAccessContext loadAccessContext;
 
 	private final KeyType keyType;
 
 	public StatefulGetReferenceOperation(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			KeyType keyType) {
 		this.entityDescriptor = entityDescriptor;

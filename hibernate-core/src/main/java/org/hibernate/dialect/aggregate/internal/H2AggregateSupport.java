@@ -117,13 +117,13 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 		return "stringdecode(regexp_replace(nullif(" + valueExpression + ",JSON'null'),'^\"(.*)\"$','$1'))";
 	}
 
-	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping<?> jdbcMapping) {
 		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
 		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
 		return sqlAppender.toString();
 	}
 
-	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
+	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping<?> jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
@@ -234,7 +234,7 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 
 		protected void passThroughUnsetSubExpressions(SelectableMapping aggregateColumn) {
 			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) aggregateColumn.getJdbcMapping().getJdbcType();
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
 				final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );

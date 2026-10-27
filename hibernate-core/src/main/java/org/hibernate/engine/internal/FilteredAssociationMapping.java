@@ -41,9 +41,9 @@ public final class FilteredAssociationMapping {
 		}
 	}
 
-	public static FilteredAssociationMapping create(EntityPersister persister) {
+	public static FilteredAssociationMapping create(EntityPersister<?> persister) {
 		final List<Slot> slots = new ArrayList<>();
-		collectSlots( persister, new AttributeMapping[0], slots );
+		collectSlots( persister, new AttributeMapping<?, ?, ?>[0], slots );
 		if ( slots.isEmpty() ) {
 			return NONE;
 		}
@@ -56,15 +56,15 @@ public final class FilteredAssociationMapping {
 		}
 	}
 
-	public static boolean isRestricted(ToOneAttributeMapping association) {
+	public static boolean isRestricted(ToOneAttributeMapping<?> association) {
 		return association.hasWhereRestrictions() || association.hasFilterForLoadByKey();
 	}
 
-	public static boolean hasRestrictedAssociations(ManagedMappingType mapping) {
+	public static boolean hasRestrictedAssociations(ManagedMappingType<?, ?, ?> mapping) {
 		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
 			final var attribute = mapping.getAttributeMapping( i );
-			if ( attribute instanceof ToOneAttributeMapping toOne && isRestricted( toOne )
-					|| attribute instanceof EmbeddableValuedModelPart embedded
+			if ( attribute instanceof ToOneAttributeMapping<?> toOne && isRestricted( toOne )
+					|| attribute instanceof EmbeddableValuedModelPart<?, ?, ?> embedded
 							&& hasRestrictedAssociations( embedded.getEmbeddableTypeDescriptor() ) ) {
 				return true;
 			}
@@ -72,27 +72,27 @@ public final class FilteredAssociationMapping {
 		return false;
 	}
 
-	private static void collectSlots(ManagedMappingType mapping, AttributeMapping[] prefix, List<Slot> slots) {
+	private static void collectSlots(ManagedMappingType<?, ?, ?> mapping, AttributeMapping<?, ?, ?>[] prefix, List<Slot> slots) {
 		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
 			final var attribute = mapping.getAttributeMapping( i );
-			if ( attribute instanceof ToOneAttributeMapping association ) {
+			if ( attribute instanceof ToOneAttributeMapping<?> association ) {
 				if ( isRestricted( association ) ) {
 					slots.add( new Slot( slots.size(), append( prefix, attribute ), association ) );
 				}
 			}
-			else if ( attribute instanceof EmbeddableValuedModelPart embedded ) {
+			else if ( attribute instanceof EmbeddableValuedModelPart<?, ?, ?> embedded ) {
 				collectSlots( embedded.getEmbeddableTypeDescriptor(), append( prefix, attribute ), slots );
 			}
 		}
 	}
 
-	private static AttributeMapping[] append(AttributeMapping[] prefix, AttributeMapping attribute) {
+	private static AttributeMapping<?, ?, ?>[] append(AttributeMapping<?, ?, ?>[] prefix, AttributeMapping<?, ?, ?> attribute) {
 		final var result = Arrays.copyOf( prefix, prefix.length + 1 );
 		result[prefix.length] = attribute;
 		return result;
 	}
 
-	public FilteredAssociationState record(FilteredAssociationState state, ToOneAttributeMapping association, Object key) {
+	public FilteredAssociationState record(FilteredAssociationState state, ToOneAttributeMapping<?> association, Object key) {
 		final var slot = byRole.get( association.getNavigableRole().getFullPath() );
 		if ( slot == null ) {
 			throw new IllegalStateException( "No filtered association slot for " + association.getNavigableRole() );
@@ -104,7 +104,7 @@ public final class FilteredAssociationMapping {
 		return state;
 	}
 
-	public boolean isFiltered(FilteredAssociationState state, ToOneAttributeMapping association) {
+	public boolean isFiltered(FilteredAssociationState state, ToOneAttributeMapping<?> association) {
 		final var slot = byRole.get( association.getNavigableRole().getFullPath() );
 		return state != null && slot != null && state.contains( slot.index );
 	}
@@ -160,7 +160,7 @@ public final class FilteredAssociationMapping {
 		return omitted;
 	}
 
-	boolean hasHiddenAttribute(FilteredAssociationState state, AttributeMapping attribute) {
+	boolean hasHiddenAttribute(FilteredAssociationState state, AttributeMapping<?, ?, ?> attribute) {
 		if ( state != null ) {
 			for ( var slot : slots ) {
 				if ( state.contains( slot.index ) ) {
@@ -196,7 +196,7 @@ public final class FilteredAssociationMapping {
 					final int position = attribute.getStateArrayPosition();
 					parent[position] = parent[position] instanceof Object[] components
 							? components.clone()
-							: componentValues( parent[position], (EmbeddableMappingType) attribute.getMappedType() );
+							: componentValues( parent[position], (EmbeddableMappingType<?, ?, ?>) attribute.getMappedType() );
 					parent = (Object[]) parent[position];
 				}
 				parent[slot.association.getStateArrayPosition()] = new FilteredAssociationState.Key( keys.apply( slot.index ) );
@@ -205,7 +205,7 @@ public final class FilteredAssociationMapping {
 		return result;
 	}
 
-	private static Object[] componentValues(Object value, EmbeddableMappingType mapping) {
+	private static Object[] componentValues(Object value, EmbeddableMappingType<?, ?, ?> mapping) {
 		final Object[] values = value == null ? new Object[mapping.getNumberOfAttributeMappings()] : mapping.getValues( value );
 		if ( mapping.isPolymorphic() ) {
 			final Object[] result = Arrays.copyOf( values, values.length + 1 );
@@ -217,7 +217,7 @@ public final class FilteredAssociationMapping {
 		return values;
 	}
 
-	private record Slot(int index, AttributeMapping[] path, ToOneAttributeMapping association) {
+	private record Slot(int index, AttributeMapping<?, ?, ?>[] path, ToOneAttributeMapping<?> association) {
 		String table() {
 			return association.getForeignKeyDescriptor().getKeyTable();
 		}
@@ -225,7 +225,7 @@ public final class FilteredAssociationMapping {
 		Object value(Object[] values) {
 			Object result = values[path[0].getStateArrayPosition()];
 			for ( int i = 1; i < path.length && result != null && result != UNFETCHED_PROPERTY; i++ ) {
-				final var mapping = (EmbeddableMappingType) path[i - 1].getMappedType();
+				final var mapping = (EmbeddableMappingType<?, ?, ?>) path[i - 1].getMappedType();
 				if ( result instanceof Object[] components ) {
 					result = components[path[i].getStateArrayPosition()];
 				}

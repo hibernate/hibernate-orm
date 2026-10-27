@@ -20,7 +20,7 @@ public class DB2JsonArrayFunction extends JsonArrayFunction {
 	@Override
 	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
 		if ( value instanceof Expression expression && expression.getExpressionType() != null ) {
-			final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 			DB2AggregateSupport.appendJsonWriteExpression( sqlAppender, () -> value.accept( walker ), jdbcMapping );
 		}
 		else {

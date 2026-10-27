@@ -13,7 +13,7 @@ import org.hibernate.sql.results.graph.Fetchable;
  */
 public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuilderContainer<T>>
 		implements DynamicFetchBuilderContainer {
-	Map<Fetchable, FetchBuilder> fetchBuilderMap;
+	Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap;
 
 	protected AbstractFetchBuilderContainer() {
 	}
@@ -34,26 +34,26 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	protected abstract String getPropertyBase();
 
 	@Override
-	public FetchBuilder findFetchBuilder(Fetchable fetchable) {
+	public FetchBuilder findFetchBuilder(Fetchable<?, ?, ?> fetchable) {
 		return fetchBuilderMap == null ? null : fetchBuilderMap.get( fetchable );
 	}
 
 	@Override
-	public T addProperty(Fetchable fetchable, String columnAlias) {
+	public T addProperty(Fetchable<?, ?, ?> fetchable, String columnAlias) {
 		final var fetchBuilder = addProperty( fetchable );
 		fetchBuilder.addColumnAlias( columnAlias );
 		return (T) this;
 	}
 
 	@Override
-	public T addProperty(Fetchable fetchable, String... columnAliases) {
+	public T addProperty(Fetchable<?, ?, ?> fetchable, String... columnAliases) {
 		final var fetchBuilder = addProperty( fetchable );
 		ArrayHelper.forEach( columnAliases, fetchBuilder::addColumnAlias );
 		return (T) this;
 	}
 
 	@Override
-	public DynamicFetchBuilder addProperty(Fetchable fetchable) {
+	public DynamicFetchBuilder addProperty(Fetchable<?, ?, ?> fetchable) {
 		if ( fetchBuilderMap == null ) {
 			fetchBuilderMap = new HashMap<>();
 		}
@@ -78,7 +78,7 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	}
 
 	@Override
-	public void addFetchBuilder(Fetchable fetchable, FetchBuilder fetchBuilder) {
+	public void addFetchBuilder(Fetchable<?, ?, ?> fetchable, FetchBuilder fetchBuilder) {
 		if ( fetchBuilderMap == null ) {
 			fetchBuilderMap = new HashMap<>();
 		}

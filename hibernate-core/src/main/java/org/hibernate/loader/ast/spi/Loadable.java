@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.spi.query.from.RootTableGroupProducer;
  *
  * @author Steve Ebersole
  */
-public interface Loadable extends ModelPart, RootTableGroupProducer {
+public interface Loadable<J, M, R> extends ModelPart<J, M, R>, RootTableGroupProducer<J, M, R> {
 	/**
 	 * The name for this loadable, for use as the root when generating
 	 * {@linkplain org.hibernate.spi.NavigablePath relative paths}

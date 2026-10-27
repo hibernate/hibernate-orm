@@ -122,7 +122,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 
 	private Object resolveGeneratedIdentifier(
 			GeneratedValues generatedValues,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object entity,
 			SessionImplementor session) {
 		final var identifierHandle = generatedValuesCollector.getIdentifierHandle();
@@ -157,7 +157,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 			EntityEntry entry,
 			GeneratedValues generatedValues,
 			PersistenceContext persistenceContext,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object[] state) {
 
 		if ( persister.hasInsertGeneratedProperties() ) {

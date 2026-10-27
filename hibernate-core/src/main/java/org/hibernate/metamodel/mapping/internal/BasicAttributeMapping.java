@@ -38,9 +38,9 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * @author Steve Ebersole
  */
 @SuppressWarnings("rawtypes")
-public class BasicAttributeMapping
-		extends AbstractSingularAttributeMapping
-		implements SingularAttributeMapping, BasicValuedModelPart {
+public class BasicAttributeMapping<J>
+		extends AbstractSingularAttributeMapping<J, J, J>
+		implements SingularAttributeMapping<J, J, J>, BasicValuedModelPart<J, J, J> {
 	private final NavigableRole navigableRole;
 
 	private final String tableExpression;
@@ -55,7 +55,7 @@ public class BasicAttributeMapping
 	private final @Nullable Integer precision;
 	private final @Nullable Integer scale;
 
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<J> jdbcMapping;
 	private final boolean isLob;
 	private final boolean nullable;
 	private final boolean insertable;
@@ -63,7 +63,7 @@ public class BasicAttributeMapping
 	private final boolean partitioned;
 	private final boolean isLazy;
 
-	private final JavaType domainTypeDescriptor;
+	private final JavaType<J> domainTypeDescriptor;
 
 	public BasicAttributeMapping(
 			@Nullable String attributeName,
@@ -89,8 +89,8 @@ public class BasicAttributeMapping
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,
-			JdbcMapping jdbcMapping,
-			@Nullable ManagedMappingType declaringType,
+			JdbcMapping<J> jdbcMapping,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable PropertyAccess propertyAccess) {
 		super(
 				attributeName,
@@ -134,9 +134,9 @@ public class BasicAttributeMapping
 							.isLazyAttribute( attributeName );
 	}
 
-	public static BasicAttributeMapping withSelectableMapping(
-			@Nullable ManagedMappingType declaringType,
-			BasicValuedModelPart original,
+	public static BasicAttributeMapping<?> withSelectableMapping(
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
+			BasicValuedModelPart<?, ?, ?> original,
 			@Nullable PropertyAccess propertyAccess,
 			boolean insertable,
 			boolean updateable,
@@ -144,7 +144,7 @@ public class BasicAttributeMapping
 		String attributeName = null;
 		int stateArrayPosition = 0;
 		AttributeMetadata attributeMetadata;
-		if ( original instanceof SingleAttributeIdentifierMapping mapping ) {
+		if ( original instanceof SingleAttributeIdentifierMapping<?, ?, ?> mapping ) {
 			attributeName = mapping.getAttributeName();
 			attributeMetadata = new SimpleAttributeMetadata(
 					castNonNull( propertyAccess ),
@@ -156,7 +156,7 @@ public class BasicAttributeMapping
 					true
 			);
 		}
-		else if ( original instanceof SingularAttributeMapping mapping ) {
+		else if ( original instanceof SingularAttributeMapping<?, ?, ?> mapping ) {
 			attributeName = mapping.getAttributeName();
 			stateArrayPosition = mapping.getStateArrayPosition();
 			attributeMetadata = mapping.getAttributeMetadata();
@@ -164,7 +164,7 @@ public class BasicAttributeMapping
 		else {
 			attributeMetadata = null;
 		}
-		return new BasicAttributeMapping(
+		return new BasicAttributeMapping<>(
 				attributeName,
 				castNonNull( original.getNavigableRole() ),
 				stateArrayPosition,
@@ -196,19 +196,19 @@ public class BasicAttributeMapping
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return jdbcMapping;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return getJdbcMapping();
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return domainTypeDescriptor;
 	}
 
@@ -325,14 +325,14 @@ public class BasicAttributeMapping
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
 			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection =
 				resolveSqlSelection( navigablePath, tableGroup, null, creationState );
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping,
@@ -373,7 +373,7 @@ public class BasicAttributeMapping
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, null, creationState ),
 				getJdbcMapping() );
 	}
@@ -441,7 +441,7 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();
 	}

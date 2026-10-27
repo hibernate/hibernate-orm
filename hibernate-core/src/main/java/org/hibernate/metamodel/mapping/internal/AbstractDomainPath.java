@@ -52,7 +52,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 	}
 
 	public Expression resolve(
-			@Nullable ModelPart referenceModelPart,
+			@Nullable ModelPart<?, ?, ?> referenceModelPart,
 			QuerySpec ast,
 			TableGroup tableGroup,
 			@Nullable String modelPartName,
@@ -79,14 +79,14 @@ public abstract class AbstractDomainPath implements DomainPath {
 					)
 			);
 		}
-		else if ( referenceModelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+		else if ( referenceModelPart instanceof EntityValuedModelPart<?> entityValuedModelPart ) {
 			final var subPart =
 					ELEMENT_TOKEN.equals( modelPartName )
 							? entityValuedModelPart.getEntityMappingType().getIdentifierMapping()
 							: modelPartName == null ? null : entityValuedModelPart.findSubPart( modelPartName );
 			return resolve( subPart, ast, tableGroup, modelPartName, creationState );
 		}
-		else if ( referenceModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+		else if ( referenceModelPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 			if ( embeddableValuedModelPart.getFetchableName()
 					.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
 				final int size = embeddableValuedModelPart.getNumberOfFetchables();
@@ -130,7 +130,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 	}
 
 	private void apply(
-			@Nullable ModelPart referenceModelPart,
+			@Nullable ModelPart<?, ?, ?> referenceModelPart,
 			QuerySpec ast,
 			TableGroup tableGroup,
 			@Nullable String collation,
@@ -153,7 +153,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 					creationState
 			);
 		}
-		else if ( referenceModelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+		else if ( referenceModelPart instanceof EntityValuedModelPart<?> entityValuedModelPart ) {
 			final var subPart =
 					ELEMENT_TOKEN.equals( modelPartName )
 							? entityValuedModelPart.getEntityMappingType().getIdentifierMapping()
@@ -170,7 +170,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 					creationState
 			);
 		}
-		else if ( referenceModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+		else if ( referenceModelPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 			addSortSpecification(
 					embeddableValuedModelPart,
 					ast,
@@ -189,7 +189,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 	}
 
 	private void addSortSpecification(
-			EmbeddableValuedModelPart embeddableValuedModelPart,
+			EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart,
 			QuerySpec ast,
 			TableGroup tableGroup,
 			@Nullable String collation,

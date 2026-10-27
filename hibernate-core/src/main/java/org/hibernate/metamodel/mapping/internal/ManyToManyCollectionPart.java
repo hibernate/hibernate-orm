@@ -73,18 +73,18 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
  *
  * @author Steve Ebersole
  */
-public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
-		implements EntityAssociationMapping, LazyTableGroup.ParentTableGroupUseChecker {
+public class ManyToManyCollectionPart<J> extends AbstractEntityCollectionPart<J>
+		implements EntityAssociationMapping<J>, LazyTableGroup.ParentTableGroupUseChecker {
 	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
-	private ForeignKeyDescriptor foreignKey;
+	private ForeignKeyDescriptor<?, ?, ?> foreignKey;
 	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
-	private ValuedModelPart fkTargetModelPart;
+	private ValuedModelPart<?, ?, ?> fkTargetModelPart;
 
 	public ManyToManyCollectionPart(
 			Nature nature,
 			Collection collectionBootDescriptor,
 			CollectionPersister collectionDescriptor,
-			EntityMappingType associatedEntityDescriptor,
+			EntityMappingType<J> associatedEntityDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		this( nature, collectionBootDescriptor, collectionDescriptor, associatedEntityDescriptor, NotFoundAction.EXCEPTION,  creationProcess );
 	}
@@ -93,7 +93,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			Nature nature,
 			Collection collectionBootDescriptor,
 			CollectionPersister collectionDescriptor,
-			EntityMappingType associatedEntityDescriptor,
+			EntityMappingType<J> associatedEntityDescriptor,
 			NotFoundAction notFoundAction,
 			MappingModelCreationProcess creationProcess) {
 		super( nature, collectionBootDescriptor, collectionDescriptor, associatedEntityDescriptor, notFoundAction, creationProcess );
@@ -106,7 +106,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Nonnull
 	@Override
-	public ModelPart getInclusionCheckPart() {
+	public ModelPart<?, ?, ?> getInclusionCheckPart() {
 		return getForeignKeyDescriptor().getKeyPart();
 	}
 
@@ -118,15 +118,15 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType targetType) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> targetType) {
 		// Prefer resolving the key part of the foreign key rather than the target part if possible
 		// to allow deferring the initialization of the target table group, omitting it if possible.
 		// This is not possible for one-to-many associations because we need to create the target table group eagerly,
 		// to preserve the cardinality. Also, the OneToManyTableGroup has no reference to the parent table group
 		if ( foreignKey != null && getTargetKeyPropertyNames().contains( name ) ) {
 			final var keyPart = foreignKey.getKeyPart();
-			return keyPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart
-				&& keyPart instanceof VirtualModelPart
+			return keyPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart
+				&& keyPart instanceof VirtualModelPart<?, ?, ?>
 					? embeddableValuedModelPart.findSubPart( name, targetType )
 					: keyPart;
 		}
@@ -216,7 +216,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Nonnull
 	@Override
-	public ForeignKeyDescriptor getForeignKeyDescriptor() {
+	public ForeignKeyDescriptor<?, ?, ?> getForeignKeyDescriptor() {
 		return foreignKey;
 	}
 
@@ -248,8 +248,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Nonnull
 	@Override
-	public ModelPart getKeyTargetMatchPart() {
-		return fkTargetModelPart instanceof ToOneAttributeMapping
+	public ModelPart<?, ?, ?> getKeyTargetMatchPart() {
+		return fkTargetModelPart instanceof ToOneAttributeMapping<?>
 				? foreignKey.getKeyPart()
 				: fkTargetModelPart;
 	}
@@ -352,9 +352,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Override
 	public boolean canUseParentTableGroup(
-			TableGroupProducer producer,
+			TableGroupProducer<?, ?, ?> producer,
 			NavigablePath navigablePath,
-			ValuedModelPart valuedModelPart) {
+			ValuedModelPart<?, ?, ?> valuedModelPart) {
 		return foreignKey.isKeyPart( valuedModelPart );
 	}
 
@@ -385,7 +385,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			final String mapKeyPropertyName = ( (Map) bootCollectionDescriptor ).getMapKeyPropertyName();
 			if ( isNotEmpty( mapKeyPropertyName ) ) {
 				// @MapKey( name="fkTargetModelPartName" )
-				final var elementDescriptor = (EntityCollectionPart) pluralAttribute.getElementDescriptor();
+				final var elementDescriptor = (EntityCollectionPart<?>) pluralAttribute.getElementDescriptor();
 				final var entityMappingType = elementDescriptor.getEntityMappingType();
 				fkTargetModelPart = resolveNamedTargetPart( mapKeyPropertyName, entityMappingType, collectionDescriptor );
 			}
@@ -398,8 +398,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			final var mappedByPart =
 					resolveNamedTargetPart( bootCollectionDescriptor.getMappedByProperty(),
 							getAssociatedEntityMappingType(), collectionDescriptor );
-			if ( mappedByPart instanceof ToOneAttributeMapping
-					|| mappedByPart instanceof DiscriminatedAssociationAttributeMapping ) {
+			if ( mappedByPart instanceof ToOneAttributeMapping<?>
+					|| mappedByPart instanceof DiscriminatedAssociationAttributeMapping<?> ) {
 				////////////////////////////////////////////////
 				// E.g.
 				//
@@ -442,7 +442,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 //				creationProcess.registerForeignKey( this, foreignKey );
 			}
 			else {
-				final var manyToManyInverse = (PluralAttributeMapping) mappedByPart;
+				final var manyToManyInverse = (PluralAttributeMapping<?>) mappedByPart;
 				if ( manyToManyInverse.getKeyDescriptor() == null ) {
 					// the collection-key is not yet ready, we need to wait
 					return false;
@@ -484,7 +484,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		return true;
 	}
 
-	private ForeignKeyDescriptor createJoinTablePartForeignKey(
+	private ForeignKeyDescriptor<?, ?, ?> createJoinTablePartForeignKey(
 			String collectionTableName,
 			ManyToOne elementBootDescriptor,
 			@Nullable String propertyPath,
@@ -500,7 +500,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		// and need to create the inverse (key) selectable-mappings and composite model-part
 
 		if ( associatedIdMapping.getNature() == EntityIdentifierMapping.Nature.SIMPLE ) {
-			final var targetModelPart = (BasicEntityIdentifierMapping) associatedIdMapping;
+			final var targetModelPart = (BasicEntityIdentifierMapping<?, ?, ?>) associatedIdMapping;
 
 			assert elementBootDescriptor.getColumns().size() == 1;
 			final Column keyColumn = elementBootDescriptor.getColumns().get( 0 );
@@ -527,7 +527,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					keySelectableMapping
 			);
 
-			return new SimpleForeignKeyDescriptor(
+			return SimpleForeignKeyDescriptor.create(
 					// the key
 					keyModelPart,
 					// the target
@@ -540,7 +540,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			);
 		}
 		else {
-			final var targetModelPart = (CompositeIdentifierMapping) associatedIdMapping;
+			final var targetModelPart = (CompositeIdentifierMapping<?, ?, ?>) associatedIdMapping;
 
 			final var keySelectableMappings = SelectableMappingsImpl.from(
 					collectionTableName,
@@ -553,7 +553,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					creationProcess.getCreationContext()
 			);
 
-			return new EmbeddedForeignKeyDescriptor(
+			return EmbeddedForeignKeyDescriptor.create(
 					collectionTableName,
 					keySelectableMappings,
 					createInverseModelPart(
@@ -572,9 +572,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		}
 	}
 
-	private static ValuedModelPart resolveNamedTargetPart(
+	private static ValuedModelPart<?, ?, ?> resolveNamedTargetPart(
 			String targetPartName,
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			CollectionPersister collectionDescriptor) {
 		final var namedPart = entityMappingType.findByPath( targetPartName );
 		if ( namedPart == null ) {
@@ -593,19 +593,19 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					)
 			);
 		}
-		return (ValuedModelPart) namedPart;
+		return (ValuedModelPart<?, ?, ?>) namedPart;
 	}
 
-	private ForeignKeyDescriptor createForeignKeyDescriptor(
+	private ForeignKeyDescriptor<?, ?, ?> createForeignKeyDescriptor(
 			Value fkBootDescriptorSource,
 			EntityType entityType,
-			ModelPart fkTargetModelPart,
+			ModelPart<?, ?, ?> fkTargetModelPart,
 			@Nullable String propertyPath,
 			MappingModelCreationProcess creationProcess) {
 		assert fkTargetModelPart != null;
 
 		// If this is mapped by a to-one attribute, we can use the FK of that attribute
-		if ( fkTargetModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+		if ( fkTargetModelPart instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 			if ( toOneAttributeMapping.getForeignKeyDescriptor() == null ) {
 				throw new IllegalStateException( "Not yet ready: " + toOneAttributeMapping );
 			}
@@ -617,7 +617,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			);
 		}
 
-		if ( fkTargetModelPart instanceof ManyToManyCollectionPart targetModelPart ) {
+		if ( fkTargetModelPart instanceof ManyToManyCollectionPart<?> targetModelPart ) {
 			// can this ever be anything other than another (the inverse) many-to-many part?
 			if ( targetModelPart.getForeignKeyDescriptor() == null ) {
 				throw new IllegalStateException( "Not yet ready: " + targetModelPart );
@@ -646,7 +646,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			);
 		}
 
-		if ( fkTargetModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+		if ( fkTargetModelPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 			return MappingModelCreationHelper.buildEmbeddableForeignKeyDescriptor(
 					propertyPath,
 					embeddableValuedModelPart,
@@ -666,8 +666,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		);
 	}
 
-	private ForeignKeyDescriptor determineForeignKey(
-			ForeignKeyDescriptor foreignKeyDescriptor,
+	private ForeignKeyDescriptor<?, ?, ?> determineForeignKey(
+			ForeignKeyDescriptor<?, ?, ?> foreignKeyDescriptor,
 			Value fkBootDescriptorSource,
 			@Nullable String propertyPath,
 			MappingModelCreationProcess creationProcess) {
@@ -702,12 +702,12 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		return foreignKeyDescriptor;
 	}
 
-	private SimpleForeignKeyDescriptor createSimpleForeignKeyDescriptor(
+	private SimpleForeignKeyDescriptor<?, ?, ?> createSimpleForeignKeyDescriptor(
 			Value fkBootDescriptorSource,
 			EntityType entityType,
 			MappingModelCreationProcess creationProcess,
 			String fkKeyTableName,
-			BasicValuedModelPart basicFkTargetPart,
+			BasicValuedModelPart<?, ?, ?> basicFkTargetPart,
 			@Nullable String propertyPath) {
 		final boolean columnInsertable;
 		final boolean columnUpdateable;
@@ -735,7 +735,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		);
 
 		// here we build a ModelPart that represents the many-to-many table key referring to the element table
-		return new SimpleForeignKeyDescriptor(
+		return SimpleForeignKeyDescriptor.create(
 				getAssociatedEntityMappingType(),
 				keySelectableMapping,
 				basicFkTargetPart,
@@ -746,7 +746,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(final int index) {
+	public JdbcMapping<?> getJdbcMapping(final int index) {
 		return getEntityMappingType().getJdbcMapping( index );
 	}
 }

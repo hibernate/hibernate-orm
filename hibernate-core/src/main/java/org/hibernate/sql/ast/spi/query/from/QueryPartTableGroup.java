@@ -21,7 +21,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 
 	public QueryPartTableGroup(
 			NavigablePath navigablePath,
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			SelectStatement selectStatement,
 			String sourceAlias,
 			List<String> columnNames,
@@ -43,7 +43,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 
 	public QueryPartTableGroup(
 			NavigablePath navigablePath,
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			SelectStatement selectStatement,
 			String sourceAlias,
 			List<String> columnNames,

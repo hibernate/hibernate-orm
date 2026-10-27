@@ -36,17 +36,17 @@ public class ManyToOneTest {
 
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister otherDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> otherDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( OtherEntity.class );
 
-		final ModelPart simpleEntityAssociation = otherDescriptor.findSubPart( "simpleEntity" );
+		final ModelPart<?, ?, ?> simpleEntityAssociation = otherDescriptor.findSubPart( "simpleEntity" );
 
 		assertThat( simpleEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final ToOneAttributeMapping childAttributeMapping = (ToOneAttributeMapping) simpleEntityAssociation;
+		final ToOneAttributeMapping<?> childAttributeMapping = (ToOneAttributeMapping<?>) simpleEntityAssociation;
 
-		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
+		ForeignKeyDescriptor<?, ?, ?> foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "other_entity" ) );

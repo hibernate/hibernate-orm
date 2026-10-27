@@ -63,9 +63,9 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 	public void checkingMapping(SessionFactoryScope scope) {
 
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
-		final EntityMappingType childMapping = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( Child.class.getName() );
+		final EntityMappingType<?> childMapping = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( Child.class.getName() );
 
-		final EntityPersister persister = childMapping.getEntityPersister();
+		final EntityPersister<?> persister = childMapping.getEntityPersister();
 		final int nameIndex = persister.getPropertyIndex( "name" );
 		final int parentIndex = persister.getPropertyIndex( "parent" );
 
@@ -81,16 +81,16 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 		assertFalse( persister.getPropertyNullability()[ nameIndex ] );
 		assertFalse( persister.getPropertyNullability()[ parentIndex ] );
 
-		final NaturalIdMapping naturalIdMapping = childMapping.getNaturalIdMapping();
+		final NaturalIdMapping<?, ?, ?> naturalIdMapping = childMapping.getNaturalIdMapping();
 		assertNotNull( naturalIdMapping );
 		assertThat( naturalIdMapping.getNaturalIdAttributes().size(), is( 2 ) );
 
-		final SingularAttributeMapping first = naturalIdMapping.getNaturalIdAttributes().get( 0 );
+		final SingularAttributeMapping<?, ?, ?> first = naturalIdMapping.getNaturalIdAttributes().get( 0 );
 		assertThat( first.getAttributeName(), is( "name" ) );
 		final AttributeMetadata firstMetadata = first.getAttributeMetadata();
 		assertFalse( firstMetadata.getMutabilityPlan().isMutable() );
 
-		final SingularAttributeMapping second = naturalIdMapping.getNaturalIdAttributes().get( 1 );
+		final SingularAttributeMapping<?, ?, ?> second = naturalIdMapping.getNaturalIdAttributes().get( 1 );
 		assertThat( second.getAttributeName(), is( "parent" ) );
 		final AttributeMetadata secondMetadata = second.getAttributeMetadata();
 		assertFalse( secondMetadata.getMutabilityPlan().isMutable() );

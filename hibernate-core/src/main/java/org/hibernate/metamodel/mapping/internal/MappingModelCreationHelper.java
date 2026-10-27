@@ -125,8 +125,8 @@ public class MappingModelCreationHelper {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public static EntityIdentifierMapping buildEncapsulatedCompositeIdentifierMapping(
-			EntityPersister entityPersister,
+	public static EntityIdentifierMapping<?, ?, ?> buildEncapsulatedCompositeIdentifierMapping(
+			EntityPersister<?> entityPersister,
 			Property bootProperty,
 			String attributeName,
 			String rootTableName,
@@ -152,7 +152,7 @@ public class MappingModelCreationHelper {
 				0,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
-				embeddable -> new EmbeddedIdentifierMappingImpl(
+				embeddable -> new EmbeddedIdentifierMappingImpl<>(
 						entityPersister,
 						attributeName,
 						embeddable,
@@ -163,16 +163,16 @@ public class MappingModelCreationHelper {
 				creationProcess
 		);
 
-		return (EmbeddedIdentifierMappingImpl) embeddableMappingType.getEmbeddedValueMapping();
+		return (EmbeddedIdentifierMappingImpl<?>) embeddableMappingType.getEmbeddedValueMapping();
 	}
 
-	public static CompositeIdentifierMapping buildNonEncapsulatedCompositeIdentifierMapping(
-			EntityPersister entityPersister,
+	public static CompositeIdentifierMapping<?, ?, ?> buildNonEncapsulatedCompositeIdentifierMapping(
+			EntityPersister<?> entityPersister,
 			String rootTableName,
 			String[] rootTableKeyColumnNames,
 			PersistentClass bootEntityDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		return new NonAggregatedIdentifierMappingImpl(
+		return NonAggregatedIdentifierMappingImpl.create(
 				entityPersister,
 				bootEntityDescriptor.getRootClass(),
 				rootTableName,
@@ -186,14 +186,14 @@ public class MappingModelCreationHelper {
 	// Non-identifier attributes
 
 	@SuppressWarnings("rawtypes")
-	public static BasicAttributeMapping buildBasicAttributeMapping(
+	public static BasicAttributeMapping<?> buildBasicAttributeMapping(
 			String attrName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			int fetchableIndex,
 			Property bootProperty,
-			ManagedMappingType declaringType,
-			BasicType attrType,
+			ManagedMappingType<?, ?, ?> declaringType,
+			BasicType<?> attrType,
 			String tableExpression,
 			String attrColumnName,
 			SelectablePath selectablePath,
@@ -219,7 +219,7 @@ public class MappingModelCreationHelper {
 		final FetchStyle fetchStyle;
 		final boolean partitioned;
 		boolean lazy = bootProperty.isLazy();
-		if ( declaringType instanceof EmbeddableMappingType embeddableMappingType ) {
+		if ( declaringType instanceof EmbeddableMappingType<?, ?, ?> embeddableMappingType ) {
 			if ( lazy) {
 				MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 						"Attribute was declared LAZY, but is part of embeddable '%s#%s', LAZY ignored",
@@ -238,7 +238,7 @@ public class MappingModelCreationHelper {
 			partitioned = value.isPartitionKey();
 		}
 
-		return new BasicAttributeMapping(
+		return new BasicAttributeMapping<>(
 				attrName,
 				navigableRole,
 				stateArrayPosition,
@@ -268,12 +268,12 @@ public class MappingModelCreationHelper {
 		);
 	}
 
-	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
+	public static EmbeddedAttributeMapping<?, ?> buildEmbeddedAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
 			int fetchableIndex,
 			Property bootProperty,
-			ManagedMappingType declaringType,
+			ManagedMappingType<?, ?, ?> declaringType,
 			CompositeType attrType,
 			String tableExpression,
 			@Nullable String[] rootTableKeyColumnNames,
@@ -297,14 +297,14 @@ public class MappingModelCreationHelper {
 		);
 	}
 
-	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
+	public static EmbeddedAttributeMapping<?, ?> buildEmbeddedAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
 			int fetchableIndex,
 			Property bootProperty,
 			@Nullable DependantValue dependantValue,
 			int dependantColumnIndex,
-			ManagedMappingType declaringType,
+			ManagedMappingType<?, ?, ?> declaringType,
 			CompositeType attrType,
 			String tableExpression,
 			@Nullable String[] rootTableKeyColumnNames,
@@ -334,7 +334,7 @@ public class MappingModelCreationHelper {
 				component.getColumnUpdateability(),
 				attributeMappingType -> {
 					if ( component.isEmbedded() ) {
-						return new VirtualEmbeddedAttributeMapping(
+						return new VirtualEmbeddedAttributeMapping<>(
 								propertyAccessorService,
 								attrName,
 								castNonNull( declaringType.getNavigableRole() ).append( attrName ),
@@ -351,7 +351,7 @@ public class MappingModelCreationHelper {
 						);
 					}
 					else {
-						return new EmbeddedAttributeMapping(
+						return new EmbeddedAttributeMapping<>(
 								propertyAccessorService,
 								attrName,
 								castNonNull( declaringType.getNavigableRole() ).append( attrName ),
@@ -371,7 +371,7 @@ public class MappingModelCreationHelper {
 				creationProcess
 		);
 
-		return (EmbeddedAttributeMapping) embeddableMappingType.getEmbeddedValueMapping();
+		return (EmbeddedAttributeMapping<?, ?>) embeddableMappingType.getEmbeddedValueMapping();
 	}
 
 	private static Component component(Property bootProperty, @Nullable DependantValue dependantValue) {
@@ -448,12 +448,12 @@ public class MappingModelCreationHelper {
 		return new SimpleAttributeMetadata( propertyAccess, ImmutableMutabilityPlan.instance(), false, true, false, false, true );
 	}
 
-	public static PluralAttributeMapping buildPluralAttributeMapping(
+	public static PluralAttributeMapping<?> buildPluralAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
 			int fetchableIndex,
 			Property bootProperty,
-			ManagedMappingType declaringType,
+			ManagedMappingType<?, ?, ?> declaringType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			FetchStyle mappingFetchStyle,
@@ -475,17 +475,17 @@ public class MappingModelCreationHelper {
 	/**
 	 * For Hibernate Reactive
 	 */
-	public static PluralAttributeMapping buildPluralAttributeMapping(
+	public static PluralAttributeMapping<?> buildPluralAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
 			int fetchableIndex,
 			Property bootProperty,
-			ManagedMappingType declaringType,
+			ManagedMappingType<?, ?, ?> declaringType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			FetchStyle mappingFetchStyle,
 			MappingModelCreationProcess creationProcess,
-			Function<PluralAttributeMappingImpl, PluralAttributeMappingImpl> mappingConverter) {
+			Function<PluralAttributeMappingImpl<?>, PluralAttributeMappingImpl<?>> mappingConverter) {
 
 		final var bootValueMapping = (Collection) bootProperty.getValue();
 
@@ -509,8 +509,8 @@ public class MappingModelCreationHelper {
 				creationProcess
 		);
 
-		final CollectionPart indexDescriptor;
-		CollectionIdentifierDescriptor identifierDescriptor = null;
+		final CollectionPart<?, ?, ?> indexDescriptor;
+		CollectionIdentifierDescriptor<?, ?> identifierDescriptor = null;
 
 		final var collectionSemantics = collectionDescriptor.getCollectionSemantics();
 		final CollectionMappingType<?> collectionMappingType;
@@ -545,7 +545,7 @@ public class MappingModelCreationHelper {
 				indexDescriptor = null;
 				final String identifierColumnName = castNonNull( collectionDescriptor.getIdentifierColumnName() );
 				assert identifierColumnName != null;
-				identifierDescriptor = new CollectionIdentifierDescriptorImpl(
+				identifierDescriptor = new CollectionIdentifierDescriptorImpl<>(
 						collectionDescriptor,
 						tableExpression,
 						identifierColumnName,
@@ -641,7 +641,7 @@ public class MappingModelCreationHelper {
 				sessionFactory
 		);
 
-		final var pluralAttributeMapping = mappingConverter.apply( new PluralAttributeMappingImpl(
+		final var pluralAttributeMapping = mappingConverter.apply( new PluralAttributeMappingImpl<>(
 				attrName,
 				bootValueMapping,
 				propertyAccess,
@@ -690,7 +690,7 @@ public class MappingModelCreationHelper {
 	}
 
 	@Nonnull
-	private static CollectionPart collectionPart(
+	private static CollectionPart<?, ?, ?> collectionPart(
 			MappingModelCreationProcess creationProcess,
 			IndexedCollection bootValueMapping,
 			RuntimeModelCreationContext creationContext,
@@ -710,7 +710,7 @@ public class MappingModelCreationHelper {
 				false,
 				creationProcess.getCreationContext()
 		);
-		return new BasicValuedCollectionPart(
+		return BasicValuedCollectionPart.create(
 				collectionDescriptor,
 				CollectionPart.Nature.INDEX,
 				selectableMapping
@@ -718,25 +718,25 @@ public class MappingModelCreationHelper {
 	}
 
 	private static void interpretPluralAttributeMappingKeyDescriptor(
-			PluralAttributeMappingImpl attributeMapping,
+			PluralAttributeMappingImpl<?> attributeMapping,
 			Collection bootValueMapping,
 			CollectionPersister collectionDescriptor,
-			ManagedMappingType declaringType,
+			ManagedMappingType<?, ?, ?> declaringType,
 			MappingModelCreationProcess creationProcess) {
 		final String mappedByProperty = collectionDescriptor.getMappedByProperty();
-		final ModelPart attributeMappingSubPart;
+		final ModelPart<?, ?, ?> attributeMappingSubPart;
 		if ( mappedByProperty == null || mappedByProperty.isEmpty() ) {
 			attributeMappingSubPart = null;
 		}
 		else {
 			final var partMappingType =
-					(ModelPartContainer)
+					(ModelPartContainer<?, ?, ?>)
 							attributeMapping.getElementDescriptor().getPartMappingType();
 			attributeMappingSubPart =
 					partMappingType.findSubPart( mappedByProperty, null );
 		}
 
-		if ( attributeMappingSubPart instanceof ToOneAttributeMapping referencedAttributeMapping ) {
+		if ( attributeMappingSubPart instanceof ToOneAttributeMapping<?> referencedAttributeMapping ) {
 			setReferencedAttributeForeignKeyDescriptor(
 					attributeMapping,
 					referencedAttributeMapping,
@@ -767,7 +767,7 @@ public class MappingModelCreationHelper {
 						? collectionDescriptor.getOwnerEntityPersister().getIdentifierMappingForJoin()
 						: castNonNull( declaringType.findContainingEntityMapping() ).findSubPart( lhsPropertyName );
 
-		if ( keyType instanceof BasicType ) {
+		if ( keyType instanceof BasicType<?> ) {
 			assert bootValueMappingKey.getColumnSpan() == 1;
 
 			final var simpleFkTargetPart = castNonNull( castNonNull( fkTargetPart ).asBasicValuedModelPart() );
@@ -781,7 +781,7 @@ public class MappingModelCreationHelper {
 					getPropertyPath( attributeMapping.getNavigableRole() )
 							+ "." + CollectionPart.Nature.INDEX.getName(),
 					null,
-					(JdbcMapping) keyType,
+					(JdbcMapping<?>) keyType,
 					bootValueMappingKey.isColumnInsertable( 0 ),
 					bootValueMappingKey.isColumnUpdateable( 0 ),
 					false,
@@ -789,7 +789,7 @@ public class MappingModelCreationHelper {
 					creationProcess.getCreationContext()
 			);
 
-			final var keyDescriptor = new SimpleForeignKeyDescriptor(
+			final var keyDescriptor = SimpleForeignKeyDescriptor.create(
 					keyDeclaringType,
 					keySelectableMapping,
 					simpleFkTargetPart,
@@ -799,7 +799,7 @@ public class MappingModelCreationHelper {
 			attributeMapping.setForeignKeyDescriptor( keyDescriptor );
 //			creationProcess.registerForeignKey( collectionDescriptor.getAttributeMapping(), keyDescriptor );
 		}
-		else if ( fkTargetPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+		else if ( fkTargetPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 			final var keyDescriptor = buildEmbeddableForeignKeyDescriptor(
 					getPropertyPath( attributeMapping.getNavigableRole() ),
 					embeddableValuedModelPart,
@@ -852,7 +852,7 @@ public class MappingModelCreationHelper {
 	 * @return true if the foreign key is actually set
 	 */
 	public static boolean interpretToOneKeyDescriptor(
-			ToOneAttributeMapping attributeMapping,
+			ToOneAttributeMapping<?> attributeMapping,
 			Property bootProperty,
 			ToOne bootValueMapping,
 			@Nullable PropertyAccess inversePropertyAccess,
@@ -897,7 +897,7 @@ public class MappingModelCreationHelper {
 				throw new IllegalArgumentException( "Unable to find attribute " + bootProperty.getPersistentClass()
 						.getEntityName() + " -> " + bootProperty.getName() );
 			}
-			else if ( modelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+			else if ( modelPart instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 				setReferencedAttributeForeignKeyDescriptor(
 						attributeMapping,
 						toOneAttributeMapping,
@@ -906,7 +906,7 @@ public class MappingModelCreationHelper {
 						creationProcess
 				);
 			}
-			else if ( modelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+			else if ( modelPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 				final var embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
 						getPropertyPath( attributeMapping.getNavigableRole() ),
 						embeddableValuedModelPart,
@@ -985,7 +985,7 @@ public class MappingModelCreationHelper {
 				);
 			}
 
-			final var foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
+			final var foreignKeyDescriptor = SimpleForeignKeyDescriptor.create(
 					attributeMapping.getDeclaringType(),
 					keySelectableMapping,
 					declaringKeyPropertyAccess,
@@ -1001,7 +1001,7 @@ public class MappingModelCreationHelper {
 			attributeMapping.setupCircularFetchModelPart( creationProcess );
 //			creationProcess.registerForeignKey( attributeMapping, foreignKeyDescriptor );
 		}
-		else if ( fkTarget instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+		else if ( fkTarget instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 			final var value = bootProperty.getValue();
 			final var embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
 					getPropertyPath( attributeMapping.getNavigableRole() ),
@@ -1033,7 +1033,7 @@ public class MappingModelCreationHelper {
 	}
 
 	private static PropertyAccess getDeclaringKeyPropertyAccess(
-			ToOneAttributeMapping attributeMapping,
+			ToOneAttributeMapping<?> attributeMapping,
 			ToOne bootValueMapping,
 			@Nullable PropertyAccess inversePropertyAccess,
 			PropertyBasedMapping simpleFkTarget) {
@@ -1071,12 +1071,12 @@ public class MappingModelCreationHelper {
 	 * @return true if the foreign key is actually set
 	 */
 	private static boolean interpretNestedToOneKeyDescriptor(
-			EntityPersister referencedEntityDescriptor,
+			EntityPersister<?> referencedEntityDescriptor,
 			String referencedPropertyName,
-			ToOneAttributeMapping attributeMapping,
+			ToOneAttributeMapping<?> attributeMapping,
 			MappingModelCreationProcess creationProcess) {
 		final String[] propertyPath = split( ".", referencedPropertyName );
-		EmbeddableValuedModelPart lastEmbeddableModelPart = null;
+		EmbeddableValuedModelPart<?, ?, ?> lastEmbeddableModelPart = null;
 
 		for ( int i = 0; i < propertyPath.length; i++ ) {
 			final String path = propertyPath[i];
@@ -1087,7 +1087,7 @@ public class MappingModelCreationHelper {
 			if ( modelPart == null ) {
 				return false;
 			}
-			else if ( modelPart instanceof ToOneAttributeMapping referencedAttributeMapping ) {
+			else if ( modelPart instanceof ToOneAttributeMapping<?> referencedAttributeMapping ) {
 				final var foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
 				if ( foreignKeyDescriptor == null ) {
 					return false;
@@ -1098,7 +1098,7 @@ public class MappingModelCreationHelper {
 					return true;
 				}
 			}
-			else if ( modelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+			else if ( modelPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 				lastEmbeddableModelPart = embeddableValuedModelPart;
 			}
 			else {
@@ -1109,12 +1109,12 @@ public class MappingModelCreationHelper {
 		return false;
 	}
 
-	public static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
+	public static EmbeddedForeignKeyDescriptor<?, ?, ?> buildEmbeddableForeignKeyDescriptor(
 			@Nullable String propertyPath,
-			EmbeddableValuedModelPart embeddableValuedModelPart,
+			EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart,
 			Value bootValueMapping,
-			@Nullable ManagedMappingType keyDeclaringType,
-			TableGroupProducer keyDeclaringTableGroupProducer,
+			@Nullable ManagedMappingType<?, ?, ?> keyDeclaringType,
+			TableGroupProducer<?, ?, ?> keyDeclaringTableGroupProducer,
 			@Nullable String keyTableExpression,
 			boolean inverse,
 			boolean[] insertable,
@@ -1162,7 +1162,7 @@ public class MappingModelCreationHelper {
 			);
 		}
 		if ( inverse ) {
-			return new EmbeddedForeignKeyDescriptor(
+			return EmbeddedForeignKeyDescriptor.create(
 					embeddableValuedModelPart,
 					createInverseModelPart(
 							embeddableValuedModelPart,
@@ -1180,7 +1180,7 @@ public class MappingModelCreationHelper {
 			);
 		}
 		else {
-			return new EmbeddedForeignKeyDescriptor(
+			return EmbeddedForeignKeyDescriptor.create(
 					createInverseModelPart(
 							embeddableValuedModelPart,
 							keyDeclaringType,
@@ -1199,8 +1199,8 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	public static @Nullable SelectablePath getSelectablePath(@Nullable ManagedMappingType type) {
-		return type instanceof EmbeddableMappingType embeddableType && embeddableType.getAggregateMapping() != null
+	public static @Nullable SelectablePath getSelectablePath(@Nullable ManagedMappingType<?, ?, ?> type) {
+		return type instanceof EmbeddableMappingType<?, ?, ?> embeddableType && embeddableType.getAggregateMapping() != null
 				? embeddableType.getAggregateMapping().getSelectablePath() : null;
 	}
 
@@ -1251,9 +1251,9 @@ public class MappingModelCreationHelper {
 	}
 
 	private static void setReferencedAttributeForeignKeyDescriptor(
-			AbstractAttributeMapping attributeMapping,
-			ToOneAttributeMapping referencedAttributeMapping,
-			EntityPersister referencedEntityDescriptor,
+			AbstractAttributeMapping<?, ?, ?> attributeMapping,
+			ToOneAttributeMapping<?> referencedAttributeMapping,
+			EntityPersister<?> referencedEntityDescriptor,
 			String referencedPropertyName,
 			MappingModelCreationProcess creationProcess) {
 		var foreignKeyDescriptor =
@@ -1268,7 +1268,7 @@ public class MappingModelCreationHelper {
 		final var targetPart = foreignKeyDescriptor.getTargetPart();
 		final var targetEntityMapping = targetPart.findContainingEntityMapping();
 		if ( referencedAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY
-				&& targetPart instanceof EntityIdentifierMapping
+				&& targetPart instanceof EntityIdentifierMapping<?, ?, ?>
 				&& targetPart != declaringEntityMapping.getIdentifierMapping()
 				&& targetEntityMapping != null
 				&& targetEntityMapping.getRootEntityDescriptor() == declaringEntityMapping.getRootEntityDescriptor() ) {
@@ -1280,7 +1280,7 @@ public class MappingModelCreationHelper {
 			// referenced entity's primary key, even for an association within the same hierarchy.
 			foreignKeyDescriptor = foreignKeyDescriptor.withTargetPart( declaringEntityMapping.getIdentifierMapping() );
 		}
-		if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+		if ( attributeMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 			toOneAttributeMapping.setForeignKeyDescriptor(
 					foreignKeyDescriptor,
 					referencedAttributeMapping.getSideNature().inverse()
@@ -1291,9 +1291,9 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	private static ForeignKeyDescriptor foreignKeyDescriptor(
-			ToOneAttributeMapping referencedAttributeMapping,
-			EntityPersister referencedEntityDescriptor,
+	private static ForeignKeyDescriptor<?, ?, ?> foreignKeyDescriptor(
+			ToOneAttributeMapping<?> referencedAttributeMapping,
+			EntityPersister<?> referencedEntityDescriptor,
 			String referencedPropertyName,
 			MappingModelCreationProcess creationProcess) {
 		final var foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
@@ -1330,7 +1330,7 @@ public class MappingModelCreationHelper {
 						.format( table.getQualifiedTableName() );
 	}
 
-	private static CollectionPart interpretMapKey(
+	private static CollectionPart<?, ?, ?> interpretMapKey(
 			Collection bootValueMapping,
 			CollectionPersister collectionDescriptor,
 			String tableExpression,
@@ -1369,7 +1369,7 @@ public class MappingModelCreationHelper {
 					false,
 					creationProcess.getCreationContext()
 			);
-			return new BasicValuedCollectionPart(
+			return BasicValuedCollectionPart.create(
 					collectionDescriptor,
 					CollectionPart.Nature.INDEX,
 					selectableMapping
@@ -1383,7 +1383,7 @@ public class MappingModelCreationHelper {
 					compositeType,
 					component.getColumnInsertability(),
 					component.getColumnUpdateability(),
-					inflightDescriptor -> new EmbeddedCollectionPart(
+					inflightDescriptor -> new EmbeddedCollectionPart<>(
 							creationProcess.getCreationContext().getServiceRegistry().requireService( PropertyAccessorService.class ),
 							collectionDescriptor,
 							CollectionPart.Nature.INDEX,
@@ -1395,7 +1395,7 @@ public class MappingModelCreationHelper {
 					),
 					creationProcess
 			);
-			return (CollectionPart) mappingType.getEmbeddedValueMapping();
+			return (CollectionPart<?, ?, ?>) mappingType.getEmbeddedValueMapping();
 		}
 
 		if ( bootMapKeyDescriptor instanceof OneToMany || bootMapKeyDescriptor instanceof ToOne ) {
@@ -1403,9 +1403,9 @@ public class MappingModelCreationHelper {
 			final var associatedEntity =
 					creationProcess.getEntityPersister( indexEntityType.getAssociatedEntityName() );
 
-			final EntityCollectionPart indexDescriptor;
+			final EntityCollectionPart<?> indexDescriptor;
 			if ( bootMapKeyDescriptor instanceof OneToMany ) {
-				indexDescriptor = new OneToManyCollectionPart(
+				indexDescriptor = new OneToManyCollectionPart<>(
 						CollectionPart.Nature.INDEX,
 						bootValueMapping,
 						collectionDescriptor,
@@ -1414,7 +1414,7 @@ public class MappingModelCreationHelper {
 				);
 			}
 			else {
-				indexDescriptor = new ManyToManyCollectionPart(
+				indexDescriptor = new ManyToManyCollectionPart<>(
 						CollectionPart.Nature.INDEX,
 						bootValueMapping,
 						collectionDescriptor,
@@ -1441,7 +1441,7 @@ public class MappingModelCreationHelper {
 		);
 	}
 
-	private static CollectionPart interpretElement(
+	private static CollectionPart<?, ?, ?> interpretElement(
 			Collection bootDescriptor,
 			String tableExpression,
 			CollectionPersister collectionDescriptor,
@@ -1464,7 +1464,7 @@ public class MappingModelCreationHelper {
 					true, // element collection does not support null elements
 					creationProcess.getCreationContext()
 			);
-			return new BasicValuedCollectionPart(
+			return BasicValuedCollectionPart.create(
 					collectionDescriptor,
 					CollectionPart.Nature.ELEMENT,
 					selectableMapping
@@ -1478,7 +1478,7 @@ public class MappingModelCreationHelper {
 					compositeType,
 					component.getColumnInsertability(),
 					component.getColumnUpdateability(),
-					embeddableMappingType -> new EmbeddedCollectionPart(
+					embeddableMappingType -> new EmbeddedCollectionPart<>(
 							creationProcess.getCreationContext().getServiceRegistry().requireService( PropertyAccessorService.class ),
 							collectionDescriptor,
 							CollectionPart.Nature.ELEMENT,
@@ -1490,11 +1490,11 @@ public class MappingModelCreationHelper {
 					),
 					creationProcess
 			);
-			return (CollectionPart) mappingType.getEmbeddedValueMapping();
+			return (CollectionPart<?, ?, ?>) mappingType.getEmbeddedValueMapping();
 		}
 
 		if ( element instanceof Any anyBootMapping ) {
-			return new DiscriminatedCollectionPart(
+			return new DiscriminatedCollectionPart<>(
 					CollectionPart.Nature.ELEMENT,
 					collectionDescriptor,
 					creationProcess.getCreationContext().getTypeConfiguration()
@@ -1510,9 +1510,9 @@ public class MappingModelCreationHelper {
 			final var associatedEntity =
 					creationProcess.getEntityPersister( elementEntityType.getAssociatedEntityName() );
 
-			final EntityCollectionPart elementDescriptor;
+			final EntityCollectionPart<?> elementDescriptor;
 			if ( element instanceof OneToMany oneToMany ) {
-				elementDescriptor = new OneToManyCollectionPart(
+				elementDescriptor = new OneToManyCollectionPart<>(
 						CollectionPart.Nature.ELEMENT,
 						bootDescriptor,
 						collectionDescriptor,
@@ -1522,7 +1522,7 @@ public class MappingModelCreationHelper {
 				);
 			}
 			else if ( element instanceof ManyToOne manyToOne ) {
-				elementDescriptor = new ManyToManyCollectionPart(
+				elementDescriptor = new ManyToManyCollectionPart<>(
 						CollectionPart.Nature.ELEMENT,
 						bootDescriptor,
 						collectionDescriptor,
@@ -1553,25 +1553,24 @@ public class MappingModelCreationHelper {
 		);
 	}
 
-	public static EmbeddedAttributeMapping createInverseModelPart(
-			EmbeddableValuedModelPart modelPart,
-			@Nullable ManagedMappingType keyDeclaringType,
-			TableGroupProducer declaringTableGroupProducer,
+	public static <J, M, R> EmbeddedAttributeMapping<?, ?> createInverseModelPart(
+			EmbeddableValuedModelPart<J, M, R> modelPart,
+			@Nullable ManagedMappingType<?, ?, ?> keyDeclaringType,
+			TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
 		final var embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
-		if ( modelPart instanceof NonAggregatedIdentifierMapping nonAggregatedIdentifierMapping ) {
-			return new InverseNonAggregatedIdentifierMapping(
+		if ( modelPart instanceof NonAggregatedIdentifierMapping<?, ?> nonAggregatedIdentifierMapping ) {
+			return new InverseNonAggregatedIdentifierMapping<>(
 					keyDeclaringType,
 					declaringTableGroupProducer,
 					selectableMappings,
 					nonAggregatedIdentifierMapping,
-					embeddableTypeDescriptor,
 					creationProcess
 			);
 		}
-		else if ( modelPart instanceof VirtualModelPart ) {
-			return new VirtualEmbeddedAttributeMapping(
+		else if ( modelPart instanceof VirtualModelPart<?, ?, ?> ) {
+			return new VirtualEmbeddedAttributeMapping<>(
 					keyDeclaringType,
 					declaringTableGroupProducer,
 					selectableMappings,
@@ -1581,7 +1580,7 @@ public class MappingModelCreationHelper {
 			);
 		}
 		else {
-			return new EmbeddedAttributeMapping(
+			return new EmbeddedAttributeMapping<>(
 					keyDeclaringType,
 					declaringTableGroupProducer,
 					selectableMappings,
@@ -1594,11 +1593,11 @@ public class MappingModelCreationHelper {
 
 	public static Expression buildColumnReferenceExpression(
 			@Nullable TableGroup tableGroup,
-			ModelPart modelPart,
+			ModelPart<?, ?, ?> modelPart,
 			@Nullable SqlExpressionResolver sqlExpressionResolver,
 			SessionFactoryImplementor sessionFactory) {
 		final int jdbcTypeCount = modelPart.getJdbcTypeCount();
-		if ( modelPart instanceof EmbeddableValuedModelPart ) {
+		if ( modelPart instanceof EmbeddableValuedModelPart<?, ?, ?> ) {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 			modelPart.forEachSelectable(
 					(columnIndex, selection) -> {
@@ -1653,10 +1652,14 @@ public class MappingModelCreationHelper {
 					component.getType(),
 					component.getColumnInsertability(),
 					component.getColumnUpdateability(),
-					inflightDescriptor -> new EmbeddableValuedModelPart() {
+					inflightDescriptor -> new EmbeddableValuedModelPart<>() {
+						@Override
+						public JavaType<Object> getJavaType() {
+							return inflightDescriptor.getJavaType();
+						}
 						@Nonnull
 						@Override
-						public EmbeddableMappingType getEmbeddableTypeDescriptor() {
+						public EmbeddableMappingType<Object, Object, ?> getEmbeddableTypeDescriptor() {
 							return inflightDescriptor;
 						}
 
@@ -1758,13 +1761,13 @@ public class MappingModelCreationHelper {
 
 						@Nonnull
 						@Override
-						public MappingType getPartMappingType() {
+						public MappingType<Object> getPartMappingType() {
 							return inflightDescriptor;
 						}
 
 						@Nonnull
 						@Override
-						public <T> DomainResult<T> createDomainResult(
+						public DomainResult<Object> createDomainResult(
 								@Nonnull NavigablePath navigablePath,
 								@Nonnull TableGroup tableGroup,
 								@Nullable String resultVariable,
@@ -1785,13 +1788,13 @@ public class MappingModelCreationHelper {
 								@Nonnull NavigablePath navigablePath,
 								@Nonnull TableGroup tableGroup,
 								@Nonnull DomainResultCreationState creationState,
-								@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+								@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 
 						}
 
 						@Nullable
 						@Override
-						public EntityMappingType findContainingEntityMapping() {
+						public EntityMappingType<?> findContainingEntityMapping() {
 							return null;
 						}
 					},
@@ -1829,14 +1832,14 @@ public class MappingModelCreationHelper {
 	/**
 	 * For Hibernate Reactive
 	 */
-	public static ToOneAttributeMapping buildSingularAssociationAttributeMapping(
+	public static ToOneAttributeMapping<?> buildSingularAssociationAttributeMapping(
 			String attrName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			int fetchableIndex,
 			Property bootProperty,
-			ManagedMappingType declaringType,
-			EntityPersister declaringEntityPersister,
+			ManagedMappingType<?, ?, ?> declaringType,
+			EntityPersister<?> declaringEntityPersister,
 			EntityType attrType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
@@ -1857,19 +1860,19 @@ public class MappingModelCreationHelper {
 		);
 	}
 
-	public static ToOneAttributeMapping buildSingularAssociationAttributeMapping(
+	public static ToOneAttributeMapping<?> buildSingularAssociationAttributeMapping(
 			String attrName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			int fetchableIndex,
 			Property bootProperty,
-			ManagedMappingType declaringType,
-			EntityPersister declaringEntityPersister,
+			ManagedMappingType<?, ?, ?> declaringType,
+			EntityPersister<?> declaringEntityPersister,
 			EntityType attrType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess,
-			Function<ToOneAttributeMapping, ToOneAttributeMapping> mappingConverter) {
+			Function<ToOneAttributeMapping<?>, ToOneAttributeMapping<?>> mappingConverter) {
 		if ( bootProperty.getValue() instanceof ToOne value ) {
 			final var entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
 			final var attributeMetadata = getAttributeMetadata(
@@ -1892,7 +1895,7 @@ public class MappingModelCreationHelper {
 			final var fetchTiming =
 					fetchTiming( bootProperty, declaringType, value, entityPersister, fetchStyle, type, factory );
 
-			final var attributeMapping = mappingConverter.apply( new ToOneAttributeMapping(
+			final var attributeMapping = mappingConverter.apply( new ToOneAttributeMapping<>(
 					attrName,
 					navigableRole,
 					stateArrayPosition,
@@ -1924,7 +1927,7 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	private static FetchTiming fetchTiming(Property bootProperty, ManagedMappingType declaringType, ToOne value, EntityPersister entityPersister, FetchStyle fetchStyle, AssociationType type, SessionFactoryImplementor sessionFactory) {
+	private static FetchTiming fetchTiming(Property bootProperty, ManagedMappingType<?, ?, ?> declaringType, ToOne value, EntityPersister<?> entityPersister, FetchStyle fetchStyle, AssociationType type, SessionFactoryImplementor sessionFactory) {
 		final String role = castNonNull( declaringType.getNavigableRole() ).toString() + "." + bootProperty.getName();
 		final boolean lazy = value.isLazy();
 		if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {

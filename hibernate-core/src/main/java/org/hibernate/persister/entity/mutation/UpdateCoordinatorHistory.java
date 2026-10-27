@@ -52,7 +52,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	private final MutationOperationGroup historyInsertGroup;
 
 	public UpdateCoordinatorHistory(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull UpdateCoordinator currentUpdateCoordinator) {
 		super( entityPersister, factory );
@@ -215,7 +215,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
-			if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+			if ( !(attributeMapping instanceof PluralAttributeMapping<?>) ) {
 				if ( entityPersister().isPropertyTemporalExcluded( attributeIndex ) ) {
 					final var generator = attributeMapping.getGenerator();
 					final boolean generatedInSql = needsUpdateValueGeneration( entity, session, generator );
@@ -277,7 +277,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		final var attributeMappings = entityPersister().getAttributeMappings();
 		for ( final int attributeIndex : updateDetails.attributeIndexes ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
-			if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+			if ( !(attributeMapping instanceof PluralAttributeMapping<?>) ) {
 				attributeMapping.decompose(
 						values[attributeIndex],
 						0,
@@ -382,7 +382,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 	private void addSqlGeneratedValue(
 			@Nonnull AssigningTableMutationBuilder<?> updateBuilder,
-			@Nonnull AttributeMapping attributeMapping,
+			@Nonnull AttributeMapping<?, ?, ?> attributeMapping,
 			@Nonnull OnExecutionGenerator generator) {
 		final boolean writePropertyValue = generator.writePropertyValue();
 		final var columnValues =
@@ -415,7 +415,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
 			if ( propertyInclusions[attributeIndex] ) {
 				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+				if ( !(attributeMapping instanceof PluralAttributeMapping<?>) ) {
 					attributeMapping.decompose(
 							values[attributeIndex],
 							0,

@@ -58,7 +58,7 @@ public class HANAVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
+	public @Nullable String castToPattern(JdbcMapping<?> targetJdbcMapping, @Nullable Size size) {
 		final JdbcType jdbcType = targetJdbcMapping.getJdbcType();
 		return jdbcType.isString()
 				? jdbcType.isLob() ? "to_nclob(?1)" : "to_nvarchar(?1)"
@@ -84,7 +84,7 @@ public class HANAVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
+	public @Nullable String castFromPattern(JdbcMapping<?> sourceMapping, @Nullable Size size) {
 		return sourceMapping.getJdbcType().isStringLike() ? "to_" + typeName + "(?1)" : null;
 	}
 

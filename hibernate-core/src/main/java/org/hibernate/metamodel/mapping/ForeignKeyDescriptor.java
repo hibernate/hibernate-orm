@@ -20,7 +20,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * Descriptor for foreign-keys
  */
-public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart {
+public interface ForeignKeyDescriptor<J, M, R> extends VirtualModelPart<J, M, R>, ValuedModelPart<J, M, R> {
 
 	String PART_NAME = "{fk}";
 	String TARGET_PART_NAME = "{fk-target}";
@@ -39,15 +39,15 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 
 
 	@Nonnull
-	ValuedModelPart getKeyPart();
+	ValuedModelPart<?, ?, ?> getKeyPart();
 
 	@Nonnull
-	ValuedModelPart getTargetPart();
+	ValuedModelPart<?, ?, ?> getTargetPart();
 
-	boolean isKeyPart(@Nonnull ValuedModelPart modelPart);
+	boolean isKeyPart(@Nonnull ValuedModelPart<?, ?, ?> modelPart);
 
 	@Nonnull
-	default ValuedModelPart getPart(@Nonnull Nature nature) {
+	default ValuedModelPart<?, ?, ?> getPart(@Nonnull Nature nature) {
 		if ( nature == Nature.KEY ) {
 			return getKeyPart();
 		}
@@ -128,7 +128,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	@Nonnull
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
-	<T> DomainResult<T> createDomainResult(
+	DomainResult<R> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup targetTableGroup,
 			@Nullable String resultVariable,
@@ -191,9 +191,9 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	 */
 	@Nonnull
 	@org.hibernate.Internal
-	ForeignKeyDescriptor withKeySelectionMapping(
-			@Nullable ManagedMappingType declaringType,
-			@Nonnull TableGroupProducer declaringTableGroupProducer,
+	ForeignKeyDescriptor<?, ?, ?> withKeySelectionMapping(
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
+			@Nonnull TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			@Nonnull IntFunction<SelectableMapping> selectableMappingAccess,
 			@Nonnull MappingModelCreationProcess creationProcess);
 
@@ -201,7 +201,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	 * Return a copy of this foreign key descriptor with the target part as given by the argument.
 	 */
 	@Nonnull
-	ForeignKeyDescriptor withTargetPart(@Nonnull ValuedModelPart targetPart);
+	ForeignKeyDescriptor<?, ?, ?> withTargetPart(@Nonnull ValuedModelPart<?, ?, ?> targetPart);
 
 	@Nonnull
 	AssociationKey getAssociationKey();
@@ -222,7 +222,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 		@Nonnull
 		Nature getNature();
 		@Nonnull
-		ValuedModelPart getModelPart();
+		ValuedModelPart<?, ?, ?> getModelPart();
 	}
 
 	boolean isEmbedded();

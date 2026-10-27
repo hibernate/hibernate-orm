@@ -143,7 +143,7 @@ class RestrictedToOneTest {
 			final var metamodel = scope.getSessionFactory().getMappingMetamodel();
 			final var owner = metamodel.getEntityDescriptor( preparedMapping.ownerType );
 			final var target = metamodel.getEntityDescriptor( preparedMapping.targetType );
-			final var association = (ToOneAttributeMapping) owner.findAttributeMapping( "target" );
+			final var association = (ToOneAttributeMapping<?>) owner.findAttributeMapping( "target" );
 			final String ownerTable = owner.getMappedTableDetails().getTableName();
 			final String keyTable = association.getForeignKeyDescriptor().getKeyTable();
 			scope.inTransaction( session -> {
@@ -230,13 +230,13 @@ class RestrictedToOneTest {
 			}
 			final int position = entry.getPersister().findAttributeMapping( "target" ).getStateArrayPosition();
 			assertThat( entry.getPersister().getFilteredAssociationMapping().isFiltered( state,
-					(ToOneAttributeMapping) entry.getPersister().getAttributeMapping( position ) ) ).isTrue();
+					(ToOneAttributeMapping<?>) entry.getPersister().getAttributeMapping( position ) ) ).isTrue();
 			assertThat( entry.getLoadedState()[position] ).isNull();
 			hidden.setTarget( session.find( mapping.targetType, 3L ) );
 			session.flush();
 			assertThat( state.isEmpty() ).isTrue();
 			assertThat( entry.getPersister().getFilteredAssociationMapping().isFiltered( state,
-					(ToOneAttributeMapping) entry.getPersister().getAttributeMapping( position ) ) ).isFalse();
+					(ToOneAttributeMapping<?>) entry.getPersister().getAttributeMapping( position ) ) ).isFalse();
 			// The replacement is visible and may now be cleared normally.
 			hidden.setTarget( null );
 		} );
@@ -485,7 +485,7 @@ class RestrictedToOneTest {
 		scope.inTransaction( session -> {
 			enable( session );
 			final var descriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( mapping.ownerType );
-			final var association = (ToOneAttributeMapping) descriptor.findAttributeMapping( "target" );
+			final var association = (ToOneAttributeMapping<?>) descriptor.findAttributeMapping( "target" );
 			final String keyTable = association.getForeignKeyDescriptor().getKeyTable();
 			final String ownerTable = descriptor.getMappedTableDetails().getTableName();
 			final String sql = ownerTable.equals( keyTable )
@@ -590,7 +590,7 @@ class RestrictedToOneTest {
 		scope.inTransaction( session -> {
 			final var descriptor = scope.getSessionFactory().getMappingMetamodel()
 					.getEntityDescriptor( mapping.ownerType );
-			final var association = (ToOneAttributeMapping) descriptor.findAttributeMapping( "target" );
+			final var association = (ToOneAttributeMapping<?>) descriptor.findAttributeMapping( "target" );
 			final String table = association.getForeignKeyDescriptor().getKeyTable();
 			final String idColumn = mapping.ownerType.getSimpleName().contains( "Join" ) ? "owner_id" : "id";
 			final var values = session.createNativeQuery(

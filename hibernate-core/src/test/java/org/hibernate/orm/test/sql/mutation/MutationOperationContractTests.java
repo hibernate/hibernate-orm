@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 /// Tests the immutable request and operation-state guarantees exposed by the
@@ -50,7 +51,7 @@ public class MutationOperationContractTests {
 
 	@Test
 	void jdbcMutationSnapshotsItsParameterBinders() {
-		final ColumnValueParameter parameter = mock( ColumnValueParameter.class );
+		final ColumnValueParameter<?> parameter = mock( ColumnValueParameter.class );
 		final ColumnReference columnReference = mock( ColumnReference.class );
 		when( parameter.getColumnReference() ).thenReturn( columnReference );
 		when( columnReference.getColumnExpression() ).thenReturn( "id" );
@@ -83,10 +84,10 @@ public class MutationOperationContractTests {
 		assertThat( ColumnValueParameter.class.getDeclaredMethod( "getJdbcMapping" ).getDeclaringClass() )
 				.isEqualTo( ColumnValueParameter.class );
 
-		final JdbcMapping jdbcMapping = mock( JdbcMapping.class );
+		final JdbcMapping<?> jdbcMapping = mock( JdbcMapping.class );
 		final ColumnReference columnReference = mock( ColumnReference.class );
-		when( columnReference.getJdbcMapping() ).thenReturn( jdbcMapping );
-		final ColumnValueParameter parameter = new ColumnValueParameter( columnReference );
+		doReturn( jdbcMapping ).when( columnReference ).getJdbcMapping();
+		final ColumnValueParameter<?> parameter = ColumnValueParameter.create( columnReference );
 		final SqlAstWalker sqlAstWalker = mock( SqlAstWalker.class );
 
 		assertThat( parameter.getParameterBinder() ).isSameAs( parameter );

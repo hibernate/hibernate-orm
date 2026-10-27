@@ -411,7 +411,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		return convertRevEndTimestampToDate( value );
 	}
 
-	private EntityPersister getEntityPersister(String entityName, SharedSessionContractImplementor sessionImplementor) {
+	private EntityPersister<?> getEntityPersister(String entityName, SharedSessionContractImplementor sessionImplementor) {
 		return sessionImplementor.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
@@ -506,12 +506,12 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			Object id,
 			Object revision) {
 
-		EntityPersister entity = getEntityPersister( entityName, session );
+		EntityPersister<?> entity = getEntityPersister( entityName, session );
 		final List<UpdateContext> contexts = new ArrayList<>( 0 );
 
 		// HHH-9062 - update inherited
 		if ( configuration.isRevisionEndTimestampEnabled() && !configuration.isRevisionEndTimestampUseLegacyPlacement() ) {
-			if ( entity instanceof JoinedSubclassEntityPersister ) {
+			if ( entity instanceof JoinedSubclassEntityPersister<?> ) {
 				// iterate subclasses, excluding root
 				while ( entity.getMappedSuperclass() != null ) {
 					contexts.add( getNonRootUpdateContext(
@@ -550,11 +550,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			Object id,
 			Object revision) {
 
-		final EntityPersister entity = getEntityPersister( entityName, session );
-		final EntityPersister rootEntity = getEntityPersister( entity.getRootEntityName(), session );
-		final EntityPersister auditEntity = getEntityPersister( auditEntityName, session );
-		final EntityPersister rootAuditEntity = getEntityPersister( auditEntity.getRootEntityName(), session );
-		final EntityPersister revisionEntity = getEntityPersister( configuration.getRevisionInfo().getRevisionInfoClass().getName(), session );
+		final EntityPersister<?> entity = getEntityPersister( entityName, session );
+		final EntityPersister<?> rootEntity = getEntityPersister( entity.getRootEntityName(), session );
+		final EntityPersister<?> auditEntity = getEntityPersister( auditEntityName, session );
+		final EntityPersister<?> rootAuditEntity = getEntityPersister( auditEntity.getRootEntityName(), session );
+		final EntityPersister<?> revisionEntity = getEntityPersister( configuration.getRevisionInfo().getRevisionInfoClass().getName(), session );
 
 		final Number revisionNumber = getRevisionNumber( configuration, revision );
 
@@ -574,7 +574,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		if ( configuration.isRevisionEndTimestampEnabled() ) {
 			final Object revisionTimestamp = revisionTimestampGetter.get( revision );
 			final String revEndTimestampAttributeName = configuration.getRevisionEndTimestampFieldName();
-			final AttributeMapping revEndTimestampAttributeMapping = rootAuditEntity.findAttributeMapping( revEndTimestampAttributeName );
+			final AttributeMapping<?, ?, ?> revEndTimestampAttributeMapping = rootAuditEntity.findAttributeMapping( revEndTimestampAttributeName );
 			// Apply optional "[, REVEND_TSTMP = ?]" portion of the SQL
 			context.addAssignment( revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression() );
 			context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampAttributeMapping );
@@ -616,8 +616,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			Object id,
 			Object revision) {
 
-		final EntityPersister entity = getEntityPersister( entityName, session );
-		final EntityPersister auditEntity = getEntityPersister( auditEntityName, session );
+		final EntityPersister<?> entity = getEntityPersister( entityName, session );
+		final EntityPersister<?> auditEntity = getEntityPersister( auditEntityName, session );
 
 
 		// The expected SQL is an update statement as follows:
@@ -628,7 +628,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		// Apply "SET REVEND_TSTMP = ?" portion of the SQL
 		final Object revisionTimestamp = revisionTimestampGetter.get( revision );
 		final String revEndTimestampAttributeName = configuration.getRevisionEndTimestampFieldName();
-		final AttributeMapping revEndTimestampAttributeMapping = auditEntity.findAttributeMapping( revEndTimestampAttributeName );
+		final AttributeMapping<?, ?, ?> revEndTimestampAttributeMapping = auditEntity.findAttributeMapping( revEndTimestampAttributeName );
 		final String revEndTimestampColumnName = revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression();
 		context.addAssignment( revEndTimestampColumnName );
 		context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampAttributeMapping );
@@ -656,8 +656,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		return reader.getRevisionNumber( revisionEntity );
 	}
 
-	private String getUpdateTableName(EntityPersister rootEntity, EntityPersister rootAuditEntity, EntityPersister auditEntity) {
-		if ( rootEntity instanceof UnionSubclassEntityPersister ) {
+	private String getUpdateTableName(EntityPersister<?> rootEntity, EntityPersister<?> rootAuditEntity, EntityPersister<?> auditEntity) {
+		if ( rootEntity instanceof UnionSubclassEntityPersister<?> ) {
 			// we need to specially handle union-subclass mappings
 			return auditEntity.getMappedTableDetails().getTableName();
 		}
@@ -682,7 +682,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			bindings.add( new QueryParameterBindingType( value, type ) );
 		}
 
-		public void bind(Object value, ModelPart part) {
+		public void bind(Object value, ModelPart<?, ?, ?> part) {
 			bindings.add( new QueryParameterBindingPart( value, part ) );
 		}
 	}
@@ -707,10 +707,10 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	private static class QueryParameterBindingPart implements QueryParameterBinding {
-		private final ModelPart modelPart;
+		private final ModelPart<?, ?, ?> modelPart;
 		private final Object value;
 
-		public QueryParameterBindingPart(Object value, ModelPart modelPart) {
+		public QueryParameterBindingPart(Object value, ModelPart<?, ?, ?> modelPart) {
 			this.value = value;
 			this.modelPart = modelPart;
 		}

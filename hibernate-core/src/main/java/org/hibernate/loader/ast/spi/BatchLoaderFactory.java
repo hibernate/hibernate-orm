@@ -25,7 +25,7 @@ public interface BatchLoaderFactory extends Service {
 	@Deprecated(forRemoval = true)
 	default <T> EntityBatchLoader<T> createEntityBatchLoader(
 			int domainBatchSize,
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull SessionFactoryImplementor factory) {
 		return createEntityBatchLoader( domainBatchSize, entityDescriptor, new LoadQueryInfluencers( factory ) );
 	}
@@ -39,7 +39,7 @@ public interface BatchLoaderFactory extends Service {
 	@Nonnull
 	<T> EntityBatchLoader<T> createEntityBatchLoader(
 			int domainBatchSize,
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers);
 
 	/**
@@ -53,6 +53,6 @@ public interface BatchLoaderFactory extends Service {
 	CollectionBatchLoader createCollectionBatchLoader(
 			int domainBatchSize,
 			@Nonnull LoadQueryInfluencers influencers,
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull SessionFactoryImplementor factory);
 }

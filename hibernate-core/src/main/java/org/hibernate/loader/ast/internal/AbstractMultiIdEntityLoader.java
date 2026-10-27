@@ -32,12 +32,12 @@ import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSessionCache
  * @author Steve Ebersole
  */
 public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoader<T> {
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
-	protected final EntityIdentifierMapping identifierMapping;
+	protected final EntityIdentifierMapping<?, ?, ?> identifierMapping;
 	private final boolean idCoercionEnabled;
 
-	public AbstractMultiIdEntityLoader(@Nonnull EntityMappingType entityDescriptor, @Nonnull SessionFactoryImplementor sessionFactory) {
+	public AbstractMultiIdEntityLoader(@Nonnull EntityMappingType<?> entityDescriptor, @Nonnull SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = sessionFactory;
 		identifierMapping = getLoadable().getIdentifierMapping();
@@ -49,7 +49,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	}
 
 	@Nonnull
-	protected EntityMappingType getEntityDescriptor() {
+	protected EntityMappingType<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 
@@ -59,7 +59,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	}
 
 	@Nonnull
-	public EntityIdentifierMapping getIdentifierMapping() {
+	public EntityIdentifierMapping<?, ?, ?> getIdentifierMapping() {
 		return identifierMapping;
 	}
 
@@ -80,7 +80,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 	@Nonnull
 	@Override
-	public EntityMappingType getLoadable() {
+	public EntityMappingType<?> getLoadable() {
 		return getEntityDescriptor();
 	}
 

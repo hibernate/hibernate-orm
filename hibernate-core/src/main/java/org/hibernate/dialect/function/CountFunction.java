@@ -424,7 +424,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			return true;
 		}
 		else {
-			final JdbcMapping sourceMapping = realArg.getExpressionType().getSingleJdbcMapping();
+			final JdbcMapping<?> sourceMapping = realArg.getExpressionType().getSingleJdbcMapping();
 			final CastType sourceType = sourceMapping.getCastType();
 			// No need to cast if we already have a string
 			if ( sourceType == CastType.STRING ) {
@@ -451,7 +451,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			final Expression sqlExpression = pathInterpretation.getSqlExpression();
 			final JdbcMappingContainer expressionType = sqlExpression.getExpressionType();
 			// The entity identifier mapping is always considered non-nullable
-			final boolean isNonNullable = expressionType instanceof EntityIdentifierMapping;
+			final boolean isNonNullable = expressionType instanceof EntityIdentifierMapping<?, ?, ?>;
 			// If canUseInnerJoins is given for a table group, this means that it is non-optional
 			// But we also have to check if it contains joins that could alter the nullability (RIGHT or FULL)
 			if ( isNonNullable && tableGroup.canUseInnerJoins() && !hasJoinsAlteringNullability( tableGroup ) ) {

@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
  *
  * @author Steve Ebersole
  */
-public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExpressible {
+public interface CollectionPart<J, M, R> extends ValuedModelPart<J, M, R>, Fetchable<J, M, R>, JavaTypedExpressible<M> {
 
 	enum Nature {
 		/**
@@ -84,7 +84,7 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 	Nature getNature();
 
 	@Nonnull
-	PluralAttributeMapping getCollectionAttribute();
+	PluralAttributeMapping<?> getCollectionAttribute();
 
 	@Nonnull
 	@Override
@@ -93,7 +93,7 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 	}
 
 	@Nonnull
-	default ModelPart getInclusionCheckPart() {
+	default ModelPart<?, ?, ?> getInclusionCheckPart() {
 		return this;
 	}
 }

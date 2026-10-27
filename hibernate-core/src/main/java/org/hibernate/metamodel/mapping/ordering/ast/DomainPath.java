@@ -19,9 +19,9 @@ public interface DomainPath extends OrderingExpression, SequencePart {
 	@Nullable
 	DomainPath getLhs();
 
-	ModelPart getReferenceModelPart();
+	ModelPart<?, ?, ?> getReferenceModelPart();
 
-	default PluralAttributeMapping getPluralAttribute() {
+	default PluralAttributeMapping<?> getPluralAttribute() {
 		return castNonNull( getLhs() ).getPluralAttribute();
 	}
 

@@ -104,7 +104,7 @@ public interface CollectionPersister extends Restrictable {
 	}
 
 	@Nonnull
-	default PluralAttributeMapping getAttributeMapping() {
+	default PluralAttributeMapping<?> getAttributeMapping() {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
@@ -121,7 +121,7 @@ public interface CollectionPersister extends Restrictable {
 	 * Get the persister of the entity that "owns" this collection
 	 */
 	@Nonnull
-	EntityPersister getOwnerEntityPersister();
+	EntityPersister<?> getOwnerEntityPersister();
 
 	/**
 	 * Initialize the given collection with the given key
@@ -325,7 +325,7 @@ public interface CollectionPersister extends Restrictable {
 	}
 
 	default boolean isAffectedByEnabledFilters(
-			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull Set<ManagedMappingType<?, ?, ?>> visitedTypes,
 			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
@@ -525,5 +525,5 @@ public interface CollectionPersister extends Restrictable {
 	 * must be {@code OuterJoinLoadable}.
 	 */
 	@Nullable
-	EntityPersister getElementPersister();
+	EntityPersister<?> getElementPersister();
 }

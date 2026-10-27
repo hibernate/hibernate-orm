@@ -58,11 +58,11 @@ import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptio
 @Internal
 public class GeneratedValuesHelper {
 
-	public static GeneratedValues buildGeneratedValues(EntityPersister entityPersister, EventType timing) {
+	public static GeneratedValues buildGeneratedValues(EntityPersister<?> entityPersister, EventType timing) {
 		var mutationDelegate = entityPersister.getMutationDelegate( timing == EventType.INSERT ? INSERT : UPDATE );
 		final var mappingProducer = (GeneratedValuesMappingProducer) mutationDelegate.getGeneratedValuesMappingProducer();
 		final var resultBuilders = mappingProducer.getResultBuilders();
-		final List<ModelPart> generatedProperties = new ArrayList<>( resultBuilders.size() );
+		final List<ModelPart<?, ?, ?>> generatedProperties = new ArrayList<>( resultBuilders.size() );
 		for ( var resultBuilder : resultBuilders ) {
 			generatedProperties.add( resultBuilder.getModelPart() );
 		}
@@ -87,7 +87,7 @@ public class GeneratedValuesHelper {
 	public static GeneratedValues getGeneratedValues(
 			ResultSet resultSet,
 			PreparedStatement statement,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing,
 			SharedSessionContractImplementor session) throws SQLException {
 		return getGeneratedValues( resultSet, statement, persister, timing, session, null );
@@ -98,7 +98,7 @@ public class GeneratedValuesHelper {
 	public static GeneratedValues getGeneratedValues(
 			ResultSet resultSet,
 			PreparedStatement statement,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing,
 			SharedSessionContractImplementor session,
 			Runnable emptyResultHandler) throws SQLException {
@@ -111,7 +111,7 @@ public class GeneratedValuesHelper {
 						persister.getMutationDelegate( timing == EventType.INSERT ? INSERT : UPDATE )
 								.getGeneratedValuesMappingProducer();
 		final var resultBuilders = mappingProducer.getResultBuilders();
-		final List<ModelPart> generatedProperties = new ArrayList<>( resultBuilders.size() );
+		final List<ModelPart<?, ?, ?>> generatedProperties = new ArrayList<>( resultBuilders.size() );
 		for ( var resultBuilder : resultBuilders ) {
 			generatedProperties.add( resultBuilder.getModelPart() );
 		}
@@ -148,7 +148,7 @@ public class GeneratedValuesHelper {
 	private static Object[] readGeneratedValues(
 			ResultSet resultSet,
 			PreparedStatement statement,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			JdbcValuesMappingProducer mappingProducer,
 			SharedSessionContractImplementor session,
 			Runnable emptyResultHandler) {
@@ -203,7 +203,7 @@ public class GeneratedValuesHelper {
 	 * @return the instantiated jdbc values mapping producer
 	 */
 	public static GeneratedValuesMappingProducer createMappingProducer(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing,
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {
@@ -212,16 +212,16 @@ public class GeneratedValuesHelper {
 	}
 
 	public static GeneratedValuesMappingProducer createMappingProducer(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			boolean supportsArbitraryValues,
-			List<? extends ModelPart> generatedProperties) {
+			List<? extends ModelPart<?, ?, ?>> generatedProperties) {
 		return generatedValuesMappingProducer( persister, supportsArbitraryValues, generatedProperties );
 	}
 
 	private static GeneratedValuesMappingProducer generatedValuesMappingProducer(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			boolean supportsArbitraryValues,
-			List<? extends ModelPart> generatedProperties) {
+			List<? extends ModelPart<?, ?, ?>> generatedProperties) {
 		final var parentNavigablePath = new NavigablePath( persister.getEntityName() );
 		// This is just a mock table group needed to correctly resolve expressions
 		final var tableGroup = new TableGroupImpl(
@@ -255,7 +255,7 @@ public class GeneratedValuesHelper {
 		return mappingProducer;
 	}
 
-	public static BasicValuedModelPart getActualGeneratedModelPart(BasicValuedModelPart modelPart) {
+	public static BasicValuedModelPart<?, ?, ?> getActualGeneratedModelPart(BasicValuedModelPart<?, ?, ?> modelPart) {
 		// Use the root entity descriptor's identifier mapping to get the correct selection
 		// expression since we always retrieve generated values for the root table only
 		return modelPart.isEntityIdentifierMapping()
@@ -270,15 +270,15 @@ public class GeneratedValuesHelper {
 	 * Returns a list of {@link ModelPart}s that represent the actual generated values
 	 * based on timing and the support flags passed in input.
 	 */
-	public static List<? extends ModelPart> getActualGeneratedModelParts(
-			EntityPersister persister,
+	public static List<? extends ModelPart<?, ?, ?>> getActualGeneratedModelParts(
+			EntityPersister<?> persister,
 			EventType timing,
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {
 		if ( timing == EventType.INSERT ) {
 			if ( !supportsArbitraryValues ) {
 				final var identifierMapping = persister.getIdentifierMapping();
-				if ( identifierMapping instanceof CompositeIdentifierMapping compositeIdentifier
+				if ( identifierMapping instanceof CompositeIdentifierMapping<?, ?, ?> compositeIdentifier
 						&& persister.getGenerator() instanceof CompositeNestedGeneratedValueGenerator compositeGenerator ) {
 					final boolean[] generatedColumns =
 							compositeGenerator.getGeneratedOnExecutionColumnInclusions();
@@ -292,7 +292,7 @@ public class GeneratedValuesHelper {
 			final var expandedProperties =
 					expandCompositeIdentifierGeneratedParts( persister, generatedProperties );
 			if ( persister.getRowIdMapping() != null && supportsRowId ) {
-				final List<ModelPart> newList =
+				final List<ModelPart<?, ?, ?>> newList =
 						new ArrayList<>( expandedProperties.size() + 1 );
 				newList.addAll( expandedProperties );
 				newList.add( persister.getRowIdMapping() );
@@ -316,7 +316,7 @@ public class GeneratedValuesHelper {
 	 * If the current {@link Dialect} doesn't support any of the available delegates this method returns {@code null}.
 	 */
 	public static GeneratedValuesMutationDelegate getGeneratedValuesDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing) {
 		final var factory = persister.getFactory();
 		final var generatedProperties = persister.getGeneratedProperties( timing );
@@ -356,10 +356,10 @@ public class GeneratedValuesHelper {
 		return null;
 	}
 
-	private static List<? extends ModelPart> generatedIdentifierModelParts(
-			CompositeIdentifierMapping compositeIdentifier,
+	private static List<? extends ModelPart<?, ?, ?>> generatedIdentifierModelParts(
+			CompositeIdentifierMapping<?, ?, ?> compositeIdentifier,
 			boolean[] generatedColumns) {
-		final List<ModelPart> modelParts = new ArrayList<>();
+		final List<ModelPart<?, ?, ?>> modelParts = new ArrayList<>();
 		collectGeneratedIdParts(
 				compositeIdentifier.getEmbeddableTypeDescriptor(),
 				generatedColumns,
@@ -369,11 +369,11 @@ public class GeneratedValuesHelper {
 		return modelParts;
 	}
 
-	private static List<? extends ModelPart> expandCompositeIdentifierGeneratedParts(
-			EntityPersister persister,
-			List<? extends ModelPart> generatedProperties) {
+	private static List<? extends ModelPart<?, ?, ?>> expandCompositeIdentifierGeneratedParts(
+			EntityPersister<?> persister,
+			List<? extends ModelPart<?, ?, ?>> generatedProperties) {
 		if ( !generatedProperties.isEmpty()
-				&& persister.getIdentifierMapping() instanceof CompositeIdentifierMapping compositeIdentifier
+				&& persister.getIdentifierMapping() instanceof CompositeIdentifierMapping<?, ?, ?> compositeIdentifier
 				&& persister.getGenerator() instanceof CompositeNestedGeneratedValueGenerator compositeGenerator ) {
 			final boolean[] generatedColumns =
 					compositeGenerator.getGeneratedOnExecutionColumnInclusions();
@@ -386,14 +386,14 @@ public class GeneratedValuesHelper {
 		return generatedProperties;
 	}
 
-	private static List<ModelPart> expand(
-			List<? extends ModelPart> generatedProperties,
-			CompositeIdentifierMapping compositeIdentifier,
+	private static List<ModelPart<?, ?, ?>> expand(
+			List<? extends ModelPart<?, ?, ?>> generatedProperties,
+			CompositeIdentifierMapping<?, ?, ?> compositeIdentifier,
 			boolean[] generatedColumns) {
-		final List<ModelPart> expanded = new ArrayList<>( generatedProperties.size() );
+		final List<ModelPart<?, ?, ?>> expanded = new ArrayList<>( generatedProperties.size() );
 		for ( var part : generatedProperties ) {
 			if ( part.isEntityIdentifierMapping()
-					&& part instanceof CompositeIdentifierMapping ) {
+					&& part instanceof CompositeIdentifierMapping<?, ?, ?> ) {
 				expanded.addAll( generatedIdentifierModelParts( compositeIdentifier, generatedColumns ) );
 			}
 			else {
@@ -403,10 +403,10 @@ public class GeneratedValuesHelper {
 		return expanded;
 	}
 
-	private static boolean needsExpansion(List<? extends ModelPart> generatedProperties) {
+	private static boolean needsExpansion(List<? extends ModelPart<?, ?, ?>> generatedProperties) {
 		for ( var part : generatedProperties ) {
 			if ( part.isEntityIdentifierMapping()
-					&& part instanceof CompositeIdentifierMapping ) {
+					&& part instanceof CompositeIdentifierMapping<?, ?, ?> ) {
 				return true;
 			}
 		}
@@ -414,10 +414,10 @@ public class GeneratedValuesHelper {
 	}
 
 	private static int collectGeneratedIdParts(
-			EmbeddableMappingType embeddableMapping,
+			EmbeddableMappingType<?, ?, ?> embeddableMapping,
 			boolean[] generatedColumns,
 			int offset,
-			List<ModelPart> modelParts) {
+			List<ModelPart<?, ?, ?>> modelParts) {
 		final var attributeMappings = embeddableMapping.getAttributeMappings();
 		int position = offset;
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -429,7 +429,7 @@ public class GeneratedValuesHelper {
 					modelParts.add( basicPart );
 					position += span;
 				}
-				else if ( attributeMapping instanceof EmbeddableValuedModelPart embeddablePart ) {
+				else if ( attributeMapping instanceof EmbeddableValuedModelPart<?, ?, ?> embeddablePart ) {
 					position = collectGeneratedIdParts(
 							embeddablePart.getEmbeddableTypeDescriptor(),
 							generatedColumns,
@@ -471,7 +471,7 @@ public class GeneratedValuesHelper {
 		);
 	}
 
-	public static boolean noCustomSql(EntityPersister persister, EventType timing) {
+	public static boolean noCustomSql(EntityPersister<?> persister, EventType timing) {
 		final var identifierTable = persister.getIdentifierTableMapping();
 		final var mutationDetails =
 				timing == EventType.INSERT

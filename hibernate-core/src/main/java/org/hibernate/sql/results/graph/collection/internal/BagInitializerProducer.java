@@ -17,12 +17,12 @@ import jakarta.annotation.Nullable;
  * @author Steve Ebersole
  */
 public class BagInitializerProducer implements CollectionInitializerProducer {
-	private final PluralAttributeMapping bagDescriptor;
+	private final PluralAttributeMapping<?> bagDescriptor;
 	private final @Nullable Fetch collectionIdFetch;
 	private final Fetch elementFetch;
 
 	public BagInitializerProducer(
-			PluralAttributeMapping bagDescriptor,
+			PluralAttributeMapping<?> bagDescriptor,
 			Fetch collectionIdFetch,
 			Fetch elementFetch) {
 		this.bagDescriptor = bagDescriptor;
@@ -43,7 +43,7 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 	@Override
 	public CollectionInitializer<?> produceInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attribute,
+			PluralAttributeMapping<?> attribute,
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,

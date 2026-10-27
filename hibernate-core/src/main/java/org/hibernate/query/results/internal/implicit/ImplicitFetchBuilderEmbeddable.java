@@ -26,26 +26,26 @@ import static org.hibernate.query.results.internal.ResultsHelper.impl;
  */
 public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 	private final NavigablePath fetchPath;
-	private final EmbeddableValuedFetchable fetchable;
-	private final Map<Fetchable, FetchBuilder> fetchBuilders;
+	private final EmbeddableValuedFetchable<?, ?, ?> fetchable;
+	private final Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilders;
 
 	public ImplicitFetchBuilderEmbeddable(
 			NavigablePath fetchPath,
-			EmbeddableValuedFetchable fetchable,
+			EmbeddableValuedFetchable<?, ?, ?> fetchable,
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
 		this.fetchBuilders = fetchBuilderMap( fetchPath, fetchable, impl( creationState ) );
 	}
 
-	private static Map<Fetchable, FetchBuilder> fetchBuilderMap(
+	private static Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap(
 			NavigablePath fetchPath,
-			EmbeddableValuedFetchable fetchable,
+			EmbeddableValuedFetchable<?, ?, ?> fetchable,
 			DomainResultCreationStateImpl creationStateImpl) {
 		final var fetchBuilderResolver =
 				creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		final int size = fetchable.getNumberOfFetchables();
-		final Map<Fetchable, FetchBuilder> fetchBuilders = linkedMapOfSize( size );
+		final Map<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilders = linkedMapOfSize( size );
 		for ( int i = 0; i < size; i++ ) {
 			final var subFetchable = fetchable.getFetchable( i );
 			final var explicitFetchBuilder = fetchBuilderResolver.apply( subFetchable );
@@ -160,7 +160,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable<?, ?, ?>, FetchBuilder> consumer) {
 		fetchBuilders.forEach( (k, v) -> consumer.accept( k, v ) );
 	}
 }

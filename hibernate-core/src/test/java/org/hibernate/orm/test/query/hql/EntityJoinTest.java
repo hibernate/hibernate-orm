@@ -174,7 +174,7 @@ public class EntityJoinTest {
 				(session) -> {
 					final SessionFactoryImplementor factory = scope.getSessionFactory();
 
-					final EntityMappingType customerEntityDescriptor = factory.getRuntimeMetamodels()
+					final EntityMappingType<?> customerEntityDescriptor = factory.getRuntimeMetamodels()
 							.getMappingMetamodel()
 							.findEntityDescriptor( Customer.class );
 

@@ -61,7 +61,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	@Nonnull
 	public static Object staticCreateEntityKey(
 			@Nonnull Object id,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nullable String tenantIdentifier) {
 		final Type keyType = persister.getIdentifierType();
@@ -84,7 +84,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	@Nonnull
 	public static Object staticCreateNaturalIdKey(
 			@Nonnull Object naturalIdValues,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session) {
 		return NaturalIdCacheKey.from( naturalIdValues, persister, session );
 	}
@@ -126,7 +126,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	@Nonnull
 	public Object createEntityKey(
 			@Nonnull Object id,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nullable String tenantIdentifier) {
 		return staticCreateEntityKey( id, persister, factory, tenantIdentifier );
@@ -136,7 +136,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	@Nonnull
 	public Object createNaturalIdKey(
 			@Nonnull Object naturalIdValues,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session) {
 		return staticCreateNaturalIdKey( naturalIdValues, persister, session );
 	}

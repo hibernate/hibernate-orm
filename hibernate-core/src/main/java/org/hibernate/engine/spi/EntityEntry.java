@@ -50,7 +50,7 @@ public interface EntityEntry {
 
 	void postInsert(Object version);
 
-	EntityPersister getPersister();
+	EntityPersister<?> getPersister();
 
 	/**
 	 * Get the {@link EntityKey} for this entry.

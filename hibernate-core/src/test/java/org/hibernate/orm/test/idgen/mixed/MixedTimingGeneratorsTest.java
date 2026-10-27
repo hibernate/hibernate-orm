@@ -273,7 +273,7 @@ public class MixedTimingGeneratorsTest {
 	public static class IdentityOrAssignedGenerator extends IdentityGenerator implements IdentifierGenerator {
 		@Override
 		public Object generate(SharedSessionContractImplementor session, Object object) {
-			final EntityPersister entityPersister = session.getEntityPersister( null, object );
+			final EntityPersister<?> entityPersister = session.getEntityPersister( null, object );
 			return entityPersister.getIdentifier( object, session );
 		}
 

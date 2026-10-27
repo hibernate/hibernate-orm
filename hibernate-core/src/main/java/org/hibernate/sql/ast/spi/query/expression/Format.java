@@ -27,7 +27,7 @@ public class Format implements SqlExpressible, SqlAstNode {
 
 	@Nullable
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return null;
 	}
 
@@ -37,7 +37,7 @@ public class Format implements SqlExpressible, SqlAstNode {
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return getJdbcTypeCount();
 	}
 }

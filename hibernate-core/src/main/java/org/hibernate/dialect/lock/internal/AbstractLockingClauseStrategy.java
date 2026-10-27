@@ -75,10 +75,10 @@ public abstract class AbstractLockingClauseStrategy implements LockingClauseStra
 			if ( lockingScope == PessimisticLockScope.EXTENDED ) {
 				// if the TableGroup is an owned (aka, non-inverse) collection,
 				// and we are to lock collections, track it
-				if ( joinedGroup.getModelPart() instanceof PluralAttributeMapping attrMapping ) {
+				if ( joinedGroup.getModelPart() instanceof PluralAttributeMapping<?> attrMapping ) {
 					if ( !attrMapping.getCollectionDescriptor().isInverse() ) {
 						// owned collection element-collection
-						return attrMapping.getElementDescriptor() instanceof BasicValuedCollectionPart;
+						return attrMapping.getElementDescriptor() instanceof BasicValuedCollectionPart<?>;
 					}
 				}
 			}

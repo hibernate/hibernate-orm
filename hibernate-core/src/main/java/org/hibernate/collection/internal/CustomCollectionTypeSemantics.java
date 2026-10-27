@@ -231,7 +231,7 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 	@Override
 	public CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,

@@ -101,7 +101,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 	}
 
-	private static @Nonnull EntityPersister getPersister(
+	private static @Nonnull EntityPersister<?> getPersister(
 			@Nullable LazyInitializer lazyInitializer,
 			@Nonnull EventSource source,
 			@Nonnull Object object,
@@ -166,7 +166,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			@Nonnull RefreshEvent event,
 			@Nullable Object object,
 			@Nonnull EventSource source,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nullable LazyInitializer initializer,
 			@Nullable EntityEntry entry,
 			@Nonnull Object id,
@@ -192,7 +192,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	private static void evictEntity(
 			@Nullable Object object,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object id,
 			@Nonnull EventSource source) {
 		writingToCache( persister, cache -> {
@@ -220,7 +220,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			@Nonnull EventSource source,
 			@Nullable Object object,
 			@Nullable EntityEntry entry,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nullable LazyInitializer lazyInitializer,
 			@Nonnull Object id,
 			@Nonnull PersistenceContext persistenceContext) {
@@ -282,7 +282,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	private static boolean isReadOnly(
 			@Nullable EntityEntry entry,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nullable LazyInitializer lazyInitializer,
 			@Nonnull EventSource source) {
 		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
@@ -302,7 +302,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	}
 
 	private static void evictCachedCollections(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object id,
 			@Nonnull EventSource source) {
 		evictCachedCollections( persister.getPropertyTypes(), id, source );

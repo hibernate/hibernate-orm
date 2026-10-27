@@ -95,7 +95,7 @@ public final class ColumnValueBindingBuilder {
 			ParameterUsage parameterUsage,
 			Consumer<Object> parameterConsumer) {
 		final JdbcType jdbcType = selectableMapping.getJdbcMapping().getJdbcType();
-		final EmbeddableMappingType aggregateMappingType =
+		final EmbeddableMappingType<?, ?, ?> aggregateMappingType =
 				jdbcType instanceof AggregateJdbcType aggregateJdbcType
 						? aggregateJdbcType.getEmbeddableMappingType()
 						: null;
@@ -111,7 +111,7 @@ public final class ColumnValueBindingBuilder {
 			return new ColumnWriteFragment( writeExpression, parameters, selectableMapping );
 		}
 		else {
-			final ColumnValueParameter parameter = new ColumnValueParameter( columnReference, parameterUsage );
+			final ColumnValueParameter<?> parameter = ColumnValueParameter.create( columnReference, parameterUsage );
 			parameterConsumer.accept( parameter );
 			return new ColumnWriteFragment( writeExpression, parameter, selectableMapping );
 		}

@@ -43,10 +43,10 @@ public class CurrencyMappingTests {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		final JdbcTypeRegistry jdbcRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityWithCurrency.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityWithCurrency.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("currency");
-		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
+		final BasicAttributeMapping<?> duration = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("currency");
+		final JdbcMapping<?> jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Currency.class));
 		assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR)));
 
@@ -65,10 +65,10 @@ public class CurrencyMappingTests {
 	public void basicAssertions(final SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory.getTypeConfiguration().getJdbcTypeRegistry();
-		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor(
+		final EntityPersister<?> entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor(
 				EntityWithCurrency.class );
 		{
-			final BasicAttributeMapping currencyAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+			final BasicAttributeMapping<?> currencyAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 					"currency");
 			Assertions.assertThat(currencyAttribute.getJdbcMapping().getJdbcType())
 					.isEqualTo(jdbcTypeRegistry.getDescriptor(Types.VARCHAR));
@@ -76,9 +76,9 @@ public class CurrencyMappingTests {
 					Currency.class );
 		}
 		{
-			final PluralAttributeMapping currenciesAttribute = (PluralAttributeMapping) entityDescriptor.findAttributeMapping(
+			final PluralAttributeMapping<?> currenciesAttribute = (PluralAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 					"currencies" );
-			final BasicValuedCollectionPart elementDescriptor = (BasicValuedCollectionPart) currenciesAttribute.getElementDescriptor();
+			final BasicValuedCollectionPart<?> elementDescriptor = (BasicValuedCollectionPart<?>) currenciesAttribute.getElementDescriptor();
 			Assertions.assertThat( elementDescriptor.getJdbcMapping().getJdbcType() )
 					.isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			Assertions.assertThat( elementDescriptor.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo(

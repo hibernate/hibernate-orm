@@ -31,7 +31,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		super(
 				true,
 				correlatedTableGroup.getNavigablePath(),
-				(TableGroupProducer) correlatedTableGroup.getExpressionType(),
+				(TableGroupProducer<?, ?, ?>) correlatedTableGroup.getExpressionType(),
 				null,
 				sqlAliasBase,
 				sessionFactory
@@ -83,7 +83,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression,
 			boolean resolve) {
 		final TableReference tableReference = correlatedTableGroup.getTableReference(
@@ -166,7 +166,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	public TableGroup findCompatibleJoinedGroup(TableGroupJoinProducer joinProducer, SqlAstJoinType requestedJoinType) {
+	public TableGroup findCompatibleJoinedGroup(TableGroupJoinProducer<?, ?, ?> joinProducer, SqlAstJoinType requestedJoinType) {
 		final TableGroup compatibleJoinedGroup = super.findCompatibleJoinedGroup( joinProducer, requestedJoinType );
 		return compatibleJoinedGroup == null ? correlatedTableGroup.findCompatibleJoinedGroup(
 				joinProducer,

@@ -41,7 +41,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 ///
 /// @author Steve Ebersole
 public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implements ResultBuilderEntityValued {
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister<?> entityDescriptor;
 	private final NavigablePath rootPath;
 	private final LockMode lockMode;
 	private final FetchBuilder identifierFetchBuilder;
@@ -89,7 +89,7 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 				final var attributeMapping =
 								entityDescriptor.findSubPart( embeddedMapping.name() );
 				if ( !identifierFetchHandler.handleMember( embeddedMapping ) ) {
-					if ( attributeMapping instanceof EmbeddableValuedModelPart modelPart ) {
+					if ( attributeMapping instanceof EmbeddableValuedModelPart<?, ?, ?> modelPart ) {
 						attributeFetchBuilders.put(
 								embeddedMapping.name(),
 								new CompleteFetchBuilderEmbeddableValuedModelPart(
@@ -116,7 +116,7 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 
 	private static List<String> extractColumnNames(
 			EmbeddedMapping<?, ?> embeddedMapping,
-			EmbeddableValuedModelPart modelPart) {
+			EmbeddableValuedModelPart<?, ?, ?> modelPart) {
 		final var columnNames = new String[modelPart.getJdbcTypeCount()];
 		collectColumnNames( embeddedMapping, modelPart.getEmbeddableTypeDescriptor(), 0, columnNames );
 		for ( int i = 0; i < columnNames.length; i++ ) {
@@ -132,7 +132,7 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 
 	private static void collectColumnNames(
 			EmbeddedMapping<?, ?> embeddedMapping,
-			ManagedMappingType embeddableMappingType,
+			ManagedMappingType<?, ?, ?> embeddableMappingType,
 			int offset,
 			String[] columnNames) {
 		for ( var memberMapping : embeddedMapping.fields() ) {
@@ -158,12 +158,12 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 			String[] columnNames,
 			MemberMapping<?> memberMapping,
 			String memberName,
-			AttributeMapping attributeMapping) {
+			AttributeMapping<?, ?, ?> attributeMapping) {
 		if ( memberMapping instanceof FieldMapping<?, ?> basicMapping ) {
 			columnNames[offset] = basicMapping.columnName();
 		}
 		else if ( memberMapping instanceof EmbeddedMapping<?, ?> nestedMapping ) {
-			if ( !(attributeMapping instanceof EmbeddableValuedModelPart nestedModelPart) ) {
+			if ( !(attributeMapping instanceof EmbeddableValuedModelPart<?, ?, ?> nestedModelPart) ) {
 				throw new IllegalArgumentException(
 						"Embedded result mapping specified non-embedded attribute: " + memberName
 				);
@@ -191,7 +191,7 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 		}
 	}
 
-	private static int getAttributeOffset(ManagedMappingType embeddableMappingType, String attributeName) {
+	private static int getAttributeOffset(ManagedMappingType<?, ?, ?> embeddableMappingType, String attributeName) {
 		int offset = 0;
 		for ( int i = 0; i < embeddableMappingType.getNumberOfAttributeMappings(); i++ ) {
 			final var attributeMapping = embeddableMappingType.getAttributeMapping( i );
@@ -205,10 +205,10 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 
 	private IdentifierFetchHandler buildIdentifierFetchHandler() {
 		final var identifierMapping = entityDescriptor.getIdentifierMapping();
-		if ( identifierMapping instanceof NonAggregatedIdentifierMapping complexId ) {
+		if ( identifierMapping instanceof NonAggregatedIdentifierMapping<?, ?> complexId ) {
 			return new ComplexIdentifierFetchHandler( complexId, rootPath );
 		}
-		else if ( identifierMapping instanceof SingleAttributeIdentifierMapping simpleId ) {
+		else if ( identifierMapping instanceof SingleAttributeIdentifierMapping<?, ?, ?> simpleId ) {
 			return new SimpleIdentifierFetchHandler( entityDescriptor, simpleId, rootPath );
 		}
 		else {
@@ -225,14 +225,14 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 	}
 
 	private static class SimpleIdentifierFetchHandler implements IdentifierFetchHandler {
-		private final EntityMappingType entityDescriptor;
-		private final SingleAttributeIdentifierMapping idMapping;
+		private final EntityMappingType<?> entityDescriptor;
+		private final SingleAttributeIdentifierMapping<?, ?, ?> idMapping;
 		private final NavigablePath rootPath;
 		private MemberMapping<?> memberMapping;
 
 		public SimpleIdentifierFetchHandler(
-				EntityMappingType entityDescriptor,
-				SingleAttributeIdentifierMapping idMapping,
+				EntityMappingType<?> entityDescriptor,
+				SingleAttributeIdentifierMapping<?, ?, ?> idMapping,
 				NavigablePath rootPath) {
 			this.entityDescriptor = entityDescriptor;
 			this.idMapping = idMapping;
@@ -290,11 +290,11 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 	private static class ComplexIdentifierFetchHandler implements IdentifierFetchHandler {
 		private final Set<String> idAttributeNames;
 		private final List<String> columnNames;
-		private final NonAggregatedIdentifierMapping idMapping;
+		private final NonAggregatedIdentifierMapping<?, ?> idMapping;
 		private final NavigablePath rootPath;
 
 		public ComplexIdentifierFetchHandler(
-				NonAggregatedIdentifierMapping idMapping,
+				NonAggregatedIdentifierMapping<?, ?> idMapping,
 				NavigablePath rootPath) {
 			this.idMapping = idMapping;
 			this.rootPath = rootPath;

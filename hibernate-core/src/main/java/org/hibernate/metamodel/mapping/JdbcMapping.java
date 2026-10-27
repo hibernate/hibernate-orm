@@ -49,13 +49,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Steve Ebersole
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
-public interface JdbcMapping extends MappingType, JdbcMappingContainer {
+public interface JdbcMapping<J> extends MappingType<J>, JdbcMappingContainer {
 	/**
 	 * The descriptor for the Java type represented by this
 	 * expressible type
 	 */
 	@Nonnull
-	JavaType<?> getJavaTypeDescriptor();
+	JavaType<J> getJavaTypeDescriptor();
 
 	/**
 	 * The descriptor for the SQL type represented by this
@@ -95,7 +95,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 
 	@Nonnull
 	@Override
-	default JavaType<?> getMappedJavaType() {
+	default JavaType<J> getMappedJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
@@ -155,7 +155,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 
 	@Nonnull
 	@Override
-	default JdbcMapping getJdbcMapping(int index) {
+	default JdbcMapping<?> getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );
 		}
@@ -164,18 +164,18 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 
 	@Nonnull
 	@Override
-	default JdbcMapping getSingleJdbcMapping() {
+	default JdbcMapping<?> getSingleJdbcMapping() {
 		return this;
 	}
 
 	@Override
-	default int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( 0, this );
 		return 1;
 	}
 
 	@Override
-	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( 0, this );
 		return 1;
 	}

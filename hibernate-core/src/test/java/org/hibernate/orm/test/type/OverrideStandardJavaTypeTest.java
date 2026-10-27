@@ -43,7 +43,7 @@ public class OverrideStandardJavaTypeTest {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( SampleEntity.class );
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor( SampleEntity.class );
 
 		final var languageJavaTypeDescriptor = entityDescriptor.findAttributeMapping( "language" )
 				.getSingleJdbcMapping().getJavaTypeDescriptor();

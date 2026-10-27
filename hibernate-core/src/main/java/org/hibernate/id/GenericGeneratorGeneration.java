@@ -209,12 +209,12 @@ public class GenericGeneratorGeneration
 	}
 
 	@Override
-	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister<?> persister) {
 		return onExecutionGenerator().getGeneratedIdentifierDelegate( persister );
 	}
 
 	@Override
-	public String[] getUniqueKeyPropertyNames(EntityPersister persister) {
+	public String[] getUniqueKeyPropertyNames(EntityPersister<?> persister) {
 		return onExecutionGenerator().getUniqueKeyPropertyNames( persister );
 	}
 

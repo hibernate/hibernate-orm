@@ -99,7 +99,7 @@ public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implement
 	@Override
 	public CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,

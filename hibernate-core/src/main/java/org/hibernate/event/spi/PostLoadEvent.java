@@ -12,13 +12,13 @@ import jakarta.annotation.Nullable;
 public class PostLoadEvent extends AbstractSessionEvent {
 	private Object entity;
 	private Object id;
-	private EntityPersister persister;
+	private EntityPersister<?> persister;
 
 	public PostLoadEvent(@Nonnull EventSource session) {
 		super(session);
 	}
 
-	public PostLoadEvent(@Nullable Object id, @Nullable EntityPersister persister, @Nullable Object entity, @Nonnull EventSource session) {
+	public PostLoadEvent(@Nullable Object id, @Nullable EntityPersister<?> persister, @Nullable Object entity, @Nonnull EventSource session) {
 		super(session);
 		this.id = id;
 		this.persister = persister;
@@ -35,7 +35,7 @@ public class PostLoadEvent extends AbstractSessionEvent {
 		return entity;
 	}
 
-	public @Nullable EntityPersister getPersister() {
+	public @Nullable EntityPersister<?> getPersister() {
 		return persister;
 	}
 
@@ -53,7 +53,7 @@ public class PostLoadEvent extends AbstractSessionEvent {
 		return this;
 	}
 
-	public @Nonnull PostLoadEvent setPersister(@Nullable EntityPersister persister) {
+	public @Nonnull PostLoadEvent setPersister(@Nullable EntityPersister<?> persister) {
 		this.persister = persister;
 		return this;
 	}

@@ -31,7 +31,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 	private final TranslationContext translationContext;
 
 	public ParseTreeVisitor(
-			PluralAttributeMapping pluralAttributeMapping,
+			PluralAttributeMapping<?> pluralAttributeMapping,
 			TranslationContext translationContext) {
 		this.pathConsumer = new PathConsumer( pluralAttributeMapping, translationContext );
 		this.translationContext = translationContext;

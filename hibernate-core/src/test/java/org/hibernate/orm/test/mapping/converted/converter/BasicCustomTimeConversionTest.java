@@ -68,7 +68,7 @@ public class BasicCustomTimeConversionTest {
 
 	@Test
 	public void testSimpleConvertUsage(SessionFactoryScope scope) {
-		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(TheEntity.class.getName());
+		final EntityPersister<?> ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(TheEntity.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final ConvertedBasicTypeImpl type = assertTyping( ConvertedBasicTypeImpl.class, theDatePropertyType );
 		final JpaAttributeConverter converter = (JpaAttributeConverter) type.getValueConverter();

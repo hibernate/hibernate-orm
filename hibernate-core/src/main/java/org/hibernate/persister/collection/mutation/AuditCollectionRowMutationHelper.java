@@ -21,7 +21,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
  */
 final class AuditCollectionRowMutationHelper {
 	private final CollectionMutationTarget mutationTarget;
-	private final PluralAttributeMapping attributeMapping;
+	private final PluralAttributeMapping<?> attributeMapping;
 	private final String auditTableName;
 	private final SelectableMapping changesetIdMapping;
 	private final SelectableMapping modificationTypeMapping;

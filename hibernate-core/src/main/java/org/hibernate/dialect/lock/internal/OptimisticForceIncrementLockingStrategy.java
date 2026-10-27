@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * @since 3.5
  */
 public class OptimisticForceIncrementLockingStrategy implements LockingStrategy {
-	private final EntityPersister lockable;
+	private final EntityPersister<?> lockable;
 	private final LockMode lockMode;
 
 	/**
@@ -31,7 +31,7 @@ public class OptimisticForceIncrementLockingStrategy implements LockingStrategy 
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
-	public OptimisticForceIncrementLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	public OptimisticForceIncrementLockingStrategy(EntityPersister<?> lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.OPTIMISTIC_FORCE_INCREMENT ) ) {

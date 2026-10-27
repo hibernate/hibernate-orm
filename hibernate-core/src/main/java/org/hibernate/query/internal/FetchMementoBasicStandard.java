@@ -23,12 +23,12 @@ import org.hibernate.query.results.internal.complete.CompleteFetchBuilderBasicPa
  */
 public class FetchMementoBasicStandard implements FetchMementoBasic {
 	private final NavigablePath navigablePath;
-	private final BasicValuedModelPart fetchedAttribute;
+	private final BasicValuedModelPart<?, ?, ?> fetchedAttribute;
 	private final String columnAlias;
 
 	public FetchMementoBasicStandard(
 			NavigablePath navigablePath,
-			BasicValuedModelPart fetchedAttribute,
+			BasicValuedModelPart<?, ?, ?> fetchedAttribute,
 			String columnAlias) {
 		this.navigablePath = navigablePath;
 		this.fetchedAttribute = fetchedAttribute;
@@ -38,8 +38,8 @@ public class FetchMementoBasicStandard implements FetchMementoBasic {
 	public static FetchMementoBasicStandard from(
 			FieldMapping<?, ?> basicMapping,
 			NavigablePath attributePath,
-			EntityPersister entityDescriptor,
-			BasicAttributeMapping attributeMapping,
+			EntityPersister<?> entityDescriptor,
+			BasicAttributeMapping<?> attributeMapping,
 			SessionFactoryImplementor factory) {
 		return null;
 	}
@@ -49,7 +49,7 @@ public class FetchMementoBasicStandard implements FetchMementoBasic {
 		return navigablePath;
 	}
 
-	public BasicValuedModelPart getFetchedAttribute() {
+	public BasicValuedModelPart<?, ?, ?> getFetchedAttribute() {
 		return fetchedAttribute;
 	}
 

@@ -24,7 +24,7 @@ final class ParentPropertyAccessHelper {
 	static PropertyAccess parentPropertyAccess(
 			PropertyAccessorService propertyAccessorService,
 			@Nullable String parentInjectionAttributeName,
-			EmbeddableMappingType embeddableMappingType) {
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		if ( parentInjectionAttributeName == null ) {
 			return null;
 		}

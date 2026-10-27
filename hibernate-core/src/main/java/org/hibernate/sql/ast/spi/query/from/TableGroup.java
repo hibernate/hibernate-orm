@@ -29,7 +29,7 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, PathIn
 	 */
 	String getGroupAlias();
 
-	ModelPartContainer getModelPart();
+	ModelPartContainer<?, ?, ?> getModelPart();
 
 	String getSourceAlias();
 
@@ -127,9 +127,9 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, PathIn
 
 	@Override
 	default void applySqlSelections(DomainResultCreationState creationState) {
-		final ModelPartContainer modelPart = getModelPart();
-		final ModelPart modelPartToApply =
-				modelPart instanceof EntityValuedModelPart entityValuedModelPart
+		final ModelPartContainer<?, ?, ?> modelPart = getModelPart();
+		final ModelPart<?, ?, ?> modelPartToApply =
+				modelPart instanceof EntityValuedModelPart<?> entityValuedModelPart
 						? entityValuedModelPart.getEntityMappingType()
 						: modelPart;
 		modelPartToApply.applySqlSelections(
@@ -161,7 +161,7 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, PathIn
 	}
 
 	default TableGroupJoin findCompatibleJoin(
-			TableGroupJoinProducer joinProducer,
+			TableGroupJoinProducer<?, ?, ?> joinProducer,
 			SqlAstJoinType requestedJoinType) {
 		// We don't look into nested table group joins as that wouldn't be "compatible"
 		for ( TableGroupJoin join : getTableGroupJoins() ) {
@@ -185,7 +185,7 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, PathIn
 	}
 
 	default TableGroup findCompatibleJoinedGroup(
-			TableGroupJoinProducer joinProducer,
+			TableGroupJoinProducer<?, ?, ?> joinProducer,
 			SqlAstJoinType requestedJoinType) {
 		final TableGroupJoin compatibleJoin = findCompatibleJoin( joinProducer, requestedJoinType );
 		return compatibleJoin != null ? compatibleJoin.getJoinedGroup() : null;

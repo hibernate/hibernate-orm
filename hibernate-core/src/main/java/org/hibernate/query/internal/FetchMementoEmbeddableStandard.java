@@ -14,12 +14,12 @@ import org.hibernate.spi.NavigablePath;
  */
 public class FetchMementoEmbeddableStandard implements FetchMemento {
 	private final NavigablePath navigablePath;
-	private final EmbeddableValuedModelPart attributeMapping;
+	private final EmbeddableValuedModelPart<?, ?, ?> attributeMapping;
 	private final List<String> columnNames;
 
 	public FetchMementoEmbeddableStandard(
 			NavigablePath navigablePath,
-			EmbeddableValuedModelPart attributeMapping,
+			EmbeddableValuedModelPart<?, ?, ?> attributeMapping,
 			List<String> columnNames) {
 		this.navigablePath = navigablePath;
 		this.attributeMapping = attributeMapping;
@@ -39,7 +39,7 @@ public class FetchMementoEmbeddableStandard implements FetchMemento {
 		return navigablePath;
 	}
 
-	public EmbeddableValuedModelPart getAttributeMapping() {
+	public EmbeddableValuedModelPart<?, ?, ?> getAttributeMapping() {
 		return attributeMapping;
 	}
 

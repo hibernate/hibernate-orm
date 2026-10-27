@@ -56,7 +56,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 ///
 /// @author Steve Ebersole
 public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperation<T>, NaturalIdLoader.Options {
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister<?> entityDescriptor;
 
 	private KeyType keyType = KeyType.IDENTIFIER;
 
@@ -79,7 +79,7 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 	private NaturalIdSynchronization naturalIdSynchronization;
 
 	public AbstractFindByKeyOperation(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<?> rootGraph,
 			@Nullable LockOptions defaultLockOptions,
@@ -177,7 +177,7 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 		enabledFetchProfiles.add( profileName );
 	}
 
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 

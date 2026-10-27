@@ -67,7 +67,7 @@ public class LazyBasicFieldNotInitializedTest {
 			TestEntity entity = s.get( TestEntity.class, entityId );
 			assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
 
-			EntityPersister entityPersister = scope.getSessionFactory().getRuntimeMetamodels()
+			EntityPersister<?> entityPersister = scope.getSessionFactory().getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( TestEntity.class );
 
@@ -76,7 +76,7 @@ public class LazyBasicFieldNotInitializedTest {
 			Assertions.assertTrue( propertyLaziness[0] );
 
 			// Make sure runtime attribute metadata is consistent (HHH-10551)
-			final AttributeMapping theBytesAttr = entityPersister.findAttributeMapping( "description" );
+			final AttributeMapping<?, ?, ?> theBytesAttr = entityPersister.findAttributeMapping( "description" );
 			assertThat( theBytesAttr ).isInstanceOf( BasicValuedModelPart.class );
 			assertThat( theBytesAttr.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.DELAYED );
 		} );

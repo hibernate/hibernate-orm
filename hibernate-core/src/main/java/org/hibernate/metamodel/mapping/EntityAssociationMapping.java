@@ -11,7 +11,7 @@ import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
  *
  * @author Steve Ebersole
  */
-public interface EntityAssociationMapping extends ModelPart, Association, TableGroupJoinProducer {
+public interface EntityAssociationMapping<J> extends ModelPart<J, J, J>, Association<J, J, J>, TableGroupJoinProducer<J, J, J> {
 	@Nonnull
 	@Override
 	default String getFetchableName() {
@@ -19,7 +19,7 @@ public interface EntityAssociationMapping extends ModelPart, Association, TableG
 	}
 
 	@Nonnull
-	EntityMappingType getAssociatedEntityMappingType();
+	EntityMappingType<J> getAssociatedEntityMappingType();
 
 	@Nonnull
 	Set<String> getTargetKeyPropertyNames();
@@ -29,7 +29,7 @@ public interface EntityAssociationMapping extends ModelPart, Association, TableG
 	 * of this association's foreign-key
 	 */
 	@Nonnull
-	ModelPart getKeyTargetMatchPart();
+	ModelPart<?, ?, ?> getKeyTargetMatchPart();
 
 	boolean isReferenceToPrimaryKey();
 

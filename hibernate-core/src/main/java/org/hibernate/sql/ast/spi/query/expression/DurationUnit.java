@@ -17,9 +17,9 @@ import org.hibernate.sql.ast.spi.SqlAstNode;
  */
 public class DurationUnit implements Expression, SqlAstNode {
 	private final TemporalUnit unit;
-	private final BasicValuedMapping type;
+	private final BasicValuedMapping<?> type;
 
-	public DurationUnit(TemporalUnit unit, BasicValuedMapping type) {
+	public DurationUnit(TemporalUnit unit, BasicValuedMapping<?> type) {
 		this.unit = unit;
 		this.type = type;
 	}
@@ -29,7 +29,7 @@ public class DurationUnit implements Expression, SqlAstNode {
 	}
 
 	@Override
-	public BasicValuedMapping getExpressionType() {
+	public BasicValuedMapping<?> getExpressionType() {
 		return type;
 	}
 

@@ -15,7 +15,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 	private final Map<String, Object> data;
 	private final boolean changes;
 
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final Object[] oldState;
 	private final Object[] newState;
 
@@ -24,7 +24,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			String entityName,
 			EnversService enversService,
 			Object id,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			Object[] newState,
 			Object[] oldState) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.MOD );

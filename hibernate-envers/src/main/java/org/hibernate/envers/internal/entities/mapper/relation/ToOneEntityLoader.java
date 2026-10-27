@@ -50,7 +50,7 @@ public final class ToOneEntityLoader {
 			boolean removed,
 			EnversService enversService,
 			boolean isTargetNotAudited) {
-		final EntityPersister persister = versionsReader.getSessionImplementor()
+		final EntityPersister<?> persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
@@ -73,7 +73,7 @@ public final class ToOneEntityLoader {
 			boolean removed,
 			EnversService enversService,
 			boolean isTargetNotAudited) {
-		final EntityPersister persister = versionsReader.getSessionImplementor()
+		final EntityPersister<?> persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );

@@ -37,7 +37,7 @@ class AggregateJdbcValuesTest {
 
 	@Test
 	void decomposesIntoPhysicalOrderWithoutAliasingTheDomainValues() throws SQLException {
-		final EmbeddableMappingType mappingType = mappingType();
+		final EmbeddableMappingType<?, ?, ?> mappingType = mappingType();
 		final Object[] domainValue = { "A", "B", "C" };
 
 		final Object[] jdbcValues = AggregateJdbcValues.fromDomainValue(
@@ -53,7 +53,7 @@ class AggregateJdbcValuesTest {
 
 	@Test
 	void normalizesPhysicalValuesIntoLogicalOrderWithoutMutatingTheInput() throws SQLException {
-		final EmbeddableMappingType mappingType = mappingType();
+		final EmbeddableMappingType<?, ?, ?> mappingType = mappingType();
 		final Object[] physicalValues = { "C", "A", "B" };
 
 		final Object[] logicalValues = AggregateJdbcValues.toLogicalJdbcValues(
@@ -81,14 +81,14 @@ class AggregateJdbcValuesTest {
 
 	@Test
 	void roundTripsFlattenedEmbeddableWithInterleavedPhysicalSlots() throws SQLException {
-		final EmbeddableMappingType nested = mappingType( 2 );
-		final EmbeddableMappingType mapping = mappingType( 2 );
+		final EmbeddableMappingType<?, ?, ?> nested = mappingType( 2 );
+		final EmbeddableMappingType<?, ?, ?> mapping = mappingType( 2 );
 		when( mapping.getJdbcValueCount() ).thenReturn( 3 );
-		final AttributeMapping embedded = mock(
+		final AttributeMapping<?, ?, ?> embedded = mock(
 				AttributeMapping.class, withSettings().extraInterfaces( EmbeddableValuedModelPart.class )
 		);
-		when( embedded.getMappedType() ).thenReturn( nested );
-		when( mapping.getAttributeMapping( 0 ) ).thenReturn( embedded );
+		doReturn( nested ).when( embedded ).getMappedType();
+		doReturn( embedded ).when( mapping ).getAttributeMapping( 0 );
 		final Object[] domain = { new Object[] { "A", null }, "C" };
 		final AggregateJdbcValueOrder order = AggregateJdbcValueOrder.physicalOrder( 2, 0, 1 );
 		final Object[] physical = AggregateJdbcValues.fromDomainValue( mapping, domain, order, options );
@@ -102,17 +102,17 @@ class AggregateJdbcValuesTest {
 
 	@Test
 	void roundTripsNestedNativeAggregateWithoutDecodingItTwice() throws SQLException {
-		final EmbeddableMappingType nested = mappingType( 2 );
-		final EmbeddableMappingType mapping = mappingType( 2 );
-		final AttributeMapping embedded = mock(
+		final EmbeddableMappingType<?, ?, ?> nested = mappingType( 2 );
+		final EmbeddableMappingType<?, ?, ?> mapping = mappingType( 2 );
+		final AttributeMapping<?, ?, ?> embedded = mock(
 				AttributeMapping.class, withSettings().extraInterfaces( EmbeddableValuedModelPart.class )
 		);
-		when( embedded.getMappedType() ).thenReturn( nested );
-		when( mapping.getAttributeMapping( 0 ) ).thenReturn( embedded );
+		doReturn( nested ).when( embedded ).getMappedType();
+		doReturn( embedded ).when( mapping ).getAttributeMapping( 0 );
 		final SelectableMapping selectable = mock( SelectableMapping.class );
 		when( nested.getAggregateMapping() ).thenReturn( selectable );
-		final JdbcMapping jdbcMapping = mock( JdbcMapping.class );
-		when( selectable.getJdbcMapping() ).thenReturn( jdbcMapping );
+		final JdbcMapping<?> jdbcMapping = mock( JdbcMapping.class );
+		doReturn( jdbcMapping ).when( selectable ).getJdbcMapping();
 		final AggregateJdbcType aggregate = mock( AggregateJdbcType.class );
 		when( jdbcMapping.getJdbcType() ).thenReturn( aggregate );
 		final ValueBinder<Object> binder = mock( ValueBinder.class );
@@ -133,7 +133,7 @@ class AggregateJdbcValuesTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	void convertsArrayComponentsWithoutMutatingTheDecodedContainer() throws SQLException {
-		final EmbeddableMappingType mapping = mappingType( 2 );
+		final EmbeddableMappingType<?, ?, ?> mapping = mappingType( 2 );
 		final BasicPluralType<Object[], Object> arrayType = mock( BasicPluralType.class );
 		final BasicType<Object> elementType = mock( BasicType.class );
 		when( arrayType.getElementType() ).thenReturn( elementType );
@@ -144,7 +144,7 @@ class AggregateJdbcValuesTest {
 		when( javaType.wrap( any(), any() ) ).thenAnswer( invocation ->
 				( (java.sql.Array) invocation.getArgument( 0 ) ).getArray() );
 		when( arrayType.convertToDomainValue( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
-		when( mapping.getAttributeMapping( 0 ).getSingleJdbcMapping() ).thenReturn( arrayType );
+		doReturn( arrayType ).when( mapping.getAttributeMapping( 0 ) ).getSingleJdbcMapping();
 		final java.sql.Array nativeArray = mock( java.sql.Array.class );
 		final Object[] elements = { 1, null, 3 };
 		when( nativeArray.getArray() ).thenReturn( elements );
@@ -159,8 +159,8 @@ class AggregateJdbcValuesTest {
 
 	@Test
 	void domainConversionDoesNotMutateInputOrApplyConvertersTwice() throws SQLException {
-		final EmbeddableMappingType mapping = mappingType( 1 );
-		final JdbcMapping jdbcMapping = mapping.getAttributeMapping( 0 ).getSingleJdbcMapping();
+		final EmbeddableMappingType<?, ?, ?> mapping = mappingType( 1 );
+		final JdbcMapping<?> jdbcMapping = mapping.getAttributeMapping( 0 ).getSingleJdbcMapping();
 		when( jdbcMapping.convertToDomainValue( any() ) ).thenAnswer( invocation -> "domain:" + invocation.getArgument( 0 ) );
 		final Object[] physical = { "value" };
 		assertEquals( List.of( "domain:value" ), AggregateJdbcValues.toDomainValue( mapping, physical, options ) );
@@ -179,25 +179,25 @@ class AggregateJdbcValuesTest {
 		);
 	}
 
-	private EmbeddableMappingType mappingType() throws SQLException {
+	private EmbeddableMappingType<?, ?, ?> mappingType() throws SQLException {
 		return mappingType( 3 );
 	}
 
 	@SuppressWarnings("unchecked")
-	private EmbeddableMappingType mappingType(int attributeCount) throws SQLException {
-		final EmbeddableMappingType mappingType = mock( EmbeddableMappingType.class );
+	private EmbeddableMappingType<?, ?, ?> mappingType(int attributeCount) throws SQLException {
+		final EmbeddableMappingType<?, ?, ?> mappingType = mock( EmbeddableMappingType.class );
 		when( mappingType.getJdbcValueCount() ).thenReturn( attributeCount );
 		when( mappingType.getNumberOfAttributeMappings() ).thenReturn( attributeCount );
 		when( mappingType.getValues( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
 
 		for ( int i = 0; i < attributeCount; i++ ) {
-			final AttributeMapping modelPart = mock( AttributeMapping.class );
-			final JdbcMapping jdbcMapping = mock( JdbcMapping.class );
+			final AttributeMapping<?, ?, ?> modelPart = mock( AttributeMapping.class );
+			final JdbcMapping<?> jdbcMapping = mock( JdbcMapping.class );
 			final JavaType<Object> jdbcJavaType = mock( JavaType.class );
 			final ValueBinder<Object> valueBinder = mock( ValueBinder.class );
-			when( mappingType.getAttributeMapping( i ) ).thenReturn( modelPart );
+			doReturn( modelPart ).when( mappingType ).getAttributeMapping( i );
 			when( modelPart.getJdbcTypeCount() ).thenReturn( 1 );
-			when( modelPart.getSingleJdbcMapping() ).thenReturn( jdbcMapping );
+			doReturn( jdbcMapping ).when( modelPart ).getSingleJdbcMapping();
 			when( jdbcMapping.convertToRelationalValue( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
 			when( jdbcMapping.convertToDomainValue( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
 			doReturn( jdbcJavaType ).when( jdbcMapping ).getJdbcJavaType();

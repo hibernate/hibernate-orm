@@ -105,7 +105,7 @@ public interface TableDetails {
 		 * Describes the mapping between object and relational for this column
 		 */
 		@Nonnull
-		JdbcMapping getJdbcMapping();
+		JdbcMapping<?> getJdbcMapping();
 	}
 
 	@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })

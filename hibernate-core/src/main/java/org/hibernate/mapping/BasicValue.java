@@ -1354,7 +1354,7 @@ public class BasicValue extends SimpleValue
 			return null;
 		}
 
-		JdbcMapping getJdbcMapping();
+		JdbcMapping<?> getJdbcMapping();
 
 		/**
 		 * The JavaType for the value as part of the domain model

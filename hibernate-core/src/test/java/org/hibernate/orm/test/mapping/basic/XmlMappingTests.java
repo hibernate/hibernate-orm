@@ -114,14 +114,14 @@ public abstract class XmlMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithXml.class );
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithXml.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
-		final BasicAttributeMapping stringMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+		final BasicAttributeMapping<?> stringMapAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 				"stringMap" );
-		final BasicAttributeMapping objectMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+		final BasicAttributeMapping<?> objectMapAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 				"objectMap" );
-		final BasicAttributeMapping listAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+		final BasicAttributeMapping<?> listAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 				"list" );
 		assertThat( stringMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( objectMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );

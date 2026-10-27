@@ -24,7 +24,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 public abstract class AbstractPessimisticUpdateLockingStrategy implements LockingStrategy {
 
-	private final EntityPersister lockable;
+	private final EntityPersister<?> lockable;
 	private final LockMode lockMode;
 	private final String sql;
 
@@ -35,7 +35,7 @@ public abstract class AbstractPessimisticUpdateLockingStrategy implements Lockin
 	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
-	public AbstractPessimisticUpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	public AbstractPessimisticUpdateLockingStrategy(EntityPersister<?> lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.PESSIMISTIC_READ ) ) {

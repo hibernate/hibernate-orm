@@ -30,7 +30,7 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public UniqueKeySelectingDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			String[] uniqueKeyPropertyNames,
 			EventType timing) {
 		super( persister, timing, true, true );

@@ -26,7 +26,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 	public StandardTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			String sourceAlias,
 			TableReference primaryTableReference,
 			SqlAliasBase sqlAliasBase,
@@ -50,7 +50,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 	public StandardTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			String sourceAlias,
 			TableReference primaryTableReference,
 			boolean realTableGroup,
@@ -70,7 +70,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 	public StandardTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			boolean fetched,
 			String sourceAlias,
 			TableReference primaryTableReference,

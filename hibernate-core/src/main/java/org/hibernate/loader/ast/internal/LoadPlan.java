@@ -16,13 +16,13 @@ public interface LoadPlan {
 	 * The thing being loaded
 	 */
 	@Nonnull
-	Loadable getLoadable();
+	Loadable<?, ?, ?> getLoadable();
 
 	/**
 	 * The part of the thing being loaded used to restrict which loadables get loaded
 	 */
 	@Nonnull
-	ModelPart getRestrictivePart();
+	ModelPart<?, ?, ?> getRestrictivePart();
 
 	/**
 	 * The JdbcSelect for the load

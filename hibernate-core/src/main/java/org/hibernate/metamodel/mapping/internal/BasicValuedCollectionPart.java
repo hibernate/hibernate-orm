@@ -43,18 +43,25 @@ import static org.hibernate.sql.results.internal.ResultsLogger.RESULTS_LOGGER;
  *
  * @author Steve Ebersole
  */
-public class BasicValuedCollectionPart
-		implements CollectionPart, BasicValuedModelPart, FetchOptions {
+public class BasicValuedCollectionPart<J>
+		implements CollectionPart<J, J, J>, BasicValuedModelPart<J, J, J>, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
 
 	private final SelectableMapping selectableMapping;
+	private final JdbcMapping<J> jdbcMapping;
 
-	public BasicValuedCollectionPart(
+	public static BasicValuedCollectionPart<?> create(
 			CollectionPersister collectionDescriptor,
 			Nature nature,
 			SelectableMapping selectableMapping) {
+		return new BasicValuedCollectionPart<>( collectionDescriptor, nature, selectableMapping, selectableMapping.getJdbcMapping() );
+	}
+
+	private BasicValuedCollectionPart(CollectionPersister collectionDescriptor, Nature nature,
+			SelectableMapping selectableMapping, JdbcMapping<J> jdbcMapping) {
+		this.jdbcMapping = jdbcMapping;
 		this.navigableRole = collectionDescriptor.getNavigableRole().append( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
@@ -69,14 +76,14 @@ public class BasicValuedCollectionPart
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getCollectionAttribute() {
+	public PluralAttributeMapping<?> getCollectionAttribute() {
 		return collectionDescriptor.getAttributeMapping();
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
-		return selectableMapping.getJdbcMapping()::getJavaTypeDescriptor;
+	public MappingType<J> getPartMappingType() {
+		return jdbcMapping::getJavaTypeDescriptor;
 	}
 
 	@Nonnull
@@ -165,8 +172,8 @@ public class BasicValuedCollectionPart
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
-		return selectableMapping.getJdbcMapping().getJavaTypeDescriptor();
+	public JavaType<J> getJavaType() {
+		return jdbcMapping.getJavaTypeDescriptor();
 	}
 
 	@Nonnull
@@ -182,16 +189,16 @@ public class BasicValuedCollectionPart
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
 			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				selectableMapping.getJdbcMapping(),
+				getJdbcMapping(),
 				navigablePath,
 				false,
 				!sqlSelection.isVirtual()
@@ -236,25 +243,25 @@ public class BasicValuedCollectionPart
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, null, creationState ), getJdbcMapping() );
 	}
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
-		return selectableMapping.getJdbcMapping();
+	public JdbcMapping<J> getJdbcMapping() {
+		return jdbcMapping;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return this::getJavaType;
 	}
 
@@ -311,7 +318,7 @@ public class BasicValuedCollectionPart
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );
 		}
@@ -320,7 +327,7 @@ public class BasicValuedCollectionPart
 
 	@Nonnull
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping<?> getSingleJdbcMapping() {
 		return getJdbcMapping();
 	}
 
@@ -335,7 +342,7 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, selectableMapping.getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

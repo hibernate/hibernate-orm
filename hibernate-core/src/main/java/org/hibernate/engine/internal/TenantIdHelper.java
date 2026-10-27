@@ -26,12 +26,12 @@ public final class TenantIdHelper {
 	 * The tenant attribute outside the identifier. Identifier tenant columns already
 	 * participate in key restrictions and do not need a separate tenant restriction.
 	 */
-	public static @Nullable AttributeMapping tenantIdAttribute(EntityPersister persister) {
+	public static @Nullable AttributeMapping<?, ?, ?> tenantIdAttribute(EntityPersister<?> persister) {
 		final var mapping = persister.getTenantIdMapping();
 		return mapping == null ? null : mapping.getAttributeMapping();
 	}
 
-	public static @Nullable SelectableMapping tenantIdColumn(EntityPersister persister, String tableName) {
+	public static @Nullable SelectableMapping tenantIdColumn(EntityPersister<?> persister, String tableName) {
 		final var tenantMapping = tenantIdAttribute( persister );
 		if ( tenantMapping != null ) {
 			final var selectable = tenantMapping.getSelectable( 0 );
@@ -46,14 +46,14 @@ public final class TenantIdHelper {
 	 * The tenant column only if this operation has a parameter for its restriction.
 	 * Custom SQL may omit that parameter.
 	 */
-	public static @Nullable SelectableMapping tenantIdColumn(EntityPersister persister, MutationOperation operation) {
+	public static @Nullable SelectableMapping tenantIdColumn(EntityPersister<?> persister, MutationOperation operation) {
 		final var selectable = tenantIdColumn( persister, operation.getTableDetails().getTableName() );
 		return selectable != null
 				&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null
 				? selectable : null;
 	}
 
-	public static void applyTenantRestriction(EntityPersister persister, RestrictedTableMutationBuilder<?, ?> builder) {
+	public static void applyTenantRestriction(EntityPersister<?> persister, RestrictedTableMutationBuilder<?, ?> builder) {
 		final var bindings = builder.getOptimisticLockBindings();
 		if ( bindings != null ) {
 			final var selectable = tenantIdColumn( persister, builder.getMutatingTable().getTableName() );
@@ -64,7 +64,7 @@ public final class TenantIdHelper {
 	}
 
 	public static void bindTenantRestriction(
-			EntityPersister persister, MutationOperation operation, JdbcValueBindings bindings,
+			EntityPersister<?> persister, MutationOperation operation, JdbcValueBindings bindings,
 			SharedSessionContractImplementor session) {
 		final var selectable = tenantIdColumn( persister, operation );
 		if ( selectable != null ) {
@@ -74,7 +74,7 @@ public final class TenantIdHelper {
 	}
 
 	public static boolean needsMultiTableUpdateCheck(
-			EntityPersister persister, SharedSessionContractImplementor session) {
+			EntityPersister<?> persister, SharedSessionContractImplementor session) {
 		return persister.hasMultipleTables() && !session.isRootTenant() && tenantIdAttribute( persister ) != null;
 	}
 
@@ -82,7 +82,7 @@ public final class TenantIdHelper {
 	 * Whether successful execution of this update establishes and locks tenant ownership.
 	 * Custom SQL and optional row counts cannot provide this guarantee.
 	 */
-	public static boolean checksTenantId(EntityPersister persister, MutationOperation operation) {
+	public static boolean checksTenantId(EntityPersister<?> persister, MutationOperation operation) {
 		return operation instanceof PreparableMutationOperation preparable
 			&& operation.getMutationType() == MutationType.UPDATE
 			&& !operation.getTableDetails().isOptional()
@@ -96,13 +96,13 @@ public final class TenantIdHelper {
 	 * Such an incomplete primary key cannot identify a stored row.
 	 */
 	public static boolean hasUnassignedIdentifierTenant(
-			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+			Object id, EntityPersister<?> persister, SharedSessionContractImplementor session) {
 		final var mapping = persister.getTenantIdMapping();
 		return mapping != null && mapping.hasUnassignedIdentifierTenant( id, session );
 	}
 
 	public static void validateIdentifierTenant(
-			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+			Object id, EntityPersister<?> persister, SharedSessionContractImplementor session) {
 		final var mapping = persister.getTenantIdMapping();
 		if ( mapping != null ) {
 			mapping.validateIdentifier( id, session );
@@ -113,7 +113,7 @@ public final class TenantIdHelper {
 	 * Validate the detached tenant value before any SQL or changes to the entity state.
 	 */
 	public static void validateAssignedTenantId(
-			Object entity, Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+			Object entity, Object id, EntityPersister<?> persister, SharedSessionContractImplementor session) {
 		final var mapping = persister.getTenantIdMapping();
 		if ( mapping != null ) {
 			mapping.validateAssignedValue( entity, id, session );
@@ -121,7 +121,7 @@ public final class TenantIdHelper {
 	}
 
 	public static void initializeIdentifierTenant(
-			Object entity, EntityPersister persister, SharedSessionContractImplementor session) {
+			Object entity, EntityPersister<?> persister, SharedSessionContractImplementor session) {
 		final var mapping = persister.getTenantIdMapping();
 		if ( mapping != null ) {
 			mapping.initializeIdentifier( entity, session );
@@ -129,7 +129,7 @@ public final class TenantIdHelper {
 	}
 
 	public static void initializeTenantId(
-			Object entity, Object[] state, EntityPersister persister, SharedSessionContractImplementor session) {
+			Object entity, Object[] state, EntityPersister<?> persister, SharedSessionContractImplementor session) {
 		final var mapping = persister.getTenantIdMapping();
 		if ( mapping != null ) {
 			mapping.initialize( entity, state, session );
@@ -141,7 +141,7 @@ public final class TenantIdHelper {
 	 * The supplied entity state cannot establish ownership of a database row.
 	 */
 	public static void checkStoredTenantOwnership(
-			Object id, EntityPersister persister, SharedSessionContractImplementor session, MissingRowPolicy missingRowPolicy) {
+			Object id, EntityPersister<?> persister, SharedSessionContractImplementor session, MissingRowPolicy missingRowPolicy) {
 		validateIdentifierTenant( id, persister, session );
 		final var loader = persister.getTenantIdLoader();
 		if ( loader != null && !session.isRootTenant() ) {

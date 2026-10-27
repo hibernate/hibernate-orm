@@ -94,7 +94,7 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	}
 
 	/// Registers an entity update as the authority for owner update-callback applicability.
-	public void registerOwnerEntityUpdate(Object owner, org.hibernate.persister.entity.EntityPersister persister) {
+	public void registerOwnerEntityUpdate(Object owner, org.hibernate.persister.entity.EntityPersister<?> persister) {
 		if ( !OwnerUpdateCompletionCoordinator.isNeeded( persister ) ) {
 			return;
 		}

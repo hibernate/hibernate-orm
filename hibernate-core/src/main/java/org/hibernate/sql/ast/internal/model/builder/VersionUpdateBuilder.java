@@ -19,16 +19,16 @@ import java.util.List;
 ///
 /// @author Steve Ebersole
 public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateStandard> {
-	private final EntityPersister mutationTarget;
+	private final EntityPersister<?> mutationTarget;
 	private final MutatingTableReference tableReference;
 
 	private final List<ColumnValueBinding> restrictionBindings = new ArrayList<>();
 	private final List<ColumnValueBinding> tenantBindings = new ArrayList<>();
 	private final ColumnValueBinding newVersionBinding;
 
-	private final List<ColumnValueParameter> parameterBinders;
+	private final List<ColumnValueParameter<?>> parameterBinders;
 
-	public VersionUpdateBuilder(EntityPersister mutationTarget) {
+	public VersionUpdateBuilder(EntityPersister<?> mutationTarget) {
 		this.mutationTarget = mutationTarget;
 
 		var identifierTableDescriptor = mutationTarget.getIdentifierTableDescriptor();
@@ -48,7 +48,7 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 				mutationTarget.getVersionMapping(),
 				tableReference,
 				ParameterUsage.SET,
-				(o) -> parameterBinders.add( (ColumnValueParameter) o )
+				(o) -> parameterBinders.add( (ColumnValueParameter<?>) o )
 		);
 
 		identifierTableDescriptor.keyDescriptor().columns().forEach( (columnDescriptor) -> {
@@ -57,7 +57,7 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 					columnDescriptor,
 					tableReference,
 					ParameterUsage.RESTRICT,
-					(o) -> parameterBinders.add( (ColumnValueParameter) o )
+					(o) -> parameterBinders.add( (ColumnValueParameter<?>) o )
 			);
 			restrictionBindings.add( idColumnBinding );
 		} );
@@ -67,14 +67,14 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 				mutationTarget.getVersionMapping(),
 				tableReference,
 				ParameterUsage.RESTRICT,
-				(o) -> parameterBinders.add( (ColumnValueParameter) o )
+				(o) -> parameterBinders.add( (ColumnValueParameter<?>) o )
 		);
 		restrictionBindings.add( oldVersionBinding );
 		final var tenantColumn = TenantIdHelper.tenantIdColumn( mutationTarget, tableReference.getTableName() );
 		if ( tenantColumn != null ) {
 			tenantBindings.add( ColumnValueBindingBuilder.createTenantRestriction(
 					tenantColumn, tableReference,
-					parameter -> parameterBinders.add( (ColumnValueParameter) parameter ) ) );
+					parameter -> parameterBinders.add( (ColumnValueParameter<?>) parameter ) ) );
 		}
 	}
 

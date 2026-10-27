@@ -36,7 +36,7 @@ public final class EntityCacheRestrictions {
 	public static final EntityCacheRestrictions NONE = new EntityCacheRestrictions( false, new String[0] );
 	private static final EntityCacheRestrictions SQL_RESTRICTED = new EntityCacheRestrictions( true, new String[0] );
 
-	public static EntityCacheRestrictions create(EntityMappingType entity, MetadataImplementor bootModel) {
+	public static EntityCacheRestrictions create(EntityMappingType<?> entity, MetadataImplementor bootModel) {
 		if ( hasSqlRestrictions( entity, new HashSet<>() ) ) {
 			return SQL_RESTRICTED;
 		}
@@ -62,7 +62,7 @@ public final class EntityCacheRestrictions {
 	}
 
 	private static void collectEntityFilters(
-			EntityMappingType entity, MetadataImplementor bootModel, Set<String> names, boolean root) {
+			EntityMappingType<?> entity, MetadataImplementor bootModel, Set<String> names, boolean root) {
 		final var factory = entity.getEntityPersister().getFactory();
 		for ( var filter : bootModel.getEntityBinding( entity.getEntityName() ).getFilters() ) {
 			final String name = filter.getName();
@@ -74,9 +74,9 @@ public final class EntityCacheRestrictions {
 	}
 
 	private static void collectFilters(
-			ManagedMappingType mapping, MetadataImplementor bootModel, Set<String> names, Set<ManagedMappingType> visited) {
+			ManagedMappingType<?, ?, ?> mapping, MetadataImplementor bootModel, Set<String> names, Set<ManagedMappingType<?, ?, ?>> visited) {
 		if ( visited.add( mapping ) ) {
-			if ( mapping instanceof EntityMappingType entity ) {
+			if ( mapping instanceof EntityMappingType<?> entity ) {
 				collectEntityFilters( entity, bootModel, names, false );
 			}
 			collectAttributeFilters( mapping, bootModel, names, visited );
@@ -84,17 +84,17 @@ public final class EntityCacheRestrictions {
 	}
 
 	private static void collectAttributeFilters(
-			ManagedMappingType mapping, MetadataImplementor bootModel, Set<String> names, Set<ManagedMappingType> visited) {
+			ManagedMappingType<?, ?, ?> mapping, MetadataImplementor bootModel, Set<String> names, Set<ManagedMappingType<?, ?, ?>> visited) {
 		for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
 			final var attribute = mapping.getAttributeMapping( i );
-			if ( attribute instanceof ToOneAttributeMapping toOne ) {
+			if ( attribute instanceof ToOneAttributeMapping<?> toOne ) {
 				addAll( names, toOne.getAssociationFilterNames() );
 				collectFilters( toOne.getEntityMappingType(), bootModel, names, visited );
 			}
-			else if ( attribute instanceof EmbeddableValuedModelPart embedded ) {
+			else if ( attribute instanceof EmbeddableValuedModelPart<?, ?, ?> embedded ) {
 				collectFilters( embedded.getEmbeddableTypeDescriptor(), bootModel, names, visited );
 			}
-			else if ( attribute instanceof PluralAttributeMapping plural ) {
+			else if ( attribute instanceof PluralAttributeMapping<?> plural ) {
 				final var fetchOptions = attribute.getMappedFetchOptions();
 				if ( fetchOptions.getTiming() == FetchTiming.IMMEDIATE
 					&& fetchOptions.getStyle() == FetchStyle.JOIN ) {
@@ -112,29 +112,29 @@ public final class EntityCacheRestrictions {
 	}
 
 	private static void collectCollectionPartFilters(
-			Object part, MetadataImplementor bootModel, Set<String> names, Set<ManagedMappingType> visited) {
-		if ( part instanceof EntityCollectionPart entity ) {
+			Object part, MetadataImplementor bootModel, Set<String> names, Set<ManagedMappingType<?, ?, ?>> visited) {
+		if ( part instanceof EntityCollectionPart<?> entity ) {
 			collectFilters( entity.getEntityMappingType(), bootModel, names, visited );
 		}
-		else if ( part instanceof EmbeddedCollectionPart embedded ) {
+		else if ( part instanceof EmbeddedCollectionPart<?> embedded ) {
 			collectFilters( embedded.getEmbeddableTypeDescriptor(), bootModel, names, visited );
 		}
 	}
 
-	public static boolean hasSqlRestrictions(ManagedMappingType mapping, Set<ManagedMappingType> visited) {
+	public static boolean hasSqlRestrictions(ManagedMappingType<?, ?, ?> mapping, Set<ManagedMappingType<?, ?, ?>> visited) {
 		if ( !visited.add( mapping ) ) {
 			return false;
 		}
-		else if ( mapping instanceof EntityMappingType entity
+		else if ( mapping instanceof EntityMappingType<?> entity
 					&& entity.hasWhereRestrictions() ) {
 			return true;
 		}
 		else {
 			for ( int i = 0; i < mapping.getNumberOfAttributeMappings(); i++ ) {
 				final var attribute = mapping.getAttributeMapping( i );
-				if ( attribute instanceof ToOneAttributeMapping toOne
+				if ( attribute instanceof ToOneAttributeMapping<?> toOne
 						&& (toOne.hasAssociationSqlRestriction() || hasSqlRestrictions( toOne.getEntityMappingType(), visited ))
-					|| attribute instanceof EmbeddableValuedModelPart embedded
+					|| attribute instanceof EmbeddableValuedModelPart<?, ?, ?> embedded
 						&& hasSqlRestrictions( embedded.getEmbeddableTypeDescriptor(), visited ) ) {
 					return true;
 				}

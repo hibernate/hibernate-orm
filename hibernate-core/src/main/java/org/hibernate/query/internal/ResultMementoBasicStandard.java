@@ -156,7 +156,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 		return (BasicJavaType<?>) jtdRegistry.resolveDescriptor( domainClass );
 	}
 
-	private static BasicValuedMapping resolveUnderlyingMapping(
+	private static BasicValuedMapping<?> resolveUnderlyingMapping(
 			Type[] typeArguments,
 			TypeConfiguration typeConfiguration) {
 		return typeConfiguration.standardBasicTypeForJavaType( typeArguments[1] );

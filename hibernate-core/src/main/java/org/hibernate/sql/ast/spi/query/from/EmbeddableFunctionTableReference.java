@@ -23,7 +23,7 @@ public class EmbeddableFunctionTableReference extends AbstractTableReference {
 
 	public EmbeddableFunctionTableReference(
 			NavigablePath navigablePath,
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			Expression expression) {
 		super( navigablePath.getFullPath(), false );
 		this.tableExpression = embeddableMappingType.getAggregateMapping().getContainingTableExpression();

@@ -16,11 +16,11 @@ import java.util.Map;
 
 /// @author Steve Ebersole
 public class FixupBindPlan implements BindPlan, OperationResultChecker {
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final Object identifier;
 	private final Map<String,Object> intendedValues;
 
-	public FixupBindPlan(EntityPersister entityPersister, Object identifier, Map<String, Object> intendedValues) {
+	public FixupBindPlan(EntityPersister<?> entityPersister, Object identifier, Map<String, Object> intendedValues) {
 		this.entityPersister = entityPersister;
 		this.identifier = identifier;
 		this.intendedValues = intendedValues;

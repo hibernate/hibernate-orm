@@ -89,7 +89,7 @@ public class JdbcParameterFactoryTests {
 
 	@Test
 	void createsAParameterUsingAProviderBinder() throws Exception {
-		final JdbcMapping jdbcMapping = mock( JdbcMapping.class );
+		final JdbcMapping<?> jdbcMapping = mock( JdbcMapping.class );
 		final JdbcParameterBinder binder = mock( JdbcParameterBinder.class );
 		final JdbcParameter parameter = JdbcParameterFactory.custom( jdbcMapping, binder );
 		final SqlAstWalker walker = mock( SqlAstWalker.class );

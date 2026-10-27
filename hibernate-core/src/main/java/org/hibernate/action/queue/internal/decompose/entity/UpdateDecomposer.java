@@ -94,12 +94,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			Map<String, StatementShapeKey> shapeKeys) {
 	}
 
-	public UpdateDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
+	public UpdateDecomposer(EntityPersister<?> entityPersister, SessionFactoryImplementor sessionFactory) {
 		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
 	}
 
 	public UpdateDecomposer(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory,
 			EntityMutationPlanContributor mutationPlanContributor) {
 		super( entityPersister, sessionFactory );
@@ -449,7 +449,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		return filteredAssociations.updateCacheKey( assignments, tables );
 	}
 
-	private static Object getVersion(Object[] state, EntityVersionMapping versionMapping) {
+	private static Object getVersion(Object[] state, EntityVersionMapping<?> versionMapping) {
 		return state[versionMapping.getVersionAttribute().getStateArrayPosition()];
 	}
 
@@ -562,7 +562,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			Object[] state,
 			Object previousVersion,
 			int[] dirtyFields,
-			EntityVersionMapping versionMapping,
+			EntityVersionMapping<?> versionMapping,
 			SharedSessionContractImplementor session) {
 		if ( entityPersister.hasUpdateGeneratedProperties()
 			|| entityPersister.hasPreUpdateGeneratedProperties() ) {
@@ -604,7 +604,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			Object[] state,
 			Object previousVersion,
 			int[] dirtyFields,
-			EntityVersionMapping versionMapping,
+			EntityVersionMapping<?> versionMapping,
 			SharedSessionContractImplementor session) {
 		if ( dirtyFields != null ) {
 			switch ( dirtyFields.length ) {
@@ -918,8 +918,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	private void applyValueAssignment(
 			Object entity,
-			EntityVersionMapping versionMapping,
-			AttributeMapping attributeMapping,
+			EntityVersionMapping<?> versionMapping,
+			AttributeMapping<?, ?, ?> attributeMapping,
 			AssigningTableMutationBuilder<?> tableUpdateBuilder,
 			SharedSessionContractImplementor session) {
 		if ( attributeMapping.getGenerator() instanceof OnExecutionGenerator onExecutionGenerator
@@ -940,7 +940,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	}
 
 	protected void handleValueGeneration(
-			AttributeMapping attributeMapping,
+			AttributeMapping<?, ?, ?> attributeMapping,
 			AssigningTableMutationBuilder<?> tableUpdateBuilder,
 			OnExecutionGenerator generator) {
 		final var dialect = sessionFactory.getJdbcServices().getDialect();
@@ -1013,7 +1013,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	}
 
 	private boolean shouldIncludeInDynamicUpdate(
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			boolean[] updateable,
 			UpdateValuesAnalysis valuesAnalysis) {
 		final var versionMapping = entityPersister.getVersionMapping();
@@ -1155,7 +1155,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			boolean needsDynamicUpdate,
 			GeneratedValuesCollector generatedValuesCollector) {
 		return new EntityUpdateBindPlan(
-				entityPersister instanceof UnionSubclassEntityPersister
+				entityPersister instanceof UnionSubclassEntityPersister<?>
 						? entityPersister.getIdentifierTableDescriptor()
 						: tableDescriptor,
 				entityPersister,

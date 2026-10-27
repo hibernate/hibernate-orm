@@ -195,16 +195,16 @@ public abstract class JsonMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithJson.class );
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithJson.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
-		final BasicAttributeMapping stringMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+		final BasicAttributeMapping<?> stringMapAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 				"stringMap" );
-		final BasicAttributeMapping objectMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+		final BasicAttributeMapping<?> objectMapAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 				"objectMap" );
-		final BasicAttributeMapping listAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+		final BasicAttributeMapping<?> listAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 				"list" );
-		final BasicAttributeMapping jsonAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+		final BasicAttributeMapping<?> jsonAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 				"jsonString" );
 
 		assertThat( stringMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );

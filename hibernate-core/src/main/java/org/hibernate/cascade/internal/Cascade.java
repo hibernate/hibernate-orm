@@ -60,7 +60,7 @@ public final class Cascade {
 	 */
 	public static <T> void cascade(
 			final CascadingAction<T> action, final CascadePoint cascadePoint,
-			final EventSource eventSource, final EntityPersister persister, final Object parent)
+			final EventSource eventSource, final EntityPersister<?> persister, final Object parent)
 			throws HibernateException {
 		cascade( action, cascadePoint, eventSource, persister, parent, null );
 	}
@@ -78,7 +78,7 @@ public final class Cascade {
 			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
-			final EntityPersister persister,
+			final EntityPersister<?> persister,
 			final Object parent,
 			final T anything) throws HibernateException {
 		if ( !isBuiltInAction( action ) ) {
@@ -107,7 +107,7 @@ public final class Cascade {
 			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
-			final EntityPersister persister,
+			final EntityPersister<?> persister,
 			final Object parent,
 			final T anything,
 			final CascadeDecisionTrace decisionTrace) throws HibernateException {
@@ -127,7 +127,7 @@ public final class Cascade {
 			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
-			final EntityPersister persister,
+			final EntityPersister<?> persister,
 			final Object parent,
 			final T anything,
 			final CascadeDecisionTrace decisionTrace,
@@ -401,7 +401,7 @@ public final class Cascade {
 
 	private static CascadePropertySelection determinePropertySelection(
 			CascadeTraversalContext<?> context,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			CascadePropertySelection propertySelectionOverride) {
 		if ( context.traceEnabled() ) {
 			return CascadePropertySelection.all();
@@ -409,7 +409,7 @@ public final class Cascade {
 		if ( propertySelectionOverride != null ) {
 			return propertySelectionOverride;
 		}
-		return persister instanceof AbstractEntityPersister abstractPersister
+		return persister instanceof AbstractEntityPersister<?> abstractPersister
 				? abstractPersister.getCascadePropertySelection( context.action() )
 				: CascadePropertySelection.all();
 	}
@@ -1043,7 +1043,7 @@ public final class Cascade {
 			&& persister.isCascadeDeleteEnabled();
 	}
 
-	private static <T> boolean cascadeDeleteEnabled(CascadingAction<T> action, EntityPersister persister, int i) {
+	private static <T> boolean cascadeDeleteEnabled(CascadingAction<T> action, EntityPersister<?> persister, int i) {
 		return action.directionAffectedByCascadeDelete() == ForeignKeyDirection.TO_PARENT
 			&& persister.getPropertyOnDeleteActions()[i] == OnDeleteAction.CASCADE;
 	}

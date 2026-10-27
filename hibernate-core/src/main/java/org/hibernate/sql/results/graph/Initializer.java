@@ -59,7 +59,7 @@ public interface Initializer<Data extends InitializerData> {
 
 	NavigablePath getNavigablePath();
 
-	ModelPart getInitializedPart();
+	ModelPart<?, ?, ?> getInitializedPart();
 
 	default Object getResolvedInstance(Data data) {
 		assert switch ( data.getState() ) {

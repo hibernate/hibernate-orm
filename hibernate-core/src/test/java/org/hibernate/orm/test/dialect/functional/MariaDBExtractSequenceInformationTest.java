@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.MariaDBDialect;
@@ -80,12 +81,12 @@ public class MariaDBExtractSequenceInformationTest {
 					.extractMetadata(
 					new ExtractionContext.EmptyExtractionContext() {
 						@Override
-						public Connection getJdbcConnection() {
+						public @Nonnull Connection getJdbcConnection() {
 							return connection;
 						}
 
 						@Override
-						public JdbcEnvironment getJdbcEnvironment() {
+						public @Nonnull JdbcEnvironment getJdbcEnvironment() {
 							return jdbcEnvironment;
 						}
 					} );

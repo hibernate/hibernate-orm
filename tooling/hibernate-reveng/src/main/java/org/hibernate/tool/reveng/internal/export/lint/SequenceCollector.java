@@ -11,6 +11,8 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+
 public class SequenceCollector {
 
 	private static final Logger log = Logger.getLogger(SequenceCollector.class);
@@ -35,12 +37,12 @@ public class SequenceCollector {
 			final Connection jdbcConnection = connection;
 			for ( var sequence : extractor.extractMetadata( new ExtractionContext.EmptyExtractionContext() {
 				@Override
-				public JdbcEnvironment getJdbcEnvironment() {
+				public @Nonnull JdbcEnvironment getJdbcEnvironment() {
 					return jdbcEnvironment;
 				}
 
 				@Override
-				public Connection getJdbcConnection() {
+				public @Nonnull Connection getJdbcConnection() {
 					return jdbcConnection;
 				}
 			} ) ) {

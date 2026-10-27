@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -101,12 +102,12 @@ public class SQLServerDialectSequenceInformationTest {
 			Iterable<SequenceInformation> sequenceInformations = dialect.getSequenceInformationExtractor().extractMetadata(
 					new ExtractionContext.EmptyExtractionContext() {
 						@Override
-						public Connection getJdbcConnection() {
+						public @Nonnull Connection getJdbcConnection() {
 							return connection;
 						}
 
 						@Override
-						public JdbcEnvironment getJdbcEnvironment() {
+						public @Nonnull JdbcEnvironment getJdbcEnvironment() {
 							return jdbcEnvironment;
 						}
 					} );

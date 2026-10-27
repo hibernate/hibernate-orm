@@ -17,6 +17,7 @@ if [ "$dbParam" != '' ]; then
       exit 1
     fi
 
-    $CONTAINER_CLI cp ${containerName}:/opt/sybase/jConnect-16_0/classes/jconn4.jar $DIR/../drivers/jconn4.jar
+    $CONTAINER_CLI cp ${containerName}:/opt/sybase/jConnect-16_0/classes/jconn4.jar $DIR/jconn4.jar
+    $JAVA_HOME/bin/java $DIR/SybDriverPatcher.java $DIR/jconn4.jar $DIR/../drivers/jconn4.jar
   fi
 fi

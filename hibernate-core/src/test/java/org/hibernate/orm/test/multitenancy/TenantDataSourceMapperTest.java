@@ -20,6 +20,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
@@ -107,6 +108,8 @@ class TenantDataSourceMapperTest {
 		try ( var registry = registryBuilder()
 				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, mapper ).build();
 			var factory = factory( registry ) ) {
+			assertEquals( BOOTSTRAP,
+					registry.requireService( MultiTenancy.class ).getBootstrapDataSourceJndiName() );
 			final var provider = provider( registry );
 			assertInstanceOf( DataSourceConnectionProvider.class, provider );
 			assertNull( registry.getService( MultiTenantConnectionProvider.class ) );
@@ -126,23 +129,6 @@ class TenantDataSourceMapperTest {
 			assertTenantConnection( factory, 42, tenantDataSource );
 			assertTenantConnection( factory, 43, otherDataSource );
 			assertTenantConnection( factory, 42, tenantDataSource );
-		}
-	}
-
-	@Test
-	void factoriesShareProviderWithDifferentMappings() {
-		try ( var registry = registryBuilder().build() ) {
-			final var provider = provider( registry );
-			try ( var first = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata().getSessionFactoryBuilder()
-					.applyTenantDataSourceMapper( new Mapper() ).build();
-				var second = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata().getSessionFactoryBuilder()
-						.applyTenantDataSourceMapper( tenant -> "jdbc/other" ).build() ) {
-				assertSame( provider, first.getServiceRegistry().requireService( ConnectionProvider.class ) );
-				assertSame( provider, second.getServiceRegistry().requireService( ConnectionProvider.class ) );
-				assertTenantConnection( first, 42, tenantDataSource );
-				assertTenantConnection( second, 42, otherDataSource );
-				assertTenantConnection( first, 42, tenantDataSource );
-			}
 		}
 	}
 
@@ -187,9 +173,9 @@ class TenantDataSourceMapperTest {
 		final String schema = "TENANT_DS_" + UUID.randomUUID().toString().replace( "-", "" ).toUpperCase( Locale.ROOT );
 		try ( var connection = bootstrapDataSource.getConnection(); var statement = connection.createStatement() ) {
 			statement.execute( "create schema " + schema );
-			try ( var registry = registryBuilder().build();
+			try ( var registry = registryBuilder()
+					.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, new Mapper() ).build();
 				var factory = new MetadataSources( registry ).buildMetadata().getSessionFactoryBuilder()
-						.applyTenantDataSourceMapper( new Mapper() )
 						.applyTenantSchemaMapper( tenant -> schema ).build();
 				var session = factory.withOptions().tenantIdentifier( 42 ).openSession() ) {
 				session.doWork( tenantConnection -> {
@@ -243,6 +229,8 @@ class TenantDataSourceMapperTest {
 				.applySetting( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY, 42 );
 		builder.getSettings().remove( DATASOURCE );
 		try ( var registry = builder.build() ) {
+			assertEquals( "tenants/tenant-42",
+					registry.requireService( MultiTenancy.class ).getBootstrapDataSourceJndiName() );
 			assertAnyConnection( provider( registry ), tenantDataSource );
 		}
 	}
@@ -270,6 +258,8 @@ class TenantDataSourceMapperTest {
 				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, Mapper.class )
 				.applySetting( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY, 42 )
 				.build() ) {
+			assertEquals( "tenants/tenant-42",
+					registry.requireService( MultiTenancy.class ).getBootstrapDataSourceJndiName() );
 			assertAnyConnection( provider( registry ), tenantDataSource );
 		}
 	}
@@ -363,49 +353,12 @@ class TenantDataSourceMapperTest {
 	}
 
 	@Test
-	void builderMapperEnablesProviderWithoutChangingSharedRegistry() {
-		try ( var registry = registryBuilder().build() ) {
-			final var metadata = new MetadataSources( registry ).buildMetadata();
-			final var mapper = new Mapper();
-			try ( var factory = (SessionFactoryImplementor) metadata.getSessionFactoryBuilder()
-					.applyTenantDataSourceMapper( mapper ).build() ) {
-				assertSame( mapper, factory.getSessionFactoryOptions().getTenantDataSourceMapper() );
-				assertTenantSession( factory );
-				assertNull( registry.getService( MultiTenantConnectionProvider.class ) );
-			}
-		}
-	}
-
-	@Test
-	void clearingBuilderMapperDoesNotEnableMultitenancy() {
-		try ( var registry = registryBuilder().build();
-			var factory = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata()
-					.getSessionFactoryBuilder()
-					.applyTenantDataSourceMapper( new Mapper() )
-					.applyTenantDataSourceMapper( null ).build() ) {
-			assertFalse( factory.getSessionFactoryOptions().isMultiTenancyEnabled() );
-		}
-	}
-
-	@ParameterizedTest
-	@ValueSource(booleans = { false, true })
-	void builderMapperOverridesConfiguredMapper(boolean conventionalNaming) {
-		try ( var registry = registryBuilder()
-				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, conventionalNaming
-						? "default" : (TenantDataSourceMapper<Object>) tenant -> "jdbc/other" ).build();
-			var factory = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata()
-					.getSessionFactoryBuilder().applyTenantDataSourceMapper( new Mapper() ).build() ) {
-			assertTenantSession( factory );
-		}
-	}
-
-	@Test
-	void configurationMapperEnablesProvider() {
+	void configurationSettingEnablesProvider() {
 		final var configuration = new Configuration();
 		configuration.getProperties().putAll( registryBuilder().getSettings() );
 		final var mapper = new Mapper();
-		configuration.setTenantDataSourceMapper( mapper );
-		assertSame( mapper, configuration.getTenantDataSourceMapper() );
+		configuration.getProperties().put( MULTI_TENANT_DATASOURCE_MAPPER, mapper );
+		assertSame( mapper, configuration.getProperties().get( MULTI_TENANT_DATASOURCE_MAPPER ) );
 		try ( var factory = (SessionFactoryImplementor) configuration.buildSessionFactory() ) {
 			assertTenantSession( factory );
 		}

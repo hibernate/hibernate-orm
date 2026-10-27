@@ -23,7 +23,7 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 
 	public SimpleAttributeMetadata(
 			PropertyAccess propertyAccess,
-			MutabilityPlan mutabilityPlan,
+			MutabilityPlan<?> mutabilityPlan,
 			Property bootProperty,
 			Value value
 			) {
@@ -40,7 +40,7 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 
 	public SimpleAttributeMetadata(
 			PropertyAccess propertyAccess,
-			MutabilityPlan mutabilityPlan,
+			MutabilityPlan<?> mutabilityPlan,
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
@@ -60,7 +60,7 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 
 	public SimpleAttributeMetadata(
 			PropertyAccess propertyAccess,
-			MutabilityPlan mutabilityPlan,
+			MutabilityPlan<?> mutabilityPlan,
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
@@ -85,7 +85,7 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 
 	@Nonnull
 	@Override
-	public MutabilityPlan getMutabilityPlan() {
+	public MutabilityPlan<?> getMutabilityPlan() {
 		return mutabilityPlan;
 	}
 

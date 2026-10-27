@@ -275,7 +275,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 												concatFunction,
 												stringType,
 												formatExpression,
-												new SelfRenderingFunctionSqlAstExpression(
+												new SelfRenderingFunctionSqlAstExpression<>(
 														getFunctionName(),
 														getFunctionRenderer(),
 														List.of(
@@ -392,7 +392,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								concatFunction,
 								stringType,
 								formatExpression,
-								new SelfRenderingFunctionSqlAstExpression(
+								new SelfRenderingFunctionSqlAstExpression<>(
 										getFunctionName(),
 										getFunctionRenderer(),
 										List.of( arguments.get( 0 ), new Format( chunks[i] ) ),
@@ -413,7 +413,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 					return formatExpression;
 				}
 			}
-			return new SelfRenderingFunctionSqlAstExpression(
+			return new SelfRenderingFunctionSqlAstExpression<>(
 					getFunctionName(),
 					getFunctionRenderer(),
 					arguments,
@@ -450,7 +450,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			final Expression instantExpression = sqlTuple.getExpressions().get( 0 );
 			final Expression offsetExpression = sqlTuple.getExpressions().get( 1 );
 
-			return new SelfRenderingFunctionSqlAstExpression(
+			return new SelfRenderingFunctionSqlAstExpression<>(
 					"timestampadd",
 					timestampaddFunction,
 					List.of(
@@ -525,7 +525,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								integerType,
 								offsetExpression
 						),
-						new SelfRenderingFunctionSqlAstExpression(
+						new SelfRenderingFunctionSqlAstExpression<>(
 								"substring",
 								substringFunction,
 								List.of(
@@ -582,7 +582,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				@Nonnull BasicType<Integer> integerType,
 				@Nonnull Expression offsetExpression) {
 			if ( offsetExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString() ) {
-				return new SelfRenderingFunctionSqlAstExpression(
+				return new SelfRenderingFunctionSqlAstExpression<>(
 						"substring",
 						substringFunction,
 						List.of(

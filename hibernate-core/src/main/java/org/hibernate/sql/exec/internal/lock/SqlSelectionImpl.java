@@ -33,7 +33,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	}
 
 	@Override
-	public ValueExtractor getJdbcValueExtractor() {
+	public ValueExtractor<?> getJdbcValueExtractor() {
 		return columnReference.getJdbcMapping().getJdbcValueExtractor();
 	}
 

@@ -34,7 +34,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	private final Expression sqlExpression;
 	private final JavaType<?> jdbcJavaType;
 	private final boolean virtual;
-	private transient ValueExtractor valueExtractor;
+	private transient ValueExtractor<?> valueExtractor;
 
 	public SqlSelectionImpl(Expression sqlExpression) {
 		this( 0, -1, null, sqlExpression, false );
@@ -70,7 +70,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 			Expression sqlExpression,
 			JavaType<?> jdbcJavaType,
 			boolean virtual,
-			ValueExtractor valueExtractor) {
+			ValueExtractor<?> valueExtractor) {
 		this.jdbcPosition = jdbcPosition;
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.sqlExpression = sqlExpression;
@@ -79,7 +79,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 		this.valueExtractor = valueExtractor;
 	}
 
-	private static ValueExtractor determineValueExtractor(Expression sqlExpression, JavaType<?> jdbcJavaType) {
+	private static ValueExtractor<?> determineValueExtractor(Expression sqlExpression, JavaType<?> jdbcJavaType) {
 		final JdbcMappingContainer expressionType = sqlExpression.getExpressionType();
 		final JdbcMapping<?> jdbcMapping = expressionType == null
 				? JavaObjectType.INSTANCE
@@ -99,8 +99,8 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	}
 
 	@Override
-	public ValueExtractor getJdbcValueExtractor() {
-		ValueExtractor extractor = valueExtractor;
+	public ValueExtractor<?> getJdbcValueExtractor() {
+		ValueExtractor<?> extractor = valueExtractor;
 		if ( extractor == null ) {
 			valueExtractor = extractor = determineValueExtractor( sqlExpression, jdbcJavaType );
 		}

@@ -31,6 +31,7 @@ public interface TimestampsCache {
 	 *
 	 * @deprecated This method is never called.
 	 */
+	@Deprecated
 	@Nullable
 	TimestampsRegion getRegion();
 

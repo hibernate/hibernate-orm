@@ -21,14 +21,14 @@ import static org.hibernate.sql.results.graph.instantiation.internal.Instantiati
  */
 public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResultAssembler<T> {
 	private final JavaType<T> target;
-	private final List<BeanInjection> beanInjections;
+	private final List<BeanInjection<T>> beanInjections;
 
 	public DynamicInstantiationAssemblerInjectionImpl(
 			JavaType<T> target,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.target = target;
 		final var targetJavaType = target.getJavaTypeClass();
-		final List<BeanInjection> beanInjections = new ArrayList<>( argumentReaders.size() );
+		final List<BeanInjection<T>> beanInjections = new ArrayList<>( argumentReaders.size() );
 		BeanInfoHelper.visitBeanInfo(
 				targetJavaType,
 				beanInfo -> {
@@ -44,12 +44,12 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 		this.beanInjections = beanInjections;
 	}
 
-	private DynamicInstantiationAssemblerInjectionImpl(List<BeanInjection> beanInjections, JavaType<T> target) {
+	private DynamicInstantiationAssemblerInjectionImpl(List<BeanInjection<T>> beanInjections, JavaType<T> target) {
 		this.target = target;
 		this.beanInjections = beanInjections;
 	}
 
-	private static BeanInjection injection(BeanInfo beanInfo, ArgumentReader<?> argument, Class<?> targetJavaType) {
+	private static <T> BeanInjection<T> injection(BeanInfo beanInfo, ArgumentReader<?> argument, Class<T> targetJavaType) {
 		final var argType = argument.getAssembledJavaType().getJavaTypeClass();
 		final String alias = argument.getAlias();
 
@@ -58,14 +58,14 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			if ( propertyMatches( alias, argType, propertyDescriptor ) ) {
 				final var setter = propertyDescriptor.getWriteMethod();
 				setter.setAccessible(true);
-				return new BeanInjection( new BeanInjectorSetter<>( setter ), argument );
+				return new BeanInjection<>( new BeanInjectorSetter<>( setter ), argument );
 			}
 		}
 
 		// see if we can find a Field with the given name...
 		final var field = findField( targetJavaType, alias, argType );
 		if ( field != null ) {
-			return new BeanInjection( new BeanInjectorField<>( field ), argument );
+			return new BeanInjection<>( new BeanInjectorField<>( field ), argument );
 		}
 		else {
 			throw new InstantiationException(
@@ -80,7 +80,6 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T assemble(RowProcessingState rowProcessingState) {
 		final T result;
 		try {

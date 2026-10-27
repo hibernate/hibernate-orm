@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
@@ -145,12 +146,12 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public @Nullable TableInformation locateTableInformation(QualifiedTableName tableName) {
+	public @Nullable TableInformation locateTableInformation(@Nonnull QualifiedTableName tableName) {
 		return getTableInformation( tableName );
 	}
 
 	@Override
-	public SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName) {
+	public @Nullable SequenceInformation locateSequenceInformation(@Nonnull QualifiedSequenceName sequenceName) {
 		// again, follow legacy behavior
 		if ( sequenceName.getCatalogName() != null || sequenceName.getSchemaName() != null ) {
 			sequenceName = unqualifiedSequenceName( sequenceName );
@@ -159,17 +160,18 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public PrimaryKeyInformation locatePrimaryKeyInformation(QualifiedTableName tableName) {
+	public @Nullable PrimaryKeyInformation locatePrimaryKeyInformation(@Nonnull QualifiedTableName tableName) {
 		return extractor.getPrimaryKey( locateNonNullTableInformation( tableName ) );
 	}
 
 	@Override
-	public Iterable<ForeignKeyInformation> locateForeignKeyInformation(QualifiedTableName tableName) {
+	public @Nonnull Iterable<ForeignKeyInformation> locateForeignKeyInformation(
+			@Nonnull QualifiedTableName tableName) {
 		return extractor.getForeignKeys( locateNonNullTableInformation( tableName ) );
 	}
 
 	@Override
-	public Iterable<IndexInformation> locateIndexesInformation(QualifiedTableName tableName) {
+	public @Nonnull Iterable<IndexInformation> locateIndexesInformation(@Nonnull QualifiedTableName tableName) {
 		return extractor.getIndexes( locateNonNullTableInformation( tableName ) );
 	}
 

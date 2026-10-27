@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -38,27 +40,27 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 	}
 
 	@Override
-	public ServiceRegistry getServiceRegistry() {
+	public @Nonnull ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}
 
 	@Override
-	public JdbcEnvironment getJdbcEnvironment() {
+	public @Nonnull JdbcEnvironment getJdbcEnvironment() {
 		return jdbcEnvironment;
 	}
 
 	@Override
-	public SqlStringGenerationContext getSqlStringGenerationContext() {
+	public @Nonnull SqlStringGenerationContext getSqlStringGenerationContext() {
 		return context;
 	}
 
 	@Override
-	public Connection getJdbcConnection() {
+	public @Nonnull Connection getJdbcConnection() {
 		return ddlTransactionIsolator.getIsolatedConnection();
 	}
 
 	@Override
-	public DatabaseMetaData getJdbcDatabaseMetaData() {
+	public @Nonnull DatabaseMetaData getJdbcDatabaseMetaData() {
 		if ( jdbcDatabaseMetaData == null ) {
 			try {
 				jdbcDatabaseMetaData = getJdbcConnection().getMetaData();
@@ -72,17 +74,17 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 	}
 
 	@Override
-	public Identifier getDefaultCatalog() {
+	public @Nullable Identifier getDefaultCatalog() {
 		return context.getDefaultCatalog();
 	}
 
 	@Override
-	public Identifier getDefaultSchema() {
+	public @Nullable Identifier getDefaultSchema() {
 		return context.getDefaultSchema();
 	}
 
 	@Override
-	public DatabaseObjectAccess getDatabaseObjectAccess() {
+	public @Nonnull DatabaseObjectAccess getDatabaseObjectAccess() {
 		return databaseObjectAccess;
 	}
 

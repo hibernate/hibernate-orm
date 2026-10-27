@@ -11,6 +11,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.sql.rowset.RowSetMetaDataImpl;
 import javax.sql.rowset.RowSetProvider;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
@@ -39,15 +41,15 @@ public class ExampleSequenceInformationExtractorTest {
 		final AtomicReference<String> query = new AtomicReference<>();
 		final ExtractionContext context = new ExtractionContext.EmptyExtractionContext() {
 			@Override
-			public JdbcEnvironment getJdbcEnvironment() {
+			public @Nonnull JdbcEnvironment getJdbcEnvironment() {
 				return jdbcEnvironment;
 			}
 
 			@Override
-			public <T> T getQueryResults(
-					String queryString,
-					Object[] positionalParameters,
-					ResultSetProcessor<T> resultSetProcessor) throws SQLException {
+			public <T> @Nullable T getQueryResults(
+					@Nonnull String queryString,
+					@Nullable Object[] positionalParameters,
+					@Nonnull ResultSetProcessor<T> resultSetProcessor) throws SQLException {
 				query.set( queryString );
 				return resultSetProcessor.process( rows );
 			}

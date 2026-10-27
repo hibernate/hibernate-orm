@@ -58,8 +58,7 @@ public class DataSourceConnectionProvider
 	private JndiService jndiService;
 	private String dataSourceJndiName;
 	private Integer loginTimeout;
-
-	private transient ServiceRegistryImplementor serviceRegistry;
+	private MultiTenancy multiTenancy;
 
 	private boolean available;
 
@@ -79,7 +78,7 @@ public class DataSourceConnectionProvider
 
 	@Override
 	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
+		multiTenancy = serviceRegistry.requireService( MultiTenancy.class );
 	}
 
 	@Override
@@ -117,17 +116,16 @@ public class DataSourceConnectionProvider
 				final Object namedObject = jndiService.locate( jndiName );
 				if ( namedObject instanceof DataSource instance ) {
 					dataSource = instance;
-					dataSources.put( jndiName, instance );
 				}
 				else if ( namedObject instanceof Context ) {
-					dataSource = bootstrapDataSource( configuration );
+					dataSource = bootstrapDataSource();
 				}
 				else {
 					throw new ConnectionProviderConfigurationException( "JNDI name does not refer to a DataSource or Context: " + jndiName );
 				}
 			}
-			else if ( dataSourceSetting == null && serviceRegistry != null ) {
-				dataSource = bootstrapDataSource( configuration );
+			else if ( dataSourceSetting == null ) {
+				dataSource = bootstrapDataSource();
 			}
 			else {
 				throw new ConnectionProviderConfigurationException(
@@ -155,31 +153,37 @@ public class DataSourceConnectionProvider
 		available = true;
 	}
 
-	private DataSource bootstrapDataSource(Map<String, Object> configuration) {
-		final var mapper = MultiTenancy.getTenantDataSourceMapper( configuration, serviceRegistry );
-		final Object tenantIdentifier = configuration.get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
-		if ( mapper == null || tenantIdentifier == null ) {
+	@Nonnull
+	private DataSource bootstrapDataSource() {
+		dataSourceJndiName = multiTenancy.getBootstrapDataSourceJndiName();
+		if ( dataSourceJndiName == null ) {
 			throw new ConnectionProviderConfigurationException( "A tenant data source mapper and '"
 					+ TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY + "' are required when no bootstrap DataSource is specified" );
 		}
-		dataSourceJndiName = mapper.dataSourceName( tenantIdentifier );
-		return namedDataSource( dataSourceJndiName );
+		return locateDataSource( dataSourceJndiName );
 	}
 
-	private DataSource namedDataSource(String name) {
-		return dataSources.computeIfAbsent( name, jndiName -> {
-			if ( jndiService == null ) {
-				throw new ConnectionProviderConfigurationException( "Unable to locate JndiService to lookup Datasource" );
-			}
-			if ( !(jndiService.locate( jndiName ) instanceof DataSource source) ) {
-				throw new ConnectionProviderConfigurationException( "JNDI name does not refer to a DataSource: " + jndiName );
-			}
-			configureDataSource( source );
-			return source;
-		} );
+	@Nonnull
+	private DataSource namedDataSource(String dataSourceName) {
+		return dataSources.computeIfAbsent( dataSourceName, this::locateDataSource );
 	}
 
-	private void configureDataSource(DataSource dataSource) {
+	@Nonnull
+	private DataSource locateDataSource(@Nonnull String jndiName) {
+		if ( jndiName == null ) {
+			throw new HibernateException( "Tenant data source name cannot be null" );
+		}
+		if ( jndiService == null ) {
+			throw new ConnectionProviderConfigurationException( "Unable to locate JndiService to lookup Datasource" );
+		}
+		if ( !(jndiService.locate( jndiName ) instanceof DataSource source) ) {
+			throw new ConnectionProviderConfigurationException( "JNDI name does not refer to a DataSource: " + jndiName );
+		}
+		configureDataSource( source );
+		return source;
+	}
+
+	private void configureDataSource(@Nonnull DataSource dataSource) {
 		if ( loginTimeout != null ) {
 			try {
 				dataSource.setLoginTimeout( loginTimeout );

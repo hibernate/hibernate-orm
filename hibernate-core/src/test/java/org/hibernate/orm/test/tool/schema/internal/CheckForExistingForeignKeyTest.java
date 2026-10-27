@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.tool.schema.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
@@ -82,12 +83,12 @@ public class CheckForExistingForeignKeyTest {
 		}
 
 		@Override
-		public ColumnInformation getReferencingColumnMetadata() {
+		public @Nonnull ColumnInformation getReferencingColumnMetadata() {
 			return referencingColumnMetadata;
 		}
 
 		@Override
-		public ColumnInformation getReferencedColumnMetadata() {
+		public @Nonnull ColumnInformation getReferencedColumnMetadata() {
 			return referencedColumnMetadata;
 		}
 	}

@@ -1,5 +1,7 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
@@ -22,7 +24,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return {@code true} indicates a schema with the given name already exists
 	 */
-	boolean schemaExists(Namespace.Name schema);
+	boolean schemaExists(@Nonnull Namespace.Name schema);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -33,7 +35,10 @@ public interface DatabaseInformation {
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	TableInformation getTableInformation(Identifier catalogName, Identifier schemaName, Identifier tableName);
+	@Nullable TableInformation getTableInformation(
+			@Nullable Identifier catalogName,
+			@Nullable Identifier schemaName,
+			@Nonnull Identifier tableName);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -43,7 +48,9 @@ public interface DatabaseInformation {
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	TableInformation getTableInformation(Namespace.Name schemaName, Identifier tableName);
+	@Nullable TableInformation getTableInformation(
+			@Nonnull Namespace.Name schemaName,
+			@Nonnull Identifier tableName);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -52,7 +59,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	TableInformation getTableInformation(QualifiedTableName tableName);
+	@Nullable TableInformation getTableInformation(@Nonnull QualifiedTableName tableName);
 
 	/**
 	 * Obtain reference to all the {@link TableInformation} for a given {@link Namespace}
@@ -61,7 +68,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return a {@link NameSpaceTablesInformation}
 	 */
-	NameSpaceTablesInformation getTablesInformation(Namespace namespace);
+	@Nonnull NameSpaceTablesInformation getTablesInformation(@Nonnull Namespace namespace);
 
 	/**
 	 * Obtain reference to the named SequenceInformation
@@ -72,10 +79,10 @@ public interface DatabaseInformation {
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	SequenceInformation getSequenceInformation(
-			Identifier catalogName,
-			Identifier schemaName,
-			Identifier sequenceName);
+	@Nullable SequenceInformation getSequenceInformation(
+			@Nullable Identifier catalogName,
+			@Nullable Identifier schemaName,
+			@Nonnull Identifier sequenceName);
 
 	/**
 	 * Obtain reference to the named SequenceInformation
@@ -85,7 +92,9 @@ public interface DatabaseInformation {
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName);
+	@Nullable SequenceInformation getSequenceInformation(
+			@Nonnull Namespace.Name schemaName,
+			@Nonnull Identifier sequenceName);
 
 	/**
 	 * Obtain reference to the named SequenceInformation
@@ -94,7 +103,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	SequenceInformation getSequenceInformation(QualifiedSequenceName sequenceName);
+	@Nullable SequenceInformation getSequenceInformation(@Nonnull QualifiedSequenceName sequenceName);
 
 	/**
 	 * Check to see if the given catalog already exists.
@@ -103,7 +112,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return {@code true} indicates a catalog with the given name already exists
 	 */
-	boolean catalogExists(Identifier catalog);
+	boolean catalogExists(@Nonnull Identifier catalog);
 
 	void cleanup();
 }

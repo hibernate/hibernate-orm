@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -408,11 +409,11 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		return jdbcEnvironment.getDialect().getSequenceInformationExtractor().extractMetadata(
 				new ExtractionContext.EmptyExtractionContext() {
 					@Override
-					public Connection getJdbcConnection() {
+					public @Nonnull Connection getJdbcConnection() {
 						return connection;
 					}
 					@Override
-					public JdbcEnvironment getJdbcEnvironment() {
+					public @Nonnull JdbcEnvironment getJdbcEnvironment() {
 						return jdbcEnvironment;
 					}
 				}

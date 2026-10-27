@@ -293,8 +293,8 @@ public class EntityInitializerImpl
 				// Version fetch is only expected to be null when the version
 				// property is excluded from audit tables
 				assert entityDescriptor.getAuditMapping() != null
-						&& entityDescriptor.isPropertyAuditedExcluded(
-								versionMapping.getVersionAttribute().getStateArrayPosition() );
+					&& entityDescriptor.isPropertyAuditedExcluded(
+						versionMapping.getVersionAttribute().getStateArrayPosition() );
 				versionAssembler = null;
 			}
 		}

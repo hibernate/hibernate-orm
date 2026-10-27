@@ -51,7 +51,7 @@ public class LengthTest {
 	@Test
 	public void testLong32(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final BasicValuedMapping mapping = (BasicValuedMapping) scope.getSessionFactory()
+		final BasicValuedMapping<?> mapping = (BasicValuedMapping<?>) scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( WithLongStrings.class )

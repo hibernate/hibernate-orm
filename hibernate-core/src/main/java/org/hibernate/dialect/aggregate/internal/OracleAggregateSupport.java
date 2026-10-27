@@ -431,7 +431,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	public void appendJsonWriteExpression(
 			SqlAppender sqlAppender,
 			Runnable renderFunction,
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			TypeConfiguration typeConfiguration) {
 		final int sqlTypeCode = JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() );
 		switch ( sqlTypeCode ) {
@@ -543,7 +543,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		}
 	}
 
-	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping, TypeConfiguration typeConfiguration) {
+	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping<?> jdbcMapping, TypeConfiguration typeConfiguration) {
 		final int sqlTypeCode = JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() );
 		switch ( sqlTypeCode ) {
 			case UUID:
@@ -663,7 +663,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	private static class AggregateJsonWriteExpression implements JsonWriteExpression {
 		private final boolean colonSyntax;
 		private final LinkedHashMap<String, JsonWriteExpression> subExpressions = new LinkedHashMap<>();
-		protected final EmbeddableMappingType embeddableMappingType;
+		protected final EmbeddableMappingType<?, ?, ?> embeddableMappingType;
 		protected final String ddlTypeName;
 
 		public AggregateJsonWriteExpression(
@@ -685,7 +685,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				final SelectablePath selectablePath = column.getSelectablePath();
 				final SelectablePath[] parts = selectablePath.getParts();
 				AggregateJsonWriteExpression currentAggregate = this;
-				EmbeddableMappingType currentMappingType = embeddableMappingType;
+				EmbeddableMappingType<?, ?, ?> currentMappingType = embeddableMappingType;
 				for ( int i = 1; i < parts.length - 1; i++ ) {
 					final SelectableMapping selectableMapping = currentMappingType.getJdbcValueSelectable(
 							currentMappingType.getSelectableIndex( parts[i].getSelectableName() )
@@ -870,7 +870,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				AggregateXmlWriteExpression currentAggregate = this;
 				for ( int i = 1; i < parts.length - 1; i++ ) {
 					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) currentAggregate.selectableMapping.getJdbcMapping().getJdbcType();
-					final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+					final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
@@ -891,7 +891,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 
 		protected void passThroughUnsetSubExpressions(SelectableMapping aggregateColumn) {
 			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) aggregateColumn.getJdbcMapping().getJdbcType();
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
 				final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );

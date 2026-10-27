@@ -12,7 +12,7 @@ import org.hibernate.type.BasicType;
  * binds the value of the first row from the {@code QueryOptions} limit
  * of the current execution.
  */
-public class OffsetJdbcParameter extends AbstractJdbcParameter {
+public class OffsetJdbcParameter extends AbstractJdbcParameter<Integer> {
 
 	public OffsetJdbcParameter(BasicType<Integer> type) {
 		super( type );

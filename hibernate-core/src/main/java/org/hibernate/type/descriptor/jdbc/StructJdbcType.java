@@ -30,7 +30,7 @@ public class StructJdbcType implements StructuredJdbcType {
 	private final int[] orderMapping;
 	private final int[] inverseOrderMapping;
 	private final AggregateJdbcValueOrder valueOrder;
-	private final EmbeddableMappingType embeddableMappingType;
+	private final EmbeddableMappingType<?, ?, ?> embeddableMappingType;
 	private final ValueExtractor<Object[]> objectArrayExtractor;
 
 	private StructJdbcType() {
@@ -38,7 +38,7 @@ public class StructJdbcType implements StructuredJdbcType {
 		this( null, null, null );
 	}
 
-	public StructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
+	public StructJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType, String typeName, int[] orderMapping) {
 		this.embeddableMappingType = embeddableMappingType;
 		this.typeName = typeName;
 		this.orderMapping = orderMapping == null ? null : orderMapping.clone();
@@ -71,7 +71,7 @@ public class StructJdbcType implements StructuredJdbcType {
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new StructJdbcType(
@@ -86,7 +86,7 @@ public class StructJdbcType implements StructuredJdbcType {
 	}
 
 	@Override
-	public EmbeddableMappingType getEmbeddableMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getEmbeddableMappingType() {
 		return embeddableMappingType;
 	}
 

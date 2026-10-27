@@ -20,7 +20,7 @@ public class PostgreSQLCastingJsonJdbcType extends JsonJdbcType {
 
 	private final boolean jsonb;
 
-	public PostgreSQLCastingJsonJdbcType(boolean jsonb, EmbeddableMappingType embeddableMappingType) {
+	public PostgreSQLCastingJsonJdbcType(boolean jsonb, EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 		this.jsonb = jsonb;
 	}
@@ -32,7 +32,7 @@ public class PostgreSQLCastingJsonJdbcType extends JsonJdbcType {
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new PostgreSQLCastingJsonJdbcType( jsonb, mappingType );

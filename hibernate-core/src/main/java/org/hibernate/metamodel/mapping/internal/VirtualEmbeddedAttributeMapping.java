@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.spi.query.from.TableGroupProducer;
 /**
  * @author Christian Beikov
  */
-public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping implements VirtualModelPart {
+public class VirtualEmbeddedAttributeMapping<M, R> extends EmbeddedAttributeMapping<M, R> implements VirtualModelPart<M, M, R> {
 
 	public VirtualEmbeddedAttributeMapping(
 			PropertyAccessorService propertyAccessorService,
@@ -31,8 +31,8 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			String parentInjectionAttributeName,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
-			EmbeddableMappingType embeddableMappingType,
-			@Nullable ManagedMappingType declaringType,
+			EmbeddableMappingType<?, M, R> embeddableMappingType,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable PropertyAccess propertyAccess) {
 		super(
 				propertyAccessorService,
@@ -61,8 +61,8 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			PropertyAccess parentInjectionAttributePropertyAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
-			EmbeddableMappingType embeddableMappingType,
-			@Nullable ManagedMappingType declaringType,
+			EmbeddableMappingType<?, M, R> embeddableMappingType,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable PropertyAccess propertyAccess) {
 		super(
 				name,
@@ -82,11 +82,11 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 
 	// Constructor is only used for creating the inverse attribute mapping
 	VirtualEmbeddedAttributeMapping(
-			@Nullable ManagedMappingType keyDeclaringType,
-			TableGroupProducer declaringTableGroupProducer,
+			@Nullable ManagedMappingType<?, ?, ?> keyDeclaringType,
+			TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
-			EmbeddableValuedModelPart inverseModelPart,
-			EmbeddableMappingType embeddableTypeDescriptor,
+			EmbeddableValuedModelPart<?, M, R> inverseModelPart,
+			EmbeddableMappingType<?, M, ?> embeddableTypeDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		super(
 				keyDeclaringType,

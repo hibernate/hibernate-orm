@@ -19,11 +19,11 @@ public interface EntityInitializer<Data extends InitializerData> extends Initial
 	/**
 	 * Get the descriptor for the type of entity being initialized
 	 */
-	EntityPersister getEntityDescriptor();
+	EntityPersister<?> getEntityDescriptor();
 
-	EntityPersister getConcreteDescriptor(Data data);
+	EntityPersister<?> getConcreteDescriptor(Data data);
 
-	default EntityPersister getConcreteDescriptor(RowProcessingState rowProcessingState) {
+	default EntityPersister<?> getConcreteDescriptor(RowProcessingState rowProcessingState) {
 		return getConcreteDescriptor( getData( rowProcessingState ) );
 	}
 

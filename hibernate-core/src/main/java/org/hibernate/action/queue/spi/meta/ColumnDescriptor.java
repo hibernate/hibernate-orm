@@ -27,7 +27,7 @@ public record ColumnDescriptor(
 		String name,
 		String selectionExpression,
 		String tableName,
-		JdbcMapping jdbcMapping,
+		JdbcMapping<?> jdbcMapping,
 		String writeFragment,
 		boolean isFormula,
 		boolean nullable,
@@ -125,7 +125,7 @@ public record ColumnDescriptor(
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 }

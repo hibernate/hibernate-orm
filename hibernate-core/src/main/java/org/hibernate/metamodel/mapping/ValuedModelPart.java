@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.type.descriptor.java.JavaType;
+
 import jakarta.annotation.Nonnull;
 
 /**
@@ -10,7 +12,12 @@ import jakarta.annotation.Nonnull;
  *
  * @author Steve Ebersole
  */
-public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMappings {
+public interface ValuedModelPart<J, M, R> extends ModelPart<J, M, R>, ValueMapping<M>, SelectableMappings {
+	@Override
+	default JavaType<M> getExpressibleJavaType() {
+		return ValueMapping.super.getExpressibleJavaType();
+	}
+
 	/**
 	 * The table which contains the columns mapped by this value
 	 */
@@ -24,7 +31,7 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 
 	@Nonnull
 	@Override
-	default JdbcMapping getSingleJdbcMapping() {
+	default JdbcMapping<?> getSingleJdbcMapping() {
 		return ModelPart.super.getSingleJdbcMapping();
 	}
 

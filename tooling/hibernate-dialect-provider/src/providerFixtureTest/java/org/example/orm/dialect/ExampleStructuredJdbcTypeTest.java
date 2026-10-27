@@ -32,7 +32,7 @@ class ExampleStructuredJdbcTypeTest {
 
 	@Test
 	void convertsBetweenDomainLogicalAndProviderPhysicalRepresentations() throws SQLException {
-		final EmbeddableMappingType mappingType = mappingType();
+		final EmbeddableMappingType<?, ?, ?> mappingType = mappingType();
 		final ExampleStructuredJdbcType jdbcType = ExampleStructuredJdbcType.mapped(
 				mappingType,
 				AggregateJdbcValueOrder.physicalOrder( 2, 0, 1 )
@@ -57,15 +57,15 @@ class ExampleStructuredJdbcTypeTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private EmbeddableMappingType mappingType() throws SQLException {
-		final EmbeddableMappingType mappingType = mock( EmbeddableMappingType.class );
+	private EmbeddableMappingType<?, ?, ?> mappingType() throws SQLException {
+		final EmbeddableMappingType<?, ?, ?> mappingType = mock( EmbeddableMappingType.class );
 		when( mappingType.getJdbcValueCount() ).thenReturn( 3 );
 		when( mappingType.getNumberOfAttributeMappings() ).thenReturn( 3 );
 		when( mappingType.getValues( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
 
 		for ( int i = 0; i < 3; i++ ) {
-			final AttributeMapping modelPart = mock( AttributeMapping.class );
-			final JdbcMapping jdbcMapping = mock( JdbcMapping.class );
+			final AttributeMapping<?, ?, ?> modelPart = mock( AttributeMapping.class );
+			final JdbcMapping<?> jdbcMapping = mock( JdbcMapping.class );
 			final JavaType<Object> jdbcJavaType = mock( JavaType.class );
 			final ValueBinder<Object> valueBinder = mock( ValueBinder.class );
 			when( mappingType.getAttributeMapping( i ) ).thenReturn( modelPart );

@@ -45,7 +45,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 		this.containsCollectionFetches = newFetches.containsCollectionFetches();
 	}
 
-	public abstract FetchableContainer getFetchContainer();
+	public abstract FetchableContainer<?, ?, ?> getFetchContainer();
 
 	@Override
 	public NavigablePath getNavigablePath() {
@@ -58,7 +58,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 	}
 
 	@Override
-	public FetchableContainer getReferencedMappingContainer() {
+	public FetchableContainer<?, ?, ?> getReferencedMappingContainer() {
 		return getFetchContainer();
 	}
 
@@ -68,8 +68,8 @@ public abstract class AbstractFetchParent implements FetchParent {
 	}
 
 	@Override
-	public Fetch findFetch(final Fetchable fetchable) {
-		if ( fetchable instanceof EntityVersionMapping entityVersionMapping ) {
+	public Fetch findFetch(final Fetchable<?, ?, ?> fetchable) {
+		if ( fetchable instanceof EntityVersionMapping<?> entityVersionMapping ) {
 			return fetches.get( entityVersionMapping.getVersionAttribute() );
 		}
 		return fetches.get( fetchable );

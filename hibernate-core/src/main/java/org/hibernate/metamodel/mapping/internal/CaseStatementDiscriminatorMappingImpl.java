@@ -41,21 +41,21 @@ import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createCol
 /**
  * @author Andrea Boriero
  */
-public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminatorMapping {
+public class CaseStatementDiscriminatorMappingImpl<J> extends AbstractDiscriminatorMapping<J> {
 
 	private final LinkedHashMap<String,TableDiscriminatorDetails> tableDiscriminatorDetailsMap = new LinkedHashMap<>();
 
 	public CaseStatementDiscriminatorMappingImpl(
-			JoinedSubclassEntityPersister entityDescriptor,
+			JoinedSubclassEntityPersister<?> entityDescriptor,
 			String[] tableNames,
 			int[] notNullColumnTableNumbers,
 			String[] notNullColumnNames,
 			String[] discriminatorValues,
 			boolean[] discriminatorAbstract,
-			DiscriminatorType<?> incomingDiscriminatorType) {
+			DiscriminatorType<J> incomingDiscriminatorType) {
 		//noinspection unchecked
 		super( entityDescriptor,
-				(DiscriminatorType<Object>) incomingDiscriminatorType,
+				incomingDiscriminatorType,
 				(BasicType<Object>) incomingDiscriminatorType.getUnderlyingJdbcMapping() );
 
 		for ( int i = 0; i < discriminatorValues.length; i++ ) {
@@ -80,9 +80,8 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Nonnull
-	@SuppressWarnings( "rawtypes" )
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -109,7 +108,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	private void resolveSubTypeTableReferences(TableGroup tableGroup, NavigablePath navigablePath) {
-		final var entityDescriptor = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
+		final var entityDescriptor = (EntityMappingType<?>) tableGroup.getModelPart().getPartMappingType();
 		// Since the expression is lazy, based on the available table reference joins,
 		// we need to force the initialization in case this is selected
 		for ( var subMappingType : entityDescriptor.getSubMappingTypes() ) {
@@ -125,7 +124,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	@Override
 	public Expression resolveSqlExpression(
 			@Nonnull NavigablePath navigablePath,
-			@Nullable JdbcMapping jdbcMappingToUse,
+			@Nullable JdbcMapping<?> jdbcMappingToUse,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAstCreationState creationState) {
 		return creationState.getSqlExpressionResolver()

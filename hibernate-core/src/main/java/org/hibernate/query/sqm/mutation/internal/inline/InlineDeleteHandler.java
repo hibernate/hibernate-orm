@@ -59,7 +59,7 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 		super( matchingIdsPredicateProducer, sqmStatement, domainParameterXref, context, firstJdbcParameterBindingsConsumer );
 		final List<TableDeleter> tableDeleters = new ArrayList<>();
 
-		final SoftDeleteMapping softDeleteMapping = getEntityDescriptor().getSoftDeleteMapping();
+		final SoftDeleteMapping<?> softDeleteMapping = getEntityDescriptor().getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
 			for ( var target : softDeleteTargets( getEntityDescriptor() ) ) {
 				tableDeleters.add( createSoftDeleter( target ) );
@@ -81,7 +81,7 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 							//
 							// in all of these cases, we should clean up the matching rows in the
 							// collection table
-							final ModelPart fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
+							final ModelPart<?, ?, ?> fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
 							final int valueIndex;
 							if ( fkTargetPart.isEntityIdentifierMapping() ) {
 								valueIndex = 0;
@@ -125,9 +125,9 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 		this.tableDeleters = tableDeleters;
 	}
 
-	private TableDeleter createSoftDeleter(EntityMappingType entityDescriptor) {
+	private TableDeleter createSoftDeleter(EntityMappingType<?> entityDescriptor) {
 		final TableDetails softDeleteTable = entityDescriptor.getSoftDeleteTableDetails();
-		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		final SoftDeleteMapping<?> softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
 
 		final NamedTableReference targetTableReference = new NamedTableReference(
@@ -184,7 +184,7 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 			AbstractUpdateOrDeleteStatement statement,
 			@Nullable Supplier<Consumer<SelectableConsumer>> tableKeyColumnsVisitationSupplier,
 			int valueIndex,
-			@Nullable ModelPart valueModelPart
+			@Nullable ModelPart<?, ?, ?> valueModelPart
 	) {}
 
 	// For Hibernate Reactive

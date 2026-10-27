@@ -40,9 +40,9 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	private final boolean isPartOfKey;
 	private final boolean isEnhancedForLazyLoading;
 
-	protected final EntityPersister concreteDescriptor;
+	protected final EntityPersister<?> concreteDescriptor;
 	protected final DomainResultAssembler<?> keyAssembler;
-	protected final ToOneAttributeMapping toOneMapping;
+	protected final ToOneAttributeMapping<?> toOneMapping;
 	protected final boolean affectedByFilter;
 	protected final boolean keyIsEager;
 	protected final boolean hasLazySubInitializer;
@@ -69,9 +69,9 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	public EntitySelectFetchInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping toOneMapping,
+			ToOneAttributeMapping<?> toOneMapping,
 			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
+			EntityPersister<?> concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			FetchOptions fetchOptions,
@@ -99,7 +99,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		return new EntitySelectFetchInitializerData( this, rowProcessingState );
 	}
 
-	public ModelPart getInitializedPart(){
+	public ModelPart<?, ?, ?> getInitializedPart(){
 		return toOneMapping;
 	}
 
@@ -317,7 +317,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	static void checkNotFound(
-			ToOneAttributeMapping toOneMapping,
+			ToOneAttributeMapping<?> toOneMapping,
 			boolean affectedByFilter,
 			String entityName, Object identifier) {
 		final var notFoundAction = toOneMapping.getNotFoundAction();
@@ -363,12 +363,12 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		return concreteDescriptor;
 	}
 
 	@Override
-	public EntityPersister getConcreteDescriptor(Data data) {
+	public EntityPersister<?> getConcreteDescriptor(Data data) {
 		return concreteDescriptor;
 	}
 

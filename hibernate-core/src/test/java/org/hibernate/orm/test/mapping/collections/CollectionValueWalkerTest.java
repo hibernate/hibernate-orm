@@ -45,7 +45,7 @@ class CollectionValueWalkerTest {
 				managed( EmbeddableMappingType.class, embedded( component, nested,
 						managed( EmbeddableMappingType.class, leaf ) ) ) );
 		final var mapping = managed( EntityPersister.class, direct, embedded );
-		final var attributes = new ArrayList<PluralAttributeMapping>();
+		final var attributes = new ArrayList<PluralAttributeMapping<?>>();
 		final var values = new ArrayList<Object>();
 
 		visitCollectionValues( mapping, root, (attribute, value) -> {
@@ -176,7 +176,7 @@ class CollectionValueWalkerTest {
 				.isSameAs( failure );
 	}
 
-	private static PluralAttributeMapping collection(Object container, Object value) {
+	private static PluralAttributeMapping<?> collection(Object container, Object value) {
 		final var attribute = mock( PluralAttributeMapping.class, RETURNS_DEEP_STUBS );
 		when( attribute.isPluralAttributeMapping() ).thenReturn( true );
 		when( attribute.asPluralAttributeMapping() ).thenReturn( attribute );
@@ -184,8 +184,8 @@ class CollectionValueWalkerTest {
 		return attribute;
 	}
 
-	private static EmbeddedAttributeMapping embedded(
-			Object container, Object value, EmbeddableMappingType embeddable) {
+	private static EmbeddedAttributeMapping<?, ?> embedded(
+			Object container, Object value, EmbeddableMappingType<?, ?, ?> embeddable) {
 		final var attribute = mock( EmbeddedAttributeMapping.class, RETURNS_DEEP_STUBS );
 		when( attribute.isEmbeddedAttributeMapping() ).thenReturn( true );
 		when( attribute.asEmbeddedAttributeMapping() ).thenReturn( attribute );
@@ -195,10 +195,10 @@ class CollectionValueWalkerTest {
 		return attribute;
 	}
 
-	private static <T extends ManagedMappingType> T managed(Class<T> type, AttributeMapping... attributes) {
+	private static <T extends ManagedMappingType<?, ?, ?>> T managed(Class<T> type, AttributeMapping<?, ?, ?>... attributes) {
 		final T mapping = mock( type );
 		doAnswer( invocation -> {
-			final Consumer<AttributeMapping> consumer = invocation.getArgument( 0 );
+			final Consumer<AttributeMapping<?, ?, ?>> consumer = invocation.getArgument( 0 );
 			for ( var attribute : attributes ) {
 				consumer.accept( attribute );
 			}

@@ -13,7 +13,7 @@ public class PreLoadEvent extends AbstractSessionEvent {
 	private Object entity;
 	private Object[] state;
 	private Object id;
-	private EntityPersister persister;
+	private EntityPersister<?> persister;
 
 	public PreLoadEvent(@Nonnull EventSource session) {
 		super(session);
@@ -34,7 +34,7 @@ public class PreLoadEvent extends AbstractSessionEvent {
 		return id;
 	}
 
-	public @Nullable EntityPersister getPersister() {
+	public @Nullable EntityPersister<?> getPersister() {
 		return persister;
 	}
 
@@ -53,7 +53,7 @@ public class PreLoadEvent extends AbstractSessionEvent {
 		return this;
 	}
 
-	public @Nonnull PreLoadEvent setPersister(@Nullable EntityPersister persister) {
+	public @Nonnull PreLoadEvent setPersister(@Nullable EntityPersister<?> persister) {
 		this.persister = persister;
 		return this;
 	}

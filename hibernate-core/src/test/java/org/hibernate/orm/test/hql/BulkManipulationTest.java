@@ -470,7 +470,7 @@ public class BulkManipulationTest {
 	}
 
 	protected boolean supportsBulkInsertIdGeneration(Class entityClass, SessionFactoryScope factoryScope) {
-		EntityPersister persister = factoryScope
+		EntityPersister<?> persister = factoryScope
 				.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(entityClass.getName());

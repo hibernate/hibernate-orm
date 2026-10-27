@@ -45,7 +45,7 @@ public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
 			}
 
 			@Override
-			public @Nullable BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+			public @Nullable BasicValuedMapping<?> resolveFunctionReturnType(Supplier<BasicValuedMapping<?>> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
 				return type == null || impliedTypeAccess == null ? null : impliedTypeAccess.get();
 			}
 		} );

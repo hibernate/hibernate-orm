@@ -21,14 +21,14 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getG
 @Internal
 public class AppendingIdentitySelectDelegate extends GetGeneratedKeysDelegate {
 
-	public AppendingIdentitySelectDelegate(EntityPersister persister) {
+	public AppendingIdentitySelectDelegate(EntityPersister<?> persister) {
 		super( persister, true, EventType.INSERT );
 	}
 
 	@Override
 	public String prepareIdentifierGeneratingInsert(String insertSQL) {
 		final var identifierMapping =
-				(BasicEntityIdentifierMapping)
+				(BasicEntityIdentifierMapping<?, ?, ?>)
 						persister.getRootEntityDescriptor().getIdentifierMapping();
 		return dialect().getIdentityColumnSupport()
 				.appendIdentitySelectToInsert( identifierMapping.getSelectionExpression(), insertSQL );

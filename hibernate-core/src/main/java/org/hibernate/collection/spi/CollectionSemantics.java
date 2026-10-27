@@ -144,7 +144,7 @@ public interface CollectionSemantics<CE, E> {
 	 */
 	default CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
@@ -162,7 +162,7 @@ public interface CollectionSemantics<CE, E> {
 	 */
 	default CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,

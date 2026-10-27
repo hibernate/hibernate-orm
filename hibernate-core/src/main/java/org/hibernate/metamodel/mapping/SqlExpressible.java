@@ -16,11 +16,11 @@ public interface SqlExpressible extends JdbcMappingContainer {
 	 * would be of basic type.
 	 */
 	@Nullable
-	JdbcMapping getJdbcMapping();
+	JdbcMapping<?> getJdbcMapping();
 
 	@Nonnull
 	@Override
-	default JdbcMapping getJdbcMapping(int index) {
+	default JdbcMapping<?> getJdbcMapping(int index) {
 		final var jdbcMapping = getJdbcMapping();
 		if ( index != 0 || jdbcMapping == null ) {
 			throw new IndexOutOfBoundsException( index );

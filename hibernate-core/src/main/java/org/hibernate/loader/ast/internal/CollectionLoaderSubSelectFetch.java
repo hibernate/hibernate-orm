@@ -32,13 +32,13 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  * @author Steve Ebersole
  */
 public class CollectionLoaderSubSelectFetch implements CollectionLoader {
-	private final PluralAttributeMapping attributeMapping;
+	private final PluralAttributeMapping<?> attributeMapping;
 	private final SubselectFetch subselect;
 
 	private final SelectStatement sqlAst;
 
 	public CollectionLoaderSubSelectFetch(
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nullable DomainResult<?> cachedDomainResult,
 			@Nonnull SubselectFetch subselect,
 			@Nonnull SharedSessionContractImplementor session) {
@@ -70,7 +70,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getLoadable() {
+	public PluralAttributeMapping<?> getLoadable() {
 		return attributeMapping;
 	}
 

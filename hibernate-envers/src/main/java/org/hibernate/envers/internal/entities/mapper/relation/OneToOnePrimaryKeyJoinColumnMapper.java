@@ -52,7 +52,7 @@ public class OneToOnePrimaryKeyJoinColumnMapper extends AbstractOneToOneMapper {
 	private Object createNotAuditedEntityReference(
 			AuditReaderImplementor versionsReader, Class<?> entityClass,
 			String entityName, Serializable primaryKey) {
-		final EntityPersister entityPersister = versionsReader.getSessionImplementor()
+		final EntityPersister<?> entityPersister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );

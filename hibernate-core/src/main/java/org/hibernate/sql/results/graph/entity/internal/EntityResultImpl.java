@@ -31,7 +31,7 @@ public class EntityResultImpl<E> extends AbstractEntityResultGraphNode
 
 	public EntityResultImpl(
 			NavigablePath navigablePath,
-			EntityValuedModelPart entityValuedModelPart,
+			EntityValuedModelPart<E> entityValuedModelPart,
 			TableGroup tableGroup,
 			String resultVariable) {
 		super( entityValuedModelPart, navigablePath );
@@ -40,8 +40,8 @@ public class EntityResultImpl<E> extends AbstractEntityResultGraphNode
 	}
 
 	@Override
-	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
-		if ( fetchable instanceof TableGroupProducer ) {
+	public NavigablePath resolveNavigablePath(Fetchable<?, ?, ?> fetchable) {
+		if ( fetchable instanceof TableGroupProducer<?, ?, ?> ) {
 			for ( var tableGroupJoin : tableGroup.getTableGroupJoins() ) {
 				final var navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
@@ -56,12 +56,12 @@ public class EntityResultImpl<E> extends AbstractEntityResultGraphNode
 	}
 
 	@Override
-	public FetchableContainer getReferencedMappingType() {
+	public FetchableContainer<?, ?, ?> getReferencedMappingType() {
 		return getReferencedMappingContainer();
 	}
 
 	@Override
-	public EntityValuedModelPart getReferencedModePart() {
+	public EntityValuedModelPart<?> getReferencedModePart() {
 		return getEntityValuedModelPart();
 	}
 

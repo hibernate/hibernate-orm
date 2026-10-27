@@ -48,12 +48,12 @@ public class ImmutableNaturalIdTest {
 	@JiraKey( value = "HHH-10360")
 	public void verifyMetamodel(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
+		final EntityMappingType<?> entityMappingType = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
 
-		final AttributeMapping userNameMapping = entityMappingType.findAttributeMapping( "userName" );
+		final AttributeMapping<?, ?, ?> userNameMapping = entityMappingType.findAttributeMapping( "userName" );
 		assertFalse( userNameMapping.getAttributeMetadata().isNullable() );
 
-		final EntityPersister persister = entityMappingType.getEntityPersister();
+		final EntityPersister<?> persister = entityMappingType.getEntityPersister();
 		final int propertyIndex = persister.getPropertyIndex( "userName" );
 		// nullability is not specified, so it should be non-nullable by hbm-specific default
 		assertFalse( persister.getPropertyNullability()[propertyIndex] );

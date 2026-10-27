@@ -28,7 +28,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 
 	private final String tableAlias;
 	private final NavigablePath navigablePath;
-	private final PluralAttributeMapping pluralAttributeDescriptor;
+	private final PluralAttributeMapping<?> pluralAttributeDescriptor;
 	private final String[] keyColumnNames;
 	private final String[] indexColumnNames;
 	private final String[] elementColumnNames;
@@ -36,14 +36,14 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 	public CompleteResultBuilderCollectionStandard(
 			String tableAlias,
 			NavigablePath navigablePath,
-			PluralAttributeMapping pluralAttributeDescriptor) {
+			PluralAttributeMapping<?> pluralAttributeDescriptor) {
 		this( tableAlias, navigablePath, pluralAttributeDescriptor, null, null, null );
 	}
 
 	public CompleteResultBuilderCollectionStandard(
 			String tableAlias,
 			NavigablePath navigablePath,
-			PluralAttributeMapping pluralAttributeDescriptor,
+			PluralAttributeMapping<?> pluralAttributeDescriptor,
 			String[] keyColumnNames,
 			String[] indexColumnNames,
 			String[] elementColumnNames) {
@@ -68,7 +68,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 
 	@Override
 	@Nonnull
-	public PluralAttributeMapping getPluralAttribute() {
+	public PluralAttributeMapping<?> getPluralAttribute() {
 		return pluralAttributeDescriptor;
 	}
 
@@ -134,7 +134,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 
 	private void resolveSelections(
 			TableGroup tableGroup,
-			ModelPart modelPart,
+			ModelPart<?, ?, ?> modelPart,
 			String[] columnNames,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationStateImpl creationStateImpl) {
@@ -157,8 +157,8 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 				) );
 	}
 
-	private static void resolveSelections(ModelPart modelPart, SelectableConsumer consumer) {
-		if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+	private static void resolveSelections(ModelPart<?, ?, ?> modelPart, SelectableConsumer consumer) {
+		if ( modelPart instanceof EntityValuedModelPart<?> entityValuedModelPart ) {
 			final var entityMappingType = entityValuedModelPart.getEntityMappingType();
 			int index = entityMappingType.getIdentifierMapping().forEachSelectable( consumer );
 			final var discriminatorMapping = entityMappingType.getDiscriminatorMapping();

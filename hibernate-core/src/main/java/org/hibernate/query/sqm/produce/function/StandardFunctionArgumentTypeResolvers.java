@@ -64,7 +64,7 @@ public final class StandardFunctionArgumentTypeResolvers {
 	public static FunctionArgumentTypeResolver invariant(
 			TypeConfiguration typeConfiguration,
 			FunctionParameterType... types) {
-		final var expressibles = new MappingModelExpressible[types.length];
+		final var expressibles = new MappingModelExpressible<?>[types.length];
 		for ( int i = 0; i < types.length; i++ ) {
 			expressibles[i] = getMappingModelExpressible( typeConfiguration, types[i] );
 		}

@@ -28,7 +28,7 @@ public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdb
 	}
 
 	private PostgreSQLStructCastingJdbcType(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			String typeName,
 			RuntimeModelCreationContext creationContext) {
 		super( embeddableMappingType, typeName, creationContext );
@@ -36,7 +36,7 @@ public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdb
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new PostgreSQLStructCastingJdbcType(

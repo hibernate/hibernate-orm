@@ -5,5 +5,5 @@ package org.hibernate.metamodel.mapping;
  *
  * @author Steve Ebersole
  */
-public interface SingularAttributeMapping extends AttributeMapping {
+public interface SingularAttributeMapping<J, M, R> extends AttributeMapping<J, M, R> {
 }

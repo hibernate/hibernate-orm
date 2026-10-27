@@ -209,7 +209,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	}
 
 	@Override
-	public EntityMappingType getRootEntityDescriptor() {
+	public EntityMappingType<?> getRootEntityDescriptor() {
 		return executionContext.getRootEntityDescriptor();
 	}
 

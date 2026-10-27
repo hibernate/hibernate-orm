@@ -33,7 +33,7 @@ import jakarta.annotation.Nullable;
 public abstract class AbstractCollectionInitializer<Data extends AbstractCollectionInitializer.CollectionInitializerData>
 		extends AbstractInitializer<Data> implements CollectionInitializer<Data> {
 	protected final NavigablePath collectionPath;
-	protected final PluralAttributeMapping collectionAttributeMapping;
+	protected final PluralAttributeMapping<?> collectionAttributeMapping;
 	protected final @Nullable Type keyTypeForEqualsHashCode;
 	protected final boolean isResultInitializer;
 	protected final @Nullable InitializerParent<?> parent;
@@ -66,7 +66,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 
 	protected AbstractCollectionInitializer(
 			NavigablePath collectionPath,
-			PluralAttributeMapping collectionAttributeMapping,
+			PluralAttributeMapping<?> collectionAttributeMapping,
 			@Nullable InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			boolean isResultInitializer,
@@ -238,12 +238,12 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		return collectionPath;
 	}
 
-	public PluralAttributeMapping getCollectionAttributeMapping() {
+	public PluralAttributeMapping<?> getCollectionAttributeMapping() {
 		return collectionAttributeMapping;
 	}
 
 	@Override
-	public PluralAttributeMapping getInitializedPart() {
+	public PluralAttributeMapping<?> getInitializedPart() {
 		return getCollectionAttributeMapping();
 	}
 

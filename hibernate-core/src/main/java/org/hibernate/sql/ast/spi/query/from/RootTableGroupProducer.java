@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.spi.query.predicate.Predicate;
  *
  * @author Steve Ebersole
  */
-public interface RootTableGroupProducer extends TableGroupProducer {
+public interface RootTableGroupProducer<J, M, R> extends TableGroupProducer<J, M, R> {
 	/**
 	 * Create a root TableGroup as defined by this producer
 	 *

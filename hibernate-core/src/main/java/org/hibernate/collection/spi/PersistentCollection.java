@@ -232,7 +232,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 			Object entry,
 			int i,
 			PersistentCollection<?> collection,
-			PluralAttributeMapping attributeDescriptor) {
+			PluralAttributeMapping<?> attributeDescriptor) {
 		assert collection == this;
 		assert attributeDescriptor != null;
 
@@ -259,7 +259,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 			Object entry,
 			int entryPosition,
 			PersistentCollection<?> collection,
-			PluralAttributeMapping attributeDescriptor) {
+			PluralAttributeMapping<?> attributeDescriptor) {
 		assert collection == this;
 		assert attributeDescriptor != null;
 
@@ -277,7 +277,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	default boolean needsUpdating(
 			Object entry,
 			int entryPosition,
-			PluralAttributeMapping attributeDescriptor) {
+			PluralAttributeMapping<?> attributeDescriptor) {
 		assert attributeDescriptor != null;
 
 		return needsUpdating( entry, entryPosition, attributeDescriptor.getCollectionDescriptor().getElementType() );
@@ -403,7 +403,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	/**
 	 * Inject the state loaded for a collection instance.
 	 */
-	void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingState);
+	void injectLoadedState(PluralAttributeMapping<?> attributeMapping, List<?> loadingState);
 
 	/**
 	 * Called after reading all rows from the JDBC result set.  Pairs with {@link #beginRead}

@@ -21,12 +21,12 @@ import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpre
 public class CompleteResultBuilderBasicModelPart
 		implements CompleteResultBuilderBasicValued, ModelPartReferenceBasic {
 	private final NavigablePath navigablePath;
-	private final BasicValuedModelPart modelPart;
+	private final BasicValuedModelPart<?, ?, ?> modelPart;
 	private final String columnAlias;
 
 	public CompleteResultBuilderBasicModelPart(
 			NavigablePath navigablePath,
-			BasicValuedModelPart modelPart,
+			BasicValuedModelPart<?, ?, ?> modelPart,
 			String columnAlias) {
 		this.navigablePath = navigablePath;
 		this.modelPart = modelPart;
@@ -44,7 +44,7 @@ public class CompleteResultBuilderBasicModelPart
 	}
 
 	@Override
-	public BasicValuedModelPart getReferencedPart() {
+	public BasicValuedModelPart<?, ?, ?> getReferencedPart() {
 		return modelPart;
 	}
 

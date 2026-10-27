@@ -90,7 +90,7 @@ public interface EventMonitor {
 			@Nullable DiagnosticEvent cachePutEvent,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean cacheContentChanged,
 			@Nonnull CacheActionDescription description);
 
@@ -98,7 +98,7 @@ public interface EventMonitor {
 			@Nullable DiagnosticEvent cachePutEvent,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean cacheContentChanged,
 			boolean isNatualId,
 			@Nonnull CacheActionDescription description);
@@ -123,7 +123,7 @@ public interface EventMonitor {
 			@Nullable DiagnosticEvent cacheGetEvent,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull Region region,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean isNaturalKey,
 			boolean hit);
 
@@ -156,7 +156,7 @@ public interface EventMonitor {
 	void completeDirtyCalculationEvent(
 			@Nullable DiagnosticEvent dirtyCalculationEvent,
 			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EntityEntry entry,
 			@Nullable int[] dirtyProperties);
 

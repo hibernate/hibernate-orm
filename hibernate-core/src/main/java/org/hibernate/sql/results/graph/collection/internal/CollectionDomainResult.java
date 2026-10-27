@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class CollectionDomainResult implements DomainResult, CollectionResultGraphNode, FetchParent,
 		InitializerProducer<CollectionDomainResult> {
 	private final NavigablePath loadingPath;
-	private final PluralAttributeMapping loadingAttribute;
+	private final PluralAttributeMapping<?> loadingAttribute;
 
 	private final String resultVariable;
 	private final TableGroup tableGroup;
@@ -40,7 +40,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 
 	public CollectionDomainResult(
 			NavigablePath loadingPath,
-			PluralAttributeMapping loadingAttribute,
+			PluralAttributeMapping<?> loadingAttribute,
 			String resultVariable,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
@@ -114,12 +114,12 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
-	public FetchableContainer getReferencedMappingContainer() {
+	public FetchableContainer<?, ?, ?> getReferencedMappingContainer() {
 		return loadingAttribute;
 	}
 
 	@Override
-	public FetchableContainer getReferencedMappingType() {
+	public FetchableContainer<?, ?, ?> getReferencedMappingType() {
 		return getReferencedMappingContainer();
 	}
 
@@ -134,7 +134,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 		return null;
 	}
 

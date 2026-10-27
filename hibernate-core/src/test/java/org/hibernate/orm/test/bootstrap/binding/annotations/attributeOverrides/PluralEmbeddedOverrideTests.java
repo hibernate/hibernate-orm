@@ -63,7 +63,7 @@ public class PluralEmbeddedOverrideTests {
 		final org.hibernate.mapping.Map attributesMap = (org.hibernate.mapping.Map) attributesBinding.getValue();
 
 		final SimpleValue mapKey = assertTyping( SimpleValue.class, attributesMap.getIndex() );
-		final BasicType mapKeyType = assertTyping( BasicType.class, mapKey.getType() );
+		final BasicType<?> mapKeyType = assertTyping( BasicType.class, mapKey.getType() );
 		assertEquals( String.class, mapKeyType.getReturnedClass() );
 
 		// let's also make sure the @MapKeyColumn got applied

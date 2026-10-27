@@ -16,7 +16,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -50,24 +49,30 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 /**
  * EmbeddableMappingType implementation describing an {@link jakarta.persistence.IdClass}
  */
-public class IdClassEmbeddable extends AbstractEmbeddableMapping implements IdentifierValueMapper {
+public class IdClassEmbeddable<J> extends AbstractEmbeddableMapping<J, J, J> implements IdentifierValueMapper<J> {
+	@Override
+	public JavaType<J> getJavaType() {
+		return javaType;
+	}
+
 	private final NavigableRole navigableRole;
-	private final NonAggregatedIdentifierMapping idMapping;
-	private final VirtualIdEmbeddable virtualIdEmbeddable;
-	private final JavaType<?> javaType;
+	private final NonAggregatedIdentifierMapping<?, ?> idMapping;
+	private final VirtualIdEmbeddable<?> virtualIdEmbeddable;
+	private final JavaType<J> javaType;
 	private final IdClassRepresentationStrategy representationStrategy;
 //	private final IdClassEmbedded embedded;
-	private final EmbeddableValuedModelPart embedded;
+	private final EmbeddableValuedModelPart<?, ?, ?> embedded;
 
 	public IdClassEmbeddable(
 			Component idClassSource,
 			RootClass bootEntityDescriptor,
-			NonAggregatedIdentifierMapping idMapping,
-			EntityMappingType identifiedEntityMapping,
+			NonAggregatedIdentifierMapping<?, ?> idMapping,
+			EntityMappingType<?> identifiedEntityMapping,
 			String idTable,
 			String[] idColumns,
-			VirtualIdEmbeddable virtualIdEmbeddable,
-			MappingModelCreationProcess creationProcess) {
+			VirtualIdEmbeddable<?> virtualIdEmbeddable,
+			MappingModelCreationProcess creationProcess,
+			JavaType<J> javaType) {
 		super( idClassSource.getPropertySpan() );
 
 		this.idMapping = idMapping;
@@ -75,9 +80,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 		navigableRole = castNonNull( idMapping.getNavigableRole() ).append( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 
-		javaType =
-				creationProcess.getCreationContext().getTypeConfiguration().getJavaTypeRegistry()
-						.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
+		this.javaType = javaType;
 
 		final PropertyAccessorService propertyAccessorService = creationProcess.getCreationContext().getServiceRegistry()
 				.requireService( PropertyAccessorService.class );
@@ -103,7 +106,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		final var attributeMetadata =
 				MappingModelCreationHelper.getAttributeMetadata( propertyAccess );
 
-		embedded = new EmbeddedAttributeMapping(
+		embedded = new EmbeddedAttributeMapping<>(
 				NavigablePath.IDENTIFIER_MAPPER_PROPERTY,
 				identifiedEntityMapping.getNavigableRole()
 						.append( EntityIdentifierMapping.ID_ROLE_NAME )
@@ -138,16 +141,16 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	public IdClassEmbeddable(
-			EmbeddedAttributeMapping valueMapping,
-			TableGroupProducer declaringTableGroupProducer,
+			EmbeddedAttributeMapping<?, ?> valueMapping,
+			TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
-			IdClassEmbeddable inverseMappingType,
+			IdClassEmbeddable<J> inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
 		super( inverseMappingType.attributeMappings.size() );
 
 		this.navigableRole = inverseMappingType.getNavigableRole();
-		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;
-		this.virtualIdEmbeddable = (VirtualIdEmbeddable) valueMapping.getEmbeddableTypeDescriptor();
+		this.idMapping = (NonAggregatedIdentifierMapping<?, ?>) valueMapping;
+		this.virtualIdEmbeddable = (VirtualIdEmbeddable<?>) valueMapping.getEmbeddableTypeDescriptor();
 		this.javaType = inverseMappingType.javaType;
 		this.representationStrategy = new IdClassRepresentationStrategy(
 				creationProcess.getCreationContext().getServiceRegistry()
@@ -176,7 +179,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Nonnull
 	@Override
-	public EmbeddableValuedModelPart getEmbeddedPart() {
+	public EmbeddableValuedModelPart<?, ?, ?> getEmbeddedPart() {
 		return embedded;
 	}
 
@@ -196,13 +199,13 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 								: null;
 			}
 			//JPA 2 @MapsId + @IdClass points to the pk of the entity
-			else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
-					&& !( getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
+			else if ( attributeMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping
+					&& !( getAttributeMapping( i ) instanceof ToOneAttributeMapping<?> ) ) {
 				final var targetPart =
 						toOneAttributeMapping.getForeignKeyDescriptor()
 								.getPart( toOneAttributeMapping.getSideNature().inverse() );
 				if ( targetPart.isEntityIdentifierMapping() ) {
-					propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( object );
+					propertyValues[i] = ( (EntityIdentifierMapping<?, ?, ?>) targetPart ).getIdentifier( object );
 				}
 				else {
 					propertyValues[i] = object;
@@ -228,8 +231,8 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				(position, virtualIdAttribute) -> {
 					final var idClassAttribute = attributeMappings.get( position );
 					Object object = idClassAttribute.getValue( id );
-					if ( object != null && virtualIdAttribute instanceof ToOneAttributeMapping toOneAttributeMapping
-						&& !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
+					if ( object != null && virtualIdAttribute instanceof ToOneAttributeMapping<?> toOneAttributeMapping
+						&& !( idClassAttribute instanceof ToOneAttributeMapping<?> ) ) {
 						final var entityPersister =
 								toOneAttributeMapping.getEntityMappingType()
 										.getEntityPersister();
@@ -275,24 +278,24 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Nonnull
 	@Override
-	public JavaType<?> getMappedJavaType() {
+	public JavaType<J> getMappedJavaType() {
 		return javaType;
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
+	public EmbeddableValuedModelPart<?, ?, ?> getEmbeddedValueMapping() {
 		return embedded;
 	}
 
 	@Override
-	public void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		forEachAttribute( (index, attribute) -> action.accept( attribute ) );
 	}
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return idMapping.findContainingEntityMapping();
 	}
 
@@ -310,18 +313,18 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nullable String resultVariable, @Nonnull DomainResultCreationState creationState) {
+	public DomainResult<J> createDomainResult(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nullable String resultVariable, @Nonnull DomainResultCreationState creationState) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType createInverseMappingType(
-			@Nonnull EmbeddedAttributeMapping valueMapping,
-			@Nonnull TableGroupProducer declaringTableGroupProducer,
+	public IdClassEmbeddable<J> createInverseMappingType(
+			@Nonnull EmbeddedAttributeMapping<?, ?> valueMapping,
+			@Nonnull TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			@Nonnull SelectableMappings selectableMappings,
 			@Nonnull MappingModelCreationProcess creationProcess) {
-		return new IdClassEmbeddable(
+		return new IdClassEmbeddable<>(
 				valueMapping,
 				declaringTableGroupProducer,
 				selectableMappings,

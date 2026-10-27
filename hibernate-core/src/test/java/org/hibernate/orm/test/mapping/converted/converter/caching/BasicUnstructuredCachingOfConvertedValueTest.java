@@ -38,7 +38,7 @@ public class BasicUnstructuredCachingOfConvertedValueTest {
 	@Test
 	@JiraKey( value = "HHH-9615" )
 	public void basicCacheStructureTest(SessionFactoryScope scope) {
-		EntityPersister persister = scope.getSessionFactory()
+		EntityPersister<?> persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Address.class.getName() );
 		final DomainDataRegion region = persister.getCacheAccessStrategy().getRegion();

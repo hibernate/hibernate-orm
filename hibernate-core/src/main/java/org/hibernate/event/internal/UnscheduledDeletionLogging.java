@@ -17,7 +17,7 @@ public class UnscheduledDeletionLogging {
 	private static final Logger UNSCHEDULED_DELETION_LOGGER = Logger.getLogger( UnscheduledDeletionLogging.class, SubSystemLogging.BASE + ".event.unschedule-deletion" );
 
 	public static void unschedulingEntityDeletion(
-			@Nullable EntityPersister persister,
+			@Nullable EntityPersister<?> persister,
 			@Nullable Object id,
 			@Nullable SessionFactoryImplementor factory) {
 		if ( UNSCHEDULED_DELETION_LOGGER.isDebugEnabled() ) {

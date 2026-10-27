@@ -491,7 +491,7 @@ abstract class AbstractSharedSessionContract
 	 */
 	protected abstract <T> FindByKeyOperation<T> byKey(
 			@Nullable Class<T> entityClass,
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			FindOption... options);
 
 	/**
@@ -505,7 +505,7 @@ abstract class AbstractSharedSessionContract
 	 */
 	protected abstract <T> FindByKeyOperation<T> byKey(
 			Class<T> entityClass,
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			GraphSemantic graphSemantic,
 			RootGraphImplementor<T> rootGraph,
 			FindOption... options);
@@ -516,7 +516,7 @@ abstract class AbstractSharedSessionContract
 	 * However, Hibernate internals throw the much more meaningful {@linkplain UnknownEntityTypeException}.
 	 * Here we catch {@linkplain UnknownEntityTypeException} and convert it to {@linkplain IllegalArgumentException}.
 	 */
-	protected EntityPersister requireEntityPersisterForLoad(Class<?> entityClass) {
+	protected EntityPersister<?> requireEntityPersisterForLoad(Class<?> entityClass) {
 		try {
 			return requireEntityPersister( entityClass );
 		}
@@ -533,7 +533,7 @@ abstract class AbstractSharedSessionContract
 	 *
 	 * @implNote Even though JPA does not define support for dynamic models, we want to be consistent here.
 	 */
-	protected EntityPersister requireEntityPersisterForLoad(String entityName) {
+	protected EntityPersister<?> requireEntityPersisterForLoad(String entityName) {
 		try {
 			return requireEntityPersister( entityName );
 		}
@@ -695,7 +695,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	abstract <E> List<E> findMultiple(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<E> rootGraph,
 			@Nonnull List<?> keys,
@@ -1557,7 +1557,7 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	@Nonnull
-	public EntityKey generateEntityKey(@Nonnull Object id, @Nonnull EntityPersister persister) {
+	public EntityKey generateEntityKey(@Nonnull Object id, @Nonnull EntityPersister<?> persister) {
 		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
 		return temporalId != null
 			&& temporalId != AuditLog.ALL_CHANGESETS
@@ -2070,12 +2070,12 @@ abstract class AbstractSharedSessionContract
 	}
 
 	// Hibernate Reactive may need to use this
-	protected final EntityPersister requireEntityPersister(Class<?> entityClass) {
+	protected final EntityPersister<?> requireEntityPersister(Class<?> entityClass) {
 		return getMappingMetamodel().getEntityDescriptor( entityClass );
 	}
 
 	// Hibernate Reactive may need to use this
-	protected final EntityPersister requireEntityPersister(String entityName) {
+	protected final EntityPersister<?> requireEntityPersister(String entityName) {
 		return getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 

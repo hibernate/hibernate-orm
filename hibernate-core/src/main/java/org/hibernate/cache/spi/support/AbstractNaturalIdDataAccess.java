@@ -30,7 +30,7 @@ public abstract class AbstractNaturalIdDataAccess extends AbstractCachedDomainDa
 	@Nonnull
 	public Object generateCacheKey(
 			@Nonnull Object naturalIdValues,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session) {
 		return keysFactory.createNaturalIdKey( naturalIdValues, persister, session );
 	}

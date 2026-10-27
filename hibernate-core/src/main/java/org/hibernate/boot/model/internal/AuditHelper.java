@@ -839,14 +839,14 @@ public final class AuditHelper {
 	 * {@code false} immediately when there is no temporal identifier
 	 * (the common case for non-audit queries).
 	 */
-	public static boolean isFetchableAuditExcluded(Fetchable fetchable, LoadQueryInfluencers influencers) {
+	public static boolean isFetchableAuditExcluded(Fetchable<?, ?, ?> fetchable, LoadQueryInfluencers influencers) {
 		if ( influencers.getTemporalIdentifier() == null ) {
 			return false;
 		}
 		final var attr = fetchable.asAttributeMapping();
 		if ( attr != null
 				&& attr.getStateArrayPosition() >= 0
-				&& attr.getDeclaringType() instanceof EntityMappingType entityMappingType ) {
+				&& attr.getDeclaringType() instanceof EntityMappingType<?> entityMappingType ) {
 			final var persister = entityMappingType.getEntityPersister();
 			return persister.getAuditMapping() != null
 					&& persister.isPropertyAuditedExcluded( attr.getStateArrayPosition() );

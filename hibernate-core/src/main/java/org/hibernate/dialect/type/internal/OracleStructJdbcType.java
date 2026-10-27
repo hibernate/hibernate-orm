@@ -19,13 +19,13 @@ public class OracleStructJdbcType extends OracleBaseStructJdbcType {
 		this( null, null, null );
 	}
 
-	private OracleStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
+	private OracleStructJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType, String typeName, int[] orderMapping) {
 		super( embeddableMappingType, typeName, orderMapping );
 	}
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new OracleStructJdbcType(

@@ -18,7 +18,7 @@ public class TableDeleteStandard extends AbstractTableDelete implements Generate
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters) {
+			List<ColumnValueParameter<?>> parameters) {
 		this( mutatingTable, mutationTarget, sqlComment, keyRestrictionBindings, optLockRestrictionBindings, parameters, null );
 	}
 
@@ -28,7 +28,7 @@ public class TableDeleteStandard extends AbstractTableDelete implements Generate
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters,
+			List<ColumnValueParameter<?>> parameters,
 			String whereFragment) {
 		super( mutatingTable, mutationTarget, sqlComment, keyRestrictionBindings, optLockRestrictionBindings, parameters );
 		this.whereFragment = whereFragment;

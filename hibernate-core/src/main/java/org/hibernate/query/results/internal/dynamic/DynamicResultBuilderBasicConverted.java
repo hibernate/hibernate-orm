@@ -122,7 +122,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 		);
 		return new ResultSetMappingSqlSelection(
 				jdbcPositionToValuesArrayPosition( jdbcPosition ),
-				(BasicValuedMapping) basicType
+				(BasicValuedMapping<?>) basicType
 		);
 	}
 

@@ -15,11 +15,11 @@ import org.hibernate.service.Service;
 public interface SqmMultiTableMutationStrategyProvider extends Service {
 	/// Determines the multi-table mutation strategy for the given entity.
 	SqmMultiTableMutationStrategy createMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			RuntimeModelCreationContext creationContext);
 
 	/// Determines the multi-table insert strategy for the given entity.
 	SqmMultiTableInsertStrategy createInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			RuntimeModelCreationContext creationContext);
 }

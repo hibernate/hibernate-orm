@@ -34,7 +34,7 @@ public class SecondaryTableQuotingTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel()
+		final EntityPersister<?> entityDescriptor = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel()
 				.getEntityDescriptor( Foo.class );
 		final EntityTableMapping secondaryTableMapping = entityDescriptor.getTableMappings()[1];
 		assertFalse( secondaryTableMapping.isOptional() );

@@ -35,7 +35,7 @@ public class ArrayContainsUnnestFunction extends AbstractArrayContainsFunction {
 		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression needleExpression = (Expression) sqlAstArguments.get( 1 );
 		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
-		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
+		final JdbcMapping<?> needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
 		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
 			warnAboutArrayContainsWithArrayArgument();
 			sqlAppender.append( '(' );

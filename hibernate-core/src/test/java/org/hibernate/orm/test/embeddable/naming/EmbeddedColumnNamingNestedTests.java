@@ -34,16 +34,16 @@ public class EmbeddedColumnNamingNestedTests {
 	void testNestedNamingPattern(SessionFactoryScope sfScope) {
 		final SessionFactoryImplementor sessionFactory = sfScope.getSessionFactory();
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
-		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( Person.class );
+		final EntityPersister<?> persister = mappingMetamodel.getEntityDescriptor( Person.class );
 
-		final EmbeddedAttributeMapping homeAddressMapping = (EmbeddedAttributeMapping) persister.findAttributeMapping( "homeAddress" );
+		final EmbeddedAttributeMapping<?, ?> homeAddressMapping = (EmbeddedAttributeMapping<?, ?>) persister.findAttributeMapping( "homeAddress" );
 		verifyColumnNames( homeAddressMapping, "home_" );
-		final EmbeddedAttributeMapping homeZipMapping = (EmbeddedAttributeMapping) homeAddressMapping.getEmbeddableTypeDescriptor().findAttributeMapping( "zip" );
+		final EmbeddedAttributeMapping<?, ?> homeZipMapping = (EmbeddedAttributeMapping<?, ?>) homeAddressMapping.getEmbeddableTypeDescriptor().findAttributeMapping( "zip" );
 		verifyColumnNames( homeZipMapping, "home_zip" );
 
-		final EmbeddedAttributeMapping workAddressMapping = (EmbeddedAttributeMapping) persister.findAttributeMapping( "workAddress" );
+		final EmbeddedAttributeMapping<?, ?> workAddressMapping = (EmbeddedAttributeMapping<?, ?>) persister.findAttributeMapping( "workAddress" );
 		verifyColumnNames( workAddressMapping, "work_" );
-		final EmbeddedAttributeMapping workZipMapping = (EmbeddedAttributeMapping) workAddressMapping.getEmbeddableTypeDescriptor().findAttributeMapping( "zip" );
+		final EmbeddedAttributeMapping<?, ?> workZipMapping = (EmbeddedAttributeMapping<?, ?>) workAddressMapping.getEmbeddableTypeDescriptor().findAttributeMapping( "zip" );
 		verifyColumnNames( workZipMapping, "work_zip" );
 	}
 

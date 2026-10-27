@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface EntityCollectionPart extends CollectionPart, EntityValuedFetchable {
+public interface EntityCollectionPart<J> extends CollectionPart<J, J, J>, EntityValuedFetchable<J> {
 
 	enum Cardinality { ONE_TO_MANY, MANY_TO_MANY }
 
@@ -32,7 +32,7 @@ public interface EntityCollectionPart extends CollectionPart, EntityValuedFetcha
 
 	NotFoundAction getNotFoundAction();
 
-	EntityMappingType getAssociatedEntityMappingType();
+	EntityMappingType<J> getAssociatedEntityMappingType();
 
 	@Override
 	default String getFetchableName() {
@@ -41,25 +41,25 @@ public interface EntityCollectionPart extends CollectionPart, EntityValuedFetcha
 
 	@Nonnull
 	@Override
-	default EntityMappingType getPartMappingType() {
+	default EntityMappingType<J> getPartMappingType() {
 		return getAssociatedEntityMappingType();
 	}
 
 	@Nonnull
 	@Override
-	default EntityMappingType getEntityMappingType() {
+	default EntityMappingType<J> getEntityMappingType() {
 		return getAssociatedEntityMappingType();
 	}
 
 	@Nonnull
 	@Override
-	default JavaType<?> getJavaType() {
+	default JavaType<J> getJavaType() {
 		return getAssociatedEntityMappingType().getJavaType();
 	}
 
 	@Nonnull
 	@Override
-	default JavaType<?> getExpressibleJavaType() {
+	default JavaType<J> getExpressibleJavaType() {
 		return getJavaType();
 	}
 

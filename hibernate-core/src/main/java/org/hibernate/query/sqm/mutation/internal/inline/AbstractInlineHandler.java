@@ -28,7 +28,7 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
  */
 public abstract class AbstractInlineHandler implements MultiTableHandler {
 	private final MatchingIdRestrictionProducer matchingIdsPredicateProducer;
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister<?> entityDescriptor;
 	private final DomainParameterXref domainParameterXref;
 	private final CacheableSqmInterpretation<SelectStatement, JdbcSelect> matchingIdsInterpretation;
 
@@ -79,7 +79,7 @@ public abstract class AbstractInlineHandler implements MultiTableHandler {
 		return matchingIdsInterpretation.jdbcOperation().isCompatibleWith( jdbcParameterBindings, queryOptions );
 	}
 
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 

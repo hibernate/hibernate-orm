@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvide
 public class SqmMultiTableMutationStrategyProviderStandard implements SqmMultiTableMutationStrategyProvider {
 	@Override
 	public SqmMultiTableMutationStrategy createMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final SessionFactoryOptions options = creationContext.getSessionFactoryOptions();
 
@@ -42,7 +42,7 @@ public class SqmMultiTableMutationStrategyProviderStandard implements SqmMultiTa
 
 	@Override
 	public SqmMultiTableInsertStrategy createInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final SessionFactoryOptions options = creationContext.getSessionFactoryOptions();
 

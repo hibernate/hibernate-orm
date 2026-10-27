@@ -20,7 +20,7 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 		implements SqmSelectableNode<T>, SemanticPathPart {
 
 	private final EntityDomainType value;
-	private final BasicType domainType;
+	private final BasicType<T> domainType;
 	private final String pathName;
 
 	public SqmAnyDiscriminatorValue(

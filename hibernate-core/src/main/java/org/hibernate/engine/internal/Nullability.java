@@ -51,12 +51,12 @@ public final class Nullability {
 	 * @throws PropertyValueException Break the nullability of one property
 	 * @throws HibernateException error while getting Component values
 	 */
-	public void checkNullability(final Object[] values, final EntityPersister persister) {
+	public void checkNullability(final Object[] values, final EntityPersister<?> persister) {
 		checkNullability( values, persister, null );
 	}
 
 	public void checkNullability(
-			final Object[] values, final EntityPersister persister, FilteredAssociationState filteredState) {
+			final Object[] values, final EntityPersister<?> persister, FilteredAssociationState filteredState) {
 
 		// Typically, when Bean Validation is present, we don't validate
 		// not-null values here. Hence, the checkNullability setting.
@@ -88,7 +88,7 @@ public final class Nullability {
 					final Object value = values[i];
 					final var attribute = filteredState == null ? null : persister.getAttributeMapping( i );
 					final boolean hidden = filteredMapping.hasHiddenAttribute( filteredState, attribute );
-					if ( hidden && attribute instanceof EmbeddableValuedModelPart embedded ) {
+					if ( hidden && attribute instanceof EmbeddableValuedModelPart<?, ?, ?> embedded ) {
 						final String failure =
 								checkComponentNullability( value, (CompositeType) propertyTypes[i],
 										embedded.getEmbeddableTypeDescriptor(), filteredState, filteredMapping );
@@ -124,7 +124,7 @@ public final class Nullability {
 		}
 	}
 
-	private boolean[] getCheckability(EntityPersister persister) {
+	private boolean[] getCheckability(EntityPersister<?> persister) {
 		return checkType == NullabilityCheckType.CREATE
 				? persister.getPropertyInsertability()
 				: persister.getPropertyUpdateability();
@@ -153,7 +153,7 @@ public final class Nullability {
 	}
 
 	private String checkSubElementsNullability(
-			Type propertyType, Object value, EmbeddableMappingType mapping,
+			Type propertyType, Object value, EmbeddableMappingType<?, ?, ?> mapping,
 			FilteredAssociationState state, FilteredAssociationMapping filteredMapping) {
 		if ( propertyType instanceof AnyType anyType ) {
 			return checkComponentNullability( value, anyType );
@@ -198,7 +198,7 @@ public final class Nullability {
 	}
 
 	private String checkComponentNullability(
-			Object composite, CompositeType compositeType, EmbeddableMappingType mapping,
+			Object composite, CompositeType compositeType, EmbeddableMappingType<?, ?, ?> mapping,
 			FilteredAssociationState state, FilteredAssociationMapping filteredMapping) {
 		// IMPL NOTE: we currently skip checking "any" and "many-to-any" mappings.
 		//
@@ -233,7 +233,7 @@ public final class Nullability {
 								filteredMapping != null
 								&& filteredMapping.hasHiddenAttribute( state, attribute );
 						final var embedded =
-								attribute instanceof EmbeddableValuedModelPart part
+								attribute instanceof EmbeddableValuedModelPart<?, ?, ?> part
 										? part.getEmbeddableTypeDescriptor()
 										: null;
 						if ( value == null && !(hidden && embedded != null) ) {

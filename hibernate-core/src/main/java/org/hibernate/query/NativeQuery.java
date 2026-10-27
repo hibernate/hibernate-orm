@@ -950,7 +950,7 @@ public interface NativeQuery<T>
 
 		@Nonnull
 		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-		EntityMappingType getEntityMapping();
+		EntityMappingType<?> getEntityMapping();
 
 		@Nonnull
 		NavigablePath getNavigablePath();
@@ -1014,7 +1014,7 @@ public interface NativeQuery<T>
 
 		@Nonnull
 		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-		PluralAttributeMapping getPluralAttribute();
+		PluralAttributeMapping<?> getPluralAttribute();
 
 		@Nonnull
 		NavigablePath getNavigablePath();
@@ -1034,7 +1034,7 @@ public interface NativeQuery<T>
 
 		@Nonnull
 		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-		Fetchable getFetchable();
+		Fetchable<?, ?, ?> getFetchable();
 
 		@Nonnull
 		String getFetchableName();

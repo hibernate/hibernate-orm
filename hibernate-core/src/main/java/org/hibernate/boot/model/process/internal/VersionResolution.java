@@ -120,13 +120,13 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	private final JavaType<E> javaType;
 	private final JdbcType jdbcType;
 
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 	private final BasicType<E> legacyType;
 
 	public VersionResolution(
 			JavaType<E> javaType,
 			JdbcType jdbcType,
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			BasicType<E> legacyType) {
 		this.javaType = javaType;
 		this.jdbcType = jdbcType;
@@ -135,7 +135,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 

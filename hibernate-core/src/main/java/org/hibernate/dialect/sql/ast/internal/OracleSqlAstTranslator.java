@@ -234,7 +234,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		final Locking.FollowOn followOnStrategy = lockOptions == null
 				? Locking.FollowOn.ALLOW
 				: lockOptions.getFollowOnStrategy();
-		final EntityIdentifierMapping identifierMappingForLockingWrapper = identifierMappingForLockingWrapper( querySpec, followOnStrategy );
+		final EntityIdentifierMapping<?, ?, ?> identifierMappingForLockingWrapper = identifierMappingForLockingWrapper( querySpec, followOnStrategy );
 		final Expression offsetExpression;
 		final Expression fetchExpression;
 		final FetchClauseType fetchClauseType;
@@ -271,7 +271,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			Expression offsetExpression,
 			Expression fetchExpression,
 			FetchClauseType fetchClauseType,
-			EntityIdentifierMapping identifierMappingForLockingWrapper) {
+			EntityIdentifierMapping<?, ?, ?> identifierMappingForLockingWrapper) {
 
 		final TableGroup rootTableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		final List<ColumnReference> idColumnReferences = new ArrayList<>( identifierMappingForLockingWrapper.getJdbcTypeCount() );
@@ -282,7 +282,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				}
 		);
 		final Expression idExpression;
-		if ( identifierMappingForLockingWrapper instanceof EmbeddableValuedModelPart ) {
+		if ( identifierMappingForLockingWrapper instanceof EmbeddableValuedModelPart<?, ?, ?> ) {
 			idExpression = new SqlTuple( idColumnReferences, identifierMappingForLockingWrapper );
 		}
 		else {
@@ -318,7 +318,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		return lockingWrapper;
 	}
 
-	private EntityIdentifierMapping identifierMappingForLockingWrapper(QuerySpec querySpec, Locking.FollowOn followOnStrategy) {
+	private EntityIdentifierMapping<?, ?, ?> identifierMappingForLockingWrapper(QuerySpec querySpec, Locking.FollowOn followOnStrategy) {
 		// We only need a locking wrapper for very simple queries
 		if ( canApplyLockingWrapper( querySpec )
 				// There must be the need for locking in this query
@@ -331,7 +331,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				&& querySpec.getHavingClauseRestrictions() == null
 				&& !querySpec.getSelectClause().isDistinct()
 				&& !hasAggregateFunctions( querySpec ) ) {
-			return ( (EntityMappingType) querySpec.getFromClause().getRoots().get( 0 ).getModelPart() ).getIdentifierMapping();
+			return ( (EntityMappingType<?>) querySpec.getFromClause().getRoots().get( 0 ).getModelPart() ).getIdentifierMapping();
 		}
 		return null;
 	}
@@ -342,7 +342,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				// Must have a single root with no joins for an entity type
 				&& ( fromClause = querySpec.getFromClause() ).getRoots().size() == 1
 				&& !fromClause.hasJoins()
-				&& fromClause.getRoots().get( 0 ).getModelPart() instanceof EntityMappingType;
+				&& fromClause.getRoots().get( 0 ).getModelPart() instanceof EntityMappingType<?>;
 	}
 
 	private boolean needsLockingWrapper(QuerySpec querySpec, Locking.FollowOn followOnStrategy) {

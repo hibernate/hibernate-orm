@@ -27,11 +27,11 @@ public class BitSetJavaTypeRegistrationTests {
 
 	@Test
 	public void testResolution(SessionFactoryScope scope) {
-		final EntityPersister productType = scope.getSessionFactory()
+		final EntityPersister<?> productType = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.findEntityDescriptor(Product.class);
-		final SingularAttributeMapping bitSetAttribute = (SingularAttributeMapping) productType.findAttributeMapping("bitSet");
+		final SingularAttributeMapping<?, ?, ?> bitSetAttribute = (SingularAttributeMapping<?, ?, ?>) productType.findAttributeMapping("bitSet");
 		// make sure BitSetTypeDescriptor was selected
 		assertThat( bitSetAttribute.getJavaType(), instanceOf( BitSetJavaType.class));
 	}

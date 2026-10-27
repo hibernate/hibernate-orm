@@ -74,11 +74,11 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	}
 
 	public static class CollectionLoader {
-		private final PluralAttributeMapping collectionAttribute;
+		private final PluralAttributeMapping<?> collectionAttribute;
 		private final DomainResultAssembler<?> collectionKeyAssembler;
 
 		public CollectionLoader(
-				PluralAttributeMapping collectionAttribute,
+				PluralAttributeMapping<?> collectionAttribute,
 				DomainResultAssembler<?> collectionKeyAssembler) {
 			this.collectionAttribute = collectionAttribute;
 			this.collectionKeyAssembler = collectionKeyAssembler;

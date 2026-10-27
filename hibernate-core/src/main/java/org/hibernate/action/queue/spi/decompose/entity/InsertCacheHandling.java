@@ -98,7 +98,7 @@ public class InsertCacheHandling {
 	}
 
 	private static boolean isCachePutEnabled(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SharedSessionContractImplementor session) {
 		return persister.canWriteToCache()
 			&& !persister.isCacheInvalidationRequired()
@@ -108,7 +108,7 @@ public class InsertCacheHandling {
 	private static boolean cacheInsert(
 			AbstractEntityInsertAction action,
 			CacheInsert cacheInsert,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EntityDataAccess cache,
 			Object cacheKey,
 			SharedSessionContractImplementor session) {

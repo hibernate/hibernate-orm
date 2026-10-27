@@ -147,7 +147,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	public AggregateJdbcType resolveAggregateDescriptor(
 			int jdbcTypeCode,
 			String typeName,
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			RuntimeModelCreationContext context) {
 		final String registrationKey;
 		if ( typeName != null ) {
@@ -177,7 +177,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	private AggregateJdbcType resolveAggregateDescriptor(
 			int jdbcTypeCode,
 			String typeName,
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			RuntimeModelCreationContext context,
 			String registrationKey) {
 		final var descriptor = getDescriptor( jdbcTypeCode );

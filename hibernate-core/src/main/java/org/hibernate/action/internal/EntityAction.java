@@ -32,7 +32,7 @@ public abstract class EntityAction
 	@Nonnull
 	private transient EventSource session;
 	@Nonnull
-	private transient EntityPersister persister;
+	private transient EntityPersister<?> persister;
 
 	private transient boolean veto;
 
@@ -48,7 +48,7 @@ public abstract class EntityAction
 			@Nonnull EventSource session,
 			@Nullable Object id,
 			@Nullable Object instance,
-			@Nonnull EntityPersister persister) {
+			@Nonnull EntityPersister<?> persister) {
 		assert session != null;
 		assert persister != null;
 		entityName = persister.getEntityName();
@@ -140,7 +140,7 @@ public abstract class EntityAction
 	 * @return The entity persister
 	 */
 	@Nonnull
-	public final EntityPersister getPersister() {
+	public final EntityPersister<?> getPersister() {
 		return persister;
 	}
 

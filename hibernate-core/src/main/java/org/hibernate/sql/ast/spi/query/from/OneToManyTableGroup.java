@@ -18,12 +18,12 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  */
 public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implements TableGroup, PluralTableGroup {
 	private final SessionFactoryImplementor sessionFactory;
-	private final PluralAttributeMapping pluralAttributeMapping;
+	private final PluralAttributeMapping<?> pluralAttributeMapping;
 	private final TableGroup elementTableGroup;
 	private TableGroup indexTableGroup;
 
 	public OneToManyTableGroup(
-			PluralAttributeMapping pluralAttributeMapping,
+			PluralAttributeMapping<?> pluralAttributeMapping,
 			TableGroup elementTableGroup,
 			SessionFactoryImplementor sessionFactory) {
 		this.pluralAttributeMapping = pluralAttributeMapping;
@@ -32,12 +32,12 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 	}
 
 	@Override
-	public PluralAttributeMapping getExpressionType() {
+	public PluralAttributeMapping<?> getExpressionType() {
 		return pluralAttributeMapping;
 	}
 
 	@Override
-	public PluralAttributeMapping getModelPart() {
+	public PluralAttributeMapping<?> getModelPart() {
 		return pluralAttributeMapping;
 	}
 

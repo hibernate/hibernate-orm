@@ -16,14 +16,14 @@ import static java.util.Locale.ROOT;
 public class JdbcValueDescriptorImpl implements JdbcValueDescriptor {
 	private final String columnName;
 	private final ParameterUsage usage;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 	private final int jdbcPosition;
 
 	public JdbcValueDescriptorImpl(JdbcParameterBinder jdbcParameterBinder, int jdbcPosition) {
-		this( (ColumnValueParameter) jdbcParameterBinder, jdbcPosition );
+		this( (ColumnValueParameter<?>) jdbcParameterBinder, jdbcPosition );
 	}
 
-	public JdbcValueDescriptorImpl(ColumnValueParameter columnValueParameter, int jdbcPosition) {
+	public JdbcValueDescriptorImpl(ColumnValueParameter<?> columnValueParameter, int jdbcPosition) {
 		this.columnName = columnValueParameter.getColumnReference().getColumnExpression();
 		this.usage = columnValueParameter.getUsage();
 		this.jdbcMapping = columnValueParameter.getJdbcMapping();
@@ -46,7 +46,7 @@ public class JdbcValueDescriptorImpl implements JdbcValueDescriptor {
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 

@@ -34,7 +34,7 @@ public class ExampleJdbcParameterFactoryTest {
 
 	@Test
 	void createsAProviderBoundParameterWithoutAnInternalBaseClass() {
-		final JdbcMapping jdbcMapping = (JdbcMapping) Proxy.newProxyInstance(
+		final JdbcMapping<?> jdbcMapping = (JdbcMapping<?>) Proxy.newProxyInstance(
 				JdbcMapping.class.getClassLoader(),
 				new Class<?>[] { JdbcMapping.class },
 				(proxy, method, arguments) -> null
@@ -48,13 +48,13 @@ public class ExampleJdbcParameterFactoryTest {
 
 	@Test
 	void accessesColumnValueParameterThroughItsDeclaredSpi() {
-		final JdbcMapping jdbcMapping = (JdbcMapping) Proxy.newProxyInstance(
+		final JdbcMapping<?> jdbcMapping = (JdbcMapping<?>) Proxy.newProxyInstance(
 				JdbcMapping.class.getClassLoader(),
 				new Class<?>[] { JdbcMapping.class },
 				(proxy, method, arguments) -> null
 		);
 		final var columnReference = new ColumnReference( (String) null, "example_column", false, null, jdbcMapping );
-		final var parameter = new ColumnValueParameter( columnReference );
+		final var parameter = ColumnValueParameter.create( columnReference );
 		final SqlAstWalker walker = (SqlAstWalker) Proxy.newProxyInstance(
 				SqlAstWalker.class.getClassLoader(),
 				new Class<?>[] { SqlAstWalker.class },

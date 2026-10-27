@@ -27,7 +27,7 @@ import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 /// @author Steve Ebersole
 public class EntityTemporalEndBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityTableDescriptor tableDescriptor;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final TemporalMapping temporalMapping;
 	private final Object identifier;
 	private final Object rowId;
@@ -37,7 +37,7 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 
 	public EntityTemporalEndBindPlan(
 			EntityTableDescriptor tableDescriptor,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			TemporalMapping temporalMapping,
 			Object identifier,
 			Object rowId,

@@ -35,7 +35,7 @@ public class HibernateSequenceTest {
 
 	@Test
 	public void testHibernateSequenceSchema(SessionFactoryScope scope) {
-		EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(HibernateSequenceEntity.class.getName());
+		EntityPersister<?> persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(HibernateSequenceEntity.class.getName());
 		Generator generator = persister.getGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;

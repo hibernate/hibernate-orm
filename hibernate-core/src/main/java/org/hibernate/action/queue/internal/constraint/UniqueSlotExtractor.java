@@ -32,12 +32,12 @@ import static org.hibernate.action.queue.internal.constraint.ConstraintModel.nor
 public class UniqueSlotExtractor {
 	private final ConstraintModel constraintModel;
 	private final SharedSessionContractImplementor session;
-	private final Map<String, EntityPersister> persistersByTable;
+	private final Map<String, EntityPersister<?>> persistersByTable;
 
 	public UniqueSlotExtractor(
 			ConstraintModel constraintModel,
 			SharedSessionContractImplementor session,
-			Map<String, EntityPersister> persistersByTable) {
+			Map<String, EntityPersister<?>> persistersByTable) {
 		this.constraintModel = constraintModel;
 		this.session = session;
 		this.persistersByTable = persistersByTable;
@@ -88,7 +88,7 @@ public class UniqueSlotExtractor {
 			return slots;
 		}
 
-		EntityPersister persister = findPersisterForTable( tableName );
+		EntityPersister<?> persister = findPersisterForTable( tableName );
 		if (persister == null) {
 			return slots;
 		}
@@ -137,7 +137,7 @@ public class UniqueSlotExtractor {
 			return slots;
 		}
 
-		EntityPersister persister = findPersisterForTable( tableName );
+		EntityPersister<?> persister = findPersisterForTable( tableName );
 		if (persister == null) {
 			return slots;
 		}
@@ -192,7 +192,7 @@ public class UniqueSlotExtractor {
 			return slots;
 		}
 
-		final EntityPersister persister = findPersisterForTable( tableName );
+		final EntityPersister<?> persister = findPersisterForTable( tableName );
 		if ( persister == null ) {
 			return slots;
 		}
@@ -218,7 +218,7 @@ public class UniqueSlotExtractor {
 
 	/// Extract the values for a specific unique constraint from entity instance.
 	private Object[] extractValues(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object entityInstance,
 			UniqueConstraint constraint) {
 
@@ -238,7 +238,7 @@ public class UniqueSlotExtractor {
 	}
 
 	private Object[] extractPrimaryKeyValues(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object id,
 			SelectableMappings constraintColumns) {
 		if ( id == null ) {
@@ -286,7 +286,7 @@ public class UniqueSlotExtractor {
 	}
 
 	private Object[] extractColumnValues(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object entityId,
 			Object entityInstance,
 			Object[] state,
@@ -302,7 +302,7 @@ public class UniqueSlotExtractor {
 
 	/// Extract values from entity state array.
 	private Object[] extractValuesFromState(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object entityId,
 			Object[] state,
 			UniqueConstraint constraint) {
@@ -320,7 +320,7 @@ public class UniqueSlotExtractor {
 	}
 
 	private void collectAttributeColumnValues(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object entityInstance,
 			Object[] state,
 			Map<ColumnKey, Object> valuesByColumn) {
@@ -341,14 +341,14 @@ public class UniqueSlotExtractor {
 		} );
 	}
 
-	private boolean isInverseOneToOne(AttributeMapping attributeMapping) {
-		return attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
+	private boolean isInverseOneToOne(AttributeMapping<?, ?, ?> attributeMapping) {
+		return attributeMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping
 				&& toOneAttributeMapping.getCardinality() == ToOneAttributeMapping.Cardinality.ONE_TO_ONE
 				&& toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.TARGET;
 	}
 
 	private Object resolveAttributeValue(
-			AttributeMapping attributeMapping,
+			AttributeMapping<?, ?, ?> attributeMapping,
 			Object entityInstance,
 			Object[] state) {
 		if ( state != null ) {
@@ -365,7 +365,7 @@ public class UniqueSlotExtractor {
 	}
 
 	private void collectModelPartColumnValues(
-			AttributeMapping attributeMapping,
+			AttributeMapping<?, ?, ?> attributeMapping,
 			Object attributeValue,
 			Map<ColumnKey, Object> valuesByColumn) {
 		try {
@@ -395,13 +395,13 @@ public class UniqueSlotExtractor {
 	}
 
 	/// Build a map of table names to entity persisters for quick lookup.
-	public static Map<String, EntityPersister> buildPersisterMap(SharedSessionContractImplementor session) {
+	public static Map<String, EntityPersister<?>> buildPersisterMap(SharedSessionContractImplementor session) {
 		return buildPersisterMap( session.getFactory() );
 	}
 
 	/// Build a map of table names to entity persisters for quick lookup.
-	public static Map<String, EntityPersister> buildPersisterMap(SessionFactoryImplementor factory) {
-		Map<String, EntityPersister> map = new java.util.HashMap<>();
+	public static Map<String, EntityPersister<?>> buildPersisterMap(SessionFactoryImplementor factory) {
+		Map<String, EntityPersister<?>> map = new java.util.HashMap<>();
 
 		factory.getMappingMetamodel().forEachEntityDescriptor(persister -> {
 			for ( var tableMapping : persister.getTableMappings() ) {
@@ -413,8 +413,8 @@ public class UniqueSlotExtractor {
 		return map;
 	}
 
-	private EntityPersister findPersisterForTable(String tableName) {
-		EntityPersister persister = persistersByTable.get( tableName );
+	private EntityPersister<?> findPersisterForTable(String tableName) {
+		EntityPersister<?> persister = persistersByTable.get( tableName );
 		if ( persister != null ) {
 			return persister;
 		}

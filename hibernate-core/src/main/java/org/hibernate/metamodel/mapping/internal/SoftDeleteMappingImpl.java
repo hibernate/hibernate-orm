@@ -64,13 +64,18 @@ import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
  *
  * @author Steve Ebersole
  */
-public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliaryMutationSupport {
+public class SoftDeleteMappingImpl<J> implements SoftDeleteMapping<J>, LegacyAuxiliaryMutationSupport {
+	@Override
+	public JavaType<J> getExpressibleJavaType() {
+		return jdbcMapping.getMappedJavaType();
+	}
+
 	private final NavigableRole navigableRole;
-	private final SoftDeletableModelPart softDeletable;
+	private final SoftDeletableModelPart<?, ?, ?> softDeletable;
 	private final SoftDeleteType strategy;
 	private final String columnName;
 	private final String tableName;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<J> jdbcMapping;
 
 	private final Object deletionIndicator;
 
@@ -84,28 +89,37 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 	@Nullable private final Object nonDeletedLiteralValue;
 	@Nullable private final String nonDeletedLiteralText;
 
-	public SoftDeleteMappingImpl(
-			SoftDeletableModelPart softDeletable,
+	public static SoftDeleteMappingImpl<?> create(
+			SoftDeletableModelPart<?, ?, ?> softDeletable,
 			SoftDeletable bootMapping,
 			String tableName,
 			MappingModelCreationProcess modelCreationProcess) {
-		assert bootMapping.getSoftDeleteColumn() != null;
+		final var column = bootMapping.getSoftDeleteColumn();
+		assert column != null;
+		final var resolution = ((BasicValue) column.getValue()).resolve();
+		return new SoftDeleteMappingImpl<>( softDeletable, bootMapping.getSoftDeleteStrategy(), column.getName(),
+				tableName, modelCreationProcess, resolution, resolution.getJdbcMapping() );
+	}
+
+	private SoftDeleteMappingImpl(
+			SoftDeletableModelPart<?, ?, ?> softDeletable,
+			SoftDeleteType strategy,
+			String columnName,
+			String tableName,
+			MappingModelCreationProcess modelCreationProcess,
+			BasicValue.Resolution<?> resolution, JdbcMapping<J> jdbcMapping) {
 
 		this.softDeletable = softDeletable;
 		navigableRole = castNonNull( softDeletable.getNavigableRole() ).append( ROLE_NAME );
-		strategy = bootMapping.getSoftDeleteStrategy();
+		this.strategy = strategy;
 
 		final var dialect = modelCreationProcess.getCreationContext().getDialect();
 
-		final var softDeleteColumn = bootMapping.getSoftDeleteColumn();
-		final var columnValue = (BasicValue) softDeleteColumn.getValue();
-		final var resolution = columnValue.resolve();
-
 		this.tableName = tableName;
-		columnName = softDeleteColumn.getName();
-		jdbcMapping = resolution.getJdbcMapping();
+		this.columnName = columnName;
+		this.jdbcMapping = jdbcMapping;
 
-		if ( bootMapping.getSoftDeleteStrategy() == SoftDeleteType.TIMESTAMP ) {
+		if ( strategy == SoftDeleteType.TIMESTAMP ) {
 			currentTimestampFunctionName = dialect.getCurrentTemporalSupport().currentTimestamp();
 			final var currentTimestampFunctionType =
 					modelCreationProcess.getCreationContext().getTypeConfiguration()
@@ -250,7 +264,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return jdbcMapping;
 	}
 
@@ -267,7 +281,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, jdbcMapping );
 		return 1;
 	}
@@ -296,13 +310,13 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return jdbcMapping;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return jdbcMapping.getMappedJavaType();
 	}
 
@@ -313,13 +327,13 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
 			@Nonnull DomainResultCreationState creationState) {
 		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				getJdbcMapping(),
@@ -360,7 +374,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
 		selectionConsumer.accept( sqlSelection, getJdbcMapping() );
 	}
@@ -379,12 +393,12 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return softDeletable.findContainingEntityMapping();
 	}
 
 	@Override
-	public void addToInsertGroup(@Nonnull MutationGroupBuilder insertGroupBuilder, @Nonnull EntityPersister persister) {
+	public void addToInsertGroup(@Nonnull MutationGroupBuilder insertGroupBuilder, @Nonnull EntityPersister<?> persister) {
 		final TableInsertBuilder insertBuilder =
 				insertGroupBuilder.getTableDetailsBuilder( persister.getIdentifierTableName() );
 		insertBuilder.addValueColumn( createNonDeletedValueBinding(
@@ -393,7 +407,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 
 	@Override
 	public void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityMappingType,
+			@Nonnull EntityMappingType<?> associatedEntityMappingType,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull LazyTableGroup lazyTableGroup,
 			@Nonnull NavigablePath navigablePath,
@@ -408,7 +422,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 
 	@Override
 	public void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityDescriptor,
+			@Nonnull EntityMappingType<?> associatedEntityDescriptor,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -421,7 +435,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 
 	@Override
 	public void applyPredicate(
-			@Nonnull PluralAttributeMapping associatedEntityDescriptor,
+			@Nonnull PluralAttributeMapping<?> associatedEntityDescriptor,
 			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
@@ -443,7 +457,7 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 			@Nonnull SqlAstCreationState creationState,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull NamedTableReference rootTableReference,
-			@Nonnull EntityMappingType entityMappingType) {
+			@Nonnull EntityMappingType<?> entityMappingType) {
 		final var tableReference =
 				tableGroup.resolveTableReference( getTableName() );
 		final var softDeletePredicate =

@@ -117,7 +117,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	}
 
 	@Override
-	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
+	public void injectLoadedState(PluralAttributeMapping<?> attributeMapping, List<?> loadingState) {
 		assert isInitializing();
 		if ( loadingState == null ) {
 			array = newInstance( elementClass, 0 );

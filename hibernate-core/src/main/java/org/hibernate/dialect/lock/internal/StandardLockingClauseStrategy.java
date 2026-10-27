@@ -226,7 +226,7 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 
 		final List<TableReferenceJoin> tableReferenceJoins = tableGroup.getTableReferenceJoins();
 		if ( CollectionHelper.isNotEmpty( tableReferenceJoins ) ) {
-			final EntityPersister entityPersister = determineEntityPersister( tableGroup.getModelPart() );
+			final EntityPersister<?> entityPersister = determineEntityPersister( tableGroup.getModelPart() );
 			for ( int i = 0; i < tableReferenceJoins.size(); i++ ) {
 				final TableReferenceJoin tableReferenceJoin = tableReferenceJoins.get( i );
 				final NamedTableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
@@ -239,14 +239,14 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 		}
 	}
 
-	private TableMapping determineTableMapping(EntityPersister entityPersister, TableReferenceJoin tableReferenceJoin) {
+	private TableMapping determineTableMapping(EntityPersister<?> entityPersister, TableReferenceJoin tableReferenceJoin) {
 		final NamedTableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
 		for ( EntityTableMapping tableMapping : entityPersister.getTableMappings() ) {
 			if ( joinedTableReference.containsAffectedTableName( tableMapping.getTableName() ) ) {
 				return tableMapping;
 			}
 		}
-		for ( EntityMappingType subMappingType : entityPersister.getSubMappingTypes() ) {
+		for ( EntityMappingType<?> subMappingType : entityPersister.getSubMappingTypes() ) {
 			for ( EntityTableMapping tableMapping : subMappingType.getEntityPersister().getTableMappings() ) {
 				if ( joinedTableReference.containsAffectedTableName( tableMapping.getTableName() ) ) {
 					return tableMapping;
@@ -256,14 +256,14 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 		throw new IllegalArgumentException( "Couldn't find subclass index for joined table reference " + joinedTableReference );
 	}
 
-	private EntityPersister determineEntityPersister(ModelPartContainer modelPart) {
-		if ( modelPart instanceof EntityPersister entityPersister ) {
+	private EntityPersister<?> determineEntityPersister(ModelPartContainer<?, ?, ?> modelPart) {
+		if ( modelPart instanceof EntityPersister<?> entityPersister ) {
 			return entityPersister;
 		}
-		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		else if ( modelPart instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			return pluralAttributeMapping.getCollectionDescriptor().getElementPersister();
 		}
-		else if ( modelPart instanceof EntityAssociationMapping entityAssociationMapping ) {
+		else if ( modelPart instanceof EntityAssociationMapping<?> entityAssociationMapping ) {
 			return entityAssociationMapping.getAssociatedEntityMappingType().getEntityPersister();
 		}
 		else {
@@ -275,13 +275,13 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 		if ( tableGroup instanceof LockingTableGroup lockingTableGroup ) {
 			return extractColumnNames( lockingTableGroup.getKeyColumnMappings() );
 		}
-		else if ( tableGroup.getModelPart() instanceof EntityPersister entityPersister ) {
+		else if ( tableGroup.getModelPart() instanceof EntityPersister<?> entityPersister ) {
 			return entityPersister.getIdentifierColumnNames();
 		}
-		else if ( tableGroup.getModelPart() instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		else if ( tableGroup.getModelPart() instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			return extractColumnNames( pluralAttributeMapping.getKeyDescriptor() );
 		}
-		else if ( tableGroup.getModelPart() instanceof EntityAssociationMapping entityAssociationMapping ) {
+		else if ( tableGroup.getModelPart() instanceof EntityAssociationMapping<?> entityAssociationMapping ) {
 			return extractColumnNames( entityAssociationMapping.getAssociatedEntityMappingType().getIdentifierMapping() );
 		}
 		else {

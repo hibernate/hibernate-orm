@@ -17,8 +17,8 @@ public interface EmbeddableResultGraphNode extends DomainResultGraphNode, FetchP
 	}
 
 	@Override
-	EmbeddableValuedModelPart getReferencedMappingContainer();
+	EmbeddableValuedModelPart<?, ?, ?> getReferencedMappingContainer();
 
 	@Override
-	EmbeddableMappingType getReferencedMappingType();
+	EmbeddableMappingType<?, ?, ?> getReferencedMappingType();
 }

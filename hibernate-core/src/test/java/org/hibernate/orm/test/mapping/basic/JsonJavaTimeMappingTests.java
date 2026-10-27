@@ -84,10 +84,10 @@ public abstract class JsonJavaTimeMappingTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithJson.class );
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor( EntityWithJson.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
-		final BasicAttributeMapping stringMapAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+		final BasicAttributeMapping<?> stringMapAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping(
 				"javaTime" );
 
 		assertThat( stringMapAttribute.getJavaType().getJavaTypeClass(), equalTo( JavaTime.class ) );

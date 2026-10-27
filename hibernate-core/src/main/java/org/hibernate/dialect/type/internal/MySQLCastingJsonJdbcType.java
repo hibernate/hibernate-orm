@@ -18,13 +18,13 @@ public class MySQLCastingJsonJdbcType extends JsonJdbcType {
 	 */
 	public static final JsonJdbcType INSTANCE = new MySQLCastingJsonJdbcType( null );
 
-	public MySQLCastingJsonJdbcType(EmbeddableMappingType embeddableMappingType) {
+	public MySQLCastingJsonJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 	}
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new MySQLCastingJsonJdbcType( mappingType );

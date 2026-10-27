@@ -13,21 +13,21 @@ import org.hibernate.sql.ast.spi.SqlAstNode;
  * @author Gavin King
  */
 public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
-	private final JdbcMapping type;
+	private final JdbcMapping<?> type;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
 	private final @Nullable Integer scale;
 
-	public CastTarget(JdbcMapping type) {
+	public CastTarget(JdbcMapping<?> type) {
 		this( type, null, null, null, null );
 	}
 
-	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
+	public CastTarget(JdbcMapping<?> type, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
 		this( type, length, null, precision, scale );
 	}
 
-	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer arrayLength, @Nullable Integer precision, @Nullable Integer scale) {
+	public CastTarget(JdbcMapping<?> type, @Nullable Long length, @Nullable Integer arrayLength, @Nullable Integer precision, @Nullable Integer scale) {
 		this.type = type;
 		this.length = length;
 		this.arrayLength = arrayLength;
@@ -37,7 +37,7 @@ public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return type;
 	}
 

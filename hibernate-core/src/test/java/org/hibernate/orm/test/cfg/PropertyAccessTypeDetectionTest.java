@@ -35,11 +35,11 @@ public class PropertyAccessTypeDetectionTest {
 	public void testPropertyAccessIgnoresStaticFields(SessionFactoryScope factoryScope) {
 		// verify that the entity persister is configured with property intValue as an Integer rather than
 		// using the static field reference and determining the type to be String.
-		final EntityPersister entityDescriptor = factoryScope
+		final EntityPersister<?> entityDescriptor = factoryScope
 				.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( FooEntity.class );
-		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "intValue" );
+		final AttributeMapping<?, ?, ?> attributeMapping = entityDescriptor.findAttributeMapping( "intValue" );
 		assertThat( attributeMapping ).isNotNull();
 		assertThat( attributeMapping.getJavaType().getJavaTypeClass() ).isAssignableFrom( Integer.class );
 	}

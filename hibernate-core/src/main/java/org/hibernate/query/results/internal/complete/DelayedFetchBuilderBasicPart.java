@@ -19,12 +19,12 @@ import java.util.List;
 public class DelayedFetchBuilderBasicPart
 		implements CompleteFetchBuilder, FetchBuilderBasicValued, ModelPartReferenceBasic {
 	private final NavigablePath navigablePath;
-	private final BasicValuedModelPart referencedModelPart;
+	private final BasicValuedModelPart<?, ?, ?> referencedModelPart;
 	private final boolean isEnhancedForLazyLoading;
 
 	public DelayedFetchBuilderBasicPart(
 			NavigablePath navigablePath,
-			BasicValuedModelPart referencedModelPart,
+			BasicValuedModelPart<?, ?, ?> referencedModelPart,
 			boolean isEnhancedForLazyLoading) {
 		this.navigablePath = navigablePath;
 		this.referencedModelPart = referencedModelPart;
@@ -42,7 +42,7 @@ public class DelayedFetchBuilderBasicPart
 	}
 
 	@Override
-	public BasicValuedModelPart getReferencedPart() {
+	public BasicValuedModelPart<?, ?, ?> getReferencedPart() {
 		return referencedModelPart;
 	}
 

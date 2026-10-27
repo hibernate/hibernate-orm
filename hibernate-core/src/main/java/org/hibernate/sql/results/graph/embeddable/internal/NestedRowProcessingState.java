@@ -199,7 +199,7 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	}
 
 	@Override
-	public EntityMappingType getRootEntityDescriptor() {
+	public EntityMappingType<?> getRootEntityDescriptor() {
 		return processingState.getRootEntityDescriptor();
 	}
 

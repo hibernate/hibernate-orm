@@ -298,7 +298,7 @@ public class CompositeNestedGeneratedValueGenerator
 	}
 
 	@Override
-	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister<?> persister) {
 		for ( var generator : generators ) {
 			if ( generator instanceof PostInsertIdentifierGenerator postInsertIdentifierGenerator ) {
 				final var delegate = postInsertIdentifierGenerator.getGeneratedIdentifierDelegate( persister );

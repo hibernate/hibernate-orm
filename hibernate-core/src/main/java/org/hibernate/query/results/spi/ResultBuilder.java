@@ -46,6 +46,6 @@ public interface ResultBuilder extends GraphNodeBuilder {
 	ResultBuilder cacheKeyInstance();
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
-	default void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
+	default void visitFetchBuilders(BiConsumer<Fetchable<?, ?, ?>, FetchBuilder> consumer) {
 	}
 }

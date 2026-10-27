@@ -146,7 +146,7 @@ class EntityEntryContext {
 		managedEntity.$$_hibernate_setPersistenceInfo( entityEntry, previous, null, instanceId );
 	}
 
-	private static boolean isReferenceCachingEnabled(EntityPersister persister) {
+	private static boolean isReferenceCachingEnabled(EntityPersister<?> persister) {
 		// Immutable entities which can use reference caching are treated as non-enhanced entities, as setting
 		// the instance-id on them would be problematic in different sessions
 		return persister.canUseReferenceCacheEntries() && persister.canReadFromCache();
@@ -710,7 +710,7 @@ class EntityEntryContext {
 		// Check instance type of EntityEntry and if type is ImmutableEntityEntry,
 		// check to see if entity is referenced cached in the second level cache
 		private static boolean canClearEntityEntryReference(EntityEntry entityEntry) {
-			final EntityPersister persister = entityEntry.getPersister();
+			final EntityPersister<?> persister = entityEntry.getPersister();
 			return persister.isMutable() || !isReferenceCachingEnabled( persister );
 		}
 

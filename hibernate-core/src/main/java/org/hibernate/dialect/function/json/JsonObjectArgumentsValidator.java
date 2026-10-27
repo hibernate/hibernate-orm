@@ -40,7 +40,7 @@ public class JsonObjectArgumentsValidator implements ArgumentsValidator {
 								: nodeType.getRelationalJavaType();
 				if ( !isUnknown( javaType )
 						&& key.getExpressible().getSqmType()
-								instanceof JdbcMapping jdbcMapping ) {
+								instanceof JdbcMapping<?> jdbcMapping ) {
 					checkArgumentType(
 							i,
 							functionName,

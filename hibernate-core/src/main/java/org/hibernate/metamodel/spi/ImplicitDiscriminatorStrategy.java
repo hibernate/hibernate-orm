@@ -22,10 +22,10 @@ public interface ImplicitDiscriminatorStrategy {
 	/**
 	 * Determine the discriminator value to use for the given {@code entityMapping}.
 	 */
-	Object toDiscriminatorValue(EntityMappingType entityMapping, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel);
+	Object toDiscriminatorValue(EntityMappingType<?> entityMapping, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel);
 
 	/**
 	 * Determine the entity-mapping which matches the given {@code discriminatorValue}.
 	 */
-	EntityMappingType toEntityMapping(Object discriminatorValue, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel);
+	EntityMappingType<?> toEntityMapping(Object discriminatorValue, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel);
 }

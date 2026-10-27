@@ -29,19 +29,24 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 /// Hibernate.
 ///
 /// @author Steve Ebersole
-public class ColumnValueParameter extends AbstractJdbcParameter {
+public class ColumnValueParameter<J> extends AbstractJdbcParameter<J> {
 	private final ColumnReference columnReference;
 	private final ParameterUsage usage;
 
-	public ColumnValueParameter(ColumnReference columnReference, ParameterUsage usage) {
-		super( columnReference.getJdbcMapping() );
+	public static ColumnValueParameter<?> create(ColumnReference columnReference, ParameterUsage usage) {
+		return new ColumnValueParameter<>( columnReference, usage, columnReference.getJdbcMapping() );
+	}
+
+	public static ColumnValueParameter<?> create(ColumnReference columnReference) {
+		return create( columnReference, ParameterUsage.SET );
+	}
+
+	private ColumnValueParameter(ColumnReference columnReference, ParameterUsage usage, JdbcMapping<J> jdbcMapping) {
+		super( jdbcMapping );
 		this.columnReference = columnReference;
 		this.usage = usage;
 	}
 
-	public ColumnValueParameter(ColumnReference columnReference) {
-		this( columnReference, ParameterUsage.SET );
-	}
 
 	@Nonnull
 	@Override
@@ -75,8 +80,8 @@ public class ColumnValueParameter extends AbstractJdbcParameter {
 	/// @since 8.0
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
-		return columnReference.getJdbcMapping();
+	public JdbcMapping<J> getJdbcMapping() {
+		return super.getJdbcMapping();
 	}
 
 	/// Accept the SQL AST walker as this parameter.

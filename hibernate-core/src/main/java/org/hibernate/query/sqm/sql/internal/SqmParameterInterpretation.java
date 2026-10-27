@@ -31,10 +31,10 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			List<JdbcParameter> jdbcParameters,
 			MappingModelExpressible<?> valueMapping) {
 
-		if ( valueMapping instanceof EntityAssociationMapping mapping ) {
+		if ( valueMapping instanceof EntityAssociationMapping<?> mapping ) {
 			this.valueMapping = mapping.getForeignKeyDescriptor().getPart( mapping.getSideNature() );
 		}
-		else if ( valueMapping instanceof EntityValuedModelPart entityValuedModelPart ) {
+		else if ( valueMapping instanceof EntityValuedModelPart<?> entityValuedModelPart ) {
 			this.valueMapping = entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
 		}
 		else {
@@ -48,8 +48,8 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	}
 
 	private Expression determineResolvedExpression(List<JdbcParameter> jdbcParameters, MappingModelExpressible<?> valueMapping) {
-		if ( valueMapping instanceof EmbeddableValuedModelPart
-				|| valueMapping instanceof DiscriminatedAssociationModelPart ) {
+		if ( valueMapping instanceof EmbeddableValuedModelPart<?, ?, ?>
+				|| valueMapping instanceof DiscriminatedAssociationModelPart<?> ) {
 			return new SqlTuple( jdbcParameters, valueMapping );
 		}
 

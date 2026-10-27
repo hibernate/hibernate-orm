@@ -47,7 +47,7 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 	private final MutationOperationGroup staticHistoryInsertGroup;
 
 	public InsertCoordinatorHistory(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull InsertCoordinator currentInsertCoordinator) {
 		super( entityPersister, factory );
@@ -174,7 +174,7 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 
 	private void addSqlGeneratedValue(
 			@Nonnull TableInsertBuilderStandard insertBuilder,
-			@Nonnull AttributeMapping attributeMapping,
+			@Nonnull AttributeMapping<?, ?, ?> attributeMapping,
 			@Nonnull OnExecutionGenerator generator) {
 		final boolean writePropertyValue = generator.writePropertyValue();
 		final var columnValues =
@@ -207,7 +207,7 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
 			if ( propertyInclusions[attributeIndex] ) {
 				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+				if ( !(attributeMapping instanceof PluralAttributeMapping<?>) ) {
 					attributeMapping.decompose(
 							values[attributeIndex],
 							0,

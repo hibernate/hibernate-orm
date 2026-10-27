@@ -31,7 +31,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	private final BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator;
 
 	public SingleIdEntityLoaderStandardImpl(
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		this( entityDescriptor, loadQueryInfluencers,
 				(lockOptions, influencers) -> createLoadPlan( entityDescriptor, lockOptions, influencers) );
@@ -44,7 +44,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	 * </p>
 	 */
 	protected SingleIdEntityLoaderStandardImpl(
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator) {
 		// todo (6.0) : consider creating a base AST and "cloning" it
@@ -173,7 +173,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 
 	@Nonnull
 	private static <T> SingleIdLoadPlan<T> createLoadPlan(
-			@Nonnull EntityMappingType loadable,
+			@Nonnull EntityMappingType<?> loadable,
 			@Nonnull LockOptions lockOptions,
 			@Nonnull LoadQueryInfluencers influencers) {
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();

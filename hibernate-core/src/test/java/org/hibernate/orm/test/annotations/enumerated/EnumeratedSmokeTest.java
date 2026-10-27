@@ -51,7 +51,7 @@ public class EnumeratedSmokeTest {
 	private void validateEnumMapping(JdbcTypeRegistry jdbcRegistry, Property property, EnumType expectedJpaEnumType) {
 		final BasicType<?> propertyType = (BasicType<?>) property.getType();
 //		final EnumValueConverter<?, ?> valueConverter = (EnumValueConverter<?, ?>) propertyType.getValueConverter();
-		final JdbcMapping jdbcMapping = propertyType.getJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = propertyType.getJdbcMapping();
 		final JdbcType jdbcType = jdbcMapping.getJdbcType();
 
 		assert expectedJpaEnumType != null;

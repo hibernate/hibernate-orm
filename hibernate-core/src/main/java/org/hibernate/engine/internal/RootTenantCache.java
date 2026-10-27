@@ -16,7 +16,7 @@ public final class RootTenantCache {
 	}
 
 	public static void invalidateEntity(
-			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+			Object id, EntityPersister<?> persister, SharedSessionContractImplementor session) {
 		if ( session.isRootTenant() ) {
 			if ( persister.canWriteToCache() ) {
 				final var state = entityCacheState( id, persister, session );
@@ -41,7 +41,7 @@ public final class RootTenantCache {
 	private record EntityCacheState(String tenantIdentifier, Object version) {}
 
 	private static @Nullable EntityCacheState entityCacheState(
-			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+			Object id, EntityPersister<?> persister, SharedSessionContractImplementor session) {
 		final var loader = persister.getTenantIdLoader();
 		final var snapshot = loader == null ? null : loader.loadCacheSnapshot( id, session );
 		final String tenant = snapshot == null
@@ -77,7 +77,7 @@ public final class RootTenantCache {
 	}
 
 	private static String tenantIdentifier(
-			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+			Object id, EntityPersister<?> persister, SharedSessionContractImplementor session) {
 		final var mapping = persister.getTenantIdMapping();
 		if ( mapping == null ) {
 			return null;

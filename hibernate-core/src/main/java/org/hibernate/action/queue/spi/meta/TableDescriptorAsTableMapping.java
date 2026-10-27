@@ -165,7 +165,7 @@ public record TableDescriptorAsTableMapping(
 
 		@Nonnull
 		@Override
-		public JdbcMapping getJdbcMapping() {
+		public JdbcMapping<?> getJdbcMapping() {
 			return columnDescriptor.jdbcMapping();
 		}
 

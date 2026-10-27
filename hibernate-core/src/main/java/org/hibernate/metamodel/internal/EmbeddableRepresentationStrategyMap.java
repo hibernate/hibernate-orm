@@ -25,7 +25,7 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 
 	public EmbeddableRepresentationStrategyMap(
 			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			Supplier<EmbeddableMappingType<?, ?, ?>> runtimeDescriptorAccess,
 			EmbeddableInstantiator customInstantiator,
 			RuntimeModelCreationContext creationContext) {
 		mapJavaType =

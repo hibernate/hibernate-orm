@@ -31,7 +31,7 @@ public class PreUpdateEvent extends AbstractPreDatabaseOperationEvent {
 			@Nonnull Object id,
 			@Nonnull Object[] state,
 			@Nullable Object[] oldState,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;

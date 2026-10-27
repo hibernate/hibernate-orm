@@ -27,7 +27,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 	@Override
 	public EntityRepresentationStrategy resolveStrategy(
 			PersistentClass bootDescriptor,
-			EntityPersister runtimeDescriptor,
+			EntityPersister<?> runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		if ( bootDescriptor.getMappedClass() == null ) { // i.e. RepresentationMode.MAP;
 			return new EntityRepresentationStrategyMap( bootDescriptor, creationContext );
@@ -46,7 +46,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 	@Override
 	public EmbeddableRepresentationStrategy resolveStrategy(
 			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			Supplier<EmbeddableMappingType<?, ?, ?>> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
 
 		final var compositeUserType = getCompositeUserType( bootDescriptor, creationContext );

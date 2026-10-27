@@ -27,13 +27,13 @@ public abstract class AbstractTableMutation<O extends MutationOperation>
 	private final MutationTarget mutationTarget;
 	private final String sqlComment;
 
-	private final List<ColumnValueParameter> parameters;
+	private final List<ColumnValueParameter<?>> parameters;
 
 	public AbstractTableMutation(
 			MutatingTableReference mutatingTable,
 			MutationTarget mutationTarget,
 			String sqlComment,
-			List<ColumnValueParameter> parameters) {
+			List<ColumnValueParameter<?>> parameters) {
 		this.mutatingTable = mutatingTable;
 		this.mutationTarget = mutationTarget;
 		this.sqlComment = sqlComment;
@@ -67,11 +67,11 @@ public abstract class AbstractTableMutation<O extends MutationOperation>
 	}
 
 	@Override
-	public List<ColumnValueParameter> getParameters() {
+	public List<ColumnValueParameter<?>> getParameters() {
 		return parameters;
 	}
 
-	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
+	public void forEachParameter(Consumer<ColumnValueParameter<?>> consumer) {
 		if ( parameters == null ) {
 			return;
 		}

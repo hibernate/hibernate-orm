@@ -61,16 +61,16 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 
 	@Nonnull
 	@Override
-	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister persister) {
+	public InsertCoordinator createInsertCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new InsertCoordinatorStandard( persister, persister.getFactory() );
 	}
 
 	@Nonnull
 	@Override
-	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister persister) {
+	public UpdateCoordinator createUpdateCoordinator(@Nonnull EntityPersister<?> persister) {
 		final var attributeMappings = persister.getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			if ( attributeMappings.get( i ) instanceof SingularAttributeMapping ) {
+			if ( attributeMappings.get( i ) instanceof SingularAttributeMapping<?, ?, ?> ) {
 				return new UpdateCoordinatorStandard( persister, persister.getFactory() );
 			}
 		}
@@ -79,13 +79,13 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 
 	@Nonnull
 	@Override
-	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister persister) {
+	public UpdateCoordinator createMergeCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new MergeCoordinatorStandard( persister, persister.getFactory() );
 	}
 
 	@Nonnull
 	@Override
-	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister) {
+	public DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister<?> persister) {
 		return new DeleteCoordinatorStandard( persister, persister.getFactory() );
 	}
 
@@ -213,7 +213,7 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 		final var elementPersister = persister.getElementPersister();
 		return elementPersister != null
 			&& elementPersister.hasSubclasses()
-			&& elementPersister instanceof UnionSubclassEntityPersister;
+			&& elementPersister instanceof UnionSubclassEntityPersister<?>;
 	}
 
 	@Nonnull
@@ -228,7 +228,7 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull RootClass bootDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return null;
@@ -237,7 +237,7 @@ public abstract class AbstractStateManagement implements StateManagement, StateM
 	@Nullable
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull PluralAttributeMapping<?> pluralAttributeMapping,
 			@Nonnull Collection bootDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return null;

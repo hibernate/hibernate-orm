@@ -81,7 +81,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 
 	private static ValueExtractor determineValueExtractor(Expression sqlExpression, JavaType<?> jdbcJavaType) {
 		final JdbcMappingContainer expressionType = sqlExpression.getExpressionType();
-		final JdbcMapping jdbcMapping = expressionType == null
+		final JdbcMapping<?> jdbcMapping = expressionType == null
 				? JavaObjectType.INSTANCE
 				: expressionType.getSingleJdbcMapping();
 		if ( jdbcJavaType == null || jdbcMapping.getMappedJavaType() == jdbcJavaType ) {

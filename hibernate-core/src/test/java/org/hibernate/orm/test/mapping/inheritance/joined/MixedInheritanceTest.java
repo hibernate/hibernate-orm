@@ -43,39 +43,39 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MixedInheritanceTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister customerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> customerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( Customer.class );
-		final EntityPersister domesticCustomerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> domesticCustomerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( DomesticCustomer.class );
-		final EntityPersister foreignCustomerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> foreignCustomerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( ForeignCustomer.class );
 
-		final EntityPersister italianCustomerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> italianCustomerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( ItalianCustomer.class );
 
-		assert customerDescriptor instanceof JoinedSubclassEntityPersister;
+		assert customerDescriptor instanceof JoinedSubclassEntityPersister<?>;
 
 		assert customerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert !customerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
 		assert !customerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
-		assert domesticCustomerDescriptor instanceof JoinedSubclassEntityPersister;
+		assert domesticCustomerDescriptor instanceof JoinedSubclassEntityPersister<?>;
 
 		assert domesticCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert domesticCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
 		assert !domesticCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
-		assert foreignCustomerDescriptor instanceof JoinedSubclassEntityPersister;
+		assert foreignCustomerDescriptor instanceof JoinedSubclassEntityPersister<?>;
 
 		assert foreignCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert !foreignCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
 		assert foreignCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
-		assert italianCustomerDescriptor instanceof JoinedSubclassEntityPersister;
+		assert italianCustomerDescriptor instanceof JoinedSubclassEntityPersister<?>;
 
 		assert italianCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert !italianCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );

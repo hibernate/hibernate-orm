@@ -30,7 +30,7 @@ public class JoinedDiscriminatedEntityResult<T> extends AbstractDiscriminatedEnt
 	public JoinedDiscriminatedEntityResult(
 			NavigablePath navigablePath,
 			JavaType<?> baseAssociationJtd,
-			DiscriminatedAssociationModelPart fetchedPart,
+			DiscriminatedAssociationModelPart<?> fetchedPart,
 			String resultVariable,
 			List<DiscriminatorValueDetails> valueDetails,
 			DomainResultCreationState creationState) {
@@ -54,7 +54,7 @@ public class JoinedDiscriminatedEntityResult<T> extends AbstractDiscriminatedEnt
 		this.affectedByFilters = affectedByFilters;
 	}
 
-	private static boolean isAffectedByEnabledFilters(EntityMappingType entityMappingType, DomainResultCreationState creationState) {
+	private static boolean isAffectedByEnabledFilters(EntityMappingType<?> entityMappingType, DomainResultCreationState creationState) {
 		final LoadQueryInfluencers loadQueryInfluencers = creationState.getSqlAstCreationState()
 				.getLoadQueryInfluencers();
 		return entityMappingType.isAffectedByEnabledFilters( loadQueryInfluencers, true );

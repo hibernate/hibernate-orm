@@ -29,7 +29,7 @@ class FilterDefinitionBinder {
 	static void processFilterDefinition(
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmFilterDefinitionType filterDefinitionMapping) {
-		Map<String, JdbcMapping> parameterMap = null;
+		Map<String, JdbcMapping<?>> parameterMap = null;
 		final String condition = filterDefinitionMapping.getCondition();
 
 		final var collector = context.getMetadataCollector();

@@ -17,7 +17,7 @@ public interface TemporaryTableColumnDescriptor {
 	String getColumnName();
 
 	/// The JDBC mapping used to bind values for this column.
-	JdbcMapping getJdbcMapping();
+	JdbcMapping<?> getJdbcMapping();
 
 	/// The base SQL type definition selected by the Dialect's type registry.
 	String getSqlTypeDefinition();

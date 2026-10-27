@@ -22,14 +22,14 @@ public abstract class AbstractCompositeIdAndNaturalIdTest {
 	@Test
 	@JiraKey(value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
-		final EntityMappingType accountMapping = scope.getSessionFactory().getRuntimeMetamodels()
+		final EntityMappingType<?> accountMapping = scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Account.class );
-		final SingularAttributeMapping shortCodeMapping = ((SimpleNaturalIdMapping) accountMapping.getNaturalIdMapping()).getAttribute();
+		final SingularAttributeMapping<?, ?, ?> shortCodeMapping = ((SimpleNaturalIdMapping<?, ?, ?>) accountMapping.getNaturalIdMapping()).getAttribute();
 		final AttributeMetadata shortCodeMetadata = shortCodeMapping.getAttributeMetadata();
 		assertThat( shortCodeMetadata.isNullable(), is( false ) );
 
-		final EntityPersister rootEntityPersister = accountMapping.getRootEntityDescriptor().getEntityPersister();
+		final EntityPersister<?> rootEntityPersister = accountMapping.getRootEntityDescriptor().getEntityPersister();
 		final int shortCodeLegacyPropertyIndex = rootEntityPersister.getPropertyIndex( "shortCode" );
 		assertThat( shortCodeLegacyPropertyIndex, is( 0 ) );
 		assertThat( rootEntityPersister.getPropertyNullability()[shortCodeLegacyPropertyIndex], is( false ) );

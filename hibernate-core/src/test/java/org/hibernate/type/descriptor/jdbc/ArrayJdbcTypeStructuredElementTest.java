@@ -101,7 +101,7 @@ class ArrayJdbcTypeStructuredElementTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private EmbeddableMappingType structMapping() throws SQLException {
+	private EmbeddableMappingType<?, ?, ?> structMapping() throws SQLException {
 		final JavaType<Object> arrayJdbcJavaType = mock( JavaType.class );
 		final ValueBinder<Object> arrayValueBinder = mock( ValueBinder.class );
 		final JavaType<Object> elementJdbcJavaType = mock( JavaType.class );
@@ -119,7 +119,7 @@ class ArrayJdbcTypeStructuredElementTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private EmbeddableMappingType directJavaTimeStructMapping(JavaType<?> arrayJdbcJavaType) throws SQLException {
+	private EmbeddableMappingType<?, ?, ?> directJavaTimeStructMapping(JavaType<?> arrayJdbcJavaType) throws SQLException {
 		return structMapping(
 				LocalDateTimeJdbcType.INSTANCE,
 				LocalDateTimeJavaType.INSTANCE,
@@ -129,26 +129,26 @@ class ArrayJdbcTypeStructuredElementTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private EmbeddableMappingType structMapping(
+	private EmbeddableMappingType<?, ?, ?> structMapping(
 			JdbcType elementJdbcType,
 			JavaType<?> elementJdbcJavaType,
 			JavaType<?> arrayJdbcJavaType,
 			ValueBinder<?> arrayValueBinder) {
-		final EmbeddableMappingType mappingType = mock( EmbeddableMappingType.class );
+		final EmbeddableMappingType<?, ?, ?> mappingType = mock( EmbeddableMappingType.class );
 		when( mappingType.getJdbcValueCount() ).thenReturn( 1 );
 		when( mappingType.getNumberOfAttributeMappings() ).thenReturn( 1 );
 		when( mappingType.getValues( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
 
 		// the struct's single attribute is an array; its mapping is a plural type whose
 		// wrap unwraps a java.sql.Array, exactly as the array JavaTypes do
-		final AttributeMapping attributeMapping = mock( AttributeMapping.class );
+		final AttributeMapping<?, ?, ?> attributeMapping = mock( AttributeMapping.class );
 		final BasicPluralType<Object, Object> arrayMapping = mock( BasicPluralType.class );
 		final JdbcType arrayJdbcType = mock( JdbcType.class );
 		final BasicType<Object> elementType = mock( BasicType.class );
 
-		when( mappingType.getAttributeMapping( 0 ) ).thenReturn( attributeMapping );
+		doReturn( attributeMapping ).when( mappingType ).getAttributeMapping( 0 );
 		when( attributeMapping.getJdbcTypeCount() ).thenReturn( 1 );
-		when( attributeMapping.getSingleJdbcMapping() ).thenReturn( (JdbcMapping) arrayMapping );
+		doReturn( (JdbcMapping<?>) arrayMapping ).when( attributeMapping ).getSingleJdbcMapping();
 		when( arrayMapping.getJdbcType() ).thenReturn( arrayJdbcType );
 		when( arrayJdbcType.getJdbcTypeCode() ).thenReturn( SqlTypes.ARRAY );
 		when( arrayJdbcType.getDefaultSqlTypeCode() ).thenReturn( SqlTypes.ARRAY );

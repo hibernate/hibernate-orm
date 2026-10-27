@@ -1,5 +1,9 @@
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
+
+import org.hibernate.type.descriptor.java.JavaType;
+
 import jakarta.annotation.Nonnull;
 
 import java.util.ArrayList;
@@ -20,19 +24,28 @@ public class TupleMappingModelExpressible implements MappingModelExpressible<Obj
 
 	private final @Nullable String[] componentNames;
 	private final MappingModelExpressible<?>[] components;
-	private final JdbcMapping[] mappings;
+	private final JdbcMapping<?>[] mappings;
+
+	@Override
+	public JavaType<Object[]> getExpressibleJavaType() {
+		final var javaTypes = new JavaType<?>[components.length];
+		for ( int i = 0; i < components.length; i++ ) {
+			javaTypes[i] = components[i].getExpressibleJavaType();
+		}
+		return new ObjectArrayJavaType( javaTypes );
+	}
 
 	public TupleMappingModelExpressible(@Nullable List<String> componentNames, MappingModelExpressible<?>[] components) {
 		this.componentNames = componentNames == null ? null : componentNames.toArray( new String[0] );
 		this.components = components;
-		final ArrayList<JdbcMapping> results = new ArrayList<>();
+		final ArrayList<JdbcMapping<?>> results = new ArrayList<>();
 		forEachJdbcType( 0, (index, jdbcMapping) -> results.add( jdbcMapping ) );
-		this.mappings = results.toArray( new JdbcMapping[0] );
+		this.mappings = results.toArray( new JdbcMapping<?>[0] );
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(final int index) {
+	public JdbcMapping<?> getJdbcMapping(final int index) {
 		return mappings[ index ];
 	}
 
@@ -45,7 +58,7 @@ public class TupleMappingModelExpressible implements MappingModelExpressible<Obj
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		int span = 0;
 		for ( int i = 0; i < components.length; i++ ) {
 			span += components[i].forEachJdbcType( offset + span, action );

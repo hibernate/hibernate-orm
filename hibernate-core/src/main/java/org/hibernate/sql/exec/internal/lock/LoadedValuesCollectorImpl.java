@@ -23,13 +23,13 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 		this.pathsToLock = pathsToLock;
 	}
 
-	public void registerEntity(NavigablePath navigablePath, EntityMappingType entityDescriptor, EntityKey entityKey) {
+	public void registerEntity(NavigablePath navigablePath, EntityMappingType<?> entityDescriptor, EntityKey entityKey) {
 		registerEntity( navigablePath, entityDescriptor, entityKey, false );
 	}
 
 	@Override
 	public void registerEntity(
-			NavigablePath navigablePath, EntityMappingType entityDescriptor, EntityKey entityKey, boolean reloaded) {
+			NavigablePath navigablePath, EntityMappingType<?> entityDescriptor, EntityKey entityKey, boolean reloaded) {
 		if ( pathsToLock.contains( navigablePath ) ) {
 			if ( entitiesToLock == null ) {
 				entitiesToLock = new ArrayList<>();
@@ -39,7 +39,7 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 		}
 	}
 
-	public void registerCollection(NavigablePath navigablePath, PluralAttributeMapping collectionDescriptor, CollectionKey collectionKey) {
+	public void registerCollection(NavigablePath navigablePath, PluralAttributeMapping<?> collectionDescriptor, CollectionKey collectionKey) {
 		if ( collectionsToLock == null ) {
 			collectionsToLock = new ArrayList<>();
 		}

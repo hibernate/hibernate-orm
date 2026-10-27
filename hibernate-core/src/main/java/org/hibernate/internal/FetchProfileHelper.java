@@ -87,7 +87,7 @@ class FetchProfileHelper {
 		};
 	}
 
-	private static void validateFetchablePart(ModelPart fetchablePart, String profileName, Association association) {
+	private static void validateFetchablePart(ModelPart<?, ?, ?> fetchablePart, String profileName, Association association) {
 		if ( fetchablePart == null ) {
 			throw new HibernateException( String.format(
 					"Fetch profile [%s] specified an association that does not exist - %s",
@@ -105,12 +105,12 @@ class FetchProfileHelper {
 		}
 	}
 
-	private static boolean isAssociation(ModelPart fetchablePart) {
-		return fetchablePart instanceof EntityValuedModelPart
-			|| fetchablePart instanceof PluralAttributeMapping;
+	private static boolean isAssociation(ModelPart<?, ?, ?> fetchablePart) {
+		return fetchablePart instanceof EntityValuedModelPart<?>
+			|| fetchablePart instanceof PluralAttributeMapping<?>;
 	}
 
-	private static EntityPersister getEntityPersister(
+	private static EntityPersister<?> getEntityPersister(
 			MappingMetamodel mappingMetamodel,
 			FetchProfile fetchProfile,
 			org.hibernate.mapping.FetchProfile.Fetch mappingFetch) {

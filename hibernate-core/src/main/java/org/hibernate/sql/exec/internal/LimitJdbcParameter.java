@@ -12,7 +12,7 @@ import org.hibernate.type.BasicType;
  * binds the value of the max rows from the {@code QueryOptions} limit
  * of the current execution.
  */
-public class LimitJdbcParameter extends AbstractJdbcParameter {
+public class LimitJdbcParameter extends AbstractJdbcParameter<Integer> {
 
 	public LimitJdbcParameter(BasicType<Integer> type) {
 		super( type );

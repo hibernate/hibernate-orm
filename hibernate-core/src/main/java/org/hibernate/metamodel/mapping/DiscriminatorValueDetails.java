@@ -33,5 +33,5 @@ public interface DiscriminatorValueDetails {
 	 * Form of {@link #getIndicatedEntityName()} returning the matched {@link EntityMappingType}
 	 */
 	@Nonnull
-	EntityMappingType getIndicatedEntity();
+	EntityMappingType<?> getIndicatedEntity();
 }

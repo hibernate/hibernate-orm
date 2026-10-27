@@ -25,12 +25,12 @@ import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpre
 public class CompleteFetchBuilderEmbeddableValuedModelPart
 		implements CompleteFetchBuilder, ModelPartReferenceEmbeddable {
 	private final NavigablePath navigablePath;
-	private final EmbeddableValuedModelPart modelPart;
+	private final EmbeddableValuedModelPart<?, ?, ?> modelPart;
 	private final List<String> columnAliases;
 
 	public CompleteFetchBuilderEmbeddableValuedModelPart(
 			NavigablePath navigablePath,
-			EmbeddableValuedModelPart modelPart,
+			EmbeddableValuedModelPart<?, ?, ?> modelPart,
 			List<String> columnAliases) {
 		this.navigablePath = navigablePath;
 		this.modelPart = modelPart;
@@ -52,7 +52,7 @@ public class CompleteFetchBuilderEmbeddableValuedModelPart
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getReferencedPart() {
+	public EmbeddableValuedModelPart<?, ?, ?> getReferencedPart() {
 		return modelPart;
 	}
 

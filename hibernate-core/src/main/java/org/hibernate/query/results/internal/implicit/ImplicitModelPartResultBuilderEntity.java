@@ -19,16 +19,16 @@ public class ImplicitModelPartResultBuilderEntity
 		implements ImplicitModelPartResultBuilder, ResultBuilderEntityValued {
 
 	private final NavigablePath navigablePath;
-	private final EntityValuedModelPart modelPart;
+	private final EntityValuedModelPart<?> modelPart;
 
 	public ImplicitModelPartResultBuilderEntity(
 			NavigablePath navigablePath,
-			EntityValuedModelPart modelPart) {
+			EntityValuedModelPart<?> modelPart) {
 		this.navigablePath = navigablePath;
 		this.modelPart = modelPart;
 	}
 
-	public ImplicitModelPartResultBuilderEntity(EntityMappingType entityMappingType) {
+	public ImplicitModelPartResultBuilderEntity(EntityMappingType<?> entityMappingType) {
 		this( new NavigablePath( entityMappingType.getEntityName() ), entityMappingType );
 	}
 

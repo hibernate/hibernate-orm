@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	private final NavigablePath navigablePath;
 	private final FetchParent fetchParent;
-	private final BasicValuedModelPart valuedMapping;
+	private final BasicValuedModelPart<?, ?, ?> valuedMapping;
 
 	private final DomainResultAssembler<T> assembler;
 
@@ -34,7 +34,7 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			int valuesArrayPosition,
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
-			BasicValuedModelPart valuedMapping,
+			BasicValuedModelPart<?, ?, ?> valuedMapping,
 			FetchTiming fetchTiming,
 			boolean unwrapRowProcessingState) {
 		//noinspection unchecked
@@ -55,7 +55,7 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			int valuesArrayPosition,
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
-			BasicValuedModelPart valuedMapping,
+			BasicValuedModelPart<?, ?, ?> valuedMapping,
 			BasicValueConverter<T, ?> valueConverter,
 			FetchTiming fetchTiming,
 			boolean canBasicPartFetchBeDelayed,
@@ -97,7 +97,7 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	}
 
 	@Override
-	public Fetchable getFetchedMapping() {
+	public Fetchable<?, ?, ?> getFetchedMapping() {
 		return valuedMapping;
 	}
 

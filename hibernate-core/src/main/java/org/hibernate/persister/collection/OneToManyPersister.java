@@ -118,7 +118,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public void prepareMappingModel(@Nonnull MappingModelCreationProcess creationProcess, @Nonnull Collection bootCollectionDescriptor) {
 		super.prepareMappingModel( creationProcess, bootCollectionDescriptor );
 
-		if ( getElementPersister() instanceof UnionSubclassEntityPersister ) {
+		if ( getElementPersister() instanceof UnionSubclassEntityPersister<?> ) {
 			useTablePerSubclassDecomposition = getElementPersister().hasSubclasses();
 		}
 		else {
@@ -444,7 +444,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		// for one-to-many, we know the element is an entity and need to restrict the update
 		// based on the element's id
-		final var entityPart = (EntityCollectionPart) getAttributeMapping().getElementDescriptor();
+		final var entityPart = (EntityCollectionPart<?>) getAttributeMapping().getElementDescriptor();
 		final var entityId = entityPart.getAssociatedEntityMappingType().getIdentifierMapping();
 		entityId.forEachColumn( (index, selectableMapping) -> {
 			updateBuilder.addKeyRestriction( selectableMapping );
@@ -502,7 +502,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		if ( indexDescriptor != null ) {
 			indexDescriptor.forEachUpdatable( updateBuilder );
 		}
-		final var elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
+		final var elementDescriptor = (EntityCollectionPart<?>) attributeMapping.getElementDescriptor();
 		final var elementType = elementDescriptor.getAssociatedEntityMappingType();
 		assert elementType.containsTableReference( tableReference.getTableName() );
 		updateBuilder.addKeyRestrictionsLeniently( elementType.getIdentifierMapping() );
@@ -546,7 +546,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		}
 
 		final Object elementValue = collection.getElement( rowValue );
-		final var elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
+		final var elementDescriptor = (EntityCollectionPart<?>) attributeMapping.getElementDescriptor();
 		final var identifierMapping = elementDescriptor.getAssociatedEntityMappingType().getIdentifierMapping();
 		identifierMapping.decompose(
 				identifierMapping.getIdentifier( elementValue ),
@@ -566,7 +566,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder =
 				new TableUpdateBuilderStandard<>( this, tableReference, factory, sqlWhereString );
 		final var attributeMapping = getAttributeMapping();
-		final var elementDescriptor = (OneToManyCollectionPart) attributeMapping.getElementDescriptor();
+		final var elementDescriptor = (OneToManyCollectionPart<?>) attributeMapping.getElementDescriptor();
 		updateBuilder.addKeyRestrictionsLeniently( elementDescriptor.getAssociatedEntityMappingType().getIdentifierMapping() );
 		// if the collection has an identifier, add its column as well
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
@@ -612,7 +612,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
-		final var elementDescriptor = (OneToManyCollectionPart) attributeMapping.getElementDescriptor();
+		final var elementDescriptor = (OneToManyCollectionPart<?>) attributeMapping.getElementDescriptor();
 		final var associatedType = elementDescriptor.getAssociatedEntityMappingType();
 		final Object element = collection.getElement( entry );
 		final var identifierMapping = associatedType.getIdentifierMapping();

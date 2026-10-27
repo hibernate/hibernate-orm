@@ -34,14 +34,14 @@ import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpre
 public class DynamicFetchBuilderStandard
 		implements DynamicFetchBuilder, NativeQuery.ReturnProperty {
 
-	private final Fetchable fetchable;
+	private final Fetchable<?, ?, ?> fetchable;
 	private final List<String> columnNames;
 
-	public DynamicFetchBuilderStandard(Fetchable fetchable) {
+	public DynamicFetchBuilderStandard(Fetchable<?, ?, ?> fetchable) {
 		this( fetchable, new ArrayList<>() );
 	}
 
-	private DynamicFetchBuilderStandard(Fetchable fetchable, List<String> columnNames) {
+	private DynamicFetchBuilderStandard(Fetchable<?, ?, ?> fetchable, List<String> columnNames) {
 		this.fetchable = fetchable;
 		this.columnNames = columnNames;
 	}
@@ -88,7 +88,7 @@ public class DynamicFetchBuilderStandard
 					creationStateImpl
 			);
 		}
-		else if ( fetchable instanceof EmbeddableValuedFetchable embeddableValuedFetchable ) {
+		else if ( fetchable instanceof EmbeddableValuedFetchable<?, ?, ?> embeddableValuedFetchable ) {
 			fetchable.forEachSelectable(
 					getSelectableConsumer(
 							fetchPath,
@@ -109,7 +109,7 @@ public class DynamicFetchBuilderStandard
 					creationStateImpl
 			);
 		}
-		else if ( fetchable instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+		else if ( fetchable instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 			toOneAttributeMapping.getForeignKeyDescriptor()
 					.getPart( toOneAttributeMapping.getSideNature() )
 					.forEachSelectable(
@@ -132,7 +132,7 @@ public class DynamicFetchBuilderStandard
 					creationStateImpl
 			);
 		}
-		else if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		else if ( fetchable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			pluralAttributeMapping.getKeyDescriptor().visitTargetSelectables(
 					getSelectableConsumer(
 							fetchPath,
@@ -165,7 +165,7 @@ public class DynamicFetchBuilderStandard
 			DomainResultCreationStateImpl creationStateImpl,
 			TableGroup ownerTableGroup,
 			SqlExpressionResolver sqlExpressionResolver,
-			ValuedModelPart valuedModelPart) {
+			ValuedModelPart<?, ?, ?> valuedModelPart) {
 		return (selectionIndex, selectableMapping) -> {
 			final var tableReference = ownerTableGroup.resolveTableReference(
 					fetchPath,

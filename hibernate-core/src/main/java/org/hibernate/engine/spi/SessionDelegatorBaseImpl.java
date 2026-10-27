@@ -165,7 +165,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	@Nonnull
-	public EntityKey generateEntityKey(@Nonnull Object id, @Nonnull EntityPersister persister) {
+	public EntityKey generateEntityKey(@Nonnull Object id, @Nonnull EntityPersister<?> persister) {
 		return delegate.generateEntityKey( id, persister );
 	}
 
@@ -214,7 +214,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	@Nonnull
-	public EntityPersister getEntityPersister(@Nullable String entityName, @Nonnull Object object) {
+	public EntityPersister<?> getEntityPersister(@Nullable String entityName, @Nonnull Object object) {
 		return delegate.getEntityPersister( entityName, object );
 	}
 
@@ -1515,7 +1515,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	@Nonnull
-	public Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) throws HibernateException {
+	public Object instantiate(@Nonnull EntityPersister<?> persister, @Nullable Object id) throws HibernateException {
 		return delegate.instantiate( persister, id );
 	}
 
@@ -1606,7 +1606,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public Object loadFromSecondLevelCache(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EntityKey entityKey,
 			@Nullable Object instanceToLoad,
 			@Nonnull LockMode lockMode) {

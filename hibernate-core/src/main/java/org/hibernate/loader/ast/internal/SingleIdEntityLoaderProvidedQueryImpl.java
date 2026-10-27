@@ -23,11 +23,11 @@ import static org.hibernate.query.ResultListTransformer.uniqueResultTransformer;
  * @author Steve Ebersole
  */
 public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityLoader<T> {
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 	private final NamedQueryMemento<T> namedQueryMemento;
 
 	public SingleIdEntityLoaderProvidedQueryImpl(
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull NamedQueryMemento<T> namedQueryMemento) {
 		this.entityDescriptor = entityDescriptor;
 		this.namedQueryMemento = namedQueryMemento;
@@ -35,7 +35,7 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 
 	@Nonnull
 	@Override
-	public EntityMappingType getLoadable() {
+	public EntityMappingType<?> getLoadable() {
 		return entityDescriptor;
 	}
 

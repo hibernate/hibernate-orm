@@ -25,7 +25,7 @@ import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilder;
 public interface GraphEntityMutationTarget extends GraphMutationTarget<EntityTableDescriptor> {
 
 	@Override
-	EntityMappingType getTargetPart();
+	EntityMappingType<?> getTargetPart();
 
 	@Override
 	EntityTableDescriptor getIdentifierTableDescriptor();
@@ -34,7 +34,7 @@ public interface GraphEntityMutationTarget extends GraphMutationTarget<EntityTab
 	EntityTableDescriptor[] getTableDescriptors();
 
 	/// The ModelPart describing the identifier/key for this target
-	ModelPart getIdentifierDescriptor();
+	ModelPart<?, ?, ?> getIdentifierDescriptor();
 
 	/// The decomposer for INSERT actions
 	EntityActionDecomposer<AbstractEntityInsertAction> getInsertDecomposer();

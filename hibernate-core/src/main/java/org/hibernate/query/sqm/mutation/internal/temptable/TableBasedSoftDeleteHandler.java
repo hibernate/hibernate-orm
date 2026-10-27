@@ -102,7 +102,7 @@ public class TableBasedSoftDeleteHandler
 		this.sessionUidParameter =
 				sessionUidColumn == null
 						? null
-						: new SqlTypedMappingJdbcParameter( sessionUidColumn );
+						: SqlTypedMappingJdbcParameter.create( sessionUidColumn );
 
 		final var converter = new MultiTableSqmMutationConverter(
 				getEntityDescriptor(),
@@ -187,7 +187,7 @@ public class TableBasedSoftDeleteHandler
 		final boolean needsSubQuery =
 				!walker.isAllColumnReferencesFromIdentificationVariable()
 						|| targetEntityDescriptor != rootEntityDescriptor
-						|| targetEntityDescriptor.getEntityPersister() instanceof UnionSubclassEntityPersister;
+						|| targetEntityDescriptor.getEntityPersister() instanceof UnionSubclassEntityPersister<?>;
 		if ( needsSubQuery ) {
 			if ( getSessionFactory().getJdbcServices().getDialect().getSubquerySupport()
 					.supports( MUTATION_TARGET_REFERENCE ) ) {
@@ -232,7 +232,7 @@ public class TableBasedSoftDeleteHandler
 	}
 
 	private List<JdbcOperationQueryMutation> createDeletesUsingIdTable(
-			EntityMappingType targetEntityDescriptor,
+			EntityMappingType<?> targetEntityDescriptor,
 			SqmJdbcExecutionContextAdapter executionContext) {
 		final var factory = executionContext.getSession().getFactory();
 		final var softDeleteMutations = new ArrayList<JdbcOperationQueryMutation>();
@@ -264,7 +264,7 @@ public class TableBasedSoftDeleteHandler
 		return softDeleteMutations;
 	}
 
-	private static Expression createIdExpression(EntityMappingType entityDescriptor, NamedTableReference targetTableReference) {
+	private static Expression createIdExpression(EntityMappingType<?> entityDescriptor, NamedTableReference targetTableReference) {
 		final var keyDetails = entityDescriptor.getSoftDeleteTableDetails().getKeyDetails();
 		final List<Expression> idExpressions = new ArrayList<>( keyDetails.getColumnCount() );
 		keyDetails.forEachKeyColumn( (position, column) ->
@@ -276,7 +276,7 @@ public class TableBasedSoftDeleteHandler
 	}
 
 	private List<JdbcOperationQueryMutation> createDeletesWithSubQuery(
-			EntityMappingType targetEntityDescriptor,
+			EntityMappingType<?> targetEntityDescriptor,
 			TableGroup deletingTableGroup,
 			NamedTableReference rootTableReference,
 			PredicateCollector predicateCollector,
@@ -332,7 +332,7 @@ public class TableBasedSoftDeleteHandler
 	}
 
 	private JdbcOperationQueryMutation createDirectDelete(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			NamedTableReference rootTableReference,
 			PredicateCollector predicateCollector,
 			JdbcParameterBindings jdbcParameterBindings,

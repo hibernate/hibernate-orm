@@ -42,7 +42,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		final TableGroup tableGroup =
 				sqlAstCreationState.getFromClauseAccess()
 						.getTableGroup( sqmPath.getNavigablePath().getParent() );
-		final EntityMappingType treatTarget;
+		final EntityMappingType<?> treatTarget;
 		if ( jpaQueryComplianceEnabled ) {
 			final var mappingMetamodel = sqlAstCreationState.getCreationContext().getMappingMetamodel();
 			if ( lhs instanceof SqmTreatedPath<?, ?> treatedPath
@@ -62,7 +62,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		}
 
 		// Use the target type to find the sub part if needed, otherwise just use the container
-		final var mapping = (EmbeddableValuedModelPart)
+		final var mapping = (EmbeddableValuedModelPart<?, ?, ?>)
 				getTargetMappingIfNeeded( sqmPath, tableGroup.getModelPart(), sqlAstCreationState )
 						.findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
 
@@ -85,7 +85,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 	public EmbeddableValuedPathInterpretation(
 			SqlTuple sqlExpression,
 			NavigablePath navigablePath,
-			EmbeddableValuedModelPart mapping,
+			EmbeddableValuedModelPart<?, ?, ?> mapping,
 			TableGroup tableGroup) {
 		this( sqlExpression, navigablePath, mapping, tableGroup,
 				determineAffectedTableName( tableGroup, mapping ) );
@@ -94,7 +94,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 	public EmbeddableValuedPathInterpretation(
 				SqlTuple sqlExpression,
 				NavigablePath navigablePath,
-				EmbeddableValuedModelPart mapping,
+				EmbeddableValuedModelPart<?, ?, ?> mapping,
 				TableGroup tableGroup,
 				@Nullable String affectedTableName) {
 		super( navigablePath, mapping, tableGroup );

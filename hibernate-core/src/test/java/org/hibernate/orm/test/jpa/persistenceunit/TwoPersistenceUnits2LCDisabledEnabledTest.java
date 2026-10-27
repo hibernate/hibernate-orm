@@ -41,7 +41,7 @@ public class TwoPersistenceUnits2LCDisabledEnabledTest {
 			}
 	)
 	public void testEnabled(EntityManagerFactoryScope scope) {
-		final EntityPersister persister =
+		final EntityPersister<?> persister =
 				scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
 						.getMappingMetamodel().getEntityDescriptor( AnEntity.class );
 		assertNotNull( persister.getCacheAccessStrategy() );
@@ -63,7 +63,7 @@ public class TwoPersistenceUnits2LCDisabledEnabledTest {
 			}
 	)
 	public void testDisabled(EntityManagerFactoryScope scope) {
-		final EntityPersister persister =
+		final EntityPersister<?> persister =
 				scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
 						.getMappingMetamodel().getEntityDescriptor( AnEntity.class );
 		assertNull( persister.getCacheAccessStrategy() );

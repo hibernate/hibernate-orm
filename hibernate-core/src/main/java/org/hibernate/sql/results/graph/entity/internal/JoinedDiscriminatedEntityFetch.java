@@ -38,7 +38,7 @@ public class JoinedDiscriminatedEntityFetch extends AbstractDiscriminatedEntityR
 	public JoinedDiscriminatedEntityFetch(
 			NavigablePath navigablePath,
 			JavaType<?> baseAssociationJtd,
-			DiscriminatedAssociationModelPart fetchedPart,
+			DiscriminatedAssociationModelPart<?> fetchedPart,
 			FetchTiming fetchTiming,
 			FetchParent fetchParent,
 			List<DiscriminatorValueDetails> valueDetails,
@@ -65,7 +65,7 @@ public class JoinedDiscriminatedEntityFetch extends AbstractDiscriminatedEntityR
 		this.affectedByFilters = affectedByFilters;
 	}
 
-	private static boolean isAffectedByEnabledFilters(EntityMappingType entityMappingType, DomainResultCreationState creationState) {
+	private static boolean isAffectedByEnabledFilters(EntityMappingType<?> entityMappingType, DomainResultCreationState creationState) {
 		final LoadQueryInfluencers loadQueryInfluencers = creationState.getSqlAstCreationState()
 				.getLoadQueryInfluencers();
 		return entityMappingType.isAffectedByEnabledFilters( loadQueryInfluencers, true );
@@ -85,7 +85,7 @@ public class JoinedDiscriminatedEntityFetch extends AbstractDiscriminatedEntityR
 	}
 
 	@Override
-	public DiscriminatedAssociationModelPart getFetchedMapping() {
+	public DiscriminatedAssociationModelPart<?> getFetchedMapping() {
 		return getReferencedMappingContainer();
 	}
 

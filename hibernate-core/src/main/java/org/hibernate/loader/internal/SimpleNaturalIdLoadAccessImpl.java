@@ -37,9 +37,9 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 
 	private final boolean hasSimpleNaturalId;
 
-	public SimpleNaturalIdLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityMappingType entityDescriptor) {
+	public SimpleNaturalIdLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityMappingType<?> entityDescriptor) {
 		super( context, entityDescriptor );
-		hasSimpleNaturalId = entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
+		hasSimpleNaturalId = entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping<?, ?, ?>;
 	}
 
 	@Nullable
@@ -126,7 +126,7 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	}
 
 	private boolean isNaturalIdClass(@Nullable Object naturalIdValue) {
-		final EntityPersister entityPersister = entityPersister();
+		final EntityPersister<?> entityPersister = entityPersister();
 		final var naturalIdClass = entityPersister.getNaturalIdMapping().getNaturalIdClass();
 		return naturalIdClass != null && naturalIdClass.isInstance( naturalIdValue );
 	}

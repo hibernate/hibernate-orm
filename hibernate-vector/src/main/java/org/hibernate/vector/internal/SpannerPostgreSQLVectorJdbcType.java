@@ -93,7 +93,7 @@ public class SpannerPostgreSQLVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
+	public @Nullable String castToPattern(JdbcMapping<?> targetJdbcMapping, @Nullable Size size) {
 		if ( targetJdbcMapping.getJdbcType().isStringLike() ) {
 			return "cast(to_jsonb(?1) as text)";
 		}
@@ -101,7 +101,7 @@ public class SpannerPostgreSQLVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
+	public @Nullable String castFromPattern(JdbcMapping<?> sourceMapping, @Nullable Size size) {
 		if ( sourceMapping.getJdbcType().isStringLike() ) {
 			return ( isDouble() ? "spanner.float64_array(" : "spanner.float32_array(" )
 					+ "cast(?1 as jsonb))";

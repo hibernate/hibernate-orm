@@ -43,7 +43,7 @@ import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
 /// @author Steve Ebersole
 /// @since 8.0
 class EntityInsertMutationPlanner {
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final SessionFactoryImplementor sessionFactory;
 	private final Map<String, TableInsert> staticInsertOperations;
 	private final Map<String, JdbcInsertMutation> staticJdbcInsertOperations;
@@ -51,7 +51,7 @@ class EntityInsertMutationPlanner {
 	private final boolean hasOptionalMutableTables;
 
 	EntityInsertMutationPlanner(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityPersister = entityPersister;
 		this.sessionFactory = sessionFactory;
@@ -145,7 +145,7 @@ class EntityInsertMutationPlanner {
 			AbstractEntityInsertAction action,
 			GeneratedValuesCollector generatedValuesCollector,
 			DecompositionContext decompositionContext) {
-		final EntityTableDescriptor tableDescriptorToUse = entityPersister instanceof UnionSubclassEntityPersister
+		final EntityTableDescriptor tableDescriptorToUse = entityPersister instanceof UnionSubclassEntityPersister<?>
 				? entityPersister.getIdentifierTableDescriptor()
 				: tableDescriptor;
 
@@ -448,7 +448,7 @@ class EntityInsertMutationPlanner {
 	}
 
 	private static void handleValueGeneration(
-			AttributeMapping attributeMapping,
+			AttributeMapping<?, ?, ?> attributeMapping,
 			AssigningTableMutationBuilder<?> builder,
 			OnExecutionGenerator generator,
 			Dialect dialect) {
@@ -456,7 +456,7 @@ class EntityInsertMutationPlanner {
 	}
 
 	private static void handleValueGeneration(
-			AttributeMapping attributeMapping,
+			AttributeMapping<?, ?, ?> attributeMapping,
 			AssigningTableMutationBuilder<?> builder,
 			OnExecutionGenerator generator,
 			org.hibernate.generator.EventType eventType,

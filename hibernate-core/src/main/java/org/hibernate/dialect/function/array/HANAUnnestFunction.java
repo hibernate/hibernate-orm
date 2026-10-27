@@ -159,7 +159,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 									new StandardTableGroup(
 											true,
 											sourceTableGroup.getNavigablePath(),
-											(TableGroupProducer) sourceTableGroup.getModelPart(),
+											(TableGroupProducer<?, ?, ?>) sourceTableGroup.getModelPart(),
 											false,
 											null,
 											sourceTableGroup.findTableReference( tableQualifier ),
@@ -220,14 +220,14 @@ public class HANAUnnestFunction extends UnnestFunction {
 				}
 			}
 
-			private void addIdColumns(@Nonnull ModelPartContainer modelPartContainer, @Nonnull List<ColumnInfo> idColumns) {
-				if ( modelPartContainer instanceof EntityValuedModelPart entityValuedModelPart ) {
+			private void addIdColumns(@Nonnull ModelPartContainer<?, ?, ?> modelPartContainer, @Nonnull List<ColumnInfo> idColumns) {
+				if ( modelPartContainer instanceof EntityValuedModelPart<?> entityValuedModelPart ) {
 					addIdColumns( entityValuedModelPart.getEntityMappingType(), idColumns );
 				}
-				else if ( modelPartContainer instanceof PluralAttributeMapping pluralAttributeMapping ) {
+				else if ( modelPartContainer instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 					addIdColumns( pluralAttributeMapping, idColumns );
 				}
-				else if ( modelPartContainer instanceof EmbeddableValuedModelPart embeddableModelPart ) {
+				else if ( modelPartContainer instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableModelPart ) {
 					addIdColumns( embeddableModelPart, idColumns );
 				}
 				else {
@@ -235,8 +235,8 @@ public class HANAUnnestFunction extends UnnestFunction {
 				}
 			}
 
-			private void addIdColumns(@Nonnull EmbeddableValuedModelPart embeddableModelPart, @Nonnull List<ColumnInfo> idColumns) {
-				if ( embeddableModelPart instanceof EmbeddedCollectionPart collectionPart ) {
+			private void addIdColumns(@Nonnull EmbeddableValuedModelPart<?, ?, ?> embeddableModelPart, @Nonnull List<ColumnInfo> idColumns) {
+				if ( embeddableModelPart instanceof EmbeddedCollectionPart<?> collectionPart ) {
 					addIdColumns( collectionPart.getCollectionAttribute(), idColumns );
 				}
 				else {
@@ -244,7 +244,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 				}
 			}
 
-			private void addIdColumns(@Nonnull PluralAttributeMapping pluralAttributeMapping, @Nonnull List<ColumnInfo> idColumns) {
+			private void addIdColumns(@Nonnull PluralAttributeMapping<?> pluralAttributeMapping, @Nonnull List<ColumnInfo> idColumns) {
 				final var ddlTypeRegistry = pluralAttributeMapping.getCollectionDescriptor()
 						.getFactory()
 						.getTypeConfiguration()
@@ -252,7 +252,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 				addIdColumns( pluralAttributeMapping.getKeyDescriptor().getKeyPart(), ddlTypeRegistry, idColumns );
 			}
 
-			private void addIdColumns(@Nonnull EntityMappingType entityMappingType, @Nonnull List<ColumnInfo> idColumns) {
+			private void addIdColumns(@Nonnull EntityMappingType<?> entityMappingType, @Nonnull List<ColumnInfo> idColumns) {
 				final var ddlTypeRegistry = entityMappingType.getEntityPersister()
 						.getFactory()
 						.getTypeConfiguration()
@@ -261,11 +261,11 @@ public class HANAUnnestFunction extends UnnestFunction {
 			}
 
 			private void addIdColumns(
-					@Nonnull ValuedModelPart modelPart,
+					@Nonnull ValuedModelPart<?, ?, ?> modelPart,
 					@Nonnull DdlTypeRegistry ddlTypeRegistry,
 					@Nonnull List<ColumnInfo> idColumns) {
 				modelPart.forEachSelectable( (selectionIndex, selectableMapping) -> {
-					final JdbcMapping jdbcMapping = selectableMapping.getJdbcMapping().getSingleJdbcMapping();
+					final JdbcMapping<?> jdbcMapping = selectableMapping.getJdbcMapping().getSingleJdbcMapping();
 					idColumns.add( new ColumnInfo(
 							selectableMapping.getSelectionExpression(),
 							jdbcMapping,
@@ -281,7 +281,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 		};
 	}
 
-	record ColumnInfo(String name, JdbcMapping jdbcMapping, String ddlType) {}
+	record ColumnInfo(String name, JdbcMapping<?> jdbcMapping, String ddlType) {}
 
 	static class TableColumnReferenceExpression implements SelfRenderingExpression {
 

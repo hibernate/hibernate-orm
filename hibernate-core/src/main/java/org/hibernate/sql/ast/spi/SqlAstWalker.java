@@ -171,9 +171,9 @@ public interface SqlAstWalker {
 
 	void visitSqlSelectionExpression(SqlSelectionExpression expression);
 
-	void visitEntityTypeLiteral(EntityTypeLiteral expression);
+	void visitEntityTypeLiteral(EntityTypeLiteral<?> expression);
 
-	void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression);
+	void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral<?> expression);
 
 	void visitTuple(SqlTuple tuple);
 

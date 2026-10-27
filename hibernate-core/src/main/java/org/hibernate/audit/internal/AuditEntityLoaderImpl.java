@@ -41,13 +41,13 @@ import static org.hibernate.query.sqm.ComparisonOperator.NOT_EQUAL;
  * one excluding deletions ({@code REVTYPE <> DEL}), one including all.
  */
 public class AuditEntityLoaderImpl implements AuditEntityLoader {
-	private final EntityMappingType entityMappingType;
+	private final EntityMappingType<?> entityMappingType;
 	private final SelectableMapping revMapping;
 	private final JdbcParametersList jdbcParams;
 	private final JdbcSelect excludingDeletions;
 	private final JdbcSelect includingDeletions;
 
-	public AuditEntityLoaderImpl(EntityMappingType entityMappingType, SessionFactoryImplementor sessionFactory) {
+	public AuditEntityLoaderImpl(EntityMappingType<?> entityMappingType, SessionFactoryImplementor sessionFactory) {
 		this.entityMappingType = entityMappingType;
 
 		final var auditMapping = entityMappingType.getAuditMapping();
@@ -81,7 +81,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 		final var revTableRef = rootTableGroup.resolveTableReference( navPath, revTableName );
 
 		// Build MAX(REV) WHERE REV <= ? restriction without REVTYPE filter
-		final var revParam = new SqlTypedMappingJdbcParameter( revMapping );
+		final var revParam = SqlTypedMappingJdbcParameter.create( revMapping );
 		paramsBuilder.add( revParam );
 		final var keySelectables = new ArrayList<SelectableMapping>();
 		entityMappingType.getIdentifierMapping()
@@ -159,7 +159,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 					}
 
 					@Override
-					public EntityMappingType getRootEntityDescriptor() {
+					public EntityMappingType<?> getRootEntityDescriptor() {
 						return entityMappingType.getRootEntityDescriptor();
 					}
 

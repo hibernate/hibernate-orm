@@ -23,7 +23,7 @@ import org.hibernate.sql.results.graph.Fetchable;
  * @see EmbeddedId
  * @see Nature
  */
-public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
+public interface EntityIdentifierMapping<J, M, R> extends ValuedModelPart<J, M, R>, Fetchable<J, M, R> {
 
 	String ID_ROLE_NAME = "{id}";
 	String LEGACY_ID_NAME = "id";

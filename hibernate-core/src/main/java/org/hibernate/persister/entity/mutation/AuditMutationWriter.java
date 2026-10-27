@@ -14,7 +14,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 @Internal
 public class AuditMutationWriter extends AbstractAuditCoordinator {
-	public AuditMutationWriter(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	public AuditMutationWriter(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 	}
 }

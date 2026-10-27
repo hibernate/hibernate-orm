@@ -173,7 +173,7 @@ public interface OnExecutionGenerator extends Generator {
 	 */
 	@Incubating(since = "6.2")
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
+	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister<?> persister) {
 		final var factory = persister.getFactory();
 		final var dialect = factory.getJdbcServices().getDialect();
 		final var generatedValuesSupport = dialect.getGeneratedValuesSupport();
@@ -201,7 +201,7 @@ public interface OnExecutionGenerator extends Generator {
 	 */
 	@Incubating(since = "6.2")
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	default String[] getUniqueKeyPropertyNames(EntityPersister persister) {
+	default String[] getUniqueKeyPropertyNames(EntityPersister<?> persister) {
 		return getNaturalIdPropertyNames( persister );
 	}
 

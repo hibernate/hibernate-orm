@@ -36,7 +36,7 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 	private final UpdateCoordinator versionUpdateDelegate;
 	private final String currentRowSelectSql;
 
-	public MergeCoordinatorTemporal(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	public MergeCoordinatorTemporal(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
 		this.endingUpdateGroup = buildEndingUpdateGroup( entityPersister.getIdentifierTableMapping(), temporalMapping );

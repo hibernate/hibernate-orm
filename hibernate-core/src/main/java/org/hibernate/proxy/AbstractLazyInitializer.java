@@ -85,7 +85,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 

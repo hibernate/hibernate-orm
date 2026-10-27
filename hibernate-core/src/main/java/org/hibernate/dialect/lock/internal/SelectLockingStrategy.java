@@ -28,7 +28,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
-	public SelectLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	public SelectLockingStrategy(EntityPersister<?> lockable, LockMode lockMode) {
 		super( lockable, lockMode );
 	}
 

@@ -33,9 +33,9 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 
 	public BatchInitializeEntitySelectFetchInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping referencedModelPart,
+			ToOneAttributeMapping<?> referencedModelPart,
 			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
+			EntityPersister<?> concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			FetchOptions fetchOptions,

@@ -102,18 +102,18 @@ public class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public BasicValuedMapping resolveFunctionReturnType(
-			Supplier<BasicValuedMapping> impliedTypeAccess,
+	public BasicValuedMapping<?> resolveFunctionReturnType(
+			Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 			List<? extends SqlAstNode> arguments) {
 		if (impliedTypeAccess != null) {
-			final BasicValuedMapping basicValuedMapping = impliedTypeAccess.get();
+			final BasicValuedMapping<?> basicValuedMapping = impliedTypeAccess.get();
 			if (basicValuedMapping != null) {
 				return basicValuedMapping;
 			}
 		}
 		// Resolve according to JPA spec 4.8.5
-		final BasicValuedMapping specifiedArgType = extractArgumentValuedMapping( arguments, 1 );
-		final JdbcMapping jdbcMapping = specifiedArgType.getJdbcMapping();
+		final BasicValuedMapping<?> specifiedArgType = extractArgumentValuedMapping( arguments, 1 );
+		final JdbcMapping<?> jdbcMapping = specifiedArgType.getJdbcMapping();
 		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 			case SMALLINT:
 			case TINYINT:
@@ -137,7 +137,7 @@ public class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 			case SPARSE_VECTOR_INT8:
 			case SPARSE_VECTOR_FLOAT32:
 			case SPARSE_VECTOR_FLOAT64:
-				return (BasicValuedMapping) jdbcMapping;
+				return (BasicValuedMapping<?>) jdbcMapping;
 		}
 		return bigDecimalType;
 	}

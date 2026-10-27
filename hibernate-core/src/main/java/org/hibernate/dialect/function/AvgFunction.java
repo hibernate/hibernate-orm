@@ -123,7 +123,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	}
 
 	private void renderArgument(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression realArg) {
-		final JdbcMapping sourceMapping = realArg.getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> sourceMapping = realArg.getExpressionType().getSingleJdbcMapping();
 		// Only cast to float/double if this is an integer
 		if ( sourceMapping.getJdbcType().isInteger() ) {
 			castFunction.render(
@@ -191,7 +191,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		}
 
 		private static JdbcType getJdbcType(DomainType<?> domainType, TypeConfiguration typeConfiguration) {
-			if ( domainType instanceof JdbcMapping jdbcMapping ) {
+			if ( domainType instanceof JdbcMapping<?> jdbcMapping ) {
 				return jdbcMapping.getJdbcType();
 			}
 			else {
@@ -219,8 +219,8 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 		@Override
 		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-		public BasicValuedMapping resolveFunctionReturnType(
-				Supplier<BasicValuedMapping> impliedTypeAccess,
+		public BasicValuedMapping<?> resolveFunctionReturnType(
+				Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 				List<? extends SqlAstNode> arguments) {
 			final var impliedType = impliedTypeAccess.get();
 			if ( impliedType != null ) {
@@ -230,7 +230,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				var expression = (Expression) arguments.get( 0 );
 				final var jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 				return jdbcMapping instanceof BasicPluralType<?, ?>
-						? (BasicValuedMapping) jdbcMapping
+						? (BasicValuedMapping<?>) jdbcMapping
 						: doubleType;
 			}
 		}

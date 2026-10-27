@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.type.descriptor.java.JavaType;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
@@ -24,17 +26,22 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *
  * @author Andrea Boriero
  */
-public class EmbeddedIdentifierMappingImpl
-		extends AbstractCompositeIdentifierMapping
-		implements AggregatedIdentifierMapping {
+public class EmbeddedIdentifierMappingImpl<J>
+		extends AbstractCompositeIdentifierMapping<J, J, J>
+		implements AggregatedIdentifierMapping<J, J, J> {
+	@Override
+	public JavaType<J> getJavaType() {
+		return embeddableDescriptor.getJavaType();
+	}
+
 	private final String name;
-	private final EmbeddableMappingType embeddableDescriptor;
+	private final EmbeddableMappingType<J, J, ?> embeddableDescriptor;
 	private final PropertyAccess propertyAccess;
 
 	public EmbeddedIdentifierMappingImpl(
-			EntityMappingType entityMapping,
+			EntityMappingType<?> entityMapping,
 			String name,
-			EmbeddableMappingType embeddableDescriptor,
+			EmbeddableMappingType<J, J, ?> embeddableDescriptor,
 			PropertyAccess propertyAccess,
 			String tableExpression,
 			MappingModelCreationProcess creationProcess) {
@@ -59,13 +66,13 @@ public class EmbeddedIdentifierMappingImpl
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getPartMappingType() {
+	public EmbeddableMappingType<J, J, ?> getPartMappingType() {
 		return embeddableDescriptor;
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType<?, ?, ?> getMappedIdEmbeddableTypeDescriptor() {
 		return getMappedType();
 	}
 
@@ -80,7 +87,7 @@ public class EmbeddedIdentifierMappingImpl
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		getEmbeddableTypeDescriptor()
 				.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}

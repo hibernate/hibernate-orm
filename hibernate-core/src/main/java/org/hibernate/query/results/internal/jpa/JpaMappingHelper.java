@@ -92,7 +92,7 @@ public class JpaMappingHelper {
 			Class<T> entityType,
 			SessionFactoryImplementor sessionFactory) {
 		var entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityType );
-		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+		final EntityDiscriminatorMapping<?> discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 		return entity(
 				entityType,
 				discriminatorMapping == null ? null : discriminatorMapping.getSelectableName(),
@@ -102,7 +102,7 @@ public class JpaMappingHelper {
 
 	private static <T> MemberMapping<T>[] collectMemberMappings(
 			Class<T> entityType,
-			EntityMappingType entityTypeDescriptor,
+			EntityMappingType<?> entityTypeDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		final List<MemberMapping<T>> memberMappingList = new ArrayList<>();
 		applyAttributeMapping( entityType, entityTypeDescriptor, memberMappingList::add, sessionFactory );
@@ -113,25 +113,25 @@ public class JpaMappingHelper {
 
 	private static <T> void applyAttributeMapping(
 			Class<T> entityType,
-			EntityMappingType entityTypeDescriptor,
+			EntityMappingType<?> entityTypeDescriptor,
 			Consumer<MemberMapping<T>> memberMappingConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		final EntityIdentifierMapping identifierMapping = entityTypeDescriptor.getIdentifierMapping();
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping idAttribute ) {
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityTypeDescriptor.getIdentifierMapping();
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping<?, ?, ?> idAttribute ) {
 			applyAttributeMapping( entityType, idAttribute, memberMappingConsumer, sessionFactory );
 		}
 		else {
-			( (NonAggregatedIdentifierMapping) identifierMapping ).getVirtualIdEmbeddable().forEachAttributeMapping( (idAttribute) -> {
+			( (NonAggregatedIdentifierMapping<?, ?>) identifierMapping ).getVirtualIdEmbeddable().forEachAttributeMapping( (idAttribute) -> {
 				applyAttributeMapping( entityType, idAttribute, memberMappingConsumer, sessionFactory );
 			} );
 		}
 
-		applyAttributeMapping( entityType, (ManagedMappingType) entityTypeDescriptor, memberMappingConsumer, sessionFactory );
+		applyAttributeMapping( entityType, (ManagedMappingType<?, ?, ?>) entityTypeDescriptor, memberMappingConsumer, sessionFactory );
 	}
 
 	private static <T> MemberMapping<T>[] collectMemberMappings(
 			Class<T> managedType,
-			ManagedMappingType managedTypeDescriptor,
+			ManagedMappingType<?, ?, ?> managedTypeDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		final List<MemberMapping<T>> memberMappingList = new ArrayList<>();
 		applyAttributeMapping( managedType, managedTypeDescriptor, memberMappingList::add, sessionFactory );
@@ -142,7 +142,7 @@ public class JpaMappingHelper {
 
 	private static <T> void applyAttributeMapping(
 			Class<T> managedType,
-			ManagedMappingType managedTypeDescriptor,
+			ManagedMappingType<?, ?, ?> managedTypeDescriptor,
 			Consumer<MemberMapping<T>> memberMappingConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		managedTypeDescriptor.forEachAttributeMapping( (attribute) -> {
@@ -152,10 +152,10 @@ public class JpaMappingHelper {
 
 	private static <T,A> void applyAttributeMapping(
 			Class<T> containerType,
-			AttributeMapping attributeDescriptor,
+			AttributeMapping<?, ?, ?> attributeDescriptor,
 			Consumer<MemberMapping<T>> memberMappingConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		if ( attributeDescriptor instanceof BasicValuedModelPart basicAttribute ) {
+		if ( attributeDescriptor instanceof BasicValuedModelPart<?, ?, ?> basicAttribute ) {
 			memberMappingConsumer.accept( field(
 					containerType,
 					basicAttribute.getJavaType().getJavaTypeClass(),
@@ -163,7 +163,7 @@ public class JpaMappingHelper {
 					basicAttribute.getSelectableName()
 			) );
 		}
-		else if ( attributeDescriptor instanceof EmbeddableValuedModelPart embeddedAttribute ) {
+		else if ( attributeDescriptor instanceof EmbeddableValuedModelPart<?, ?, ?> embeddedAttribute ) {
 			//noinspection unchecked
 			Class<A> embeddedJavaType = (Class<A>) embeddedAttribute.getEmbeddableTypeDescriptor()
 					.getJavaType()

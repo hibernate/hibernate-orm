@@ -57,7 +57,7 @@ public class GenerateSeriesArgumentValidator implements ArgumentsValidator {
 					)
 			);
 		}
-		final var type = (JdbcMapping) startType;
+		final var type = (JdbcMapping<?>) startType;
 		final var jdbcType = type.getJdbcType();
 		if ( jdbcType.isInteger() || jdbcType.isDecimal() ) {
 			if ( step != null ) {
@@ -91,7 +91,7 @@ public class GenerateSeriesArgumentValidator implements ArgumentsValidator {
 			if ( stepType == null ) {
 				throw unknownType( functionName, arguments, 2 );
 			}
-			final var stepJdbcType = ((JdbcMapping) stepType).getJdbcType();
+			final var stepJdbcType = ((JdbcMapping<?>) stepType).getJdbcType();
 			if ( !stepJdbcType.isInterval() && !stepJdbcType.isDuration() ) {
 				throw new FunctionArgumentException(
 						String.format(

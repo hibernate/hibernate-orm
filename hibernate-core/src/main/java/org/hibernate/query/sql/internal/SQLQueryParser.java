@@ -30,7 +30,7 @@ public class SQLQueryParser {
 
 	public interface ParserContext {
 		boolean isEntityAlias(String aliasName);
-		EntityPersister getEntityPersister(String alias);
+		EntityPersister<?> getEntityPersister(String alias);
 		String getEntitySuffix(String alias);
 		boolean isCollectionAlias(String aliasName);
 		CollectionPersister getCollectionPersister(String alias);

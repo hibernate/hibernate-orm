@@ -11,7 +11,10 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  *
  * @see jakarta.persistence.Version
  */
-public interface EntityVersionMapping extends BasicValuedModelPart {
+public interface EntityVersionMapping<J> extends BasicValuedModelPart<J, J, J> {
+	@Override
+	JdbcMapping<J> getJdbcMapping();
+
 
 	String VERSION_ROLE_NAME = "{version}";
 
@@ -24,7 +27,7 @@ public interface EntityVersionMapping extends BasicValuedModelPart {
 	 */
 	@Nonnull
 	@org.hibernate.Internal
-	BasicAttributeMapping getVersionAttribute();
+	BasicAttributeMapping<J> getVersionAttribute();
 
 	/**
 	 * The strategy for distinguishing between detached and transient
@@ -37,17 +40,17 @@ public interface EntityVersionMapping extends BasicValuedModelPart {
 
 	@Nonnull
 	@Override
-	VersionJavaType<?> getJavaType();
+	VersionJavaType<J> getJavaType();
 
 	@Nonnull
 	@Override
-	default VersionJavaType<?> getExpressibleJavaType() {
-		return (VersionJavaType<?>) getMappedType().getMappedJavaType();
+	default VersionJavaType<J> getExpressibleJavaType() {
+		return getJavaType();
 	}
 
 	@Nonnull
 	@Override
-	default AttributeMapping asAttributeMapping() {
+	default AttributeMapping<J,J,J> asAttributeMapping() {
 		return getVersionAttribute();
 	}
 }

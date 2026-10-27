@@ -129,7 +129,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			FunctionParameterType type,
 			JavaType<?> javaType) {
 		if ( !isUnknown( javaType ) ) {
-			if ( argument.getExpressible().getSqmType() instanceof JdbcMapping jdbcMapping ) {
+			if ( argument.getExpressible().getSqmType() instanceof JdbcMapping<?> jdbcMapping ) {
 				checkArgumentType(
 						count, functionName, type,
 						jdbcMapping.getJdbcType(),

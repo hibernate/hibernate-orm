@@ -44,7 +44,7 @@ public final class MutationBindTemplate {
 	private static boolean hasColumnValueParameters(PreparableMutationOperation operation) {
 		final var parameterBinders = operation.getParameterBinders();
 		for ( int i = 0; i < parameterBinders.size(); i++ ) {
-			if ( !( parameterBinders.get( i ) instanceof ColumnValueParameter ) ) {
+			if ( !( parameterBinders.get( i ) instanceof ColumnValueParameter<?> ) ) {
 				return false;
 			}
 		}
@@ -58,7 +58,7 @@ public final class MutationBindTemplate {
 		this.slotsByUsage = new EnumMap<>( ParameterUsage.class );
 
 		for ( int i = 0; i < parameterBinders.size(); i++ ) {
-			final var columnValueParameter = (ColumnValueParameter) parameterBinders.get( i );
+			final var columnValueParameter = (ColumnValueParameter<?>) parameterBinders.get( i );
 			final var valueDescriptor = new JdbcValueDescriptorImpl( columnValueParameter, offset + i + 1 );
 			final var slot = new BindSlot(
 					i,

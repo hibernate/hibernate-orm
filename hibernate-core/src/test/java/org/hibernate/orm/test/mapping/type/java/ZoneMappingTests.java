@@ -42,17 +42,17 @@ public class ZoneMappingTests {
 	@Test
 	public void basicAssertions(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor( ZoneMappingTestEntity.class );
+		final EntityPersister<?> entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor( ZoneMappingTestEntity.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory.getTypeConfiguration().getJdbcTypeRegistry();
 
 		{
-			final BasicAttributeMapping zoneIdAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "zoneId" );
+			final BasicAttributeMapping<?> zoneIdAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping( "zoneId" );
 			assertThat( zoneIdAttribute.getJdbcMapping().getJdbcType() ).isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( zoneIdAttribute.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( ZoneId.class );
 		}
 
 		{
-			final BasicAttributeMapping zoneOffsetAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "zoneOffset" );
+			final BasicAttributeMapping<?> zoneOffsetAttribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping( "zoneOffset" );
 			assertThat( zoneOffsetAttribute.getJdbcMapping().getJdbcType() ).isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( zoneOffsetAttribute.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( ZoneOffset.class );
 		}

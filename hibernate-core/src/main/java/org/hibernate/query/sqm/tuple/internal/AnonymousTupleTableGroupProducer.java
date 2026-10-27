@@ -59,17 +59,22 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Christian Beikov
  */
-public class AnonymousTupleTableGroupProducer implements TableGroupProducer, MappingType, SetReturningFunctionType {
+public class AnonymousTupleTableGroupProducer<J> implements TableGroupProducer<J, J, J>, MappingType<J>, SetReturningFunctionType {
+	@Override
+	public JavaType<J> getExpressibleJavaType() {
+		return getMappedJavaType();
+	}
+
 
 	private final String aliasStem;
-	private final JavaType<?> javaTypeDescriptor;
-	private final Map<String, ModelPart> modelParts;
+	private final JavaType<J> javaTypeDescriptor;
+	private final Map<String, ModelPart<?, ?, ?>> modelParts;
 	private final Set<String> compatibleTableExpressions;
 	private final SqlTypedMapping[] sqlTypedMappings;
 	private final int jdbcTypeCount;
 
 	public AnonymousTupleTableGroupProducer(
-			AnonymousTupleType<?> tupleType,
+			AnonymousTupleType<J> tupleType,
 			String aliasStem,
 			SqlTypedMapping[] sqlTypedMappings,
 			FromClauseAccess fromClauseAccess) {
@@ -82,13 +87,13 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 		final boolean generateColumnNames = !( tupleType instanceof SqmCteTable<?> );
 		final int componentCount = tupleType.componentCount();
-		final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( componentCount );
+		final Map<String, ModelPart<?, ?, ?>> modelParts = CollectionHelper.linkedMapOfSize( componentCount );
 		int selectionIndex = 0;
 		for ( int i = 0; i < componentCount && selectionIndex < sqlTypedMappings.length; i++ ) {
 			final SqmExpressible<?> expressible = tupleType.get( i );
 			final DomainType<?> sqmType = expressible.getSqmType();
 			final String partName = tupleType.getComponentName( i );
-			final ModelPart modelPart;
+			final ModelPart<?, ?, ?> modelPart;
 			if ( expressible instanceof PluralPersistentAttribute<?, ?, ?>
 					|| !( sqmType instanceof BasicType<?> ) ) {
 				final TableGroup tableGroup = fromClauseAccess.findTableGroup( tupleType.getComponentSourcePath( i ) );
@@ -107,7 +112,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 				);
 			}
 			else if ( sqlTypedMappings[selectionIndex] instanceof SelectableMapping selectable ) {
-				modelPart = new AnonymousTupleBasicValuedModelPart(
+				modelPart = AnonymousTupleBasicValuedModelPart.create(
 						this,
 						partName,
 						selectable,
@@ -118,7 +123,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			}
 			else {
 				// HQL component names may contain spaces or other characters unsuitable for SQL identifiers.
-				modelPart = new AnonymousTupleBasicValuedModelPart(
+				modelPart = new AnonymousTupleBasicValuedModelPart<>(
 						this,
 						partName,
 						generateColumnNames ? "c" + selectionIndex : partName,
@@ -135,7 +140,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		jdbcTypeCount = selectionIndex;
 	}
 
-	private ModelPart getModelPart(TableGroup tableGroup) {
+	private ModelPart<?, ?, ?> getModelPart(TableGroup tableGroup) {
 		if ( tableGroup instanceof PluralTableGroup ) {
 			tableGroup = ( (PluralTableGroup) tableGroup ).getElementTableGroup();
 		}
@@ -145,29 +150,30 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		return tableGroup.getModelPart();
 	}
 
-	public static ModelPart createModelPart(
-			MappingType mappingType,
+	@SuppressWarnings("unchecked")
+	public static <D> ModelPart<?, ?, ?> createModelPart(
+			MappingType<?> mappingType,
 			SqmExpressible<?> sqmExpressible,
-			DomainType<?> domainType,
+			DomainType<D> domainType,
 			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
 			String selectionExpression,
 			String partName,
-			ModelPart existingModelPart,
+			ModelPart<?, ?, ?> existingModelPart,
 			Set<String> compatibleTableExpressions,
 			int fetchableIndex,
 			boolean generateColumnNames) {
 		if ( domainType instanceof EntityDomainType<?> entityDomainType ) {
-			final EntityValuedModelPart existingModelPartContainer = (EntityValuedModelPart) existingModelPart;
-			final EntityIdentifierMapping identifierMapping =
+			final EntityValuedModelPart<D> existingModelPartContainer = (EntityValuedModelPart<D>) existingModelPart;
+			final EntityIdentifierMapping<?, ?, ?> identifierMapping =
 					existingModelPartContainer.getEntityMappingType().getIdentifierMapping();
-			final EntityIdentifierMapping newIdentifierMapping;
-			if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-				if ( identifierMapping.getPartMappingType() instanceof ManagedMappingType ) {
+			final EntityIdentifierMapping<?, ?, ?> newIdentifierMapping;
+			if ( identifierMapping instanceof SingleAttributeIdentifierMapping<?, ?, ?> ) {
+				if ( identifierMapping.getPartMappingType() instanceof ManagedMappingType<?, ?, ?> ) {
 					final ManagedDomainType<?> sqmPathType =
 							(ManagedDomainType<?>)
 									entityDomainType.getIdentifierDescriptor().getPathType();
-					newIdentifierMapping = new AnonymousTupleEmbeddedEntityIdentifierMapping(
+					newIdentifierMapping = new AnonymousTupleEmbeddedEntityIdentifierMapping<>(
 							sqmExpressible,
 							sqlTypedMappings,
 							selectionIndex,
@@ -175,26 +181,26 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 							compatibleTableExpressions,
 							sqmPathType.getAttributes(),
 							domainType,
-							(CompositeIdentifierMapping) identifierMapping,
+							(CompositeIdentifierMapping<?, ?, ?>) identifierMapping,
 							generateColumnNames
 					);
 				}
 				else if ( sqlTypedMappings[selectionIndex] instanceof SelectableMapping selectable ) {
-					newIdentifierMapping = new AnonymousTupleBasicEntityIdentifierMapping(
+					newIdentifierMapping = AnonymousTupleBasicEntityIdentifierMapping.create(
 							mappingType,
 							selectable,
 							sqmExpressible,
-							(BasicEntityIdentifierMapping) identifierMapping
+							(BasicEntityIdentifierMapping<?, ?, ?>) identifierMapping
 					);
 					compatibleTableExpressions.add( selectable.getContainingTableExpression() );
 				}
 				else {
-					newIdentifierMapping = new AnonymousTupleBasicEntityIdentifierMapping(
+					newIdentifierMapping = new AnonymousTupleBasicEntityIdentifierMapping<>(
 							mappingType,
 							generateColumnNames ? "c" + selectionIndex : selectionExpression + "_" + identifierMapping.getAttributeName(),
 							sqmExpressible,
 							sqlTypedMappings[selectionIndex].getJdbcMapping(),
-							(BasicEntityIdentifierMapping) identifierMapping
+							(BasicEntityIdentifierMapping<?, ?, ?>) identifierMapping
 					);
 				}
 			}
@@ -202,7 +208,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 				final ManagedDomainType<?> sqmPathType =
 						(ManagedDomainType<?>)
 								entityDomainType.getIdentifierDescriptor().getPathType();
-				newIdentifierMapping = new AnonymousTupleNonAggregatedEntityIdentifierMapping(
+				newIdentifierMapping = new AnonymousTupleNonAggregatedEntityIdentifierMapping<>(
 						sqmExpressible,
 						sqlTypedMappings,
 						selectionIndex,
@@ -211,15 +217,15 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 						sqmPathType.getAttributes(),
 						domainType,
 						selectionExpression,
-						(NonAggregatedIdentifierMapping) identifierMapping,
+						(NonAggregatedIdentifierMapping<D, ?>) identifierMapping,
 						generateColumnNames
 				);
 			}
-			if ( existingModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+			if ( existingModelPart instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 				// We take "ownership" of FK columns by reporting the derived table group is compatible
 				compatibleTableExpressions.add( toOneAttributeMapping.getIdentifyingColumnsTableExpression() );
 			}
-			return new AnonymousTupleEntityValuedModelPart(
+			return new AnonymousTupleEntityValuedModelPart<>(
 					newIdentifierMapping,
 					domainType,
 					existingModelPartContainer,
@@ -227,7 +233,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			);
 		}
 		else if ( domainType instanceof ManagedDomainType<?> managedDomainType ) {
-			return new AnonymousTupleEmbeddableValuedModelPart(
+			return new AnonymousTupleEmbeddableValuedModelPart<>(
 					sqmExpressible,
 					sqlTypedMappings,
 					selectionIndex,
@@ -236,14 +242,14 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 					managedDomainType.getAttributes(),
 					domainType,
 					selectionExpression,
-					(EmbeddableValuedModelPart) existingModelPart,
+					(EmbeddableValuedModelPart<?, ?, ?>) existingModelPart,
 					fetchableIndex,
 					generateColumnNames
 			);
 		}
 		else if ( sqlTypedMappings[selectionIndex] instanceof SelectableMapping selectable ) {
 			compatibleTableExpressions.add( selectable.getContainingTableExpression() );
-			return new AnonymousTupleBasicValuedModelPart(
+			return AnonymousTupleBasicValuedModelPart.create(
 					mappingType,
 					partName,
 					selectable,
@@ -252,7 +258,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			);
 		}
 		else {
-			return new AnonymousTupleBasicValuedModelPart(
+			return new AnonymousTupleBasicValuedModelPart<>(
 					mappingType,
 					partName,
 					generateColumnNames ? "c" + selectionIndex : selectionExpression,
@@ -280,13 +286,13 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getMappedJavaType() {
+	public JavaType<J> getMappedJavaType() {
 		return javaTypeDescriptor;
 	}
 
@@ -304,38 +310,38 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return null;
 	}
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		return findSubPart( name );
 	}
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(String name) {
+	public ModelPart<?, ?, ?> findSubPart(String name) {
 		return modelParts.get( name );
 	}
 
 	@Override
-	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTarget) {
 		int i = 0;
-		for ( Map.Entry<String, ModelPart> entry : modelParts.entrySet() ) {
+		for ( Map.Entry<String, ModelPart<?, ?, ?>> entry : modelParts.entrySet() ) {
 			consumer.accept( i++, entry.getValue() );
 		}
 	}
 
 	@Override
-	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
-		for ( ModelPart modelPart : modelParts.values() ) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTargetType) {
+		for ( ModelPart<?, ?, ?> modelPart : modelParts.values() ) {
 			consumer.accept( modelPart );
 		}
 	}
 
-	public Map<String, ModelPart> getModelParts() {
+	public Map<String, ModelPart<?, ?, ?>> getModelParts() {
 		return modelParts;
 	}
 
@@ -346,14 +352,14 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<J> getJavaType() {
 		return javaTypeDescriptor;
 	}
 
 	@Override
 	public int forEachSelectable(int offset, @Nonnull SelectableConsumer consumer) {
 		final int originalOffset = offset;
-		for ( ModelPart modelPart : modelParts.values() ) {
+		for ( ModelPart<?, ?, ?> modelPart : modelParts.values() ) {
 			offset += modelPart.forEachSelectable( offset, consumer );
 		}
 
@@ -371,7 +377,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -392,7 +398,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
@@ -431,12 +437,12 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		return sqlTypedMappings[index].getJdbcMapping();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 

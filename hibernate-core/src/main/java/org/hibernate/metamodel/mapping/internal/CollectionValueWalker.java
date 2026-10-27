@@ -35,12 +35,12 @@ public final class CollectionValueWalker {
 	///
 	/// @throws MappingException if a polymorphic component has an unmapped runtime class
 	public static void visitCollectionValues(
-			ManagedMappingType mappingType,
+			ManagedMappingType<?, ?, ?> mappingType,
 			@Nullable Object instance,
-			BiConsumer<PluralAttributeMapping, Object> consumer) {
+			BiConsumer<PluralAttributeMapping<?>, Object> consumer) {
 		final EmbeddableMappingType.ConcreteEmbeddableType subtype;
 		if ( instance != null
-				&& mappingType instanceof EmbeddableMappingType embeddableType
+				&& mappingType instanceof EmbeddableMappingType<?, ?, ?> embeddableType
 				&& embeddableType.isPolymorphic() ) {
 			subtype = embeddableType.findSubtypeBySubclass( instance.getClass().getName() );
 			if ( subtype == null ) {
@@ -65,9 +65,9 @@ public final class CollectionValueWalker {
 	}
 
 	private static void visitCollectionValue(
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			@Nullable Object container,
-			BiConsumer<PluralAttributeMapping, Object> consumer) {
+			BiConsumer<PluralAttributeMapping<?>, Object> consumer) {
 		if ( attribute.isPluralAttributeMapping() ) {
 			consumer.accept( attribute.asPluralAttributeMapping(), getValue( attribute, container ) );
 		}
@@ -82,7 +82,7 @@ public final class CollectionValueWalker {
 	}
 
 	private static @Nullable Object getValue(
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			@Nullable Object container) {
 		return container == null
 				? null

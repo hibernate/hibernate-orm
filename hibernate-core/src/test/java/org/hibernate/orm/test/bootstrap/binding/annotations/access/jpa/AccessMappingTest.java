@@ -71,10 +71,10 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
 				.buildSessionFactory( serviceRegistry )) {
-			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister<?> entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( classUnderTest.getName() );
-			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+			final BasicEntityIdentifierMappingImpl<?> identifierMapping = (BasicEntityIdentifierMappingImpl<?>) entityPersister.getIdentifierMapping();
 
 			assertThat( identifierMapping.getPropertyAccess().getGetter() )
 					.describedAs( "Field access should be used." )
@@ -91,10 +91,10 @@ public class AccessMappingTest {
 
 		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
 				.buildSessionFactory( serviceRegistry )) {
-			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister<?> entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( classUnderTest.getName() );
-			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+			final BasicEntityIdentifierMappingImpl<?> identifierMapping = (BasicEntityIdentifierMappingImpl<?>) entityPersister.getIdentifierMapping();
 
 			assertThat( identifierMapping.getPropertyAccess().getGetter() )
 					.describedAs( "Property access should be used." )
@@ -110,10 +110,10 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
 				.buildSessionFactory( serviceRegistry )) {
-			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister<?> entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( classUnderTest.getName() );
-			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+			final BasicEntityIdentifierMappingImpl<?> identifierMapping = (BasicEntityIdentifierMappingImpl<?>) entityPersister.getIdentifierMapping();
 
 			assertThat( identifierMapping.getPropertyAccess().getGetter() )
 					.describedAs( "Property access should be used." )
@@ -142,10 +142,10 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
 				.buildSessionFactory( serviceRegistry )) {
-			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister<?> entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( classUnderTest.getName() );
-			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+			final BasicEntityIdentifierMappingImpl<?> identifierMapping = (BasicEntityIdentifierMappingImpl<?>) entityPersister.getIdentifierMapping();
 
 			assertThat( identifierMapping.getPropertyAccess().getGetter() )
 					.describedAs( "Field access should be used." )
@@ -165,10 +165,10 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
 				.buildSessionFactory( serviceRegistry )) {
-			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister<?> entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( classUnderTest.getName() );
-			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+			final BasicEntityIdentifierMappingImpl<?> identifierMapping = (BasicEntityIdentifierMappingImpl<?>) entityPersister.getIdentifierMapping();
 
 			assertThat(
 
@@ -192,10 +192,10 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Being.class );
 		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
 				.buildSessionFactory( serviceRegistry )) {
-			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister<?> entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( classUnderTest.getName() );
-			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+			final BasicEntityIdentifierMappingImpl<?> identifierMapping = (BasicEntityIdentifierMappingImpl<?>) entityPersister.getIdentifierMapping();
 
 			assertThat(
 					identifierMapping.getPropertyAccess().getGetter() )
@@ -213,10 +213,10 @@ public class AccessMappingTest {
 
 		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg
 				.buildSessionFactory( serviceRegistry )) {
-			EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			EntityPersister<?> entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( Animal.class.getName() );
-			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+			final BasicEntityIdentifierMappingImpl<?> identifierMapping = (BasicEntityIdentifierMappingImpl<?>) entityPersister.getIdentifierMapping();
 
 			assertThat( identifierMapping.getPropertyAccess().getGetter() )
 					.describedAs( "Property access should be used since explicity configured via @Access" )
@@ -251,7 +251,7 @@ public class AccessMappingTest {
 					.getMappingMetamodel()
 					.getEntityDescriptor( AnimalEntity.class.getName() );
 			final var identifierMapping =
-					(BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+					(BasicEntityIdentifierMappingImpl<?>) entityPersister.getIdentifierMapping();
 			assertThat( identifierMapping.getPropertyAccess().getGetter() )
 					.describedAs( "Field access should be used." )
 					.isInstanceOf( GetterFieldImpl.class );
@@ -268,7 +268,7 @@ public class AccessMappingTest {
 					.getMappingMetamodel()
 					.getEntityDescriptor( PlantEntity.class.getName() );
 			final var identifierMapping =
-					(BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+					(BasicEntityIdentifierMappingImpl<?>) entityPersister.getIdentifierMapping();
 			assertThat( identifierMapping.getPropertyAccess().getGetter() )
 					.describedAs( "Property access should be used." )
 					.isInstanceOf( GetterMethodImpl.class );

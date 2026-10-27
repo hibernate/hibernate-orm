@@ -33,12 +33,12 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class AggregateColumnAssignmentHandler {
 	private final TypeConfiguration typeConfiguration;
 	private final AggregateSupport aggregateSupport;
-	private final HashMap<SelectablePath, EmbeddableMappingType> rootAggregates;
+	private final HashMap<SelectablePath, EmbeddableMappingType<?, ?, ?>> rootAggregates;
 	private final int assignmentCount;
-	private final LinkedHashMap<EmbeddableMappingType, BitSet> aggregateAssignmentPositions;
+	private final LinkedHashMap<EmbeddableMappingType<?, ?, ?>, BitSet> aggregateAssignmentPositions;
 
-	private AggregateColumnAssignmentHandler(EntityPersister entityDescriptor, int assignmentCount) {
-		final HashMap<SelectablePath, EmbeddableMappingType> rootAggregates = new HashMap<>();
+	private AggregateColumnAssignmentHandler(EntityPersister<?> entityDescriptor, int assignmentCount) {
+		final HashMap<SelectablePath, EmbeddableMappingType<?, ?, ?>> rootAggregates = new HashMap<>();
 		collectRootAggregates( rootAggregates, entityDescriptor );
 		this.typeConfiguration = entityDescriptor.getFactory().getTypeConfiguration();
 		this.aggregateSupport = entityDescriptor.getFactory().getJdbcServices()
@@ -50,13 +50,13 @@ public class AggregateColumnAssignmentHandler {
 	}
 
 	private static void collectRootAggregates(
-			HashMap<SelectablePath, EmbeddableMappingType> rootAggregates,
-			ManagedMappingType mappingType) {
+			HashMap<SelectablePath, EmbeddableMappingType<?, ?, ?>> rootAggregates,
+			ManagedMappingType<?, ?, ?> mappingType) {
 		final int numberOfAttributeMappings = mappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-			final AttributeMapping attributeMapping = mappingType.getAttributeMapping( i );
-			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
+			final AttributeMapping<?, ?, ?> attributeMapping = mappingType.getAttributeMapping( i );
+			final MappingType<?> mappedType = attributeMapping.getMappedType();
+			if ( mappedType instanceof EmbeddableMappingType<?, ?, ?> embeddableMappingType ) {
 				final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 				if ( aggregateMapping == null ) {
 					collectRootAggregates( rootAggregates, embeddableMappingType );
@@ -68,7 +68,7 @@ public class AggregateColumnAssignmentHandler {
 		}
 	}
 
-	static AggregateColumnAssignmentHandler forEntityDescriptor(EntityPersister entityDescriptor, int size) {
+	static AggregateColumnAssignmentHandler forEntityDescriptor(EntityPersister<?> entityDescriptor, int size) {
 		if ( entityDescriptor.anyRequiresAggregateColumnWriter() ) {
 			return new AggregateColumnAssignmentHandler( entityDescriptor, size );
 		}
@@ -76,7 +76,7 @@ public class AggregateColumnAssignmentHandler {
 	}
 
 	public void addAssignment(int position, ColumnReference columnReference) {
-		final EmbeddableMappingType aggregateType = findAggregateToCombine( columnReference.getSelectablePath() );
+		final EmbeddableMappingType<?, ?, ?> aggregateType = findAggregateToCombine( columnReference.getSelectablePath() );
 		if ( aggregateType == null ) {
 			// this means that no aggregate in that selectable path requires combination
 			return;
@@ -93,8 +93,8 @@ public class AggregateColumnAssignmentHandler {
 	public void aggregateAssignments(ArrayList<Assignment> assignments) {
 		final var aggregateAssignments = new ArrayList<Assignment>( aggregateAssignmentPositions.size() );
 		final BitSet consumedPositions = new BitSet( assignmentCount );
-		for ( Map.Entry<EmbeddableMappingType, BitSet> entry : aggregateAssignmentPositions.entrySet() ) {
-			final EmbeddableMappingType aggregateType = entry.getKey();
+		for ( Map.Entry<EmbeddableMappingType<?, ?, ?>, BitSet> entry : aggregateAssignmentPositions.entrySet() ) {
+			final EmbeddableMappingType<?, ?, ?> aggregateType = entry.getKey();
 			final BitSet assignmentPositions = entry.getValue();
 			final int assignmentsPositionCount = assignmentPositions.cardinality();
 			final SelectableMapping aggregateMapping = aggregateType.getAggregateMapping();
@@ -184,7 +184,7 @@ public class AggregateColumnAssignmentHandler {
 		assert aggregateAssignmentIndex == -1;
 	}
 
-	private SelectableMapping findSelectable(EmbeddableMappingType aggregateType, ColumnReference columnReference) {
+	private SelectableMapping findSelectable(EmbeddableMappingType<?, ?, ?> aggregateType, ColumnReference columnReference) {
 		final SelectablePath aggregateSelectablePath = aggregateType.getAggregateMapping().getSelectablePath();
 		final SelectablePath[] relativeSelectablePaths = columnReference.getSelectablePath()
 				.relativize( aggregateSelectablePath );
@@ -201,10 +201,10 @@ public class AggregateColumnAssignmentHandler {
 		);
 	}
 
-	private EmbeddableMappingType findAggregateToCombine(SelectablePath selectablePath) {
+	private EmbeddableMappingType<?, ?, ?> findAggregateToCombine(SelectablePath selectablePath) {
 		final SelectablePath[] parts = selectablePath.getParts();
 		for ( int i = parts.length - 2; i >= 0; i-- ) {
-			final EmbeddableMappingType embeddableMappingType = rootAggregates.get( parts[i] );
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = rootAggregates.get( parts[i] );
 			if ( embeddableMappingType != null && embeddableMappingType.requiresAggregateColumnWriter() ) {
 				return embeddableMappingType;
 			}

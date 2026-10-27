@@ -126,7 +126,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 	}
 
 	@Nonnull
-	private SubclassEntry getSubclassEntry(@Nonnull EntityPersister elementPersister) {
+	private SubclassEntry getSubclassEntry(@Nonnull EntityPersister<?> elementPersister) {
 		final int subclassId = elementPersister.getSubclassId();
 		final var subclassEntry = subclassEntries[subclassId];
 		if ( subclassEntry != null ) {
@@ -141,7 +141,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 	}
 
 	@Nonnull
-	private MutationOperationGroup createOperationGroup(@Nonnull EntityPersister elementPersister) {
+	private MutationOperationGroup createOperationGroup(@Nonnull EntityPersister<?> elementPersister) {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 

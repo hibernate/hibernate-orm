@@ -61,7 +61,7 @@ public class CollectionCacheInvalidator
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+	public boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 		return true;
 	}
 
@@ -90,7 +90,7 @@ public class CollectionCacheInvalidator
 		}
 	}
 
-	private void evictCache(Object entity, EntityPersister persister, EventSource session, Object[] oldState) {
+	private void evictCache(Object entity, EntityPersister<?> persister, EventSource session, Object[] oldState) {
 		try {
 			final var metamodel = persister.getFactory().getMappingMetamodel();
 			final var roles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
@@ -111,7 +111,7 @@ public class CollectionCacheInvalidator
 
 	private void evictCollection(
 			Object entity,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object[] oldState,
 			CollectionPersister collectionPersister,
 			EventSource session) {
@@ -132,7 +132,7 @@ public class CollectionCacheInvalidator
 
 	private void handleInverseOneToMany(
 			Object entity,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object[] oldState,
 			CollectionPersister collectionPersister,
 			EventSource session) {

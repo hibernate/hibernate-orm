@@ -133,7 +133,7 @@ public class StringJsonValueJDBCTypeAdapter implements JsonValueJDBCTypeAdapter 
 								subValues,
 								options
 						);
-						final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+						final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 						return instantiate( embeddableMappingType, subAttributeValues ) ;
 					}
 					return subValues;

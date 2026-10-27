@@ -55,7 +55,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 
 	public EmbeddableRepresentationStrategyPojo(
 			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			Supplier<EmbeddableMappingType<?, ?, ?>> runtimeDescriptorAccess,
 			EmbeddableInstantiator customInstantiator,
 			CompositeUserType<Object> compositeUserType,
 			RuntimeModelCreationContext creationContext) {
@@ -172,7 +172,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	private static EmbeddableInstantiator determineInstantiator(
 			Component bootDescriptor,
 			Class<?> embeddableClass,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			Supplier<EmbeddableMappingType<?, ?, ?>> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
 		final var accessorService = creationContext.getServiceRegistry()
 				.requireService( PropertyAccessorService.class );

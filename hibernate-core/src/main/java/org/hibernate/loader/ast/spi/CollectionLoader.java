@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 public interface CollectionLoader extends Loader {
 	@Nonnull
 	@Override
-	PluralAttributeMapping getLoadable();
+	PluralAttributeMapping<?> getLoadable();
 
 	/**
 	 * Load a collection by its key (not necessarily the same as its owner's PK).

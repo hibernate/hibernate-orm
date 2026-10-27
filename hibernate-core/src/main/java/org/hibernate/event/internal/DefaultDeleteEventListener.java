@@ -170,7 +170,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			@Nonnull DeleteEvent event,
 			@Nonnull DeleteContext transientEntities,
 			@Nonnull Object entity,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EventSource source) {
 		if ( source.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 			throw new DetachedObjectException( "Given entity is not associated with the persistence context" );
@@ -226,7 +226,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	private static boolean flushAndEvictExistingEntity(
 			@Nonnull EntityKey key,
 			@Nonnull Object version,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EventSource source) {
 		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object existingEntity = persistenceContext.getEntity( key );
@@ -283,7 +283,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	/**
 	 * Can we delete the row represented by the proxy without loading the entity?
 	 */
-	private boolean canBeDeletedWithoutLoading(@Nonnull EventSource source, @Nonnull EntityPersister persister) {
+	private boolean canBeDeletedWithoutLoading(@Nonnull EventSource source, @Nonnull EntityPersister<?> persister) {
 		return source.getInterceptor() == EmptyInterceptor.INSTANCE
 			&& TenantIdHelper.tenantIdAttribute( persister ) == null
 			&& !persister.hasSubclasses() //TODO: should be unnecessary, using EntityPersister.getSubclassPropertyTypeClosure(), etc
@@ -306,7 +306,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 						instanceof PostDeleteEventListenerStandardImpl);
 	}
 
-	private boolean hasRegisteredRemoveCallbacks(@Nonnull EntityPersister persister) {
+	private boolean hasRegisteredRemoveCallbacks(@Nonnull EntityPersister<?> persister) {
 		final var entityCallbacks = persister.getEntityCallbacks();
 		return entityCallbacks.hasRegisteredCallbacks( CallbackType.PRE_REMOVE )
 			|| entityCallbacks.hasRegisteredCallbacks( CallbackType.POST_REMOVE )
@@ -331,7 +331,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	protected void deleteTransientEntity(
 			@Nonnull EventSource session,
 			@Nonnull Object entity,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull DeleteContext transientEntities) {
 		EVENT_LISTENER_LOGGER.handlingTransientEntity();
 		if ( transientEntities.add( entity ) ) {
@@ -361,7 +361,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			@Nonnull final EntityEntry entityEntry,
 			final boolean isCascadeDeleteEnabled,
 			final boolean isOrphanRemovalBeforeUpdates,
-			@Nonnull final EntityPersister persister,
+			@Nonnull final EntityPersister<?> persister,
 			@Nonnull final DeleteContext transientEntities) {
 
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
@@ -451,7 +451,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 	@Nonnull
 	private Object[] createDeletedState(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object parent,
 			@Nonnull Object[] currentState,
 			@Nonnull EventSource eventSource) {
@@ -494,7 +494,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 	protected void cascadeBeforeDelete(
 			@Nonnull EventSource session,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity,
 			@Nonnull DeleteContext transientEntities) {
 
@@ -521,7 +521,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 	protected void cascadeAfterDelete(
 			@Nonnull EventSource session,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object entity,
 			@Nonnull DeleteContext transientEntities) {
 

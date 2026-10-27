@@ -30,14 +30,14 @@ import static org.hibernate.query.internal.QueryLogging.QUERY_LOGGER;
 public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMemento.Parent {
 	private final String tableAlias;
 	private final NavigablePath navigablePath;
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 	private final LockMode lockMode;
 	private final FetchMementoBasic discriminatorMemento;
 	private final Map<String, FetchMemento> fetchMementoMap;
 
 	public ResultMementoEntityStandard(
 			String tableAlias,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			LockMode lockMode,
 			FetchMementoBasic discriminatorMemento,
 			Map<String, FetchMemento> fetchMementoMap) {
@@ -66,10 +66,10 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 
-		final HashMap<Fetchable, FetchBuilder> fetchBuilderMap = new HashMap<>();
+		final HashMap<Fetchable<?, ?, ?>, FetchBuilder> fetchBuilderMap = new HashMap<>();
 		fetchMementoMap.forEach(
 				(attrName, fetchMemento) -> fetchBuilderMap.put(
-						(Fetchable) entityDescriptor.findByPath( attrName ),
+						(Fetchable<?, ?, ?>) entityDescriptor.findByPath( attrName ),
 						fetchMemento.resolve(this, querySpaceConsumer, context )
 				)
 		);

@@ -516,7 +516,7 @@ public class StatelessSessionImpl
 				: cve;
 	}
 
-	private void recreateCollections(Object entity, Object id, EntityPersister persister) {
+	private void recreateCollections(Object entity, Object id, EntityPersister<?> persister) {
 		if ( persister.hasOwnedCollections() ) {
 			final String entityName = persister.getEntityName();
 			final var eventMonitor = getEventMonitor();
@@ -625,7 +625,7 @@ public class StatelessSessionImpl
 		}
 	}
 
-	private void removeCollections(Object entity, Object id, EntityPersister persister) {
+	private void removeCollections(Object entity, Object id, EntityPersister<?> persister) {
 		if ( persister.hasOwnedCollections() ) {
 			final String entityName = persister.getEntityName();
 			final var eventMonitor = getEventMonitor();
@@ -742,7 +742,7 @@ public class StatelessSessionImpl
 		}
 	}
 
-	private static void checkLobVersioning(EntityPersister persister) {
+	private static void checkLobVersioning(EntityPersister<?> persister) {
 		if ( !persister.isVersioned() || persister.isVersionPropertyGenerated() ) {
 			return;
 		}
@@ -763,7 +763,7 @@ public class StatelessSessionImpl
 				if ( !versionability[i] ) {
 					hasExcludedProperty = true;
 				}
-				else if ( persister.getAttributeMapping( i ) instanceof SingularAttributeMapping attribute ) {
+				else if ( persister.getAttributeMapping( i ) instanceof SingularAttributeMapping<?, ?, ?> attribute ) {
 					for ( int j = 0; j < attribute.getJdbcTypeCount(); j++ ) {
 						final var selectable = attribute.getSelectable( j );
 						if ( !selectable.isFormula() && selectable.isUpdateable()
@@ -784,7 +784,7 @@ public class StatelessSessionImpl
 	private static void applyDatabaseResolvedVersion(
 			Object entity,
 			Object[] state,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			GeneratedValues generatedValues) {
 		final var versionMapping = persister.getVersionMapping();
 		if ( generatedValues != null && versionMapping != null ) {
@@ -796,7 +796,7 @@ public class StatelessSessionImpl
 		}
 	}
 
-	private void removeAndRecreateCollections(Object entity, Object id, EntityPersister persister) {
+	private void removeAndRecreateCollections(Object entity, Object id, EntityPersister<?> persister) {
 		if ( persister.hasOwnedCollections() ) {
 			final String entityName = persister.getEntityName();
 			final var eventMonitor = getEventMonitor();
@@ -905,7 +905,7 @@ public class StatelessSessionImpl
 	}
 
 	// Hibernate Reactive calls this
-	protected Object versionToUpsert(Object entity, EntityPersister persister, Object[] state) {
+	protected Object versionToUpsert(Object entity, EntityPersister<?> persister, Object[] state) {
 		if ( persister.isVersioned() ) {
 			final Object oldVersion = persister.getVersion( entity );
 			final Boolean knownTransient =
@@ -933,7 +933,7 @@ public class StatelessSessionImpl
 	}
 
 	// Hibernate Reactive calls this
-	protected Object idToUpsert(Object entity, EntityPersister persister) {
+	protected Object idToUpsert(Object entity, EntityPersister<?> persister) {
 		final Object id = persister.getIdentifier( entity, this );
 		if ( id == null ) {
 			throw new IllegalArgumentException( "Object passed to upsert() has no identifier" );
@@ -952,7 +952,7 @@ public class StatelessSessionImpl
 	// event processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	// Hibernate Reactive may need to call this
-	protected boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+	protected boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister<?> persister) {
 		final var callbacks = persister.getEntityCallbacks();
 		final boolean hasPrePersistCallbacks = callbacks.hasRegisteredCallbacks( CallbackType.PRE_PERSIST );
 		final boolean hasPreInsertCallbacks = callbacks.hasRegisteredCallbacks( CallbackType.PRE_INSERT );
@@ -978,7 +978,7 @@ public class StatelessSessionImpl
 	}
 
 	// Hibernate Reactive may need to call this
-	protected boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
+	protected boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister<?> persister) {
 		runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preUpdate( entity ) );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
@@ -995,7 +995,7 @@ public class StatelessSessionImpl
 	}
 
 	// Hibernate Reactive may need to call this
-	protected boolean firePreUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+	protected boolean firePreUpsert(Object entity, Object id, Object[] state, EntityPersister<?> persister) {
 		final var callbacks = persister.getEntityCallbacks();
 		if ( callbacks.hasRegisteredCallbacks( CallbackType.PRE_UPSERT )
 				&& callEntityLifecycleCallback( () -> callbacks.preUpsert( entity ) ) ) {
@@ -1015,7 +1015,7 @@ public class StatelessSessionImpl
 		}
 	}
 
-	private void copyStateFromEntity(Object entity, Object[] state, EntityPersister persister) {
+	private void copyStateFromEntity(Object entity, Object[] state, EntityPersister<?> persister) {
 		final Object[] currentState = persister.getValues( entity );
 		System.arraycopy( currentState, 0, state, 0, state.length );
 		TypeHelper.deepCopy(
@@ -1028,7 +1028,7 @@ public class StatelessSessionImpl
 	}
 
 	// Hibernate Reactive may need to call this
-	protected boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
+	protected boolean firePreDelete(Object entity, Object id, EntityPersister<?> persister) {
 		final var callbacks = persister.getEntityCallbacks();
 		final boolean hasPreRemoveCallbacks = callbacks.hasRegisteredCallbacks( CallbackType.PRE_REMOVE );
 		final boolean hasPreDeleteCallbacks = callbacks.hasRegisteredCallbacks( CallbackType.PRE_DELETE );
@@ -1057,28 +1057,28 @@ public class StatelessSessionImpl
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+	protected void firePostInsert(Object entity, Object id, Object[] state, EntityPersister<?> persister) {
 		eventListenerGroups.eventListenerGroup_POST_INSERT.fireLazyEventOnEachListener(
 				() -> new PostInsertEvent( entity, id, state, persister, this ),
 				PostInsertEventListener::onPostInsert );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
+	protected void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister<?> persister) {
 		eventListenerGroups.eventListenerGroup_POST_UPDATE.fireLazyEventOnEachListener(
 				() -> new PostUpdateEvent( entity, id, state, null, null, persister, this ),
 				PostUpdateEventListener::onPostUpdate );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+	protected void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister<?> persister) {
 		eventListenerGroups.eventListenerGroup_POST_UPSERT.fireLazyEventOnEachListener(
 				() -> new PostUpsertEvent( entity, id, state, null, persister, this ),
 				PostUpsertEventListener::onPostUpsert );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostDelete(Object entity, Object id, EntityPersister persister) {
+	protected void firePostDelete(Object entity, Object id, EntityPersister<?> persister) {
 		eventListenerGroups.eventListenerGroup_POST_DELETE.fireLazyEventOnEachListener(
 				() -> new PostDeleteEvent( entity, id, null, persister, this ),
 				PostDeleteEventListener::onPostDelete );
@@ -1161,7 +1161,7 @@ public class StatelessSessionImpl
 	// Hibernate Reactive calls this
 	protected void forEachOwnedCollection(
 			Object entity, Object key,
-			EntityPersister persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
+			EntityPersister<?> persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
 		visitCollectionValues( persister, entity, (attribute, value) -> {
 			final var descriptor = attribute.getCollectionDescriptor();
 			final Object cacheKey = lockCacheItem( key, descriptor );
@@ -1216,14 +1216,14 @@ public class StatelessSessionImpl
 	// loading
 
 	@Override
-	protected <T> FindByKeyOperation<T> byKey(Class<T> entityClass, EntityPersister entityDescriptor, FindOption... options) {
+	protected <T> FindByKeyOperation<T> byKey(Class<T> entityClass, EntityPersister<?> entityDescriptor, FindOption... options) {
 		return byKey( entityClass, entityDescriptor, null, null, options );
 	}
 
 	@Override
 	protected <T> FindByKeyOperation<T> byKey(
 			Class<T> entityClass,
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			GraphSemantic graphSemantic,
 			RootGraphImplementor<T> rootGraph,
 			FindOption... options) {
@@ -1277,7 +1277,7 @@ public class StatelessSessionImpl
 
 	@Override
 	<E> List<E> findMultiple(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<E> graph,
 			@Nonnull List<?> keys,
@@ -1507,7 +1507,7 @@ public class StatelessSessionImpl
 
 	@Override
 	@Nonnull
-	public Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) {
+	public Object instantiate(@Nonnull EntityPersister<?> persister, @Nullable Object id) {
 		checkOpen();
 		return persister.instantiate( id, this );
 	}
@@ -1743,7 +1743,7 @@ public class StatelessSessionImpl
 
 	@Override
 	@Nonnull
-	public EntityPersister getEntityPersister(@Nullable String entityName, @Nonnull Object entity) {
+	public EntityPersister<?> getEntityPersister(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
 		//noinspection ConstantValue
 		if ( entity == null ) {
@@ -1911,7 +1911,7 @@ public class StatelessSessionImpl
 		return lockMode == null ? LockMode.NONE : StatelessLocking.getEffectiveLockMode( lockMode, this );
 	}
 
-	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
+	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister<?> persister) {
 		RootTenantCache.invalidateEntity( id, persister, this );
 		return writingToCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
@@ -1927,7 +1927,7 @@ public class StatelessSessionImpl
 		}, null );
 	}
 
-	protected void removeCacheItem(Object cacheKey, EntityPersister persister) {
+	protected void removeCacheItem(Object cacheKey, EntityPersister<?> persister) {
 		writingToCache( persister, cache -> cache.remove( this, cacheKey ) );
 	}
 
@@ -1968,7 +1968,7 @@ public class StatelessSessionImpl
 
 	@Override
 	public Object loadFromSecondLevelCache(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EntityKey entityKey,
 			@Nullable Object instanceToLoad,
 			@Nonnull LockMode lockMode) {

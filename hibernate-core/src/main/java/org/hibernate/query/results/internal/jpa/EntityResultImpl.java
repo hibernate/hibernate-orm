@@ -31,7 +31,7 @@ import java.util.Map;
 ///
 /// @author Steve Ebersole
 class EntityResultImpl<E> implements EntityResult<E> {
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 
 	private final JavaType<E> javaType;
 	private final NavigablePath navigablePath;
@@ -42,7 +42,7 @@ class EntityResultImpl<E> implements EntityResult<E> {
 	private final ImmutableFetchList fetches;
 
 	public EntityResultImpl(
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			JavaType<E> javaType,
 			NavigablePath navigablePath,
 			String resultAlias,
@@ -142,7 +142,7 @@ class EntityResultImpl<E> implements EntityResult<E> {
 	}
 
 	@Override
-	public FetchableContainer getReferencedMappingType() {
+	public FetchableContainer<?, ?, ?> getReferencedMappingType() {
 		return entityDescriptor;
 	}
 
@@ -157,7 +157,7 @@ class EntityResultImpl<E> implements EntityResult<E> {
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 		return fetches.get( fetchable );
 	}
 
@@ -172,7 +172,7 @@ class EntityResultImpl<E> implements EntityResult<E> {
 	}
 
 	@Override
-	public EntityValuedModelPart getEntityValuedModelPart() {
+	public EntityValuedModelPart<?> getEntityValuedModelPart() {
 		return entityDescriptor;
 	}
 }

@@ -17,10 +17,10 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 	//collections was severely triggering https://bugs.openjdk.org/browse/JDK-8180450 .
 	//Arrays are safe for types reads; not for writes! but we're only writing
 	//during initialization.
-	private final AttributeMapping[] list;
+	private final AttributeMapping<?, ?, ?>[] list;
 
-	private ImmutableAttributeMappingList(final ArrayList<AttributeMapping> objects) {
-		this.list = objects.toArray( new AttributeMapping[0] );
+	private ImmutableAttributeMappingList(final ArrayList<AttributeMapping<?, ?, ?>> objects) {
+		this.list = objects.toArray( new AttributeMapping<?, ?, ?>[0] );
 	}
 
 	@Override
@@ -30,19 +30,19 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 
 	@Nonnull
 	@Override
-	public AttributeMapping get(final int i) {
+	public AttributeMapping<?, ?, ?> get(final int i) {
 		return list[i]; //intentional unguarded array access: let it explode
 	}
 
 	@Override
-	public void forEach(@Nonnull Consumer<? super AttributeMapping> attributeMappingConsumer) {
+	public void forEach(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> attributeMappingConsumer) {
 		for ( var attributeMapping : list ) {
 			attributeMappingConsumer.accept( attributeMapping );
 		}
 	}
 
 	@Override
-	public void indexedForEach(@Nonnull final IndexedConsumer<? super AttributeMapping> consumer) {
+	public void indexedForEach(@Nonnull final IndexedConsumer<? super AttributeMapping<?, ?, ?>> consumer) {
 		for ( int i = 0; i < list.length; i++ ) {
 			consumer.accept( i, list[i] );
 		}
@@ -50,13 +50,13 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 
 	public static final class Builder {
 
-		private final ArrayList<AttributeMapping> builderList;
+		private final ArrayList<AttributeMapping<?, ?, ?>> builderList;
 
 		public Builder(final int sizeHint) {
 			builderList = new ArrayList<>( sizeHint );
 		}
 
-		public void add(final AttributeMapping attributeMapping) {
+		public void add(final AttributeMapping<?, ?, ?> attributeMapping) {
 			Objects.requireNonNull( attributeMapping );
 			builderList.add( attributeMapping );
 		}
@@ -65,11 +65,11 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 			return builderList.size();
 		}
 
-		AttributeMapping get(final int i) {
+		AttributeMapping<?, ?, ?> get(final int i) {
 			return builderList.get( i );
 		}
 
-		void set(final int i, final AttributeMapping attributeMapping) {
+		void set(final int i, final AttributeMapping<?, ?, ?> attributeMapping) {
 			Objects.requireNonNull( attributeMapping );
 			builderList.set( i, attributeMapping );
 		}

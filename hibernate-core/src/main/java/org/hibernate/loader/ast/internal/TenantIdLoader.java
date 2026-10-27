@@ -21,7 +21,7 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
  * The locking query addresses the physical tenant table directly, avoiding follow-on locking.
  */
 public class TenantIdLoader {
-	private final EntityPersister persister;
+	private final EntityPersister<?> persister;
 	private final String ownerSql;
 	private final String tenantSql;
 	private final String lockedTenantSql;
@@ -29,7 +29,7 @@ public class TenantIdLoader {
 	@Nullable
 	private final DatabaseSnapshotExecutor cacheInvalidationPlan;
 
-	public TenantIdLoader(@Nonnull EntityPersister persister) {
+	public TenantIdLoader(@Nonnull EntityPersister<?> persister) {
 		this.persister = persister;
 		ownerSql = createSql( false, false );
 		tenantSql = createSql( true, false );
@@ -72,7 +72,7 @@ public class TenantIdLoader {
 	Object version) {}
 
 	@Nonnull
-	private SingleIdArrayLoadPlan createLoadPlan(@Nonnull List<? extends ModelPart> parts) {
+	private SingleIdArrayLoadPlan createLoadPlan(@Nonnull List<? extends ModelPart<?, ?, ?>> parts) {
 		final var factory = persister.getFactory();
 		final var identifier = persister.getIdentifierMapping();
 		final var parameters = JdbcParametersList.newBuilder();

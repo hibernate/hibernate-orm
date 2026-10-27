@@ -5,7 +5,6 @@ import jakarta.annotation.Nonnull;
 import java.util.Locale;
 
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 
 /**
  * Describes a mapping related to any part of the app's domain model,
@@ -15,16 +14,16 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
  * @author Steve Ebersole
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
-public interface ValueMapping extends MappingModelExpressible, JavaTypedExpressible {
+public interface ValueMapping<J> extends MappingModelExpressible<J> {
 	/**
 	 * Descriptor for the type of this mapping
 	 */
 	@Nonnull
-	MappingType getMappedType();
+	MappingType<J> getMappedType();
 
 	@Nonnull
 	@Override
-	default JavaType<?> getExpressibleJavaType() {
+	default JavaType<J> getExpressibleJavaType() {
 		return getMappedType().getMappedJavaType();
 	}
 

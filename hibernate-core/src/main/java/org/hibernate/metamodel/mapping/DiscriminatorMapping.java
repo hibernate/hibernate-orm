@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModelPart, Fetchable {
+public interface DiscriminatorMapping<J> extends VirtualModelPart<J, J, J>, BasicValuedModelPart<J, J, J>, Fetchable<J, J, J> {
 	/**
 	 * Information about the value mappings
 	 */
@@ -44,7 +44,7 @@ public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModel
 	}
 
 	@Nonnull
-	JdbcMapping getUnderlyingJdbcMapping();
+	JdbcMapping<?> getUnderlyingJdbcMapping();
 
 	/**
 	 * The domain Java form, which is either {@code JavaType<Class>} (entity class)
@@ -73,7 +73,7 @@ public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModel
 	@Nonnull
 	Expression resolveSqlExpression(
 			@Nonnull NavigablePath navigablePath,
-			@Nullable JdbcMapping jdbcMappingToUse,
+			@Nullable JdbcMapping<?> jdbcMappingToUse,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAstCreationState creationState);
 

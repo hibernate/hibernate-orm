@@ -417,7 +417,7 @@ public class LoadQueryInfluencers implements Serializable {
 				: batchSizeOverride > 1;
 	}
 
-	public int effectiveBatchSize(EntityPersister persister) {
+	public int effectiveBatchSize(EntityPersister<?> persister) {
 		final var batchSizeOverride = fetchOptions.batchSize();
 		if ( batchSizeOverride != null ) {
 			return batchSizeOverride;
@@ -430,7 +430,7 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 	}
 
-	public boolean effectivelyBatchLoadable(@Nonnull EntityPersister persister) {
+	public boolean effectivelyBatchLoadable(@Nonnull EntityPersister<?> persister) {
 		final var batchSizeOverride = fetchOptions.batchSize();
 		return batchSizeOverride == null
 				? persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1
@@ -468,7 +468,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return false;
 	}
 
-	public boolean hasSubselectLoadableAttributes(@Nonnull EntityPersister persister) {
+	public boolean hasSubselectLoadableAttributes(@Nonnull EntityPersister<?> persister) {
 		return canUseAttributeFetchOptions( effectiveEntityGraph ) && persister.hasSubselectLoadableAttributes()
 			|| subselectFetchEnabled && persister.hasCollections()
 			|| hasSubselectLoadableCollectionsEnabledInProfile( persister )
@@ -476,7 +476,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public boolean hasSubselectLoadableAttributes(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nullable AppliedGraph appliedGraph) {
 		return canUseAttributeFetchOptions( appliedGraph ) && hasSubselectLoadableAttributes( persister )
 			|| hasSubselectLoadableCollectionsEnabledInGraph( appliedGraph, persister );
@@ -486,7 +486,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return appliedGraph == null || appliedGraph.getSemantic() != GraphSemantic.FETCH;
 	}
 
-	private boolean hasSubselectLoadableCollectionsEnabledInProfile(@Nonnull EntityPersister persister) {
+	private boolean hasSubselectLoadableCollectionsEnabledInProfile(@Nonnull EntityPersister<?> persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			final var sqlTranslationEngine = persister.getFactory().getSqlTranslationEngine();
 			for ( String profile : getEnabledFetchProfileNames() ) {
@@ -501,7 +501,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private boolean hasSubselectLoadableCollectionsEnabledInGraph(
 			@Nullable AppliedGraph appliedGraph,
-			@Nonnull EntityPersister persister) {
+			@Nonnull EntityPersister<?> persister) {
 		final var graph = appliedGraph == null ? null : appliedGraph.getGraph();
 		if ( graph == null || appliedGraph.getSemantic() == null ) {
 			return false;

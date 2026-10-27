@@ -11,13 +11,13 @@ public class PostgreSQLJsonPGObjectJsonType extends AbstractPostgreSQLJsonPGObje
 	public PostgreSQLJsonPGObjectJsonType() {
 		this( null, false );
 	}
-	private PostgreSQLJsonPGObjectJsonType(EmbeddableMappingType embeddableMappingType, boolean jsonb) {
+	private PostgreSQLJsonPGObjectJsonType(EmbeddableMappingType<?, ?, ?> embeddableMappingType, boolean jsonb) {
 		super( embeddableMappingType, jsonb );
 	}
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new PostgreSQLJsonPGObjectJsonType( mappingType, false );

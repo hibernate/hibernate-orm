@@ -26,9 +26,9 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  * @author Jan Schatteman
  */
 public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdLoader<E> {
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 
-	public AbstractMultiNaturalIdLoader(@Nonnull EntityMappingType entityDescriptor) {
+	public AbstractMultiNaturalIdLoader(@Nonnull EntityMappingType<?> entityDescriptor) {
 		this.entityDescriptor = entityDescriptor;
 	}
 
@@ -185,12 +185,12 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 
 	@Nonnull
 	@Override
-	public EntityMappingType getLoadable() {
+	public EntityMappingType<?> getLoadable() {
 		return getEntityDescriptor();
 	}
 
 	@Nonnull
-	protected final EntityMappingType getEntityDescriptor() {
+	protected final EntityMappingType<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 }

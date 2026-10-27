@@ -44,7 +44,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 ///
 /// @author Steve Ebersole
 public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiNaturalIdLoadOptions {
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister<?> entityDescriptor;
 
 	private KeyType keyType = KeyType.IDENTIFIER;
 
@@ -71,7 +71,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 
 	@SuppressWarnings({ "PatternVariableHidesField", "removal" })
 	public AbstractFindMultipleByKeyOperation(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nullable LockOptions defaultLockOptions,
 			@Nullable CacheMode defaultCacheMode,
 			boolean defaultReadOnly,
@@ -211,7 +211,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 		return getCacheMode() == CacheMode.REFRESH_SESSION;
 	}
 
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 
@@ -380,7 +380,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 	/// are both also deprecated.
 	@Deprecated
 	public AbstractFindMultipleByKeyOperation(
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			KeyType keyType,
 			FindMultipleOption.BatchSize batchSize,
 			FindMultipleOption.SessionCheckMode sessionCheckMode,

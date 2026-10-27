@@ -61,7 +61,7 @@ public class LockingHelper {
 	 * @see Session#lock
 	 */
 	public static void lockCollectionTable(
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			LockMode lockMode,
 			Timeout lockTimeout,
 			PersistentCollection<?> collectionToLock,
@@ -104,7 +104,7 @@ public class LockingHelper {
 		final ComparisonPredicate restriction;
 		if ( jdbcTypeCount == 1 ) {
 			final var jdbcParameter =
-					new SqlTypedMappingJdbcParameter( keyPart.getSelectable( 0 ) );
+					SqlTypedMappingJdbcParameter.create( keyPart.getSelectable( 0 ) );
 			keyDescriptor.breakDownJdbcValues(
 					collectionToLock.getKey(),
 					(valueIndex, value, jdbcValueMapping) -> {
@@ -123,7 +123,7 @@ public class LockingHelper {
 					(valueIndex, value, jdbcValueMapping) -> {
 						columnReferences.add( new ColumnReference( tableReference, jdbcValueMapping ) );
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+						final var jdbcParameter = SqlTypedMappingJdbcParameter.create( jdbcValueMapping );
 						jdbcParameters.add( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -149,7 +149,7 @@ public class LockingHelper {
 	 * @param ownerDetailsMap Details for each owner, whose collection-table rows should be locked.
 	 */
 	public static void lockCollectionTable(
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			LockMode lockMode,
 			Timeout lockTimeout,
 			Map<Object, EntityDetails> ownerDetailsMap,
@@ -230,8 +230,8 @@ public class LockingHelper {
 	}
 
 	private static void applySimpleCollectionKeyTableLockRestrictions(
-			PluralAttributeMapping attributeMapping,
-			ForeignKeyDescriptor keyDescriptor,
+			PluralAttributeMapping<?> attributeMapping,
+			ForeignKeyDescriptor<?, ?, ?> keyDescriptor,
 			InListPredicate restriction,
 			JdbcParameterBindingsImpl parameterBindings,
 			Map<Object, EntityDetails> ownerDetailsMap,
@@ -245,7 +245,7 @@ public class LockingHelper {
 					collectionInstance.getKey(),
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+						final var jdbcParameter = SqlTypedMappingJdbcParameter.create( jdbcValueMapping );
 						restriction.addExpression( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -256,8 +256,8 @@ public class LockingHelper {
 	}
 
 	private static InListPredicate applyCompositeCollectionKeyTableLockRestrictions(
-			PluralAttributeMapping attributeMapping,
-			ForeignKeyDescriptor keyDescriptor,
+			PluralAttributeMapping<?> attributeMapping,
+			ForeignKeyDescriptor<?, ?, ?> keyDescriptor,
 			TableReference tableReference,
 			JdbcParameterBindingsImpl parameterBindings,
 			Map<Object, EntityDetails> ownerDetailsMap,
@@ -288,7 +288,7 @@ public class LockingHelper {
 					collectionKeyValue,
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+						final var jdbcParameter = SqlTypedMappingJdbcParameter.create( jdbcValueMapping );
 						jdbcParameters.add( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -310,7 +310,7 @@ public class LockingHelper {
 	 * @param collectionKeys Keys of collection-table rows that should be locked.
 	 */
 	public static void lockCollectionTable(
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			LockMode lockMode,
 			Timeout lockTimeout,
 			List<CollectionKey> collectionKeys,
@@ -376,7 +376,7 @@ public class LockingHelper {
 	}
 
 	private static void applySimpleCollectionKeyTableLockRestrictions(
-			ForeignKeyDescriptor keyDescriptor,
+			ForeignKeyDescriptor<?, ?, ?> keyDescriptor,
 			InListPredicate restriction,
 			JdbcParameterBindingsImpl parameterBindings,
 			List<CollectionKey> collectionKeys,
@@ -386,7 +386,7 @@ public class LockingHelper {
 					collectionKey.getKey(),
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+						final var jdbcParameter = SqlTypedMappingJdbcParameter.create( jdbcValueMapping );
 						restriction.addExpression( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -397,8 +397,8 @@ public class LockingHelper {
 	}
 
 	private static InListPredicate applyCompositeCollectionKeyTableLockRestrictions(
-			PluralAttributeMapping attributeMapping,
-			ForeignKeyDescriptor keyDescriptor,
+			PluralAttributeMapping<?> attributeMapping,
+			ForeignKeyDescriptor<?, ?, ?> keyDescriptor,
 			TableReference tableReference,
 			JdbcParameterBindingsImpl parameterBindings,
 			List<CollectionKey> collectionKeys,
@@ -424,7 +424,7 @@ public class LockingHelper {
 					collectionKey.getKey(),
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
-						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+						final var jdbcParameter = SqlTypedMappingJdbcParameter.create( jdbcValueMapping );
 						jdbcParameters.add( jdbcParameter );
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, value ) );
@@ -479,7 +479,7 @@ public class LockingHelper {
 		}
 	}
 
-	public static void segmentLoadedValues(List<LoadedValuesCollector.LoadedEntityRegistration> registrations, Map<EntityMappingType, List<EntityKey>> map) {
+	public static void segmentLoadedValues(List<LoadedValuesCollector.LoadedEntityRegistration> registrations, Map<EntityMappingType<?>, List<EntityKey>> map) {
 		if ( registrations != null ) {
 			registrations.forEach( (registration) -> {
 				final var entityKeys =
@@ -493,7 +493,7 @@ public class LockingHelper {
 	public static void segmentLoadedCollections(
 			List<LoadedValuesCollector.LoadedCollectionRegistration> registrations,
 			PessimisticLockScope lockScope,
-			Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> map) {
+			Map<EntityMappingType<?>, Map<PluralAttributeMapping<?>, List<CollectionKey>>> map) {
 		if ( registrations != null ) {
 			registrations.forEach( (registration) -> {
 				final var pluralAttributeMapping = registration.collectionDescriptor();

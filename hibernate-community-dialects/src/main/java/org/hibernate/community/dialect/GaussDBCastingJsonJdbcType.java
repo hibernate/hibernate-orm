@@ -23,7 +23,7 @@ public class GaussDBCastingJsonJdbcType extends JsonJdbcType {
 
 	private final boolean jsonb;
 
-	public GaussDBCastingJsonJdbcType(boolean jsonb, EmbeddableMappingType embeddableMappingType) {
+	public GaussDBCastingJsonJdbcType(boolean jsonb, EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 		this.jsonb = jsonb;
 	}
@@ -35,7 +35,7 @@ public class GaussDBCastingJsonJdbcType extends JsonJdbcType {
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new GaussDBCastingJsonJdbcType( jsonb, mappingType );

@@ -121,7 +121,7 @@ import static org.hibernate.internal.util.StringHelper.unqualifyEntityName;
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
-public interface EntityPersister extends EntityMappingType, EntityMutationTarget, RootTableGroupProducer, AttributeSource {
+public interface EntityPersister<J> extends EntityMappingType<J>, EntityMutationTarget, RootTableGroupProducer<J, J, J>, AttributeSource {
 
 	/**
 	 * Finish the initialization of this object.
@@ -577,7 +577,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	@Nonnull
 	@Override
-	default AttributeMapping getAttributeMapping(int position) {
+	default AttributeMapping<?, ?, ?> getAttributeMapping(int position) {
 		return getAttributeMappings().get( position );
 	}
 
@@ -592,13 +592,13 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		int span = 0;
 		if ( domainValue instanceof Object[] values ) {
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
-				final AttributeMapping attributeMapping = getAttributeMapping( i );
+				final AttributeMapping<?, ?, ?> attributeMapping = getAttributeMapping( i );
 				span += attributeMapping.breakDownJdbcValues( values[ i ], offset + span, x, y, valueConsumer, session );
 			}
 		}
 		else {
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
-				final AttributeMapping attributeMapping = getAttributeMapping( i );
+				final AttributeMapping<?, ?, ?> attributeMapping = getAttributeMapping( i );
 				final Object attributeValue = domainValue == null ? null : attributeMapping.getValue( domainValue );
 				span += attributeMapping.breakDownJdbcValues(
 						attributeValue,
@@ -1139,12 +1139,12 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	@Nonnull
-	default List<? extends ModelPart> getGeneratedProperties(@Nonnull EventType timing) {
+	default List<? extends ModelPart<?, ?, ?>> getGeneratedProperties(@Nonnull EventType timing) {
 		return timing == EventType.INSERT ? getInsertGeneratedProperties() : getUpdateGeneratedProperties();
 	}
 
 	@Nonnull
-	default List<? extends ModelPart> getInsertGeneratedProperties() {
+	default List<? extends ModelPart<?, ?, ?>> getInsertGeneratedProperties() {
 		return Collections.emptyList();
 	}
 
@@ -1183,7 +1183,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 			@Nonnull SharedSessionContractImplementor session);
 
 	@Nonnull
-	default List<? extends ModelPart> getUpdateGeneratedProperties() {
+	default List<? extends ModelPart<?, ?, ?>> getUpdateGeneratedProperties() {
 		return Collections.emptyList();
 	}
 
@@ -1358,14 +1358,14 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *                            subclass of the entity mapped by this persister.
 	 */
 	@Nonnull
-	EntityPersister getSubclassEntityPersister(@Nullable Object instance, @Nonnull SessionFactoryImplementor factory);
+	EntityPersister<?> getSubclassEntityPersister(@Nullable Object instance, @Nonnull SessionFactoryImplementor factory);
 
 	@Nonnull
 	EntityRepresentationStrategy getRepresentationStrategy();
 
 	@Nonnull
 	@Override
-	default EntityPersister getEntityMappingType() {
+	default EntityPersister<J> getEntityMappingType() {
 		return this;
 	}
 

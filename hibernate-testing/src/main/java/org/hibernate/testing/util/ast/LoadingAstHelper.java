@@ -34,14 +34,14 @@ public class LoadingAstHelper {
 	}
 
 	public static <I> LoaderTranslation translateLoading(
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			I id,
 			SessionFactoryImplementor sessionFactory) {
 		return translateLoading( entityMappingType, List.of(id), sessionFactory );
 	}
 
 	public static <I> LoaderTranslation translateLoading(
-			EntityMappingType entityMappingType,
+			EntityMappingType<?> entityMappingType,
 			List<I> ids,
 			SessionFactoryImplementor sessionFactory) {
 		var jdbcParameters = new ArrayList<JdbcParameter>();
@@ -70,7 +70,7 @@ public class LoadingAstHelper {
 	}
 
 	private static <I> JdbcParameterBindings buildJdbcParameterBindings(
-			EntityIdentifierMapping identifierMapping,
+			EntityIdentifierMapping<?, ?, ?> identifierMapping,
 			List<I> ids,
 			ArrayList<JdbcParameter> jdbcParameters) {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );

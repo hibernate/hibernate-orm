@@ -29,7 +29,7 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 	private final StatelessLoadAccessContext loadAccessContext;
 
 	public StatelessFindByKeyOperation(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nonnull StatelessLoadAccessContext loadAccessContext,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<?> rootGraph,

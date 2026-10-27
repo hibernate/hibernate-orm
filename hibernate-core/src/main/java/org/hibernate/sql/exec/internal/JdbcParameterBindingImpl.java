@@ -12,10 +12,10 @@ import java.util.Locale;
  * @author Andrea Boriero
  */
 public class JdbcParameterBindingImpl implements JdbcParameterBinding {
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 	private final Object bindValue;
 
-	public JdbcParameterBindingImpl(JdbcMapping jdbcMapping, Object bindValue) {
+	public JdbcParameterBindingImpl(JdbcMapping<?> jdbcMapping, Object bindValue) {
 		assert bindValue == null || jdbcMapping == null || jdbcMapping.getJdbcJavaType().isInstance( bindValue )
 			|| jdbcMapping.getJdbcJavaType() instanceof BasicPluralJavaType<?> pluralJavaType
 				&& bindValue instanceof Object[] objects
@@ -28,7 +28,7 @@ public class JdbcParameterBindingImpl implements JdbcParameterBinding {
 	}
 
 	@Override
-	public JdbcMapping getBindType() {
+	public JdbcMapping<?> getBindType() {
 		return jdbcMapping;
 	}
 

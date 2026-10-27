@@ -36,7 +36,7 @@ public class DynamicStatusWithMultipleToManyRelationTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory().getMappingMetamodel()
+		final EntityPersister<?> persister = scope.getSessionFactory().getMappingMetamodel()
 				.findEntityDescriptor( FooEntity.class );
 		assertThat( persister.isDynamicUpdate() ).isFalse();
 	}

@@ -15,10 +15,10 @@ import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
  * additional command execution to retrieve the generated {@code IDENTITY} value
  */
 public class BasicSelectingDelegate extends AbstractSelectingDelegate {
-	final private EntityPersister persister;
+	final private EntityPersister<?> persister;
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public BasicSelectingDelegate(EntityPersister persister) {
+	public BasicSelectingDelegate(EntityPersister<?> persister) {
 		super( persister, EventType.INSERT, false, false );
 		this.persister = persister;
 	}

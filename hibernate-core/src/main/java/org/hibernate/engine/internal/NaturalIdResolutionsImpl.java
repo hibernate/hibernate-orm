@@ -31,7 +31,7 @@ import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
 public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 
 	private final StatefulPersistenceContext persistenceContext;
-	private final ConcurrentHashMap<EntityMappingType, EntityResolutions> resolutionsByEntity = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<EntityMappingType<?>, EntityResolutions> resolutionsByEntity = new ConcurrentHashMap<>();
 
 	/**
 	 * Constructs a NaturalIdXrefDelegate
@@ -51,7 +51,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		return persistenceContext.getSession();
 	}
 
-	public EntityResolutions getEntityResolutions(EntityMappingType entityMappingType) {
+	public EntityResolutions getEntityResolutions(EntityMappingType<?> entityMappingType) {
 		return resolutionsByEntity.get( entityMappingType );
 	}
 
@@ -60,13 +60,13 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public boolean cacheResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+	public boolean cacheResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor) {
 		validateNaturalId( entityDescriptor, naturalId );
 		return cacheResolutionLocally( id, naturalId, entityDescriptor );
 	}
 
 	@Override
-	public void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+	public void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType<?> entityDescriptor) {
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.cachingNaturalIdResolutionFromLoad(
 					entityDescriptor.getEntityName(),
@@ -91,7 +91,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	/**
 	 * Private, but see {@link #cacheResolution} for public version
 	 */
-	private boolean cacheResolutionLocally(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+	private boolean cacheResolutionLocally(Object id, Object naturalId, EntityMappingType<?> entityDescriptor) {
 		// by the time we get here, we assume that the natural id value has already been validated, so just assert
 		assert entityDescriptor.getNaturalIdMapping() != null;
 		assert isValidValue( naturalId, entityDescriptor );
@@ -118,7 +118,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public Object removeResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+	public Object removeResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor) {
 		final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 //		final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
 		validateNaturalId( persister, naturalId );
@@ -138,7 +138,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	public void manageLocalResolution(
 			Object id,
 			Object naturalIdValue,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			CachedNaturalIdValueSource source) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
@@ -148,7 +148,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public Object removeLocalResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+	public Object removeLocalResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
@@ -173,7 +173,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	 * second-level cache (NaturalIdDataAccess).  Returns the natural-id value previously
 	 * cached on the Session
 	 */
-	private Object removeNaturalIdCrossReference(Object id, Object naturalId, EntityPersister persister) {
+	private Object removeNaturalIdCrossReference(Object id, Object naturalId, EntityPersister<?> persister) {
 		validateNaturalId( persister, naturalId );
 		final Object sessionCachedNaturalId = removeSessionCachedNaturalIdValue( id, persister );
 		if ( persister.hasNaturalIdCache() ) {
@@ -190,13 +190,13 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 	private static void evictCachedNaturalId(
 			Object naturalId,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SharedSessionContractImplementor session) {
 		final NaturalIdDataAccess cacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
 		cacheAccessStrategy.evict( cacheAccessStrategy.generateCacheKey( naturalId, persister, session ) );
 	}
 
-	private Object removeSessionCachedNaturalIdValue(Object id, EntityPersister persister) {
+	private Object removeSessionCachedNaturalIdValue(Object id, EntityPersister<?> persister) {
 		final var entityResolutions = resolutionsByEntity.get( persister );
 		if ( entityResolutions != null ) {
 			final var cachedNaturalId = entityResolutions.pkToNaturalIdMap.remove( id );
@@ -213,7 +213,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			final Object id,
 			Object naturalId,
 			Object previousNaturalId,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			CachedNaturalIdValueSource source) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping != null && naturalIdMapping.getCacheAccess() != null ) {
@@ -228,7 +228,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	private void manageSharedResolution(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			final Object id,
 			Object naturalIdValues,
 			Object previousNaturalIdValues,
@@ -282,9 +282,9 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			Object id,
 			Object previousNaturalIdValues,
 			NaturalIdDataAccess cacheAccess,
-			EntityPersister rootEntityPersister,
+			EntityPersister<?> rootEntityPersister,
 			Object cacheKey,
-			EntityMappingType rootEntityDescriptor) {
+			EntityMappingType<?> rootEntityDescriptor) {
 		final var session = session();
 
 		final Object previousCacheKey =
@@ -357,8 +357,8 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			Object id,
 			NaturalIdDataAccess cacheAccess,
 			Object cacheKey,
-			EntityMappingType rootEntityDescriptor,
-			EntityPersister rootEntityPersister) {
+			EntityMappingType<?> rootEntityDescriptor,
+			EntityPersister<?> rootEntityPersister) {
 		final var session = session();
 
 		final var statistics = session.getFactory().getStatistics();
@@ -405,12 +405,12 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	private void cacheFromLoad(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object id,
 			Object cacheKey,
 			NaturalIdDataAccess cacheAccess,
-			EntityMappingType rootEntityDescriptor,
-			EntityPersister rootEntityPersister) {
+			EntityMappingType<?> rootEntityDescriptor,
+			EntityPersister<?> rootEntityPersister) {
 		final var session = session();
 		// prevent identical re-caching
 		if ( fromSharedCache( session, cacheKey, persister, cacheAccess ) == null ) {
@@ -445,12 +445,12 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor) {
 		removeSharedResolution( id, naturalId, entityDescriptor, false );
 	}
 
 	@Override
-	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean delayToAfterTransactionCompletion) {
+	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor, boolean delayToAfterTransactionCompletion) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			final var cacheAccess = naturalIdMapping.getCacheAccess();
@@ -489,7 +489,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public void handleSynchronization(Object pk, Object entity, EntityMappingType entityDescriptor) {
+	public void handleSynchronization(Object pk, Object entity, EntityMappingType<?> entityDescriptor) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
@@ -510,7 +510,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public void handleEviction(Object id, Object object, EntityMappingType entityDescriptor) {
+	public void handleEviction(Object id, Object object, EntityMappingType<?> entityDescriptor) {
 		removeResolution( id, findCachedNaturalIdById( id, entityDescriptor ), entityDescriptor );
 	}
 
@@ -523,7 +523,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	 *
 	 * @return {@code true} if the given naturalIdValues match the current cached values; {@code false} otherwise.
 	 */
-	public boolean sameAsCached(EntityPersister persister, Object pk, Object naturalIdValues) {
+	public boolean sameAsCached(EntityPersister<?> persister, Object pk, Object naturalIdValues) {
 		final var entityNaturalIdResolutionCache = resolutionsByEntity.get( persister );
 		return entityNaturalIdResolutionCache != null
 			&& entityNaturalIdResolutionCache.sameAsCached( pk, naturalIdValues );
@@ -537,7 +537,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	 *
 	 * @return The root persister.
 	 */
-	protected EntityPersister locatePersisterForKey(EntityPersister persister) {
+	protected EntityPersister<?> locatePersisterForKey(EntityPersister<?> persister) {
 		return persister.getRootEntityDescriptor().getEntityPersister();
 	}
 
@@ -550,7 +550,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	 * @param entityDescriptor The entity type descriptor
 	 * @param naturalIdValues The natural id values
 	 */
-	protected void validateNaturalId(EntityMappingType entityDescriptor, Object naturalIdValues) {
+	protected void validateNaturalId(EntityMappingType<?> entityDescriptor, Object naturalIdValues) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping == null ) {
 			throw new IllegalArgumentException( "Entity did not define a natural id" );
@@ -558,7 +558,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		naturalIdMapping.validateInternalForm( naturalIdValues );
 	}
 
-	private boolean isValidValue(Object naturalIdValues, EntityMappingType entityDescriptor) {
+	private boolean isValidValue(Object naturalIdValues, EntityMappingType<?> entityDescriptor) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping == null ) {
 			throw new IllegalArgumentException( "Entity did not define a natural id" );
@@ -569,7 +569,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public Object findCachedNaturalIdById(Object id, EntityMappingType entityDescriptor) {
+	public Object findCachedNaturalIdById(Object id, EntityMappingType<?> entityDescriptor) {
 		final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 		final var entityNaturalIdResolutionCache = resolutionsByEntity.get( persister );
 		if ( entityNaturalIdResolutionCache == null ) {
@@ -582,7 +582,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public Object findCachedIdByNaturalId(@Nullable Object naturalId, EntityMappingType entityDescriptor) {
+	public Object findCachedIdByNaturalId(@Nullable Object naturalId, EntityMappingType<?> entityDescriptor) {
 		final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 		validateNaturalId( persister, naturalId );
 		final var resolutionCache = resolutionsByEntity.get( persister );
@@ -647,7 +647,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 	private void storeInResolutionCache(
 			EntityResolutions resolutionCache,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object pk,
 			Resolution cachedNaturalId) {
 
@@ -664,7 +664,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public Collection<?> getCachedPkResolutions(EntityMappingType entityDescriptor) {
+	public Collection<?> getCachedPkResolutions(EntityMappingType<?> entityDescriptor) {
 		final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 		final var entityNaturalIdResolutionCache = resolutionsByEntity.get( persister );
 		if ( entityNaturalIdResolutionCache != null ) {
@@ -686,7 +686,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	 *
 	 * @see org.hibernate.NaturalIdLoadAccess#setSynchronizationEnabled
 	 */
-	public void stashInvalidNaturalIdReference(EntityPersister persister, Object invalidNaturalIdValues) {
+	public void stashInvalidNaturalIdReference(EntityPersister<?> persister, Object invalidNaturalIdValues) {
 		persister = locatePersisterForKey( persister );
 		final var entityNaturalIdResolutionCache = resolutionsByEntity.get( persister );
 		if ( entityNaturalIdResolutionCache == null ) {
@@ -720,23 +720,23 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	public static class EntityResolutions implements Serializable {
 		private final PersistenceContext persistenceContext;
 
-		private final EntityMappingType entityDescriptor;
+		private final EntityMappingType<?> entityDescriptor;
 
 		private final Map<Object, Resolution> pkToNaturalIdMap = new ConcurrentHashMap<>();
 		private final Map<Resolution, Object> naturalIdToPkMap = new ConcurrentHashMap<>();
 
 		private List<Resolution> invalidNaturalIdList;
 
-		private EntityResolutions(EntityMappingType entityDescriptor, PersistenceContext persistenceContext) {
+		private EntityResolutions(EntityMappingType<?> entityDescriptor, PersistenceContext persistenceContext) {
 			this.entityDescriptor = entityDescriptor;
 			this.persistenceContext = persistenceContext;
 		}
 
-		public EntityMappingType getEntityDescriptor() {
+		public EntityMappingType<?> getEntityDescriptor() {
 			return entityDescriptor;
 		}
 
-		public EntityPersister getPersister() {
+		public EntityPersister<?> getPersister() {
 			return getEntityDescriptor().getEntityPersister();
 		}
 
@@ -811,12 +811,12 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	private static class ResolutionImpl implements Resolution, Serializable {
 		private final PersistenceContext persistenceContext;
 
-		private final EntityMappingType entityDescriptor;
+		private final EntityMappingType<?> entityDescriptor;
 		private final Object naturalIdValue;
 
 		private final int hashCode;
 
-		public ResolutionImpl(EntityMappingType entityDescriptor, Object naturalIdValue, PersistenceContext persistenceContext) {
+		public ResolutionImpl(EntityMappingType<?> entityDescriptor, Object naturalIdValue, PersistenceContext persistenceContext) {
 			this.entityDescriptor = entityDescriptor;
 			this.naturalIdValue = naturalIdValue;
 			this.persistenceContext = persistenceContext;

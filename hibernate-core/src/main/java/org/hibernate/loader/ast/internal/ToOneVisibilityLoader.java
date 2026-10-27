@@ -21,11 +21,11 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /** Checks association visibility when the owner SQL could not supply a restricted target key. */
 public final class ToOneVisibilityLoader {
-	private final ToOneAttributeMapping association;
+	private final ToOneAttributeMapping<?> association;
 	private volatile @Nullable Plan identifierPlan;
 	private volatile @Nullable Plan uniqueKeyPlan;
 
-	public ToOneVisibilityLoader(ToOneAttributeMapping association) {
+	public ToOneVisibilityLoader(ToOneAttributeMapping<?> association) {
 		this.association = association;
 	}
 
@@ -58,9 +58,9 @@ public final class ToOneVisibilityLoader {
 
 	private Plan createPlan(boolean byUniqueKey, LoadQueryInfluencers influencers, boolean captureFilters) {
 		final var target = association.getEntityMappingType();
-		final ModelPart attribute = byUniqueKey
+		final ModelPart<?, ?, ?> attribute = byUniqueKey
 				? target.findByPath( association.getReferencedPropertyName() ) : target.getIdentifierMapping();
-		final ModelPart key = attribute instanceof ToOneAttributeMapping toOne
+		final ModelPart<?, ?, ?> key = attribute instanceof ToOneAttributeMapping<?> toOne
 				? toOne.getForeignKeyDescriptor() : attribute;
 		final var parameters = JdbcParametersList.newBuilder();
 		final var select = LoaderSelectBuilder.createAssociationKeySelect( association, key, influencers, parameters::add );

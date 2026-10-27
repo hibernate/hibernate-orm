@@ -63,7 +63,7 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 /**
  * Base support for EmbeddableMappingType implementations
  */
-public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType,
+public abstract class AbstractEmbeddableMapping<J, M, R> implements EmbeddableMappingType<J, M, R>,
 		EmbeddableMappingType.ConcreteEmbeddableType {
 	protected AttributeMappingsList attributeMappings;
 	@SuppressWarnings("NullAway.Init") // Assigned during mapping model initialization.
@@ -92,7 +92,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
-	public boolean declaresAttribute(@Nonnull AttributeMapping attributeMapping) {
+	public boolean declaresAttribute(@Nonnull AttributeMapping<?, ?, ?> attributeMapping) {
 		return true;
 	}
 
@@ -120,9 +120,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	@Nonnull
 	@Override
-	public JavaType<?> getMappedJavaType() {
-		return getRepresentationStrategy().getMappedJavaType();
-	}
+	public abstract JavaType<M> getMappedJavaType();
 
 	@Nonnull
 	@Override
@@ -186,11 +184,11 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	protected boolean inverseInitializeCallback(
-			TableGroupProducer declaringTableGroupProducer,
+			TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
-			EmbeddableMappingType inverseMappingType,
+			EmbeddableMappingType<?, ?, ?> inverseMappingType,
 			MappingModelCreationProcess creationProcess,
-			ManagedMappingType declaringType) {
+			ManagedMappingType<?, ?, ?> declaringType) {
 		final int size = inverseMappingType.getNumberOfAttributeMappings();
 		if ( size == 0 ) {
 			return false;
@@ -200,7 +198,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		// We copy the attributes from the inverse mappings and replace the selection mappings
 		for ( int j = 0; j < size; j++ ) {
 			var attributeMapping = inverseMappingType.getAttributeMapping( j );
-			if ( attributeMapping instanceof BasicAttributeMapping original ) {
+			if ( attributeMapping instanceof BasicAttributeMapping<?> original ) {
 				final var selectableMapping = selectableMappings.getSelectable( currentIndex );
 				attributeMapping = BasicAttributeMapping.withSelectableMapping(
 						declaringType,
@@ -212,7 +210,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				);
 				currentIndex++;
 			}
-			else if ( attributeMapping instanceof ToOneAttributeMapping original ) {
+			else if ( attributeMapping instanceof ToOneAttributeMapping<?> original ) {
 				final var foreignKeyDescriptor = original.getForeignKeyDescriptor();
 				if ( foreignKeyDescriptor == null ) {
 					// This is expected to happen when processing a
@@ -240,7 +238,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping = toOne;
 				currentIndex += attributeMapping.getJdbcTypeCount();
 			}
-			else if ( attributeMapping instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableValuedModelPart ) {
 				final var subMappings = new SelectableMapping[attributeMapping.getJdbcTypeCount()];
 				for ( int i = 0; i < subMappings.length; i++ ) {
 					subMappings[i] = selectableMappings.getSelectable( currentIndex++ );
@@ -270,11 +268,11 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			CompositeType compositeType,
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
-			EmbeddableMappingType declarer,
+			EmbeddableMappingType<?, ?, ?> declarer,
 			EmbeddableRepresentationStrategy representationStrategy,
 			AttributeTypeValidator attributeTypeValidator,
 			ConcreteTableResolver concreteTableResolver,
-			Consumer<AttributeMapping> attributeConsumer,
+			Consumer<AttributeMapping<?, ?, ?>> attributeConsumer,
 			SuccessfulCompletionCallback completionCallback,
 			MappingModelCreationProcess creationProcess) {
 		final var  creationContext = creationProcess.getCreationContext();
@@ -294,10 +292,10 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			attributeTypeValidator.check( bootPropertyDescriptor.getName(), subtype );
 
 			final var propertyAccess = representationStrategy.resolvePropertyAccess( bootPropertyDescriptor );
-			final AttributeMapping attributeMapping;
+			final AttributeMapping<?, ?, ?> attributeMapping;
 
 			final var value = bootPropertyDescriptor.getValue();
-			if ( subtype instanceof BasicType ) {
+			if ( subtype instanceof BasicType<?> ) {
 				final BasicValue basicValue = (BasicValue) value;
 				final Selectable selectable = basicValue.getColumn();
 				final String containingTableExpression;
@@ -408,7 +406,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						cascadeStyle
 				);
 
-				attributeMapping = new DiscriminatedAssociationAttributeMapping(
+				attributeMapping = new DiscriminatedAssociationAttributeMapping<>(
 						navigableRole.append( bootPropertyDescriptor.getName() ),
 						typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object.class ),
 						declarer,
@@ -513,17 +511,17 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
-	public Fetchable getFetchable(int position) {
+	public Fetchable<?, ?, ?> getFetchable(int position) {
 		return getAttributeMappings().get( position );
 	}
 
 	@Override
-	public void visitFetchables(Consumer<? super Fetchable> consumer, EntityMappingType treatTargetType) {
+	public void visitFetchables(Consumer<? super Fetchable<?, ?, ?>> consumer, EntityMappingType<?> treatTargetType) {
 		forEachAttributeMapping( consumer );
 	}
 
 	@Override
-	public void visitFetchables(IndexedConsumer<? super Fetchable> indexedConsumer, EntityMappingType treatTargetType) {
+	public void visitFetchables(IndexedConsumer<? super Fetchable<?, ?, ?>> indexedConsumer, EntityMappingType<?> treatTargetType) {
 		this.getAttributeMappings().indexedForEach( indexedConsumer );
 	}
 
@@ -534,13 +532,13 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	@Nonnull
 	@Override
-	public AttributeMapping getAttributeMapping(int position) {
+	public AttributeMapping<?, ?, ?> getAttributeMapping(int position) {
 		return getAttributeMappings().get( position );
 	}
 
 	@Nullable
 	@Override
-	public AttributeMapping findAttributeMapping(@Nonnull String name) {
+	public AttributeMapping<?, ?, ?> findAttributeMapping(@Nonnull String name) {
 		final var attributes = getAttributeMappings();
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final var attribute = attributes.get( i );
@@ -591,7 +589,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return getSelectableMappings().forEachSelectable(
 				offset,
 				(index, selectable) -> action.accept( index, selectable.getJdbcMapping() )
@@ -600,28 +598,28 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		return getSelectable( index ).getJdbcMapping();
 	}
 
 	@Override
-	public void forEachAttributeMapping(@Nonnull final IndexedConsumer<? super AttributeMapping> consumer) {
+	public void forEachAttributeMapping(@Nonnull final IndexedConsumer<? super AttributeMapping<?, ?, ?>> consumer) {
 		getAttributeMappings().indexedForEach( consumer );
 	}
 
 	@Override
-	public void forEachAttributeMapping(@Nonnull final Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(@Nonnull final Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		getAttributeMappings().forEach( action );
 	}
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		return findAttributeMapping( name );
 	}
 
 	@Override
-	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTarget) {
 		final var attributes = getAttributeMappings();
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			consumer.accept( i, attributes.get(i) );
@@ -629,7 +627,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
-	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTargetType) {
 		forEachAttributeMapping( consumer );
 	}
 
@@ -689,7 +687,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			}
 		}
 		if ( isPolymorphic() ) {
-			final EmbeddableDiscriminatorMapping discriminatorMapping = getDiscriminatorMapping();
+			final EmbeddableDiscriminatorMapping<?> discriminatorMapping = getDiscriminatorMapping();
 			final Object discriminatorValue = value != null ?
 					castNonNull( discriminatorMapping ).getDiscriminatorValue( value.getClass().getName() )
 					: null;
@@ -734,7 +732,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		if ( value == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final var attributeMapping = attributeMappings.get( i );
-				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+				if ( !(attributeMapping instanceof PluralAttributeMapping<?>) ) {
 					span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 				}
 			}
@@ -742,7 +740,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		else {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final var attributeMapping = attributeMappings.get( i );
-				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+				if ( !(attributeMapping instanceof PluralAttributeMapping<?>) ) {
 					span += attributeMapping.forEachJdbcValue( getValue( value, i ), span + offset, x, y, valuesConsumer, session );
 				}
 			}
@@ -752,7 +750,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	protected void addAttribute(
 			ImmutableAttributeMappingList.Builder attributeMappings,
-			AttributeMapping attributeMapping) {
+			AttributeMapping<?, ?, ?> attributeMapping) {
 		// check if we've already seen this attribute...
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final var previous = attributeMappings.get( i );

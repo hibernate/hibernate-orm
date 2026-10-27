@@ -51,7 +51,7 @@ public class OrdinalFunction
 			SqlAstTranslator<?> walker) {
 		Expression singleExpression = (Expression) arguments.get( 0 );
 
-		JdbcMapping singleJdbcMapping = singleExpression.getExpressionType().getSingleJdbcMapping();
+		JdbcMapping<?> singleJdbcMapping = singleExpression.getExpressionType().getSingleJdbcMapping();
 		JdbcType argumentType = singleJdbcMapping.getJdbcType();
 
 		if ( argumentType.isInteger() ) {

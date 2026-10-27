@@ -38,8 +38,8 @@ public record EntityTableDescriptor(
 		TableMapping.MutationDetails updateDetails,
 		TableMapping.MutationDetails deleteDetails,
 		List<ColumnDescriptor> columns,
-		List<AttributeMapping> attributes,
-		Map<AttributeMapping,List<Integer>> attributeColumnIndexes,
+		List<AttributeMapping<?, ?, ?>> attributes,
+		Map<AttributeMapping<?, ?, ?>,List<Integer>> attributeColumnIndexes,
 		TableKeyDescriptor keyDescriptor) implements TableDescriptor, Serializable {
 
 	public EntityTableDescriptor {
@@ -47,7 +47,7 @@ public record EntityTableDescriptor(
 		columns = List.copyOf(columns);
 	}
 
-	public void forEachAttributeColumn(AttributeMapping attribute, Consumer<ColumnDescriptor> consumer) {
+	public void forEachAttributeColumn(AttributeMapping<?, ?, ?> attribute, Consumer<ColumnDescriptor> consumer) {
 		var columnIndexes = attributeColumnIndexes().get( attribute );
 		if ( columnIndexes == null ) {
 			// Attribute has no columns mapped to this table (e.g., plural attributes, or attributes with no selectables)

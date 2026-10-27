@@ -38,29 +38,29 @@ public class TablePerClassInheritanceWithAbstractRootTest {
 
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister customerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> customerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( Customer.class );
-		final EntityPersister domesticCustomerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> domesticCustomerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( DomesticCustomer.class );
-		final EntityPersister foreignCustomerDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> foreignCustomerDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( ForeignCustomer.class );
 
-		assert customerDescriptor instanceof UnionSubclassEntityPersister;
+		assert customerDescriptor instanceof UnionSubclassEntityPersister<?>;
 
 		assert customerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert !customerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
 		assert !customerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
-		assert domesticCustomerDescriptor instanceof UnionSubclassEntityPersister;
+		assert domesticCustomerDescriptor instanceof UnionSubclassEntityPersister<?>;
 
 		assert domesticCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert domesticCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
 		assert !domesticCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
-		assert foreignCustomerDescriptor instanceof UnionSubclassEntityPersister;
+		assert foreignCustomerDescriptor instanceof UnionSubclassEntityPersister<?>;
 
 		assert foreignCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert !foreignCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );

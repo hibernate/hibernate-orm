@@ -17,18 +17,18 @@ public interface GeneratedValues {
 	/**
 	 * Register a generated value for the corresponding {@link ModelPart}
 	 */
-	void addGeneratedValue(ModelPart modelPart, Object value);
+	void addGeneratedValue(ModelPart<?, ?, ?> modelPart, Object value);
 
 	/**
 	 * Retrieve a generated value for the requested {@link ModelPart}.
 	 */
-	Object getGeneratedValue(ModelPart modelPart);
+	Object getGeneratedValue(ModelPart<?, ?, ?> modelPart);
 
 	/**
 	 * Retrieves a list of generated values corresponding to the list of requested {@link ModelPart}s.
 	 * Ensures the order of the values in the returned list corresponds to the input properties.
 	 */
-	List<Object> getGeneratedValues(List<? extends ModelPart> modelParts);
+	List<Object> getGeneratedValues(List<? extends ModelPart<?, ?, ?>> modelParts);
 
 	void apply(GeneratedValues generatedValues);
 }

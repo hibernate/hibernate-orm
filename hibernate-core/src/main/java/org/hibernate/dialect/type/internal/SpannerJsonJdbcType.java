@@ -19,7 +19,7 @@ public class SpannerJsonJdbcType extends JsonJdbcType {
 
 	public static final SpannerJsonJdbcType INSTANCE = new SpannerJsonJdbcType( null );
 
-	public SpannerJsonJdbcType(EmbeddableMappingType embeddableMappingType) {
+	public SpannerJsonJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 	}
 
@@ -30,7 +30,7 @@ public class SpannerJsonJdbcType extends JsonJdbcType {
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new SpannerJsonJdbcType( mappingType );

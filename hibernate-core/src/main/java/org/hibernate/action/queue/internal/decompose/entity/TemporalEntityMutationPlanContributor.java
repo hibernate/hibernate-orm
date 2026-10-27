@@ -28,14 +28,14 @@ import static org.hibernate.generator.EventType.UPDATE;
 ///
 /// @author Steve Ebersole
 public class TemporalEntityMutationPlanContributor implements EntityMutationPlanContributor {
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final SessionFactoryImplementor sessionFactory;
 	private final TemporalMapping temporalMapping;
 	private final EntityInsertMutationPlanner insertMutationPlanner;
 	private final MutationOperation staticEndOperation;
 
 	public TemporalEntityMutationPlanContributor(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityPersister = entityPersister;
 		this.sessionFactory = sessionFactory;

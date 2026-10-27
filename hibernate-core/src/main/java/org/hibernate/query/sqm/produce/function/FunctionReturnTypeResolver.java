@@ -86,8 +86,8 @@ public interface FunctionReturnTypeResolver {
 	 */
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	@Nullable
-	BasicValuedMapping resolveFunctionReturnType(
-			Supplier<BasicValuedMapping> impliedTypeAccess,
+	BasicValuedMapping<?> resolveFunctionReturnType(
+			Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 			List<? extends SqlAstNode> arguments);
 	/**
 	 * The return type in a format suitable for display to the user.

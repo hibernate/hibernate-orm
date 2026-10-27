@@ -10,13 +10,13 @@ import org.hibernate.metamodel.spi.ValueAccess;
  * EmbeddableInstantiator used for instantiating "proxies" of an embeddable.
  */
 public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstantiator {
-	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
+	private final Supplier<EmbeddableMappingType<?, ?, ?>> embeddableMappingAccess;
 	private final Class<?> proxiedClass;
 	private final BasicProxyFactory factory;
 
 	public EmbeddableInstantiatorProxied(
 			Class<?> proxiedClass,
-			Supplier<EmbeddableMappingType> embeddableMappingAccess,
+			Supplier<EmbeddableMappingType<?, ?, ?>> embeddableMappingAccess,
 			BasicProxyFactory factory) {
 		this.proxiedClass = proxiedClass;
 		this.embeddableMappingAccess = embeddableMappingAccess;

@@ -83,7 +83,7 @@ public class TableUpdateNoSet
 	}
 
 	@Override
-	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
+	public void forEachParameter(Consumer<ColumnValueParameter<?>> consumer) {
 	}
 
 	@Override

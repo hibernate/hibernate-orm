@@ -47,7 +47,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			boolean updateable,
 			boolean partitioned,
 			boolean isFormula,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<?> jdbcMapping) {
 		this(
 				containingTableExpression,
 				selectionExpression,
@@ -86,7 +86,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			boolean updateable,
 			boolean partitioned,
 			boolean isFormula,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<?> jdbcMapping) {
 		super( length, arrayLength, precision, scale, temporalPrecision, jdbcMapping );
 		assert selectionExpression != null;
 		// Save memory by using interned strings. Probability is high that we have multiple duplicate strings
@@ -110,7 +110,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			// if the selectable is a formula. If it's a formula, the value should be non-null
 			@Nullable final String propertyPath,
 			@Nullable final SelectablePath parentPath,
-			final JdbcMapping jdbcMapping,
+			final JdbcMapping<?> jdbcMapping,
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,

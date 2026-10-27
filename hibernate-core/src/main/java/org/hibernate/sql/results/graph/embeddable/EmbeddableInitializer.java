@@ -20,7 +20,7 @@ import jakarta.annotation.Nullable;
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EmbeddableInitializer<Data extends InitializerData> extends InitializerParent<Data> {
 	@Override
-	EmbeddableValuedModelPart getInitializedPart();
+	EmbeddableValuedModelPart<?, ?, ?> getInitializedPart();
 
 	@Override
 	@Nullable InitializerParent<?> getParent();

@@ -48,17 +48,17 @@ public class CharacterArrayMappingTests {
 				.getMappingMetamodel();
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final JdbcTypeRegistry jdbcRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityWithCharArrays.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityWithCharArrays.class);
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
+			final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("primitive");
+			final JdbcMapping<?> jdbcMapping = attributeMapping.getJdbcMapping();
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR)));
 		}
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
+			final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("wrapper");
+			final JdbcMapping<?> jdbcMapping = attributeMapping.getJdbcMapping();
 			if ( dialect.getArraySupport().supports( ArraySupport.Capability.STANDARD_ARRAY ) ) {
 				assertThat( jdbcMapping.getJdbcType(), instanceOf( ArrayJdbcType.class ) );
 				assertThat(
@@ -75,21 +75,21 @@ public class CharacterArrayMappingTests {
 		}
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperOld");
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
+			final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("wrapperOld");
+			final JdbcMapping<?> jdbcMapping = attributeMapping.getJdbcMapping();
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR)));
 		}
 
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitiveClob");
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
+			final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("primitiveClob");
+			final JdbcMapping<?> jdbcMapping = attributeMapping.getJdbcMapping();
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.CLOB)));
 		}
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperClob");
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
+			final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("wrapperClob");
+			final JdbcMapping<?> jdbcMapping = attributeMapping.getJdbcMapping();
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.CLOB)));
 		}
 	}

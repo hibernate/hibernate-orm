@@ -33,19 +33,19 @@ public class SimplePojoXmlTests {
 	public void testBinding(SessionFactoryScope factoryScope) {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
-		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
+		final EntityPersister<?> entityDescriptor = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.findEntityDescriptor( SimpleEntity.class );
 
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityDescriptor.getIdentifierMapping();
 		assertThat( identifierMapping, instanceOf( BasicEntityIdentifierMapping.class ) );
-		final BasicEntityIdentifierMapping bid = (BasicEntityIdentifierMapping) identifierMapping;
+		final BasicEntityIdentifierMapping<?, ?, ?> bid = (BasicEntityIdentifierMapping<?, ?, ?>) identifierMapping;
 		assertThat( bid.getFetchableName(), is( "id" ) );
 		assertThat( bid.getPartName(), is( EntityIdentifierMapping.ID_ROLE_NAME ) );
 
 		assertThat( entityDescriptor.getNumberOfAttributeMappings(), is( 1 ) );
 		assertThat( entityDescriptor.getNumberOfDeclaredAttributeMappings(), is( 1 ) );
-		final AttributeMapping nameAttr = entityDescriptor.findAttributeMapping( "name" );
+		final AttributeMapping<?, ?, ?> nameAttr = entityDescriptor.findAttributeMapping( "name" );
 		assertThat( nameAttr, notNullValue() );
 	}
 

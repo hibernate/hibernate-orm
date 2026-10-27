@@ -9,7 +9,7 @@ import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public interface TableGroupProducer extends ModelPartContainer {
+public interface TableGroupProducer<J, M, R> extends ModelPartContainer<J, M, R> {
 	/**
 	 * Get the "stem" used as the base for generating SQL table aliases for table
 	 * references that are part of the TableGroup being generated

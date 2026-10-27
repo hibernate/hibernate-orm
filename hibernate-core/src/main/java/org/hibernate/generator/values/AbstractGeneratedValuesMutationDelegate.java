@@ -16,7 +16,7 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.crea
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public abstract class AbstractGeneratedValuesMutationDelegate implements GeneratedValuesMutationDelegate {
-	protected final EntityPersister persister;
+	protected final EntityPersister<?> persister;
 	private final EventType timing;
 	private final boolean supportsArbitraryValues;
 	private final boolean supportsRowId;
@@ -24,13 +24,13 @@ public abstract class AbstractGeneratedValuesMutationDelegate implements Generat
 	protected final GeneratedValuesMappingProducer jdbcValuesMappingProducer;
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
-	public AbstractGeneratedValuesMutationDelegate(EntityPersister persister, EventType timing) {
+	public AbstractGeneratedValuesMutationDelegate(EntityPersister<?> persister, EventType timing) {
 		this( persister, timing, true, true );
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public AbstractGeneratedValuesMutationDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing,
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {
@@ -43,11 +43,11 @@ public abstract class AbstractGeneratedValuesMutationDelegate implements Generat
 	}
 
 	public AbstractGeneratedValuesMutationDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing,
 			boolean supportsArbitraryValues,
 			boolean supportsRowId,
-			List<? extends ModelPart> generatedProperties) {
+			List<? extends ModelPart<?, ?, ?>> generatedProperties) {
 		this.persister = persister;
 		this.timing = timing;
 		this.supportsArbitraryValues = supportsArbitraryValues;

@@ -64,7 +64,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * @return {@code true} indicates the dirty check can be done; {@code false} indicates it cannot.
 	 */
 	@SPI(SPI.Role.USE)
-	boolean canDirtyCheck(Object entity, EntityPersister persister, Session session);
+	boolean canDirtyCheck(Object entity, EntityPersister<?> persister, Session session);
 
 	/**
 	 * The callback used by Hibernate to determine if the given entity is dirty.  Only called if the previous
@@ -77,7 +77,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * @return {@code true} indicates the entity is dirty; {@code false} indicates the entity is not dirty.
 	 */
 	@SPI(SPI.Role.USE)
-	boolean isDirty(Object entity, EntityPersister persister, Session session);
+	boolean isDirty(Object entity, EntityPersister<?> persister, Session session);
 
 	/**
 	 * Callback used by Hibernate to signal that the entity dirty flag should be cleared.  Generally this
@@ -88,7 +88,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * @param session The session from which this call originates.
 	 */
 	@SPI(SPI.Role.USE)
-	void resetDirty(Object entity, EntityPersister persister, Session session);
+	void resetDirty(Object entity, EntityPersister<?> persister, Session session);
 
 	/**
 	 * Callback used to hook into Hibernate algorithm for determination of which attributes have changed.  Applications
@@ -101,7 +101,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * @param dirtyCheckContext The callback context
 	 */
 	@SPI(SPI.Role.USE)
-	void findDirty(Object entity, EntityPersister persister, Session session, DirtyCheckContext dirtyCheckContext);
+	void findDirty(Object entity, EntityPersister<?> persister, Session session, DirtyCheckContext dirtyCheckContext);
 
 	/**
 	 * A callback to drive dirty checking.  Handed to the {@link CustomEntityDirtinessStrategy#findDirty} method
@@ -147,7 +147,7 @@ public interface CustomEntityDirtinessStrategy {
 		 * @return The entity persister.
 		 */
 		@SPI(SPI.Role.USE)
-		EntityPersister getContainingPersister();
+		EntityPersister<?> getContainingPersister();
 
 		/**
 		 * Many of Hibernate internals use arrays to define information about attributes.  This value

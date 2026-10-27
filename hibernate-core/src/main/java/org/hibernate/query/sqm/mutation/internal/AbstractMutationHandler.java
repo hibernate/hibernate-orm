@@ -12,7 +12,7 @@ public abstract class AbstractMutationHandler implements MultiTableHandler {
 	private final SqmDmlStatement<?> sqmDmlStatement;
 
 	private final SessionFactoryImplementor sessionFactory;
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister<?> entityDescriptor;
 
 	public AbstractMutationHandler(
 			SqmDmlStatement<?> sqmDmlStatement,
@@ -32,7 +32,7 @@ public abstract class AbstractMutationHandler implements MultiTableHandler {
 		return sqmDmlStatement;
 	}
 
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 

@@ -71,7 +71,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 				)
 		);
 		SqmMutationStrategyHelper.visitCollectionTables(
-				(EntityMappingType) mutatingTableGroup.getModelPart(),
+				(EntityMappingType<?>) mutatingTableGroup.getModelPart(),
 				pluralAttribute -> {
 					// Skip deleting rows in collection tables if cascade delete is enabled
 					if ( pluralAttribute.getSeparateCollectionTable() != null
@@ -196,7 +196,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		return Identifier.toIdentifier( DELETE_RESULT_TABLE_NAME_PREFIX + tableExpression ).render( dialect );
 	}
 
-	protected String getCteTableName(PluralAttributeMapping pluralAttribute) {
+	protected String getCteTableName(PluralAttributeMapping<?> pluralAttribute) {
 		final Dialect dialect = getSessionFactory().getJdbcServices().getDialect();
 		final String hibernateEntityName = pluralAttribute.findContainingEntityMapping().getEntityName();
 		final String jpaEntityName = getSessionFactory().getJpaMetamodel().entity( hibernateEntityName ).getName();

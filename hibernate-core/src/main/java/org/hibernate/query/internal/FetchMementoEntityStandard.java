@@ -14,12 +14,12 @@ import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
  */
 public class FetchMementoEntityStandard implements FetchMemento {
 	private final NavigablePath navigablePath;
-	private final EntityValuedFetchable attributeMapping;
+	private final EntityValuedFetchable<?> attributeMapping;
 	private final List<String> columnNames;
 
 	public FetchMementoEntityStandard(
 			NavigablePath navigablePath,
-			EntityValuedFetchable attributeMapping,
+			EntityValuedFetchable<?> attributeMapping,
 			List<String> columnNames) {
 		this.navigablePath = navigablePath;
 		this.attributeMapping = attributeMapping;

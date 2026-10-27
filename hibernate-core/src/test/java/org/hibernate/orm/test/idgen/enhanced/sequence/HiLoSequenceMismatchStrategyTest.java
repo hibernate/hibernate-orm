@@ -76,7 +76,7 @@ public class HiLoSequenceMismatchStrategyTest {
 
 	@Test
 	public void testSequenceMismatchStrategyNotApplied(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister<?> persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(TestEntity.class.getName());
 		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );

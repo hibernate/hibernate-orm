@@ -27,11 +27,11 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 		InitializerProducer<EmbeddableExpressionResultImpl<T>> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
-	private final EmbeddableMappingType fetchContainer;
+	private final EmbeddableMappingType<?, ?, ?> fetchContainer;
 
 	public EmbeddableExpressionResultImpl(
 			NavigablePath navigablePath,
-			EmbeddableValuedModelPart modelPart,
+			EmbeddableValuedModelPart<?, ?, ?> modelPart,
 			SqlTuple sqlExpression,
 			String resultVariable,
 			DomainResultCreationState creationState) {
@@ -46,7 +46,7 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-			final var attribute = (BasicAttributeMapping) mappingType.getAttributeMapping( i );
+			final var attribute = (BasicAttributeMapping<?>) mappingType.getAttributeMapping( i );
 			final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 					sqlExpression.getExpressions().get( i ),
 					attribute.getJavaType(),
@@ -90,7 +90,7 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 	}
 
 	@Override
-	public EmbeddableMappingType getFetchContainer() {
+	public EmbeddableMappingType<?, ?, ?> getFetchContainer() {
 		return this.fetchContainer;
 	}
 
@@ -100,12 +100,12 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 	}
 
 	@Override
-	public EmbeddableMappingType getReferencedMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getReferencedMappingType() {
 		return getFetchContainer();
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getReferencedMappingContainer() {
+	public EmbeddableValuedModelPart<?, ?, ?> getReferencedMappingContainer() {
 		return getFetchContainer().getEmbeddedValueMapping();
 	}
 

@@ -20,7 +20,7 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 
 	private void handlePostUpdate(
 			@Nonnull Object entity,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor source) {
 		final var tracker = source.getPersistenceContextInternal().getCollectionFlushActionTracker();
 		if ( tracker instanceof FlushProcessingContext flushProcessingContext
@@ -35,7 +35,7 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+	public boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 		return persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.POST_UPDATE );
 	}
 }

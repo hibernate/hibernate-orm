@@ -63,11 +63,11 @@ public class EmbeddedColumnNamingTests {
 	void testBaselineNamingPattern(SessionFactoryScope sfScope) {
 		final SessionFactoryImplementor sessionFactory = sfScope.getSessionFactory();
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
-		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( BaselinePerson.class );
+		final EntityPersister<?> persister = mappingMetamodel.getEntityDescriptor( BaselinePerson.class );
 		verifyColumnNames( persister.findAttributeMapping( "homeAddress" ), "home_" );
 	}
 
-	public static void verifyColumnNames(AttributeMapping embeddedMapping, String prefix) {
+	public static void verifyColumnNames(AttributeMapping<?, ?, ?> embeddedMapping, String prefix) {
 		embeddedMapping.forEachSelectable( (selectionIndex, selectableMapping) -> {
 			assertThat( selectableMapping.getSelectionExpression() ).startsWith( prefix );
 		} );
@@ -83,19 +83,19 @@ public class EmbeddedColumnNamingTests {
 	void testSingularNamingPattern(SessionFactoryScope sfScope) {
 		final SessionFactoryImplementor sessionFactory = sfScope.getSessionFactory();
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
-		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( SingularPerson.class );
+		final EntityPersister<?> persister = mappingMetamodel.getEntityDescriptor( SingularPerson.class );
 		verifyColumnNames( persister.findAttributeMapping( "homeAddress" ), "home_" );
 
-		final EmbeddedAttributeMapping workAddressMapping = persister
+		final EmbeddedAttributeMapping<?, ?> workAddressMapping = persister
 				.findAttributeMapping( "workAddress" )
 				.asEmbeddedAttributeMapping();
-		final EmbeddableMappingType workAddressType = workAddressMapping.getEmbeddableTypeDescriptor();
+		final EmbeddableMappingType<?, ?, ?> workAddressType = workAddressMapping.getEmbeddableTypeDescriptor();
 
-		final AttributeMapping workStreetMapping = workAddressType.findAttributeMapping( "street" );
+		final AttributeMapping<?, ?, ?> workStreetMapping = workAddressType.findAttributeMapping( "street" );
 		assertThat( workStreetMapping.getJdbcTypeCount() ).isEqualTo( 1 );
 		assertThat( workStreetMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "street" );
 
-		final AttributeMapping workCityMapping = workAddressType.findAttributeMapping( "city" );
+		final AttributeMapping<?, ?, ?> workCityMapping = workAddressType.findAttributeMapping( "city" );
 		assertThat( workCityMapping.getJdbcTypeCount() ).isEqualTo( 1 );
 		assertThat( workCityMapping.getSelectable( 0 ).getSelectionExpression() ).isEqualTo( "city" );
 	}
@@ -110,7 +110,7 @@ public class EmbeddedColumnNamingTests {
 	void testGoodNamingPattern(SessionFactoryScope sfScope) {
 		final SessionFactoryImplementor sessionFactory = sfScope.getSessionFactory();
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
-		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( GoodPerson.class );
+		final EntityPersister<?> persister = mappingMetamodel.getEntityDescriptor( GoodPerson.class );
 		verifyColumnNames( persister.findAttributeMapping( "homeAddress" ), "home_" );
 		verifyColumnNames( persister.findAttributeMapping( "workAddress" ), "work_" );
 	}

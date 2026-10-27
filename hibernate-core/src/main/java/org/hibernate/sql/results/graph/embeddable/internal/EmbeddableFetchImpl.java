@@ -40,13 +40,13 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	private final FetchTiming fetchTiming;
 	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
-	private final EmbeddableMappingType fetchContainer;
+	private final EmbeddableMappingType<?, ?, ?> fetchContainer;
 	private final BasicFetch<?> discriminatorFetch;
 	private final @Nullable DomainResult<Boolean> nullIndicatorResult;
 
 	public EmbeddableFetchImpl(
 			NavigablePath navigablePath,
-			EmbeddableValuedFetchable embeddedPartDescriptor,
+			EmbeddableValuedFetchable<?, ?, ?> embeddedPartDescriptor,
 			FetchParent fetchParent,
 			FetchTiming fetchTiming,
 			boolean hasTableGroup,
@@ -132,24 +132,24 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	}
 
 	@Override
-	public EmbeddableMappingType getFetchContainer() {
+	public EmbeddableMappingType<?, ?, ?> getFetchContainer() {
 		return this.fetchContainer;
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getReferencedMappingContainer() {
+	public EmbeddableValuedModelPart<?, ?, ?> getReferencedMappingContainer() {
 		return getFetchContainer().getEmbeddedValueMapping();
 	}
 
 	@Override
-	public Fetchable getFetchedMapping() {
+	public Fetchable<?, ?, ?> getFetchedMapping() {
 		return getReferencedMappingContainer();
 	}
 
 
 	@Override
-	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
-		if ( fetchable instanceof TableGroupProducer ) {
+	public NavigablePath resolveNavigablePath(Fetchable<?, ?, ?> fetchable) {
+		if ( fetchable instanceof TableGroupProducer<?, ?, ?> ) {
 			for ( var tableGroupJoin : tableGroup.getTableGroupJoins() ) {
 				final var navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
@@ -164,7 +164,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	}
 
 	@Override
-	public EmbeddableMappingType getReferencedMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getReferencedMappingType() {
 		return getFetchContainer();
 	}
 

@@ -20,7 +20,7 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 
 	public StandardVirtualTableGroup(
 			NavigablePath navigablePath,
-			ModelPartContainer modelPart,
+			ModelPartContainer<?, ?, ?> modelPart,
 			TableGroup underlyingTableGroup,
 			boolean fetched) {
 		super(
@@ -36,7 +36,7 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 	}
 
 	@Override
-	public ModelPartContainer getExpressionType() {
+	public ModelPartContainer<?, ?, ?> getExpressionType() {
 		return getModelPart();
 	}
 
@@ -133,12 +133,12 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression,
 			boolean resolve) {
-		final ValuedModelPart parentModelPart =
-				modelPart instanceof OwnedValuedModelPart ownedValuedModelPart
-					&& ownedValuedModelPart.getDeclaringType() instanceof EmbeddableMappingType declaringType
+		final ValuedModelPart<?, ?, ?> parentModelPart =
+				modelPart instanceof OwnedValuedModelPart<?, ?, ?> ownedValuedModelPart
+					&& ownedValuedModelPart.getDeclaringType() instanceof EmbeddableMappingType<?, ?, ?> declaringType
 						? declaringType.getEmbeddedValueMapping()
 						: modelPart;
 		final TableReference tableReference = underlyingTableGroup.getTableReference(

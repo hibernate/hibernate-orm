@@ -17,7 +17,7 @@ public class DelayedCollectionInitializer extends AbstractNonJoinCollectionIniti
 
 	public DelayedCollectionInitializer(
 			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedMapping,
+			PluralAttributeMapping<?> fetchedMapping,
 			InitializerParent<?> parent,
 			DomainResult<?> collectionKeyResult,
 			FetchOptions fetchOptions,

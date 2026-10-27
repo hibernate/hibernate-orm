@@ -60,7 +60,7 @@ public class SQLServerCastingVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
+	public @Nullable String castFromPattern(JdbcMapping<?> sourceMapping, @Nullable Size size) {
 		return sourceMapping.getJdbcType().isStringLike() ? "cast(?1 as vector(" + size.getArrayLength() + "))" : null;
 	}
 

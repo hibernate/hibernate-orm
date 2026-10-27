@@ -68,7 +68,7 @@ public interface ExecutionContext {
 		return null;
 	}
 
-	default EntityMappingType getRootEntityDescriptor() {
+	default EntityMappingType<?> getRootEntityDescriptor() {
 		return null;
 	}
 

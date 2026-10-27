@@ -39,7 +39,7 @@ import static java.util.Collections.emptyList;
 @Deprecated
 class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, MultiIdLoadOptions {
 	private final SharedSessionContractImplementor session;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 
 	private LockOptions lockOptions;
 	private CacheMode cacheMode;
@@ -56,7 +56,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
 
-	MultiIdentifierLoadAccessImpl(SharedSessionContractImplementor session, EntityPersister entityPersister) {
+	MultiIdentifierLoadAccessImpl(SharedSessionContractImplementor session, EntityPersister<?> entityPersister) {
 		this.session = session;
 		this.entityPersister = entityPersister;
 	}

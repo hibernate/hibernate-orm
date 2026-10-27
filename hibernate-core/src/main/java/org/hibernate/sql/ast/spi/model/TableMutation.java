@@ -64,7 +64,7 @@ public interface TableMutation<O extends MutationOperation> extends Statement {
 	 *
 	 * @see #forEachParameter
 	 */
-	List<ColumnValueParameter> getParameters();
+	List<ColumnValueParameter<?>> getParameters();
 
 	/**
 	 * Visit the JDBC parameters associated with this mutation.
@@ -74,7 +74,7 @@ public interface TableMutation<O extends MutationOperation> extends Statement {
 	 *
 	 * @see #getParameters
 	 */
-	void forEachParameter(Consumer<ColumnValueParameter> consumer);
+	void forEachParameter(Consumer<ColumnValueParameter<?>> consumer);
 
 	O createMutationOperation(ValuesAnalysis valuesAnalysis, SessionFactoryImplementor sessionFactory);
 

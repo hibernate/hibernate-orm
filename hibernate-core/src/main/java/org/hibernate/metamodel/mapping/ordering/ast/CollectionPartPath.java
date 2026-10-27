@@ -18,11 +18,11 @@ import org.hibernate.spi.NavigablePath;
 public class CollectionPartPath extends AbstractDomainPath {
 	private final NavigablePath navigablePath;
 	private final PluralAttributePath lhs;
-	private final CollectionPart referencedPart;
+	private final CollectionPart<?, ?, ?> referencedPart;
 
 	CollectionPartPath(
 			PluralAttributePath lhs,
-			CollectionPart referencedPart) {
+			CollectionPart<?, ?, ?> referencedPart) {
 		this.lhs = lhs;
 		this.referencedPart = referencedPart;
 
@@ -30,7 +30,7 @@ public class CollectionPartPath extends AbstractDomainPath {
 	}
 
 	@Override
-	public PluralAttributeMapping getPluralAttribute() {
+	public PluralAttributeMapping<?> getPluralAttribute() {
 		return lhs.getPluralAttribute();
 	}
 
@@ -46,7 +46,7 @@ public class CollectionPartPath extends AbstractDomainPath {
 	}
 
 	@Override
-	public CollectionPart getReferenceModelPart() {
+	public CollectionPart<?, ?, ?> getReferenceModelPart() {
 		return referencedPart;
 	}
 
@@ -57,8 +57,8 @@ public class CollectionPartPath extends AbstractDomainPath {
 			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext) {
-		if ( referencedPart instanceof ModelPartContainer modelPartContainer ) {
-			final ModelPart subPart = modelPartContainer.findSubPart( name, null );
+		if ( referencedPart instanceof ModelPartContainer<?, ?, ?> modelPartContainer ) {
+			final ModelPart<?, ?, ?> subPart = modelPartContainer.findSubPart( name, null );
 			if ( subPart == null ) {
 				throw new PathResolutionException( name );
 			}

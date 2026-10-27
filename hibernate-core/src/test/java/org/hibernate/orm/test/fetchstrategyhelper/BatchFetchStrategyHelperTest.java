@@ -171,7 +171,7 @@ public class BatchFetchStrategyHelperTest {
 	}
 
 	private FetchStyle determineFetchStyle(Class<?> entityClass, String path, SessionFactoryImplementor sessionFactory) {
-		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
+		AbstractEntityPersister<?> entityPersister = (AbstractEntityPersister<?>)
 				sessionFactory.getMappingMetamodel().getEntityDescriptor(entityClass.getName());
 		int index = entityPersister.getPropertyIndex( path );
 		return entityPersister.getFetchStyle( index );
@@ -181,7 +181,7 @@ public class BatchFetchStrategyHelperTest {
 			Class<?> entityClass,
 			String path,
 			SessionFactoryImplementor sessionFactory) {
-		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
+		AbstractEntityPersister<?> entityPersister = (AbstractEntityPersister<?>)
 				sessionFactory.getMappingMetamodel().getEntityDescriptor(entityClass.getName());
 		int index = entityPersister.getPropertyIndex( path );
 		return (AssociationType) entityPersister.getSubclassPropertyType( index );

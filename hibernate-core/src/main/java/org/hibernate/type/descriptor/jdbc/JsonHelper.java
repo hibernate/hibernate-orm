@@ -51,7 +51,7 @@ public class JsonHelper {
 	 * @param <X> the type of the returned value
 	 * @throws SQLException if error occured during mapping of types
 	 */
-	private static <X> X consumeJsonDocumentItems(JsonDocumentReader reader, EmbeddableMappingType embeddableMappingType, boolean returnEmbeddable, WrapperOptions options)
+	private static <X> X consumeJsonDocumentItems(JsonDocumentReader reader, EmbeddableMappingType<?, ?, ?> embeddableMappingType, boolean returnEmbeddable, WrapperOptions options)
 			throws SQLException {
 		final StandardStack<ParseLevel> parseLevel = new StandardStack<>();
 		final JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,returnEmbeddable);
@@ -72,7 +72,7 @@ public class JsonHelper {
 			assert currentLevel != null;
 			switch (reader.next()) {
 				case VALUE_KEY -> {
-					final EmbeddableMappingType currentEmbeddableMappingType = currentLevel.embeddableMappingType;
+					final EmbeddableMappingType<?, ?, ?> currentEmbeddableMappingType = currentLevel.embeddableMappingType;
 					assert currentEmbeddableMappingType != null
 							: "Value keys are only valid for objects";
 
@@ -122,7 +122,7 @@ public class JsonHelper {
 					);
 				}
 				case OBJECT_START -> {
-					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
+					final JdbcMapping<?> jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
 
 					if ( !(jdbcMapping.getJdbcType() instanceof AggregateJdbcType aggregateJdbcType) ) {
 						throw new IllegalArgumentException(
@@ -137,7 +137,7 @@ public class JsonHelper {
 					currentSelectableData = null;
 				}
 				case OBJECT_END -> {
-					final EmbeddableMappingType currentEmbeddableMappingType = currentLevel.embeddableMappingType;
+					final EmbeddableMappingType<?, ?, ?> currentEmbeddableMappingType = currentLevel.embeddableMappingType;
 					assert currentEmbeddableMappingType != null;
 
 					// go back in the mapping definition tree
@@ -167,7 +167,7 @@ public class JsonHelper {
 					currentSelectableData = null;
 				}
 				case NUMERIC_VALUE -> {
-					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
+					final JdbcMapping<?> jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
 					currentLevel.addValue(
 							currentSelectableData,
 							adapter.fromNumericValue(
@@ -187,7 +187,7 @@ public class JsonHelper {
 					currentSelectableData = null;
 				}
 				case VALUE -> {
-					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
+					final JdbcMapping<?> jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
 					currentLevel.addValue(
 							currentSelectableData,
 							adapter.fromValue(
@@ -213,7 +213,7 @@ public class JsonHelper {
 	 * @return the deserialized value
 	 */
 	public static <X> X deserialize(
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			JsonDocumentReader reader,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
@@ -287,7 +287,7 @@ public class JsonHelper {
 					break;
 				case OBJECT_START:
 					assert elementJdbcType instanceof JsonJdbcType;
-					final EmbeddableMappingType embeddableMappingType = ((JsonJdbcType) elementJdbcType).getEmbeddableMappingType();
+					final EmbeddableMappingType<?, ?, ?> embeddableMappingType = ((JsonJdbcType) elementJdbcType).getEmbeddableMappingType();
 					arrayList.add( consumeJsonDocumentItems(reader, embeddableMappingType, true, options) );
 					break;
 				default:
@@ -387,15 +387,15 @@ public class JsonHelper {
 	private record SelectableData(String selectableName, int selectableIndex, SelectableMapping selectableMapping){}
 	private record ParseLevel(
 			@Nullable SelectableData selectableData,
-			@Nullable EmbeddableMappingType embeddableMappingType,
+			@Nullable EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			@Nullable BasicPluralType<?, ?> arrayType,
 			@Nullable List<Object> subArrayObjectList,
 			@Nullable Object [] objectArray
 	) {
-		ParseLevel(EmbeddableMappingType embeddableMappingType) {
+		ParseLevel(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 			this(null, embeddableMappingType);
 		}
-		ParseLevel(@Nullable SelectableData selectableData, EmbeddableMappingType embeddableMappingType) {
+		ParseLevel(@Nullable SelectableData selectableData, EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 			this(
 					selectableData,
 					embeddableMappingType,
@@ -419,7 +419,7 @@ public class JsonHelper {
 			}
 		}
 
-		public JdbcMapping determineJdbcMapping(@Nullable SelectableData currentSelectableData) {
+		public JdbcMapping<?> determineJdbcMapping(@Nullable SelectableData currentSelectableData) {
 			if ( currentSelectableData != null ) {
 				return currentSelectableData.selectableMapping.getJdbcMapping();
 			}

@@ -22,7 +22,7 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 	private final LongAdder fetchCount = new LongAdder();
 	private final LongAdder optimisticFailureCount = new LongAdder();
 
-	EntityStatisticsImpl(EntityPersister rootEntityDescriptor) {
+	EntityStatisticsImpl(EntityPersister<?> rootEntityDescriptor) {
 		super( () -> {
 			final var cache = rootEntityDescriptor.getCacheAccessStrategy();
 			return cache != null ? cache.getRegion() : null;

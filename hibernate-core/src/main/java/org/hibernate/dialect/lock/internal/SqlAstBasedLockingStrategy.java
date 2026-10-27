@@ -47,11 +47,11 @@ import java.util.Locale;
  * @author Steve Ebersole
  */
 public class SqlAstBasedLockingStrategy implements LockingStrategy {
-	private final EntityMappingType entityToLock;
+	private final EntityMappingType<?> entityToLock;
 	private final LockMode lockMode;
 	private final PessimisticLockScope lockScope;
 
-	public SqlAstBasedLockingStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
+	public SqlAstBasedLockingStrategy(EntityPersister<?> lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		this.entityToLock = lockable.getRootEntityDescriptor();
 		this.lockMode = lockMode;
 		this.lockScope = lockScope;
@@ -217,7 +217,7 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 			LoaderSqlAstCreationState sqlAstCreationState,
 			TableGroup rootTableGroup,
 			JdbcParameterBindings jdbcParameterBindings) {
-		final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+		final var jdbcParameter = SqlTypedMappingJdbcParameter.create( jdbcValueMapping );
 		rootQuerySpec.applyPredicate(
 				new ComparisonPredicate(
 						sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(

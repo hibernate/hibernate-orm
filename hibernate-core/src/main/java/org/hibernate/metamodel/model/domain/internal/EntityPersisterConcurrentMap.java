@@ -15,24 +15,24 @@ import org.hibernate.persister.entity.EntityPersister;
 public final class EntityPersisterConcurrentMap {
 
 	private final ConcurrentHashMap<String,EntityPersisterHolder> map = new ConcurrentHashMap<>();
-	private volatile EntityPersister[] values = new EntityPersister[0];
+	private volatile EntityPersister<?>[] values = new EntityPersister<?>[0];
 	private volatile String[] keys = new String[0];
 
-	public EntityPersister get(final String name) {
+	public EntityPersister<?> get(final String name) {
 		final var entityPersisterHolder = map.get( name );
 		return entityPersisterHolder == null ? null : entityPersisterHolder.entityPersister;
 	}
 
-	public EntityPersister[] values() {
+	public EntityPersister<?>[] values() {
 		return values;
 	}
 
-	public synchronized void put(final String name, final EntityPersister entityPersister) {
+	public synchronized void put(final String name, final EntityPersister<?> entityPersister) {
 		map.put( name, new EntityPersisterHolder( entityPersister ) );
 		recomputeValues();
 	}
 
-	public synchronized void putIfAbsent(final String name, final EntityPersister entityPersister) {
+	public synchronized void putIfAbsent(final String name, final EntityPersister<?> entityPersister) {
 		map.putIfAbsent( name, new EntityPersisterHolder( entityPersister ) );
 		recomputeValues();
 	}
@@ -48,7 +48,7 @@ public final class EntityPersisterConcurrentMap {
 	private void recomputeValues() {
 		//Assumption: the write lock is held (synchronize on this)
 		final int size = map.size();
-		final var newValues = new EntityPersister[size];
+		final var newValues = new EntityPersister<?>[size];
 		final var newKeys = new String[size];
 		int i = 0;
 		for ( var entry : map.entrySet() ) {
@@ -67,7 +67,7 @@ public final class EntityPersisterConcurrentMap {
 	 * Using a concrete holder class bypasses the problem, at a minimal
 	 * tradeoff of memory.
 	 */
-	private record EntityPersisterHolder(EntityPersister entityPersister) {
+	private record EntityPersisterHolder(EntityPersister<?> entityPersister) {
 		private EntityPersisterHolder {
 			Objects.requireNonNull( entityPersister );
 		}

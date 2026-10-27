@@ -948,7 +948,7 @@ public class SessionImpl
 	// find()/get()/load() operations
 
 	<E> List<E> findMultiple(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<E> rootGraph,
 			@Nonnull List<?> keys,
@@ -1038,7 +1038,7 @@ public class SessionImpl
 
 	@Override
 	public Object loadFromSecondLevelCache(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EntityKey entityKey,
 			@Nullable Object instanceToLoad,
 			@Nonnull LockMode lockMode) {
@@ -1060,7 +1060,7 @@ public class SessionImpl
 	 * It's an allocation hot spot.
 	 */
 	// Hibernate Reactive may need to use this
-	protected PostLoadEvent makePostLoadEvent(EntityPersister persister, Object id, Object entity) {
+	protected PostLoadEvent makePostLoadEvent(EntityPersister<?> persister, Object id, Object entity) {
 		final var event = postLoadEvent;
 		if ( event == null ) {
 			return new PostLoadEvent( id, persister, entity, this );
@@ -1563,7 +1563,7 @@ public class SessionImpl
 	 */
 	@Override
 	@Nonnull
-	public Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) {
+	public Object instantiate(@Nonnull EntityPersister<?> persister, @Nullable Object id) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		Object result = callInterceptorCallback(
@@ -1577,7 +1577,7 @@ public class SessionImpl
 
 	@Override
 	@Nonnull
-	public EntityPersister getEntityPersister(final @Nullable String entityName, final @Nonnull Object entity) {
+	public EntityPersister<?> getEntityPersister(final @Nullable String entityName, final @Nonnull Object entity) {
 		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
 			return requireEntityPersister( guessEntityName( entity ) );
@@ -2161,14 +2161,14 @@ public class SessionImpl
 	// loading
 
 	@Override
-	protected <T> StatefulFindByKeyOperation<T> byKey(Class<T> entityClass, EntityPersister entityDescriptor, FindOption... options) {
+	protected <T> StatefulFindByKeyOperation<T> byKey(Class<T> entityClass, EntityPersister<?> entityDescriptor, FindOption... options) {
 		return byKey( entityClass, entityDescriptor, null, null, options );
 	}
 
 	@Override
 	protected <T> StatefulFindByKeyOperation<T> byKey(
 			Class<T> entityClass,
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			GraphSemantic graphSemantic,
 			RootGraphImplementor<T> rootGraph,
 			FindOption... options) {
@@ -2221,7 +2221,7 @@ public class SessionImpl
 
 	private <T> FindByKeyOperation<T> byKeyWithGraph(
 			Class<T> entityClass,
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			Map<String, Object> properties,
 			FindOption[] options) {
 		final var fetchHint = fetchGraphFromHints( properties );

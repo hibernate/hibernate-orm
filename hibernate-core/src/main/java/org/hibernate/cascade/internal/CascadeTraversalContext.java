@@ -22,7 +22,7 @@ import org.hibernate.type.Type;
 final class CascadeTraversalContext<T> {
 	private final CascadingAction<T> action;
 	private final EventSource session;
-	private final EntityPersister rootPersister;
+	private final EntityPersister<?> rootPersister;
 	private final Object root;
 	private final T actionContext;
 	private final CascadeDecisionTrace decisionTrace;
@@ -42,7 +42,7 @@ final class CascadeTraversalContext<T> {
 			CascadingAction<T> action,
 			CascadePoint cascadePoint,
 			EventSource session,
-			EntityPersister rootPersister,
+			EntityPersister<?> rootPersister,
 			Object root,
 			T actionContext) {
 		this( action, cascadePoint, session, rootPersister, root, actionContext, null, CascadeEffectMode.EXECUTE );
@@ -52,7 +52,7 @@ final class CascadeTraversalContext<T> {
 			CascadingAction<T> action,
 			CascadePoint cascadePoint,
 			EventSource session,
-			EntityPersister rootPersister,
+			EntityPersister<?> rootPersister,
 			Object root,
 			T actionContext,
 			CascadeDecisionTrace decisionTrace) {
@@ -72,7 +72,7 @@ final class CascadeTraversalContext<T> {
 			CascadingAction<T> action,
 			CascadePoint cascadePoint,
 			EventSource session,
-			EntityPersister rootPersister,
+			EntityPersister<?> rootPersister,
 			Object root,
 			T actionContext,
 			CascadeDecisionTrace decisionTrace,
@@ -106,7 +106,7 @@ final class CascadeTraversalContext<T> {
 		return session;
 	}
 
-	EntityPersister rootPersister() {
+	EntityPersister<?> rootPersister() {
 		return rootPersister;
 	}
 

@@ -39,7 +39,7 @@ public class EntityAttributeMutabilityTest {
 	@Test
 	public void verifyMetamodel(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
 		final PersistentClass persistentClass = domainModelScope.getEntityBinding( Employee.class );
-		final EntityPersister entityDescriptor = sessionFactoryScope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = sessionFactoryScope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Employee.class );
@@ -47,13 +47,13 @@ public class EntityAttributeMutabilityTest {
 		// `@Immutable`
 		final Property managerProperty = persistentClass.getProperty( "manager" );
 		assertThat( managerProperty.isUpdatable() ).isFalse();
-		final AttributeMapping managerAttribute = entityDescriptor.findAttributeMapping( "manager" );
+		final AttributeMapping<?, ?, ?> managerAttribute = entityDescriptor.findAttributeMapping( "manager" );
 		assertThat( managerAttribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 
 		// `@Mutability(Immutability.class)` - no effect
 		final Property manager2Property = persistentClass.getProperty( "manager2" );
 		assertThat( manager2Property.isUpdatable() ).isTrue();
-		final AttributeMapping manager2Attribute = entityDescriptor.findAttributeMapping( "manager2" );
+		final AttributeMapping<?, ?, ?> manager2Attribute = entityDescriptor.findAttributeMapping( "manager2" );
 		assertThat( manager2Attribute.getExposedMutabilityPlan().isMutable() ).isTrue();
 	}
 

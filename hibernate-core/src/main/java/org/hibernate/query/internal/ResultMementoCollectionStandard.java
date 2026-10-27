@@ -17,12 +17,12 @@ import org.hibernate.query.results.internal.complete.CompleteResultBuilderCollec
 public class ResultMementoCollectionStandard implements ModelPartResultMementoCollection {
 	private final String tableAlias;
 	private final NavigablePath navigablePath;
-	private final PluralAttributeMapping pluralAttributeDescriptor;
+	private final PluralAttributeMapping<?> pluralAttributeDescriptor;
 
 	public ResultMementoCollectionStandard(
 			String tableAlias,
 			NavigablePath navigablePath,
-			PluralAttributeMapping pluralAttributeDescriptor) {
+			PluralAttributeMapping<?> pluralAttributeDescriptor) {
 		this.tableAlias = tableAlias;
 		this.navigablePath = navigablePath;
 		this.pluralAttributeDescriptor = pluralAttributeDescriptor;
@@ -34,7 +34,7 @@ public class ResultMementoCollectionStandard implements ModelPartResultMementoCo
 	}
 
 	@Override
-	public PluralAttributeMapping getPluralAttributeDescriptor() {
+	public PluralAttributeMapping<?> getPluralAttributeDescriptor() {
 		return pluralAttributeDescriptor;
 	}
 

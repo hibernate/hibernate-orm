@@ -56,7 +56,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMa
  * @author Gavin King
  */
 @Internal
-public class SingleTableEntityPersister extends AbstractEntityPersister {
+public class SingleTableEntityPersister<J> extends AbstractEntityPersister<J> {
 
 	// the class hierarchy structure
 	private final int joinSpan;

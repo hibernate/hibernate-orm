@@ -37,7 +37,7 @@ import static org.hibernate.generator.EventType.INSERT;
 public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 
 	/// Static, non-capturing [JdbcValueBiConsumer] for binding attribute values for insert assignment (VALUES).
-	private static final JdbcValueBiConsumer<EntityInsertBindPlan, AttributeMapping> INSERT_SET_BINDER =
+	private static final JdbcValueBiConsumer<EntityInsertBindPlan, AttributeMapping<?, ?, ?>> INSERT_SET_BINDER =
 			(valueIndex, bindPlan, attribute, jdbcValue, jdbcValueMapping) -> {
 				if ( jdbcValueMapping.isInsertable()
 						&& bindPlan.shouldBindInsertValue( attribute, valueIndex, bindPlan.bindingSession ) ) {
@@ -57,7 +57,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	private static final JdbcValueBiConsumer<EntityInsertBindPlan, List<ColumnDescriptor>> KEY_SET_BINDER =
 			(index, bindPlan, keyColumns, jdbcValue, jdbcValueMapping) -> {
 				final String columnName = keyColumns.get( index ).selectionExpression();
-				final Object valueToBind = jdbcValueMapping instanceof BasicEntityIdentifierMapping
+				final Object valueToBind = jdbcValueMapping instanceof BasicEntityIdentifierMapping<?, ?, ?>
 						? jdbcValueMapping.getJdbcMapping().convertToRelationalValue( jdbcValue )
 						: jdbcValue;
 				if ( bindPlan.valueBindings.hasBinding( columnName, ParameterUsage.SET ) ) {
@@ -73,7 +73,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			};
 
 	private final EntityTableDescriptor tableDescriptor;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final Object entity;
 	private final Object identifier;
 	private final Object[] state;
@@ -89,7 +89,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 
 	public EntityInsertBindPlan(
 			EntityTableDescriptor tableDescriptor,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			Object entity,
 			Object identifier,
 			Object[] state,
@@ -189,10 +189,10 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	private Object resolveInsertAttributeValue(
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			SharedSessionContractImplementor session) {
 		final Object attributeValue = state[attribute.getStateArrayPosition()];
-		if ( attribute instanceof ToOneAttributeMapping
+		if ( attribute instanceof ToOneAttributeMapping<?>
 				&& attributeValue != null
 				&& attribute.getValue( entity ) == null ) {
 			return null;
@@ -217,7 +217,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	private boolean shouldBindInsertValue(
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			int selectableIndex,
 			SharedSessionContractImplementor session) {
 		return shouldBindJdbcValue(

@@ -51,13 +51,13 @@ public interface InsertRowsCoordinator extends CollectionOperationCoordinator {
 		 * @return {@code true} indicates the entry should be included and {@code false}
 		 * indicates it should be excluded
 		 */
-		boolean include(@Nonnull Object entry, int position, @Nonnull PersistentCollection<?> collection, @Nonnull PluralAttributeMapping attributeDescriptor);
+		boolean include(@Nonnull Object entry, int position, @Nonnull PersistentCollection<?> collection, @Nonnull PluralAttributeMapping<?> attributeDescriptor);
 
 		/**
 		 * The inverse of {@link #include}.  Here, {@code true} indicates exclusion and
 		 * {@code false} indicates inclusion
 		 */
-		default boolean exclude(@Nonnull Object entry, int i, @Nonnull PersistentCollection<?> collection, @Nonnull PluralAttributeMapping attributeDescriptor) {
+		default boolean exclude(@Nonnull Object entry, int i, @Nonnull PersistentCollection<?> collection, @Nonnull PluralAttributeMapping<?> attributeDescriptor) {
 			return !include( entry, i, collection, attributeDescriptor );
 		}
 	}

@@ -104,7 +104,7 @@ public class SimpleUpdateTestWithLazyLoading  {
 
 		final String updatedName = "Barrabas_";
 
-		final EntityPersister childPersister = scope.getSessionFactory().getRuntimeMetamodels()
+		final EntityPersister<?> childPersister = scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Child.class.getName() );
 

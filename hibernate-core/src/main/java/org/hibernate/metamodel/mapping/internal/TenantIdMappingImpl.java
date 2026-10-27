@@ -26,15 +26,15 @@ import static org.hibernate.generator.EventType.INSERT;
  * Cached tenant attribute paths and identifier generation plans.
  */
 public class TenantIdMappingImpl implements TenantIdMapping {
-	private final EntityPersister persister;
+	private final EntityPersister<?> persister;
 	@Nullable private final TenantAttribute attribute;
-	@Nullable private final AttributeMapping tenantAttribute;
+	@Nullable private final AttributeMapping<?, ?, ?> tenantAttribute;
 	@Nullable private final TenantIdGeneration identifierGenerator;
 	private final List<GenerationPlan> identifierPlans;
 	@Nullable private final ComponentType identifierType;
 
 	@Nullable
-	public static TenantIdMapping create(EntityPersister persister) {
+	public static TenantIdMapping create(EntityPersister<?> persister) {
 		final var attribute = findTenantAttribute( persister, persister.getGenerators() );
 		final var identifierGenerator = persister.getGenerator() instanceof TenantIdGeneration generator ? generator : null;
 		final var plans = persister.getGenerator() instanceof CompositeNestedGeneratedValueGenerator composite
@@ -46,7 +46,7 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 	}
 
 	private TenantIdMappingImpl(
-			EntityPersister persister, @Nullable TenantAttribute attribute,
+			EntityPersister<?> persister, @Nullable TenantAttribute attribute,
 			@Nullable TenantIdGeneration identifierGenerator, List<GenerationPlan> identifierPlans) {
 		this.persister = persister;
 		this.attribute = attribute;
@@ -58,7 +58,7 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 
 	@Nullable
 	@Override
-	public AttributeMapping getAttributeMapping() {
+	public AttributeMapping<?, ?, ?> getAttributeMapping() {
 		return tenantAttribute;
 	}
 
@@ -134,7 +134,7 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 	}
 
 	@Nullable
-	private static TenantAttribute findTenantAttribute(ManagedMappingType type, Generator[] generators) {
+	private static TenantAttribute findTenantAttribute(ManagedMappingType<?, ?, ?> type, Generator[] generators) {
 		for ( int i = 0; i < generators.length; i++ ) {
 			final var attribute = type.getAttributeMapping( i );
 			if ( generators[i] instanceof TenantIdGeneration generator ) {
@@ -152,8 +152,8 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 		return null;
 	}
 
-	private record TenantAttribute(AttributeMapping attribute, @Nullable TenantIdGeneration generator, @Nullable TenantAttribute nested) {
-		AttributeMapping leafAttribute() {
+	private record TenantAttribute(AttributeMapping<?, ?, ?> attribute, @Nullable TenantIdGeneration generator, @Nullable TenantAttribute nested) {
+		AttributeMapping<?, ?, ?> leafAttribute() {
 			return nested == null ? attribute : nested.leafAttribute();
 		}
 

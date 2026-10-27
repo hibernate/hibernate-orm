@@ -50,7 +50,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isAssociationAffectedByEn
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
 	private final Expression sqlExpression;
-	private final ModelPart parameterInferenceMapping;
+	private final ModelPart<?, ?, ?> parameterInferenceMapping;
 	private final @Nullable String affectedTableName;
 
 	public static <T> EntityValuedPathInterpretation<T> from(
@@ -61,9 +61,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final var tableGroup =
 				sqlAstCreationState.getFromClauseAccess()
 						.findTableGroup( navigablePath );
-		final var pathMapping = (EntityValuedModelPart) tableGroup.getModelPart();
-		if ( inferredMapping instanceof EntityAssociationMapping inferredAssociation ) {
-			if ( pathMapping instanceof EntityAssociationMapping pathAssociation && inferredMapping != pathMapping ) {
+		final var pathMapping = (EntityValuedModelPart<?>) tableGroup.getModelPart();
+		if ( inferredMapping instanceof EntityAssociationMapping<?> inferredAssociation ) {
+			if ( pathMapping instanceof EntityAssociationMapping<?> pathAssociation && inferredMapping != pathMapping ) {
 				// In here, the inferred mapping and the actual path mapping are association mappings,
 				// but for different associations, so we have to check if both associations point to the same target
 				final var pathTargetPart =
@@ -113,7 +113,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					}
 				}
 			}
-			else if ( pathMapping instanceof AnonymousTupleEntityValuedModelPart ) {
+			else if ( pathMapping instanceof AnonymousTupleEntityValuedModelPart<?> ) {
 				// AnonymousEntityValuedModelParts use the PK, which the inferred path will also use in this case,
 				// so we render this path as it is
 				return from(
@@ -131,7 +131,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				return from(
 						navigablePath,
 						tableGroup,
-						(EntityValuedModelPart) inferredMapping,
+						(EntityValuedModelPart<?>) inferredMapping,
 						inferredMapping,
 						sqlAstCreationState
 				);
@@ -152,14 +152,14 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	private static <T> EntityValuedPathInterpretation<T> from(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			EntityValuedModelPart mapping,
+			EntityValuedModelPart<?> mapping,
 			MappingModelExpressible<?> inferredMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final ModelPart resultModelPart;
+		final ModelPart<?, ?, ?> resultModelPart;
 		final TableGroup resultTableGroup;
 		// For association mappings where the FK optimization i.e. use of the parent table group is allowed,
 		// we try to make use of it and the FK model part if possible based on the inferred mapping
-		if ( mapping instanceof EntityAssociationMapping associationMapping ) {
+		if ( mapping instanceof EntityAssociationMapping<?> associationMapping ) {
 			final var keyTargetMatchPart =
 					associationMapping.getForeignKeyDescriptor()
 							.getPart( associationMapping.getSideNature() );
@@ -204,8 +204,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				resultTableGroup = tableGroup;
 			}
 		}
-		else if ( mapping instanceof AnonymousTupleEntityValuedModelPart ) {
-			resultModelPart = ( (AnonymousTupleEntityValuedModelPart) mapping ).getForeignKeyPart();
+		else if ( mapping instanceof AnonymousTupleEntityValuedModelPart<?> ) {
+			resultModelPart = ( (AnonymousTupleEntityValuedModelPart<?>) mapping ).getForeignKeyPart();
 			resultTableGroup = tableGroup;
 		}
 		else {
@@ -225,19 +225,19 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 	private static boolean forceUseOfForeignKeyAssociationSidePart(
 			MappingModelExpressible<?> inferredMapping,
-			EntityAssociationMapping associationMapping,
-			ValuedModelPart keyTargetMatchPart) {
+			EntityAssociationMapping<?> associationMapping,
+			ValuedModelPart<?, ?, ?> keyTargetMatchPart) {
 		// The following is an optimization for EntityCollectionPart path mappings with a join table.
 		// We can possibly avoid doing the join of the target table by using the parent table group
 		// and forcing to use the foreign key part of the association side
 		if ( inferredMapping != null && hasJoinTable( associationMapping ) ) {
 			// But we need to make sure the inferred mapping points to the same FK target
-			if ( inferredMapping instanceof EntityMappingType entityMappingType ) {
+			if ( inferredMapping instanceof EntityMappingType<?> entityMappingType ) {
 				// If the inferred mapping is an EntityMappingType, meaning it's some sort of root path,
 				// we only have to make sure the FK target is part of the mapping type
 				return entityMappingType.findSubPart( keyTargetMatchPart.getPartName() ) != null;
 			}
-			else if ( inferredMapping instanceof EntityAssociationMapping entityAssociationMapping) {
+			else if ( inferredMapping instanceof EntityAssociationMapping<?> entityAssociationMapping) {
 				// Otherwise, it must be an association mapping
 				// Comparing UK-based toOne with PK-based collection part
 				// In this case, we compare based on PK/FK, and can use the FK part if it points to the PK
@@ -253,21 +253,21 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		}
 	}
 
-	private static boolean hasNotFound(EntityValuedModelPart mapping) {
-		return mapping instanceof ToOneAttributeMapping && ( (ToOneAttributeMapping) mapping ).hasNotFoundAction();
+	private static boolean hasNotFound(EntityValuedModelPart<?> mapping) {
+		return mapping instanceof ToOneAttributeMapping<?> && ( (ToOneAttributeMapping<?>) mapping ).hasNotFoundAction();
 	}
 
-	private static boolean hasJoinTable(EntityAssociationMapping associationMapping) {
-		return associationMapping instanceof EntityCollectionPart entityCollectionPart
+	private static boolean hasJoinTable(EntityAssociationMapping<?> associationMapping) {
+		return associationMapping instanceof EntityCollectionPart<?> entityCollectionPart
 			&& entityCollectionPart.getCardinality() == EntityCollectionPart.Cardinality.MANY_TO_MANY;
 	}
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			ModelPart resultModelPart,
-			EntityValuedModelPart mapping,
-			EntityValuedModelPart treatedMapping,
+			ModelPart<?, ?, ?> resultModelPart,
+			EntityValuedModelPart<?> mapping,
+			EntityValuedModelPart<?> treatedMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		final boolean expandToAllColumns;
 		final var currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
@@ -312,7 +312,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			};
 			identifierMapping.forEachSelectable( selectableConsumer );
 			if ( !supportsFunctionalDependency( dialect, entityMappingType ) ) {
-				final EntityDiscriminatorMapping discriminatorMapping = entityMappingType.getDiscriminatorMapping();
+				final EntityDiscriminatorMapping<?> discriminatorMapping = entityMappingType.getDiscriminatorMapping();
 				if ( discriminatorMapping != null ) {
 					expressions.add( discriminatorMapping.resolveSqlExpression(
 							navigablePath,
@@ -322,7 +322,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					) );
 				}
 				for ( int i = 0; i < entityMappingType.getNumberOfFetchables(); i++ ) {
-					final Fetchable fetchable = entityMappingType.getFetchable( i );
+					final Fetchable<?, ?, ?> fetchable = entityMappingType.getFetchable( i );
 					if ( fetchable.isSelectable() ) {
 						fetchable.forEachSelectable( selectableConsumer );
 					}
@@ -346,7 +346,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 						(selectionIndex, selectableMapping) -> {
 							final TableReference tableReference = tableGroup.resolveTableReference(
 									navigablePath,
-									(ValuedModelPart) resultModelPart,
+									(ValuedModelPart<?, ?, ?>) resultModelPart,
 									selectableMapping.getContainingTableExpression()
 							);
 							expressions.add( sqlExprResolver.resolveSqlExpression( tableReference, selectableMapping ) );
@@ -360,10 +360,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				navigablePath,
 				tableGroup,
 				treatedMapping,
-				treatedMapping instanceof ValuedModelPart valuedModelPart
+				treatedMapping instanceof ValuedModelPart<?, ?, ?> valuedModelPart
 						? determineAffectedTableName( tableGroup, valuedModelPart )
 						: null,
-				resultModelPart instanceof EntityIdentifierMapping identifierMapping
+				resultModelPart instanceof EntityIdentifierMapping<?, ?, ?> identifierMapping
 						? identifierMapping.findContainingEntityMapping()
 						: mapping
 		);
@@ -412,7 +412,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		return false;
 	}
 
-	private static boolean supportsFunctionalDependency(Dialect dialect, EntityMappingType entityMappingType) {
+	private static boolean supportsFunctionalDependency(Dialect dialect, EntityMappingType<?> entityMappingType) {
 		final var analysisSupport = dialect.getFunctionalDependencyAnalysisSupport();
 		if ( analysisSupport.supportsAnalysis() ) {
 			if ( entityMappingType.getSqmMultiTableMutationStrategy() == null ) {
@@ -424,7 +424,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				return analysisSupport.supportsTableGroups() && ( analysisSupport.supportsConstants() ||
 						// Union entity persisters use a literal 'clazz_' column as a discriminator
 						// that breaks functional dependency for dialects that don't support constants
-						!( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister ) );
+						!( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister<?> ) );
 			}
 		}
 		return false;
@@ -434,9 +434,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			Expression sqlExpression,
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			EntityValuedModelPart mapping) {
+			EntityValuedModelPart<?> mapping) {
 		this( sqlExpression, navigablePath, tableGroup, mapping,
-				mapping instanceof ValuedModelPart valuedModelPart
+				mapping instanceof ValuedModelPart<?, ?, ?> valuedModelPart
 						? determineAffectedTableName( tableGroup, valuedModelPart )
 						: null );
 	}
@@ -445,7 +445,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			Expression sqlExpression,
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			EntityValuedModelPart mapping,
+			EntityValuedModelPart<?> mapping,
 			@Nullable String affectedTableName) {
 		this( sqlExpression, navigablePath, tableGroup, mapping, affectedTableName, mapping );
 	}
@@ -454,9 +454,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			Expression sqlExpression,
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			EntityValuedModelPart mapping,
+			EntityValuedModelPart<?> mapping,
 			@Nullable String affectedTableName,
-			ModelPart parameterInferenceMapping) {
+			ModelPart<?, ?, ?> parameterInferenceMapping) {
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
 		this.affectedTableName = affectedTableName;
@@ -465,7 +465,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 	/// The mapping used to extract an entity parameter's value for comparison with this expression.
 	/// Retains association-key extraction when rendering the FK, and identifier extraction when rendering the PK.
-	public ModelPart getParameterInferenceMapping() {
+	public ModelPart<?, ?, ?> getParameterInferenceMapping() {
 		return parameterInferenceMapping;
 	}
 
@@ -532,8 +532,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	}
 
 	@Override
-	public EntityValuedModelPart getExpressionType() {
-		return (EntityValuedModelPart) super.getExpressionType();
+	public EntityValuedModelPart<?> getExpressionType() {
+		return (EntityValuedModelPart<?>) super.getExpressionType();
 	}
 
 }

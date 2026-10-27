@@ -23,7 +23,7 @@ import static java.util.Collections.emptyList;
 public class LockingTableGroup implements TableGroup {
 	private final TableReference tableReference;
 	private final String tableName;
-	private final ModelPartContainer modelPart;
+	private final ModelPartContainer<?, ?, ?> modelPart;
 	private final NavigablePath navigablePath;
 	private final SelectableMappings keyColumnMappings;
 
@@ -32,7 +32,7 @@ public class LockingTableGroup implements TableGroup {
 	public LockingTableGroup(
 			TableReference tableReference,
 			String tableName,
-			ModelPartContainer modelPart,
+			ModelPartContainer<?, ?, ?> modelPart,
 			SelectableMappings keyColumnMappings) {
 		this.tableReference = tableReference;
 		this.tableName = tableName;
@@ -56,7 +56,7 @@ public class LockingTableGroup implements TableGroup {
 	}
 
 	@Override
-	public ModelPartContainer getModelPart() {
+	public ModelPartContainer<?, ?, ?> getModelPart() {
 		return modelPart;
 	}
 
@@ -131,7 +131,7 @@ public class LockingTableGroup implements TableGroup {
 	}
 
 	@Override
-	public ModelPart getExpressionType() {
+	public ModelPart<?, ?, ?> getExpressionType() {
 		return modelPart;
 	}
 

@@ -12,5 +12,5 @@ public interface Loader {
 	 * The value-mapping loaded by this loader
 	 */
 	@Nonnull
-	Loadable getLoadable();
+	Loadable<?, ?, ?> getLoadable();
 }

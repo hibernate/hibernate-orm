@@ -18,18 +18,18 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  * @author Steve Ebersole
  */
 public class CaseSimpleExpression implements Expression, DomainResultProducer {
-	private final MappingModelExpressible type;
+	private final MappingModelExpressible<?> type;
 	private final Expression fixture;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
 
-	public CaseSimpleExpression(MappingModelExpressible type, Expression fixture) {
+	public CaseSimpleExpression(MappingModelExpressible<?> type, Expression fixture) {
 		this.type = type;
 		this.fixture = fixture;
 	}
 
-	public CaseSimpleExpression(MappingModelExpressible type, Expression fixture, List<WhenFragment> whenFragments, Expression otherwise) {
+	public CaseSimpleExpression(MappingModelExpressible<?> type, Expression fixture, List<WhenFragment> whenFragments, Expression otherwise) {
 		this.type = type;
 		this.fixture = fixture;
 		this.whenFragments = whenFragments;
@@ -41,7 +41,7 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return type;
 	}
 
@@ -51,11 +51,11 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<?> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JdbcMapping jdbcMapping = type.getSingleJdbcMapping();
-		return new BasicResult(
+		final JdbcMapping<?> jdbcMapping = type.getSingleJdbcMapping();
+		return new BasicResult<>(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
 						jdbcMapping.getJdbcJavaType(),

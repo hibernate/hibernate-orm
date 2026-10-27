@@ -199,7 +199,7 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 
 	private static void checkInBatchFetchQueue(long id, Session session, boolean expected) {
 		final SessionImplementor sessionImplementor = (SessionImplementor) session;
-		final EntityPersister persister = sessionImplementor.getFactory()
+		final EntityPersister<?> persister = sessionImplementor.getFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Task.class );

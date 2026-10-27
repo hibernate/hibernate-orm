@@ -16,12 +16,12 @@ import org.hibernate.spi.NavigablePath;
  */
 public class MutatingTableReferenceGroupWrapper implements TableGroup {
 	private final NavigablePath navigablePath;
-	private final ModelPartContainer modelPart;
+	private final ModelPartContainer<?, ?, ?> modelPart;
 	private final NamedTableReference mutatingTableReference;
 
 	public MutatingTableReferenceGroupWrapper(
 			NavigablePath navigablePath,
-			ModelPartContainer modelPart,
+			ModelPartContainer<?, ?, ?> modelPart,
 			NamedTableReference mutatingTableReference) {
 		this.navigablePath = navigablePath;
 		this.modelPart = modelPart;
@@ -34,7 +34,7 @@ public class MutatingTableReferenceGroupWrapper implements TableGroup {
 	}
 
 	@Override
-	public ModelPart getExpressionType() {
+	public ModelPart<?, ?, ?> getExpressionType() {
 		return getModelPart();
 	}
 
@@ -44,7 +44,7 @@ public class MutatingTableReferenceGroupWrapper implements TableGroup {
 	}
 
 	@Override
-	public ModelPartContainer getModelPart() {
+	public ModelPartContainer<?, ?, ?> getModelPart() {
 		return modelPart;
 	}
 

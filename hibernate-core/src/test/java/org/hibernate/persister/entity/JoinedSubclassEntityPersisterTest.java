@@ -33,7 +33,7 @@ class JoinedSubclassEntityPersisterTest {
 				entityManager -> {
 					JpaMetamodelImpl metamodel = (JpaMetamodelImpl) entityManager.getMetamodel();
 					MappingMetamodel mappingMetamodel = metamodel.getMappingMetamodel();
-					EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( Dog.class );
+					EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor( Dog.class );
 					String table = entityDescriptor.getTableNameForColumn( "name" );
 					assertEquals( "TANIMAL", table );
 				}

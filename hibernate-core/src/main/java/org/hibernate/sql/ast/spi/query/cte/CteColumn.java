@@ -9,9 +9,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
  */
 public class CteColumn {
 	private final String columnExpression;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 
-	public CteColumn(String columnExpression, JdbcMapping jdbcMapping) {
+	public CteColumn(String columnExpression, JdbcMapping<?> jdbcMapping) {
 		this.columnExpression = columnExpression;
 		this.jdbcMapping = jdbcMapping;
 	}
@@ -20,7 +20,7 @@ public class CteColumn {
 		return columnExpression;
 	}
 
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 }

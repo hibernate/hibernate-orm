@@ -27,17 +27,17 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractJdbcParameter
-		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressible, SqlExpressible, BasicValuedMapping {
+public abstract class AbstractJdbcParameter<J>
+		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressible<J>, SqlExpressible, BasicValuedMapping<J> {
 
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<J> jdbcMapping;
 	private final @Nullable Integer parameterId;
 
-	public AbstractJdbcParameter(JdbcMapping jdbcMapping) {
+	public AbstractJdbcParameter(JdbcMapping<J> jdbcMapping) {
 		this( jdbcMapping, null );
 	}
 
-	public AbstractJdbcParameter(JdbcMapping jdbcMapping, @Nullable Integer parameterId) {
+	public AbstractJdbcParameter(JdbcMapping<J> jdbcMapping, @Nullable Integer parameterId) {
 		this.jdbcMapping = jdbcMapping;
 		this.parameterId = parameterId;
 	}
@@ -49,13 +49,13 @@ public abstract class AbstractJdbcParameter
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return jdbcMapping;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return jdbcMapping;
 	}
 
@@ -71,7 +71,7 @@ public abstract class AbstractJdbcParameter
 
 	@Nonnull
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping<?> getSingleJdbcMapping() {
 		return jdbcMapping;
 	}
 
@@ -91,8 +91,8 @@ public abstract class AbstractJdbcParameter
 		bindParameterValue( jdbcMapping, statement, binding.getBindValue(), startPosition, executionContext );
 	}
 
-	private JdbcMapping jdbcMapping(ExecutionContext executionContext, JdbcParameterBinding binding) {
-		JdbcMapping jdbcMapping = binding.getBindType();
+	private JdbcMapping<?> jdbcMapping(ExecutionContext executionContext, JdbcParameterBinding binding) {
+		JdbcMapping<?> jdbcMapping = binding.getBindType();
 
 		if ( jdbcMapping == null ) {
 			jdbcMapping = this.jdbcMapping;
@@ -111,7 +111,7 @@ public abstract class AbstractJdbcParameter
 	}
 
 	protected void bindParameterValue(
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			PreparedStatement statement,
 			Object bindValue,
 			int startPosition,
@@ -122,7 +122,7 @@ public abstract class AbstractJdbcParameter
 				.bind( statement, bindValue, startPosition, executionContext.getSession() );
 	}
 
-	private JdbcMapping guessBindType(ExecutionContext executionContext, Object bindValue, JdbcMapping jdbcMapping) {
+	private JdbcMapping<?> guessBindType(ExecutionContext executionContext, Object bindValue, JdbcMapping<?> jdbcMapping) {
 		if ( bindValue == null && jdbcMapping != null ) {
 			return jdbcMapping;
 		}
@@ -132,7 +132,7 @@ public abstract class AbstractJdbcParameter
 							.resolveParameterBindType( bindValue );
 			return parameterType == null && bindValue instanceof Enum<?> enumValue
 					? createEnumType( executionContext, enumValue.getClass() )
-					: parameterType instanceof JdbcMapping ? (JdbcMapping) parameterType : null;
+					: parameterType instanceof JdbcMapping<?> ? (JdbcMapping<?>) parameterType : null;
 		}
 	}
 
@@ -160,7 +160,7 @@ public abstract class AbstractJdbcParameter
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();
 	}

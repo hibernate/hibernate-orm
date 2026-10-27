@@ -91,7 +91,7 @@ public class DynamicParameterizedTypeTest {
 	@Test
 	public void testGetReturnedJavaType(SessionFactoryScope scope) {
 		scope.inTransaction(session -> {
-			EntityPersister persister = session.getEntityPersister("Entity3", new Entity3());
+			EntityPersister<?> persister = session.getEntityPersister("Entity3", new Entity3());
 			CustomType<?> mapping = (CustomType<?>) persister.findAttributeMapping("attributes").getSingleJdbcMapping();
 			UserType<?> userType = mapping.getUserType();
 			assertTrue(userType instanceof MyGenericType);
@@ -122,8 +122,8 @@ public class DynamicParameterizedTypeTest {
 						}
 
 						@Override
-						public BasicValuedMapping resolveFunctionReturnType(
-								Supplier<BasicValuedMapping> impliedTypeAccess,
+						public BasicValuedMapping<?> resolveFunctionReturnType(
+								Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 								List<? extends SqlAstNode> arguments) {
 							return null;
 						}

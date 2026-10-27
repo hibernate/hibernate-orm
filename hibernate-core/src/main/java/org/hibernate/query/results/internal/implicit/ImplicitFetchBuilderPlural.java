@@ -15,11 +15,11 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 	private final NavigablePath fetchPath;
-	private final PluralAttributeMapping fetchable;
+	private final PluralAttributeMapping<?> fetchable;
 
 	public ImplicitFetchBuilderPlural(
 			NavigablePath fetchPath,
-			PluralAttributeMapping fetchable,
+			PluralAttributeMapping<?> fetchable,
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;

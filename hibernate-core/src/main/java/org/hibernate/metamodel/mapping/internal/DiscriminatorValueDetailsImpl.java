@@ -12,9 +12,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  */
 public class DiscriminatorValueDetailsImpl implements DiscriminatorValueDetails {
 	private final DiscriminatorValue value;
-	private final EntityMappingType matchedEntityDescriptor;
+	private final EntityMappingType<?> matchedEntityDescriptor;
 
-	public DiscriminatorValueDetailsImpl(DiscriminatorValue value, EntityMappingType matchedEntityDescriptor) {
+	public DiscriminatorValueDetailsImpl(DiscriminatorValue value, EntityMappingType<?> matchedEntityDescriptor) {
 		this.value = value;
 		this.matchedEntityDescriptor = matchedEntityDescriptor;
 	}
@@ -27,7 +27,7 @@ public class DiscriminatorValueDetailsImpl implements DiscriminatorValueDetails 
 
 	@Nonnull
 	@Override
-	public EntityMappingType getIndicatedEntity() {
+	public EntityMappingType<?> getIndicatedEntity() {
 		return matchedEntityDescriptor;
 	}
 }

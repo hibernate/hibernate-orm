@@ -50,7 +50,7 @@ public class EntityDeleteAction extends EntityAction {
 			final @Nullable Object[] state,
 			final @Nullable Object version,
 			final @Nonnull Object instance,
-			final @Nonnull EntityPersister persister,
+			final @Nonnull EntityPersister<?> persister,
 			final boolean isCascadeDeleteEnabled,
 			final @Nonnull EventSource session) {
 		super( session, id, instance, persister );
@@ -71,7 +71,7 @@ public class EntityDeleteAction extends EntityAction {
 	 */
 	public EntityDeleteAction(
 			final @Nonnull Object id,
-			final @Nonnull EntityPersister persister,
+			final @Nonnull EntityPersister<?> persister,
 			final @Nonnull EventSource session) {
 		super( session, id, null, persister );
 		assert id != null;
@@ -198,7 +198,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	protected void postDeleteLoaded(
 			@Nonnull Object id,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull Object instance,
 			@Nullable Object cacheKey) {
@@ -221,7 +221,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	protected void postDeleteUnloaded(
 			@Nonnull Object id,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nullable Object cacheKey) {
 		final var persistenceContext = session.getPersistenceContextInternal();

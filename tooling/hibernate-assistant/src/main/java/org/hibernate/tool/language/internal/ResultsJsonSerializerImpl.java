@@ -92,13 +92,13 @@ public class ResultsJsonSerializerImpl implements ResultsSerializer {
 
 	private void renderValue(Object value, Selection<?> selection, StringJsonDocumentWriter writer) throws IOException {
 		if ( selection instanceof SqmRoot<?> root ) {
-			final EntityPersister persister = factory.getMappingMetamodel()
+			final EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( root.getEntityName() );
 			JSON_VISITOR.visit( persister.getEntityMappingType(), value, factory.getWrapperOptions(), writer );
 		}
 		else if ( selection instanceof SqmPath<?> path ) {
 			// extract the attribute from the path
-			final ValuedModelPart subPart = getSubPart( path.getLhs(), path.getNavigablePath().getLocalName() );
+			final ValuedModelPart<?, ?, ?> subPart = getSubPart( path.getLhs(), path.getNavigablePath().getLocalName() );
 			if ( subPart != null ) {
 				JSON_VISITOR.visit( subPart.getMappedType(), value, factory.getWrapperOptions(), writer );
 			}
@@ -162,22 +162,22 @@ public class ResultsJsonSerializerImpl implements ResultsSerializer {
 		}
 	}
 
-	private ValuedModelPart getSubPart(SqmPath<?> path, String propertyName) {
+	private ValuedModelPart<?, ?, ?> getSubPart(SqmPath<?> path, String propertyName) {
 		if ( path instanceof SqmRoot<?> root ) {
-			final EntityPersister entityDescriptor = factory.getMappingMetamodel()
+			final EntityPersister<?> entityDescriptor = factory.getMappingMetamodel()
 					.getEntityDescriptor( root.getEntityName() );
 			return entityDescriptor.findAttributeMapping( propertyName );
 		}
 		else {
 			// try to derive the subpart from the lhs
-			final ValuedModelPart subPart = getSubPart( path.getLhs(), path.getNavigablePath().getLocalName() );
-			if ( subPart instanceof EmbeddableValuedModelPart embeddable ) {
+			final ValuedModelPart<?, ?, ?> subPart = getSubPart( path.getLhs(), path.getNavigablePath().getLocalName() );
+			if ( subPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddable ) {
 				return embeddable.getEmbeddableTypeDescriptor().findAttributeMapping( propertyName );
 			}
-			else if ( subPart instanceof EntityValuedModelPart entity ) {
+			else if ( subPart instanceof EntityValuedModelPart<?> entity ) {
 				return entity.getEntityMappingType().findAttributeMapping( propertyName );
 			}
-			else if ( subPart instanceof PluralAttributeMapping plural ) {
+			else if ( subPart instanceof PluralAttributeMapping<?> plural ) {
 				final CollectionPart.Nature nature = castNonNull( CollectionPart.Nature.fromNameExact( propertyName ) );
 				return switch ( nature ) {
 					case ELEMENT -> plural.getElementDescriptor();

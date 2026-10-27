@@ -30,12 +30,12 @@ import org.hibernate.sql.ast.spi.query.predicate.Predicate;
  */
 public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Statement> {
 
-	private final EntityMappingType mutatingEntityDescriptor;
+	private final EntityMappingType<?> mutatingEntityDescriptor;
 	private final TableGroup mutatingTableGroup;
 	private Predicate discriminatorPredicate;
 
 	public MultiTableSqmMutationConverter(
-			EntityMappingType mutatingEntityDescriptor,
+			EntityMappingType<?> mutatingEntityDescriptor,
 			SqmDmlStatement<?> statement,
 			SqmRoot<?> sqmRoot,
 			DomainParameterXref domainParameterXref,
@@ -57,7 +57,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	}
 
 	public MultiTableSqmMutationConverter(
-			EntityMappingType mutatingEntityDescriptor,
+			EntityMappingType<?> mutatingEntityDescriptor,
 			SqmDmlStatement<?> statement,
 			SqmRoot<?> sqmRoot,
 			String sourceAlias,
@@ -107,7 +107,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	}
 
 	@SuppressWarnings("unused")
-	public EntityMappingType getMutatingEntityDescriptor() {
+	public EntityMappingType<?> getMutatingEntityDescriptor() {
 		return mutatingEntityDescriptor;
 	}
 

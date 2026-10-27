@@ -192,7 +192,7 @@ public abstract class AbstractFlushingEventListener {
 
 	private void cascadeOnFlush(
 			@Nonnull EventSource session,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Object object,
 			@Nonnull PersistContext anything)
 			throws HibernateException {

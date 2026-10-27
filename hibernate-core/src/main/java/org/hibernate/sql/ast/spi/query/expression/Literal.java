@@ -8,5 +8,5 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
  */
 public interface Literal extends JdbcParameterBinder, Expression {
 	Object getLiteralValue();
-	JdbcMapping getJdbcMapping();
+	JdbcMapping<?> getJdbcMapping();
 }

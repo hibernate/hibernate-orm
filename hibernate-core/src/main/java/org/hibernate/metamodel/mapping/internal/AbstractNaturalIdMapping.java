@@ -12,8 +12,8 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
-	private final EntityMappingType declaringType;
+public abstract class AbstractNaturalIdMapping<J, M, R> implements NaturalIdMapping<J, M, R> {
+	private final EntityMappingType<?> declaringType;
 	private final boolean mutable;
 	@Nullable
 	private final NaturalIdDataAccess cachesAccess;
@@ -21,7 +21,7 @@ public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 	private final NavigableRole role;
 
 	public AbstractNaturalIdMapping(
-			EntityMappingType declaringType,
+			EntityMappingType<?> declaringType,
 			boolean mutable) {
 		this.declaringType = declaringType;
 		this.mutable = mutable;
@@ -29,7 +29,7 @@ public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 		this.role = declaringType.getNavigableRole().append( PART_NAME );
 	}
 
-	public EntityMappingType getDeclaringType() {
+	public EntityMappingType<?> getDeclaringType() {
 		return declaringType;
 	}
 
@@ -52,7 +52,7 @@ public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 
 	@Nonnull
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return declaringType;
 	}
 }

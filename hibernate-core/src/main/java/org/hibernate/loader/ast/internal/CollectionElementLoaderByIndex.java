@@ -29,7 +29,7 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
  * @author Andrea Boriero
  */
 public class CollectionElementLoaderByIndex implements Loader {
-	private final PluralAttributeMapping attributeMapping;
+	private final PluralAttributeMapping<?> attributeMapping;
 	private final SelectStatement sqlAst;
 	private final JdbcParametersList jdbcParameters;
 	private final int baseIndex;
@@ -41,7 +41,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 	 * which applied the collection mapping's {@linkplain PluralAttributeMapping.IndexMetadata#getListIndexBase()}
 	 */
 	public CollectionElementLoaderByIndex(
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this( attributeMapping, attributeMapping.getIndexMetadata().getListIndexBase(), influencers, sessionFactory );
@@ -51,7 +51,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 	 * @param baseIndex A base value to apply to the relational index values processed on {@link #incrementIndexByBase}
 	 */
 	public CollectionElementLoaderByIndex(
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			int baseIndex,
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
@@ -61,10 +61,10 @@ public class CollectionElementLoaderByIndex implements Loader {
 		final var keyDescriptor = attributeMapping.getKeyDescriptor();
 		final var indexDescriptor = attributeMapping.getIndexDescriptor();
 
-		final List<ModelPart> restrictedParts = new ArrayList<>();
+		final List<ModelPart<?, ?, ?>> restrictedParts = new ArrayList<>();
 		restrictedParts.add( keyDescriptor );
 
-		if ( indexDescriptor instanceof EntityCollectionPart entityCollectionPart ) {
+		if ( indexDescriptor instanceof EntityCollectionPart<?> entityCollectionPart ) {
 			var identifierMapping =
 					entityCollectionPart.getEntityMappingType()
 							.getIdentifierMapping();
@@ -76,7 +76,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 			keyJdbcCount = keyDescriptor.getJdbcTypeCount() + indexDescriptor.getJdbcTypeCount();
 		}
 
-		final List<ModelPart> partsToSelect = new ArrayList<>();
+		final List<ModelPart<?, ?, ?>> partsToSelect = new ArrayList<>();
 		partsToSelect.add( attributeMapping.getElementDescriptor() );
 
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder( keyJdbcCount );
@@ -97,12 +97,12 @@ public class CollectionElementLoaderByIndex implements Loader {
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getLoadable() {
+	public PluralAttributeMapping<?> getLoadable() {
 		return getAttributeMapping();
 	}
 
 	@Nonnull
-	public PluralAttributeMapping getAttributeMapping() {
+	public PluralAttributeMapping<?> getAttributeMapping() {
 		return attributeMapping;
 	}
 

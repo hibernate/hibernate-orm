@@ -43,7 +43,7 @@ public final class AggregateJdbcValues {
 	/// @param options the options governing JDBC value conversion
 	/// @return a new array containing the component JDBC values
 	public static Object[] fromDomainValue(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			Object domainValue,
 			WrapperOptions options) throws SQLException {
 		return fromDomainValue( mappingType, domainValue, AggregateJdbcValueOrder.identity(), options );
@@ -58,7 +58,7 @@ public final class AggregateJdbcValues {
 	/// @param options the options governing JDBC value conversion
 	/// @return a new array containing the physically ordered component JDBC values
 	public static Object[] fromDomainValue(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			Object domainValue,
 			AggregateJdbcValueOrder order,
 			WrapperOptions options) throws SQLException {
@@ -83,7 +83,7 @@ public final class AggregateJdbcValues {
 	/// @param options the options governing JDBC value conversion
 	/// @return a new array containing converted values in logical mapping order
 	public static Object[] toLogicalJdbcValues(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			Object[] rawPhysicalValues,
 			WrapperOptions options) throws SQLException {
 		return toLogicalJdbcValues(
@@ -109,7 +109,7 @@ public final class AggregateJdbcValues {
 	/// @throws IllegalArgumentException if the value or ordering count does not
 	/// match the aggregate mapping
 	public static Object[] toLogicalJdbcValues(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			Object[] rawPhysicalValues,
 			AggregateJdbcValueOrder order,
 			WrapperOptions options) throws SQLException {
@@ -130,7 +130,7 @@ public final class AggregateJdbcValues {
 	/// @param options the options governing JDBC value conversion
 	/// @return the instantiated mapped aggregate value
 	public static Object toDomainValue(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			Object[] rawPhysicalValues,
 			WrapperOptions options) throws SQLException {
 		return toDomainValue(
@@ -156,7 +156,7 @@ public final class AggregateJdbcValues {
 	/// @throws IllegalArgumentException if the value or ordering count does not
 	/// match the aggregate mapping
 	public static Object toDomainValue(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			Object[] rawPhysicalValues,
 			AggregateJdbcValueOrder order,
 			WrapperOptions options) throws SQLException {
@@ -170,7 +170,7 @@ public final class AggregateJdbcValues {
 	}
 
 	private static void validateExtractionArguments(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			Object[] rawPhysicalValues,
 			AggregateJdbcValueOrder order,
 			WrapperOptions options) {
@@ -188,7 +188,7 @@ public final class AggregateJdbcValues {
 		order.physicalOrder( expectedValueCount );
 	}
 
-	private static int valueCount(EmbeddableMappingType mappingType) {
+	private static int valueCount(EmbeddableMappingType<?, ?, ?> mappingType) {
 		return mappingType.getJdbcValueCount() + ( mappingType.isPolymorphic() ? 1 : 0 );
 	}
 }

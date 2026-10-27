@@ -50,7 +50,7 @@ public abstract class DerivedTableReference extends AbstractTableReference {
 	@Override
 	public TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression) {
 		throw new UnknownTableReferenceException(
 				tableExpression,

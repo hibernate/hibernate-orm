@@ -36,14 +36,14 @@ public class DiscriminatedEntityInitializer
 
 	private final DomainResultAssembler<?> discriminatorValueAssembler;
 	private final DomainResultAssembler<?> keyValueAssembler;
-	private final DiscriminatedAssociationModelPart fetchedPart;
+	private final DiscriminatedAssociationModelPart<?> fetchedPart;
 	private final boolean eager;
 	private final boolean resultInitializer;
 	private final boolean keyIsEager;
 	private final boolean hasLazySubInitializer;
 
 	public static class DiscriminatedEntityInitializerData extends InitializerData {
-		protected EntityPersister concreteDescriptor;
+		protected EntityPersister<?> concreteDescriptor;
 		protected Object entityIdentifier;
 
 		public DiscriminatedEntityInitializerData(RowProcessingState rowProcessingState) {
@@ -53,7 +53,7 @@ public class DiscriminatedEntityInitializer
 
 	public DiscriminatedEntityInitializer(
 			InitializerParent<?> parent,
-			DiscriminatedAssociationModelPart fetchedPart,
+			DiscriminatedAssociationModelPart<?> fetchedPart,
 			NavigablePath fetchedNavigable,
 			Fetch discriminatorFetch,
 			Fetch keyFetch,
@@ -85,7 +85,7 @@ public class DiscriminatedEntityInitializer
 		return parent;
 	}
 
-	public ModelPart getInitializedPart(){
+	public ModelPart<?, ?, ?> getInitializedPart(){
 		return fetchedPart;
 	}
 
@@ -318,12 +318,12 @@ public class DiscriminatedEntityInitializer
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		throw new UnsupportedOperationException("Discriminated association has no static entity type");
 	}
 
 	@Override
-	public EntityPersister getConcreteDescriptor(DiscriminatedEntityInitializerData data) {
+	public EntityPersister<?> getConcreteDescriptor(DiscriminatedEntityInitializerData data) {
 		return data.concreteDescriptor;
 	}
 

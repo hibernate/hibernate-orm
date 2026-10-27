@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
  * @author Steve Ebersole
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
-public interface EmbeddableValuedFetchable extends EmbeddableValuedModelPart, Fetchable {
+public interface EmbeddableValuedFetchable<J, M, R> extends EmbeddableValuedModelPart<J, M, R>, Fetchable<J, M, R> {
 	@Override
 	default SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
 		return SqlAstJoinType.LEFT;

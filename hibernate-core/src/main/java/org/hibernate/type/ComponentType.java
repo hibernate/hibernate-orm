@@ -61,7 +61,7 @@ public class ComponentType extends AbstractType
 	private boolean hasNotNullProperty;
 	private boolean hasNullProperty;
 
-	private EmbeddableValuedModelPart mappingModelPart;
+	private EmbeddableValuedModelPart<?, ?, ?> mappingModelPart;
 
 	public ComponentType(Component component, int[] originalPropertyOrder) {
 		this( component, originalPropertyOrder, !component.isRecord() );
@@ -814,7 +814,7 @@ public class ComponentType extends AbstractType
 		return instantiator.instantiate( () -> value );
 	}
 
-	private EmbeddableMappingType embeddableTypeDescriptor() {
+	private EmbeddableMappingType<?, ?, ?> embeddableTypeDescriptor() {
 		return mappingModelPart.getEmbeddableTypeDescriptor();
 	}
 
@@ -858,16 +858,16 @@ public class ComponentType extends AbstractType
 	}
 
 	@Override
-	public void injectMappingModelPart(EmbeddableValuedModelPart part, MappingModelCreationProcess process) {
+	public void injectMappingModelPart(EmbeddableValuedModelPart<?, ?, ?> part, MappingModelCreationProcess process) {
 		mappingModelPart = part;
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getMappingModelPart() {
+	public EmbeddableValuedModelPart<?, ?, ?> getMappingModelPart() {
 		return mappingModelPart;
 	}
 
-	public EmbeddableValuedModelPart mappingModelPart() {
+	public EmbeddableValuedModelPart<?, ?, ?> mappingModelPart() {
 		if ( mappingModelPart == null ) {
 			throw new IllegalStateException( "Attempt to access EmbeddableValuedModelPart prior to its injection" );
 		}

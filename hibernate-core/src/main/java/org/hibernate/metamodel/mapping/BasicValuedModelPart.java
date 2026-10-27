@@ -12,12 +12,13 @@ import org.hibernate.sql.results.graph.Fetchable;
  *
  * @author Steve Ebersole
  */
-public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPart, Fetchable, SelectableMapping {
+public interface BasicValuedModelPart<J, M, R> extends BasicValuedMapping<M>, ValuedModelPart<J, M, R>, Fetchable<J, M, R>, SelectableMapping {
 
 	@Nonnull
 	@Override
-	default MappingType getPartMappingType() {
-		return this::getJavaType;
+	default MappingType<?> getPartMappingType() {
+		final MappingType<J> type = this::getJavaType;
+		return type;
 	}
 
 	@Override
@@ -27,13 +28,13 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPar
 
 	@Nonnull
 	@Override
-	default JdbcMapping getJdbcMapping(int index) {
+	default JdbcMapping<?> getJdbcMapping(int index) {
 		return BasicValuedMapping.super.getJdbcMapping( index );
 	}
 
 	@Nonnull
 	@Override
-	default JdbcMapping getSingleJdbcMapping() {
+	default JdbcMapping<?> getSingleJdbcMapping() {
 		return BasicValuedMapping.super.getSingleJdbcMapping();
 	}
 
@@ -62,7 +63,7 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPar
 
 	@Nonnull
 	@Override
-	default BasicValuedModelPart asBasicValuedModelPart() {
+	default BasicValuedModelPart<J, M, R> asBasicValuedModelPart() {
 		return this;
 	}
 }

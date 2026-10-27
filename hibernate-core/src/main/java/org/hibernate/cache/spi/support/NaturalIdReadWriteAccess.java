@@ -56,7 +56,7 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	@Nonnull
 	public Object generateCacheKey(
 			@Nonnull Object naturalIdValues,
-			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull EntityPersister<?> rootEntityDescriptor,
 			@Nonnull SharedSessionContractImplementor session) {
 		return keysFactory.createNaturalIdKey( naturalIdValues, rootEntityDescriptor, session );
 	}

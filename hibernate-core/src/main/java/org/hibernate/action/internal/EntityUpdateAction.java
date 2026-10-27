@@ -87,7 +87,7 @@ public class EntityUpdateAction extends EntityAction {
 			final @Nullable Object nextVersion,
 			final @Nonnull Object instance,
 			final @Nullable Object rowId,
-			final @Nonnull EntityPersister persister,
+			final @Nonnull EntityPersister<?> persister,
 			final @Nonnull EventSource session) {
 		super( session, id, instance, persister );
 		assert state != null;
@@ -111,8 +111,8 @@ public class EntityUpdateAction extends EntityAction {
 
 	@Nullable
 	private static Object determinePreviousNaturalIdValues(
-			@Nonnull EntityPersister persister,
-			@Nonnull NaturalIdMapping naturalIdMapping,
+			@Nonnull EntityPersister<?> persister,
+			@Nonnull NaturalIdMapping<?, ?, ?> naturalIdMapping,
 			@Nonnull Object id,
 			@Nullable Object[] previousState,
 			@Nonnull SharedSessionContractImplementor session) {
@@ -184,7 +184,7 @@ public class EntityUpdateAction extends EntityAction {
 		return true;
 	}
 
-	private void refreshStateAfterOwnerCallback(EntityPersister persister) {
+	private void refreshStateAfterOwnerCallback(EntityPersister<?> persister) {
 		final Object[] callbackState = persister.getValues( getInstance() );
 		final var propertyTypes = persister.getPropertyTypes();
 		if ( persister.hasCollections() ) {
@@ -223,7 +223,7 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	@Nullable
-	protected NaturalIdMapping getNaturalIdMapping() {
+	protected NaturalIdMapping<?, ?, ?> getNaturalIdMapping() {
 		return getPersister().getNaturalIdMapping();
 	}
 
@@ -306,7 +306,7 @@ public class EntityUpdateAction extends EntityAction {
 
 	public void handleNaturalIdLocalResolutions(
 			@Nonnull Object id,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull PersistenceContext context) {
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null) {
@@ -321,7 +321,7 @@ public class EntityUpdateAction extends EntityAction {
 
 	public void handleNaturalIdSharedResolutions(
 			@Nonnull Object id,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull PersistenceContext context) {
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
@@ -364,7 +364,7 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	private static boolean isCacheInvalidationRequired(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session) {
 		// the cache has to be invalidated when CacheMode is equal to GET or IGNORE
 		return persister.isCacheInvalidationRequired()
@@ -461,7 +461,7 @@ public class EntityUpdateAction extends EntityAction {
 
 	protected boolean updateCache(
 			@Nonnull EntityDataAccess cache,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nullable Object previousVersion,
 			@Nonnull Object cacheKey) {
 		final var session = getSession();
@@ -569,7 +569,7 @@ public class EntityUpdateAction extends EntityAction {
 
 	private boolean cacheUpdateRequired(
 			boolean success,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session) {
 		return success
 			&& cacheEntry != null

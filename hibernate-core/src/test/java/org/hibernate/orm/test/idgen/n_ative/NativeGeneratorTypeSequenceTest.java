@@ -69,7 +69,7 @@ public class NativeGeneratorTypeSequenceTest {
 	@JiraKey(value = "HHH-20421")
 	public void testNativeGeneratorHonorsSequenceGeneratorInitialValueAndAllocationSize(Class<?> entityClass, int expectedInitialValue, int expectedAllocationSize, SessionFactoryScope scope)
 			throws Exception {
-		final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister<?> persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityClass.getName() );
 		assertThat( persister.getGenerator() ).isInstanceOf( org.hibernate.id.NativeGenerator.class );

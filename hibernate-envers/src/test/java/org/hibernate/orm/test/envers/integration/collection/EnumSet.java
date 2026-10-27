@@ -118,19 +118,19 @@ public class EnumSet {
 				.getMappingMetamodel();
 
 		{
-			final EntityMappingType entityMapping = mappingMetamodel.getEntityDescriptor( EnumSetEntity.class );
-			final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) entityMapping.findDeclaredAttributeMapping( "enums1" );
+			final EntityMappingType<?> entityMapping = mappingMetamodel.getEntityDescriptor( EnumSetEntity.class );
+			final PluralAttributeMapping<?> attributeMapping = (PluralAttributeMapping<?>) entityMapping.findDeclaredAttributeMapping( "enums1" );
 			verifyMapping( attributeMapping.getElementDescriptor().getJdbcMapping( 0 ) );
 		}
 
 		{
-			final EntityMappingType entityMapping = mappingMetamodel.getEntityDescriptor( "EnumSetEntity_enums1_AUD" );
-			final CompositeIdentifierMapping cidMapping = (CompositeIdentifierMapping) entityMapping.getIdentifierMapping();
+			final EntityMappingType<?> entityMapping = mappingMetamodel.getEntityDescriptor( "EnumSetEntity_enums1_AUD" );
+			final CompositeIdentifierMapping<?, ?, ?> cidMapping = (CompositeIdentifierMapping<?, ?, ?>) entityMapping.getIdentifierMapping();
 			verifyMapping( cidMapping.getEmbeddableTypeDescriptor().findAttributeMapping( "element" ).getJdbcMapping( 0 ) );
 		}
 	}
 
-	private void verifyMapping(JdbcMapping jdbcMapping) {
+	private void verifyMapping(JdbcMapping<?> jdbcMapping) {
 		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode() ).isIn( Types.VARCHAR, Types.NVARCHAR, SqlTypes.ENUM );
 	}
 }

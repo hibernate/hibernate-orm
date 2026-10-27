@@ -37,7 +37,7 @@ public final class ForeignKeys {
 		private final boolean isEarlyInsert;
 		private final SharedSessionContractImplementor session;
 		private final Object self;
-		private final EntityPersister persister;
+		private final EntityPersister<?> persister;
 		private final DecompositionContext decompositionContext;
 
 		/**
@@ -54,7 +54,7 @@ public final class ForeignKeys {
 				final boolean isDelete,
 				final boolean isEarlyInsert,
 				final SharedSessionContractImplementor session,
-				final EntityPersister persister) {
+				final EntityPersister<?> persister) {
 			this(self, isDelete, isEarlyInsert, session, persister, null);
 		}
 
@@ -73,7 +73,7 @@ public final class ForeignKeys {
 				final boolean isDelete,
 				final boolean isEarlyInsert,
 				final SharedSessionContractImplementor session,
-				final EntityPersister persister,
+				final EntityPersister<?> persister,
 				final DecompositionContext decompositionContext) {
 			this.isDelete = isDelete;
 			this.isEarlyInsert = isEarlyInsert;
@@ -336,7 +336,7 @@ public final class ForeignKeys {
 		}
 
 		// let the persister inspect the instance to decide
-		final EntityPersister persister = session.getEntityPersister( entityName, entity );
+		final EntityPersister<?> persister = session.getEntityPersister( entityName, entity );
 		final Boolean isUnsavedAccordingToPersister = persister.isTransient( entity, session );
 		if ( isUnsavedAccordingToPersister != null ) {
 			return isUnsavedAccordingToPersister;
@@ -441,7 +441,7 @@ public final class ForeignKeys {
 			Object[] values,
 			boolean isEarlyInsert,
 			SharedSessionContractImplementor session) {
-		final EntityPersister persister = session.getEntityPersister( entityName, entity );
+		final EntityPersister<?> persister = session.getEntityPersister( entityName, entity );
 		final var nullifier = new Nullifier( entity, false, isEarlyInsert, session, persister );
 		final String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();

@@ -57,7 +57,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 
 	public AbstractImmediateCollectionInitializer(
 			NavigablePath collectionPath,
-			PluralAttributeMapping collectionAttributeMapping,
+			PluralAttributeMapping<?> collectionAttributeMapping,
 			InitializerParent<?> parent,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,

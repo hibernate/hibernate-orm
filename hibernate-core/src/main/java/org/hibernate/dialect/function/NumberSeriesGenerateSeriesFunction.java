@@ -124,7 +124,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 					left,
 					BinaryArithmeticOperator.ADD,
 					right,
-					(BasicValuedMapping) left.getExpressionType()
+					(BasicValuedMapping<?>) left.getExpressionType()
 			);
 		}
 	}
@@ -146,7 +146,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 					left,
 					BinaryArithmeticOperator.MULTIPLY,
 					multiplier,
-					(BasicValuedMapping) left.getExpressionType()
+					(BasicValuedMapping<?>) left.getExpressionType()
 			);
 		}
 	}
@@ -342,7 +342,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			final Expression explicitStep = arguments.size() > 2
 					? (Expression) arguments.get( 2 )
 					: null;
-			final JdbcMapping type = expressionType.getSingleJdbcMapping();
+			final JdbcMapping<?> type = expressionType.getSingleJdbcMapping();
 			if ( type == null ) {
 				throw new IllegalArgumentException(
 						"Couldn't determine types of arguments to function 'generate_series'" );
@@ -435,7 +435,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			return returnType;
 		}
 
-		private static String timestampadd(String startExpression, String stepExpression, JdbcMapping type, org.hibernate.sql.ast.spi.query.expression.Duration duration, SqmToSqlAstConverter converter) {
+		private static String timestampadd(String startExpression, String stepExpression, JdbcMapping<?> type, org.hibernate.sql.ast.spi.query.expression.Duration duration, SqmToSqlAstConverter converter) {
 			final SqlAstCreationContext creationContext = converter.getCreationContext();
 
 			final FunctionRenderer renderer = (FunctionRenderer) creationContext.getSqmFunctionRegistry()

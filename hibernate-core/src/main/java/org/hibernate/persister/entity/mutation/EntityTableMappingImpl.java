@@ -275,9 +275,9 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 
 	public static abstract class AbstractKeyMapping implements KeyMapping {
 		protected final List<KeyColumn> keyColumns;
-		protected final ModelPart identifierPart;
+		protected final ModelPart<?, ?, ?> identifierPart;
 
-		public AbstractKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull ModelPart identifierPart) {
+		public AbstractKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull ModelPart<?, ?, ?> identifierPart) {
 			this.keyColumns = keyColumns;
 			this.identifierPart = identifierPart;
 		}
@@ -367,7 +367,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	public static class SimpleKeyMapping extends AbstractKeyMapping {
 		private final KeyColumn keyColumn;
 
-		public SimpleKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull BasicValuedModelPart identifierPart) {
+		public SimpleKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull BasicValuedModelPart<?, ?, ?> identifierPart) {
 			super( keyColumns, identifierPart );
 			this.keyColumn = keyColumns.get( 0 );
 		}
@@ -401,7 +401,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	public static class CompositeKeyMapping extends AbstractKeyMapping {
-		public CompositeKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull EmbeddableValuedModelPart identifierPart) {
+		public CompositeKeyMapping(@Nonnull List<KeyColumn> keyColumns, @Nonnull EmbeddableValuedModelPart<?, ?, ?> identifierPart) {
 			super( keyColumns, identifierPart );
 		}
 

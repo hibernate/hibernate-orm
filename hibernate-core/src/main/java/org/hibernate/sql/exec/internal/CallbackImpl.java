@@ -25,7 +25,7 @@ public class CallbackImpl implements Callback {
 	}
 
 	@Override
-	public void invokeAfterLoadActions(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session) {
+	public void invokeAfterLoadActions(Object entity, EntityMappingType<?> entityMappingType, SharedSessionContractImplementor session) {
 		for ( int i = 0; i < afterLoadActions.size(); i++ ) {
 			afterLoadActions.get( i ).afterLoad( entity, entityMappingType, session );
 		}

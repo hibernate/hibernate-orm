@@ -74,7 +74,7 @@ public class DomainResultCreationStateImpl
 	private final LegacyFetchResolver legacyFetchResolver;
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Stack<Function<Fetchable, FetchBuilder>> fetchBuilderResolverStack = new StandardStack<>( fetchableName -> null );
+	private final Stack<Function<Fetchable<?, ?, ?>, FetchBuilder>> fetchBuilderResolverStack = new StandardStack<>( fetchableName -> null );
 	private Map<String, LockMode> registeredLockModes;
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
@@ -84,7 +84,7 @@ public class DomainResultCreationStateImpl
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			Map<String, Map<Fetchable, LegacyFetchBuilder>> legacyFetchBuilders,
+			Map<String, Map<Fetchable<?, ?, ?>, LegacyFetchBuilder>> legacyFetchBuilders,
 			Consumer<SqlSelection> sqlSelectionConsumer,
 			LoadQueryInfluencers loadQueryInfluencers,
 			boolean isProcedureOrNativeQuery,
@@ -124,20 +124,20 @@ public class DomainResultCreationStateImpl
 		return jdbcResultsMetadata;
 	}
 
-	public void pushExplicitFetchMementoResolver(Function<Fetchable, FetchBuilder> resolver) {
+	public void pushExplicitFetchMementoResolver(Function<Fetchable<?, ?, ?>, FetchBuilder> resolver) {
 		fetchBuilderResolverStack.push( resolver );
 	}
 
-	public Function<Fetchable, FetchBuilder> getCurrentExplicitFetchMementoResolver() {
+	public Function<Fetchable<?, ?, ?>, FetchBuilder> getCurrentExplicitFetchMementoResolver() {
 		return currentFetchBuilderResolver();
 	}
 
-	public Function<Fetchable, FetchBuilder> popExplicitFetchMementoResolver() {
+	public Function<Fetchable<?, ?, ?>, FetchBuilder> popExplicitFetchMementoResolver() {
 		return fetchBuilderResolverStack.pop();
 	}
 
 	@SuppressWarnings( "unused" )
-	public void withExplicitFetchMementoResolver(Function<Fetchable, FetchBuilder> resolver, Runnable runnable) {
+	public void withExplicitFetchMementoResolver(Function<Fetchable<?, ?, ?>, FetchBuilder> resolver, Runnable runnable) {
 		pushExplicitFetchMementoResolver( resolver );
 		try {
 			runnable.run();
@@ -168,7 +168,7 @@ public class DomainResultCreationStateImpl
 	}
 
 	@Override
-	public ModelPart resolveModelPart(NavigablePath navigablePath) {
+	public ModelPart<?, ?, ?> resolveModelPart(NavigablePath navigablePath) {
 		final var tableGroup = fromClauseAccess.findTableGroup( navigablePath );
 		if ( tableGroup != null ) {
 			return tableGroup.getModelPart();
@@ -305,13 +305,13 @@ public class DomainResultCreationStateImpl
 	}
 
 	private static class LegacyFetchResolver {
-		private final Map<String,Map<Fetchable, LegacyFetchBuilder>> legacyFetchBuilders;
+		private final Map<String,Map<Fetchable<?, ?, ?>, LegacyFetchBuilder>> legacyFetchBuilders;
 
-		public LegacyFetchResolver(Map<String, Map<Fetchable, LegacyFetchBuilder>> legacyFetchBuilders) {
+		public LegacyFetchResolver(Map<String, Map<Fetchable<?, ?, ?>, LegacyFetchBuilder>> legacyFetchBuilders) {
 			this.legacyFetchBuilders = legacyFetchBuilders;
 		}
 
-		public LegacyFetchBuilder resolve(String ownerTableAlias, Fetchable fetchedPart) {
+		public LegacyFetchBuilder resolve(String ownerTableAlias, Fetchable<?, ?, ?> fetchedPart) {
 			if ( legacyFetchBuilders == null ) {
 				return null;
 			}
@@ -332,7 +332,7 @@ public class DomainResultCreationStateImpl
 	}
 
 	private @Nonnull FetchBuilder fetchBuilder(
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			FetchBuilder explicitFetchBuilder,
 			LegacyFetchBuilder fetchBuilderLegacy,
 			NavigablePath fetchPath) {
@@ -348,7 +348,7 @@ public class DomainResultCreationStateImpl
 	}
 
 	private @Nullable LegacyFetchBuilder legacyFetchBuilder(
-			Fetchable fetchable, FetchParent fetchParent,
+			Fetchable<?, ?, ?> fetchable, FetchParent fetchParent,
 			FetchBuilder explicitFetchBuilder) {
 		if ( explicitFetchBuilder == null ) {
 			return legacyFetchResolver.resolve(
@@ -403,7 +403,7 @@ public class DomainResultCreationStateImpl
 		return fetches.build();
 	}
 
-	private Consumer<Fetchable> createFetchableConsumer(FetchParent fetchParent, ImmutableFetchList.Builder fetches) {
+	private Consumer<Fetchable<?, ?, ?>> createFetchableConsumer(FetchParent fetchParent, ImmutableFetchList.Builder fetches) {
 		return fetchable -> {
 			if ( !fetchable.isSelectable() ) {
 				return;
@@ -411,11 +411,11 @@ public class DomainResultCreationStateImpl
 			FetchBuilder explicitFetchBuilder = currentFetchBuilderResolver().apply( fetchable );
 			LegacyFetchBuilder fetchBuilderLegacy =
 					legacyFetchBuilder( fetchable, fetchParent, explicitFetchBuilder );
-			if ( fetchable instanceof Association association
+			if ( fetchable instanceof Association<?, ?, ?> association
 					&& fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
 				// If there are no fetch builders for this association, we only want to fetch the FK
 				if ( explicitFetchBuilder == null && fetchBuilderLegacy == null  ) {
-					final var modelPart = (Fetchable)
+					final var modelPart = (Fetchable<?, ?, ?>)
 							association.getForeignKeyDescriptor()
 									.getSide( association.getSideNature().inverse() )
 									.getModelPart();
@@ -434,7 +434,7 @@ public class DomainResultCreationStateImpl
 		};
 	}
 
-	private Function<Fetchable, FetchBuilder> currentFetchBuilderResolver() {
+	private Function<Fetchable<?, ?, ?>, FetchBuilder> currentFetchBuilderResolver() {
 		return fetchBuilderResolverStack.getCurrent();
 	}
 

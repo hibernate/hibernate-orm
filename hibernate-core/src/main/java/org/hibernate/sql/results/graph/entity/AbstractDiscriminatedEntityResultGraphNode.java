@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public abstract class AbstractDiscriminatedEntityResultGraphNode implements DomainResultGraphNode, FetchParent {
 	private final NavigablePath navigablePath;
 
-	private final DiscriminatedAssociationModelPart graphedPart;
+	private final DiscriminatedAssociationModelPart<?> graphedPart;
 	private final JavaType<?> baseAssociationJtd;
 
 	private Fetch discriminatorValueFetch;
@@ -26,7 +26,7 @@ public abstract class AbstractDiscriminatedEntityResultGraphNode implements Doma
 	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public AbstractDiscriminatedEntityResultGraphNode(
 			NavigablePath navigablePath,
-			DiscriminatedAssociationModelPart graphedPart,
+			DiscriminatedAssociationModelPart<?> graphedPart,
 			JavaType<?> baseAssociationJtd) {
 		this.navigablePath = navigablePath;
 		this.graphedPart = graphedPart;
@@ -69,12 +69,12 @@ public abstract class AbstractDiscriminatedEntityResultGraphNode implements Doma
 	}
 
 	@Override
-	public DiscriminatedAssociationModelPart getReferencedMappingContainer() {
+	public DiscriminatedAssociationModelPart<?> getReferencedMappingContainer() {
 		return graphedPart;
 	}
 
 	@Override
-	public DiscriminatedAssociationModelPart getReferencedMappingType() {
+	public DiscriminatedAssociationModelPart<?> getReferencedMappingType() {
 		return graphedPart;
 	}
 
@@ -84,7 +84,7 @@ public abstract class AbstractDiscriminatedEntityResultGraphNode implements Doma
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 		if ( graphedPart.getDiscriminatorMapping() == fetchable ) {
 			return discriminatorValueFetch;
 		}

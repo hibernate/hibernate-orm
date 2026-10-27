@@ -63,7 +63,7 @@ class CascadeExtensionRemovalTest {
 	void customActionIsRejectedBeforeTraversal() {
 		final CascadingAction<Object> customAction = mock( CascadingAction.class );
 		final EventSource session = mock( EventSource.class );
-		final EntityPersister persister = mock( EntityPersister.class );
+		final EntityPersister<?> persister = mock( EntityPersister.class );
 
 		assertThatThrownBy( () -> Cascade.cascade(
 				customAction,
@@ -83,7 +83,7 @@ class CascadeExtensionRemovalTest {
 	@Test
 	void everyBuiltInActionPassesTheCoordinatorBoundary() {
 		final EventSource session = mock( EventSource.class );
-		final EntityPersister persister = mock( EntityPersister.class );
+		final EntityPersister<?> persister = mock( EntityPersister.class );
 		final Object parent = new Object();
 
 		for ( CascadingAction<?> action : List.of(
@@ -102,7 +102,7 @@ class CascadeExtensionRemovalTest {
 	private static void cascade(
 			CascadingAction<?> action,
 			EventSource session,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object parent) {
 		Cascade.cascade( (CascadingAction) action, CascadePoint.BEFORE_MERGE, session, persister, parent, null );
 	}

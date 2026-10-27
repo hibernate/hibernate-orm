@@ -32,7 +32,7 @@ public class FkIdGenerator implements BeforeExecutionGenerator, AnnotationBasedG
 			Object owner,
 			Object currentValue,
 			EventType eventType) {
-		final EntityPersister persister = session.getEntityPersister( null, owner );
+		final EntityPersister<?> persister = session.getEntityPersister( null, owner );
 		final Object associated = persister.getPropertyValue( owner, propertyName );
 		if ( associated == null ) {
 			throw new IdentifierGenerationException(

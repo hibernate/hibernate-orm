@@ -16,7 +16,7 @@ import org.hibernate.persister.entity.EntityPersister;
 @org.hibernate.Internal
 public class MergeCoordinatorHistory extends UpdateCoordinatorHistory {
 	public MergeCoordinatorHistory(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull UpdateCoordinator currentMergeCoordinator) {
 		super( entityPersister, factory, currentMergeCoordinator );

@@ -29,7 +29,7 @@ public class PreDeleteEvent extends AbstractPreDatabaseOperationEvent {
 			@Nonnull Object entity,
 			@Nonnull Object id,
 			@Nullable Object[] deletedState,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.deletedState = deletedState;

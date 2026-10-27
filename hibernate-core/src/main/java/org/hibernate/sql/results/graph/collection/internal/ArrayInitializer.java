@@ -34,7 +34,7 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 
 	public ArrayInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping arrayDescriptor,
+			PluralAttributeMapping<?> arrayDescriptor,
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,

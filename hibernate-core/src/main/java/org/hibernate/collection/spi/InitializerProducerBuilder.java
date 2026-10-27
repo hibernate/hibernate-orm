@@ -22,7 +22,7 @@ import org.hibernate.sql.results.graph.collection.internal.SetInitializerProduce
 public class InitializerProducerBuilder {
 	public static CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			CollectionClassification classification,
 			FetchParent fetchParent,
 			boolean selected,
@@ -45,7 +45,7 @@ public class InitializerProducerBuilder {
 
 	public static CollectionInitializerProducer createArrayInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			Fetch indexFetch,
@@ -77,7 +77,7 @@ public class InitializerProducerBuilder {
 
 	public static CollectionInitializerProducer createBagInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			Fetch elementFetch,
@@ -114,7 +114,7 @@ public class InitializerProducerBuilder {
 
 	public static CollectionInitializerProducer createListInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			Fetch indexFetch,
@@ -146,7 +146,7 @@ public class InitializerProducerBuilder {
 
 	public static CollectionInitializerProducer createMapInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			Fetch indexFetch,
@@ -181,7 +181,7 @@ public class InitializerProducerBuilder {
 
 	public static CollectionInitializerProducer createSetInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			Fetch elementFetch,
@@ -201,7 +201,7 @@ public class InitializerProducerBuilder {
 
 	public static CollectionInitializerProducer createCollectionTypeWrapperInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			CollectionClassification classification,
 			FetchParent fetchParent,
 			boolean selected,

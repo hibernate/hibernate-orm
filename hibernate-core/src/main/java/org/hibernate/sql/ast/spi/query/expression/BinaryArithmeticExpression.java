@@ -18,13 +18,13 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 	private final BinaryArithmeticOperator operator;
 	private final Expression rhsOperand;
 
-	private final BasicValuedMapping resultType;
+	private final BasicValuedMapping<?> resultType;
 
 	public BinaryArithmeticExpression(
 			Expression lhsOperand,
 			BinaryArithmeticOperator operator,
 			Expression rhsOperand,
-			BasicValuedMapping resultType) {
+			BasicValuedMapping<?> resultType) {
 		this.operator = operator;
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
@@ -32,7 +32,7 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 	}
 
 	@Override
-	public BasicValuedMapping getExpressionType() {
+	public BasicValuedMapping<?> getExpressionType() {
 		return resultType;
 	}
 
@@ -42,13 +42,12 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<?> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( creationState );
 
-		//noinspection unchecked
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				resultType.getJdbcMapping()

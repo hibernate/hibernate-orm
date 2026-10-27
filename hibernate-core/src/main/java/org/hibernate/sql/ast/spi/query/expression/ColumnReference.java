@@ -35,7 +35,7 @@ public class ColumnReference implements Expression, Assignable {
 	private final @Nullable SelectablePath selectablePath;
 	private final boolean isFormula;
 	private final @Nullable String readExpression;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 
 	public ColumnReference(TableReference tableReference, SelectableMapping selectableMapping) {
 		this(
@@ -48,7 +48,7 @@ public class ColumnReference implements Expression, Assignable {
 		);
 	}
 
-	public ColumnReference(TableReference tableReference, String mapping, JdbcMapping jdbcMapping) {
+	public ColumnReference(TableReference tableReference, String mapping, JdbcMapping<?> jdbcMapping) {
 		this(
 				tableReference.getIdentificationVariable(),
 				mapping,
@@ -70,7 +70,7 @@ public class ColumnReference implements Expression, Assignable {
 		);
 	}
 
-	public ColumnReference(@Nullable String qualifier, SelectableMapping selectableMapping, JdbcMapping jdbcMapping) {
+	public ColumnReference(@Nullable String qualifier, SelectableMapping selectableMapping, JdbcMapping<?> jdbcMapping) {
 		this(
 				qualifier,
 				selectableMapping.getSelectionExpression(),
@@ -86,7 +86,7 @@ public class ColumnReference implements Expression, Assignable {
 			String columnExpression,
 			boolean isFormula,
 			@Nullable String customReadExpression,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<?> jdbcMapping) {
 		this(
 				tableReference.getIdentificationVariable(),
 				columnExpression,
@@ -102,7 +102,7 @@ public class ColumnReference implements Expression, Assignable {
 			String columnExpression,
 			boolean isFormula,
 			@Nullable String customReadExpression,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<?> jdbcMapping) {
 		this( qualifier, columnExpression, null, isFormula, customReadExpression, jdbcMapping );
 	}
 
@@ -112,7 +112,7 @@ public class ColumnReference implements Expression, Assignable {
 			@Nullable SelectablePath selectablePath,
 			boolean isFormula,
 			@Nullable String customReadExpression,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping<?> jdbcMapping) {
 		this.qualifier = nullIfEmpty( qualifier );
 		this.columnExpressionTemplate = columnExpression;
 
@@ -208,12 +208,12 @@ public class ColumnReference implements Expression, Assignable {
 		appender.append( columnExpression );
 	}
 
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 
 	@Override
-	public JdbcMapping getExpressionType() {
+	public JdbcMapping<?> getExpressionType() {
 		return jdbcMapping;
 	}
 

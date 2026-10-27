@@ -16,13 +16,13 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
  */
 public class EntitySelectFetchByUniqueKeyInitializer
 		extends EntitySelectFetchInitializer<EntitySelectFetchInitializer.EntitySelectFetchInitializerData> {
-	private final ToOneAttributeMapping fetchedAttribute;
+	private final ToOneAttributeMapping<?> fetchedAttribute;
 
 	public EntitySelectFetchByUniqueKeyInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping fetchedAttribute,
+			ToOneAttributeMapping<?> fetchedAttribute,
 			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
+			EntityPersister<?> concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			FetchOptions fetchOptions,

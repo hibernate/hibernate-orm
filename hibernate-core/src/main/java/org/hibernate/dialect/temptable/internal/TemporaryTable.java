@@ -459,7 +459,7 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 		);
 	}
 
-	public List<TemporaryTableColumn> findTemporaryTableColumns(EntityPersister entityDescriptor, ModelPart modelPart) {
+	public List<TemporaryTableColumn> findTemporaryTableColumns(EntityPersister<?> entityDescriptor, ModelPart<?, ?, ?> modelPart) {
 		final int offset = determineModelPartStartIndex( entityDescriptor, modelPart );
 		if ( offset == -1 ) {
 			throw new IllegalStateException( "Couldn't find matching temporary table columns for: " + modelPart );
@@ -469,7 +469,7 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 		return getColumns().subList( offset, end );
 	}
 
-	private static int determineModelPartStartIndex(EntityPersister entityDescriptor, ModelPart modelPart) {
+	private static int determineModelPartStartIndex(EntityPersister<?> entityDescriptor, ModelPart<?, ?, ?> modelPart) {
 		boolean hasIdentity = entityDescriptor.getGenerator().generatedOnExecution();
 		// Entity with an identity column get HTE_IDENTITY as first column in the temporary table that we skip
 		int offset = hasIdentity ? 1 : 0;
@@ -478,7 +478,7 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 			return -idResult;
 		}
 		offset = idResult;
-		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+		final EntityDiscriminatorMapping<?> discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 		if ( discriminatorMapping != null && discriminatorMapping.hasPhysicalColumn() && !discriminatorMapping.isFormula() ) {
 			if ( modelPart == discriminatorMapping ) {
 				return offset;
@@ -487,8 +487,8 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 		}
 		final AttributeMappingsList attributeMappings = entityDescriptor.getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			AttributeMapping attribute = attributeMappings.get( i );
-			if ( !( attribute instanceof PluralAttributeMapping ) ) {
+			AttributeMapping<?, ?, ?> attribute = attributeMappings.get( i );
+			if ( !( attribute instanceof PluralAttributeMapping<?> ) ) {
 				final int result = determineModelPartStartIndex( offset, attribute, modelPart );
 				if ( result <= 0 ) {
 					return -result;
@@ -499,37 +499,37 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 		return -1;
 	}
 
-	private static int determineIdStartIndex(int offset, EntityPersister entityDescriptor, ModelPart modelPart) {
+	private static int determineIdStartIndex(int offset, EntityPersister<?> entityDescriptor, ModelPart<?, ?, ?> modelPart) {
 		final int originalOffset = offset;
 		do {
-			final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+			final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityDescriptor.getIdentifierMapping();
 			final int result = determineModelPartStartIndex( originalOffset, identifierMapping, modelPart );
 			offset = result;
 			if ( result <= 0 ) {
 				break;
 			}
-			entityDescriptor = (EntityPersister) entityDescriptor.getSuperMappingType();
+			entityDescriptor = (EntityPersister<?>) entityDescriptor.getSuperMappingType();
 		} while ( entityDescriptor != null );
 
 		return offset;
 	}
 
-	private static int determineModelPartStartIndex(int offset, ModelPart modelPart, ModelPart modelPartToFind) {
+	private static int determineModelPartStartIndex(int offset, ModelPart<?, ?, ?> modelPart, ModelPart<?, ?, ?> modelPartToFind) {
 		if ( modelPart == modelPartToFind ) {
 			return -offset;
 		}
-		if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
-			final ModelPart keyPart =
-					modelPart instanceof Association association
+		if ( modelPart instanceof EntityValuedModelPart<?> entityValuedModelPart ) {
+			final ModelPart<?, ?, ?> keyPart =
+					modelPart instanceof Association<?, ?, ?> association
 							? association.getForeignKeyDescriptor()
 							: entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
 			return determineModelPartStartIndex( offset, keyPart, modelPartToFind );
 		}
-		else if ( modelPart instanceof EmbeddableValuedModelPart embeddablePart ) {
+		else if ( modelPart instanceof EmbeddableValuedModelPart<?, ?, ?> embeddablePart ) {
 			final AttributeMappingsList attributeMappings =
 					embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping mapping = attributeMappings.get( i );
+				final AttributeMapping<?, ?, ?> mapping = attributeMappings.get( i );
 				final int result = determineModelPartStartIndex( offset, mapping, modelPartToFind );
 				if ( result <= 0 ) {
 					return result;
@@ -538,9 +538,9 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 			}
 			return offset;
 		}
-		else if ( modelPart instanceof BasicValuedModelPart basicModelPart
+		else if ( modelPart instanceof BasicValuedModelPart<?, ?, ?> basicModelPart
 				&& !basicModelPart.isInsertable()
-				&& !(modelPart instanceof AttributeMapping attributeMapping && isPartOfId( attributeMapping )) ) {
+				&& !(modelPart instanceof AttributeMapping<?, ?, ?> attributeMapping && isPartOfId( attributeMapping )) ) {
 			return offset;
 		}
 		else {

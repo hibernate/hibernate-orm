@@ -18,7 +18,7 @@ public interface AttributeAnalysis {
 	 */
 	@Nonnull
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	AttributeMapping getAttribute();
+	AttributeMapping<?, ?, ?> getAttribute();
 
 	/**
 	 * Whether the attribute should be included in setting the

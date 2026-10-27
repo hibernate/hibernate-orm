@@ -50,8 +50,8 @@ public class UUIDBinaryTest {
 	@Test
 	public void testUsage(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Node.class );
-		final JdbcMapping jdbcMapping = entityDescriptor.getIdentifierMapping().getSingleJdbcMapping();
+		final EntityPersister<?> entityDescriptor = domainModel.findEntityDescriptor( Node.class );
+		final JdbcMapping<?> jdbcMapping = entityDescriptor.getIdentifierMapping().getSingleJdbcMapping();
 		assertThat( jdbcMapping.getJdbcType().isBinary(), is( true ) );
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {

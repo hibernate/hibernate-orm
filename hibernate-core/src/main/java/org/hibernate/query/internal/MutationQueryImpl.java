@@ -327,7 +327,7 @@ public class MutationQueryImpl<T>
 		}
 	}
 
-	private boolean useMultiTableInsert(EntityPersister persister, SqmInsertStatement<?> sqmInsert) {
+	private boolean useMultiTableInsert(EntityPersister<?> persister, SqmInsertStatement<?> sqmInsert) {
 		boolean useMultiTableInsert = persister.hasMultipleTables();
 		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, persister ) ) {
 			final var identifierGenerator = persister.getGenerator();
@@ -343,10 +343,10 @@ public class MutationQueryImpl<T>
 		return useMultiTableInsert;
 	}
 
-	protected boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
+	protected boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister<?> entityDescriptor) {
 		final var identifierMapping = entityDescriptor.getIdentifierMapping();
 		final String partName =
-				identifierMapping instanceof SingleAttributeIdentifierMapping
+				identifierMapping instanceof SingleAttributeIdentifierMapping<?, ?, ?>
 						? identifierMapping.getAttributeName()
 						: EntityIdentifierMapping.ID_ROLE_NAME;
 		for ( var insertionTargetPath : sqmInsert.getInsertionTargetPaths() ) {
@@ -360,7 +360,7 @@ public class MutationQueryImpl<T>
 		return false;
 	}
 
-	protected boolean isSimpleValuesInsert(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
+	protected boolean isSimpleValuesInsert(SqmInsertStatement<?> sqmInsert, EntityPersister<?> entityDescriptor) {
 		// Simple means that we can translate the statement to a single plain insert
 		return sqmInsert instanceof SqmInsertValuesStatement
 			// An insert is only simple if no SqmMultiTableMutation strategy is available,

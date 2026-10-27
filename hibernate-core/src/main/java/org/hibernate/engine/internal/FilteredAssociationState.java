@@ -141,7 +141,7 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 	}
 
 	/** Returns domain state unchanged for bitmap mappings. */
-	public Object[] physicalState(Object[] state, EntityPersister persister) {
+	public Object[] physicalState(Object[] state, EntityPersister<?> persister) {
 		return physicalState( state, persister.getFilteredAssociationMapping() );
 	}
 
@@ -149,7 +149,7 @@ public abstract class FilteredAssociationState implements EntityEntryExtraState,
 		return values;
 	}
 
-	public void afterUpdate(Object[] state, EntityPersister persister) {
+	public void afterUpdate(Object[] state, EntityPersister<?> persister) {
 		persister.getFilteredAssociationMapping().afterUpdate( this, state );
 	}
 

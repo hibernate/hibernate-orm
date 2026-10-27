@@ -23,7 +23,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			SharedSessionContractImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
-			Object id, EntityPersister entityPersister, Object[] state) {
+			Object id, EntityPersister<?> entityPersister, Object[] state) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 
 		this.data = new HashMap<>();

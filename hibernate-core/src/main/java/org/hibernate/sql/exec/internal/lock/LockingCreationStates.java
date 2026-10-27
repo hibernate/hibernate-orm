@@ -165,7 +165,7 @@ public class LockingCreationStates
 	}
 
 	@Override
-	public ModelPart resolveModelPart(NavigablePath navigablePath) {
+	public ModelPart<?, ?, ?> resolveModelPart(NavigablePath navigablePath) {
 		return null;
 	}
 
@@ -175,13 +175,13 @@ public class LockingCreationStates
 		final var referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		final int size = referencedMappingContainer.getNumberOfFetchables();
 		for ( int i = 0; i < size; i++ ) {
-			final Fetchable fetchable = referencedMappingContainer.getFetchable( i );
+			final Fetchable<?, ?, ?> fetchable = referencedMappingContainer.getFetchable( i );
 			processFetchable( fetchParent, fetchable, fetches );
 		}
 		return fetches.build();
 	}
 
-	private void processFetchable(FetchParent fetchParent, Fetchable fetchable, ImmutableFetchList.Builder fetches) {
+	private void processFetchable(FetchParent fetchParent, Fetchable<?, ?, ?> fetchable, ImmutableFetchList.Builder fetches) {
 		if ( fetchable.isSelectable() ) {
 			fetches.add( fetchParent.generateFetchableFetch(
 					fetchable,

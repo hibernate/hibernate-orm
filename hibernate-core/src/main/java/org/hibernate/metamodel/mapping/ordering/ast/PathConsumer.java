@@ -23,7 +23,7 @@ public class PathConsumer {
 	@Nullable private SequencePart currentPart;
 
 	public PathConsumer(
-			PluralAttributeMapping pluralAttributeMapping,
+			PluralAttributeMapping<?> pluralAttributeMapping,
 			TranslationContext translationContext) {
 		this.translationContext = translationContext;
 

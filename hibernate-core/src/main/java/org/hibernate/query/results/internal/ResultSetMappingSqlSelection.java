@@ -21,14 +21,14 @@ import org.hibernate.type.descriptor.ValueExtractor;
  */
 public class ResultSetMappingSqlSelection implements SqlSelection, Expression, SqlExpressionAccess {
 	private final int valuesArrayPosition;
-	private final JdbcMapping valueMapping;
+	private final JdbcMapping<?> valueMapping;
 	private final ValueExtractor<?> valueExtractor;
 
-	public ResultSetMappingSqlSelection(int valuesArrayPosition, BasicValuedMapping valueMapping) {
+	public ResultSetMappingSqlSelection(int valuesArrayPosition, BasicValuedMapping<?> valueMapping) {
 		this ( valuesArrayPosition, valueMapping.getJdbcMapping() );
 	}
 
-	public ResultSetMappingSqlSelection(int valuesArrayPosition, JdbcMapping jdbcMapping) {
+	public ResultSetMappingSqlSelection(int valuesArrayPosition, JdbcMapping<?> jdbcMapping) {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.valueMapping = jdbcMapping;
 		this.valueExtractor = jdbcMapping.getJdbcValueExtractor();

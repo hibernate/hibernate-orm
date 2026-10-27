@@ -118,7 +118,7 @@ public sealed class Column
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public JdbcMapping getType() {
+	public JdbcMapping<?> getType() {
 		return getValue().getSelectableType( getMetadataCollector(), getTypeIndex() );
 	}
 
@@ -460,7 +460,7 @@ public sealed class Column
 		if ( type == null ) {
 			throw new AssertionFailure( "no typing information available to determine column size" );
 		}
-		final var jdbcMapping = (JdbcMapping) type;
+		final var jdbcMapping = (JdbcMapping<?>) type;
 		final Size size = dialect.getSizeStrategy().resolveSize(
 				jdbcMapping.getJdbcType(),
 				jdbcMapping.getJdbcJavaType(),

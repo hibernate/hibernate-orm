@@ -5,7 +5,10 @@ package org.hibernate.metamodel.mapping;
  *
  * @author Steve Ebersole
  */
-public interface BasicEntityIdentifierMapping extends SingleAttributeIdentifierMapping, BasicValuedModelPart {
+public interface BasicEntityIdentifierMapping<J, M, R> extends SingleAttributeIdentifierMapping<J, M, R>, BasicValuedModelPart<J, M, R> {
+	@Override
+	JdbcMapping<R> getJdbcMapping();
+
 	@Override
 	default int getFetchableKey() {
 		return -1;

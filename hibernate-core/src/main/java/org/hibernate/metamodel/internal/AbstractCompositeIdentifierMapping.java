@@ -46,17 +46,17 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  *
  * @author Andrea Boriero
  */
-public abstract class AbstractCompositeIdentifierMapping
-		implements CompositeIdentifierMapping, EmbeddableValuedFetchable, FetchOptions {
+public abstract class AbstractCompositeIdentifierMapping<J, M, R>
+		implements CompositeIdentifierMapping<J, M, R>, EmbeddableValuedFetchable<J, M, R>, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final String tableExpression;
 
-	private final EntityMappingType entityMapping;
+	private final EntityMappingType<?> entityMapping;
 
 	protected final SessionFactoryImplementor sessionFactory;
 
 	public AbstractCompositeIdentifierMapping(
-			EntityMappingType entityMapping,
+			EntityMappingType<?> entityMapping,
 			String tableExpression,
 			MappingModelCreationProcess creationProcess) {
 		this.navigableRole =
@@ -70,7 +70,7 @@ public abstract class AbstractCompositeIdentifierMapping
 	/*
 	 * Used by Hibernate Reactive
 	 */
-	protected AbstractCompositeIdentifierMapping(AbstractCompositeIdentifierMapping original) {
+	protected AbstractCompositeIdentifierMapping(AbstractCompositeIdentifierMapping<J, M, R> original) {
 		this.navigableRole = original.navigableRole;
 		this.entityMapping = original.entityMapping;
 		this.tableExpression = original.tableExpression;
@@ -84,13 +84,13 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getMappedType() {
+	public EmbeddableMappingType<?, M, ?> getMappedType() {
 		return getPartMappingType();
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType<?, M, ?> getEmbeddableTypeDescriptor() {
 		return getPartMappingType();
 	}
 
@@ -163,14 +163,14 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		return getPartMappingType().findSubPart( name, treatTargetType );
 	}
 
 	@Override
 	public void visitSubParts(
-			@Nonnull Consumer<ModelPart> consumer,
-			@Nullable EntityMappingType treatTargetType) {
+			@Nonnull Consumer<ModelPart<?, ?, ?>> consumer,
+			@Nullable EntityMappingType<?> treatTargetType) {
 		getPartMappingType().visitSubParts( consumer, treatTargetType );
 	}
 
@@ -195,7 +195,7 @@ public abstract class AbstractCompositeIdentifierMapping
 			for ( int i = 0; i < size; i++ ) {
 				final var attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
 				final Object object = embeddableTypeDescriptor.getValue( value, i );
-				if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+				if ( attributeMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 					final var foreignKeyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
 					final var inverse = toOneAttributeMapping.getSideNature().inverse();
 					final Object identifier =
@@ -245,7 +245,7 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<R> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -266,7 +266,7 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	@Nonnull
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return entityMapping;
 	}
 
@@ -285,7 +285,7 @@ public abstract class AbstractCompositeIdentifierMapping
 		return FetchTiming.IMMEDIATE;
 	}
 
-	protected EntityMappingType getEntityMapping() {
+	protected EntityMappingType<?> getEntityMapping() {
 		return entityMapping;
 	}
 

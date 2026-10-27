@@ -26,11 +26,11 @@ public class GeometryMappingTest {
 
 	@Test
 	public void testSimpleEntity(SessionFactoryScope scope) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( MLEntity.class );
 
-		ModelPart part = entityDescriptor.findSubPart( "lineString" );
+		ModelPart<?, ?, ?> part = entityDescriptor.findSubPart( "lineString" );
 		assertThat( part.getJavaType(), equalTo( GeolatteGeometryJavaType.MULTILINESTRING_INSTANCE ) );
 
 	}

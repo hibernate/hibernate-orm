@@ -44,7 +44,7 @@ public class JoinedDiscriminatedEntityInitializer
 	protected final InitializerParent<?> parent;
 	private final NavigablePath navigablePath;
 	private final boolean isPartOfKey;
-	private final DiscriminatedAssociationModelPart fetchedPart;
+	private final DiscriminatedAssociationModelPart<?> fetchedPart;
 	private final boolean eager;
 	private final BitSet affectedByFilter;
 	private final boolean resultInitializer;
@@ -58,7 +58,7 @@ public class JoinedDiscriminatedEntityInitializer
 	private final boolean allowMissingConcreteInitializer;
 
 	public static class JoinedDiscriminatedEntityInitializerData extends InitializerData {
-		protected EntityPersister concreteDescriptor;
+		protected EntityPersister<?> concreteDescriptor;
 		protected Object entityIdentifier;
 		protected EntityInitializer<EntityInitializerImpl.EntityInitializerData> concreteInitializer;
 
@@ -69,7 +69,7 @@ public class JoinedDiscriminatedEntityInitializer
 
 	public JoinedDiscriminatedEntityInitializer(
 			InitializerParent<?> parent,
-			DiscriminatedAssociationModelPart fetchedPart,
+			DiscriminatedAssociationModelPart<?> fetchedPart,
 			NavigablePath fetchedNavigable,
 			Fetch discriminatorFetch,
 			Fetch keyFetch,
@@ -150,7 +150,7 @@ public class JoinedDiscriminatedEntityInitializer
 	}
 
 	@Override
-	public DiscriminatedAssociationModelPart getInitializedPart() {
+	public DiscriminatedAssociationModelPart<?> getInitializedPart() {
 		return fetchedPart;
 	}
 
@@ -354,12 +354,12 @@ public class JoinedDiscriminatedEntityInitializer
 		}
 	}
 
-	private static boolean hasImplicitDiscriminatorStrategy(DiscriminatorMapping discriminatorMapping) {
+	private static boolean hasImplicitDiscriminatorStrategy(DiscriminatorMapping<?> discriminatorMapping) {
 		return discriminatorMapping.getValueConverter() instanceof UnifiedAnyDiscriminatorConverter<?, ?> converter
 			&& converter.hasImplicitValueStrategy();
 	}
 
-	private EntityPersister resolveConcreteDescriptor(Object instance, SharedSessionContractImplementor session) {
+	private EntityPersister<?> resolveConcreteDescriptor(Object instance, SharedSessionContractImplementor session) {
 		final var lazyInitializer = extractLazyInitializer( instance );
 		if ( lazyInitializer == null ) {
 			return session.getEntityPersister( null, instance );
@@ -371,7 +371,7 @@ public class JoinedDiscriminatedEntityInitializer
 		}
 	}
 
-	private @Nullable EntityInitializer<EntityInitializerImpl.EntityInitializerData> resolveConcreteInitializer(EntityPersister concreteDescriptor) {
+	private @Nullable EntityInitializer<EntityInitializerImpl.EntityInitializerData> resolveConcreteInitializer(EntityPersister<?> concreteDescriptor) {
 		final var concreteInitializer = concreteInitializersByEntityName.get( concreteDescriptor.getEntityName() );
 		if ( concreteInitializer == null && !allowMissingConcreteInitializer ) {
 			throw new IllegalStateException(
@@ -443,12 +443,12 @@ public class JoinedDiscriminatedEntityInitializer
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		throw new UnsupportedOperationException( "Discriminated association has no static entity type" );
 	}
 
 	@Override
-	public EntityPersister getConcreteDescriptor(JoinedDiscriminatedEntityInitializerData data) {
+	public EntityPersister<?> getConcreteDescriptor(JoinedDiscriminatedEntityInitializerData data) {
 		return data.concreteDescriptor;
 	}
 

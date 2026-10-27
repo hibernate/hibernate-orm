@@ -44,7 +44,7 @@ public abstract class AbstractDeleteCoordinator
 	private MutationOperationGroup noVersionDeleteGroup;
 
 	public AbstractDeleteCoordinator(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
@@ -383,7 +383,7 @@ public abstract class AbstractDeleteCoordinator
 	private void breakDownJdbcValues(
 			@Nonnull Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
 			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull AttributeMapping attribute,
+			@Nonnull AttributeMapping<?, ?, ?> attribute,
 			@Nullable Object loadedValue) {
 		final var tableMutationBuilder =
 				resolver.apply( attribute.getContainingTableExpression() );

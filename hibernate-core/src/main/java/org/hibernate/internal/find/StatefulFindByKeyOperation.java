@@ -35,7 +35,7 @@ public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T>
 	// options
 
 	public StatefulFindByKeyOperation(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<?> rootGraph,

@@ -37,15 +37,15 @@ import java.util.List;
 // todo (6.0) : this can generically define a load-by-uk as well.
 // only the SQL AST and `restrictivePart` vary and they are passed as constructor args
 public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
-	private final EntityMappingType entityMappingType;
-	private final ModelPart restrictivePart;
+	private final EntityMappingType<?> entityMappingType;
+	private final ModelPart<?, ?, ?> restrictivePart;
 	private final LockOptions lockOptions;
 	private final JdbcSelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
 
 	public SingleIdLoadPlan(
-			@Nonnull EntityMappingType entityMappingType,
-			@Nonnull ModelPart restrictivePart,
+			@Nonnull EntityMappingType<?> entityMappingType,
+			@Nonnull ModelPart<?, ?, ?> restrictivePart,
 			@Nonnull SelectStatement sqlAst,
 			@Nonnull JdbcParametersList jdbcParameters,
 			@Nonnull LockOptions lockOptions,
@@ -82,13 +82,13 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 
 	@Nonnull
 	@Override
-	public Loadable getLoadable() {
+	public Loadable<?, ?, ?> getLoadable() {
 		return entityMappingType;
 	}
 
 	@Nonnull
 	@Override
-	public ModelPart getRestrictivePart() {
+	public ModelPart<?, ?, ?> getRestrictivePart() {
 		return restrictivePart;
 	}
 
@@ -181,7 +181,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		@Nullable
 		private final Object entityInstance;
 		private final Object restrictedValue;
-		private final EntityMappingType rootEntityDescriptor;
+		private final EntityMappingType<?> rootEntityDescriptor;
 		private final QueryOptions queryOptions;
 		private final Callback callback;
 
@@ -189,7 +189,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 				@Nonnull SharedSessionContractImplementor session,
 				@Nullable Object entityInstance,
 				@Nonnull Object restrictedValue,
-				@Nonnull EntityMappingType rootEntityDescriptor, @Nonnull QueryOptions queryOptions,
+				@Nonnull EntityMappingType<?> rootEntityDescriptor, @Nonnull QueryOptions queryOptions,
 				@Nonnull Callback callback) {
 			super( session );
 			this.entityInstance = entityInstance;
@@ -213,7 +213,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 
 		@Nonnull
 		@Override
-		public EntityMappingType getRootEntityDescriptor() {
+		public EntityMappingType<?> getRootEntityDescriptor() {
 			return rootEntityDescriptor;
 		}
 

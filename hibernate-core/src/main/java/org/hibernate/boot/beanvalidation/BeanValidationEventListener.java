@@ -152,7 +152,7 @@ public class BeanValidationEventListener
 		);
 	}
 
-	private <T> void validate(T object, EntityPersister persister, GroupsPerOperation.Operation operation) {
+	private <T> void validate(T object, EntityPersister<?> persister, GroupsPerOperation.Operation operation) {
 		if ( object != null && persister.getRepresentationStrategy().getMode() == POJO ) {
 			final var groups = groupsPerOperation.get( operation );
 			if ( groups.length > 0 ) {

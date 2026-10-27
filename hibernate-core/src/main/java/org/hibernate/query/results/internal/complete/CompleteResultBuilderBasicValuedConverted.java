@@ -30,7 +30,7 @@ import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createCol
  */
 public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteResultBuilderBasicValued {
 	private final String explicitColumnName;
-	private final BasicValuedMapping underlyingMapping;
+	private final BasicValuedMapping<?> underlyingMapping;
 	private final AttributeConverterBean<O, R> valueConverter;
 
 	public CompleteResultBuilderBasicValuedConverted(
@@ -38,7 +38,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			ManagedBean<? extends AttributeConverter<O, R>> converterBean,
 			JavaType<? extends AttributeConverter<O, R>> converterJtd,
 			BasicJavaType<O> domainJavaType,
-			BasicValuedMapping underlyingMapping) {
+			BasicValuedMapping<?> underlyingMapping) {
 		this.explicitColumnName = explicitColumnName;
 		this.underlyingMapping = underlyingMapping;
 		final var relationalType =

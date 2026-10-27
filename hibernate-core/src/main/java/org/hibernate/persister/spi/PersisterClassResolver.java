@@ -30,7 +30,7 @@ public interface PersisterClassResolver extends Service {
 	 * @return The entity persister class to use
 	 */
 	@Nonnull
-	Class<? extends EntityPersister> getEntityPersisterClass(@Nonnull PersistentClass metadata);
+	Class<? extends EntityPersister<?>> getEntityPersisterClass(@Nonnull PersistentClass metadata);
 
 	/**
 	 * Returns the collection persister class for a given collection role or null

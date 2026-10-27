@@ -18,14 +18,14 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
  */
 public abstract class CollectionFetch implements FetchParent, Fetch, InitializerProducer<CollectionFetch> {
 	private final NavigablePath fetchedPath;
-	private final PluralAttributeMapping fetchedAttribute;
+	private final PluralAttributeMapping<?> fetchedAttribute;
 
 	private final FetchParent fetchParent;
 	private final FetchOptions fetchOptions;
 
 	public CollectionFetch(
 			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedAttribute,
+			PluralAttributeMapping<?> fetchedAttribute,
 			FetchParent fetchParent,
 			FetchOptions fetchOptions) {
 		this.fetchedPath = fetchedPath;
@@ -40,7 +40,7 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 	}
 
 	@Override
-	public PluralAttributeMapping getFetchedMapping() {
+	public PluralAttributeMapping<?> getFetchedMapping() {
 		return fetchedAttribute;
 	}
 
@@ -54,12 +54,12 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 	}
 
 	@Override
-	public PluralAttributeMapping getReferencedMappingContainer() {
+	public PluralAttributeMapping<?> getReferencedMappingContainer() {
 		return getFetchedMapping();
 	}
 
 	@Override
-	public PluralAttributeMapping getReferencedMappingType() {
+	public PluralAttributeMapping<?> getReferencedMappingType() {
 		return getFetchedMapping();
 	}
 
@@ -69,7 +69,7 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 		return null;
 	}
 

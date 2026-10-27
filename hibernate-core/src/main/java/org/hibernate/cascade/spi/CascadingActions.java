@@ -73,7 +73,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public boolean anythingToCascade(EntityPersister persister) {
+		public boolean anythingToCascade(EntityPersister<?> persister) {
 			return persister.hasCascadeDelete();
 		}
 
@@ -254,7 +254,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public boolean anythingToCascade(EntityPersister persister) {
+		public boolean anythingToCascade(EntityPersister<?> persister) {
 			return persister.hasCascadePersist();
 		}
 
@@ -304,7 +304,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public boolean anythingToCascade(EntityPersister persister) {
+		public boolean anythingToCascade(EntityPersister<?> persister) {
 			return persister.hasCascadePersist();
 		}
 
@@ -365,7 +365,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public boolean anythingToCascade(EntityPersister persister) {
+		public boolean anythingToCascade(EntityPersister<?> persister) {
 			// Must override the implementation from the superclass
 			// because transient checking happens even for entities
 			// with cascade NONE on all associations
@@ -477,7 +477,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public boolean anythingToCascade(EntityPersister persister) {
+		public boolean anythingToCascade(EntityPersister<?> persister) {
 			// if the entity has cascade NONE everywhere, we can ignore it
 			// TODO: the persister could track which kinds of cascade it has
 			return persister.hasCascades();

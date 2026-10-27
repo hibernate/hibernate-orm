@@ -81,8 +81,8 @@ public final class JdbcParameterFactory {
 	/// The returned parameter uses `jdbcMapping` as its expression mapping and
 	/// returns `binder` from [JdbcParameter#getParameterBinder()]. Its parameter
 	/// identifier is `null`.
-	public static @Nonnull JdbcParameter custom(@Nonnull JdbcMapping jdbcMapping, @Nonnull JdbcParameterBinder binder) {
-		return new CustomJdbcParameter( jdbcMapping, binder );
+	public static @Nonnull JdbcParameter custom(@Nonnull JdbcMapping<?> jdbcMapping, @Nonnull JdbcParameterBinder binder) {
+		return new CustomJdbcParameter<>( jdbcMapping, binder );
 	}
 
 	private static BasicType<Integer> resolveIntegerType(@Nonnull TypeConfiguration typeConfiguration) {
@@ -93,10 +93,10 @@ public final class JdbcParameterFactory {
 		return integerType;
 	}
 
-	private static final class CustomJdbcParameter extends AbstractJdbcParameter {
+	private static final class CustomJdbcParameter<J> extends AbstractJdbcParameter<J> {
 		private final JdbcParameterBinder binder;
 
-		private CustomJdbcParameter(JdbcMapping jdbcMapping, JdbcParameterBinder binder) {
+		private CustomJdbcParameter(JdbcMapping<J> jdbcMapping, JdbcParameterBinder binder) {
 			super( jdbcMapping );
 			this.binder = binder;
 		}

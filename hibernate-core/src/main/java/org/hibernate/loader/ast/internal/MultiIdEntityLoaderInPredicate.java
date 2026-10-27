@@ -42,7 +42,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 	private final int idJdbcTypeCount;
 
 	public MultiIdEntityLoaderInPredicate(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			int idColumnSpan,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );

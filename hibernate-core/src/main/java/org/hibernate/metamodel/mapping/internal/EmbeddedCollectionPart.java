@@ -53,11 +53,16 @@ import static org.hibernate.metamodel.mapping.internal.ParentPropertyAccessHelpe
 /**
  * @author Steve Ebersole
  */
-public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedFetchable, FetchOptions {
+public class EmbeddedCollectionPart<J> implements CollectionPart<J, J, J>, EmbeddableValuedFetchable<J, J, J>, FetchOptions {
+	@Override
+	public JavaType<J> getJavaType() {
+		return embeddableMappingType.getJavaType();
+	}
+
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
-	private final EmbeddableMappingType embeddableMappingType;
+	private final EmbeddableMappingType<J, J, ?> embeddableMappingType;
 
 	private final String containingTableExpression;
 
@@ -68,7 +73,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			PropertyAccessorService propertyAccessorService,
 			CollectionPersister collectionDescriptor,
 			Nature nature,
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<J, J, ?> embeddableMappingType,
 			String parentInjectionAttributeName,
 			String containingTableExpression,
 			String sqlAliasStem) {
@@ -85,13 +90,13 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getCollectionAttribute() {
+	public PluralAttributeMapping<?> getCollectionAttribute() {
 		return collectionDescriptor.getAttributeMapping();
 	}
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -114,13 +119,13 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType<J, J, ?> getEmbeddableTypeDescriptor() {
 		return embeddableMappingType;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return getEmbeddableTypeDescriptor();
 	}
 
@@ -256,7 +261,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			boolean fetched,
 			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
-		assert lhs.getModelPart() instanceof PluralAttributeMapping;
+		assert lhs.getModelPart() instanceof PluralAttributeMapping<?>;
 		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
@@ -267,12 +272,12 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		return getEmbeddableTypeDescriptor().findSubPart( name, treatTargetType );
 	}
 
 	@Override
-	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTargetType) {
 		getEmbeddableTypeDescriptor().visitSubParts( consumer, treatTargetType );
 	}
 
@@ -289,13 +294,13 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		embeddableMappingType.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getExpressibleJavaType() {
+	public JavaType<J> getExpressibleJavaType() {
 		return getJavaType();
 	}
 
@@ -307,7 +312,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
@@ -325,7 +330,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	public boolean containsTableReference(String tableExpression) {
 		if ( collectionDescriptor.isOneToMany() ) {
 			final var elementDescriptor =
-					(EntityCollectionPart)
+					(EntityCollectionPart<?>)
 							collectionDescriptor.getAttributeMapping().getElementDescriptor();
 			return elementDescriptor.getPartMappingType().containsTableReference( tableExpression );
 		}

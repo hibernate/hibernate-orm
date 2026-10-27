@@ -31,17 +31,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class EntityWithOneToOneSharingPrimaryKeyTest {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( EntityWithOneToOneSharingPrimaryKey.class );
 
-		final ModelPart otherAssociation = entityDescriptor.findSubPart( "other" );
+		final ModelPart<?, ?, ?> otherAssociation = entityDescriptor.findSubPart( "other" );
 
 		assertThat( otherAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) otherAssociation;
+		final ToOneAttributeMapping<?> otherAttributeMapping = (ToOneAttributeMapping<?>) otherAssociation;
 
-		ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
+		ForeignKeyDescriptor<?, ?, ?> foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "entity_o2o_sharepk" ) );

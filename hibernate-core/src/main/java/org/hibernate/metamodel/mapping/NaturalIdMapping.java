@@ -34,7 +34,7 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 ///
 /// @author Steve Ebersole
 @Incubating(since = "5.4")
-public interface NaturalIdMapping extends VirtualModelPart {
+public interface NaturalIdMapping<J, M, R> extends VirtualModelPart<J, M, R> {
 	String PART_NAME = "{natural-id}";
 
 	/// A [class][org.hibernate.annotations.NaturalIdClass] which used
@@ -43,7 +43,7 @@ public interface NaturalIdMapping extends VirtualModelPart {
 
 	/// The attribute(s) making up the natural-id.
 	@Nonnull
-	List<SingularAttributeMapping> getNaturalIdAttributes();
+	List<SingularAttributeMapping<?, ?, ?>> getNaturalIdAttributes();
 
 	/// Whether the natural-id is mutable.
 	///
@@ -107,9 +107,9 @@ public interface NaturalIdMapping extends VirtualModelPart {
 
 	/// Make a loader capable of loading a single entity by natural-id
 	@Nonnull
-	NaturalIdLoader<?> makeLoader(@Nonnull EntityMappingType entityDescriptor);
+	NaturalIdLoader<?> makeLoader(@Nonnull EntityMappingType<?> entityDescriptor);
 
 	/// Make a loader capable of loading multiple entities by natural-id
 	@Nonnull
-	MultiNaturalIdLoader<?> makeMultiLoader(@Nonnull EntityMappingType entityDescriptor);
+	MultiNaturalIdLoader<?> makeMultiLoader(@Nonnull EntityMappingType<?> entityDescriptor);
 }

@@ -25,7 +25,7 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 
 	@Nonnull
 	@Override
-	public Class<? extends EntityPersister> getEntityPersisterClass(@Nonnull PersistentClass model) {
+	public Class<? extends EntityPersister<?>> getEntityPersisterClass(@Nonnull PersistentClass model) {
 		// todo : make sure this is based on an attribute kept on the metamodel in the new code,
 		//        not the concrete PersistentClass impl found!
 		if ( model instanceof RootClass ) {
@@ -54,18 +54,18 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 	}
 
 	@Nonnull
-	public Class<? extends EntityPersister> singleTableEntityPersister() {
-		return SingleTableEntityPersister.class;
+	public Class<? extends EntityPersister<?>> singleTableEntityPersister() {
+		return persisterClass( SingleTableEntityPersister.class );
 	}
 
 	@Nonnull
-	public Class<? extends EntityPersister> joinedSubclassEntityPersister() {
-		return JoinedSubclassEntityPersister.class;
+	public Class<? extends EntityPersister<?>> joinedSubclassEntityPersister() {
+		return persisterClass( JoinedSubclassEntityPersister.class );
 	}
 
 	@Nonnull
-	public Class<? extends EntityPersister> unionSubclassEntityPersister() {
-		return UnionSubclassEntityPersister.class;
+	public Class<? extends EntityPersister<?>> unionSubclassEntityPersister() {
+		return persisterClass( UnionSubclassEntityPersister.class );
 	}
 
 	@Nonnull
@@ -82,5 +82,9 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 	@Nonnull
 	private Class<BasicCollectionPersister> basicCollectionPersister() {
 		return BasicCollectionPersister.class;
+	}
+	@SuppressWarnings("unchecked")
+	private static Class<? extends EntityPersister<?>> persisterClass(Class<?> type) {
+		return (Class<? extends EntityPersister<?>>) (Class<?>) type.asSubclass( EntityPersister.class );
 	}
 }

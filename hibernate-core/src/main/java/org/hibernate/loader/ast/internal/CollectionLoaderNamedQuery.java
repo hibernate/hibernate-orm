@@ -29,7 +29,7 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getLoadable() {
+	public PluralAttributeMapping<?> getLoadable() {
 		return persister.getAttributeMapping();
 	}
 

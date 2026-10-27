@@ -118,7 +118,7 @@ public class BatchingTest implements BatchKey {
 								}
 
 								@Override
-								public JdbcMapping getJdbcMapping() {
+								public JdbcMapping<?> getJdbcMapping() {
 									return session.getTypeConfiguration()
 											.getBasicTypeRegistry()
 											.resolve( StandardBasicTypes.INTEGER );
@@ -144,7 +144,7 @@ public class BatchingTest implements BatchKey {
 								}
 
 								@Override
-								public JdbcMapping getJdbcMapping() {
+								public JdbcMapping<?> getJdbcMapping() {
 									return session.getTypeConfiguration()
 											.getBasicTypeRegistry()
 											.resolve( StandardBasicTypes.STRING );

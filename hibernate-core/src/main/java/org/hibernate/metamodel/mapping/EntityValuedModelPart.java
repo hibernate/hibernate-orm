@@ -26,38 +26,38 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  *
  * @author Steve Ebersole
  */
-public interface EntityValuedModelPart extends FetchableContainer {
+public interface EntityValuedModelPart<J> extends FetchableContainer<J, J, J> {
 	/**
 	 * The descriptor of the entity that is the type for this part
 	 */
 	@Nonnull
-	EntityMappingType getEntityMappingType();
+	EntityMappingType<J> getEntityMappingType();
 
 	@Nullable
-	default ModelPart findSubPart(@Nonnull String name) {
+	default ModelPart<?, ?, ?> findSubPart(@Nonnull String name) {
 		return getEntityMappingType().findSubPart( name, null );
 	}
 
 	@Override
-	default void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
+	default void forEachSubPart(@Nonnull IndexedConsumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTarget) {
 		getEntityMappingType().forEachSubPart( consumer, treatTarget );
 	}
 
 	@Nullable
 	@Override
-	default ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType targetType) {
+	default ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> targetType) {
 		return getEntityMappingType().findSubPart( name, targetType );
 	}
 
 	@Override
-	default void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType targetType) {
+	default void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> targetType) {
 		getEntityMappingType().visitSubParts( consumer, targetType );
 	}
 
 	@Nonnull
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
-	default <T> DomainResult<T> createDomainResult(
+	default DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -82,7 +82,7 @@ public interface EntityValuedModelPart extends FetchableContainer {
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection,JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection,JdbcMapping<?>> selectionConsumer) {
 		// this is really only valid for root entity returns, not really many-to-ones, etc..  but this should
 		// really only ever be called as part of creating a root-return.
 		getEntityMappingType().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
@@ -94,7 +94,7 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	}
 
 	@Override
-	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	default int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return getEntityMappingType().forEachJdbcType( offset, action );
 	}
 

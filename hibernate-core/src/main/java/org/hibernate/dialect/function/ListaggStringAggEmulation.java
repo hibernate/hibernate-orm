@@ -148,7 +148,7 @@ public class ListaggStringAggEmulation extends AbstractSqmSelfRenderingFunctionD
 	}
 
 	private void renderAsString(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression expression) {
-		final JdbcMapping sourceMapping = expression.getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> sourceMapping = expression.getExpressionType().getSingleJdbcMapping();
 		// No need to cast if we already have a string
 		if ( sourceMapping.getCastType() == CastType.STRING ) {
 			expression.accept( translator );

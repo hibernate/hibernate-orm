@@ -140,7 +140,7 @@ public class CteInsertHandler implements InsertHandler {
 				.getHibernateEntityName();
 
 		final SessionFactoryImplementor factory = context.getSession().getFactory();
-		final EntityPersister entityDescriptor = factory.getMappingMetamodel().getEntityDescriptor( entityName );
+		final EntityPersister<?> entityDescriptor = factory.getMappingMetamodel().getEntityDescriptor( entityName );
 		final SqmRoot<?> target = sqmStatement.getTarget();
 		final String explicitDmlTargetAlias =
 				target.getExplicitAlias() == null
@@ -319,16 +319,16 @@ public class CteInsertHandler implements InsertHandler {
 					rowNumberColumn.getJdbcMapping()
 			);
 			final CteColumn idColumn = fullEntityCteTable.getCteColumns().get( 0 );
-			final BasicValuedMapping idType = (BasicValuedMapping) idColumn.getJdbcMapping();
+			final BasicValuedMapping<?> idType = (BasicValuedMapping<?>) idColumn.getJdbcMapping();
 			final Optimizer optimizer = ( (OptimizableGenerator) entityDescriptor.getGenerator() ).getOptimizer();
-			final BasicValuedMapping integerType = (BasicValuedMapping) rowNumberColumn.getJdbcMapping();
+			final BasicValuedMapping<?> integerType = (BasicValuedMapping<?>) rowNumberColumn.getJdbcMapping();
 			final Expression rowNumberMinusOneModuloIncrement = new BinaryArithmeticExpression(
 					new BinaryArithmeticExpression(
 							rowNumberColumnReference,
 							BinaryArithmeticOperator.SUBTRACT,
 							new QueryLiteral<>(
 									1,
-									(BasicValuedMapping) rowNumberColumn.getJdbcMapping()
+									(BasicValuedMapping<?>) rowNumberColumn.getJdbcMapping()
 							),
 							integerType
 					),
@@ -645,7 +645,7 @@ public class CteInsertHandler implements InsertHandler {
 	protected String addDmlCtes(
 			CteContainer statement,
 			CteStatement queryCte,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			List<Map.Entry<List<CteColumn>, Assignment>> assignments,
 			boolean assignsId,
 			MultiTableSqmMutationConverter sqmConverter,
@@ -653,7 +653,7 @@ public class CteInsertHandler implements InsertHandler {
 		final SqmInsertStatement<?> sqmStatement = (SqmInsertStatement<?>) sqmConverter.getStatement();
 		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
 		final String rootEntityName = entityPersister.getRootEntityName();
-		final EntityPersister rootEntityDescriptor =
+		final EntityPersister<?> rootEntityDescriptor =
 				factory.getMappingMetamodel()
 						.getEntityDescriptor( rootEntityName );
 
@@ -1054,7 +1054,7 @@ public class CteInsertHandler implements InsertHandler {
 			CteTable dmlResultCte,
 			InsertSelectStatement insertStatement,
 			CteStatement queryCte,
-			EntityPersister entityDescriptor,
+			EntityPersister<?> entityDescriptor,
 			int tableIndex,
 			ConflictClause conflictClause,
 			CteContainer statement) {
@@ -1098,7 +1098,7 @@ public class CteInsertHandler implements InsertHandler {
 			if ( constraintColumnNames.isEmpty() ) {
 				// Assume the primary key columns
 				Predicate predicate = buildColumnMatchPredicate(
-						columnsToMatch = Arrays.asList( ((EntityPersister) entityDescriptor).getKeyColumns( tableIndex ) ),
+						columnsToMatch = Arrays.asList( ((EntityPersister<?>) entityDescriptor).getKeyColumns( tableIndex ) ),
 						insertStatement,
 						false,
 						true,

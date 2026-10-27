@@ -131,7 +131,7 @@ public class DefaultPersistEventListener
 			@Nonnull PersistContext createCache,
 			@Nonnull EventSource source,
 			@Nonnull Object entity,
-			@Nonnull EntityPersister persister) {
+			@Nonnull EntityPersister<?> persister) {
 		//TODO: merge into one method!
 		cascadeBeforeSave( source, persister, entity, createCache );
 		cascadeAfterSave( source, persister, entity, createCache );

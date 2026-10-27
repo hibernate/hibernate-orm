@@ -30,14 +30,14 @@ public class EmbeddableForeignKeyResultImpl<T>
 
 	private final String resultVariable;
 	private final FetchParent fetchParent;
-	private final EmbeddableMappingType fetchContainer;
+	private final EmbeddableMappingType<?, ?, ?> fetchContainer;
 
 	/*
 	 * Used by Hibernate Reactive
 	 */
 	public EmbeddableForeignKeyResultImpl(
 			NavigablePath navigablePath,
-			EmbeddableValuedModelPart embeddableValuedModelPart,
+			EmbeddableValuedModelPart<?, ?, T> embeddableValuedModelPart,
 			String resultVariable,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
@@ -75,14 +75,14 @@ public class EmbeddableForeignKeyResultImpl<T>
 
 	@Override
 	public Fetch generateFetchableFetch(
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final boolean shouldSelect;
-		if ( fetchable instanceof ToOneAttributeMapping toOne ) {
+		if ( fetchable instanceof ToOneAttributeMapping<?> toOne ) {
 			// We need to make sure to-ones are always delayed to avoid cycles while resolving entity keys
 			shouldSelect = selected
 					&& !creationState.isAssociationKeyVisited( toOne.getForeignKeyDescriptor().getAssociationKey() )
@@ -120,23 +120,23 @@ public class EmbeddableForeignKeyResultImpl<T>
 
 	@Override
 	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
-		return getReferencedModePart() instanceof NonAggregatedIdentifierMapping
+		return getReferencedModePart() instanceof NonAggregatedIdentifierMapping<?, ?>
 				? new NonAggregatedIdentifierMappingInitializer( this, null, creationState, true )
 				: new EmbeddableInitializerImpl( this, null, null, null, creationState, true );
 	}
 
 	@Override
-	public EmbeddableMappingType getReferencedMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getReferencedMappingType() {
 		return fetchContainer.getPartMappingType();
 	}
 
 	@Override
-	public EmbeddableMappingType getFetchContainer() {
+	public EmbeddableMappingType<?, ?, ?> getFetchContainer() {
 		return fetchContainer;
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getReferencedMappingContainer() {
+	public EmbeddableValuedModelPart<?, ?, ?> getReferencedMappingContainer() {
 		return getFetchContainer().getEmbeddedValueMapping();
 	}
 }

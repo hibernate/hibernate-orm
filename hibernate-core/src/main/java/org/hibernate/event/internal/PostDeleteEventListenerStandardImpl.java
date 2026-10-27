@@ -25,7 +25,7 @@ public class PostDeleteEventListenerStandardImpl implements PostDeleteEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+	public boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 		final var callbacks = persister.getEntityCallbacks();
 		return callbacks.hasRegisteredCallbacks( CallbackType.POST_REMOVE )
 			|| callbacks.hasRegisteredCallbacks( CallbackType.POST_DELETE );

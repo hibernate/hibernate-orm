@@ -25,7 +25,7 @@ public class PreUpsertEvent extends AbstractPreDatabaseOperationEvent {
 			@Nonnull Object entity,
 			@Nonnull Object id,
 			@Nonnull Object[] state,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;

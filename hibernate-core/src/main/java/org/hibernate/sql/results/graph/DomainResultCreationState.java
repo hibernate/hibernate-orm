@@ -82,10 +82,10 @@ public interface DomainResultCreationState {
 	 * Resolve the ModelPart associated with a given NavigablePath.  More specific ModelParts should be preferred - e.g.
 	 * the SingularAssociationAttributeMapping rather than just the EntityTypeMapping for the associated type
 	 */
-	ModelPart resolveModelPart(NavigablePath navigablePath);
+	ModelPart<?, ?, ?> resolveModelPart(NavigablePath navigablePath);
 
 	default Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
-		final EntityIdentifierMapping identifierMapping = fetchParent.getReferencedMappingContainer()
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = fetchParent.getReferencedMappingContainer()
 				.getIdentifierMapping();
 		return fetchParent.generateFetchableFetch(
 				identifierMapping,
@@ -98,8 +98,8 @@ public interface DomainResultCreationState {
 	}
 
 	default BasicFetch<?> visitDiscriminatorFetch(EntityResultGraphNode fetchParent) {
-		final EntityMappingType entityDescriptor = fetchParent.getEntityValuedModelPart().getEntityMappingType();
-		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+		final EntityMappingType<?> entityDescriptor = fetchParent.getEntityValuedModelPart().getEntityMappingType();
+		final EntityDiscriminatorMapping<?> discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 		// No need to fetch the discriminator if this type does not have subclasses
 		if ( discriminatorMapping != null && entityDescriptor.hasSubclasses() ) {
 			return discriminatorMapping.generateFetch(
@@ -117,8 +117,8 @@ public interface DomainResultCreationState {
 	}
 
 	default BasicFetch<?> visitEmbeddableDiscriminatorFetch(EmbeddableResultGraphNode fetchParent, boolean nested) {
-		final EmbeddableMappingType embeddableType = fetchParent.getReferencedMappingType();
-		final EmbeddableDiscriminatorMapping discriminatorMapping = embeddableType.getDiscriminatorMapping();
+		final EmbeddableMappingType<?, ?, ?> embeddableType = fetchParent.getReferencedMappingType();
+		final EmbeddableDiscriminatorMapping<?> discriminatorMapping = embeddableType.getDiscriminatorMapping();
 		if ( discriminatorMapping != null ) {
 			final Function<FetchParent, BasicFetch<?>> fetchSupplier = fp -> discriminatorMapping.generateFetch(
 					fp,

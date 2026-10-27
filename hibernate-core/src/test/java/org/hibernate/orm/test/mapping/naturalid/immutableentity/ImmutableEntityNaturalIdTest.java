@@ -77,20 +77,20 @@ public class ImmutableEntityNaturalIdTest {
 
 	@Test
 	public void testNaturalIdMapping(SessionFactoryScope scope) {
-		final EntityMappingType buildingMapping = scope.getSessionFactory()
+		final EntityMappingType<?> buildingMapping = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Building.class );
 
-		final NaturalIdMapping naturalIdMapping = buildingMapping.getNaturalIdMapping();
+		final NaturalIdMapping<?, ?, ?> naturalIdMapping = buildingMapping.getNaturalIdMapping();
 		assertThat( naturalIdMapping, notNullValue() );
 		assertThat( naturalIdMapping.getNaturalIdAttributes().size(), is( 3 ) );
 		// nullability is not specified, so they should be nullable by annotations-specific default
-		for ( SingularAttributeMapping attribute : naturalIdMapping.getNaturalIdAttributes() ) {
+		for ( SingularAttributeMapping<?, ?, ?> attribute : naturalIdMapping.getNaturalIdAttributes() ) {
 			assertThat( attribute.getAttributeMetadata().isNullable(), is( true ) );
 		}
 
-		final EntityPersister entityPersister = buildingMapping.getEntityPersister();
+		final EntityPersister<?> entityPersister = buildingMapping.getEntityPersister();
 		assertThat(
 				"Class should have a natural key",
 				entityPersister.hasNaturalIdentifier(),

@@ -47,7 +47,7 @@ public interface AggregateJdbcType extends JdbcType {
 	/// @see StructuredJdbcType
 	@SPI(SUPPLY)
 	AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext);
 
@@ -63,7 +63,7 @@ public interface AggregateJdbcType extends JdbcType {
 	///
 	/// @return the represented embeddable mapping, or `null` when this descriptor
 	/// is not associated with a particular mapping
-	@Nullable EmbeddableMappingType getEmbeddableMappingType();
+	@Nullable EmbeddableMappingType<?, ?, ?> getEmbeddableMappingType();
 
 	/// Create the single driver-bindable aggregate representation of a non-null
 	/// mapped domain value.

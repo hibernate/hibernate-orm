@@ -52,7 +52,7 @@ import static java.util.Collections.singletonMap;
  */
 class DatabaseSnapshotExecutor {
 
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 
 	private final JdbcSelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
@@ -60,23 +60,23 @@ class DatabaseSnapshotExecutor {
 	private final JdbcParameter tenantIdParameter;
 
 	DatabaseSnapshotExecutor(
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this( entityDescriptor, sessionFactory, null );
 	}
 
 	DatabaseSnapshotExecutor(
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull SessionFactoryImplementor sessionFactory,
 			@Nullable Filter tenantFilter) {
 		this( entityDescriptor, sessionFactory, tenantFilter, null );
 	}
 
 	DatabaseSnapshotExecutor(
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull SessionFactoryImplementor sessionFactory,
 			@Nullable Filter tenantFilter,
-			@Nullable List<? extends ModelPart> partsToSelect) {
+			@Nullable List<? extends ModelPart<?, ?, ?>> partsToSelect) {
 		this.entityDescriptor = entityDescriptor;
 		var jdbcParametersBuilder =
 				JdbcParametersList.newBuilder( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
@@ -107,7 +107,7 @@ class DatabaseSnapshotExecutor {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		state.getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
-		tenantIdParameter = tenantFilter == null ? null : new JdbcParameterImpl(
+		tenantIdParameter = tenantFilter == null ? null : new JdbcParameterImpl<>(
 				((FilterImpl) tenantFilter).getFilterDefinition().getParameterJdbcMapping( PARAMETER_NAME ) );
 		if ( tenantFilter != null ) {
 			// Snapshots ignore application filters, but must respect tenant isolation.
@@ -151,7 +151,7 @@ class DatabaseSnapshotExecutor {
 					final var tableReference =
 							rootTableGroup.resolveTableReference( idNavigablePath,
 									selection.getContainingTableExpression() );
-					final var jdbcParameter = new SqlTypedMappingJdbcParameter( selection );
+					final var jdbcParameter = SqlTypedMappingJdbcParameter.create( selection );
 					jdbcParametersBuilder.add( jdbcParameter );
 					final var columnReference =
 							(ColumnReference)

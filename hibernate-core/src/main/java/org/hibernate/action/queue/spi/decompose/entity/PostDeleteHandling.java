@@ -77,7 +77,7 @@ public class PostDeleteHandling implements PostExecutionCallback {
 
 	private void postDeleteLoaded(
 			Object id,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SessionImplementor session,
 			Object instance) {
 		// After actually deleting a row, record the fact that the instance no longer
@@ -108,7 +108,7 @@ public class PostDeleteHandling implements PostExecutionCallback {
 
 	private void postDeleteUnloaded(
 			Object id,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SessionImplementor session) {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var key = session.generateEntityKey( id, persister );

@@ -31,10 +31,10 @@ public class SequenceGeneratorOverrideTest {
 	@Test
 	public void test(SessionFactoryScope scope) {
 		SessionFactoryImplementor sf = scope.getSessionFactory();
-		EntityPersister p1 = sf.getRuntimeMetamodels()
+		EntityPersister<?> p1 = sf.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Entity1.class.getName() );
-		EntityPersister p2 = sf.getRuntimeMetamodels()
+		EntityPersister<?> p2 = sf.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Entity2.class.getName() );
 

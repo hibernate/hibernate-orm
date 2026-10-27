@@ -107,7 +107,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 		return collection.iterator();
 	}
 
-	public void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingState) {
+	public void injectLoadedState(PluralAttributeMapping<?> attributeMapping, List<?> loadingState) {
 		assert collection == null;
 
 		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();

@@ -10,13 +10,13 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Gavin King
  */
 public class DetachedCollectionAssembler<T> implements DomainResultAssembler<T> {
-	private final PluralAttributeMapping collectionAttribute;
+	private final PluralAttributeMapping<?> collectionAttribute;
 	private final CollectionPart.Nature selectedPartNature;
 	private final DomainResultAssembler<?> collectionKeyAssembler;
 	private final JavaType<?> resultJavaType;
 
 	public DetachedCollectionAssembler(
-			PluralAttributeMapping collectionAttribute,
+			PluralAttributeMapping<?> collectionAttribute,
 			CollectionPart.Nature selectedPartNature,
 			DomainResultAssembler<?> collectionKeyAssembler,
 			JavaType<?> resultJavaType) {

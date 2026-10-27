@@ -296,7 +296,7 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	}
 
 	public void injectLoadedState(
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			List<?> loadingStateList) {
 		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
 		final var collectionSemantics = collectionDescriptor.getCollectionSemantics();

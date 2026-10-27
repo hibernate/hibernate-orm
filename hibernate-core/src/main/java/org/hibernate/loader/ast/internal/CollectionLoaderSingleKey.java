@@ -32,7 +32,7 @@ import static org.hibernate.sql.exec.spi.JdbcParameterBindings.NO_BINDINGS;
  * @author Steve Ebersole
  */
 public class CollectionLoaderSingleKey implements CollectionLoader {
-	private final PluralAttributeMapping attributeMapping;
+	private final PluralAttributeMapping<?> attributeMapping;
 
 	private final int keyJdbcCount;
 
@@ -41,7 +41,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 	private final JdbcParametersList jdbcParameters;
 
 	public CollectionLoaderSingleKey(
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.attributeMapping = attributeMapping;
@@ -82,12 +82,12 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 
 	@Nonnull
 	@Override
-	public PluralAttributeMapping getLoadable() {
+	public PluralAttributeMapping<?> getLoadable() {
 		return getAttributeMapping();
 	}
 
 	@Nonnull
-	public PluralAttributeMapping getAttributeMapping() {
+	public PluralAttributeMapping<?> getAttributeMapping() {
 		return attributeMapping;
 	}
 

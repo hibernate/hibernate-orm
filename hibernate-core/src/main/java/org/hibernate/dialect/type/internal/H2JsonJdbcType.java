@@ -24,7 +24,7 @@ public class H2JsonJdbcType extends JsonJdbcType {
 	 */
 	public static final H2JsonJdbcType INSTANCE = new H2JsonJdbcType( null );
 
-	protected H2JsonJdbcType(EmbeddableMappingType embeddableMappingType) {
+	protected H2JsonJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 	}
 
@@ -40,7 +40,7 @@ public class H2JsonJdbcType extends JsonJdbcType {
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new H2JsonJdbcType( mappingType );

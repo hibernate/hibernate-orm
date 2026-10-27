@@ -1,5 +1,7 @@
 package org.hibernate.sql.exec.internal;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.exec.ExecutionException;
@@ -14,10 +16,14 @@ import java.sql.SQLException;
  *
  * @author Gavin King
  */
-public class TemporalJdbcParameter extends SqlTypedMappingJdbcParameter {
+public class TemporalJdbcParameter<J> extends SqlTypedMappingJdbcParameter<J> {
 
-	public TemporalJdbcParameter(SqlTypedMapping sqlTypedMapping) {
-		super( sqlTypedMapping );
+	public static TemporalJdbcParameter<?> create(SqlTypedMapping sqlTypedMapping) {
+		return new TemporalJdbcParameter<>( sqlTypedMapping, sqlTypedMapping.getJdbcMapping() );
+	}
+
+	private TemporalJdbcParameter(SqlTypedMapping sqlTypedMapping, JdbcMapping<J> jdbcMapping) {
+		super( sqlTypedMapping, null, jdbcMapping );
 	}
 
 	@Override

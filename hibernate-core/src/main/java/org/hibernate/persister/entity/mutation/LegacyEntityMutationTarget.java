@@ -28,7 +28,7 @@ public interface LegacyEntityMutationTarget extends LegacyMutationTarget<EntityT
 
 	@Nonnull
 	@Override
-	EntityMappingType getTargetPart();
+	EntityMappingType<?> getTargetPart();
 
 	@Nonnull
 	@Override
@@ -45,7 +45,7 @@ public interface LegacyEntityMutationTarget extends LegacyMutationTarget<EntityT
 	 * The ModelPart describing the identifier/key for this target
 	 */
 	@Nonnull
-	ModelPart getIdentifierDescriptor();
+	ModelPart<?, ?, ?> getIdentifierDescriptor();
 
 	/**
 	 * The physical table name to use when mutating the given selectable

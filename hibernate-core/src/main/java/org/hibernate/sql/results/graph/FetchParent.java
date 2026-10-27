@@ -24,27 +24,27 @@ public interface FetchParent extends DomainResultGraphNode {
 	/**
 	 * This parent's mapping type
 	 */
-	FetchableContainer getReferencedMappingContainer();
+	FetchableContainer<?, ?, ?> getReferencedMappingContainer();
 
 	/**
 	 * This parent's mapping type
 	 */
-	FetchableContainer getReferencedMappingType();
+	FetchableContainer<?, ?, ?> getReferencedMappingType();
 
-	default NavigablePath resolveNavigablePath(Fetchable fetchable) {
+	default NavigablePath resolveNavigablePath(Fetchable<?, ?, ?> fetchable) {
 		final String fetchableName = fetchable.getFetchableName();
-		if ( fetchable instanceof EntityIdentifierMapping ) {
+		if ( fetchable instanceof EntityIdentifierMapping<?, ?, ?> ) {
 			return new EntityIdentifierNavigablePath( getNavigablePath(), fetchableName );
 		}
 		else {
-			final FetchableContainer referencedMappingContainer = getReferencedMappingContainer();
-			final EntityMappingType fetchableEntityType = fetchable.findContainingEntityMapping();
-			final EntityMappingType fetchParentType;
-			if ( referencedMappingContainer instanceof EmbeddableMappingType
-					|| referencedMappingContainer instanceof EmbeddableValuedModelPart ) {
+			final FetchableContainer<?, ?, ?> referencedMappingContainer = getReferencedMappingContainer();
+			final EntityMappingType<?> fetchableEntityType = fetchable.findContainingEntityMapping();
+			final EntityMappingType<?> fetchParentType;
+			if ( referencedMappingContainer instanceof EmbeddableMappingType<?, ?, ?>
+					|| referencedMappingContainer instanceof EmbeddableValuedModelPart<?, ?, ?> ) {
 				fetchParentType = referencedMappingContainer.findContainingEntityMapping();
 			}
-			else if ( referencedMappingContainer instanceof EntityMappingType entityMappingType ) {
+			else if ( referencedMappingContainer instanceof EntityMappingType<?> entityMappingType ) {
 				fetchParentType = entityMappingType;
 			}
 			else {
@@ -69,7 +69,7 @@ public interface FetchParent extends DomainResultGraphNode {
 	 * {@link #getReferencedMappingContainer} and {@link #getReferencedMappingType} return the referenced
 	 * {@link org.hibernate.metamodel.mapping.EntityMappingType}.
 	 */
-	default ModelPart getReferencedModePart() {
+	default ModelPart<?, ?, ?> getReferencedModePart() {
 		return getReferencedMappingContainer();
 	}
 
@@ -83,7 +83,7 @@ public interface FetchParent extends DomainResultGraphNode {
 	 */
 	FetchList getFetches();
 
-	Fetch findFetch(Fetchable fetchable);
+	Fetch findFetch(Fetchable<?, ?, ?> fetchable);
 
 	boolean hasJoinFetches();
 
@@ -109,7 +109,7 @@ public interface FetchParent extends DomainResultGraphNode {
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default Fetch generateFetchableFetch(
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,

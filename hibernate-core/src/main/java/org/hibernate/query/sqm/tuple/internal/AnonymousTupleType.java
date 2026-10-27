@@ -179,18 +179,18 @@ public class AnonymousTupleType<T>
 		}
 		return jdbcMappings;
 	}
-	public AnonymousTupleTableGroupProducer resolveTableGroupProducer(
+	public AnonymousTupleTableGroupProducer<?> resolveTableGroupProducer(
 			String aliasStem,
 			List<SqlSelection> sqlSelections,
 			FromClauseAccess fromClauseAccess) {
 		return resolveTableGroupProducer( aliasStem, toSqlTypedMappings( this, sqlSelections ), fromClauseAccess );
 	}
 
-	public AnonymousTupleTableGroupProducer resolveTableGroupProducer(
+	public AnonymousTupleTableGroupProducer<?> resolveTableGroupProducer(
 			String aliasStem,
 			SqlTypedMapping[] jdbcMappings,
 			FromClauseAccess fromClauseAccess) {
-		return new AnonymousTupleTableGroupProducer( this, aliasStem, jdbcMappings, fromClauseAccess );
+		return new AnonymousTupleTableGroupProducer<>( this, aliasStem, jdbcMappings, fromClauseAccess );
 	}
 
 	@Override

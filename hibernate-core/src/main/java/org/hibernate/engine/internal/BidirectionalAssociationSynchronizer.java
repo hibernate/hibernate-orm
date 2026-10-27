@@ -59,14 +59,14 @@ public final class BidirectionalAssociationSynchronizer {
 		}
 	}
 
-	private static PluralAttributeMapping findPluralAttribute(EntityPersister persister, String attributeName) {
-		final AttributeMapping attributeMapping = persister.findAttributeMapping( attributeName );
+	private static PluralAttributeMapping<?> findPluralAttribute(EntityPersister<?> persister, String attributeName) {
+		final AttributeMapping<?, ?, ?> attributeMapping = persister.findAttributeMapping( attributeName );
 		return attributeMapping == null ? null : attributeMapping.asPluralAttributeMapping();
 	}
 
-	private static ToOneAttributeMapping findToOneAttribute(EntityPersister persister, String attributeName) {
-		final AttributeMapping attributeMapping = persister.findAttributeMapping( attributeName );
-		if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+	private static ToOneAttributeMapping<?> findToOneAttribute(EntityPersister<?> persister, String attributeName) {
+		final AttributeMapping<?, ?, ?> attributeMapping = persister.findAttributeMapping( attributeName );
+		if ( attributeMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 			return toOneAttributeMapping;
 		}
 		return null;
@@ -86,7 +86,7 @@ public final class BidirectionalAssociationSynchronizer {
 			final Map<String, ManyToManyDescriptor> manyToManyByOwningRole = new HashMap<>();
 			factory.getMappingMetamodel().forEachEntityDescriptor( entityPersister ->
 					entityPersister.forEachAttributeMapping( attributeMapping -> {
-						if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+						if ( attributeMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 							registerToOneAssociation(
 									entityPersister,
 									toOneAttributeMapping,
@@ -94,7 +94,7 @@ public final class BidirectionalAssociationSynchronizer {
 									oneToOneByOwningAttribute
 							);
 						}
-						else if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+						else if ( attributeMapping instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 							registerManyToManyAssociation( pluralAttributeMapping, manyToManyByOwningRole );
 						}
 					} ) );
@@ -112,8 +112,8 @@ public final class BidirectionalAssociationSynchronizer {
 		}
 
 		private static void registerToOneAssociation(
-				EntityPersister declaringPersister,
-				ToOneAttributeMapping toOneAttributeMapping,
+				EntityPersister<?> declaringPersister,
+				ToOneAttributeMapping<?> toOneAttributeMapping,
 				Map<String, OneToManyDescriptor> oneToManyByOwningAttribute,
 				Map<String, OneToOneDescriptor> oneToOneByOwningAttribute) {
 			final var bidirectionalAttributePath = toOneAttributeMapping.getBidirectionalAttributePath();
@@ -121,10 +121,10 @@ public final class BidirectionalAssociationSynchronizer {
 				return;
 			}
 
-			final EntityPersister associatedPersister =
+			final EntityPersister<?> associatedPersister =
 					toOneAttributeMapping.getAssociatedEntityMappingType().getEntityPersister();
 			if ( toOneAttributeMapping.getCardinality() == ToOneAttributeMapping.Cardinality.MANY_TO_ONE ) {
-				final PluralAttributeMapping inverseCollection =
+				final PluralAttributeMapping<?> inverseCollection =
 						findPluralAttribute( associatedPersister, bidirectionalAttributePath.getFullPath() );
 				if ( inverseCollection != null
 						&& inverseCollection.getCollectionDescriptor().isOneToMany()
@@ -139,7 +139,7 @@ public final class BidirectionalAssociationSynchronizer {
 				}
 			}
 			else if ( toOneAttributeMapping.getCardinality() == ToOneAttributeMapping.Cardinality.LOGICAL_ONE_TO_ONE ) {
-				final ToOneAttributeMapping inverseAttribute =
+				final ToOneAttributeMapping<?> inverseAttribute =
 						findToOneAttribute( associatedPersister, bidirectionalAttributePath.getFullPath() );
 				if ( inverseAttribute != null ) {
 					oneToOneByOwningAttribute.putIfAbsent(
@@ -149,7 +149,7 @@ public final class BidirectionalAssociationSynchronizer {
 				}
 			}
 			else {
-				final ToOneAttributeMapping owningAttribute =
+				final ToOneAttributeMapping<?> owningAttribute =
 						findToOneAttribute( associatedPersister, bidirectionalAttributePath.getFullPath() );
 				if ( owningAttribute != null ) {
 					oneToOneByOwningAttribute.putIfAbsent(
@@ -161,7 +161,7 @@ public final class BidirectionalAssociationSynchronizer {
 		}
 
 		private static void registerManyToManyAssociation(
-				PluralAttributeMapping inverseCollection,
+				PluralAttributeMapping<?> inverseCollection,
 				Map<String, ManyToManyDescriptor> manyToManyByOwningRole) {
 			final CollectionPersister inverseCollectionDescriptor = inverseCollection.getCollectionDescriptor();
 			final String mappedByProperty = inverseCollectionDescriptor.getMappedByProperty();
@@ -171,7 +171,7 @@ public final class BidirectionalAssociationSynchronizer {
 				return;
 			}
 
-			final PluralAttributeMapping owningCollection =
+			final PluralAttributeMapping<?> owningCollection =
 					findPluralAttribute( inverseCollectionDescriptor.getElementPersister(), mappedByProperty );
 			if ( owningCollection != null
 					&& owningCollection.getCollectionDescriptor().isManyToMany()
@@ -401,7 +401,7 @@ public final class BidirectionalAssociationSynchronizer {
 		}
 
 		private void setInverseProperty(
-				ToOneAttributeMapping inverseAttribute,
+				ToOneAttributeMapping<?> inverseAttribute,
 				Object inverse,
 				Object expectedOwner) {
 			inverseAttribute.setValue( inverse, expectedOwner );
@@ -423,10 +423,10 @@ public final class BidirectionalAssociationSynchronizer {
 	}
 
 	private record OneToManyDescriptor(
-			ToOneAttributeMapping owningAttribute,
-			PluralAttributeMapping inverseAttribute) {
+			ToOneAttributeMapping<?> owningAttribute,
+			PluralAttributeMapping<?> inverseAttribute) {
 
-		private EntityPersister owningPersister() {
+		private EntityPersister<?> owningPersister() {
 			return owningAttribute.findContainingEntityMapping().getEntityPersister();
 		}
 
@@ -434,32 +434,32 @@ public final class BidirectionalAssociationSynchronizer {
 			return owningPersister().getEntityName();
 		}
 
-		private EntityPersister inversePersister() {
+		private EntityPersister<?> inversePersister() {
 			return inverseAttribute.findContainingEntityMapping().getEntityPersister();
 		}
 	}
 
 	private record OneToOneDescriptor(
-			ToOneAttributeMapping owningAttribute,
-			ToOneAttributeMapping inverseAttribute) {
+			ToOneAttributeMapping<?> owningAttribute,
+			ToOneAttributeMapping<?> inverseAttribute) {
 		private String owningEntityName() {
 			return owningAttribute.findContainingEntityMapping().getEntityName();
 		}
 
-		private EntityPersister inversePersister() {
+		private EntityPersister<?> inversePersister() {
 			return inverseAttribute.findContainingEntityMapping().getEntityPersister();
 		}
 	}
 
 	private record ManyToManyDescriptor(
-			PluralAttributeMapping owningAttribute,
-			PluralAttributeMapping inverseAttribute) {
+			PluralAttributeMapping<?> owningAttribute,
+			PluralAttributeMapping<?> inverseAttribute) {
 
-		private EntityPersister owningPersister() {
+		private EntityPersister<?> owningPersister() {
 			return owningAttribute.findContainingEntityMapping().getEntityPersister();
 		}
 
-		private EntityPersister inversePersister() {
+		private EntityPersister<?> inversePersister() {
 			return inverseAttribute.findContainingEntityMapping().getEntityPersister();
 		}
 	}

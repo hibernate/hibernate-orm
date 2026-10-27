@@ -69,7 +69,7 @@ final class CollectionMutationPlanSupport {
 		}
 		else {
 			final var elementDescriptor = attribute.getElementDescriptor();
-			if ( elementDescriptor instanceof ManyToManyCollectionPart manyToMany ) {
+			if ( elementDescriptor instanceof ManyToManyCollectionPart<?> manyToMany ) {
 				manyToMany.getForeignKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
 					if ( updateBuilder != null ) {
 						updateBuilder.addKeyRestriction( jdbcMapping );
@@ -109,7 +109,7 @@ final class CollectionMutationPlanSupport {
 	static LogicalTableUpdate<?> buildSoftDeleteMutation(
 			TableUpdateBuilderStandard<?> updateBuilder,
 			MutatingTableReference mutatingTable,
-			org.hibernate.metamodel.mapping.SoftDeleteMapping softDeleteMapping) {
+			org.hibernate.metamodel.mapping.SoftDeleteMapping<?> softDeleteMapping) {
 		final var softDeleteColumnReference = new ColumnReference( mutatingTable, softDeleteMapping );
 		updateBuilder.addColumnAssignment( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
 		updateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
@@ -204,7 +204,7 @@ final class CollectionMutationPlanSupport {
 		}
 		else {
 			final var elementDescriptor = attribute.getElementDescriptor();
-			if ( elementDescriptor instanceof ManyToManyCollectionPart manyToMany ) {
+			if ( elementDescriptor instanceof ManyToManyCollectionPart<?> manyToMany ) {
 				final var id = manyToMany.getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( actualElement );
 				manyToMany.getForeignKeyDescriptor().getKeyPart().decompose(
 						id,

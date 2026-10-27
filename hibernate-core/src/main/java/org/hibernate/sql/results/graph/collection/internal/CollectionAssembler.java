@@ -15,11 +15,11 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Andrea Boriero
  */
 public class CollectionAssembler implements DomainResultAssembler {
-	private final PluralAttributeMapping fetchedMapping;
+	private final PluralAttributeMapping<?> fetchedMapping;
 
 	protected final CollectionInitializer<?> initializer;
 
-	public CollectionAssembler(PluralAttributeMapping fetchedMapping, CollectionInitializer<?> initializer) {
+	public CollectionAssembler(PluralAttributeMapping<?> fetchedMapping, CollectionInitializer<?> initializer) {
 		this.fetchedMapping = fetchedMapping;
 		this.initializer = initializer;
 	}

@@ -103,7 +103,7 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 	public DomainResult<T> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JdbcMapping jdbcMapping = getJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = getJdbcMapping();
 		final JavaType<T> jdbcJavaType;
 		final BasicValueConverter<T, ?> converter;
 		if ( jdbcMapping != null ) {
@@ -139,7 +139,7 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 
 	@Nullable
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		if ( type instanceof SqlExpressible sqlExpressible ) {
 			return sqlExpressible.getJdbcMapping();
 		}
@@ -153,7 +153,7 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		final JdbcMapping jdbcMapping = getJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = getJdbcMapping();
 		resolveSqlSelection( creationState,
 				jdbcMapping == null ? type.getExpressibleJavaType() : jdbcMapping.getJdbcJavaType() );
 	}
@@ -167,7 +167,7 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		throw new UnsupportedOperationException();
 	}
 }

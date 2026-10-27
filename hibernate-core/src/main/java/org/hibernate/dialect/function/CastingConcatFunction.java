@@ -91,7 +91,7 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 	}
 
 	private void renderAsString(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression expression) {
-		final JdbcMapping sourceMapping = expression.getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> sourceMapping = expression.getExpressionType().getSingleJdbcMapping();
 		final CastType sourceType = sourceMapping.getCastType();
 		// No need to cast if we already have a string
 		if ( sourceType == CastType.STRING ) {

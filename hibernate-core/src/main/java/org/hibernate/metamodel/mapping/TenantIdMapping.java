@@ -14,7 +14,7 @@ public interface TenantIdMapping {
 	 * The tenant attribute outside the identifier, or {@code null} if there is none.
 	 */
 	@Nullable
-	AttributeMapping getAttributeMapping();
+	AttributeMapping<?, ?, ?> getAttributeMapping();
 
 	@Nullable
 	Object getTenantIdFromIdentifier(@Nullable Object id, @Nonnull SharedSessionContractImplementor session);

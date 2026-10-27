@@ -119,7 +119,7 @@ public class ChangelogSupplier<T> implements ChangesetIdentifierSupplier<T> {
 	@SuppressWarnings("unchecked")
 	public ChangesetContext<T> generateContext(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
-		final EntityPersister persister = sessionImpl.getFactory().getMappingMetamodel()
+		final EntityPersister<?> persister = sessionImpl.getFactory().getMappingMetamodel()
 				.getEntityDescriptor( changelogClass );
 		final Object changelog = persister.instantiate( null, sessionImpl );
 		if ( listener != null ) {
@@ -170,7 +170,7 @@ public class ChangelogSupplier<T> implements ChangesetIdentifierSupplier<T> {
 	 */
 	private Object readChangesetId(
 			Object changelog,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SharedSessionContractImplementor session) {
 		final Object changesetId;
 		final var changesetIdAttr = persister.findAttributeMapping( changesetIdProperty );

@@ -50,7 +50,7 @@ public final class MutableSelectableMapping implements SelectableMapping {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return base.getJdbcMapping( index );
 	}
 

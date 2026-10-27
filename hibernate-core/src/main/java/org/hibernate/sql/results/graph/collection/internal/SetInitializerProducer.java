@@ -15,11 +15,11 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
  * @author Steve Ebersole
  */
 public class SetInitializerProducer implements CollectionInitializerProducer {
-	private final PluralAttributeMapping setDescriptor;
+	private final PluralAttributeMapping<?> setDescriptor;
 	private final Fetch elementFetch;
 
 	public SetInitializerProducer(
-			PluralAttributeMapping setDescriptor,
+			PluralAttributeMapping<?> setDescriptor,
 			Fetch elementFetch) {
 		this.setDescriptor = setDescriptor;
 		this.elementFetch = elementFetch;
@@ -28,7 +28,7 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 	@Override
 	public CollectionInitializer<?> produceInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attribute,
+			PluralAttributeMapping<?> attribute,
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,

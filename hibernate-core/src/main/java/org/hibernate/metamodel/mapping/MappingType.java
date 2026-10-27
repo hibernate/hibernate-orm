@@ -10,10 +10,10 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
-public interface MappingType {
+public interface MappingType<J> {
 	/**
 	 * The {@linkplain JavaType descriptor} descriptor for the mapped Java type
 	 */
 	@Nonnull
-	JavaType<?> getMappedJavaType();
+	JavaType<J> getMappedJavaType();
 }

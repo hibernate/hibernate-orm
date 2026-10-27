@@ -62,7 +62,7 @@ public class EntityBatchLoaderArrayParam<T>
 	 */
 	public EntityBatchLoaderArrayParam(
 			int domainBatchSize,
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		super( entityDescriptor, loadQueryInfluencers );
 		this.domainBatchSize = domainBatchSize;
@@ -76,7 +76,7 @@ public class EntityBatchLoaderArrayParam<T>
 
 		final var identifierMapping = getLoadable().getIdentifierMapping();
 		final SelectableMapping selectable = identifierMapping.getSelectable( 0 );
-		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = selectable.getJdbcMapping();
 		arraySqlTypedMapping = new SqlTypedMappingImpl(
 				selectable.getLength(),
 				selectable.getArrayLength(),
@@ -90,7 +90,7 @@ public class EntityBatchLoaderArrayParam<T>
 				)
 		);
 
-		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
+		jdbcParameter = SqlTypedMappingJdbcParameter.create( arraySqlTypedMapping );
 		sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				identifierMapping,

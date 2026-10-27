@@ -52,6 +52,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 /// Tests the immutable expression-coercion provider contract, maintained
@@ -247,9 +248,9 @@ public class ExpressionCoercionSupportTests {
 	private static Expression expression(org.hibernate.query.sqm.CastType castType) {
 		final Expression expression = mock( Expression.class );
 		final JdbcMappingContainer expressionType = mock( JdbcMappingContainer.class );
-		final JdbcMapping jdbcMapping = mock( JdbcMapping.class );
+		final JdbcMapping<?> jdbcMapping = mock( JdbcMapping.class );
 		when( expression.getExpressionType() ).thenReturn( expressionType );
-		when( expressionType.getSingleJdbcMapping() ).thenReturn( jdbcMapping );
+		doReturn( jdbcMapping ).when( expressionType ).getSingleJdbcMapping();
 		when( jdbcMapping.getCastType() ).thenReturn( castType );
 		return expression;
 	}

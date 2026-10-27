@@ -65,7 +65,7 @@ public class DB2XmlTableFunction extends XmlTableFunction {
 		renderColumnPath( definition.name(), definition.xpath(), sqlAppender, walker );
 	}
 
-	static boolean isBoolean(JdbcMapping type) {
+	static boolean isBoolean(JdbcMapping<?> type) {
 		return switch ( type.getCastType() ) {
 			case BOOLEAN, TF_BOOLEAN, YN_BOOLEAN, INTEGER_BOOLEAN -> true;
 			default -> false;
@@ -74,7 +74,7 @@ public class DB2XmlTableFunction extends XmlTableFunction {
 
 	private static class DB2XmlTableSetReturningFunctionTypeResolver extends XmlTableSetReturningFunctionTypeResolver {
 		@Override
-		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping type, SqmToSqlAstConverter converter) {
+		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping<?> type, SqmToSqlAstConverter converter) {
 			if ( isBoolean( type ) ) {
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();

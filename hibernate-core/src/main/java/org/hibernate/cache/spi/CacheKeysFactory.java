@@ -24,14 +24,14 @@ public interface CacheKeysFactory {
 	@Nonnull
 	Object createEntityKey(
 			@Nonnull Object id,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nullable String tenantIdentifier);
 
 	@Nonnull
 	Object createNaturalIdKey(
 			@Nonnull Object naturalIdValues,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session);
 
 	@Nonnull

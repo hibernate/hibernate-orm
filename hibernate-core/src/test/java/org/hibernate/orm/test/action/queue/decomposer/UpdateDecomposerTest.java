@@ -77,7 +77,7 @@ public class UpdateDecomposerTest {
 			entity.name = "Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -122,7 +122,7 @@ public class UpdateDecomposerTest {
 			entity.name = "Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithVersion.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -167,7 +167,7 @@ public class UpdateDecomposerTest {
 			entity.secondaryField = "Secondary Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithSecondaryTable.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -207,7 +207,7 @@ public class UpdateDecomposerTest {
 			entity.childField = "Child Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( ChildEntity.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -246,7 +246,7 @@ public class UpdateDecomposerTest {
 			entity.field1 = "Value1 Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( DynamicUpdateEntity.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -284,7 +284,7 @@ public class UpdateDecomposerTest {
 			entity.field1 = "Field1 Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithAllOptimisticLock.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -323,7 +323,7 @@ public class UpdateDecomposerTest {
 			entity.field1 = "Field1 Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithDirtyOptimisticLock.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -351,7 +351,7 @@ public class UpdateDecomposerTest {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( DynamicUpdateEntity.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -380,7 +380,7 @@ public class UpdateDecomposerTest {
 			entity.name = "Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -417,7 +417,7 @@ public class UpdateDecomposerTest {
 			// Don't modify entity - no dirty fields
 			// This tests that decomposer handles empty dirty fields array
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -471,7 +471,7 @@ public class UpdateDecomposerTest {
 			entity.childField = "Child Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( ChildEntity.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -509,7 +509,7 @@ public class UpdateDecomposerTest {
 			entity.primaryField = "Primary Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithOptionalSecondaryTable.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -549,7 +549,7 @@ public class UpdateDecomposerTest {
 			entity.optionalField1 = "Optional1 Updated";
 			entityManager.flush();
 
-			EntityPersister persister = factory.getMappingMetamodel()
+			EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithOptionalSecondaryTable.class );
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
@@ -568,7 +568,7 @@ public class UpdateDecomposerTest {
 	private EntityUpdateAction createUpdateAction(
 			Object entity,
 			SessionImplementor session,
-			EntityPersister persister) {
+			EntityPersister<?> persister) {
 		Object id = persister.getIdentifier( entity, session );
 		Object[] state = persister.getValues( entity );
 		Object version = persister.getVersion( entity );

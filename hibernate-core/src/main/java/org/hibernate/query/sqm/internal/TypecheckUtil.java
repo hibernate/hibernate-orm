@@ -179,7 +179,7 @@ public class TypecheckUtil {
 		// decent approach which allows comparison between literals and
 		// enums, user-defined types, etc.
 
-		if ( lhsDomainType instanceof JdbcMapping lhsMapping && rhsDomainType instanceof JdbcMapping rhsMapping
+		if ( lhsDomainType instanceof JdbcMapping<?> lhsMapping && rhsDomainType instanceof JdbcMapping<?> rhsMapping
 				&& areJdbcMappingsComparable( lhsMapping, rhsMapping, bindingContext ) ) {
 			return true;
 		}
@@ -198,8 +198,8 @@ public class TypecheckUtil {
 	}
 
 	private static boolean areJdbcMappingsComparable(
-			JdbcMapping lhsJdbcMapping,
-			JdbcMapping rhsJdbcMapping,
+			JdbcMapping<?> lhsJdbcMapping,
+			JdbcMapping<?> rhsJdbcMapping,
 			BindingContext bindingContext) {
 		if ( areJdbcTypesComparable( lhsJdbcMapping.getJdbcType(), rhsJdbcMapping.getJdbcType() ) ) {
 			return true;
@@ -223,7 +223,7 @@ public class TypecheckUtil {
 			|| lhsJdbcType.isNumber() && rhsJdbcType.isNumber();
 	}
 
-	private static JdbcMapping getDomainJdbcType(JdbcMapping jdbcMapping, BindingContext bindingContext) {
+	private static JdbcMapping<?> getDomainJdbcType(JdbcMapping<?> jdbcMapping, BindingContext bindingContext) {
 		final var valueConverter = jdbcMapping.getValueConverter();
 		if ( valueConverter != null ) {
 			final var basicType =
@@ -345,7 +345,7 @@ public class TypecheckUtil {
 
 		final var lhsDomainType = targetType.getSqmType();
 		final var rhsDomainType = expressionType.getSqmType();
-		if ( lhsDomainType instanceof JdbcMapping lhsMapping && rhsDomainType instanceof JdbcMapping rhsMapping ) {
+		if ( lhsDomainType instanceof JdbcMapping<?> lhsMapping && rhsDomainType instanceof JdbcMapping<?> rhsMapping ) {
 			final var lhsJdbcType = lhsMapping.getJdbcType();
 			final var rhsJdbcType = rhsMapping.getJdbcType();
 			if ( lhsJdbcType.getJdbcTypeCode() == rhsJdbcType.getJdbcTypeCode()
@@ -405,7 +405,7 @@ public class TypecheckUtil {
 		return lhsEntity.isSubclassEntityName( rhsEntity.getEntityName() );
 	}
 
-	private static EntityPersister getEntityDescriptor(BindingContext bindingContext, String name) {
+	private static EntityPersister<?> getEntityDescriptor(BindingContext bindingContext, String name) {
 		return bindingContext.getMappingMetamodel()
 				.getEntityDescriptor( bindingContext.getJpaMetamodel().qualifyImportableName( name ) );
 	}
@@ -615,7 +615,7 @@ public class TypecheckUtil {
 	public static void assertString(SqmExpression<?> expression) {
 		final var nodeType = expression.getNodeType();
 		if ( nodeType != null ) {
-			if ( !( nodeType.getSqmType() instanceof JdbcMapping jdbcMapping )
+			if ( !( nodeType.getSqmType() instanceof JdbcMapping<?> jdbcMapping )
 					|| !jdbcMapping.getJdbcType().isStringLike() ) {
 				throw new SemanticException(
 						"Operand of 'like' is of type '" + nodeType.getTypeName() +
@@ -628,7 +628,7 @@ public class TypecheckUtil {
 	public static void assertDuration(SqmExpression<?> expression) {
 		final var nodeType = expression.getNodeType();
 		if ( nodeType != null ) {
-			if ( !( nodeType.getSqmType() instanceof JdbcMapping jdbcMapping )
+			if ( !( nodeType.getSqmType() instanceof JdbcMapping<?> jdbcMapping )
 					|| !jdbcMapping.getJdbcType().isDuration() ) {
 				throw new SemanticException(
 						"Operand of 'by' is of type '" + nodeType.getTypeName() +
@@ -641,7 +641,7 @@ public class TypecheckUtil {
 	public static void assertNumeric(SqmExpression<?> expression, UnaryArithmeticOperator op) {
 		final var nodeType = expression.getExpressible();
 		if ( nodeType != null ) {
-			if ( !( nodeType.getSqmType() instanceof JdbcMapping jdbcMapping )
+			if ( !( nodeType.getSqmType() instanceof JdbcMapping<?> jdbcMapping )
 					|| !jdbcMapping.getJdbcType().isNumber() ) {
 				throw new SemanticException(
 						"Operand of " + op.getOperatorChar() + " is of type '" + nodeType.getTypeName() +

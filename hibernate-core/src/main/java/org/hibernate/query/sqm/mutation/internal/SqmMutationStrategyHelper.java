@@ -65,8 +65,8 @@ public class SqmMutationStrategyHelper {
 	}
 
 	public static void visitCollectionTables(
-			EntityMappingType entityDescriptor,
-			Consumer<PluralAttributeMapping> consumer) {
+			EntityMappingType<?> entityDescriptor,
+			Consumer<PluralAttributeMapping<?>> consumer) {
 		if ( ! entityDescriptor.getEntityPersister().hasCollections() ) {
 			// none to clean-up
 			return;
@@ -74,12 +74,12 @@ public class SqmMutationStrategyHelper {
 
 		entityDescriptor.visitSubTypeAttributeMappings(
 				attributeMapping -> {
-					if ( attributeMapping instanceof PluralAttributeMapping ) {
-						consumer.accept( (PluralAttributeMapping) attributeMapping );
+					if ( attributeMapping instanceof PluralAttributeMapping<?> ) {
+						consumer.accept( (PluralAttributeMapping<?>) attributeMapping );
 					}
-					else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+					else if ( attributeMapping instanceof EmbeddedAttributeMapping<?, ?> ) {
 						visitCollectionTables(
-								(EmbeddedAttributeMapping) attributeMapping,
+								(EmbeddedAttributeMapping<?, ?>) attributeMapping,
 								consumer
 						);
 					}
@@ -88,16 +88,16 @@ public class SqmMutationStrategyHelper {
 	}
 
 	private static void visitCollectionTables(
-			EmbeddedAttributeMapping attributeMapping,
-			Consumer<PluralAttributeMapping> consumer) {
+			EmbeddedAttributeMapping<?, ?> attributeMapping,
+			Consumer<PluralAttributeMapping<?>> consumer) {
 		attributeMapping.visitSubParts(
 				modelPart -> {
-					if ( modelPart instanceof PluralAttributeMapping ) {
-						consumer.accept( (PluralAttributeMapping) modelPart );
+					if ( modelPart instanceof PluralAttributeMapping<?> ) {
+						consumer.accept( (PluralAttributeMapping<?>) modelPart );
 					}
-					else if ( modelPart instanceof EmbeddedAttributeMapping ) {
+					else if ( modelPart instanceof EmbeddedAttributeMapping<?, ?> ) {
 						visitCollectionTables(
-								(EmbeddedAttributeMapping) modelPart,
+								(EmbeddedAttributeMapping<?, ?>) modelPart,
 								consumer
 						);
 					}
@@ -107,8 +107,8 @@ public class SqmMutationStrategyHelper {
 	}
 
 	public static void visitCollectionTableDeletes(
-			EntityMappingType entityDescriptor,
-			BiFunction<TableReference, PluralAttributeMapping, Predicate> restrictionProducer,
+			EntityMappingType<?> entityDescriptor,
+			BiFunction<TableReference, PluralAttributeMapping<?>, Predicate> restrictionProducer,
 			JdbcParameterBindings jdbcParameterBindings,
 			QueryOptions queryOptions,
 			Consumer<JdbcOperationQueryMutation> jdbcMutationConsumer) {
@@ -118,18 +118,18 @@ public class SqmMutationStrategyHelper {
 		}
 		entityDescriptor.visitSubTypeAttributeMappings(
 				attributeMapping -> {
-					if ( attributeMapping instanceof PluralAttributeMapping ) {
+					if ( attributeMapping instanceof PluralAttributeMapping<?> ) {
 						visitCollectionTableDeletes(
-								(PluralAttributeMapping) attributeMapping,
+								(PluralAttributeMapping<?>) attributeMapping,
 								restrictionProducer,
 								jdbcParameterBindings,
 								queryOptions,
 								jdbcMutationConsumer
 						);
 					}
-					else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+					else if ( attributeMapping instanceof EmbeddedAttributeMapping<?, ?> ) {
 						visitCollectionTableDeletes(
-								(EmbeddedAttributeMapping) attributeMapping,
+								(EmbeddedAttributeMapping<?, ?>) attributeMapping,
 								restrictionProducer,
 								jdbcParameterBindings,
 								queryOptions,
@@ -141,25 +141,25 @@ public class SqmMutationStrategyHelper {
 	}
 
 	private static void visitCollectionTableDeletes(
-			EmbeddedAttributeMapping attributeMapping,
-			BiFunction<TableReference, PluralAttributeMapping, Predicate> restrictionProducer,
+			EmbeddedAttributeMapping<?, ?> attributeMapping,
+			BiFunction<TableReference, PluralAttributeMapping<?>, Predicate> restrictionProducer,
 			JdbcParameterBindings jdbcParameterBindings,
 			QueryOptions queryOptions,
 			Consumer<JdbcOperationQueryMutation> jdbcMutationConsumer) {
 		attributeMapping.visitSubParts(
 				modelPart -> {
-					if ( modelPart instanceof PluralAttributeMapping ) {
+					if ( modelPart instanceof PluralAttributeMapping<?> ) {
 						visitCollectionTableDeletes(
-								(PluralAttributeMapping) modelPart,
+								(PluralAttributeMapping<?>) modelPart,
 								restrictionProducer,
 								jdbcParameterBindings,
 								queryOptions,
 								jdbcMutationConsumer
 						);
 					}
-					else if ( modelPart instanceof EmbeddedAttributeMapping ) {
+					else if ( modelPart instanceof EmbeddedAttributeMapping<?, ?> ) {
 						visitCollectionTableDeletes(
-								(EmbeddedAttributeMapping) modelPart,
+								(EmbeddedAttributeMapping<?, ?>) modelPart,
 								restrictionProducer,
 								jdbcParameterBindings,
 								queryOptions,
@@ -172,8 +172,8 @@ public class SqmMutationStrategyHelper {
 	}
 
 	private static void visitCollectionTableDeletes(
-			PluralAttributeMapping attributeMapping,
-			BiFunction<TableReference, PluralAttributeMapping, Predicate> restrictionProducer,
+			PluralAttributeMapping<?> attributeMapping,
+			BiFunction<TableReference, PluralAttributeMapping<?>, Predicate> restrictionProducer,
 			JdbcParameterBindings jdbcParameterBindings,
 			QueryOptions queryOptions,
 			Consumer<JdbcOperationQueryMutation> jdbcOperationConsumer) {
@@ -221,10 +221,10 @@ public class SqmMutationStrategyHelper {
 	 * Only {@code TABLE_PER_CLASS} requires multiple targets (one per concrete
 	 * subtype table); other inheritance strategies share a single soft-delete table.
 	 */
-	public static List<EntityMappingType> softDeleteTargets(EntityMappingType entityDescriptor) {
-		if ( entityDescriptor.getEntityPersister() instanceof UnionSubclassEntityPersister ) {
+	public static List<EntityMappingType<?>> softDeleteTargets(EntityMappingType<?> entityDescriptor) {
+		if ( entityDescriptor.getEntityPersister() instanceof UnionSubclassEntityPersister<?> ) {
 			// TABLE_PER_CLASS: each concrete subtype has its own table with the soft-delete column
-			final var targets = new ArrayList<EntityMappingType>();
+			final var targets = new ArrayList<EntityMappingType<?>>();
 			targets.add( entityDescriptor );
 			targets.addAll( entityDescriptor.getSubMappingTypes() );
 			return targets;
@@ -235,26 +235,26 @@ public class SqmMutationStrategyHelper {
 	}
 
 	public static boolean isId(JdbcMappingContainer type) {
-		return type instanceof EntityIdentifierMapping
-			|| type instanceof AttributeMapping attributeMapping && isPartOfId( attributeMapping );
+		return type instanceof EntityIdentifierMapping<?, ?, ?>
+			|| type instanceof AttributeMapping<?, ?, ?> attributeMapping && isPartOfId( attributeMapping );
 	}
 
-	public static boolean isPartOfId(AttributeMapping attributeMapping) {
-		return attributeMapping.getDeclaringType() instanceof EmbeddableMappingType embeddableMappingType
+	public static boolean isPartOfId(AttributeMapping<?, ?, ?> attributeMapping) {
+		return attributeMapping.getDeclaringType() instanceof EmbeddableMappingType<?, ?, ?> embeddableMappingType
 			&& (embeddableMappingType.getEmbeddedValueMapping().isEntityIdentifierMapping()
 				|| isId( embeddableMappingType.getEmbeddedValueMapping() ));
 	}
 
-	public static void forEachSelectableMapping(String prefix, ModelPart modelPart, BiConsumer<String, SelectableMapping> consumer) {
-		if ( modelPart instanceof BasicValuedModelPart basicModelPart ) {
+	public static void forEachSelectableMapping(String prefix, ModelPart<?, ?, ?> modelPart, BiConsumer<String, SelectableMapping> consumer) {
+		if ( modelPart instanceof BasicValuedModelPart<?, ?, ?> basicModelPart ) {
 			if ( basicModelPart.isInsertable()
-					|| modelPart instanceof AttributeMapping attributeMapping
+					|| modelPart instanceof AttributeMapping<?, ?, ?> attributeMapping
 							&& isPartOfId( attributeMapping ) ) {
 				consumer.accept( prefix, basicModelPart );
 			}
 		}
-		else if ( modelPart instanceof EntityValuedModelPart entityPart ) {
-			final Association association = (Association) modelPart;
+		else if ( modelPart instanceof EntityValuedModelPart<?> entityPart ) {
+			final Association<?, ?, ?> association = (Association<?, ?, ?>) modelPart;
 			if ( association.getForeignKeyDescriptor() == null ) {
 				// This is expected to happen when processing a
 				// PostInitCallbackEntry because the callbacks
@@ -267,8 +267,8 @@ public class SqmMutationStrategyHelper {
 				// Inverse one-to-one receives no column
 				return;
 			}
-			if ( association instanceof ToOneAttributeMapping toOneMapping ) {
-				final EntityPersister declaringEntityPersister = toOneMapping.findContainingEntityMapping()
+			if ( association instanceof ToOneAttributeMapping<?> toOneMapping ) {
+				final EntityPersister<?> declaringEntityPersister = toOneMapping.findContainingEntityMapping()
 						.getEntityPersister();
 				final int tableIndex = findTableIndex(
 						declaringEntityPersister,
@@ -280,8 +280,8 @@ public class SqmMutationStrategyHelper {
 					return;
 				}
 			}
-			final ValuedModelPart targetPart = association.getForeignKeyDescriptor().getTargetPart();
-			final String newPrefix = targetPart instanceof AttributeMapping attributeMapping
+			final ValuedModelPart<?, ?, ?> targetPart = association.getForeignKeyDescriptor().getTargetPart();
+			final String newPrefix = targetPart instanceof AttributeMapping<?, ?, ?> attributeMapping
 					? prefix + "_" + attributeMapping.getAttributeName()
 					: prefix;
 			forEachSelectableMapping(
@@ -290,7 +290,7 @@ public class SqmMutationStrategyHelper {
 					consumer
 			);
 		}
-		else if ( modelPart instanceof DiscriminatedAssociationModelPart discriminatedPart ) {
+		else if ( modelPart instanceof DiscriminatedAssociationModelPart<?> discriminatedPart ) {
 			final String newPrefix = prefix + "_" + discriminatedPart.getPartName() + "_";
 			forEachSelectableMapping(
 					newPrefix + "discriminator",
@@ -304,14 +304,14 @@ public class SqmMutationStrategyHelper {
 			);
 		}
 		else {
-			final EmbeddableValuedModelPart embeddablePart = ( EmbeddableValuedModelPart ) modelPart;
+			final EmbeddableValuedModelPart<?, ?, ?> embeddablePart = ( EmbeddableValuedModelPart<?, ?, ?> ) modelPart;
 			final AttributeMappingsList attributeMappings = embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
 			if ( attributeMappings.size() == 0 ) {
 				throw new IllegalStateException( "AttributeMappingsList not read yet on embeddable: " + embeddablePart );
 			}
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				AttributeMapping mapping = attributeMappings.get( i );
-				if ( !( mapping instanceof PluralAttributeMapping ) ) {
+				AttributeMapping<?, ?, ?> mapping = attributeMappings.get( i );
+				if ( !( mapping instanceof PluralAttributeMapping<?> ) ) {
 					final String newPrefix = modelPart.isVirtual() ? mapping.getAttributeName()
 							: prefix + "_" + mapping.getAttributeName();
 					forEachSelectableMapping( newPrefix, mapping, consumer );
@@ -390,7 +390,7 @@ public class SqmMutationStrategyHelper {
 		}
 	}
 
-	private static int findTableIndex(EntityPersister declaringEntityPersister, String tableExpression) {
+	private static int findTableIndex(EntityPersister<?> declaringEntityPersister, String tableExpression) {
 		final String[] tableNames = declaringEntityPersister.getTableNames();
 		for ( int i = 0; i < tableNames.length; i++ ) {
 			if ( tableExpression.equals( tableNames[i] ) ) {

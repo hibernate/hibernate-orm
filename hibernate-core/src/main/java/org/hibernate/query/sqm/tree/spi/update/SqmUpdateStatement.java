@@ -159,7 +159,7 @@ public class SqmUpdateStatement<T>
 	}
 
 	private void verifyImmutableEntityUpdate(@Nullable String hql) {
-		final EntityPersister persister =
+		final EntityPersister<?> persister =
 				nodeBuilder().getMappingMetamodel().getEntityDescriptor( getTarget().getEntityName() );
 		if ( !persister.isMutable() ) {
 			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );

@@ -24,7 +24,7 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractDatabase
 			@Nonnull SharedSessionContractImplementor source,
 			@Nonnull Object entity,
 			@Nullable Object id,
-			@Nonnull EntityPersister persister) {
+			@Nonnull EntityPersister<?> persister) {
 		super( source, entity, id, persister );
 	}
 }

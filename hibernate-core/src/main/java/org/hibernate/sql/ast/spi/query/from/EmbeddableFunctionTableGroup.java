@@ -17,7 +17,7 @@ public class EmbeddableFunctionTableGroup extends AbstractTableGroup {
 
 	public EmbeddableFunctionTableGroup(
 			NavigablePath navigablePath,
-			EmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType<?, ?, ?> embeddableMappingType,
 			Expression expression) {
 		super(
 				false,

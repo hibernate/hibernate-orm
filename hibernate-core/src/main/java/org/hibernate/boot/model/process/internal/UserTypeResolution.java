@@ -74,7 +74,7 @@ public class UserTypeResolution<T> implements BasicValue.Resolution<T> {
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return userTypeAdapter;
 	}
 }

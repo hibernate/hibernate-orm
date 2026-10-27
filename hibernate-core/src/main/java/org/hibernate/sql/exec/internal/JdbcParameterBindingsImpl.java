@@ -66,7 +66,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 							determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
 					Object lastBindValue = null;
 					for ( Object bindValue : bindValues ) {
-						final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						final var jdbcParameter = new JdbcParameterImpl<>( jdbcMapping );
 						jdbcParameterBinders.add( jdbcParameter );
 						lastBindValue =
 								valueConverter == null
@@ -76,7 +76,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 					}
 					if ( bindValueMaxCount != bindValueCount ) {
 						for ( int i = bindValueCount; i < bindValueMaxCount; i++ ) {
-							final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+							final var jdbcParameter = new JdbcParameterImpl<>( jdbcMapping );
 							jdbcParameterBinders.add( jdbcParameter );
 							addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
 						}
@@ -89,7 +89,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 							valueConverter != null && bindValue != null
 									? valueConverter.toRelationalValue( bindValue )
 									: bindValue;
-					final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+					final var jdbcParameter = new JdbcParameterImpl<>( jdbcMapping );
 					jdbcParameterBinders.add( jdbcParameter );
 					addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, convertedBindValue ) );
 				}
@@ -97,7 +97,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 		}
 	}
 
-	private JdbcMapping jdbcMapping(
+	private JdbcMapping<?> jdbcMapping(
 			SessionFactoryImplementor factory,
 			QueryParameterImplementor<?> param,
 			QueryParameterBinding<?> binding) {
@@ -109,7 +109,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 			return factory.getTypeConfiguration().getBasicTypeRegistry()
 					.resolve( basicTypeReference );
 		}
-		else if ( type instanceof BasicValuedMapping basicValuedMapping ) {
+		else if ( type instanceof BasicValuedMapping<?> basicValuedMapping ) {
 			return basicValuedMapping.getJdbcMapping();
 		}
 		else {

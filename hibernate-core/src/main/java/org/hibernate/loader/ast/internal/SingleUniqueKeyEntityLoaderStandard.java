@@ -43,21 +43,21 @@ import static java.util.Collections.singletonList;
  * @author Steve Ebersole
  */
 public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEntityLoader<T> {
-	private final EntityMappingType entityDescriptor;
-	private final ModelPart uniqueKeyAttribute;
+	private final EntityMappingType<?> entityDescriptor;
+	private final ModelPart<?, ?, ?> uniqueKeyAttribute;
 	@Nonnull
 	private final String uniqueKeyAttributePath;
 	private final JdbcParametersList jdbcParameters;
 	private final JdbcSelect jdbcSelect;
 
 	public SingleUniqueKeyEntityLoaderStandard(
-			@Nonnull EntityMappingType entityDescriptor,
-			@Nonnull SingularAttributeMapping uniqueKeyMapping,
+			@Nonnull EntityMappingType<?> entityDescriptor,
+			@Nonnull SingularAttributeMapping<?, ?, ?> uniqueKeyMapping,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		this.entityDescriptor = entityDescriptor;
 		uniqueKeyAttributePath = getAttributePath( uniqueKeyMapping );
 		uniqueKeyAttribute =
-				uniqueKeyMapping instanceof ToOneAttributeMapping toOneAttributeMapping
+				uniqueKeyMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping
 						? toOneAttributeMapping.getForeignKeyDescriptor()
 						: uniqueKeyMapping;
 
@@ -79,14 +79,14 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 	}
 
 	@Nonnull
-	private static String getAttributePath(@Nonnull AttributeMapping attribute) {
-		ManagedMappingType declaringType = attribute.getDeclaringType();
-		if ( declaringType instanceof EmbeddableMappingType ) {
+	private static String getAttributePath(@Nonnull AttributeMapping<?, ?, ?> attribute) {
+		ManagedMappingType<?, ?, ?> declaringType = attribute.getDeclaringType();
+		if ( declaringType instanceof EmbeddableMappingType<?, ?, ?> ) {
 			final var path = new StringBuilder();
 			path.append( castNonNull( attribute.getAttributeName() ) );
 			do {
 				// declaringType must be cast each time (not a pattern variable) as it's updated each iteration
-				final var valueMapping = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
+				final var valueMapping = ( (EmbeddableMappingType<?, ?, ?>) declaringType ).getEmbeddedValueMapping();
 				attribute = valueMapping.asAttributeMapping();
 				if ( attribute == null ) {
 					break;
@@ -94,7 +94,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				path.insert( 0, '.' );
 				path.insert( 0, castNonNull( attribute.getAttributeName() ) );
 				declaringType = attribute.getDeclaringType();
-			} while ( declaringType instanceof EmbeddableMappingType );
+			} while ( declaringType instanceof EmbeddableMappingType<?, ?, ?> );
 			return path.toString();
 		}
 		return castNonNull( attribute.getAttributeName() );
@@ -102,7 +102,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 	@Nonnull
 	@Override
-	public EntityMappingType getLoadable() {
+	public EntityMappingType<?> getLoadable() {
 		return entityDescriptor;
 	}
 

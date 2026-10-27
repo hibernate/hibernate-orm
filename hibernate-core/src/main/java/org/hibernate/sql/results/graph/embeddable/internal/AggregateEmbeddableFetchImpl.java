@@ -38,13 +38,13 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 	private final FetchTiming fetchTiming;
 	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
-	private final EmbeddableMappingType fetchContainer;
+	private final EmbeddableMappingType<?, ?, ?> fetchContainer;
 	private final BasicFetch<?> discriminatorFetch;
 	private final int[] aggregateValuesArrayPositions;
 
 	public AggregateEmbeddableFetchImpl(
 			NavigablePath navigablePath,
-			EmbeddableValuedFetchable embeddedPartDescriptor,
+			EmbeddableValuedFetchable<?, ?, ?> embeddedPartDescriptor,
 			FetchParent fetchParent,
 			FetchTiming fetchTiming,
 			boolean hasTableGroup,
@@ -115,24 +115,24 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 	}
 
 	@Override
-	public EmbeddableMappingType getFetchContainer() {
+	public EmbeddableMappingType<?, ?, ?> getFetchContainer() {
 		return fetchContainer;
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getReferencedMappingContainer() {
+	public EmbeddableValuedModelPart<?, ?, ?> getReferencedMappingContainer() {
 		return getFetchContainer().getEmbeddedValueMapping();
 	}
 
 	@Override
-	public Fetchable getFetchedMapping() {
+	public Fetchable<?, ?, ?> getFetchedMapping() {
 		return getReferencedMappingContainer();
 	}
 
 
 	@Override
-	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
-		if ( fetchable instanceof TableGroupProducer ) {
+	public NavigablePath resolveNavigablePath(Fetchable<?, ?, ?> fetchable) {
+		if ( fetchable instanceof TableGroupProducer<?, ?, ?> ) {
 			for ( var tableGroupJoin : tableGroup.getTableGroupJoins() ) {
 				final var navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
@@ -147,7 +147,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 	}
 
 	@Override
-	public EmbeddableMappingType getReferencedMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getReferencedMappingType() {
 		return getFetchContainer();
 	}
 

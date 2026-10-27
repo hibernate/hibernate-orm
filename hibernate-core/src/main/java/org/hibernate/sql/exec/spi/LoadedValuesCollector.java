@@ -29,7 +29,7 @@ public interface LoadedValuesCollector {
 	 */
 	void registerEntity(
 			NavigablePath navigablePath,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			EntityKey entityKey);
 
 	/**
@@ -37,7 +37,7 @@ public interface LoadedValuesCollector {
 	 */
 	default void registerEntity(
 			NavigablePath navigablePath,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			EntityKey entityKey,
 			boolean reloaded) {
 		registerEntity( navigablePath, entityDescriptor, entityKey );
@@ -52,7 +52,7 @@ public interface LoadedValuesCollector {
 	 */
 	void registerCollection(
 			NavigablePath navigablePath,
-			PluralAttributeMapping collectionDescriptor,
+			PluralAttributeMapping<?> collectionDescriptor,
 			CollectionKey collectionKey);
 
 	/**
@@ -67,7 +67,7 @@ public interface LoadedValuesCollector {
 
 	interface LoadedPartRegistration {
 		NavigablePath navigablePath();
-		ModelPart modelPart();
+		ModelPart<?, ?, ?> modelPart();
 	}
 
 	/**
@@ -75,18 +75,18 @@ public interface LoadedValuesCollector {
 	 */
 	record LoadedEntityRegistration(
 			NavigablePath navigablePath,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			EntityKey entityKey,
 			boolean reloaded) implements LoadedPartRegistration {
 		public LoadedEntityRegistration(
 				NavigablePath navigablePath,
-				EntityMappingType entityDescriptor,
+				EntityMappingType<?> entityDescriptor,
 				EntityKey entityKey) {
 			this( navigablePath, entityDescriptor, entityKey, false );
 		}
 
 		@Override
-		public EntityMappingType modelPart() {
+		public EntityMappingType<?> modelPart() {
 			return entityDescriptor();
 		}
 	}
@@ -96,10 +96,10 @@ public interface LoadedValuesCollector {
 	 */
 	record LoadedCollectionRegistration(
 			NavigablePath navigablePath,
-			PluralAttributeMapping collectionDescriptor,
+			PluralAttributeMapping<?> collectionDescriptor,
 			CollectionKey collectionKey) implements LoadedPartRegistration {
 		@Override
-		public PluralAttributeMapping modelPart() {
+		public PluralAttributeMapping<?> modelPart() {
 			return collectionDescriptor();
 		}
 	}

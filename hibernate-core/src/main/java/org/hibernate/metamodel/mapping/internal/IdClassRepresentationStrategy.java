@@ -31,7 +31,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 
 	public IdClassRepresentationStrategy(
 			PropertyAccessorService propertyAccessorService,
-			IdClassEmbeddable idClassEmbeddable,
+			IdClassEmbeddable<?> idClassEmbeddable,
 			Component idClassSource,
 			boolean simplePropertyOrder,
 			Supplier<String[]> attributeNamesAccess) {
@@ -61,7 +61,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 
 	IdClassRepresentationStrategy(
 			PropertyAccessorService propertyAccessorService,
-			IdClassEmbeddable idClassEmbeddable,
+			IdClassEmbeddable<?> idClassEmbeddable,
 			EmbeddableInstantiator instantiator) {
 		this.idClassType = idClassEmbeddable.getMappedJavaType();
 		this.instantiator = instantiator;

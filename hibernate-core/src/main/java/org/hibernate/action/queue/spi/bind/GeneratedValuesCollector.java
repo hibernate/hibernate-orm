@@ -33,7 +33,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 @Incubating(since = "8.0", group = "action-queue")
 public final class GeneratedValuesCollector {
 	public static @Nullable GeneratedValuesCollector forInsert(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory) {
 		final var dialect = sessionFactory.getJdbcServices().getDialect();
 		final var generatedValuesSupport = dialect.getGeneratedValuesSupport();
@@ -44,13 +44,13 @@ public final class GeneratedValuesCollector {
 	}
 
 	public static @Nullable GeneratedValuesCollector forUpdate(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory) {
 		final var updateDelegate = entityPersister.getUpdateDelegate();
 		if ( updateDelegate != null
 				&& updateDelegate.getGeneratedValuesMappingProducer()
 						instanceof GeneratedValuesMappingProducer mappingProducer ) {
-			final List<BasicValuedModelPart> list = new ArrayList<>();
+			final List<BasicValuedModelPart<?, ?, ?>> list = new ArrayList<>();
 			for ( var resultBuilder : mappingProducer.getResultBuilders() ) {
 				list.add( resultBuilder.getModelPart() );
 			}
@@ -62,7 +62,7 @@ public final class GeneratedValuesCollector {
 	}
 
 	public static @Nullable GeneratedValuesCollector forTiming(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			EventType timing,
 			boolean supportsRowId) {
 		final var generatedModelParts =
@@ -73,15 +73,15 @@ public final class GeneratedValuesCollector {
 	}
 
 	private final EventType timing;
-	private final EntityPersister entityPersister;
-	private final List<? extends ModelPart> generatedModelParts;
+	private final EntityPersister<?> entityPersister;
+	private final List<? extends ModelPart<?, ?, ?>> generatedModelParts;
 	private final GeneratedValues generatedValues;
 	private DelayedValueAccess identifierHandle;
 
 	public GeneratedValuesCollector(
 			EventType timing,
-			EntityPersister entityPersister,
-			List<? extends ModelPart> generatedModelParts) {
+			EntityPersister<?> entityPersister,
+			List<? extends ModelPart<?, ?, ?>> generatedModelParts) {
 		this.timing = timing;
 		this.entityPersister = entityPersister;
 		this.generatedModelParts = generatedModelParts;
@@ -92,7 +92,7 @@ public final class GeneratedValuesCollector {
 		return timing;
 	}
 
-	public EntityPersister getEntityPersister() {
+	public EntityPersister<?> getEntityPersister() {
 		return entityPersister;
 	}
 
@@ -106,7 +106,7 @@ public final class GeneratedValuesCollector {
 
 	public boolean containsGeneratedValues(TableDescriptor tableDescriptor) {
 		for ( var generatedModelPart : generatedModelParts ) {
-			final BasicValuedModelPart basicValuedModelPart = generatedModelPart.asBasicValuedModelPart();
+			final BasicValuedModelPart<?, ?, ?> basicValuedModelPart = generatedModelPart.asBasicValuedModelPart();
 			if ( basicValuedModelPart != null
 					&& tableDescriptor.name().equals( basicValuedModelPart.getContainingTableExpression() ) ) {
 				return true;

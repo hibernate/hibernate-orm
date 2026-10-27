@@ -19,7 +19,7 @@ public class SelectEagerCollectionInitializer
 
 	public SelectEagerCollectionInitializer(
 			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedMapping,
+			PluralAttributeMapping<?> fetchedMapping,
 			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			FetchOptions fetchOptions,

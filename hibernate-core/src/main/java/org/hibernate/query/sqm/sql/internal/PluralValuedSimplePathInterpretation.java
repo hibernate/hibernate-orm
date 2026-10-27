@@ -26,7 +26,7 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 		return new PluralValuedSimplePathInterpretation<>(
 				null,
 				sqmPath.getNavigablePath(),
-				(PluralAttributeMapping)
+				(PluralAttributeMapping<?>)
 						tableGroup.getModelPart().findSubPart(
 								sqmPath.getReferencedPathSource().getPathName(),
 								null
@@ -44,7 +44,7 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 	private PluralValuedSimplePathInterpretation(
 			Expression sqlExpression,
 			NavigablePath navigablePath,
-			PluralAttributeMapping mapping,
+			PluralAttributeMapping<?> mapping,
 			TableGroup tableGroup,
 			CollectionPart.Nature selectedPartNature) {
 		super( navigablePath, mapping, tableGroup );
@@ -61,7 +61,7 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		return new DetachedCollectionDomainResult<>(
 				getNavigablePath(),
-				(PluralAttributeMapping) getExpressionType(),
+				(PluralAttributeMapping<?>) getExpressionType(),
 				resultVariable,
 				getTableGroup(),
 				selectedPartNature,

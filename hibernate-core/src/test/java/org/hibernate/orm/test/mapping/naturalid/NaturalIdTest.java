@@ -50,13 +50,13 @@ public class NaturalIdTest {
 
 	@Test
 	public void testMappingProperties(SessionFactoryScope factoryScope) {
-		final EntityMappingType citizenEntityMapping = factoryScope
+		final EntityMappingType<?> citizenEntityMapping = factoryScope
 				.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Citizen.class );
 
-		final NaturalIdMapping naturalIdMapping = citizenEntityMapping.getNaturalIdMapping();
+		final NaturalIdMapping<?, ?, ?> naturalIdMapping = citizenEntityMapping.getNaturalIdMapping();
 
 		assertThat( naturalIdMapping )
 				.withFailMessage( "Class should have a natural key" )

@@ -23,10 +23,10 @@ import jakarta.annotation.Nullable;
 /**
  * @author Christian Beikov
  */
-public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends AnonymousTupleEmbeddableValuedModelPart
-		implements NonAggregatedIdentifierMapping {
+public class AnonymousTupleNonAggregatedEntityIdentifierMapping<E, I> extends AnonymousTupleEmbeddableValuedModelPart<E, E, I>
+		implements NonAggregatedIdentifierMapping<E, I> {
 
-	private final NonAggregatedIdentifierMapping delegate;
+	private final NonAggregatedIdentifierMapping<E, I> delegate;
 
 	public AnonymousTupleNonAggregatedEntityIdentifierMapping(
 			SqmExpressible<?> sqmExpressible,
@@ -35,9 +35,9 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
 			Set<? extends Attribute<?, ?>> attributes,
-			DomainType<?> domainType,
+			DomainType<E> domainType,
 			String componentName,
-			NonAggregatedIdentifierMapping delegate,
+			NonAggregatedIdentifierMapping<E, I> delegate,
 			boolean generateColumnNames) {
 		super(
 				sqmExpressible,
@@ -104,37 +104,37 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType<?, ?, ?> getMappedIdEmbeddableTypeDescriptor() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getMappedType() {
+	public EmbeddableMappingType<E, E, ?> getMappedType() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType getPartMappingType() {
+	public EmbeddableMappingType<E, E, ?> getPartMappingType() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public VirtualIdEmbeddable getVirtualIdEmbeddable() {
+	public VirtualIdEmbeddable<E> getVirtualIdEmbeddable() {
 		return delegate.getVirtualIdEmbeddable();
 	}
 
 	@Nullable
 	@Override
-	public IdClassEmbeddable getIdClassEmbeddable() {
+	public IdClassEmbeddable<I> getIdClassEmbeddable() {
 		return delegate.getIdClassEmbeddable();
 	}
 
 	@Nonnull
 	@Override
-	public IdentifierValueMapper getIdentifierValueMapper() {
+	public IdentifierValueMapper<I> getIdentifierValueMapper() {
 		return delegate.getIdentifierValueMapper();
 	}
 

@@ -102,9 +102,9 @@ public class LoaderSelectBuilder {
 	 */
 	@Nonnull
 	public static SelectStatement createSelectByUniqueKey(
-			@Nonnull Loadable loadable,
-			@Nonnull List<? extends ModelPart> partsToSelect,
-			@Nonnull ModelPart restrictedPart,
+			@Nonnull Loadable<?, ?, ?> loadable,
+			@Nonnull List<? extends ModelPart<?, ?, ?>> partsToSelect,
+			@Nonnull ModelPart<?, ?, ?> restrictedPart,
 			@Nullable DomainResult<?> cachedDomainResult,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
 			@Nonnull LockOptions lockOptions,
@@ -129,8 +129,8 @@ public class LoaderSelectBuilder {
 	}
 
 	static SelectStatement createAssociationKeySelect(
-			ToOneAttributeMapping association,
-			ModelPart restrictedPart, LoadQueryInfluencers influencers,
+			ToOneAttributeMapping<?> association,
+			ModelPart<?, ?, ?> restrictedPart, LoadQueryInfluencers influencers,
 			Consumer<JdbcParameter> parameterConsumer) {
 		final var target = association.getEntityMappingType();
 		final var factory = influencers.getSessionFactory();
@@ -145,8 +145,8 @@ public class LoaderSelectBuilder {
 	 */
 	@Nonnull
 	public static SelectStatement createSelectBySingleArrayParameter(
-			@Nonnull Loadable loadable,
-			@Nonnull ValuedModelPart restrictedPart,
+			@Nonnull Loadable<?, ?, ?> loadable,
+			@Nonnull ValuedModelPart<?, ?, ?> restrictedPart,
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull LockOptions lockOptions,
 			@Nonnull JdbcParameter jdbcArrayParameter,
@@ -194,7 +194,7 @@ public class LoaderSelectBuilder {
 				sqlAstCreationState
 		);
 
-		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		if ( loadable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			builder.applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 			builder.applyOrdering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 		}
@@ -209,7 +209,7 @@ public class LoaderSelectBuilder {
 			@Nonnull QuerySpec rootQuerySpec,
 			@Nonnull NavigablePath rootNavigablePath,
 			@Nonnull TableGroup rootTableGroup,
-			@Nonnull ValuedModelPart restrictedPart,
+			@Nonnull ValuedModelPart<?, ?, ?> restrictedPart,
 			@Nonnull JdbcParameter jdbcArrayParameter,
 			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		assert restrictedPart.getJdbcTypeCount() == 1;
@@ -242,9 +242,9 @@ public class LoaderSelectBuilder {
 	 */
 	@Nonnull
 	public static SelectStatement createSelect(
-			@Nonnull Loadable loadable,
-			@Nullable List<? extends ModelPart> partsToSelect,
-			@Nonnull ModelPart restrictedPart,
+			@Nonnull Loadable<?, ?, ?> loadable,
+			@Nullable List<? extends ModelPart<?, ?, ?>> partsToSelect,
+			@Nonnull ModelPart<?, ?, ?> restrictedPart,
 			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
@@ -269,9 +269,9 @@ public class LoaderSelectBuilder {
 
 	@Nonnull
 	public static SelectStatement createSelect(
-			@Nonnull Loadable loadable,
-			@Nullable List<? extends ModelPart> partsToSelect,
-			@Nonnull List<ModelPart> restrictedParts,
+			@Nonnull Loadable<?, ?, ?> loadable,
+			@Nullable List<? extends ModelPart<?, ?, ?>> partsToSelect,
+			@Nonnull List<ModelPart<?, ?, ?>> restrictedParts,
 			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
@@ -298,10 +298,10 @@ public class LoaderSelectBuilder {
 	// determineWhetherToForceIdSelection() a bit smarter
 	@Nonnull
 	static SelectStatement createSelect(
-			@Nonnull Loadable loadable,
-			@Nullable List<ModelPart> partsToSelect,
+			@Nonnull Loadable<?, ?, ?> loadable,
+			@Nullable List<ModelPart<?, ?, ?>> partsToSelect,
 			boolean forceIdentifierSelection,
-			@Nonnull List<ModelPart> restrictedParts,
+			@Nonnull List<ModelPart<?, ?, ?>> restrictedParts,
 			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
@@ -341,7 +341,7 @@ public class LoaderSelectBuilder {
 	 */
 	@Nonnull
 	public static SelectStatement createSubSelectFetchSelect(
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull SubselectFetch subselect,
 			@Nullable DomainResult<?> cachedDomainResult,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
@@ -380,8 +380,8 @@ public class LoaderSelectBuilder {
 	 */
 	@Nonnull
 	public static SelectStatement createSubSelectFetchSelect(
-			@Nonnull EntityMappingType entityMapping,
-			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull EntityMappingType<?> entityMapping,
+			@Nonnull ToOneAttributeMapping<?> attributeMapping,
 			@Nonnull SubselectFetch subselect,
 			@Nullable DomainResult<?> cachedDomainResult,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
@@ -405,10 +405,10 @@ public class LoaderSelectBuilder {
 	}
 
 	private final SqlAstCreationContext creationContext;
-	private final Loadable loadable;
+	private final Loadable<?, ?, ?> loadable;
 	@Nullable
-	private final List<? extends ModelPart> partsToSelect;
-	private final List<ModelPart> restrictedParts;
+	private final List<? extends ModelPart<?, ?, ?>> partsToSelect;
+	private final List<ModelPart<?, ?, ?>> restrictedParts;
 	@Nullable
 	private final DomainResult<?> cachedDomainResult;
 	private final int numberOfKeysToLoad;
@@ -426,9 +426,9 @@ public class LoaderSelectBuilder {
 
 	private LoaderSelectBuilder(
 			@Nonnull SqlAstCreationContext creationContext,
-			@Nonnull Loadable loadable,
-			@Nullable List<? extends ModelPart> partsToSelect,
-			@Nonnull List<ModelPart> restrictedParts,
+			@Nonnull Loadable<?, ?, ?> loadable,
+			@Nullable List<? extends ModelPart<?, ?, ?>> partsToSelect,
+			@Nonnull List<ModelPart<?, ?, ?>> restrictedParts,
 			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
@@ -449,7 +449,7 @@ public class LoaderSelectBuilder {
 		this.forceIdentifierSelection = forceIdentifierSelection;
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
 		this.sqlAliasBasGenerator = sqlAliasBasGenerator;
-		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		if ( loadable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			if ( pluralAttributeMapping.getMappedType().getCollectionSemantics()
 						.getCollectionClassification() == CollectionClassification.BAG ) {
 				rowCardinality = RowCardinality.BAG;
@@ -459,9 +459,9 @@ public class LoaderSelectBuilder {
 
 	private LoaderSelectBuilder(
 			@Nonnull SqlAstCreationContext creationContext,
-			@Nonnull Loadable loadable,
-			@Nullable List<? extends ModelPart> partsToSelect,
-			@Nonnull List<ModelPart> restrictedParts,
+			@Nonnull Loadable<?, ?, ?> loadable,
+			@Nullable List<? extends ModelPart<?, ?, ?>> partsToSelect,
+			@Nonnull List<ModelPart<?, ?, ?>> restrictedParts,
 			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
@@ -486,9 +486,9 @@ public class LoaderSelectBuilder {
 
 	private LoaderSelectBuilder(
 			@Nonnull SqlAstCreationContext creationContext,
-			@Nonnull Loadable loadable,
-			@Nullable List<? extends ModelPart> partsToSelect,
-			@Nonnull ModelPart restrictedPart,
+			@Nonnull Loadable<?, ?, ?> loadable,
+			@Nullable List<? extends ModelPart<?, ?, ?>> partsToSelect,
+			@Nonnull ModelPart<?, ?, ?> restrictedPart,
 			@Nullable DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers,
@@ -510,9 +510,9 @@ public class LoaderSelectBuilder {
 	}
 
 	private static boolean determineWhetherToForceIdSelection(
-			@Nonnull Loadable loadable,
+			@Nonnull Loadable<?, ?, ?> loadable,
 			int numberOfKeysToLoad,
-			@Nonnull List<ModelPart> restrictedParts,
+			@Nonnull List<ModelPart<?, ?, ?>> restrictedParts,
 			@Nonnull LoadQueryInfluencers influencers) {
 		if ( numberOfKeysToLoad > 1 ) {
 			return true;
@@ -526,8 +526,8 @@ public class LoaderSelectBuilder {
 		}
 
 		for ( var restrictedPart : restrictedParts ) {
-			if ( restrictedPart instanceof ForeignKeyDescriptor
-					|| restrictedPart instanceof NonAggregatedIdentifierMapping ) {
+			if ( restrictedPart instanceof ForeignKeyDescriptor<?, ?, ?>
+					|| restrictedPart instanceof NonAggregatedIdentifierMapping<?, ?> ) {
 				return true;
 			}
 		}
@@ -559,7 +559,7 @@ public class LoaderSelectBuilder {
 		return generateSelect( null );
 	}
 
-	private SelectStatement generateSelect(@Nullable ToOneAttributeMapping association) {
+	private SelectStatement generateSelect(@Nullable ToOneAttributeMapping<?> association) {
 		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final var rootQuerySpec = new QuerySpec( true );
@@ -598,7 +598,7 @@ public class LoaderSelectBuilder {
 			);
 		}
 
-		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		if ( loadable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 			applyOrdering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 		}
@@ -620,7 +620,7 @@ public class LoaderSelectBuilder {
 		for ( var part : partsToSelect ) {
 			final var navigablePath = rootNavigablePath.append( part.getPartName() );
 			final TableGroup tableGroup;
-			if ( part instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+			if ( part instanceof TableGroupJoinProducer<?, ?, ?> tableGroupJoinProducer ) {
 				final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 						navigablePath,
 						rootTableGroup,
@@ -692,7 +692,7 @@ public class LoaderSelectBuilder {
 			@Nonnull QuerySpec rootQuerySpec,
 			@Nonnull NavigablePath rootNavigablePath,
 			@Nonnull TableGroup rootTableGroup,
-			@Nonnull ModelPart restrictedPart,
+			@Nonnull ModelPart<?, ?, ?> restrictedPart,
 			int numberColumns,
 			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
 			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
@@ -710,7 +710,7 @@ public class LoaderSelectBuilder {
 								(ColumnReference)
 										sqlExpressionResolver.resolveSqlExpression( tableReference, selection );
 						if ( numberOfKeysToLoad == 1 ) {
-							final var jdbcParameter = new SqlTypedMappingJdbcParameter( selection );
+							final var jdbcParameter = SqlTypedMappingJdbcParameter.create( selection );
 							jdbcParameterConsumer.accept( jdbcParameter );
 							rootQuerySpec.applyPredicate(
 									new ComparisonPredicate( columnRef, ComparisonOperator.EQUAL, jdbcParameter )
@@ -719,7 +719,7 @@ public class LoaderSelectBuilder {
 						else {
 							final var predicate = new InListPredicate( columnRef );
 							for ( int i = 0; i < numberOfKeysToLoad; i++ ) {
-								final var jdbcParameter = new SqlTypedMappingJdbcParameter( selection );
+								final var jdbcParameter = SqlTypedMappingJdbcParameter.create( selection );
 								jdbcParameterConsumer.accept( jdbcParameter );
 								predicate.addExpression( jdbcParameter );
 							}
@@ -750,7 +750,7 @@ public class LoaderSelectBuilder {
 				final List<JdbcParameter> tupleParams = new ArrayList<>( numberColumns );
 				restrictedPart.forEachSelectable(
 						(columnIndex, selection) -> {
-							final JdbcParameter jdbcParameter = new SqlTypedMappingJdbcParameter( selection );
+							final JdbcParameter jdbcParameter = SqlTypedMappingJdbcParameter.create( selection );
 							jdbcParameterConsumer.accept( jdbcParameter );
 							tupleParams.add( jdbcParameter );
 						}
@@ -766,7 +766,7 @@ public class LoaderSelectBuilder {
 	private void applyFiltering(
 			@Nonnull QuerySpec querySpec,
 			@Nonnull TableGroup tableGroup,
-			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull PluralAttributeMapping<?> pluralAttributeMapping,
 			@Nonnull SqlAstCreationState astCreationState) {
 		// Only apply restrictions for root table groups,
 		// because for table group joins the restriction is applied
@@ -810,7 +810,7 @@ public class LoaderSelectBuilder {
 	private void applyOrdering(
 			@Nonnull QuerySpec querySpec,
 			@Nonnull TableGroup tableGroup,
-			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull PluralAttributeMapping<?> pluralAttributeMapping,
 			@Nonnull SqlAstCreationState astCreationState) {
 		final var orderByFragment = pluralAttributeMapping.getOrderByFragment();
 		if ( orderByFragment != null ) {
@@ -850,9 +850,9 @@ public class LoaderSelectBuilder {
 		}
 
 		final int size = referencedMappingContainer.getNumberOfFetchables();
-		List<Fetchable> bagFetchables = null;
+		List<Fetchable<?, ?, ?>> bagFetchables = null;
 		for ( int i = 0; i < size; i++ ) {
-			final Fetchable fetchable = referencedMappingContainer.getFetchable( i );
+			final Fetchable<?, ?, ?> fetchable = referencedMappingContainer.getFetchable( i );
 			if ( isBag( fetchable ) ) {
 				if ( bagFetchables == null ) {
 					bagFetchables = new ArrayList<>();
@@ -865,27 +865,27 @@ public class LoaderSelectBuilder {
 			}
 		}
 		if ( bagFetchables != null ) {
-			for ( Fetchable fetchable : bagFetchables ) {
+			for ( Fetchable<?, ?, ?> fetchable : bagFetchables ) {
 				processor.accept( fetchable, false, true );
 			}
 		}
 		return fetches.build();
 	}
 
-	private boolean isBag(@Nonnull Fetchable fetchable) {
+	private boolean isBag(@Nonnull Fetchable<?, ?, ?> fetchable) {
 		return isPluralAttributeMapping( fetchable )
-			&& ( (PluralAttributeMapping) fetchable ).getMappedType().getCollectionSemantics()
+			&& ( (PluralAttributeMapping<?>) fetchable ).getMappedType().getCollectionSemantics()
 					.getCollectionClassification() == CollectionClassification.BAG;
 	}
 
-	private boolean isPluralAttributeMapping(@Nonnull Fetchable fetchable) {
+	private boolean isPluralAttributeMapping(@Nonnull Fetchable<?, ?, ?> fetchable) {
 		final var attributeMapping = fetchable.asAttributeMapping();
 		return attributeMapping != null && attributeMapping.isPluralAttributeMapping();
 	}
 
 	@FunctionalInterface
 	private interface FetchableConsumer {
-		void accept(@Nonnull Fetchable fetchable, boolean isKeyFetchable, boolean isABag);
+		void accept(@Nonnull Fetchable<?, ?, ?> fetchable, boolean isKeyFetchable, boolean isABag);
 	}
 
 	@Nonnull
@@ -910,7 +910,7 @@ public class LoaderSelectBuilder {
 			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
 			boolean cascadeReachable = false;
 
-			if ( !( fetchable instanceof CollectionPart ) ) {
+			if ( !( fetchable instanceof CollectionPart<?, ?, ?> ) ) {
 				// 'entity graph' takes precedence over 'fetch profile'
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
@@ -996,7 +996,7 @@ public class LoaderSelectBuilder {
 					else if ( fetchDepth > maximumFetchDepth + 1 ) {
 						// We can preserve the existing value of joined for basic and embedded values
 						if ( fetchable.asBasicValuedModelPart() == null
-								&& !( fetchable instanceof EmbeddedAttributeMapping ) ) {
+								&& !( fetchable instanceof EmbeddedAttributeMapping<?, ?> ) ) {
 							joined = false;
 						}
 					}
@@ -1032,7 +1032,7 @@ public class LoaderSelectBuilder {
 	}
 
 	@Nonnull
-	private static NavigablePath getFetchablePath(@Nonnull FetchParent fetchParent, @Nonnull Fetchable fetchable, boolean isKeyFetchable) {
+	private static NavigablePath getFetchablePath(@Nonnull FetchParent fetchParent, @Nonnull Fetchable<?, ?, ?> fetchable, boolean isKeyFetchable) {
 		if ( isKeyFetchable ) {
 			final var identifierMapping = getEntityIdentifierMapping( fetchParent );
 			if ( identifierMapping != null ) {
@@ -1051,31 +1051,31 @@ public class LoaderSelectBuilder {
 	}
 
 	@Nullable
-	private static EntityIdentifierMapping getEntityIdentifierMapping(@Nonnull FetchParent fetchParent) {
+	private static EntityIdentifierMapping<?, ?, ?> getEntityIdentifierMapping(@Nonnull FetchParent fetchParent) {
 		if ( fetchParent instanceof BiDirectionalFetch parentAsBiDirectionalFetch ) {
-			return parentAsBiDirectionalFetch.getFetchedMapping() instanceof EntityValuedFetchable entityFetchable
+			return parentAsBiDirectionalFetch.getFetchedMapping() instanceof EntityValuedFetchable<?> entityFetchable
 							? entityFetchable.getEntityMappingType().getIdentifierMapping()
 							: null;
 		}
 		else {
-			return fetchParent.getReferencedMappingContainer() instanceof EntityValuedModelPart entityModelPart
+			return fetchParent.getReferencedMappingContainer() instanceof EntityValuedModelPart<?> entityModelPart
 							? entityModelPart.getEntityMappingType().getIdentifierMapping()
 							: null;
 		}
 	}
 
-	private boolean shouldExplicitFetch(@Nullable Integer maxFetchDepth, @Nonnull Fetchable fetchable, @Nonnull LoaderSqlAstCreationState creationState) {
+	private boolean shouldExplicitFetch(@Nullable Integer maxFetchDepth, @Nonnull Fetchable<?, ?, ?> fetchable, @Nonnull LoaderSqlAstCreationState creationState) {
 		/*
 			Forcing the value of explicitFetch to true will disable the fetch circularity check and
 			for already visited association or collection this will cause a StackOverflow if maxFetchDepth is null, see HHH-15391.
 		 */
 		if ( maxFetchDepth == null ) {
-			if ( fetchable instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+			if ( fetchable instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 				return !creationState.isAssociationKeyVisited(
 						toOneAttributeMapping.getForeignKeyDescriptor().getAssociationKey()
 				);
 			}
-			else if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			else if ( fetchable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 				return !creationState.isAssociationKeyVisited(
 						pluralAttributeMapping.getKeyDescriptor().getAssociationKey()
 				);
@@ -1108,8 +1108,8 @@ public class LoaderSelectBuilder {
 		// todo (6.0) : ^^ another interesting idea is to use `partsToSelect` here relative to the owner
 		//		- so `loadable` is the owner entity-descriptor and the `partsToSelect` is the collection
 
-		assert loadable instanceof PluralAttributeMapping;
-		final var attributeMapping = (PluralAttributeMapping) loadable;
+		assert loadable instanceof PluralAttributeMapping<?>;
+		final var attributeMapping = (PluralAttributeMapping<?>) loadable;
 
 		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 		final var rootQuerySpec = new QuerySpec( true );
@@ -1156,11 +1156,11 @@ public class LoaderSelectBuilder {
 
 	@Nonnull
 	private SelectStatement generateSelect(
-			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull ToOneAttributeMapping<?> attributeMapping,
 			@Nonnull SubselectFetch subselect,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator) {
-		assert loadable instanceof EntityMappingType;
-		final var entityMapping = (EntityMappingType) loadable;
+		assert loadable instanceof EntityMappingType<?>;
+		final var entityMapping = (EntityMappingType<?>) loadable;
 
 		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 		final var rootQuerySpec = new QuerySpec( true );
@@ -1202,15 +1202,15 @@ public class LoaderSelectBuilder {
 			@Nonnull TableGroup rootTableGroup,
 			@Nonnull SubselectFetch subselect,
 			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
-		assert loadable instanceof PluralAttributeMapping;
+		assert loadable instanceof PluralAttributeMapping<?>;
 
-		final var attributeMapping = (PluralAttributeMapping) loadable;
+		final var attributeMapping = (PluralAttributeMapping<?>) loadable;
 		final var fkDescriptor = attributeMapping.getKeyDescriptor();
 
 		final Expression fkExpression;
 		if ( !fkDescriptor.isEmbedded() ) {
-			assert fkDescriptor instanceof SimpleForeignKeyDescriptor;
-			final var simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
+			assert fkDescriptor instanceof SimpleForeignKeyDescriptor<?, ?, ?>;
+			final var simpleFkDescriptor = (SimpleForeignKeyDescriptor<?, ?, ?>) fkDescriptor;
 			final var tableReference =
 					rootTableGroup.resolveTableReference( null, fkDescriptor,
 							simpleFkDescriptor.getContainingTableExpression() );
@@ -1247,7 +1247,7 @@ public class LoaderSelectBuilder {
 	private void applySubSelectRestriction(
 			@Nonnull QuerySpec querySpec,
 			@Nonnull TableGroup rootTableGroup,
-			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull ToOneAttributeMapping<?> attributeMapping,
 			@Nonnull SubselectFetch subselect,
 			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		final var fkDescriptor = attributeMapping.getForeignKeyDescriptor();
@@ -1265,7 +1265,7 @@ public class LoaderSelectBuilder {
 	@Nonnull
 	private Expression createPartExpression(
 			@Nonnull TableGroup tableGroup,
-			@Nonnull ValuedModelPart modelPart,
+			@Nonnull ValuedModelPart<?, ?, ?> modelPart,
 			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		if ( modelPart.getJdbcTypeCount() == 1 ) {
@@ -1293,7 +1293,7 @@ public class LoaderSelectBuilder {
 
 	@Nonnull
 	private QueryPart generateSubSelect(
-			@Nonnull PluralAttributeMapping attributeMapping,
+			@Nonnull PluralAttributeMapping<?> attributeMapping,
 			@Nonnull SubselectFetch subselect,
 			@Nonnull LoaderSqlAstCreationState creationState) {
 		final var fkDescriptor = attributeMapping.getKeyDescriptor();
@@ -1326,7 +1326,7 @@ public class LoaderSelectBuilder {
 
 	@Nonnull
 	private QueryPart generateSubSelect(
-			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull ToOneAttributeMapping<?> attributeMapping,
 			@Nonnull SubselectFetch subselect,
 			@Nonnull LoaderSqlAstCreationState creationState) {
 		final var fkDescriptor = attributeMapping.getForeignKeyDescriptor();

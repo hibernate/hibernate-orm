@@ -22,7 +22,7 @@ public interface ManagedTypeRepresentationResolver {
 	 */
 	EntityRepresentationStrategy resolveStrategy(
 			PersistentClass bootDescriptor,
-			EntityPersister runtimeDescriptor,
+			EntityPersister<?> runtimeDescriptor,
 			RuntimeModelCreationContext creationContext);
 
 	/**
@@ -30,6 +30,6 @@ public interface ManagedTypeRepresentationResolver {
 	 */
 	EmbeddableRepresentationStrategy resolveStrategy(
 			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptor,
+			Supplier<EmbeddableMappingType<?, ?, ?>> runtimeDescriptor,
 			RuntimeModelCreationContext creationContext);
 }

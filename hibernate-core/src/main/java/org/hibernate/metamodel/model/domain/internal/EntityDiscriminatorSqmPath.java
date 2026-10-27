@@ -26,14 +26,14 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements DiscriminatorSqmPath<T> {
 	private final SqmEntityDomainType entityDomainType;
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 
 	protected EntityDiscriminatorSqmPath(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull SqmPathSource referencedPathSource,
 			@Nullable SqmPath<?> lhs,
 			@Nonnull SqmEntityDomainType entityDomainType,
-			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull EntityMappingType<?> entityDescriptor,
 			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		this.entityDomainType = entityDomainType;
@@ -46,7 +46,7 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 	}
 
 	@Nonnull
-	public EntityMappingType getEntityDescriptor() {
+	public EntityMappingType<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 

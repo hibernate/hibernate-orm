@@ -25,7 +25,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer<EntityResultImpl<E>> {
 	private final NavigablePath navigablePath;
-	private final EntityValuedModelPart entityValuedModelPart;
+	private final EntityValuedModelPart<?> entityValuedModelPart;
 
 	private final Fetch identifierFetch;
 	private final BasicFetch<?> discriminatorFetch;
@@ -37,7 +37,7 @@ public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer
 
 	public EntityResultImpl(
 			NavigablePath navigablePath,
-			EntityValuedModelPart entityValuedModelPart,
+			EntityValuedModelPart<?> entityValuedModelPart,
 			String resultAlias,
 			LockMode lockMode,
 			Function<EntityResultImpl<E>, BasicFetch<?>> discriminatorFetchBuilder,
@@ -78,12 +78,12 @@ public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer
 	}
 
 	@Override
-	public EntityValuedModelPart getReferencedMappingType() {
+	public EntityValuedModelPart<?> getReferencedMappingType() {
 		return entityValuedModelPart;
 	}
 
 	@Override
-	public EntityValuedModelPart getEntityValuedModelPart() {
+	public EntityValuedModelPart<?> getEntityValuedModelPart() {
 		return entityValuedModelPart;
 	}
 
@@ -98,7 +98,7 @@ public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 		return fetches.get( fetchable );
 	}
 

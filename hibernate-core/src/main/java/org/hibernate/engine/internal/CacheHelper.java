@@ -31,7 +31,7 @@ public final class CacheHelper {
 	public static Object fromSharedCache(
 			SharedSessionContractImplementor session,
 			Object cacheKey,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			CachedDomainDataAccess cacheAccess) {
 		return fromSharedCache( session, cacheKey, persister, false, cacheAccess );
 	}
@@ -39,7 +39,7 @@ public final class CacheHelper {
 	public static Object fromSharedCache(
 			SharedSessionContractImplementor session,
 			Object cacheKey,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			boolean isNaturalKey,
 			CachedDomainDataAccess cacheAccess) {
 		if ( session.isRootTenant() ) {
@@ -97,7 +97,7 @@ public final class CacheHelper {
 	}
 
 	public static void writingToCache(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Consumer<EntityDataAccess> action) {
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
@@ -107,7 +107,7 @@ public final class CacheHelper {
 	}
 
 	public static void readingFromCache(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Consumer<EntityDataAccess> action) {
 		if ( persister.canReadFromCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
@@ -117,7 +117,7 @@ public final class CacheHelper {
 	}
 
 	public static <T> T readingFromCache(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Function<EntityDataAccess, T> action,
 			T defaultValue) {
 		if ( persister.canReadFromCache() ) {
@@ -131,7 +131,7 @@ public final class CacheHelper {
 	}
 
 	public static <T> T writingToCache(
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull Function<EntityDataAccess, T> action,
 			T defaultValue) {
 		if ( persister.canWriteToCache() ) {
@@ -171,7 +171,7 @@ public final class CacheHelper {
 	public static void addBasicValueToCacheKey(
 			MutableCacheKeyBuilder cacheKey,
 			Object value,
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			SharedSessionContractImplementor session) {
 		final BasicValueConverter converter = jdbcMapping.getValueConverter();
 		final Object convertedValue;

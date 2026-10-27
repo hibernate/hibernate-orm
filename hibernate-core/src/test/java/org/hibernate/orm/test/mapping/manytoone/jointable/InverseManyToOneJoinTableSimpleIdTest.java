@@ -44,10 +44,10 @@ public class InverseManyToOneJoinTableSimpleIdTest {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( Author.class );
-		final PluralAttributeMapping books = (PluralAttributeMapping) entityDescriptor.findAttributeMapping( "books" );
-		final ManyToManyCollectionPart booksElementDescriptor = (ManyToManyCollectionPart) books.getElementDescriptor();
-		final SimpleForeignKeyDescriptor booksFk = (SimpleForeignKeyDescriptor) booksElementDescriptor.getForeignKeyDescriptor();
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.getEntityDescriptor( Author.class );
+		final PluralAttributeMapping<?> books = (PluralAttributeMapping<?>) entityDescriptor.findAttributeMapping( "books" );
+		final ManyToManyCollectionPart<?> booksElementDescriptor = (ManyToManyCollectionPart<?>) books.getElementDescriptor();
+		final SimpleForeignKeyDescriptor<?, ?, ?> booksFk = (SimpleForeignKeyDescriptor<?, ?, ?>) booksElementDescriptor.getForeignKeyDescriptor();
 
 		assertThat( booksFk.getKeyTable() ).isEqualTo( "book_authors" );
 		assertThat( booksFk.getKeyPart().getSelectionExpression() ).isEqualTo( "book_id" );

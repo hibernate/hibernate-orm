@@ -69,7 +69,7 @@ public class XmlArrayJdbcType extends ArrayJdbcType {
 		final var elementJdbcType = getElementJdbcType();
 		final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
 		if ( elementJdbcType instanceof XmlJdbcType xmlElementJdbcType ) {
-			final EmbeddableMappingType embeddableMappingType = xmlElementJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = xmlElementJdbcType.getEmbeddableMappingType();
 			return XmlHelper.arrayToString( embeddableMappingType, domainObjects, options );
 		}
 		else {

@@ -62,7 +62,7 @@ public class IdentityGenerator
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister<?> persister) {
 		final var dialect = persister.getFactory().getJdbcServices().getDialect();
 		final var sessionFactoryOptions = persister.getFactory().getSessionFactoryOptions();
 		final var generatedValuesSupport = dialect.getGeneratedValuesSupport();
@@ -95,7 +95,7 @@ public class IdentityGenerator
 	}
 
 	private static InsertGeneratedIdentifierDelegate buildIdentityGeneratedKeysDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Dialect dialect) {
 		return switch ( dialect.getIdentityColumnSupport().getIdentityValueRetrieval() ) {
 			case INFERRED_GENERATED_KEYS -> new GetGeneratedKeysDelegate( persister, true, INSERT );

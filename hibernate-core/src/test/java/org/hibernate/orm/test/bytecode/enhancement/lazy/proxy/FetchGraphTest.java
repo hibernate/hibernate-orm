@@ -367,7 +367,7 @@ public class FetchGraphTest {
 		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		final EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels()
+		final EntityPersister<?> persister = scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( DEntity.class );
 		assert persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();

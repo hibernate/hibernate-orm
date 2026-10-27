@@ -41,9 +41,9 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 /**
  * @author Steve Ebersole
  */
-public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOptions {
+public class EntityVersionMappingImpl<J> implements EntityVersionMapping<J>, FetchOptions {
 	private final String attributeName;
-	private final EntityMappingType declaringType;
+	private final EntityMappingType<?> declaringType;
 
 	private final String columnTableExpression;
 	private final String columnExpression;
@@ -53,7 +53,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	private final @Nullable Integer scale;
 	private final @Nullable Integer temporalPrecision;
 
-	private final BasicType<?> versionBasicType;
+	private final BasicType<J> versionBasicType;
 
 	private final VersionValue unsavedValueStrategy;
 
@@ -68,8 +68,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			@Nullable Integer precision,
 			@Nullable Integer scale,
 			@Nullable Integer temporalPrecision,
-			BasicType<?> versionBasicType,
-			EntityMappingType declaringType) {
+			BasicType<J> versionBasicType,
+			EntityMappingType<?> declaringType) {
 		this.attributeName = attributeName;
 		this.length = length;
 		this.arrayLength = arrayLength;
@@ -85,7 +85,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
 				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
-				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
+				(VersionJavaType<J>) versionBasicType.getJavaTypeDescriptor(),
 				declaringType.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
 						.getPropertyValueAccessor(),
@@ -95,8 +95,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	@Nonnull
 	@Override
-	public BasicAttributeMapping getVersionAttribute() {
-		return (BasicAttributeMapping) castNonNull( declaringType.findAttributeMapping( attributeName ) );
+	public BasicAttributeMapping<J> getVersionAttribute() {
+		return (BasicAttributeMapping<J>) castNonNull( declaringType.findAttributeMapping( attributeName ) );
 	}
 
 	@Nonnull
@@ -184,26 +184,26 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<J> getPartMappingType() {
 		return versionBasicType;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return versionBasicType;
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return versionBasicType.getJdbcMapping();
 	}
 
 	@Nonnull
 	@Override
-	public VersionJavaType<?> getJavaType() {
-		return (VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor();
+	public VersionJavaType<J> getJavaType() {
+		return (VersionJavaType<J>) versionBasicType.getJavaTypeDescriptor();
 	}
 
 	@Nonnull
@@ -220,7 +220,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	@Nonnull
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return declaringType;
 	}
 
@@ -272,13 +272,13 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
 			@Nonnull DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				versionBasicType,
@@ -299,7 +299,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		selectionConsumer.accept( resolveSqlSelection( tableGroup, creationState ), getJdbcMapping() );
 	}
 
@@ -366,7 +366,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

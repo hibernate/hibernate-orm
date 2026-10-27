@@ -167,7 +167,7 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 		}
 
 		@Override
-		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping type, SqmToSqlAstConverter converter) {
+		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping<?> type, SqmToSqlAstConverter converter) {
 			if ( isBoolean( type ) ) {
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();
@@ -204,7 +204,7 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public static boolean isBoolean(JdbcMapping type) {
+	public static boolean isBoolean(JdbcMapping<?> type) {
 		return switch ( type.getCastType() ) {
 			case BOOLEAN, TF_BOOLEAN, YN_BOOLEAN, INTEGER_BOOLEAN -> true;
 			default -> false;

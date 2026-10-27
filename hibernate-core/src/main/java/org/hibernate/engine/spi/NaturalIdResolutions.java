@@ -21,7 +21,7 @@ public interface NaturalIdResolutions {
 	 *
 	 * @return {@code true} if a new entry was actually added; {@code false} otherwise.
 	 */
-	boolean cacheResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);
+	boolean cacheResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor);
 
 	/**
 	 * Removes a natural-id-to-identifier resolution.
@@ -30,9 +30,9 @@ public interface NaturalIdResolutions {
 	 *
 	 * @return The cached values, if any.  May be different from incoming values.
 	 */
-	Object removeResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);
+	Object removeResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor);
 
-	void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor);
+	void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType<?> entityDescriptor);
 
 	/**
 	 * Ensures that the necessary local cross-reference exists.  Specifically, this
@@ -41,7 +41,7 @@ public interface NaturalIdResolutions {
 	void manageLocalResolution(
 			Object id,
 			Object naturalIdValue,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			CachedNaturalIdValueSource source);
 
 	/**
@@ -49,7 +49,7 @@ public interface NaturalIdResolutions {
 	 * <p>
 	 * Again, this only effects the persistence-context cache, not the L2 cache
 	 */
-	Object removeLocalResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);
+	Object removeLocalResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor);
 
 	/**
 	 * Ensures that the necessary cross-reference exists in the L2 cache
@@ -58,15 +58,15 @@ public interface NaturalIdResolutions {
 			Object id,
 			Object naturalId,
 			Object previousNaturalId,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			CachedNaturalIdValueSource source);
 
 	/**
 	 * Removes any cross-reference from the L2 cache
 	 */
-	void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean delayToAfterTransactionCompletion);
+	void removeSharedResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor, boolean delayToAfterTransactionCompletion);
 
-	default void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+	default void removeSharedResolution(Object id, Object naturalId, EntityMappingType<?> entityDescriptor) {
 		removeSharedResolution( id, naturalId, entityDescriptor, false );
 	}
 
@@ -75,21 +75,21 @@ public interface NaturalIdResolutions {
 	 *
 	 * @return The cross-referenced natural-id values or {@code null}
 	 */
-	Object findCachedNaturalIdById(Object id, EntityMappingType entityDescriptor);
+	Object findCachedNaturalIdById(Object id, EntityMappingType<?> entityDescriptor);
 
 	/**
 	 * Find the cached identifier for the given natural-id
 	 *
 	 * @return The cross-referenced primary key, {@link #INVALID_NATURAL_ID_REFERENCE} or {@code null}.
 	 */
-	Object findCachedIdByNaturalId(@Nullable Object naturalId, EntityMappingType entityDescriptor);
+	Object findCachedIdByNaturalId(@Nullable Object naturalId, EntityMappingType<?> entityDescriptor);
 
 	/**
 	 * Find all the locally cached primary key cross-reference entries for the given entity.
 	 *
 	 * @return The primary keys
 	 */
-	Collection<?> getCachedPkResolutions(EntityMappingType entityDescriptor);
+	Collection<?> getCachedPkResolutions(EntityMappingType<?> entityDescriptor);
 
 	/**
 	 * Part of the "load synchronization process".
@@ -104,7 +104,7 @@ public interface NaturalIdResolutions {
 	 *
 	 * @see #cleanupFromSynchronizations
 	 */
-	void handleSynchronization(Object id, Object entity, EntityMappingType entityDescriptor);
+	void handleSynchronization(Object id, Object entity, EntityMappingType<?> entityDescriptor);
 
 	/**
 	 * The clean up process of {@link #handleSynchronization}.  Responsible for cleaning up the tracking
@@ -115,5 +115,5 @@ public interface NaturalIdResolutions {
 	/**
 	 * Called on {@link org.hibernate.Session#evict} to give a chance to clean up natural-id cross refs.
 	 */
-	void handleEviction(Object id, Object object, EntityMappingType entityDescriptor);
+	void handleEviction(Object id, Object object, EntityMappingType<?> entityDescriptor);
 }

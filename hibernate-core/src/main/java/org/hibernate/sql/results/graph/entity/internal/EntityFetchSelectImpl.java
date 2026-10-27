@@ -21,7 +21,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 
 	public EntityFetchSelectImpl(
 			FetchParent fetchParent,
-			ToOneAttributeMapping fetchedAttribute,
+			ToOneAttributeMapping<?> fetchedAttribute,
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey,

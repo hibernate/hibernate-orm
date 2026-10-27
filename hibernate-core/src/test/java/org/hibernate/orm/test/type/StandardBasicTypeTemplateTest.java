@@ -36,7 +36,7 @@ public class StandardBasicTypeTemplateTest {
 				)
 		);
 
-		final BasicType registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( REG_KEY );
+		final BasicType<?> registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( REG_KEY );
 		assertThat( registeredType, notNullValue() );
 		assertTyping( StandardBasicTypeTemplate.class, registeredType );
 	}

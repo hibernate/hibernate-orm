@@ -100,7 +100,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			person.setName("John Doe");
 
 			// Get persister and decomposer
-			final EntityPersister persister = factory.getMappingMetamodel()
+			final EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor(Person.class);
 			final InsertDecomposer decomposer = new InsertDecomposer(persister, factory);
 
@@ -175,9 +175,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 			address.setPerson(person);
 
 			// Get persisters and decomposers
-			final EntityPersister personPersister = factory.getMappingMetamodel()
+			final EntityPersister<?> personPersister = factory.getMappingMetamodel()
 					.getEntityDescriptor(Person.class);
-			final EntityPersister addressPersister = factory.getMappingMetamodel()
+			final EntityPersister<?> addressPersister = factory.getMappingMetamodel()
 					.getEntityDescriptor(Address.class);
 
 			final InsertDecomposer personDecomposer = new InsertDecomposer(personPersister, factory);
@@ -267,7 +267,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			person.setName("John Doe");
 
 			// Simulate loaded state
-			final EntityPersister persister = factory.getMappingMetamodel()
+			final EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor(Person.class);
 
 			final Object[] previousState = new Object[]{"Jane Doe"};
@@ -342,7 +342,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			person.setId(1L);
 			person.setName("John Doe");
 
-			final EntityPersister persister = factory.getMappingMetamodel()
+			final EntityPersister<?> persister = factory.getMappingMetamodel()
 					.getEntityDescriptor(Person.class);
 
 			// Create delete action
@@ -421,9 +421,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 			address.setPerson(person1);
 
 			// Get persisters
-			final EntityPersister personPersister = factory.getMappingMetamodel()
+			final EntityPersister<?> personPersister = factory.getMappingMetamodel()
 					.getEntityDescriptor(Person.class);
-			final EntityPersister addressPersister = factory.getMappingMetamodel()
+			final EntityPersister<?> addressPersister = factory.getMappingMetamodel()
 					.getEntityDescriptor(Address.class);
 
 			// Get decomposers
@@ -530,9 +530,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 			dept.setHead(emp);
 
 			// Get persisters
-			final EntityPersister deptPersister = factory.getMappingMetamodel()
+			final EntityPersister<?> deptPersister = factory.getMappingMetamodel()
 					.getEntityDescriptor(Department.class);
-			final EntityPersister empPersister = factory.getMappingMetamodel()
+			final EntityPersister<?> empPersister = factory.getMappingMetamodel()
 					.getEntityDescriptor(Employee.class);
 
 			// Get decomposers
@@ -699,7 +699,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 		scope.inTransaction(session -> {
 			final SessionImplementor sessionImpl = session;
 			final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();
-			final EntityPersister productPersister = factory.getMappingMetamodel()
+			final EntityPersister<?> productPersister = factory.getMappingMetamodel()
 					.getEntityDescriptor(UniqueProduct.class);
 
 			final UniqueProduct existingProduct = session.find(UniqueProduct.class, 1L);
@@ -767,7 +767,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 		scope.inTransaction(session -> {
 			final SessionImplementor sessionImpl = session;
 			final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();
-			final EntityPersister productPersister = factory.getMappingMetamodel()
+			final EntityPersister<?> productPersister = factory.getMappingMetamodel()
 					.getEntityDescriptor(MultiUniqueProduct.class);
 
 			final MultiUniqueProduct existingProduct = session.find(MultiUniqueProduct.class, 1L);
@@ -841,7 +841,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 		scope.inTransaction(session -> {
 			final SessionImplementor sessionImpl = session;
 			final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();
-			final EntityPersister productPersister = factory.getMappingMetamodel()
+			final EntityPersister<?> productPersister = factory.getMappingMetamodel()
 					.getEntityDescriptor(MultiUniqueProduct.class);
 
 			final MultiUniqueProduct product1 = session.find(MultiUniqueProduct.class, 1L);
@@ -961,7 +961,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			Object dept2,
 			BiConsumer<Object, Object> departmentSetter) {
 		final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();
-		final EntityPersister employeePersister = factory.getMappingMetamodel()
+		final EntityPersister<?> employeePersister = factory.getMappingMetamodel()
 				.getEntityDescriptor(employeeClass);
 		final UpdateDecomposer updateDecomposer = new UpdateDecomposer(employeePersister, factory);
 
@@ -1008,7 +1008,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 	private EntityUpdateAction createSwapUpdateAction(
 			SessionImplementor sessionImpl,
-			EntityPersister employeePersister,
+			EntityPersister<?> employeePersister,
 			Object employee,
 			Object newDepartment,
 			BiConsumer<Object, Object> departmentSetter) {
@@ -1033,7 +1033,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 	private EntityUpdateAction createMultiUniqueCatalogUpdateAction(
 			SessionImplementor sessionImpl,
-			EntityPersister productPersister,
+			EntityPersister<?> productPersister,
 			MultiUniqueProduct product,
 			String newCatalogCode) {
 		final Object[] previousState = productPersister.getValues(product);

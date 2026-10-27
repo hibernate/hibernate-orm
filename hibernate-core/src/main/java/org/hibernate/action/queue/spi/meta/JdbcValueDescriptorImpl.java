@@ -12,13 +12,13 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 @Incubating(since = "8.0", group = "action-queue")
 public class JdbcValueDescriptorImpl implements JdbcValueDescriptor {
 	private final String normalizedColumnName;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 	private final ParameterUsage parameterUsage;
 	private final int parameterIndex;
 
 	public JdbcValueDescriptorImpl(
 			String normalizedColumnName,
-			JdbcMapping jdbcMapping,
+			JdbcMapping<?> jdbcMapping,
 			ParameterUsage parameterUsage,
 			int parameterIndex) {
 		this.normalizedColumnName = normalizedColumnName;
@@ -33,7 +33,7 @@ public class JdbcValueDescriptorImpl implements JdbcValueDescriptor {
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 

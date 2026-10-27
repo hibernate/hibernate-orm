@@ -70,7 +70,7 @@ public class MatchingIdSelectionHelper {
 	///  * to select all the matching ids via JDBC - see {@link MatchingIdSelectionHelper#selectMatchingIds}
 	///  * as a sub-query restriction to insert rows into an "id table"
 	public static SelectStatement generateMatchingIdSelectStatement(
-			EntityMappingType targetEntityDescriptor,
+			EntityMappingType<?> targetEntityDescriptor,
 			SqmDeleteOrUpdateStatement<?> sqmStatement,
 			boolean queryRoot,
 			Predicate restriction,
@@ -133,7 +133,7 @@ public class MatchingIdSelectionHelper {
 	/// 	* as a sub-query restriction to insert rows into an "id table"
 	public static SqmSelectStatement<?> generateMatchingIdSelectStatement(
 			SqmDeleteOrUpdateStatement<?> sqmStatement,
-			EntityMappingType entityDescriptor) {
+			EntityMappingType<?> entityDescriptor) {
 		final NodeBuilder nodeBuilder = sqmStatement.nodeBuilder();
 		final SqmQuerySpec<Object[]> sqmQuerySpec = new SqmQuerySpec<>( nodeBuilder );
 		sqmQuerySpec.setFromClause( new SqmFromClause( 1 ) );
@@ -168,7 +168,7 @@ public class MatchingIdSelectionHelper {
 			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final EntityMappingType entityDescriptor =
+		final EntityMappingType<?> entityDescriptor =
 				factory.getMappingMetamodel()
 						.getEntityDescriptor( sqmMutationStatement.getTarget().getModel().getHibernateEntityName() );
 		final SqmSelectStatement<?> sqmSelectStatement =
@@ -179,10 +179,10 @@ public class MatchingIdSelectionHelper {
 			// For delete statements we also want to collect FK values to execute collection table cleanups
 			entityDescriptor.visitSubTypeAttributeMappings(
 					attribute -> {
-						if ( attribute instanceof PluralAttributeMapping pluralAttribute ) {
+						if ( attribute instanceof PluralAttributeMapping<?> pluralAttribute ) {
 							if ( pluralAttribute.getSeparateCollectionTable() != null ) {
 								// Ensure that the FK target columns are available
-								final ValuedModelPart targetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
+								final ValuedModelPart<?, ?, ?> targetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
 								final boolean useFkTarget = !targetPart.isEntityIdentifierMapping();
 								if ( useFkTarget ) {
 									targetPart.forEachSelectable( 0, (selectionIndex, selectableMapping) ->

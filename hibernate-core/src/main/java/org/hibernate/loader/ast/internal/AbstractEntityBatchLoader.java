@@ -21,7 +21,7 @@ public abstract class AbstractEntityBatchLoader<T>
 
 	private final SingleIdEntityLoaderStandardImpl<T> singleIdLoader;
 
-	public AbstractEntityBatchLoader(@Nonnull EntityMappingType entityDescriptor, @Nonnull LoadQueryInfluencers influencers) {
+	public AbstractEntityBatchLoader(@Nonnull EntityMappingType<?> entityDescriptor, @Nonnull LoadQueryInfluencers influencers) {
 		super( entityDescriptor, influencers.getSessionFactory() );
 		singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, influencers );
 	}

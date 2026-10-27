@@ -274,7 +274,7 @@ public class JfrEventMonitor implements EventMonitor {
 			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			boolean cacheContentChanged,
 			CacheActionDescription description) {
 		completeCachePutEvent(
@@ -293,7 +293,7 @@ public class JfrEventMonitor implements EventMonitor {
 			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			boolean cacheContentChanged,
 			boolean isNatualId,
 			CacheActionDescription description) {
@@ -369,7 +369,7 @@ public class JfrEventMonitor implements EventMonitor {
 			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Region region,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			boolean isNaturalKey,
 			boolean hit) {
 		if ( monitoringEvent != null ) {
@@ -488,7 +488,7 @@ public class JfrEventMonitor implements EventMonitor {
 	public void completeDirtyCalculationEvent(
 			DiagnosticEvent monitoringEvent,
 			SharedSessionContractImplementor session,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EntityEntry entry,
 			int[] dirtyProperties) {
 		if ( monitoringEvent != null ) {
@@ -779,7 +779,7 @@ public class JfrEventMonitor implements EventMonitor {
 		return session == null ? null : session.getSessionIdentifier().toString();
 	}
 
-	private String getEntityName(EntityPersister persister) {
+	private String getEntityName(EntityPersister<?> persister) {
 		return StatsHelper.getRootEntityRole( persister ).getFullPath();
 	}
 

@@ -21,7 +21,7 @@ public abstract class AbstractRestrictedTableMutation<O extends MutationOperatio
 			String comment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters) {
+			List<ColumnValueParameter<?>> parameters) {
 		super( mutatingTable, mutationTarget, comment, parameters );
 		this.keyRestrictionBindings = keyRestrictionBindings;
 		this.optLockRestrictionBindings = optLockRestrictionBindings;

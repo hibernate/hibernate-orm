@@ -36,7 +36,7 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 
 	public ListInitializer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,

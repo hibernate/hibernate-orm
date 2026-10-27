@@ -32,15 +32,15 @@ public class EntityWithOneToOneJoinTableTest {
 
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister entityWithOneToOneJoinTableDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> entityWithOneToOneJoinTableDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( EntityWithOneToOneJoinTable.class );
-		final ModelPart other = entityWithOneToOneJoinTableDescriptor.findSubPart( "other" );
+		final ModelPart<?, ?, ?> other = entityWithOneToOneJoinTableDescriptor.findSubPart( "other" );
 		assertThat( other, instanceOf( ToOneAttributeMapping.class ) );
 
-		final ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) other;
+		final ToOneAttributeMapping<?> otherAttributeMapping = (ToOneAttributeMapping<?>) other;
 
-		final ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
+		final ForeignKeyDescriptor<?, ?, ?> foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(
 				(columnIndex, selection) -> {
 					assertThat( selection.getContainingTableExpression(), is( "Entity_SimpleEntity" ) );

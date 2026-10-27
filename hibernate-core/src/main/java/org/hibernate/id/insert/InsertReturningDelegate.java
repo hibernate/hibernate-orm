@@ -40,7 +40,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 	private final List<ColumnReference> generatedColumns;
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public InsertReturningDelegate(EntityPersister persister, EventType timing) {
+	public InsertReturningDelegate(EntityPersister<?> persister, EventType timing) {
 		super( persister, timing, true,
 				persister.getFactory().getJdbcServices().getDialect()
 						.getGeneratedValuesSupport()
@@ -55,9 +55,9 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 	}
 
 	public InsertReturningDelegate(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EventType timing,
-			List<? extends ModelPart> generatedProperties) {
+			List<? extends ModelPart<?, ?, ?>> generatedProperties) {
 		super( persister, timing, true,
 				persister.getFactory().getJdbcServices().getDialect()
 						.getGeneratedValuesSupport()
@@ -136,7 +136,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 	@Override
 	public String prepareIdentifierGeneratingInsert(String insertSQL) {
 		final var identifierMapping =
-				(BasicEntityIdentifierMapping)
+				(BasicEntityIdentifierMapping<?, ?, ?>)
 						persister.getRootEntityDescriptor().getIdentifierMapping();
 		return dialect().getIdentityColumnSupport()
 				.appendIdentitySelectToInsert( identifierMapping.getSelectionExpression(), insertSQL );

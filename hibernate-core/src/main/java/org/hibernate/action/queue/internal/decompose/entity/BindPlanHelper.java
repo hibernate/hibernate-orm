@@ -19,10 +19,10 @@ public class BindPlanHelper {
 	/// @param selectableIndex The selectable's position within the attribute mapping
 	/// @param eventType The type of event being processed - insert or update
 	static boolean shouldBindJdbcValue(
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			int selectableIndex,
 			FlushOperation flushOperation,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			EventType eventType,
 			Object entity,
 			SharedSessionContractImplementor session) {

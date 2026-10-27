@@ -23,7 +23,7 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 	private final EntityRelatedState loadingInterceptorState;
 
 	public AbstractEntityInstantiatorPojo(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			PersistentClass persistentClass,
 			JavaType<?> javaType) {
 		super( javaType.getJavaTypeClass() );

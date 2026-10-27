@@ -13,28 +13,28 @@ import org.hibernate.spi.DotIdentifierSequence;
  *
  * @author Steve Ebersole
  */
-public interface ModelPartContainer extends ModelPart {
+public interface ModelPartContainer<J, M, R> extends ModelPart<J, M, R> {
 	@Nullable
-	ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType);
+	ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType);
 
-	default void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer) {
+	default void forEachSubPart(@Nonnull IndexedConsumer<ModelPart<?, ?, ?>> consumer) {
 		forEachSubPart( consumer, null );
 	}
 
-	void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget);
+	void forEachSubPart(@Nonnull IndexedConsumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTarget);
 
-	void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType);
+	void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTargetType);
 
 	@Nullable
-	default ModelPart findByPath(@Nonnull String path) {
+	default ModelPart<?, ?, ?> findByPath(@Nonnull String path) {
 		int nextStart = 0;
 		int dotIndex;
-		ModelPartContainer modelPartContainer = this;
+		ModelPartContainer<?, ?, ?> modelPartContainer = this;
 		while ( ( dotIndex = path.indexOf( '.', nextStart ) ) != -1 ) {
 			if ( modelPartContainer == null ) {
 				return null;
 			}
-			modelPartContainer = (ModelPartContainer) modelPartContainer.findSubPart(
+			modelPartContainer = (ModelPartContainer<?, ?, ?>) modelPartContainer.findSubPart(
 					path.substring( nextStart, dotIndex ),
 					null
 			);
@@ -45,8 +45,8 @@ public interface ModelPartContainer extends ModelPart {
 	}
 
 	@Nullable
-	default ModelPart findByPath(@Nonnull DotIdentifierSequence path) {
-		ModelPartContainer modelPartContainer = this;
+	default ModelPart<?, ?, ?> findByPath(@Nonnull DotIdentifierSequence path) {
+		ModelPartContainer<?, ?, ?> modelPartContainer = this;
 		final DotIdentifierSequence endPart;
 		if ( path.getParent() != null ) {
 			final DotIdentifierSequence[] parts = path.getParts();
@@ -56,7 +56,7 @@ public interface ModelPartContainer extends ModelPart {
 					return null;
 				}
 				DotIdentifierSequence part = parts[i];
-				modelPartContainer = (ModelPartContainer) modelPartContainer.findSubPart(
+				modelPartContainer = (ModelPartContainer<?, ?, ?>) modelPartContainer.findSubPart(
 						part.getLocalName(),
 						null
 				);

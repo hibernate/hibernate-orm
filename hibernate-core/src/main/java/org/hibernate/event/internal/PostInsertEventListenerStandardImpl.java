@@ -23,7 +23,7 @@ public class PostInsertEventListenerStandardImpl implements PostInsertEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+	public boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 		final var callbacks = persister.getEntityCallbacks();
 		return callbacks.hasRegisteredCallbacks( CallbackType.POST_PERSIST )
 			|| callbacks.hasRegisteredCallbacks( CallbackType.POST_INSERT );

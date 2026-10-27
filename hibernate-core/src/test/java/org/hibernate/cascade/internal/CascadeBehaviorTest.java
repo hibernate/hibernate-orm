@@ -630,7 +630,7 @@ class CascadeBehaviorTest {
 
 	private static void verifyEnhancedToOneAccess(
 			EnhancedToOneScenario scenario,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			BytecodeEnhancementMetadata enhancementMetadata,
 			LazyAttributeLoadingInterceptor interceptor,
 			Object root) {
@@ -1517,7 +1517,7 @@ class CascadeBehaviorTest {
 			CascadingAction<Object> action,
 			CascadePoint cascadePoint,
 			EventSource session,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			Object root,
 			boolean sharedAction,
 			Runnable verification) {
@@ -1525,7 +1525,7 @@ class CascadeBehaviorTest {
 				CascadingAction<Object> action,
 				CascadePoint cascadePoint,
 				EventSource session,
-				EntityPersister persister,
+				EntityPersister<?> persister,
 				Object root) {
 			this( action, cascadePoint, session, persister, root, false, () -> {
 			} );
@@ -1535,7 +1535,7 @@ class CascadeBehaviorTest {
 				CascadingAction<Object> action,
 				CascadePoint cascadePoint,
 				EventSource session,
-				EntityPersister persister,
+				EntityPersister<?> persister,
 				Object root,
 				boolean sharedAction) {
 			this( action, cascadePoint, session, persister, root, sharedAction, () -> {

@@ -76,7 +76,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
  * @author Gavin King
  */
 @Internal
-public class UnionSubclassEntityPersister extends AbstractEntityPersister {
+public class UnionSubclassEntityPersister<J> extends AbstractEntityPersister<J> {
 
 	// the class hierarchy structure
 	private final String subquery;
@@ -482,7 +482,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Nullable
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(@Nonnull PersistentClass bootEntityDescriptor) {
+	protected EntityDiscriminatorMapping<?> generateDiscriminatorMapping(@Nonnull PersistentClass bootEntityDescriptor) {
 		return hasSubclasses() ? super.generateDiscriminatorMapping( bootEntityDescriptor ) : null;
 	}
 
@@ -634,7 +634,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		final Set<String> tablesToUnion = new HashSet<>( entityNameUses.size() );
 		// Check if there are filter uses and if so, we know the set of tables to union already
 		for ( var entry : entityNameUses.entrySet() ) {
-			final var persister = (UnionSubclassEntityPersister) metamodel.getEntityDescriptor( entry.getKey() );
+			final var persister = (UnionSubclassEntityPersister<?>) metamodel.getEntityDescriptor( entry.getKey() );
 			if ( entry.getValue().getKind() == EntityNameUse.UseKind.FILTER && !persister.isAbstract() ) {
 				tablesToUnion.add( persister.getRootTableName() );
 			}
@@ -647,7 +647,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			for ( var entry : entityNameUses.entrySet() ) {
 				if ( entry.getValue().getKind() == EntityNameUse.UseKind.TREAT ) {
 					// Collect all the real (non-abstract) table names
-					final var persister = (UnionSubclassEntityPersister) metamodel.getEntityDescriptor( entry.getKey() );
+					final var persister = (UnionSubclassEntityPersister<?>) metamodel.getEntityDescriptor( entry.getKey() );
 					tablesToUnion.addAll( Arrays.asList( persister.getConstraintOrderedTableNameClosure() ) );
 				}
 			}
@@ -662,12 +662,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		final var unionSubquery = new StringBuilder( subquery.length() ).append( "(" );
 		final var typeConfiguration = factory.getTypeConfiguration();
 		final var subMappingTypes = getSubMappingTypes();
-		final ArrayList<EntityMappingType> subMappingTypesAndThis =
+		final ArrayList<EntityMappingType<?>> subMappingTypesAndThis =
 				new ArrayList<>( subMappingTypes.size() + 1 );
 		subMappingTypesAndThis.add( this );
 		subMappingTypesAndThis.addAll( subMappingTypes );
 		for ( var mappingType : subMappingTypesAndThis ) {
-			final var persister = (EntityPersister) mappingType;
+			final var persister = (EntityPersister<?>) mappingType;
 			final String subclassTableName =
 					mappingType.hasSubclasses()
 							? persister.getRootTableName()

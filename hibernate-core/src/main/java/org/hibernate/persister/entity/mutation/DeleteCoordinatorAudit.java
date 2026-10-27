@@ -19,7 +19,7 @@ public class DeleteCoordinatorAudit extends AbstractAuditCoordinator implements 
 	private final DeleteCoordinator currentDeleteCoordinator;
 
 	public DeleteCoordinatorAudit(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull DeleteCoordinator currentDeleteCoordinator) {
 		super( entityPersister, factory );

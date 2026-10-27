@@ -26,7 +26,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  */
 @Internal
 abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordinator implements UpdateCoordinator {
-	AbstractTemporalUpdateCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	AbstractTemporalUpdateCoordinator(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 	}
 

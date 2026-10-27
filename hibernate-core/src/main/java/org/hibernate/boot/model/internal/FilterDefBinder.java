@@ -44,7 +44,7 @@ public class FilterDefBinder {
 			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
 		}
 
-		final Map<String, JdbcMapping> paramJdbcMappings;
+		final Map<String, JdbcMapping<?>> paramJdbcMappings;
 		final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolvers;
 		final var explicitParameters = filterDef.parameters();
 		if ( isEmpty( explicitParameters ) ) {
@@ -101,7 +101,7 @@ public class FilterDefBinder {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static JdbcMapping resolveFilterParamType(Class<?> type, MetadataBuildingContext context) {
+	public static JdbcMapping<?> resolveFilterParamType(Class<?> type, MetadataBuildingContext context) {
 		if ( UserType.class.isAssignableFrom( type ) ) {
 			return resolveUserType( (Class<UserType<?>>) type, context );
 		}

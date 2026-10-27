@@ -165,7 +165,7 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 			final var tableGroup = walker.getFromClauseAccess()
 					.findTableGroup( entityPath.getNavigablePath() );
 
-			final var entityMapping = (EntityMappingType) tableGroup.getModelPart();
+			final var entityMapping = (EntityMappingType<?>) tableGroup.getModelPart();
 			final var auditMapping = entityMapping.getAuditMapping();
 			if ( auditMapping == null ) {
 				throw new IllegalArgumentException(

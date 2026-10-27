@@ -159,7 +159,7 @@ public class RowIdUpdateAndDeleteTest {
 		}
 		else {
 			if ( sameTransaction ) {
-				final EntityPersister persister = scope.getSessionFactory()
+				final EntityPersister<?> persister = scope.getSessionFactory()
 						.getMappingMetamodel()
 						.findEntityDescriptor( SimpleEntity.class );
 				final GeneratedValuesMutationDelegate delegate = persister.getMutationDelegate( MutationType.INSERT );

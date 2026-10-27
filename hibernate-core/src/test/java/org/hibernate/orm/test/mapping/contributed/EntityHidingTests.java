@@ -41,7 +41,7 @@ public class EntityHidingTests {
 		final EntityDomainType<?> jpaModelDescriptor = sessionFactory.getJpaMetamodel().entity( "DynamicEntity" );
 		assertThat( jpaModelDescriptor, nullValue() );
 
-		final EntityPersister mappingModelDescriptor = sessionFactory.getMappingMetamodel()
+		final EntityPersister<?> mappingModelDescriptor = sessionFactory.getMappingMetamodel()
 				.findEntityDescriptor( "DynamicEntity" );
 		assertThat( mappingModelDescriptor, nullValue() );
 	}

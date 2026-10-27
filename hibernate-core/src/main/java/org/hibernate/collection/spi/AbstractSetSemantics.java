@@ -73,7 +73,7 @@ public abstract class AbstractSetSemantics<SE extends Set<E>,E> implements Colle
 	@Override
 	public  CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,

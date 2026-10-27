@@ -35,7 +35,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T>, Sqm
 		this.baseJtd = baseJtd;
 
 		final var discriminatorType = (MetaType) anyType.getDiscriminatorType();
-		final var discriminatorBaseType = (BasicType) discriminatorType.getBaseType();
+		final var discriminatorBaseType = (BasicType<?>) discriminatorType.getBaseType();
 		final var navigableRole = resolveNavigableRole( bootAnyMapping );
 		anyDiscriminatorType = new ConvertedBasicTypeImpl(
 				navigableRole.getFullPath(),

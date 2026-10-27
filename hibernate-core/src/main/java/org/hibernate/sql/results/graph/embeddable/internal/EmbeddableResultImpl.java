@@ -40,14 +40,14 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
-	private final EmbeddableMappingType fetchContainer;
+	private final EmbeddableMappingType<?, ?, ?> fetchContainer;
 	private final BasicFetch<?> discriminatorFetch;
 	private final @Nullable DomainResult<Boolean> nullIndicatorResult;
 	private final CollectionLoadingAttribute[] collectionLoadingAttributes;
 
 	public EmbeddableResultImpl(
 			NavigablePath navigablePath,
-			EmbeddableValuedModelPart modelPart,
+			EmbeddableValuedModelPart<?, ?, ?> modelPart,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		/*
@@ -112,7 +112,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	}
 
 	private CollectionLoadingAttribute[] collectionLoadingAttributes(
-			EmbeddableValuedModelPart modelPart,
+			EmbeddableValuedModelPart<?, ?, ?> modelPart,
 			TableGroup ownerTableGroup,
 			DomainResultCreationState creationState) {
 		if ( ownerTableGroup == null ) {
@@ -123,7 +123,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 			try {
 				modelPart.getEmbeddableTypeDescriptor().forEachAttributeMapping(
 						attributeMapping -> {
-							if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+							if ( attributeMapping instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 								collectionLoadingAttributes.add(
 										new CollectionLoadingAttribute(
 												pluralAttributeMapping,
@@ -153,7 +153,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 		}
 		final var builder = new ImmutableFetchList.Builder( fetchContainer );
 		for ( var fetch : fetches ) {
-			if ( !( fetch.getFetchedMapping() instanceof PluralAttributeMapping ) ) {
+			if ( !( fetch.getFetchedMapping() instanceof PluralAttributeMapping<?> ) ) {
 				builder.add( fetch );
 			}
 		}
@@ -203,7 +203,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	}
 
 	@Override
-	public EmbeddableMappingType getFetchContainer() {
+	public EmbeddableMappingType<?, ?, ?> getFetchContainer() {
 		return this.fetchContainer;
 	}
 
@@ -213,12 +213,12 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	}
 
 	@Override
-	public EmbeddableMappingType getReferencedMappingType() {
+	public EmbeddableMappingType<?, ?, ?> getReferencedMappingType() {
 		return getFetchContainer();
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getReferencedMappingContainer() {
+	public EmbeddableValuedModelPart<?, ?, ?> getReferencedMappingContainer() {
 		return getFetchContainer().getEmbeddedValueMapping();
 	}
 
@@ -257,7 +257,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	}
 
 	private record CollectionLoadingAttribute(
-			PluralAttributeMapping collectionAttribute,
+			PluralAttributeMapping<?> collectionAttribute,
 			DomainResult<?> collectionKeyResult) {
 	}
 

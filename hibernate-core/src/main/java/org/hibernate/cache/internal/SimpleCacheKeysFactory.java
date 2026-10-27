@@ -32,7 +32,7 @@ public class SimpleCacheKeysFactory implements CacheKeysFactory {
 	@Nonnull
 	public Object createEntityKey(
 			@Nonnull Object id,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nullable String tenantIdentifier) {
 		return id;
@@ -42,7 +42,7 @@ public class SimpleCacheKeysFactory implements CacheKeysFactory {
 	@Nonnull
 	public Object createNaturalIdKey(
 			@Nonnull Object naturalIdValues,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull SharedSessionContractImplementor session) {
 		// natural ids always need to be wrapped
 		return NaturalIdCacheKey.from( naturalIdValues, persister, null, session );

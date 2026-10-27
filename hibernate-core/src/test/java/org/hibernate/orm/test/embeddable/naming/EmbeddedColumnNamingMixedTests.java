@@ -37,7 +37,7 @@ public class EmbeddedColumnNamingMixedTests {
 	void testMixedNamingPattern(SessionFactoryScope sfScope) {
 		final SessionFactoryImplementor sessionFactory = sfScope.getSessionFactory();
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
-		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( Person.class );
+		final EntityPersister<?> persister = mappingMetamodel.getEntityDescriptor( Person.class );
 		verifyColumnNames( persister.findAttributeMapping( "homeAddress" ), "home_" );
 		verifyColumnNames( persister.findAttributeMapping( "workAddress" ), "work_" );
 	}

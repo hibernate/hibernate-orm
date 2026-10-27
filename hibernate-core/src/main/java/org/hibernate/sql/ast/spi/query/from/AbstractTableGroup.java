@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.spi.creation.SqlAliasBase;
 public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
 	private final boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
-	private final ModelPartContainer modelPartContainer;
+	private final ModelPartContainer<?, ?, ?> modelPartContainer;
 	private final String sourceAlias;
 	private final SqlAliasBase sqlAliasBase;
 
@@ -30,7 +30,7 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	public AbstractTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
-			ModelPartContainer modelPartContainer,
+			ModelPartContainer<?, ?, ?> modelPartContainer,
 			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
@@ -58,12 +58,12 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	}
 
 	@Override
-	public ModelPartContainer getModelPart() {
+	public ModelPartContainer<?, ?, ?> getModelPart() {
 		return modelPartContainer;
 	}
 
 	@Override
-	public ModelPart getExpressionType() {
+	public ModelPart<?, ?, ?> getExpressionType() {
 		return getModelPart();
 	}
 

@@ -69,9 +69,9 @@ public class SimpleNaturalIdTests {
 		assertThat( sku.isNaturalIdentifier(), is( true ) );
 
 		final MappingMetamodel mappingMetamodel = factoryScope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
-		final EntityPersister productMapping = mappingMetamodel.findEntityDescriptor( Product.class );
+		final EntityPersister<?> productMapping = mappingMetamodel.findEntityDescriptor( Product.class );
 		assertThat( productMapping.hasNaturalIdentifier(), is( true ) );
-		final NaturalIdMapping naturalIdMapping = productMapping.getNaturalIdMapping();
+		final NaturalIdMapping<?, ?, ?> naturalIdMapping = productMapping.getNaturalIdMapping();
 		assertThat( naturalIdMapping, notNullValue() );
 	}
 

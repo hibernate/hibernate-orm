@@ -89,8 +89,8 @@ public final class ConstraintModelBuilder {
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		final var foreignKeys = new ArrayList<ForeignKey>();
 		final var uniqueConstraints = new ArrayList<UniqueConstraint>();
-		final var seen = new IdentityHashMap<ForeignKeyDescriptor, Boolean>();
-		final var entityPersisters = new HashMap<String, EntityPersister>();
+		final var seen = new IdentityHashMap<ForeignKeyDescriptor<?, ?, ?>, Boolean>();
+		final var entityPersisters = new HashMap<String, EntityPersister<?>>();
 
 		// First pass: collect entity persisters for later reference
 		mappingModel.forEachEntityDescriptor( (descriptor) -> {
@@ -149,11 +149,11 @@ public final class ConstraintModelBuilder {
 	}
 
 	private void collectFromEntityPersister(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			List<ForeignKey> foreignKeys,
 			List<UniqueConstraint> uniqueConstraints,
-			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
-			Map<String, EntityPersister> entityPersisters,
+			IdentityHashMap<ForeignKeyDescriptor<?, ?, ?>, Boolean> seen,
+			Map<String, EntityPersister<?>> entityPersisters,
 			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 
@@ -174,11 +174,11 @@ public final class ConstraintModelBuilder {
 	}
 
 	private void collectPrimaryKeyConstraint(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			List<ForeignKey> foreignKeys,
 			List<UniqueConstraint> uniqueConstraints,
-			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
-			Map<String, EntityPersister> entityPersisters) {
+			IdentityHashMap<ForeignKeyDescriptor<?, ?, ?>, Boolean> seen,
+			Map<String, EntityPersister<?>> entityPersisters) {
 		if ( planningOptions.orderByUniqueKeySlots() ) {
 			for ( EntityTableMapping tableMapping : descriptor.getTableMappings() ) {
 				uniqueConstraints.add( new UniqueConstraint(
@@ -194,8 +194,8 @@ public final class ConstraintModelBuilder {
 		}
 
 		// Check if identifier is an embeddable with @ManyToOne attributes (composite key scenario)
-		EntityIdentifierMapping identifierMapping = descriptor.getIdentifierMapping();
-		if (identifierMapping instanceof EmbeddableValuedModelPart embeddableId) {
+		EntityIdentifierMapping<?, ?, ?> identifierMapping = descriptor.getIdentifierMapping();
+		if (identifierMapping instanceof EmbeddableValuedModelPart<?, ?, ?> embeddableId) {
 			handleToOneAttributes( embeddableId.getEmbeddableTypeDescriptor(), foreignKeys, uniqueConstraints, seen, entityPersisters );
 		}
 	}
@@ -203,7 +203,7 @@ public final class ConstraintModelBuilder {
 	/// Collect @NaturalId constraint if the entity has one.
 	/// Phase 4: Support for @NaturalId unique constraints.
 	private void collectNaturalIdConstraint(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			List<UniqueConstraint> uniqueConstraints) {
 		if ( !planningOptions.orderByUniqueKeySlots() ) {
 			return;
@@ -238,10 +238,10 @@ public final class ConstraintModelBuilder {
 	}
 
 	/// Combine multiple SelectableMappings from natural ID attributes into a single SelectableMappings.
-	private SelectableMappings combineSelectableMappings(List<SingularAttributeMapping> attributes) {
+	private SelectableMappings combineSelectableMappings(List<SingularAttributeMapping<?, ?, ?>> attributes) {
 		List<SelectableMapping> allSelectables = new ArrayList<>();
 
-		for (SingularAttributeMapping attribute : attributes) {
+		for (SingularAttributeMapping<?, ?, ?> attribute : attributes) {
 			// Each attribute is a SelectableMappings
 			SelectableMappings attrMappings = attribute;
 			for (int i = 0; i < attrMappings.getJdbcTypeCount(); i++) {
@@ -301,7 +301,7 @@ public final class ConstraintModelBuilder {
 	/// Collect @Column(unique=true) constraints.
 	/// Phase 4: Support for single-column unique constraints.
 	private void collectUniqueColumnConstraints(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			List<UniqueConstraint> uniqueConstraints,
 			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
@@ -353,7 +353,7 @@ public final class ConstraintModelBuilder {
 	}
 
 	private void addUniqueKeyConstraint(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			List<UniqueConstraint> uniqueConstraints,
 			String tableName,
 			String constraintName,
@@ -387,7 +387,7 @@ public final class ConstraintModelBuilder {
 	}
 
 	private UniqueKeyRuntimeMapping resolveUniqueKeyRuntimeMapping(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			PersistentClass persistentClass,
 			String tableName,
 			List<Column> columns) {
@@ -417,12 +417,12 @@ public final class ConstraintModelBuilder {
 	}
 
 	private SelectableMatch findSelectableForColumn(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			String tableName,
 			Column column) {
 		final SelectableMatch[] match = new SelectableMatch[1];
 		descriptor.forEachAttributeMapping( (attributeMapping) -> {
-			if ( match[0] != null || !( attributeMapping instanceof SingularAttributeMapping singularAttribute ) ) {
+			if ( match[0] != null || !( attributeMapping instanceof SingularAttributeMapping<?, ?, ?> singularAttribute ) ) {
 				return;
 			}
 
@@ -439,7 +439,7 @@ public final class ConstraintModelBuilder {
 	}
 
 	private SelectableMatch findSelectableForBootColumnOwner(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			PersistentClass persistentClass,
 			String tableName,
 			Column column) {
@@ -470,11 +470,11 @@ public final class ConstraintModelBuilder {
 	}
 
 	private SelectableMatch findSelectableForProperty(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			String propertyName,
 			String tableName,
 			Column column) {
-		if ( !( descriptor.findAttributeMapping( propertyName ) instanceof SingularAttributeMapping singularAttribute ) ) {
+		if ( !( descriptor.findAttributeMapping( propertyName ) instanceof SingularAttributeMapping<?, ?, ?> singularAttribute ) ) {
 			return null;
 		}
 
@@ -537,20 +537,20 @@ public final class ConstraintModelBuilder {
 			CollectionPersister descriptor,
 			List<ForeignKey> foreignKeys,
 			List<UniqueConstraint> uniqueConstraints,
-			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
-			Map<String, EntityPersister> entityPersisters,
+			IdentityHashMap<ForeignKeyDescriptor<?, ?, ?>, Boolean> seen,
+			Map<String, EntityPersister<?>> entityPersisters,
 			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		var attributeMapping = descriptor.getAttributeMapping();
 
 		// key FK (collection table -> owner)
-		final ForeignKeyDescriptor keyFk = attributeMapping.getKeyDescriptor();
+		final ForeignKeyDescriptor<?, ?, ?> keyFk = attributeMapping.getKeyDescriptor();
 		final boolean keyNullable = areColumnsNullable(keyFk.getKeyPart());
 		addIfConstraint(keyFk, keyFk.getKeyPart(), keyFk.getTargetPart(), keyNullable, foreignKeys, seen, entityPersisters);
 
 		// many-to-many join table has element FK too (collection table -> child)
-		if (attributeMapping.getElementDescriptor() instanceof ManyToManyCollectionPart m2m) {
-			final ForeignKeyDescriptor elementFk = m2m.getForeignKeyDescriptor();
+		if (attributeMapping.getElementDescriptor() instanceof ManyToManyCollectionPart<?> m2m) {
+			final ForeignKeyDescriptor<?, ?, ?> elementFk = m2m.getForeignKeyDescriptor();
 			final boolean inverseKeyNullable = areColumnsNullable(elementFk.getKeyPart());
 			addIfConstraint(elementFk, elementFk.getKeyPart(), elementFk.getTargetPart(), inverseKeyNullable, foreignKeys, seen, entityPersisters);
 		}
@@ -566,7 +566,7 @@ public final class ConstraintModelBuilder {
 
 	private void collectCollectionTableUniqueConstraints(
 			CollectionPersister descriptor,
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			List<UniqueConstraint> uniqueConstraints,
 			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
@@ -662,7 +662,7 @@ public final class ConstraintModelBuilder {
 	}
 
 	private void addCollectionUniqueConstraint(
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			List<UniqueConstraint> uniqueConstraints,
 			String tableName,
 			String constraintName,
@@ -691,7 +691,7 @@ public final class ConstraintModelBuilder {
 	}
 
 	private SelectableMappings resolveCollectionUniqueKeyRuntimeColumns(
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			String tableName,
 			List<Column> columns) {
 		if ( columns.isEmpty() ) {
@@ -711,7 +711,7 @@ public final class ConstraintModelBuilder {
 	}
 
 	private SelectableMapping findCollectionSelectableForColumn(
-			PluralAttributeMapping attributeMapping,
+			PluralAttributeMapping<?> attributeMapping,
 			String tableName,
 			Column column) {
 		final SelectableMapping keySelectable = findSelectableForColumn(
@@ -788,10 +788,10 @@ public final class ConstraintModelBuilder {
 	/// See [- secondary tables].
 	/// See [- joined inheritance tables].
 	private void collectEntityTableGroupConstraints(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			List<ForeignKey> foreignKeys,
-			IdentityHashMap<ForeignKeyDescriptor,Boolean> seen,
-			Map<String, EntityPersister> entityPersisters) {
+			IdentityHashMap<ForeignKeyDescriptor<?, ?, ?>,Boolean> seen,
+			Map<String, EntityPersister<?>> entityPersisters) {
 
 		// order the entity tables for processing
 		//	- primarily identifier-table first (only one per group)
@@ -836,12 +836,12 @@ public final class ConstraintModelBuilder {
 	/// NOTE: these do not define ForeignKeyDescriptor, so we need to create one
 	/// but that is super trivial given the details we do have from EntityTableMapping
 	private void addEntityTableGroupConstraint(
-			EntityPersister descriptor,
+			EntityPersister<?> descriptor,
 			EntityTableMapping source,
 			EntityTableMapping target,
 			List<ForeignKey> foreignKeys,
-			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
-			Map<String, EntityPersister> entityPersisters) {
+			IdentityHashMap<ForeignKeyDescriptor<?, ?, ?>, Boolean> seen,
+			Map<String, EntityPersister<?>> entityPersisters) {
 
 		// Determine target type - these always target the primary key
 		ForeignKey.TargetType targetType = ForeignKey.TargetType.PRIMARY_KEY;
@@ -860,30 +860,30 @@ public final class ConstraintModelBuilder {
 	}
 
 	private void handleToOneAttributes(
-			ManagedMappingType declaringType,
+			ManagedMappingType<?, ?, ?> declaringType,
 			List<ForeignKey> foreignKeys,
 			List<UniqueConstraint> uniqueConstraints,
-			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
-			Map<String, EntityPersister> entityPersisters) {
+			IdentityHashMap<ForeignKeyDescriptor<?, ?, ?>, Boolean> seen,
+			Map<String, EntityPersister<?>> entityPersisters) {
 		declaringType.forEachAttributeMapping( (attributeMapping) -> {
 			// To-one
-			if (attributeMapping instanceof ToOneAttributeMapping toOne) {
+			if (attributeMapping instanceof ToOneAttributeMapping<?> toOne) {
 				collectFromToOne( toOne, foreignKeys, uniqueConstraints, seen, entityPersisters );
 			}
 			// Embedded / component: recurse into its attributes
-			if (attributeMapping instanceof EmbeddableValuedModelPart emb) {
+			if (attributeMapping instanceof EmbeddableValuedModelPart<?, ?, ?> emb) {
 				handleToOneAttributes( emb.getEmbeddableTypeDescriptor(),  foreignKeys, uniqueConstraints, seen, entityPersisters );
 			}
 		} );
 	}
 
 	private void collectFromToOne(
-			ToOneAttributeMapping toOne,
+			ToOneAttributeMapping<?> toOne,
 			List<ForeignKey> foreignKeys,
 			List<UniqueConstraint> uniqueConstraints,
-			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
-			Map<String, EntityPersister> entityPersisters) {
-		final ForeignKeyDescriptor fk = toOne.getForeignKeyDescriptor();
+			IdentityHashMap<ForeignKeyDescriptor<?, ?, ?>, Boolean> seen,
+			Map<String, EntityPersister<?>> entityPersisters) {
+		final ForeignKeyDescriptor<?, ?, ?> fk = toOne.getForeignKeyDescriptor();
 
 		// Check if this is a one-to-one (unique FK) based on cardinality
 		boolean isOneToOne = toOne.getCardinality() == ToOneAttributeMapping.Cardinality.ONE_TO_ONE
@@ -909,13 +909,13 @@ public final class ConstraintModelBuilder {
 	}
 
 	private void addIfConstraint(
-			ForeignKeyDescriptor fk,
+			ForeignKeyDescriptor<?, ?, ?> fk,
 			SelectableMappings keySide,
 			SelectableMappings targetSide,
 			boolean nullable,
 			List<ForeignKey> foreignKeys,
-			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
-			Map<String, EntityPersister> entityPersisters) {
+			IdentityHashMap<ForeignKeyDescriptor<?, ?, ?>, Boolean> seen,
+			Map<String, EntityPersister<?>> entityPersisters) {
 		if ( fk == null ) {
 			return;
 		}
@@ -930,12 +930,12 @@ public final class ConstraintModelBuilder {
 	}
 
 	private void addConstraint(
-			ForeignKeyDescriptor fkDesc,
+			ForeignKeyDescriptor<?, ?, ?> fkDesc,
 			SelectableMappings keySide,
 			SelectableMappings targetSide,
 			boolean nullable,
 			List<ForeignKey> foreignKeys,
-			Map<String, EntityPersister> entityPersisters) {
+			Map<String, EntityPersister<?>> entityPersisters) {
 		List<String> keyColumns = arrayList( fkDesc.getAssociationKey().columns().size() );
 		List<String> targetColumns = arrayList( fkDesc.getAssociationKey().columns().size() );
 
@@ -975,18 +975,18 @@ public final class ConstraintModelBuilder {
 
 	/// Determine what the foreign key targets (primary key, unique key, or non-unique)
 	private ForeignKey.TargetType determineTargetType(
-			ForeignKeyDescriptor fkDesc,
+			ForeignKeyDescriptor<?, ?, ?> fkDesc,
 			SelectableMappings targetSide,
-			Map<String, EntityPersister> entityPersisters) {
+			Map<String, EntityPersister<?>> entityPersisters) {
 
 		// Try to find the target entity persister
 		String targetTable = fkDesc.getTargetTable();
 
 		// Check each entity persister to see if it owns this table and if the FK targets its PK
-		for (EntityPersister persister : entityPersisters.values()) {
+		for (EntityPersister<?> persister : entityPersisters.values()) {
 			if (tableNamesMatch( persister.getTableName(), targetTable )) {
 				// Check if targeting primary key
-				EntityIdentifierMapping idMapping = persister.getIdentifierMapping();
+				EntityIdentifierMapping<?, ?, ?> idMapping = persister.getIdentifierMapping();
 				if (idMapping != null && columnsMatch(targetSide, idMapping)) {
 					return ForeignKey.TargetType.PRIMARY_KEY;
 				}
@@ -1004,7 +1004,7 @@ public final class ConstraintModelBuilder {
 	private ArrayList<ForeignKey> reclassifyForeignKeyTargetTypes(
 			ArrayList<ForeignKey> foreignKeys,
 			ArrayList<UniqueConstraint> uniqueConstraints,
-			Map<String, EntityPersister> entityPersisters) {
+			Map<String, EntityPersister<?>> entityPersisters) {
 		final ArrayList<ForeignKey> reclassified = new ArrayList<>( foreignKeys.size() );
 
 		for ( ForeignKey foreignKey : foreignKeys ) {
@@ -1031,10 +1031,10 @@ public final class ConstraintModelBuilder {
 	private ForeignKey.TargetType determineTargetType(
 			ForeignKey foreignKey,
 			ArrayList<UniqueConstraint> uniqueConstraints,
-			Map<String, EntityPersister> entityPersisters) {
-		final EntityPersister targetPersister = findPersisterForTable( foreignKey.targetTable(), entityPersisters );
+			Map<String, EntityPersister<?>> entityPersisters) {
+		final EntityPersister<?> targetPersister = findPersisterForTable( foreignKey.targetTable(), entityPersisters );
 		if ( targetPersister != null ) {
-			final EntityIdentifierMapping idMapping = targetPersister.getIdentifierMapping();
+			final EntityIdentifierMapping<?, ?, ?> idMapping = targetPersister.getIdentifierMapping();
 			if ( idMapping != null && columnsMatch( foreignKey.targetColumns(), idMapping ) ) {
 				return ForeignKey.TargetType.PRIMARY_KEY;
 			}
@@ -1051,8 +1051,8 @@ public final class ConstraintModelBuilder {
 		return ForeignKey.TargetType.NON_UNIQUE;
 	}
 
-	private EntityPersister findPersisterForTable(String tableName, Map<String, EntityPersister> entityPersisters) {
-		for ( EntityPersister persister : entityPersisters.values() ) {
+	private EntityPersister<?> findPersisterForTable(String tableName, Map<String, EntityPersister<?>> entityPersisters) {
+		for ( EntityPersister<?> persister : entityPersisters.values() ) {
 			if ( tableNamesMatch( persister.getTableName(), tableName ) ) {
 				return persister;
 			}

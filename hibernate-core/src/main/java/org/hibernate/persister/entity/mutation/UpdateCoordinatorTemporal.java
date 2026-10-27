@@ -31,7 +31,7 @@ public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator
 	private final UpdateCoordinator versionUpdateDelegate;
 
 	public UpdateCoordinatorTemporal(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );

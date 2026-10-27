@@ -145,8 +145,8 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 				|| expression instanceof TrimSpecification
 				|| expression instanceof CastTarget
 				|| expression instanceof SqlSelectionExpression
-				|| expression instanceof EntityTypeLiteral
-				|| expression instanceof EmbeddableTypeLiteral
+				|| expression instanceof EntityTypeLiteral<?>
+				|| expression instanceof EmbeddableTypeLiteral<?>
 				|| expression instanceof Collation
 				|| expression instanceof JdbcParameter
 				|| expression instanceof JdbcLiteral<?>
@@ -528,12 +528,12 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
+	public void visitEntityTypeLiteral(EntityTypeLiteral<?> expression) {
 		doReplaceExpression( expression );
 	}
 
 	@Override
-	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral<?> expression) {
 		doReplaceExpression( expression );
 	}
 
@@ -592,7 +592,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 			returnedNode = new UnaryOperation(
 					unaryOperationExpression.getOperator(),
 					newOperand,
-					(BasicValuedMapping) unaryOperationExpression.getExpressionType()
+					(BasicValuedMapping<?>) unaryOperationExpression.getExpressionType()
 			);
 		}
 		else {
@@ -636,7 +636,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 			returnedNode = new Conversion(
 					newDuration,
 					conversion.getUnit(),
-					(BasicValuedMapping) conversion.getExpressionType()
+					(BasicValuedMapping<?>) conversion.getExpressionType()
 			);
 		}
 		else {

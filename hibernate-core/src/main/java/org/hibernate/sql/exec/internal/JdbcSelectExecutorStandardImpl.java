@@ -452,7 +452,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		private void initializeArrays() {
 			final int columnCount = resultSetAccess.getColumnCount();
 			columnNames = new String[columnCount];
-			types = new BasicType[columnCount];
+			types = new BasicType<?>[columnCount];
 		}
 
 		@Override

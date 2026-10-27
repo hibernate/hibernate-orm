@@ -40,7 +40,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	private boolean isMultiValued;
 
 	private @Nullable BindableType<T> bindType;
-	private @Nullable MappingModelExpressible<T> type;
+	private @Nullable MappingModelExpressible<?> type;
 	private @Nullable @SuppressWarnings("deprecation") TemporalType explicitTemporalPrecision;
 
 	private T bindValue;
@@ -277,26 +277,26 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public @Nullable MappingModelExpressible<T> getType() {
+	public @Nullable MappingModelExpressible<?> getType() {
 		return type;
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public boolean setType(@Nullable MappingModelExpressible<T> type) {
-		final MappingModelExpressible<T> previousType = this.type;
+	public boolean setType(@Nullable MappingModelExpressible<?> type) {
+		final MappingModelExpressible<?> previousType = this.type;
 		this.type = type;
 		// If the bind type is undetermined or the given type is a model part, then we try to apply a new bind type
-		if ( bindType == null || bindType.getJavaType() == Object.class || type instanceof ModelPart ) {
+		if ( bindType == null || bindType.getJavaType() == Object.class || type instanceof ModelPart<?, ?, ?> ) {
 			if ( type instanceof BindableType<?> ) {
 				final boolean changed = bindType != null && type != bindType;
 				bindType = (BindableType<T>) type;
 				return changed;
 			}
-			else if ( type instanceof BasicValuedMapping basicValuedMapping ) {
+			else if ( type instanceof BasicValuedMapping<?> basicValuedMapping ) {
 				final var jdbcMapping = basicValuedMapping.getJdbcMapping();
 				if ( jdbcMapping instanceof BindableType<?> ) {
 					final boolean changed = bindType != null && jdbcMapping != bindType;
-					if ( changed && previousType instanceof BasicValuedMapping previousBasicValuedMapping
+					if ( changed && previousType instanceof BasicValuedMapping<?> previousBasicValuedMapping
 						&& !areTypesCompatible( basicValuedMapping, previousBasicValuedMapping ) ) {
 						// An SQM parameter is used in multiple type-incompatible contexts,
 						// so let's play safe and not force a type onto the binding,
@@ -315,9 +315,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		return false;
 	}
 
-	private boolean areTypesCompatible(BasicValuedMapping mapping1, BasicValuedMapping mapping2) {
-		final JdbcMapping jdbcMapping1 = mapping1.getSingleJdbcMapping();
-		final JdbcMapping jdbcMapping2 = mapping2.getSingleJdbcMapping();
+	private boolean areTypesCompatible(BasicValuedMapping<?> mapping1, BasicValuedMapping<?> mapping2) {
+		final JdbcMapping<?> jdbcMapping1 = mapping1.getSingleJdbcMapping();
+		final JdbcMapping<?> jdbcMapping2 = mapping2.getSingleJdbcMapping();
 		// We can assume the java types are compatible, since this is relevant for cases when using the same parameter
 		// in multiple contexts e.g. assignment or comparison.
 		return jdbcMapping1.getJdbcType() == jdbcMapping2.getJdbcType()

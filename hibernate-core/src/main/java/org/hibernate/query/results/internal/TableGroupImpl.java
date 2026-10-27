@@ -25,7 +25,7 @@ public class TableGroupImpl extends AbstractTableGroup {
 			NavigablePath navigablePath,
 			String alias,
 			TableReference primaryTableReference,
-			ModelPartContainer container) {
+			ModelPartContainer<?, ?, ?> container) {
 		super( false, navigablePath, container, alias, null, null );
 		this.primaryTableReference = primaryTableReference;
 	}

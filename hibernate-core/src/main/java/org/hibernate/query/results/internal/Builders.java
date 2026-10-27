@@ -153,17 +153,17 @@ public class Builders {
 
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
 		final String fullEntityName = mappingMetamodel.getImportedName( entityName );
-		final EntityPersister entityMapping = mappingMetamodel.findEntityDescriptor( fullEntityName );
+		final EntityPersister<?> entityMapping = mappingMetamodel.findEntityDescriptor( fullEntityName );
 		if ( entityMapping == null ) {
 			throw new IllegalArgumentException( "Could not locate entity mapping : " + fullEntityName );
 		}
 
-		final AttributeMapping attributeMapping = entityMapping.findAttributeMapping( attributePath );
+		final AttributeMapping<?, ?, ?> attributeMapping = entityMapping.findAttributeMapping( attributePath );
 		if ( attributeMapping == null ) {
 			throw new IllegalArgumentException( "Could not locate attribute mapping : " + fullEntityName + "." + attributePath );
 		}
 
-		if ( attributeMapping instanceof SingularAttributeMapping singularAttributeMapping ) {
+		if ( attributeMapping instanceof SingularAttributeMapping<?, ?, ?> singularAttributeMapping ) {
 			return new DynamicResultBuilderAttribute( singularAttributeMapping, columnAlias, fullEntityName, attributePath );
 		}
 
@@ -199,7 +199,7 @@ public class Builders {
 			String tableAlias,
 			String entityName,
 			SessionFactoryImplementor sessionFactory) {
-		final EntityMappingType entityMapping =
+		final EntityMappingType<?> entityMapping =
 				sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
 		return new DynamicResultBuilderEntityStandard( entityMapping, tableAlias );
 	}
@@ -231,11 +231,11 @@ public class Builders {
 			String entityName,
 			LockMode explicitLockMode,
 			SessionFactoryImplementor sessionFactory) {
-		final EntityMappingType entityMapping = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
+		final EntityMappingType<?> entityMapping = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
 		return new DynamicResultBuilderEntityCalculated( entityMapping, tableAlias, explicitLockMode );
 	}
 
-	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, Fetchable fetchable) {
+	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, Fetchable<?, ?, ?> fetchable) {
 		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, fetchable, new ArrayList<>(), new HashMap<>() );
 	}
 
@@ -248,7 +248,7 @@ public class Builders {
 	public static ResultBuilder resultClassBuilder(
 			Class<?> resultMappingClass,
 			MappingMetamodel mappingMetamodel) {
-		final EntityMappingType entityMappingType = mappingMetamodel.findEntityDescriptor( resultMappingClass );
+		final EntityMappingType<?> entityMappingType = mappingMetamodel.findEntityDescriptor( resultMappingClass );
 		if ( entityMappingType != null ) {
 			// the resultClass is an entity
 			return new ImplicitModelPartResultBuilderEntity( entityMappingType );
@@ -262,30 +262,30 @@ public class Builders {
 
 	public static ImplicitFetchBuilder implicitFetchBuilder(
 			NavigablePath fetchPath,
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			DomainResultCreationState creationState) {
-		final BasicValuedModelPart basicValuedFetchable = fetchable.asBasicValuedModelPart();
+		final BasicValuedModelPart<?, ?, ?> basicValuedFetchable = fetchable.asBasicValuedModelPart();
 		if ( basicValuedFetchable != null ) {
 			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable, creationState );
 		}
 
-		if ( fetchable instanceof EmbeddableValuedFetchable embeddableValuedFetchable ) {
+		if ( fetchable instanceof EmbeddableValuedFetchable<?, ?, ?> embeddableValuedFetchable ) {
 			return new ImplicitFetchBuilderEmbeddable( fetchPath, embeddableValuedFetchable, creationState );
 		}
 
-		if ( fetchable instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+		if ( fetchable instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
 			return new ImplicitFetchBuilderEntity( fetchPath, toOneAttributeMapping, creationState );
 		}
 
-		if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		if ( fetchable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 			return new ImplicitFetchBuilderPlural( fetchPath, pluralAttributeMapping, creationState );
 		}
 
-		if ( fetchable instanceof EntityCollectionPart entityCollectionPart ) {
+		if ( fetchable instanceof EntityCollectionPart<?> entityCollectionPart ) {
 			return new ImplicitFetchBuilderEntityPart( fetchPath, entityCollectionPart );
 		}
 
-		if ( fetchable instanceof DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping ) {
+		if ( fetchable instanceof DiscriminatedAssociationAttributeMapping<?> discriminatedAssociationAttributeMapping ) {
 			return new ImplicitFetchBuilderDiscriminatedAssociation(
 					fetchPath,
 					discriminatedAssociationAttributeMapping,

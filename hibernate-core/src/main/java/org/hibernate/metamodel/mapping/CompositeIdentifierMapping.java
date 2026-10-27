@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.IdentifierValue;
  *
  * @author Andrea Boriero
  */
-public interface CompositeIdentifierMapping extends EntityIdentifierMapping, EmbeddableValuedModelPart {
+public interface CompositeIdentifierMapping<J, M, R> extends EntityIdentifierMapping<J, M, R>, EmbeddableValuedModelPart<J, M, R> {
 
 	@Override
 	default int getFetchableKey() {
@@ -31,12 +31,12 @@ public interface CompositeIdentifierMapping extends EntityIdentifierMapping, Emb
 	boolean hasContainingClass();
 
 	@Nonnull
-	EmbeddableMappingType getPartMappingType();
+	EmbeddableMappingType<?, M, ?> getPartMappingType();
 
 	/**
 	 * Returns the embeddable type descriptor of the id-class, if there is one,
 	 * otherwise the one of the virtual embeddable mapping type.
 	 */
 	@Nonnull
-	EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor();
+	EmbeddableMappingType<?, ?, ?> getMappedIdEmbeddableTypeDescriptor();
 }

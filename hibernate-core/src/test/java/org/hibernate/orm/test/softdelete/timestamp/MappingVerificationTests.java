@@ -26,14 +26,14 @@ public class MappingVerificationTests {
 	void verifyModel(SessionFactoryScope scope) {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory().getMappingMetamodel();
 
-		final EntityPersister entityMapping = mappingMetamodel.getEntityDescriptor( Employee.class );
+		final EntityPersister<?> entityMapping = mappingMetamodel.getEntityDescriptor( Employee.class );
 		MappingVerifier.verifyTimestampMapping(
 				entityMapping.getSoftDeleteMapping(),
 				"deleted_at",
 				"employees"
 		);
 
-		final PluralAttributeMapping accoladesMapping = (PluralAttributeMapping) entityMapping.findAttributeMapping( "accolades" );
+		final PluralAttributeMapping<?> accoladesMapping = (PluralAttributeMapping<?>) entityMapping.findAttributeMapping( "accolades" );
 		MappingVerifier.verifyTimestampMapping(
 				accoladesMapping.getSoftDeleteMapping(),
 				"deleted_on",

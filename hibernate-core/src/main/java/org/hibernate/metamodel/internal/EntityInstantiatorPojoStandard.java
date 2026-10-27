@@ -25,7 +25,7 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	private final Constructor<?> constructor;
 
 	public EntityInstantiatorPojoStandard(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			PersistentClass persistentClass,
 			JavaType<?> javaType) {
 		super( persister, persistentClass, javaType );

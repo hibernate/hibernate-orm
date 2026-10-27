@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 /// has its own table, requiring different JDBC operations per subclass.
 /// @author Steve Ebersole
 public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomposer {
-	private final IdentityMap<EntityPersister,CollectionJdbcOperations> operationsBySubclass;
+	private final IdentityMap<EntityPersister<?>,CollectionJdbcOperations> operationsBySubclass;
 
 	public TablePerSubclassOneToManyDecomposer(
 			OneToManyPersister persister,
@@ -31,7 +31,7 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 			CollectionMutationPlanContributor mutationPlanContributor) {
 		super( persister, factory, mutationPlanContributor );
 
-		var elementDescriptor = (EntityCollectionPart) persister.getAttributeMapping().getElementDescriptor();
+		var elementDescriptor = (EntityCollectionPart<?>) persister.getAttributeMapping().getElementDescriptor();
 		var associatedType = elementDescriptor.getAssociatedEntityMappingType();
 
 		int count = associatedType.getSubMappingTypes().size() + 1;
@@ -47,11 +47,11 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 	}
 
 	private CollectionJdbcOperations buildJdbcOperations(
-			EntityPersister entityPersister) {
+			EntityPersister<?> entityPersister) {
 		return buildJdbcOperations( concreteTableDescriptor( entityPersister ) );
 	}
 
-	private TableDescriptor concreteTableDescriptor(EntityPersister subclassPersister) {
+	private TableDescriptor concreteTableDescriptor(EntityPersister<?> subclassPersister) {
 		final var tableDescriptor = subclassPersister.getIdentifierTableDescriptor();
 		final var tableName = subclassPersister.getMappedTableDetails().getTableName();
 		if ( tableDescriptor.name().equals( tableName ) ) {

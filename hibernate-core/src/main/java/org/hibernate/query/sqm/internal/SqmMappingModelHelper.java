@@ -53,7 +53,7 @@ public class SqmMappingModelHelper {
 	 * Resolve a JPA EntityType descriptor to it's corresponding EntityPersister
 	 * in the Hibernate mapping type system
 	 */
-	public static EntityPersister resolveEntityPersister(
+	public static EntityPersister<?> resolveEntityPersister(
 			EntityDomainType<?> entityType,
 			MappingMetamodel mappingMetamodel) {
 		// Our EntityTypeImpl#getType impl returns the Hibernate entity-name
@@ -156,14 +156,14 @@ public class SqmMappingModelHelper {
 		}
 
 		final SqmExpressible<?> nodeType = sqmNode.getNodeType();
-		if ( nodeType instanceof BasicType ) {
+		if ( nodeType instanceof BasicType<?> ) {
 			return (BasicType<?>) nodeType;
 		}
 
 		return null;
 	}
 
-	private static ModelPart resolveSqmPath(
+	private static ModelPart<?, ?, ?> resolveSqmPath(
 			SqmPath<?> sqmPath,
 			MappingMetamodel domainModel,
 			Function<NavigablePath,TableGroup> tableGroupLocator) {
@@ -180,7 +180,7 @@ public class SqmMappingModelHelper {
 		if ( sqmPath.getLhs() instanceof SqmTreatedPath<?, ?> treatedPath ) {
 			final var treatTarget = treatedPath.getTreatTarget();
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
-				final EntityPersister container = domainModel.findEntityDescriptor( treatTarget.getTypeName() );
+				final EntityPersister<?> container = domainModel.findEntityDescriptor( treatTarget.getTypeName() );
 				return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
 			}
 		}
@@ -188,18 +188,18 @@ public class SqmMappingModelHelper {
 		// Plural path parts are not joined and thus also have no table group
 		if ( sqmPath instanceof AbstractSqmSpecificPluralPartPath<?> ) {
 			final var lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getLhs().getNavigablePath() );
-			final var pluralPart = (ModelPartContainer) lhsTableGroup.getModelPart().findSubPart(
+			final var pluralPart = (ModelPartContainer<?, ?, ?>) lhsTableGroup.getModelPart().findSubPart(
 					sqmPath.getLhs().getReferencedPathSource().getPathName(),
 					null
 			);
-			final var collectionPart = (CollectionPart) pluralPart.findSubPart(
+			final var collectionPart = (CollectionPart<?, ?, ?>) pluralPart.findSubPart(
 					sqmPath.getReferencedPathSource()
 							.getPathName(),
 					null
 			);
 			// For entity collection parts, we must return the entity mapping type,
 			// as that is the mapping type of the expression
-			return collectionPart instanceof EntityCollectionPart entityCollectionPart
+			return collectionPart instanceof EntityCollectionPart<?> entityCollectionPart
 					? entityCollectionPart.getAssociatedEntityMappingType()
 					: collectionPart;
 		}
@@ -213,9 +213,9 @@ public class SqmMappingModelHelper {
 			return null;
 		}
 		final var lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );
-		final ModelPartContainer modelPart;
+		final ModelPartContainer<?, ?, ?> modelPart;
 		if ( lhsTableGroup == null ) {
-			modelPart = (ModelPartContainer) resolveSqmPath( sqmPath.getLhs(), domainModel, tableGroupLocator );
+			modelPart = (ModelPartContainer<?, ?, ?>) resolveSqmPath( sqmPath.getLhs(), domainModel, tableGroupLocator );
 			if ( modelPart == null ) {
 				// There are many reasons for why this situation can happen,
 				// but they all boil down to a parameter being compared against a SqmPath.
@@ -239,7 +239,7 @@ public class SqmMappingModelHelper {
 		return modelPart.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 	}
 
-	public static EntityMappingType resolveExplicitTreatTarget(
+	public static EntityMappingType<?> resolveExplicitTreatTarget(
 			SqmPath<?> sqmPath,
 			SqmToSqlAstConverter converter) {
 		final SqmPath<?> parentPath = sqmPath.getLhs();

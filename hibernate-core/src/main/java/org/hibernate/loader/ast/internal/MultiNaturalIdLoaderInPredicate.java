@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  */
 public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLoader<E> implements SqlInPredicateMultiKeyLoader {
 
-	public MultiNaturalIdLoaderInPredicate(@Nonnull EntityMappingType entityDescriptor) {
+	public MultiNaturalIdLoaderInPredicate(@Nonnull EntityMappingType<?> entityDescriptor) {
 		super(entityDescriptor);
 	}
 

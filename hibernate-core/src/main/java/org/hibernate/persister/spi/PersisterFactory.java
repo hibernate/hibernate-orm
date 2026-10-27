@@ -28,7 +28,7 @@ public interface PersisterFactory extends Service {
 	 * @param creationContext Access to additional information needed to create the EntityPersister
 	 */
 	@Nonnull
-	EntityPersister createEntityPersister(
+	EntityPersister<?> createEntityPersister(
 			@Nonnull PersistentClass entityBinding,
 			@Nullable EntityDataAccess entityCacheAccessStrategy,
 			@Nullable NaturalIdDataAccess naturalIdCacheAccessStrategy,

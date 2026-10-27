@@ -30,20 +30,20 @@ import static org.hibernate.loader.ast.internal.LoaderHelper.normalizeKeys;
 public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoader<E> implements SqlArrayMultiKeyLoader {
 	private final Class<?> keyClass;
 
-	public MultiNaturalIdLoaderArrayParam(@Nonnull EntityMappingType entityDescriptor) {
+	public MultiNaturalIdLoaderArrayParam(@Nonnull EntityMappingType<?> entityDescriptor) {
 		super(entityDescriptor);
-		assert entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
+		assert entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping<?, ?, ?>;
 		keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
 	}
 
 	@Nonnull
-	protected SimpleNaturalIdMapping getNaturalIdMapping()  {
-		return (SimpleNaturalIdMapping) castNonNull( getEntityDescriptor().getNaturalIdMapping() );
+	protected SimpleNaturalIdMapping<?, ?, ?> getNaturalIdMapping()  {
+		return (SimpleNaturalIdMapping<?, ?, ?>) castNonNull( getEntityDescriptor().getNaturalIdMapping() );
 	}
 
 	@Nonnull
-	protected BasicAttributeMapping getNaturalIdAttribute()  {
-		return (BasicAttributeMapping) castNonNull( getNaturalIdMapping().asAttributeMapping() );
+	protected BasicAttributeMapping<?> getNaturalIdAttribute()  {
+		return (BasicAttributeMapping<?>) castNonNull( getNaturalIdMapping().asAttributeMapping() );
 	}
 
 	@Nonnull
@@ -55,7 +55,7 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 			@Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		final var selectable = getNaturalIdAttribute().getSelectable( 0 );
-		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = selectable.getJdbcMapping();
 		final SqlTypedMapping arraySqlTypedMapping = new SqlTypedMappingImpl(
 				selectable.getLength(),
 				selectable.getArrayLength(),
@@ -68,7 +68,7 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 						factory
 				)
 		);
-		final var jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
+		final var jdbcParameter = SqlTypedMappingJdbcParameter.create( arraySqlTypedMapping );
 		final var sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				getNaturalIdAttribute(),

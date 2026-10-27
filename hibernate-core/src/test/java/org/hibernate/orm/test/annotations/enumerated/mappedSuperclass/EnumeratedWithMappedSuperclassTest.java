@@ -60,8 +60,8 @@ public class EnumeratedWithMappedSuperclassTest {
 		// check the runtime model
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
-		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( AddressLevel.class.getName() );
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) persister.findAttributeMapping( "nature" );
+		final EntityPersister<?> persister = mappingMetamodel.getEntityDescriptor( AddressLevel.class.getName() );
+		final BasicAttributeMapping<?> attributeMapping = (BasicAttributeMapping<?>) persister.findAttributeMapping( "nature" );
 		final JdbcType jdbcType = attributeMapping.getJdbcMapping().getJdbcType();
 		assertThat( jdbcType.getJdbcTypeCode() )
 				.isIn( SqlTypes.VARCHAR, SqlTypes.ENUM, SqlTypes.NAMED_ENUM );

@@ -38,7 +38,7 @@ public class Overflow implements Expression, SqlExpressible, SqlAstNode {
 
 	@Nullable
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return ( (SqlExpressible) separatorExpression ).getJdbcMapping();
 	}
 
@@ -54,7 +54,7 @@ public class Overflow implements Expression, SqlExpressible, SqlAstNode {
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

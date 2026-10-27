@@ -91,7 +91,7 @@ public class MappingModelHelper {
 //		}
 //	}
 //
-	public static boolean isCompatibleModelPart(@Nullable ModelPart attribute1, @Nullable ModelPart attribute2) {
+	public static boolean isCompatibleModelPart(@Nullable ModelPart<?, ?, ?> attribute1, @Nullable ModelPart<?, ?, ?> attribute2) {
 		if ( attribute1 == attribute2 ) {
 			return true;
 		}
@@ -101,14 +101,14 @@ public class MappingModelHelper {
 		if ( attribute1.getClass() != attribute2.getClass() || attribute1.getJavaType() != attribute2.getJavaType() ) {
 			return false;
 		}
-		if ( attribute1 instanceof Association association1 ) {
-			final var association2 = (Association) attribute2;
+		if ( attribute1 instanceof Association<?, ?, ?> association1 ) {
+			final var association2 = (Association<?, ?, ?>) attribute2;
 			return association1.getForeignKeyDescriptor().getAssociationKey().equals(
 					association2.getForeignKeyDescriptor().getAssociationKey()
 			);
 		}
-		else if ( attribute1 instanceof PluralAttributeMapping plural1 ) {
-			final var plural2 = (PluralAttributeMapping) attribute2;
+		else if ( attribute1 instanceof PluralAttributeMapping<?> plural1 ) {
+			final var plural2 = (PluralAttributeMapping<?>) attribute2;
 			final var element1 = plural1.getElementDescriptor();
 			final var element2 = plural2.getElementDescriptor();
 			final var index1 = plural1.getIndexDescriptor();
@@ -118,8 +118,8 @@ public class MappingModelHelper {
 				&& ( index1 == null && index2 == null || isCompatibleModelPart( index1, index2 ) )
 				&& isCompatibleModelPart( element1, element2 );
 		}
-		else if ( attribute1 instanceof EmbeddableValuedModelPart embedded1 ) {
-			final var embedded2 = (EmbeddableValuedModelPart) attribute2;
+		else if ( attribute1 instanceof EmbeddableValuedModelPart<?, ?, ?> embedded1 ) {
+			final var embedded2 = (EmbeddableValuedModelPart<?, ?, ?>) attribute2;
 			final var embeddableTypeDescriptor1 = embedded1.getEmbeddableTypeDescriptor();
 			final var embeddableTypeDescriptor2 = embedded2.getEmbeddableTypeDescriptor();
 			final int numberOfAttributeMappings = embeddableTypeDescriptor1.getNumberOfAttributeMappings();
@@ -150,7 +150,7 @@ public class MappingModelHelper {
 				// because we match up columns of disjoint union subclass types by column name
 				final var containingEntity = attribute1.findContainingEntityMapping();
 				return containingEntity != null
-						&& containingEntity.getEntityPersister() instanceof UnionSubclassEntityPersister;
+						&& containingEntity.getEntityPersister() instanceof UnionSubclassEntityPersister<?>;
 			}
 		}
 		return false;

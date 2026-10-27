@@ -13,11 +13,11 @@ import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
  */
 public class TableKeyExpressionCollector {
 
-	private final EntityMappingType entityMappingType;
+	private final EntityMappingType<?> entityMappingType;
 	private Expression firstColumnExpression;
 	private List<Expression> collectedColumnExpressions;
 
-	public TableKeyExpressionCollector(EntityMappingType entityMappingType) {
+	public TableKeyExpressionCollector(EntityMappingType<?> entityMappingType) {
 		this.entityMappingType = entityMappingType;
 	}
 

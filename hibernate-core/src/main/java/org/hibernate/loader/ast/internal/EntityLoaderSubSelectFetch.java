@@ -20,14 +20,14 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
  * A one-time use {@link EntityLoader} for applying a subselect fetch to a to-one association.
  */
 public class EntityLoaderSubSelectFetch implements EntityLoader {
-	private final EntityMappingType entityMapping;
+	private final EntityMappingType<?> entityMapping;
 	private final SubselectFetch subselect;
 
 	private final SelectStatement sqlAst;
 
 	public EntityLoaderSubSelectFetch(
-			@Nonnull EntityMappingType entityMapping,
-			@Nonnull ToOneAttributeMapping attributeMapping,
+			@Nonnull EntityMappingType<?> entityMapping,
+			@Nonnull ToOneAttributeMapping<?> attributeMapping,
 			@Nonnull SubselectFetch subselect,
 			@Nonnull SharedSessionContractImplementor session) {
 		this.entityMapping = entityMapping;
@@ -48,7 +48,7 @@ public class EntityLoaderSubSelectFetch implements EntityLoader {
 
 	@Nonnull
 	@Override
-	public EntityMappingType getLoadable() {
+	public EntityMappingType<?> getLoadable() {
 		return entityMapping;
 	}
 

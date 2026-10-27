@@ -23,15 +23,15 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 
 	public SimpleNaturalIdLoader(
-			@Nonnull SimpleNaturalIdMapping naturalIdMapping,
-			@Nonnull EntityMappingType entityDescriptor) {
+			@Nonnull SimpleNaturalIdMapping<?, ?, ?> naturalIdMapping,
+			@Nonnull EntityMappingType<?> entityDescriptor) {
 		super( naturalIdMapping, entityDescriptor );
 	}
 
 	@Nonnull
 	@Override
-	protected SimpleNaturalIdMapping naturalIdMapping() {
-		return (SimpleNaturalIdMapping) super.naturalIdMapping();
+	protected SimpleNaturalIdMapping<?, ?, ?> naturalIdMapping() {
+		return (SimpleNaturalIdMapping<?, ?, ?>) super.naturalIdMapping();
 	}
 
 	@Override

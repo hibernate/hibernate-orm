@@ -90,7 +90,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		@Override
 		public TableReference resolveTableReference(
 				NavigablePath navigablePath,
-				ValuedModelPart modelPart,
+				ValuedModelPart<?, ?, ?> modelPart,
 				String tableExpression) {
 			if ( tableExpression.equals( normalTableExpression ) ) {
 				return resolveTableReference( navigablePath, modelPart, auditTableExpression );
@@ -112,7 +112,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		@Override
 		public TableReference getTableReference(
 				NavigablePath navigablePath,
-				ValuedModelPart modelPart,
+				ValuedModelPart<?, ?, ?> modelPart,
 				String tableExpression,
 				boolean resolve) {
 			if ( tableExpression.equals( normalTableExpression ) ) {
@@ -199,7 +199,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 			final CollectionPersister collectionDescriptor =
 					walker.getCreationContext().getMappingMetamodel()
 							.findCollectionDescriptor( attributeRole );
-			final PluralAttributeMapping pluralAttribute = collectionDescriptor.getAttributeMapping();
+			final PluralAttributeMapping<?> pluralAttribute = collectionDescriptor.getAttributeMapping();
 			final QuerySpec queryPart = (QuerySpec) ( (SqlAstQueryPartProcessingState) walker.getCurrentProcessingState() ).getInflightQueryPart();
 			final OrderByFragment fragment;
 			if ( pluralAttribute.getOrderByFragment() != null ) {

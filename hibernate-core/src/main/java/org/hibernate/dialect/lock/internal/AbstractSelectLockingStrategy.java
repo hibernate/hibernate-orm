@@ -28,17 +28,17 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Steve Ebersole
  */
 public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
-	private final EntityPersister lockable;
+	private final EntityPersister<?> lockable;
 	private final LockMode lockMode;
 	private final String waitForeverSql;
 
-	protected AbstractSelectLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	protected AbstractSelectLockingStrategy(EntityPersister<?> lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		this.waitForeverSql = generateLockString( WAIT_FOREVER );
 	}
 
-	protected EntityPersister getLockable() {
+	protected EntityPersister<?> getLockable() {
 		return lockable;
 	}
 

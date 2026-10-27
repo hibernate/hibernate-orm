@@ -23,12 +23,12 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 public class Duration implements Expression, DomainResultProducer {
 	private final Expression magnitude;
 	private final TemporalUnit unit;
-	private final BasicValuedMapping type;
+	private final BasicValuedMapping<?> type;
 
 	public Duration(
 			Expression magnitude,
 			TemporalUnit unit,
-			BasicValuedMapping type) {
+			BasicValuedMapping<?> type) {
 		this.magnitude = magnitude;
 		this.unit = unit;
 		this.type = type;
@@ -77,7 +77,7 @@ public class Duration implements Expression, DomainResultProducer {
 	}
 
 	@Override
-	public BasicValuedMapping getExpressionType() {
+	public BasicValuedMapping<?> getExpressionType() {
 		return type;
 	}
 }

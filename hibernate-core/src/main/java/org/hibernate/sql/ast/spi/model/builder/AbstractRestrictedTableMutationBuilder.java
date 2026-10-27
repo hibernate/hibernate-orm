@@ -78,7 +78,7 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	 * The count cannot identify omitted or reordered non-tenant parameters:
 	 * the custom SQL must preserve the original parameter list and its order.
 	 */
-	protected void adjustCustomSqlTenantRestriction(TableMapping.MutationDetails details, List<ColumnValueParameter> parameters) {
+	protected void adjustCustomSqlTenantRestriction(TableMapping.MutationDetails details, List<ColumnValueParameter<?>> parameters) {
 		if ( optimisticLockBindings.stream().anyMatch( binding -> binding instanceof TenantIdColumnValueBinding ) ) {
 			final int expected = parameters.size() + details.getExpectation().getNumberOfParametersUsed();
 			final int actual = details.getCustomSqlParameterCount();

@@ -17,7 +17,7 @@ public class UnionTableGroup extends AbstractTableGroup {
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			UnionTableReference tableReference,
-			UnionSubclassEntityPersister modelPart,
+			UnionSubclassEntityPersister<?> modelPart,
 			String sourceAlias) {
 		super( canUseInnerJoins, navigablePath, modelPart, sourceAlias, null, null );
 		this.tableReference = tableReference;

@@ -23,16 +23,19 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  *
  * @author Steve Ebersole
  */
-public interface ManagedMappingType extends MappingType, FetchableContainer {
-	@Nonnull
+public interface ManagedMappingType<J, M, R> extends MappingType<M>, FetchableContainer<J, M, R> {
 	@Override
-	default JavaType<?> getJavaType() {
+	default JavaType<M> getExpressibleJavaType() {
 		return getMappedJavaType();
 	}
 
 	@Nonnull
 	@Override
-	default MappingType getPartMappingType() {
+	JavaType<J> getJavaType();
+
+	@Nonnull
+	@Override
+	default MappingType<M> getPartMappingType() {
 		return this;
 	}
 
@@ -45,7 +48,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 * Retrieve an attribute by its contributor position
 	 */
 	@Nonnull
-	AttributeMapping getAttributeMapping(int position);
+	AttributeMapping<?, ?, ?> getAttributeMapping(int position);
 
 	/**
 	 * Find an attribute by name.
@@ -53,7 +56,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 * @return The named attribute, or {@code null} if no match was found
 	 */
 	@Nullable
-	default AttributeMapping findAttributeMapping(@Nonnull String name) {
+	default AttributeMapping<?, ?, ?> findAttributeMapping(@Nonnull String name) {
 		return null;
 	}
 
@@ -66,12 +69,12 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	/**
 	 * Visit attributes defined on this class and any supers
 	 */
-	void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action);
+	void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action);
 
 	/**
 	 * Visit attributes defined on this class and any supers
 	 */
-	default void forEachAttributeMapping(@Nonnull IndexedConsumer<? super AttributeMapping> consumer) {
+	default void forEachAttributeMapping(@Nonnull IndexedConsumer<? super AttributeMapping<?, ?, ?>> consumer) {
 		getAttributeMappings().indexedForEach( consumer );
 	}
 
@@ -104,8 +107,8 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	default boolean anyRequiresAggregateColumnWriter() {
 		final int end = getNumberOfAttributeMappings();
 		for ( int i = 0; i < end; i++ ) {
-			final MappingType mappedType = getAttributeMapping( i ).getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType embeddableMappingType
+			final MappingType<?> mappedType = getAttributeMapping( i ).getMappedType();
+			if ( mappedType instanceof EmbeddableMappingType<?, ?, ?> embeddableMappingType
 					&& embeddableMappingType.anyRequiresAggregateColumnWriter() ) {
 				return true;
 			}
@@ -117,7 +120,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	default boolean hasPartitionedSelectionMapping() {
 		final AttributeMappingsList attributeMappings = getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			AttributeMapping attributeMapping = attributeMappings.get( i );
+			AttributeMapping<?, ?, ?> attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping.hasPartitionedSelectionMapping() ) {
 				return true;
 			}
@@ -126,7 +129,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	}
 
 	default boolean isAffectedByEnabledFilters(
-			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull Set<ManagedMappingType<?, ?, ?>> visitedTypes,
 			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		if ( !visitedTypes.add( this ) ) {
@@ -137,31 +140,31 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	}
 
 	default boolean areAttributesAffectedByEnabledFilters(
-			@Nonnull Set<ManagedMappingType> visitedTypes,
+			@Nonnull Set<ManagedMappingType<?, ?, ?>> visitedTypes,
 			@Nonnull LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		// we still need to verify collection fields to be eagerly loaded by join
 		final AttributeMappingsList attributeMappings = getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			final AttributeMapping<?, ?, ?> attributeMapping = attributeMappings.get( i );
 			final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
-			if ( attributeMapping instanceof EmbeddableValuedModelPart
-					|| attributeMapping instanceof ToOneAttributeMapping
+			if ( attributeMapping instanceof EmbeddableValuedModelPart<?, ?, ?>
+					|| attributeMapping instanceof ToOneAttributeMapping<?>
 					|| mappedFetchOptions.getTiming() == FetchTiming.IMMEDIATE
 							&& mappedFetchOptions.getStyle() == FetchStyle.JOIN ) {
-				if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+				if ( attributeMapping instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 					final CollectionPersister collectionDescriptor = pluralAttributeMapping.getCollectionDescriptor();
 					if ( collectionDescriptor.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
 						return true;
 					}
 				}
-				else if ( attributeMapping instanceof EmbeddableValuedModelPart embedded ) {
+				else if ( attributeMapping instanceof EmbeddableValuedModelPart<?, ?, ?> embedded ) {
 					if ( embedded.getEmbeddableTypeDescriptor().isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
 						return true;
 					}
 				}
-				else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
-					final EntityMappingType entityMappingType = toOneAttributeMapping.getEntityMappingType();
+				else if ( attributeMapping instanceof ToOneAttributeMapping<?> toOneAttributeMapping ) {
+					final EntityMappingType<?> entityMappingType = toOneAttributeMapping.getEntityMappingType();
 					if ( toOneAttributeMapping.isAffectedByAssociationFilters( influencers )
 							|| entityMappingType.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
 						return true;

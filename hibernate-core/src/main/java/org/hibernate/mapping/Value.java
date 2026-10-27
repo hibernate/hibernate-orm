@@ -78,11 +78,11 @@ public interface Value extends Serializable {
 
 	@Incubating(since = "6.2")
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	default JdbcMapping getSelectableType(MappingContext mappingContext, int index) throws MappingException {
+	default JdbcMapping<?> getSelectableType(MappingContext mappingContext, int index) throws MappingException {
 		return getType( mappingContext, getType(), index );
 	}
 
-	private JdbcMapping getType(MappingContext factory, Type elementType, int index) {
+	private JdbcMapping<?> getType(MappingContext factory, Type elementType, int index) {
 		if ( elementType instanceof CompositeType compositeType ) {
 			for ( final var subtype : compositeType.getSubtypes() ) {
 				final int columnSpan =
@@ -103,10 +103,10 @@ public interface Value extends Serializable {
 			return getType( factory, getIdType( entityType ), index );
 		}
 		else if ( elementType instanceof MetaType metaType ) {
-			return (JdbcMapping) metaType.getBaseType();
+			return (JdbcMapping<?>) metaType.getBaseType();
 		}
 		else {
-			return (JdbcMapping) elementType;
+			return (JdbcMapping<?>) elementType;
 		}
 	}
 

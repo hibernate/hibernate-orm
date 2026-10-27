@@ -27,9 +27,9 @@ import static org.hibernate.generator.EventTypeSets.ALL;
  * @author Gavin King
  */
 public class VersionGeneration implements BeforeExecutionGenerator {
-	private final EntityVersionMapping versionMapping;
+	private final EntityVersionMapping<?> versionMapping;
 
-	public VersionGeneration(EntityVersionMapping versionMapping) {
+	public VersionGeneration(EntityVersionMapping<?> versionMapping) {
 		this.versionMapping = versionMapping;
 	}
 

@@ -30,7 +30,7 @@ public final class MultiTableMutationStrategyFactory {
 
 	public static SqmMultiTableMutationStrategy createMutationStrategy(
 			Dialect dialect,
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final MultiTableMutationStrategyKind strategyKind = requireSupport( dialect ).mutationStrategyKind();
 		validate( dialect, rootEntityDescriptor, strategyKind, "update/delete" );
@@ -46,7 +46,7 @@ public final class MultiTableMutationStrategyFactory {
 
 	public static SqmMultiTableInsertStrategy createInsertStrategy(
 			Dialect dialect,
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final MultiTableMutationStrategyKind strategyKind = requireSupport( dialect ).insertStrategyKind();
 		validate( dialect, rootEntityDescriptor, strategyKind, "insert" );
@@ -73,7 +73,7 @@ public final class MultiTableMutationStrategyFactory {
 
 	private static void validate(
 			Dialect dialect,
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			MultiTableMutationStrategyKind strategyKind,
 			String operation) {
 		final String missingPrerequisite = switch ( strategyKind ) {

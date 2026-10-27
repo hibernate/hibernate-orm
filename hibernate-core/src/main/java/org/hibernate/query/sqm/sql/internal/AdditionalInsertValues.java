@@ -1,5 +1,7 @@
 package org.hibernate.query.sqm.sql.internal;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -33,7 +35,7 @@ public final class AdditionalInsertValues {
 	private final Expression versionExpression;
 	private final Expression discriminatorExpression;
 	private final Generator identifierGenerator;
-	private final BasicEntityIdentifierMapping identifierMapping;
+	private final BasicEntityIdentifierMapping<?, ?, ?> identifierMapping;
 	private Expression identifierGeneratorParameter;
 	private SqlSelection versionSelection;
 	private SqlSelection discriminatorSelection;
@@ -43,7 +45,7 @@ public final class AdditionalInsertValues {
 			Expression versionExpression,
 			Expression discriminatorExpression,
 			Generator identifierGenerator,
-			BasicEntityIdentifierMapping identifierMapping) {
+			BasicEntityIdentifierMapping<?, ?, ?> identifierMapping) {
 		this.versionExpression = versionExpression;
 		this.discriminatorExpression = discriminatorExpression;
 		this.identifierGenerator = identifierGenerator;
@@ -61,7 +63,7 @@ public final class AdditionalInsertValues {
 		if ( identifierGenerator != null && !identifierGenerator.generatedOnExecution() ) {
 			if ( identifierGeneratorParameter == null ) {
 				identifierGeneratorParameter =
-						new IdGeneratorParameter( identifierMapping, (BeforeExecutionGenerator) identifierGenerator );
+						new IdGeneratorParameter<>( identifierMapping.getJdbcMapping(), (BeforeExecutionGenerator) identifierGenerator );
 			}
 			expressions.add( identifierGeneratorParameter );
 		}
@@ -120,13 +122,13 @@ public final class AdditionalInsertValues {
 				&& !( identifierSelection.getExpression() instanceof SelfRenderingSqlFragmentExpression );
 	}
 
-	private static class IdGeneratorParameter extends AbstractJdbcParameter {
+	private static class IdGeneratorParameter<J> extends AbstractJdbcParameter<J> {
 		private final BeforeExecutionGenerator generator;
 
 		private IdGeneratorParameter(
-				BasicEntityIdentifierMapping identifierMapping,
+				JdbcMapping<J> jdbcMapping,
 				BeforeExecutionGenerator generator) {
-			super( identifierMapping.getJdbcMapping() );
+			super( jdbcMapping );
 			this.generator = generator;
 		}
 

@@ -17,7 +17,7 @@ import org.hibernate.sql.results.graph.FetchOptions;
  *
  * @author Steve Ebersole
  */
-public interface EntityDiscriminatorMapping extends DiscriminatorMapping, FetchOptions {
+public interface EntityDiscriminatorMapping<J> extends DiscriminatorMapping<J>, FetchOptions {
 
 	String DISCRIMINATOR_ROLE_NAME = "{discriminator}";
 	String LEGACY_DISCRIMINATOR_NAME = "class";

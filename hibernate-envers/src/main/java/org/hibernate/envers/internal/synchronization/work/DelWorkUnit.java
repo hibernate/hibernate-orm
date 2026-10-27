@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private final Object[] state;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final String[] propertyNames;
 
 	public DelWorkUnit(
@@ -24,7 +24,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			String entityName,
 			EnversService enversService,
 			Object id,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			Object[] state) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.DEL );
 

@@ -48,7 +48,7 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 				if ( inferredType instanceof ReturnableType<?> returnableType ) {
 					return returnableType;
 				}
-				else if ( inferredType instanceof BasicValuedMapping basicValuedMapping ) {
+				else if ( inferredType instanceof BasicValuedMapping<?> basicValuedMapping ) {
 					return (ReturnableType<?>) basicValuedMapping.getJdbcMapping();
 				}
 			}
@@ -67,8 +67,8 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 
 	@Override
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public @Nullable BasicValuedMapping resolveFunctionReturnType(
-			Supplier<BasicValuedMapping> impliedTypeAccess,
+	public @Nullable BasicValuedMapping<?> resolveFunctionReturnType(
+			Supplier<BasicValuedMapping<?>> impliedTypeAccess,
 			List<? extends SqlAstNode> arguments) {
 		return null;
 	}

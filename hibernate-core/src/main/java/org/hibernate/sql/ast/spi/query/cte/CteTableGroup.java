@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
  */
 public class CteTableGroup extends AbstractTableGroup {
 	private final NamedTableReference cteTableReference;
-	private final TableGroupProducer tableGroupProducer;
+	private final TableGroupProducer<?, ?, ?> tableGroupProducer;
 
 	public CteTableGroup(NamedTableReference cteTableReference) {
 		this(
@@ -38,7 +38,7 @@ public class CteTableGroup extends AbstractTableGroup {
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			SqlAliasBase sqlAliasBase,
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			NamedTableReference cteTableReference) {
 		super(
 				canUseInnerJoins,

@@ -74,7 +74,7 @@ public class FilterDefRegistration {
 	public FilterDefinition toFilterDefinition(MetadataBuildingContext buildingContext) {
 		final ManagedBeanRegistry beanRegistry = buildingContext.getBootstrapContext().getManagedBeanRegistry();
 
-		final Map<String, JdbcMapping> parameterJdbcMappings;
+		final Map<String, JdbcMapping<?>> parameterJdbcMappings;
 		if ( CollectionHelper.isEmpty( parameterTypes ) ) {
 			parameterJdbcMappings = Collections.emptyMap();
 		}

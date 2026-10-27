@@ -30,13 +30,13 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Nathan Xu
  */
-public class EntityRowIdMappingImpl implements EntityRowIdMapping {
+public class EntityRowIdMappingImpl implements EntityRowIdMapping<Object> {
 	private final String rowIdName;
-	private final EntityMappingType declaringType;
+	private final EntityMappingType<?> declaringType;
 	private final String tableExpression;
 	private final BasicType<Object> rowIdType;
 
-	public EntityRowIdMappingImpl(String rowIdName, String tableExpression, EntityMappingType declaringType) {
+	public EntityRowIdMappingImpl(String rowIdName, String tableExpression, EntityMappingType<?> declaringType) {
 		this.rowIdName = rowIdName;
 		this.tableExpression = tableExpression;
 		this.declaringType = declaringType;
@@ -53,13 +53,13 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 
 	@Nonnull
 	@Override
-	public MappingType getPartMappingType() {
+	public MappingType<Object> getPartMappingType() {
 		return rowIdType;
 	}
 
 	@Nonnull
 	@Override
-	public JavaType<?> getJavaType() {
+	public JavaType<Object> getJavaType() {
 		return rowIdType.getJavaTypeDescriptor();
 	}
 
@@ -77,7 +77,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 
 	@Nonnull
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return declaringType;
 	}
 
@@ -88,7 +88,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<Object> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -105,7 +105,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
-		return new BasicResult<>(
+		return BasicResult.fromJdbcMapping(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				rowIdType,
@@ -117,7 +117,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );
 		}
@@ -126,7 +126,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping<?> getSingleJdbcMapping() {
 		return getJdbcMapping();
 	}
 
@@ -153,7 +153,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
@@ -168,7 +168,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull DomainResultCreationState creationState,
-			@Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			@Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 	}
 
 	@Override
@@ -257,13 +257,13 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<Object> getJdbcMapping() {
 		return rowIdType.getJdbcMapping();
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<Object> getMappedType() {
 		return rowIdType;
 	}
 

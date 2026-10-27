@@ -76,7 +76,7 @@ public class EnhancementAsProxyLazinessInterceptor
 	private Object read(
 			Object target, String attributeName, SharedSessionContractImplementor session, Boolean isTempSession) {
 		final Object[] writtenAttributeValues;
-		final AttributeMapping[] writtenAttributeMappings;
+		final AttributeMapping<?, ?, ?>[] writtenAttributeMappings;
 
 		if ( writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
 
@@ -93,7 +93,7 @@ public class EnhancementAsProxyLazinessInterceptor
 			// 		initialization
 
 			writtenAttributeValues = new Object[writtenFieldNames.size()];
-			writtenAttributeMappings = new AttributeMapping[writtenFieldNames.size()];
+			writtenAttributeMappings = new AttributeMapping<?, ?, ?>[writtenFieldNames.size()];
 
 			int index = 0;
 			for ( String writtenFieldName : writtenFieldNames ) {
@@ -324,9 +324,9 @@ public class EnhancementAsProxyLazinessInterceptor
 		private final Set<String> collectionAttributeNames;
 		private final boolean initializeBeforeWrite;
 		private final boolean inLineDirtyChecking;
-		private final EntityPersister persister;
+		private final EntityPersister<?> persister;
 
-		public EntityRelatedState(EntityPersister persister,
+		public EntityRelatedState(EntityPersister<?> persister,
 								CompositeType nonAggregatedCidMapper,
 								Set<String> identifierAttributeNames) {
 			this.identifierAttributeNames = identifierAttributeNames;

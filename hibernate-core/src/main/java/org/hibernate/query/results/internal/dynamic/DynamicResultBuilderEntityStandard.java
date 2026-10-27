@@ -44,7 +44,7 @@ public class DynamicResultBuilderEntityStandard
 
 	private final NavigablePath navigablePath;
 
-	private final EntityMappingType entityMapping;
+	private final EntityMappingType<?> entityMapping;
 	private final String tableAlias;
 
 	private LockMode lockMode;
@@ -52,12 +52,12 @@ public class DynamicResultBuilderEntityStandard
 	private List<String> idColumnNames;
 	private String discriminatorColumnName;
 
-	public DynamicResultBuilderEntityStandard(EntityMappingType entityMapping, String tableAlias) {
+	public DynamicResultBuilderEntityStandard(EntityMappingType<?> entityMapping, String tableAlias) {
 		this( entityMapping, tableAlias, new NavigablePath( entityMapping.getEntityName() ) );
 	}
 
 	public DynamicResultBuilderEntityStandard(
-			EntityMappingType entityMapping,
+			EntityMappingType<?> entityMapping,
 			String tableAlias,
 			NavigablePath navigablePath) {
 		this.navigablePath = navigablePath;
@@ -82,7 +82,7 @@ public class DynamicResultBuilderEntityStandard
 
 	@Override
 	@Nonnull
-	public EntityMappingType getEntityMapping() {
+	public EntityMappingType<?> getEntityMapping() {
 		return entityMapping;
 	}
 
@@ -152,7 +152,7 @@ public class DynamicResultBuilderEntityStandard
 
 	public Fetch buildFetch(
 			FetchParent parent,
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
 		return buildResultOrFetch(
@@ -172,14 +172,14 @@ public class DynamicResultBuilderEntityStandard
 
 	private <T> T buildResultOrFetch(
 			Function<TableGroup, T> resultOrFetchBuilder,
-			Fetchable fetchable,
+			Fetchable<?, ?, ?> fetchable,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
 		final var creationState = impl( domainResultCreationState );
 		final var fromClauseAccess = domainResultCreationState.getSqlAstCreationState().getFromClauseAccess();
 		final TableGroup collectionTableGroup;
 		final NavigablePath elementNavigablePath;
-		if ( fetchable instanceof PluralAttributeMapping ) {
+		if ( fetchable instanceof PluralAttributeMapping<?> ) {
 			collectionTableGroup = fromClauseAccess.getTableGroup( navigablePath );
 			elementNavigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}
@@ -208,9 +208,9 @@ public class DynamicResultBuilderEntityStandard
 		final var idFetchBuilder = findIdFetchBuilder();
 		final var keyColumnAliases = getKeyColumnAliases( idFetchBuilder );
 		if ( keyColumnAliases != null ) {
-			final ModelPart keyPart;
+			final ModelPart<?, ?, ?> keyPart;
 			final TableGroup keyTableGroup;
-			if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			if ( fetchable instanceof PluralAttributeMapping<?> pluralAttributeMapping ) {
 				if ( pluralAttributeMapping.getCollectionDescriptor().isOneToMany() ) {
 					keyPart = entityMapping.getIdentifierMapping();
 					keyTableGroup = tableGroup;
@@ -219,7 +219,7 @@ public class DynamicResultBuilderEntityStandard
 					// In here, we know that the idColumnNames refer to the columns of the join table,
 					// so we also need to resolve selections for the element identifier columns
 					final var elementDescriptor =
-							(ManyToManyCollectionPart)
+							(ManyToManyCollectionPart<?>)
 									pluralAttributeMapping.getElementDescriptor();
 					keyPart = elementDescriptor.getForeignKeyDescriptor().getKeyPart();
 					keyTableGroup = collectionTableGroup;
@@ -339,14 +339,14 @@ public class DynamicResultBuilderEntityStandard
 	@Nonnull
 	public NativeQuery.RootReturn addProperty(@Nonnull String propertyName, @Nonnull String columnAlias) {
 		final var subPart = entityMapping.findSubPart( propertyName );
-		addProperty( (Fetchable) subPart, columnAlias );
+		addProperty( (Fetchable<?, ?, ?>) subPart, columnAlias );
 		return this;
 	}
 
 	@Override
 	@Nonnull
 	public NativeQuery.ReturnProperty addProperty(@Nonnull String propertyName) {
-		return addProperty( (Fetchable) entityMapping.findSubPart( propertyName ) );
+		return addProperty( (Fetchable<?, ?, ?>) entityMapping.findSubPart( propertyName ) );
 	}
 
 	@Override

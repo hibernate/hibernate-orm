@@ -82,7 +82,7 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
  * @author Gavin King
  */
 @Internal
-public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
+public class JoinedSubclassEntityPersister<J> extends AbstractEntityPersister<J> {
 	private static final Logger LOG = Logger.getLogger( JoinedSubclassEntityPersister.class );
 
 	private static final String IMPLICIT_DISCRIMINATOR_ALIAS = "clazz_";
@@ -1055,7 +1055,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Nullable
 	@Override
-	protected EntityVersionMapping generateVersionMapping(
+	protected EntityVersionMapping<?> generateVersionMapping(
 			@Nullable Supplier<?> templateInstanceCreator,
 			@Nonnull PersistentClass bootEntityDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess) {
@@ -1084,7 +1084,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Nonnull
 	@Override
-	protected EntityIdentifierMapping generateIdentifierMapping(
+	protected EntityIdentifierMapping<?, ?, ?> generateIdentifierMapping(
 			@Nullable Supplier<?> templateInstanceCreator,
 			@Nonnull PersistentClass persistentClass,
 			@Nonnull MappingModelCreationProcess creationProcess) {
@@ -1101,7 +1101,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Nonnull
-	private BasicEntityIdentifierMappingImpl basicIdentifierMapping(
+	private BasicEntityIdentifierMappingImpl<?> basicIdentifierMapping(
 			@Nullable Supplier<?> templateInstanceCreator,
 			@Nonnull PersistentClass persistentClass,
 			@Nonnull MappingModelCreationProcess creationProcess,
@@ -1130,7 +1130,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		final var identifierProperty = persistentClass.getIdentifierProperty();
 		final var value = identifierProperty.getValue();
-		return new BasicEntityIdentifierMappingImpl(
+		return new BasicEntityIdentifierMappingImpl<>(
 				this,
 				templateInstanceCreator,
 				identifierProperty.getName(),
@@ -1148,7 +1148,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Nonnull
-	private EntityIdentifierMapping compositeIdentifierMapping(
+	private EntityIdentifierMapping<?, ?, ?> compositeIdentifierMapping(
 			@Nonnull PersistentClass persistentClass,
 			@Nonnull MappingModelCreationProcess creationProcess,
 			@Nonnull CompositeType compositeIdType) {
@@ -1183,7 +1183,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Nullable
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(@Nonnull PersistentClass bootEntityDescriptor) {
+	protected EntityDiscriminatorMapping<?> generateDiscriminatorMapping(@Nonnull PersistentClass bootEntityDescriptor) {
 		final var superMappingType = getSuperMappingType();
 		if ( superMappingType != null ) {
 			return superMappingType.getDiscriminatorMapping();
@@ -1198,7 +1198,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 			else {
 				// otherwise, we need to use the case approach
-				return new CaseStatementDiscriminatorMappingImpl(
+				return new CaseStatementDiscriminatorMappingImpl<>(
 						this,
 						subclassTableNameClosure,
 						castNonNull( notNullColumnTableNumbers ),
@@ -1216,7 +1216,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Nonnull
 	@Override
-	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
+	protected EntityIdentifierMapping<?, ?, ?> generateNonEncapsulatedCompositeIdentifierMapping(
 			@Nonnull MappingModelCreationProcess creationProcess,
 			@Nonnull PersistentClass bootEntityDescriptor) {
 		assert declaredAttributeMappings != null;
@@ -1269,7 +1269,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		boolean needsTreatDiscriminator = false;
 		for ( var entry : entityNameUses.entrySet() ) {
 			final var useKind = entry.getValue().getKind();
-			final var persister = (JoinedSubclassEntityPersister) metamodel.findEntityDescriptor( entry.getKey() );
+			final var persister = (JoinedSubclassEntityPersister<?>) metamodel.findEntityDescriptor( entry.getKey() );
 			// The following block tries to figure out what can be inner joined and which super class table joins can be omitted
 			if ( innerJoinOptimization ) {
 				optimizeInnerJoins( tableGroup, useKind, persister, tablesToInnerJoin, retainedTableReferences );
@@ -1370,7 +1370,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private void optimizeInnerJoins(
 			@Nonnull TableGroup tableGroup,
 			@Nonnull EntityNameUse.UseKind useKind,
-			@Nonnull JoinedSubclassEntityPersister persister,
+			@Nonnull JoinedSubclassEntityPersister<?> persister,
 			@Nonnull Set<String> tablesToInnerJoin,
 			@Nonnull Set<TableReference> retainedTableReferences) {
 		if ( useKind == EntityNameUse.UseKind.TREAT || useKind == EntityNameUse.UseKind.FILTER ) {
@@ -1412,7 +1412,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Nonnull
 	@Override
-	public EntityIdentifierMapping getIdentifierMappingForJoin() {
+	public EntityIdentifierMapping<?, ?, ?> getIdentifierMappingForJoin() {
 		// If the joined subclass has a physical discriminator and has subtypes
 		// we must use the root table identifier mapping for joining to allow table group elimination to work
 		return isPhysicalDiscriminator() && !getSubMappingTypes().isEmpty()

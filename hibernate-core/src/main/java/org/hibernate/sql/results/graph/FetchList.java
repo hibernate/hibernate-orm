@@ -32,7 +32,7 @@ public interface FetchList extends Iterable<Fetch> {
 
 	boolean isEmpty();
 
-	Fetch get(Fetchable fetchable);
+	Fetch get(Fetchable<?, ?, ?> fetchable);
 
 	void forEach(Consumer<? super Fetch> consumer);
 

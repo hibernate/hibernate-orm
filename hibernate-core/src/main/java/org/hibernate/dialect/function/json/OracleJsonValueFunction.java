@@ -31,7 +31,7 @@ public class OracleJsonValueFunction extends JsonValueFunction {
 			JsonValueArguments arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		final JdbcMapping jdbcMapping = arguments.returningType() != null
+		final JdbcMapping<?> jdbcMapping = arguments.returningType() != null
 				? arguments.returningType().getJdbcMapping()
 				: null;
 		final int sqlTypeCode = jdbcMapping != null
@@ -126,7 +126,7 @@ public class OracleJsonValueFunction extends JsonValueFunction {
 	@Override
 	protected void renderReturningClause(SqlAppender sqlAppender, JsonValueArguments arguments, SqlAstTranslator<?> walker) {
 		if ( arguments.returningType() != null ) {
-			final JdbcMapping jdbcMapping = arguments.returningType().getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = arguments.returningType().getJdbcMapping();
 			final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 
 			// No return type for encoded booleans, UUID, or binary types (handled via decode/hextoraw)
@@ -203,7 +203,7 @@ public class OracleJsonValueFunction extends JsonValueFunction {
 		return walker.getSessionFactory().getJdbcServices().getDialect().getVersion().isSameOrAfter( 23 );
 	}
 
-	private static boolean requiresSpecialExtraction(int sqlTypeCode, JdbcMapping jdbcMapping) {
+	private static boolean requiresSpecialExtraction(int sqlTypeCode, JdbcMapping<?> jdbcMapping) {
 		return switch ( sqlTypeCode ) {
 			case TINYINT, SMALLINT, INTEGER, BIGINT,
 				CLOB, NCLOB, UUID,
@@ -215,7 +215,7 @@ public class OracleJsonValueFunction extends JsonValueFunction {
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public static boolean isEncodedBoolean(JdbcMapping type) {
+	public static boolean isEncodedBoolean(JdbcMapping<?> type) {
 		return type.getJdbcType().isBoolean() && type.getJdbcType().getDdlTypeCode() != BOOLEAN;
 	}
 }

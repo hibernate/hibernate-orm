@@ -77,9 +77,9 @@ public class ResultsHelper {
 	private ResultsHelper() {
 	}
 
-	public static String attributeName(ModelPart identifierMapping) {
+	public static String attributeName(ModelPart<?, ?, ?> identifierMapping) {
 		if ( identifierMapping.isEntityIdentifierMapping() ) {
-			return identifierMapping instanceof SingleAttributeIdentifierMapping singleAttributeIdentifierMapping
+			return identifierMapping instanceof SingleAttributeIdentifierMapping<?, ?, ?> singleAttributeIdentifierMapping
 					? singleAttributeIdentifierMapping.getAttributeName()
 					: null;
 		}

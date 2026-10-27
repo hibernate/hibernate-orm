@@ -129,7 +129,7 @@ public class GeneratedWritableDelegateTest {
 			SessionFactoryScope scope,
 			Class<?> entityClass,
 			MutationType mutationType) {
-		final EntityPersister entityDescriptor = scope.getSessionFactory()
+		final EntityPersister<?> entityDescriptor = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.findEntityDescriptor( entityClass );
 		return entityDescriptor.getMutationDelegate( mutationType );

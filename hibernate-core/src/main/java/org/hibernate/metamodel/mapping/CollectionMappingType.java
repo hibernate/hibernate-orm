@@ -9,7 +9,7 @@ import org.hibernate.collection.spi.CollectionSemantics;
  *
  * @author Steve Ebersole
  */
-public interface CollectionMappingType<C> extends MappingType {
+public interface CollectionMappingType<C> extends MappingType<C> {
 	@Nonnull
 	CollectionSemantics<C,?> getCollectionSemantics();
 }

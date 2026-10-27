@@ -34,7 +34,7 @@ public final class RestrictionRendering {
 	}
 
 	/** Compiles mapping-dependent column matching once, without retaining any query aliases. */
-	public static RestrictionRendering compile(String template, EntityMappingType entityMapping) {
+	public static RestrictionRendering compile(String template, EntityMappingType<?> entityMapping) {
 		final Map<String, Owner> owners = new HashMap<>();
 		entityMapping.forEachAttributeMapping( attribute -> {
 			if ( !attribute.isPluralAttributeMapping() ) {

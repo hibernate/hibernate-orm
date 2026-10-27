@@ -65,12 +65,12 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 
 	private final String origin;
 
-	public DeleteDecomposerStandard(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
+	public DeleteDecomposerStandard(EntityPersister<?> entityPersister, SessionFactoryImplementor sessionFactory) {
 		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
 	}
 
 	public DeleteDecomposerStandard(
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			SessionFactoryImplementor sessionFactory,
 			EntityMutationPlanContributor mutationPlanContributor) {
 		super( entityPersister, sessionFactory );
@@ -565,7 +565,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 		}
 	}
 
-	protected static boolean needsRowId(EntityPersister entityPersister, TableMapping tableMapping) {
+	protected static boolean needsRowId(EntityPersister<?> entityPersister, TableMapping tableMapping) {
 		return entityPersister.getRowIdMapping() != null && tableMapping.isIdentifierTable();
 	}
 

@@ -25,7 +25,7 @@ import org.hibernate.type.Type;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchEntitySelectFetchInitializer.BatchEntitySelectFetchInitializerData> {
-	protected final AttributeMapping[] parentAttributes;
+	protected final AttributeMapping<?, ?, ?>[] parentAttributes;
 	protected final PropertyValueAccessor referencedModelPartSetter;
 	protected final Type referencedModelPartType;
 
@@ -41,9 +41,9 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 
 	public BatchEntitySelectFetchInitializer(
 			InitializerParent<?> parentAccess,
-			ToOneAttributeMapping referencedModelPart,
+			ToOneAttributeMapping<?> referencedModelPart,
 			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
+			EntityPersister<?> concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			FetchOptions fetchOptions,

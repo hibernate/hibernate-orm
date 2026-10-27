@@ -34,11 +34,11 @@ public class DatePrecisionTests {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
-		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityOfDates.class);
+		final EntityPersister<?> entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityOfDates.class);
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("dateAsTimestamp");
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("dateAsTimestamp");
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			final TemporalJavaType jtd = (TemporalJavaType) jdbcMapping.getJavaTypeDescriptor();
 			assertThat(jtd, is(attribute.getJavaType()));
 			assertThat(jtd.getJavaTypeClass(), equalTo(Date.class));
@@ -47,8 +47,8 @@ public class DatePrecisionTests {
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("dateAsDate");
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("dateAsDate");
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			final TemporalJavaType jtd = (TemporalJavaType) jdbcMapping.getJavaTypeDescriptor();
 			assertThat(jtd, is(attribute.getJavaType()));
 			assertThat(jtd.getJavaTypeClass(), equalTo(Date.class));
@@ -57,8 +57,8 @@ public class DatePrecisionTests {
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("dateAsTime");
-			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			final BasicAttributeMapping<?> attribute = (BasicAttributeMapping<?>) entityDescriptor.findAttributeMapping("dateAsTime");
+			final JdbcMapping<?> jdbcMapping = attribute.getJdbcMapping();
 			final TemporalJavaType jtd = (TemporalJavaType) jdbcMapping.getJavaTypeDescriptor();
 			assertThat(jtd, is(attribute.getJavaType()));
 			assertThat(jtd.getJavaTypeClass(), equalTo(Date.class));

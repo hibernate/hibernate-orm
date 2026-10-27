@@ -21,11 +21,11 @@ public final class ImmutableAttributeMappingsMap implements AttributeMappingsMap
 	//instead - an extra indirection but avoids type check
 	//and related cache pollution issues.
 	private final HashMap<String,Integer> mapStore;
-	private final AttributeMapping[] orderedValues;
+	private final AttributeMapping<?, ?, ?>[] orderedValues;
 
-	public ImmutableAttributeMappingsMap(final LinkedHashMap<String,AttributeMapping> sortedSource) {
+	public ImmutableAttributeMappingsMap(final LinkedHashMap<String,AttributeMapping<?, ?, ?>> sortedSource) {
 		final int size = sortedSource.size();
-		orderedValues = new AttributeMapping[size];
+		orderedValues = new AttributeMapping<?, ?, ?>[size];
 		mapStore = new HashMap<>( size );
 		int idx = 0;
 		//populate both parallel representations
@@ -37,7 +37,7 @@ public final class ImmutableAttributeMappingsMap implements AttributeMappingsMap
 	}
 
 	@Override
-	public void forEachValue(@Nonnull final Consumer<? super AttributeMapping> action) {
+	public void forEachValue(@Nonnull final Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		for ( var attributeMapping : orderedValues ) {
 			action.accept( attributeMapping );
 		}
@@ -49,27 +49,27 @@ public final class ImmutableAttributeMappingsMap implements AttributeMappingsMap
 
 	@Nullable
 	@Override
-	public AttributeMapping get(@Nonnull final String name) {
+	public AttributeMapping<?, ?, ?> get(@Nonnull final String name) {
 		final Integer integer = mapStore.get( name );
 		return integer == null ? null : orderedValues[integer];
 	}
 
 	@Nonnull
 	@Override
-	public Iterable<AttributeMapping> valueIterator() {
+	public Iterable<AttributeMapping<?, ?, ?>> valueIterator() {
 		return new AttributeMappingIterable();
 	}
 
-	private final class AttributeMappingIterable implements Iterable<AttributeMapping> {
+	private final class AttributeMappingIterable implements Iterable<AttributeMapping<?, ?, ?>> {
 
 		@Override
-		public Iterator<AttributeMapping> iterator() {
+		public Iterator<AttributeMapping<?, ?, ?>> iterator() {
 			return new AttributeMappingIterator();
 		}
 
 	}
 
-	private final class AttributeMappingIterator implements Iterator<AttributeMapping> {
+	private final class AttributeMappingIterator implements Iterator<AttributeMapping<?, ?, ?>> {
 
 		private int idx = 0;
 
@@ -79,7 +79,7 @@ public final class ImmutableAttributeMappingsMap implements AttributeMappingsMap
 		}
 
 		@Override
-		public AttributeMapping next() {
+		public AttributeMapping<?, ?, ?> next() {
 			return ImmutableAttributeMappingsMap.this.orderedValues[ idx++ ];
 		}
 

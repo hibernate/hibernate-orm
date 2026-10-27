@@ -165,7 +165,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			boolean inclusionAlreadyTested,
 			PersistentCollection<?> collection,
 			Object key,
-			org.hibernate.metamodel.mapping.PluralAttributeMapping attribute,
+			org.hibernate.metamodel.mapping.PluralAttributeMapping<?> attribute,
 			int insertOrdinal,
 			int writeIndexOrdinal,
 			int ordinalBase,
@@ -1163,7 +1163,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				} );
 			}
 
-			final var elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
+			final var elementDescriptor = (EntityCollectionPart<?>) attributeMapping.getElementDescriptor();
 			final var elementType = elementDescriptor.getAssociatedEntityMappingType();
 			elementType.getIdentifierMapping().forEachColumn( (index, selectableMapping) -> {
 				updateBuilder.addKeyRestriction( selectableMapping );
@@ -1203,7 +1203,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		}
 
 		final Object elementValue = collection.getElement( rowValue );
-		final var elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
+		final var elementDescriptor = (EntityCollectionPart<?>) attributeMapping.getElementDescriptor();
 		final var identifierMapping = elementDescriptor.getAssociatedEntityMappingType().getIdentifierMapping();
 		identifierMapping.decompose(
 				identifierMapping.getIdentifier( elementValue ),
@@ -1237,7 +1237,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			} );
 
 			// Add element identifier restrictions (WHERE clause for element's PK)
-			final var elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
+			final var elementDescriptor = (EntityCollectionPart<?>) attributeMapping.getElementDescriptor();
 			final var elementType = elementDescriptor.getAssociatedEntityMappingType();
 			elementType.getIdentifierMapping().forEachColumn( (index, selectableMapping) -> {
 				updateBuilder.addKeyRestriction( selectableMapping );
@@ -1281,7 +1281,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = persister.getAttributeMapping();
-		final var elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
+		final var elementDescriptor = (EntityCollectionPart<?>) attributeMapping.getElementDescriptor();
 		final var associatedType = elementDescriptor.getAssociatedEntityMappingType();
 		final Object element = collection.getElement( entry );
 		final var identifierMapping = associatedType.getIdentifierMapping();
@@ -1347,7 +1347,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 		// for one-to-many, we know the element is an entity and need to restrict the update
 		// based on the element's id
-		final var entityPart = (EntityCollectionPart) persister.getAttributeMapping().getElementDescriptor();
+		final var entityPart = (EntityCollectionPart<?>) persister.getAttributeMapping().getElementDescriptor();
 		entityPart.getAssociatedEntityMappingType().getIdentifierMapping().forEachColumn(  (index, selectableMapping) -> {
 			updateBuilder.addKeyRestriction( selectableMapping );
 		} );
@@ -1380,7 +1380,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				session
 		);
 
-		final var entityPart = (EntityCollectionPart) persister.getAttributeMapping().getElementDescriptor();
+		final var entityPart = (EntityCollectionPart<?>) persister.getAttributeMapping().getElementDescriptor();
 		final var identifierMapping = entityPart.getAssociatedEntityMappingType().getIdentifierMapping();
 		// Extract the ID from the actual element entity (rowValue), not the owner's FK (keyValue)
 		final Object elementId = identifierMapping.getIdentifier( rowValue );

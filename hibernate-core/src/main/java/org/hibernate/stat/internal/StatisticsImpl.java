@@ -553,7 +553,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 			naturalIdQueryExecutionMaxTimeEntity = rootEntityName;
 		}
 
-		final EntityPersister rootEntityPersister = metamodel.getEntityDescriptor( rootEntityName );
+		final EntityPersister<?> rootEntityPersister = metamodel.getEntityDescriptor( rootEntityName );
 
 		getNaturalIdStatistics( rootEntityName ).queryExecuted( time );
 
@@ -1003,7 +1003,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	private NaturalIdStatisticsImpl instantiateNaturalStatistics(final String entityName) {
-		final EntityPersister entityDescriptor = metamodel.getEntityDescriptor( entityName );
+		final EntityPersister<?> entityDescriptor = metamodel.getEntityDescriptor( entityName );
 		if ( !entityDescriptor.hasNaturalIdentifier() ) {
 			throw new IllegalArgumentException( "Given entity [" + entityName + "] does not define natural-id" );
 		}

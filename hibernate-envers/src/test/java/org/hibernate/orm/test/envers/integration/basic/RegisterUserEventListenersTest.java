@@ -71,7 +71,7 @@ public class RegisterUserEventListenersTest {
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
+		public boolean requiresPostCommitHandling(@Nonnull EntityPersister<?> persister) {
 			return true;
 		}
 

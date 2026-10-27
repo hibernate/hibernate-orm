@@ -47,8 +47,8 @@ public class MutableNaturalIdTest {
 	@JiraKey( value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
-		final EntityPersister persister = entityMappingType.getEntityPersister();
+		final EntityMappingType<?> entityMappingType = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
+		final EntityPersister<?> persister = entityMappingType.getEntityPersister();
 
 		assertFalse( persister.getPropertyNullability()[persister.getPropertyIndex( "name" )] );
 		assertFalse( persister.getPropertyNullability()[persister.getPropertyIndex( "org" )] );

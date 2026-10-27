@@ -59,7 +59,7 @@ public class MappedFetchTests {
 	public void baseline(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final MappingMetamodel domainModel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
-		final EntityPersister rootEntityDescriptor = domainModel.getEntityDescriptor( RootEntity.class );
+		final EntityPersister<?> rootEntityDescriptor = domainModel.getEntityDescriptor( RootEntity.class );
 
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
 				rootEntityDescriptor,

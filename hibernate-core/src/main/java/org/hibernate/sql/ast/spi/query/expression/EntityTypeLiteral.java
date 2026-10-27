@@ -23,17 +23,21 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Steve Ebersole
  */
-public class EntityTypeLiteral
-		implements Expression, DomainResultProducer<Object>, BasicValuedMapping {
-	private final EntityPersister entityTypeDescriptor;
-	private final DiscriminatorType<?> discriminatorType;
+public class EntityTypeLiteral<J>
+		implements Expression, DomainResultProducer<Object>, BasicValuedMapping<J> {
+	private final EntityPersister<?> entityTypeDescriptor;
+	private final DiscriminatorType<J> discriminatorType;
 
-	public EntityTypeLiteral(EntityPersister entityTypeDescriptor) {
-		this.entityTypeDescriptor = entityTypeDescriptor;
-		this.discriminatorType = entityTypeDescriptor.getDiscriminatorDomainType();
+	public static EntityTypeLiteral<?> create(EntityPersister<?> entityTypeDescriptor) {
+		return new EntityTypeLiteral<>( entityTypeDescriptor, entityTypeDescriptor.getDiscriminatorDomainType() );
 	}
 
-	public EntityPersister getEntityTypeDescriptor() {
+	private EntityTypeLiteral(EntityPersister<?> entityTypeDescriptor, DiscriminatorType<J> discriminatorType) {
+		this.entityTypeDescriptor = entityTypeDescriptor;
+		this.discriminatorType = discriminatorType;
+	}
+
+	public EntityPersister<?> getEntityTypeDescriptor() {
 		return entityTypeDescriptor;
 	}
 
@@ -48,13 +52,13 @@ public class EntityTypeLiteral
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<J> getJdbcMapping() {
 		return discriminatorType;
 	}
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return discriminatorType;
 	}
 
@@ -65,18 +69,18 @@ public class EntityTypeLiteral
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		return discriminatorType.getJdbcMapping( index );
 	}
 
 	@Nonnull
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping<?> getSingleJdbcMapping() {
 		return discriminatorType.getSingleJdbcMapping();
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		return discriminatorType.forEachJdbcType( offset, action );
 	}
 
@@ -147,7 +151,7 @@ public class EntityTypeLiteral
 
 	@Nonnull
 	@Override
-	public JavaType<?> getExpressibleJavaType() {
+	public JavaType<J> getExpressibleJavaType() {
 		return discriminatorType.getExpressibleJavaType();
 	}
 }

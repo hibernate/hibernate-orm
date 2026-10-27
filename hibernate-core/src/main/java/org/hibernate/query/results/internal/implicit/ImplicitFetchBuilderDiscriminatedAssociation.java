@@ -15,11 +15,11 @@ import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
 public class ImplicitFetchBuilderDiscriminatedAssociation implements ImplicitFetchBuilder {
 	private final NavigablePath fetchPath;
-	private final DiscriminatedAssociationAttributeMapping fetchable;
+	private final DiscriminatedAssociationAttributeMapping<?> fetchable;
 
 	public ImplicitFetchBuilderDiscriminatedAssociation(
 			NavigablePath fetchPath,
-			DiscriminatedAssociationAttributeMapping fetchable,
+			DiscriminatedAssociationAttributeMapping<?> fetchable,
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;

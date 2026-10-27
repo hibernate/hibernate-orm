@@ -258,13 +258,13 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 		return parentPartExpression;
 	}
 
-	private static String customWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private static String customWriteExpression(String customWriteExpression, JdbcMapping<?> jdbcMapping) {
 		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
 		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
 		return sqlAppender.toString();
 	}
 
-	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
+	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping<?> jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case UUID:
@@ -387,7 +387,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 				AggregateJsonWriteExpression currentAggregate = this;
 				for ( int i = 1; i < parts.length - 1; i++ ) {
 					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) currentAggregate.selectableMapping.getJdbcMapping().getJdbcType();
-					final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+					final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateJsonWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
@@ -408,7 +408,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 
 		protected void passThroughUnsetSubExpressions(SelectableMapping aggregateColumn) {
 			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) aggregateColumn.getJdbcMapping().getJdbcType();
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
 				final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );
@@ -663,7 +663,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 				AggregateXmlWriteExpression currentAggregate = this;
 				for ( int i = 1; i < parts.length - 1; i++ ) {
 					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) currentAggregate.selectableMapping.getJdbcMapping().getJdbcType();
-					final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+					final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
@@ -684,7 +684,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 
 		protected void passThroughUnsetSubExpressions(SelectableMapping aggregateColumn) {
 			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) aggregateColumn.getJdbcMapping().getJdbcType();
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
 				final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );
@@ -894,7 +894,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 
 		private void appendNullTags(SqlAppender sb, SelectableMapping parentMapping) {
 			final AggregateJdbcType jdbcType = (AggregateJdbcType) parentMapping.getJdbcMapping().getJdbcType();
-			final EmbeddableMappingType embeddableMappingType = jdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = jdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
 				final SelectableMapping selectable = embeddableMappingType.getJdbcValueSelectable( i );

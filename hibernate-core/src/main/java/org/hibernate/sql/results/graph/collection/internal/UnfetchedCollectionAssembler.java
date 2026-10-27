@@ -8,9 +8,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 public class UnfetchedCollectionAssembler implements DomainResultAssembler {
 
-	private final PluralAttributeMapping fetchedMapping;
+	private final PluralAttributeMapping<?> fetchedMapping;
 
-	public UnfetchedCollectionAssembler(PluralAttributeMapping fetchedMapping) {
+	public UnfetchedCollectionAssembler(PluralAttributeMapping<?> fetchedMapping) {
 		this.fetchedMapping = fetchedMapping;
 	}
 

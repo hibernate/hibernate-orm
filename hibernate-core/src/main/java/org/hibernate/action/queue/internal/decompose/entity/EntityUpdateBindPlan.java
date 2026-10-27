@@ -32,7 +32,7 @@ import static org.hibernate.generator.EventType.UPDATE;
 public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 
 	/// Static, non-capturing [JdbcValueBiConsumer] for binding attribute values for update assignment (SET).
-	private static final JdbcValueBiConsumer<EntityUpdateBindPlan, AttributeMapping> UPDATE_SET_BINDER =
+	private static final JdbcValueBiConsumer<EntityUpdateBindPlan, AttributeMapping<?, ?, ?>> UPDATE_SET_BINDER =
 			(valueIndex, bindPlan, attribute, jdbcValue, selectableMapping) -> {
 				if ( selectableMapping.isUpdateable()
 						&& !selectableMapping.isFormula()
@@ -54,7 +54,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			};
 
 	private final EntityTableDescriptor tableDescriptor;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 	private final Object entity;
 	private final Object identifier;
 	private final Object rowId;
@@ -74,7 +74,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 
 	public EntityUpdateBindPlan(
 			EntityTableDescriptor tableDescriptor,
-			EntityPersister entityPersister,
+			EntityPersister<?> entityPersister,
 			Object entity,
 			Object identifier,
 			Object rowId,
@@ -199,7 +199,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 
 	private void decomposeAttributeForSet(
 			Object value,
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			JdbcValueBindings valueBindings,
 			SharedSessionContractImplementor session) {
 		assert !attribute.isPluralAttributeMapping();
@@ -229,7 +229,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	private boolean shouldBindUpdateValue(
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			int selectableIndex,
 			SharedSessionContractImplementor session) {
 		return shouldBindJdbcValue(
@@ -244,7 +244,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	protected boolean shouldIncludeInUpdate(
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			SharedSessionContractImplementor session) {
 		final int attributeIndex = attribute.getStateArrayPosition();
 		final var generator = attribute.getGenerator();
@@ -375,7 +375,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	protected void decomposeAttributeForRestriction(
 			Object value,
 			JdbcValueBindings jdbcValueBindings,
-			AttributeMapping attribute,
+			AttributeMapping<?, ?, ?> attribute,
 			SharedSessionContractImplementor session) {
 		assert !attribute.isPluralAttributeMapping();
 

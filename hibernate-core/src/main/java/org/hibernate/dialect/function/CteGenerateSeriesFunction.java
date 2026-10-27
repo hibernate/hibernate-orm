@@ -89,7 +89,7 @@ public class CteGenerateSeriesFunction extends NumberSeriesGenerateSeriesFunctio
 						withOrdinality,
 						walker
 				);
-				final AnonymousTupleTableGroupProducer tableGroupProducer = (AnonymousTupleTableGroupProducer) tableGroup.getModelPart();
+				final AnonymousTupleTableGroupProducer<?> tableGroupProducer = (AnonymousTupleTableGroupProducer<?>) tableGroup.getModelPart();
 				if ( !lateral ) {
 					return new QueryPartTableGroup(
 							navigablePath,
@@ -190,9 +190,9 @@ public class CteGenerateSeriesFunction extends NumberSeriesGenerateSeriesFunctio
 	}
 
 	private SelectStatement createCteSubquery(FunctionTableGroup tableGroup, SqmToSqlAstConverter walker) {
-		final AnonymousTupleTableGroupProducer tableGroupProducer = (AnonymousTupleTableGroupProducer) tableGroup.getModelPart();
-		final ModelPart indexPart = tableGroupProducer.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
-		final ModelPart elementPart = tableGroupProducer.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null );
+		final AnonymousTupleTableGroupProducer<?> tableGroupProducer = (AnonymousTupleTableGroupProducer<?>) tableGroup.getModelPart();
+		final ModelPart<?, ?, ?> indexPart = tableGroupProducer.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		final ModelPart<?, ?, ?> elementPart = tableGroupProducer.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null );
 		final NumericTypeCategory numericTypeCategory = NumericTypeCategory.BIG_DECIMAL;
 		final BasicType<?> resultType = (BasicType<?>) elementPart.getSingleJdbcMapping();
 		final BasicType<Integer> integerType = walker.getCreationContext().getTypeConfiguration()
@@ -325,7 +325,7 @@ public class CteGenerateSeriesFunction extends NumberSeriesGenerateSeriesFunctio
 					tIndex,
 					BinaryArithmeticOperator.ADD,
 					new UnparsedNumericLiteral<>( "1", NumericTypeCategory.INTEGER, integerType ),
-					(BasicValuedMapping) indexPart.getSingleJdbcMapping()
+					(BasicValuedMapping<?>) indexPart.getSingleJdbcMapping()
 			) ) );
 		}
 

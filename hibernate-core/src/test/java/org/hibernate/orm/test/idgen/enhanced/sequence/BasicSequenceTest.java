@@ -26,7 +26,7 @@ public class BasicSequenceTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister<?> persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
 		assertThat( persister.getGenerator() ).isInstanceOf( SequenceStyleGenerator.class );
@@ -54,7 +54,7 @@ public class BasicSequenceTest {
 	public void testSequencePerEntity(SessionFactoryScope scope) {
 		final String overriddenEntityName = "SpecialEntity";
 
-		final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister<?> persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(overriddenEntityName);
 		assertThat( persister.getGenerator() ).isInstanceOf( SequenceStyleGenerator.class );

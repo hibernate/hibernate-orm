@@ -59,8 +59,8 @@ public class CteSoftDeleteHandler extends CteDeleteHandler {
 			CteStatement idSelectCte,
 			SessionFactoryImplementor factory,
 			TableGroup updatingTableGroup,
-			EntityMappingType entityDescriptor) {
-		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+			EntityMappingType<?> entityDescriptor) {
+		final SoftDeleteMapping<?> softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
 		final TableDetails softDeleteTable = entityDescriptor.getSoftDeleteTableDetails();
 		final CteTable dmlResultCte = new CteTable(
 				getCteTableName( softDeleteTable.getTableName() ),

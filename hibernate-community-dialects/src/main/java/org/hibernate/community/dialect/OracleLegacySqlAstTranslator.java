@@ -259,7 +259,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		final EntityIdentifierMapping identifierMappingForLockingWrapper = identifierMappingForLockingWrapper( querySpec );
+		final EntityIdentifierMapping<?, ?, ?> identifierMappingForLockingWrapper = identifierMappingForLockingWrapper( querySpec );
 		final Expression offsetExpression;
 		final Expression fetchExpression;
 		final FetchClauseType fetchClauseType;
@@ -296,7 +296,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			Expression offsetExpression,
 			Expression fetchExpression,
 			FetchClauseType fetchClauseType,
-			EntityIdentifierMapping identifierMappingForLockingWrapper) {
+			EntityIdentifierMapping<?, ?, ?> identifierMappingForLockingWrapper) {
 
 		final TableGroup rootTableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		final List<ColumnReference> idColumnReferences = new ArrayList<>( identifierMappingForLockingWrapper.getJdbcTypeCount() );
@@ -307,7 +307,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				}
 		);
 		final Expression idExpression;
-		if ( identifierMappingForLockingWrapper instanceof EmbeddableValuedModelPart ) {
+		if ( identifierMappingForLockingWrapper instanceof EmbeddableValuedModelPart<?, ?, ?> ) {
 			idExpression = new SqlTuple( idColumnReferences, identifierMappingForLockingWrapper );
 		}
 		else {
@@ -342,7 +342,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		return lockingWrapper;
 	}
 
-	private EntityIdentifierMapping identifierMappingForLockingWrapper(QuerySpec querySpec) {
+	private EntityIdentifierMapping<?, ?, ?> identifierMappingForLockingWrapper(QuerySpec querySpec) {
 		// We only need a locking wrapper for very simple queries
 		if ( canApplyLockingWrapper( querySpec )
 				// There must be the need for locking in this query
@@ -355,7 +355,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				&& querySpec.getHavingClauseRestrictions() == null
 				&& !querySpec.getSelectClause().isDistinct()
 				&& !hasAggregateFunctions( querySpec ) ) {
-			return ( (EntityMappingType) querySpec.getFromClause().getRoots().get( 0 ).getModelPart() ).getIdentifierMapping();
+			return ( (EntityMappingType<?>) querySpec.getFromClause().getRoots().get( 0 ).getModelPart() ).getIdentifierMapping();
 		}
 		return null;
 	}
@@ -366,7 +366,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				// Must have a single root with no joins for an entity type
 				&& ( fromClause = querySpec.getFromClause() ).getRoots().size() == 1
 				&& !fromClause.hasJoins()
-				&& fromClause.getRoots().get( 0 ).getModelPart() instanceof EntityMappingType;
+				&& fromClause.getRoots().get( 0 ).getModelPart() instanceof EntityMappingType<?>;
 	}
 
 	private boolean needsLockingWrapper(QuerySpec querySpec) {

@@ -68,9 +68,9 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 
 	public AbstractBatchEntitySelectFetchInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping toOneMapping,
+			ToOneAttributeMapping<?> toOneMapping,
 			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
+			EntityPersister<?> concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			FetchOptions fetchOptions,
@@ -332,12 +332,12 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		return instance;
 	}
 
-	protected AttributeMapping[] getParentEntityAttributes(String attributeName) {
+	protected AttributeMapping<?, ?, ?>[] getParentEntityAttributes(String attributeName) {
 		final var entityDescriptor = owningEntityInitializer.getEntityDescriptor();
 		final int size =
 				entityDescriptor.getRootEntityDescriptor()
 						.getSubclassEntityNames().size();
-		final var parentEntityAttributes = new AttributeMapping[size];
+		final var parentEntityAttributes = new AttributeMapping<?, ?, ?>[size];
 		parentEntityAttributes[ entityDescriptor.getSubclassId() ] =
 				getParentEntityAttribute( entityDescriptor, toOneMapping, attributeName );
 		for ( var subMappingType : entityDescriptor.getSubMappingTypes() ) {
@@ -347,9 +347,9 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		return parentEntityAttributes;
 	}
 
-	protected static AttributeMapping getParentEntityAttribute(
-			EntityMappingType subMappingType,
-			ToOneAttributeMapping referencedModelPart,
+	protected static AttributeMapping<?, ?, ?> getParentEntityAttribute(
+			EntityMappingType<?> subMappingType,
+			ToOneAttributeMapping<?> referencedModelPart,
 			String attributeName) {
 		final var parentAttribute = subMappingType.findAttributeMapping( attributeName );
 		// These checks are needed to avoid setting the instance using the wrong (child's) model part or

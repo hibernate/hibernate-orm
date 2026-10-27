@@ -58,7 +58,7 @@ public class MappingModelCreationProcess {
 		return creationContext;
 	}
 
-	public EntityPersister getEntityPersister(String name) {
+	public EntityPersister<?> getEntityPersister(String name) {
 		return entityPersisterMap.get( name );
 	}
 
@@ -71,7 +71,7 @@ public class MappingModelCreationProcess {
 	 */
 	private void execute() {
 		for ( var entityPersister : entityPersisterMap.values() ) {
-			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
+			if ( entityPersister instanceof InFlightEntityMappingType<?> inFlightEntityMappingType ) {
 				inFlightEntityMappingType.linkWithSuperType( this );
 			}
 		}
@@ -79,7 +79,7 @@ public class MappingModelCreationProcess {
 		for ( var entityPersister : entityPersisterMap.values() ) {
 			currentlyProcessingRole = entityPersister.getEntityName();
 
-			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
+			if ( entityPersister instanceof InFlightEntityMappingType<?> inFlightEntityMappingType ) {
 				inFlightEntityMappingType.prepareMappingModel( this );
 			}
 		}
@@ -157,7 +157,7 @@ public class MappingModelCreationProcess {
 		}
 	}
 
-	public <T extends ModelPart> T processSubPart(
+	public <T extends ModelPart<?, ?, ?>> T processSubPart(
 			String localName,
 			SubPartMappingProducer<T> subPartMappingProducer) {
 		assert currentlyProcessingRole != null;

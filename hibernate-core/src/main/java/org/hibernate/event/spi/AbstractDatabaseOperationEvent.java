@@ -18,7 +18,7 @@ import jakarta.annotation.Nonnull;
 public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
 	private final Object entity;
 	private final Object id;
-	private final EntityPersister persister;
+	private final EntityPersister<?> persister;
 
 	/**
 	 * Constructs an event containing the pertinent information.
@@ -32,7 +32,7 @@ public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
 			@Nonnull SharedSessionContractImplementor source,
 			@Nonnull Object entity,
 			@Nullable Object id,
-			@Nonnull EntityPersister persister) {
+			@Nonnull EntityPersister<?> persister) {
 		super( source );
 		this.entity = entity;
 		this.id = id;
@@ -56,7 +56,7 @@ public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
 	/**
 	 * The persister for the entity.
 	 */
-	public @Nonnull EntityPersister getPersister() {
+	public @Nonnull EntityPersister<?> getPersister() {
 		return persister;
 	}
 }

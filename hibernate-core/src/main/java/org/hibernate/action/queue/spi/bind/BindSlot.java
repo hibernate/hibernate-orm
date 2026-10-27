@@ -30,6 +30,6 @@ public record BindSlot(
 		String columnName,
 		ParameterUsage usage,
 		int jdbcPosition,
-		JdbcMapping jdbcMapping,
+		JdbcMapping<?> jdbcMapping,
 		JdbcValueDescriptor valueDescriptor) {
 }

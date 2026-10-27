@@ -36,13 +36,13 @@ public class SybaseJtdsJsonAsStringJdbcType extends JsonAsStringJdbcType {
 	public static final SybaseJtdsJsonAsStringJdbcType JTDS_INSTANCE =
 			new SybaseJtdsJsonAsStringJdbcType( SqlTypes.NCLOB, null );
 
-	public SybaseJtdsJsonAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType embeddableMappingType) {
+	public SybaseJtdsJsonAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( ddlTypeCode, embeddableMappingType );
 	}
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new SybaseJtdsJsonAsStringJdbcType( getDdlTypeCode(), mappingType );

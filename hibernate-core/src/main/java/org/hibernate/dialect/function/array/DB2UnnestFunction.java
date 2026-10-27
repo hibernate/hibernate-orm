@@ -75,12 +75,12 @@ public class DB2UnnestFunction extends UnnestFunction {
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "lateral(select " );
-		final ModelPart elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
+		final ModelPart<?, ?, ?> elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
 		if ( elementPart == null ) {
 			sqlAppender.append( "t.*" );
 		}
 		else {
-			final BasicValuedModelPart elementMapping = elementPart.asBasicValuedModelPart();
+			final BasicValuedModelPart<?, ?, ?> elementMapping = elementPart.asBasicValuedModelPart();
 			final boolean isBoolean = elementMapping.getSingleJdbcMapping().getJdbcType().isBoolean();
 			if ( isBoolean ) {
 				sqlAppender.appendSql( "decode(" );
@@ -90,7 +90,7 @@ public class DB2UnnestFunction extends UnnestFunction {
 			sqlAppender.appendSql( "||'}','$.a['||(i.i-1)||']'" );
 			if ( isBoolean ) {
 				sqlAppender.appendSql( ')' );
-				final JdbcMapping type = elementMapping.getSingleJdbcMapping();
+				final JdbcMapping<?> type = elementMapping.getSingleJdbcMapping();
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();
 				final SessionFactoryImplementor sessionFactory = walker.getSessionFactory();
@@ -112,7 +112,7 @@ public class DB2UnnestFunction extends UnnestFunction {
 
 			sqlAppender.append( elementMapping.getSelectionExpression() );
 		}
-		final ModelPart indexPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
+		final ModelPart<?, ?, ?> indexPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
 		if ( indexPart != null ) {
 			sqlAppender.appendSql( ",i.i " );
 			sqlAppender.append( indexPart.asBasicValuedModelPart().getSelectionExpression() );

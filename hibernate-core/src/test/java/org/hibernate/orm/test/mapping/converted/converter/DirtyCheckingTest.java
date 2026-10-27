@@ -87,9 +87,9 @@ public class DirtyCheckingTest {
 
 	@Test
 	public void checkConverterMutabilityPlans(SessionFactoryScope scope) {
-		final EntityPersister persister = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(SomeEntity.class.getName());
-		final AttributeMapping numberMapping = persister.findAttributeMapping( "number" );
-		final AttributeMapping nameMapping = persister.findAttributeMapping( "name" );
+		final EntityPersister<?> persister = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(SomeEntity.class.getName());
+		final AttributeMapping<?, ?, ?> numberMapping = persister.findAttributeMapping( "number" );
+		final AttributeMapping<?, ?, ?> nameMapping = persister.findAttributeMapping( "name" );
 		assertFalse( numberMapping.getExposedMutabilityPlan().isMutable() );
 		assertTrue( nameMapping.getExposedMutabilityPlan().isMutable() );
 	}

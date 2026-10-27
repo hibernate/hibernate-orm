@@ -21,7 +21,7 @@ import org.hibernate.persister.entity.EntityPersister;
 @org.hibernate.Internal
 public class MergeCoordinatorAudit extends UpdateCoordinatorAudit {
 	public MergeCoordinatorAudit(
-			@Nonnull EntityPersister entityPersister,
+			@Nonnull EntityPersister<?> entityPersister,
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull UpdateCoordinator currentUpdateCoordinator) {
 		super( entityPersister, factory, currentUpdateCoordinator );

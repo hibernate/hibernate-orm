@@ -36,13 +36,13 @@ public class SybaseJtdsXmlAsStringJdbcType extends XmlAsStringJdbcType {
 	public static final SybaseJtdsXmlAsStringJdbcType JTDS_INSTANCE =
 			new SybaseJtdsXmlAsStringJdbcType( SqlTypes.NCLOB, null );
 
-	public SybaseJtdsXmlAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType embeddableMappingType) {
+	public SybaseJtdsXmlAsStringJdbcType(int ddlTypeCode, EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( ddlTypeCode, embeddableMappingType );
 	}
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new SybaseJtdsXmlAsStringJdbcType( getDdlTypeCode(), mappingType );

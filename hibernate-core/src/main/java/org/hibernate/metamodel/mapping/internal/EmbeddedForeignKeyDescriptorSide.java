@@ -8,14 +8,14 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddedForeignKeyDescriptorSide implements ForeignKeyDescriptor.Side {
+public class EmbeddedForeignKeyDescriptorSide<J, M, R> implements ForeignKeyDescriptor.Side {
 
 	private final ForeignKeyDescriptor.Nature nature;
-	private final EmbeddableValuedModelPart modelPart;
+	private final EmbeddableValuedModelPart<J, M, R> modelPart;
 
 	public EmbeddedForeignKeyDescriptorSide(
 			ForeignKeyDescriptor.Nature nature,
-			EmbeddableValuedModelPart modelPart) {
+			EmbeddableValuedModelPart<J, M, R> modelPart) {
 		this.nature = nature;
 		this.modelPart = modelPart;
 	}
@@ -28,7 +28,7 @@ public class EmbeddedForeignKeyDescriptorSide implements ForeignKeyDescriptor.Si
 
 	@Nonnull
 	@Override
-	public EmbeddableValuedModelPart getModelPart() {
+	public EmbeddableValuedModelPart<J, M, R> getModelPart() {
 		return modelPart;
 	}
 }

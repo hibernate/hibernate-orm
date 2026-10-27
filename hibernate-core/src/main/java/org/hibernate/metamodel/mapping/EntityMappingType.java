@@ -33,7 +33,6 @@ import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableReference;
 import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;
@@ -54,9 +53,9 @@ import static java.lang.String.format;
  *
  * @author Steve Ebersole
  */
-public interface EntityMappingType
-		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminable,
-		SoftDeletableModelPart {
+public interface EntityMappingType<J>
+		extends ManagedMappingType<J, J, J>, EntityValuedModelPart<J>, Loadable<J, J, J>, Restrictable, Discriminable,
+		SoftDeletableModelPart<J, J, J> {
 
 	@Nonnull
 	@Override
@@ -120,25 +119,25 @@ public interface EntityMappingType
 
 	@Nonnull
 	@Override
-	default EntityMappingType findContainingEntityMapping() {
+	default EntityMappingType<?> findContainingEntityMapping() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	default JavaType<?> getJavaType() {
+	default JavaType<J> getJavaType() {
 		return getMappedJavaType();
 	}
 
 	@Nonnull
 	@Override
-	default EntityMappingType asEntityMappingType() {
+	default EntityMappingType<J> asEntityMappingType() {
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	default MappingType getPartMappingType() {
+	default MappingType<J> getPartMappingType() {
 		return this;
 	}
 
@@ -156,12 +155,12 @@ public interface EntityMappingType
 
 	@Nullable
 	@Override
-	default ModelPart findSubPart(@Nonnull String name) {
+	default ModelPart<?, ?, ?> findSubPart(@Nonnull String name) {
 		return findSubPart( name, null );
 	}
 
 	@Nullable
-	default ModelPart findSubTypesSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	default ModelPart<?, ?, ?> findSubTypesSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		return findSubPart( name, treatTargetType );
 	}
 
@@ -199,7 +198,7 @@ public interface EntityMappingType
 	 * is driven by mapping.
 	 */
 	@Nullable
-	default EntityMappingType getSuperMappingType() {
+	default EntityMappingType<?> getSuperMappingType() {
 		return null;
 	}
 
@@ -218,10 +217,10 @@ public interface EntityMappingType
 	 * Retrieve mappings for all subtypes
 	 */
 	@Nonnull
-	default Collection<EntityMappingType> getSubMappingTypes() {
+	default Collection<EntityMappingType<?>> getSubMappingTypes() {
 		final var mappingMetamodel = getEntityPersister().getFactory().getMappingMetamodel();
 		final var subclassEntityNames = getSubclassEntityNames();
-		final List<EntityMappingType> mappingTypes = new ArrayList<>( subclassEntityNames.size() );
+		final List<EntityMappingType<?>> mappingTypes = new ArrayList<>( subclassEntityNames.size() );
 		for ( String subclassEntityName : subclassEntityNames ) {
 			mappingTypes.add( mappingMetamodel.getEntityDescriptor( subclassEntityName ) );
 		}
@@ -232,7 +231,7 @@ public interface EntityMappingType
 	 * Whether the passed entity mapping is the same as or is a supertype of
 	 * this entity mapping
 	 */
-	default boolean isTypeOrSuperType(@Nullable EntityMappingType targetType) {
+	default boolean isTypeOrSuperType(@Nullable EntityMappingType<?> targetType) {
 		return targetType == this;
 	}
 
@@ -242,8 +241,8 @@ public interface EntityMappingType
 	 *
 	 * @see #isTypeOrSuperType(EntityMappingType)
 	 */
-	default boolean isTypeOrSuperType(@Nullable ManagedMappingType targetType) {
-		if ( targetType instanceof EntityMappingType entityMappingType ) {
+	default boolean isTypeOrSuperType(@Nullable ManagedMappingType<?, ?, ?> targetType) {
+		if ( targetType instanceof EntityMappingType<?> entityMappingType ) {
 			return isTypeOrSuperType( entityMappingType );
 		}
 
@@ -287,7 +286,7 @@ public interface EntityMappingType
 	}
 
 	@Nonnull
-	default EntityMappingType getRootEntityDescriptor() {
+	default EntityMappingType<?> getRootEntityDescriptor() {
 		final var superMappingType = getSuperMappingType();
 		return superMappingType == null
 				? this
@@ -330,14 +329,14 @@ public interface EntityMappingType
 	 * entity mappings within an inheritance hierarchy.
 	 */
 	@Nonnull
-	EntityIdentifierMapping getIdentifierMapping();
+	EntityIdentifierMapping<?, ?, ?> getIdentifierMapping();
 
 	/**
 	 * Mapping details for the entity's identifier.  This is shared across all
 	 * entity mappings within an inheritance hierarchy.
 	 */
 	@Nonnull
-	default EntityIdentifierMapping getIdentifierMappingForJoin() {
+	default EntityIdentifierMapping<?, ?, ?> getIdentifierMappingForJoin() {
 		return getIdentifierMapping();
 	}
 
@@ -346,7 +345,7 @@ public interface EntityMappingType
 	 * entity mappings within an inheritance hierarchy.
 	 */
 	@Nullable
-	EntityDiscriminatorMapping getDiscriminatorMapping();
+	EntityDiscriminatorMapping<?> getDiscriminatorMapping();
 
 	/**
 	 * Returns {@code true} if this entity type's hierarchy is configured to return
@@ -371,7 +370,7 @@ public interface EntityMappingType
 	 */
 	@Nonnull
 	@Incubating(since = "5.4")
-	default EntityMappingType resolveConcreteProxyTypeForId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
+	default EntityMappingType<?> resolveConcreteProxyTypeForId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		return this;
 	}
 
@@ -388,7 +387,7 @@ public interface EntityMappingType
 	 * @see #optimisticLockStyle
 	 */
 	@Nullable
-	EntityVersionMapping getVersionMapping();
+	EntityVersionMapping<?> getVersionMapping();
 
 	/**
 	 * Tenant metadata, or {@code null} for entities without a tenant id.
@@ -409,10 +408,10 @@ public interface EntityMappingType
 	/**
 	 * The mapping for the natural-id of the entity, if one is defined
 	 */
-	@Nullable NaturalIdMapping getNaturalIdMapping();
+	@Nullable NaturalIdMapping<?, ?, ?> getNaturalIdMapping();
 
 	@Nonnull
-	default NaturalIdMapping requireNaturalIdMapping() {
+	default NaturalIdMapping<?, ?, ?> requireNaturalIdMapping() {
 		final var mapping = getNaturalIdMapping();
 		if ( mapping == null ) {
 			throw new HibernateException( format( "Entity %s does not specify a natural id", getEntityName() ) );
@@ -424,14 +423,14 @@ public interface EntityMappingType
 	 * The mapping for the row-id of the entity, if one is defined.
 	 */
 	@Nullable
-	EntityRowIdMapping getRowIdMapping();
+	EntityRowIdMapping<Object> getRowIdMapping();
 
 	/**
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
 	@Nullable
 	@Incubating(since = "5.4")
-	default SoftDeleteMapping getSoftDeleteMapping() {
+	default SoftDeleteMapping<?> getSoftDeleteMapping() {
 		return null;
 	}
 
@@ -493,7 +492,7 @@ public interface EntityMappingType
 	 * @see #getAttributeMappings()
 	 */
 	@Override
-	default void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping> action) {
+	default void forEachAttributeMapping(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		getAttributeMappings().forEach( action );
 	}
 
@@ -503,7 +502,7 @@ public interface EntityMappingType
 	 */
 	@Nonnull
 	@Override
-	default AttributeMapping getAttributeMapping(int position) {
+	default AttributeMapping<?, ?, ?> getAttributeMapping(int position) {
 		return getEntityPersister().getAttributeMapping( position );
 	}
 
@@ -512,7 +511,7 @@ public interface EntityMappingType
 	 * subs), by name
 	 */
 	@Nullable
-	AttributeMapping findDeclaredAttributeMapping(@Nonnull String name);
+	AttributeMapping<?, ?, ?> findDeclaredAttributeMapping(@Nonnull String name);
 
 	/**
 	 * Get the number of attributes defined on this entity mapping - do not access
@@ -531,27 +530,27 @@ public interface EntityMappingType
 	/**
 	 * Visit attributes defined on this class - do not visit attributes defined on the super
 	 */
-	void visitDeclaredAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action);
+	void visitDeclaredAttributeMappings(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action);
 
 	/**
 	 * Visit the mappings, but limited to just attributes defined
 	 * in the targetType or its super-type(s) if any.
 	 */
-	default void visitAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
+	default void visitAttributeMappings(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		getAttributeMappings().forEach( action );
 	}
 
 	/**
 	 * Walk this type's attributes as well as its subtypes
 	 */
-	default void visitSubTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
+	default void visitSubTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		// by default do nothing
 	}
 
 	/**
 	 * Walk this type's attributes as well as its super-type's
 	 */
-	default void visitSuperTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping> action) {
+	default void visitSuperTypeAttributeMappings(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		// by default do nothing
 	}
 
@@ -684,7 +683,7 @@ public interface EntityMappingType
 
 	@Nonnull
 	@Override
-	default JavaType<?> getMappedJavaType() {
+	default JavaType<J> getMappedJavaType() {
 		return getEntityPersister().getMappedJavaType();
 	}
 
@@ -695,7 +694,7 @@ public interface EntityMappingType
 
 	@Nonnull
 	@Override
-	default Fetchable getFetchable(int position) {
+	default AttributeMapping<?, ?, ?> getFetchable(int position) {
 		return getEntityPersister().getFetchable( position );
 	}
 
@@ -766,7 +765,7 @@ public interface EntityMappingType
 	// todo (6.0) : look to remove need for this.  at the very least, move it to an SPI contract
 	@Nonnull
 	@Internal
-	EntityPersister getEntityPersister();
+	EntityPersister<J> getEntityPersister();
 
 	@Nonnull
 	@Override

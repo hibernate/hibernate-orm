@@ -82,7 +82,7 @@ public class SQLServerJsonObjectFunction extends JsonObjectFunction {
 
 	@Override
 	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
-		final JdbcMapping jdbcMapping = ((Expression) value).getExpressionType().getSingleJdbcMapping();
+		final JdbcMapping<?> jdbcMapping = ((Expression) value).getExpressionType().getSingleJdbcMapping();
 		final boolean isBoolean = ExpressionTypeHelper.isBoolean( value );
 		if ( isBoolean ) {
 			sqlAppender.appendSql( "cast(" );

@@ -39,7 +39,7 @@ public class ReferenceCacheTest {
 
 	@Test
 	public void testUseOfDirectReferencesInCache(SessionFactoryScope scope) {
-		EntityPersister persister = scope.getSessionFactory().getMappingMetamodel()
+		EntityPersister<?> persister = scope.getSessionFactory().getMappingMetamodel()
 				.getEntityDescriptor( MyReferenceData.class );
 		assertFalse( persister.isMutable() );
 		assertTrue( persister.buildCacheEntry( new Object(), new Object[0], null, null ).isReferenceEntry() );

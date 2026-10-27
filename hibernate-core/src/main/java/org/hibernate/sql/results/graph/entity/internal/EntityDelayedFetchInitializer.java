@@ -46,7 +46,7 @@ public class EntityDelayedFetchInitializer
 	private final InitializerParent<?> parent;
 	private final NavigablePath navigablePath;
 	private final boolean isPartOfKey;
-	private final ToOneAttributeMapping referencedModelPart;
+	private final ToOneAttributeMapping<?> referencedModelPart;
 	private final boolean selectByUniqueKey;
 	private final DomainResultAssembler<?> identifierAssembler;
 	private final @Nullable BasicResultAssembler<?> discriminatorAssembler;
@@ -65,7 +65,7 @@ public class EntityDelayedFetchInitializer
 	public EntityDelayedFetchInitializer(
 			InitializerParent<?> parent,
 			NavigablePath fetchedNavigable,
-			ToOneAttributeMapping referencedModelPart,
+			ToOneAttributeMapping<?> referencedModelPart,
 			boolean selectByUniqueKey,
 			DomainResult<?> keyResult,
 			@Nullable BasicFetch<?> discriminatorResult,
@@ -117,7 +117,7 @@ public class EntityDelayedFetchInitializer
 	}
 
 	@Override
-	public ModelPart getInitializedPart() {
+	public ModelPart<?, ?, ?> getInitializedPart() {
 		return referencedModelPart;
 	}
 
@@ -152,7 +152,7 @@ public class EntityDelayedFetchInitializer
 			}
 			else {
 				final var entityPersister = getEntityDescriptor();
-				final EntityPersister concreteDescriptor;
+				final EntityPersister<?> concreteDescriptor;
 				if ( discriminatorAssembler != null ) {
 					concreteDescriptor = determineConcreteEntityDescriptor(
 							rowProcessingState,
@@ -181,7 +181,7 @@ public class EntityDelayedFetchInitializer
 	protected void initialize(
 			EntityDelayedFetchInitializerData data,
 			@Nullable EntityKey entityKey,
-			EntityPersister concreteDescriptor) {
+			EntityPersister<?> concreteDescriptor) {
 		if ( selectByUniqueKey ) {
 			data.setInstance( instanceWithUniqueKey( data, concreteDescriptor ) );
 		}
@@ -192,7 +192,7 @@ public class EntityDelayedFetchInitializer
 
 	private Object instanceWithId(
 			EntityDelayedFetchInitializerData data,
-			EntityPersister concreteDescriptor,
+			EntityPersister<?> concreteDescriptor,
 			EntityKey entityKey) {
 		final var rowProcessingState = data.getRowProcessingState();
 		final var session = rowProcessingState.getSession();
@@ -230,7 +230,7 @@ public class EntityDelayedFetchInitializer
 
 	private Object instanceWithUniqueKey(
 			EntityDelayedFetchInitializerData data,
-			EntityPersister concreteDescriptor) {
+			EntityPersister<?> concreteDescriptor) {
 		final var rowProcessingState = data.getRowProcessingState();
 		final var session = rowProcessingState.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
@@ -297,7 +297,7 @@ public class EntityDelayedFetchInitializer
 	}
 
 	private Type getUniqueKeyPropertyType(
-			EntityPersister concreteDescriptor,
+			EntityPersister<?> concreteDescriptor,
 			SharedSessionContractImplementor session,
 			String uniqueKeyPropertyName) {
 		return referencedModelPart.getReferencedPropertyName() == null
@@ -382,7 +382,7 @@ public class EntityDelayedFetchInitializer
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor() {
+	public EntityPersister<?> getEntityDescriptor() {
 		return referencedModelPart.getEntityMappingType().getEntityPersister();
 	}
 
@@ -412,7 +412,7 @@ public class EntityDelayedFetchInitializer
 	}
 
 	@Override
-	public EntityPersister getConcreteDescriptor(EntityDelayedFetchInitializerData data) {
+	public EntityPersister<?> getConcreteDescriptor(EntityDelayedFetchInitializerData data) {
 		return getEntityDescriptor();
 	}
 

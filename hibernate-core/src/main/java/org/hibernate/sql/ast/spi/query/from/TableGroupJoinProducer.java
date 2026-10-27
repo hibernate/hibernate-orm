@@ -13,7 +13,7 @@ import jakarta.annotation.Nullable;
 /**
  * @author Steve Ebersole
  */
-public interface TableGroupJoinProducer extends TableGroupProducer {
+public interface TableGroupJoinProducer<J, M, R> extends TableGroupProducer<J, M, R> {
 
 	SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup);
 

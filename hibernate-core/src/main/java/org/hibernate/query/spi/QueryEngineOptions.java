@@ -99,7 +99,7 @@ public interface QueryEngineOptions {
 	 */
 	@Nullable
 	SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(
-			@Nonnull EntityMappingType rootEntityDescriptor,
+			@Nonnull EntityMappingType<?> rootEntityDescriptor,
 			@Nonnull RuntimeModelCreationContext creationContext);
 
 	/**
@@ -110,7 +110,7 @@ public interface QueryEngineOptions {
 	 */
 	@Nullable
 	SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(
-			@Nonnull EntityMappingType rootEntityDescriptor,
+			@Nonnull EntityMappingType<?> rootEntityDescriptor,
 			@Nonnull RuntimeModelCreationContext creationContext);
 
 	/**

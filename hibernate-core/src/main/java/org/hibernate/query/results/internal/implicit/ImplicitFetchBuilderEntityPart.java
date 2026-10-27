@@ -15,9 +15,9 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 public class ImplicitFetchBuilderEntityPart implements ImplicitFetchBuilder {
 	private final NavigablePath fetchPath;
-	private final EntityCollectionPart fetchable;
+	private final EntityCollectionPart<?> fetchable;
 
-	public ImplicitFetchBuilderEntityPart(NavigablePath fetchPath, EntityCollectionPart fetchable) {
+	public ImplicitFetchBuilderEntityPart(NavigablePath fetchPath, EntityCollectionPart<?> fetchable) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
 	}

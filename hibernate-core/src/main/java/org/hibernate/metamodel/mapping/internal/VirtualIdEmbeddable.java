@@ -1,10 +1,11 @@
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.type.descriptor.java.JavaType;
+
 import jakarta.annotation.Nonnull;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
@@ -30,15 +31,25 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 /**
  * Embeddable describing the virtual-id aspect of a non-aggregated composite id
  */
-public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements IdentifierValueMapper {
+public class VirtualIdEmbeddable<J> extends AbstractEmbeddableMapping<J, J, J> implements IdentifierValueMapper<J> {
+	@Override
+	public JavaType<J> getJavaType() {
+		return getMappedJavaType();
+	}
+
+	@Override
+	public JavaType<J> getMappedJavaType() {
+		return representationStrategy.getMappedJavaType();
+	}
+
 	private final NavigableRole navigableRole;
-	private final NonAggregatedIdentifierMapping idMapping;
-	private final VirtualIdRepresentationStrategy representationStrategy;
+	private final NonAggregatedIdentifierMapping<J, ?> idMapping;
+	private final VirtualIdRepresentationStrategy<J> representationStrategy;
 
 	public VirtualIdEmbeddable(
 			Component virtualIdSource,
-			NonAggregatedIdentifierMapping idMapping,
-			EntityPersister identifiedEntityMapping,
+			NonAggregatedIdentifierMapping<J, ?> idMapping,
+			EntityPersister<J> identifiedEntityMapping,
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
@@ -46,7 +57,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 		this.idMapping = idMapping;
 		navigableRole = castNonNull( idMapping.getNavigableRole() );
-		representationStrategy = new VirtualIdRepresentationStrategy(
+		representationStrategy = new VirtualIdRepresentationStrategy<>(
 				this,
 				identifiedEntityMapping,
 				virtualIdSource,
@@ -71,15 +82,15 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	public VirtualIdEmbeddable(
-			EmbeddedAttributeMapping valueMapping,
-			TableGroupProducer declaringTableGroupProducer,
+			EmbeddedAttributeMapping<?, ?> valueMapping,
+			TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
-			VirtualIdEmbeddable inverseMappingType,
+			VirtualIdEmbeddable<J> inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
 		super( inverseMappingType.attributeMappings.size() );
 
 		this.navigableRole = inverseMappingType.getNavigableRole();
-		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;
+		this.idMapping = (NonAggregatedIdentifierMapping<J, ?>) valueMapping;
 		this.representationStrategy = inverseMappingType.representationStrategy;
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
@@ -99,7 +110,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 	@Nonnull
 	@Override
-	public EmbeddableValuedModelPart getEmbeddedPart() {
+	public EmbeddableValuedModelPart<?, ?, ?> getEmbeddedPart() {
 		return idMapping;
 	}
 
@@ -134,25 +145,25 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 	@Nonnull
 	@Override
-	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
+	public EmbeddableValuedModelPart<?, ?, ?> getEmbeddedValueMapping() {
 		return getEmbeddedPart();
 	}
 
 	@Nonnull
 	@Override
-	public VirtualIdRepresentationStrategy getRepresentationStrategy() {
+	public VirtualIdRepresentationStrategy<J> getRepresentationStrategy() {
 		return representationStrategy;
 	}
 
 	@Nullable
 	@Override
-	public EntityMappingType findContainingEntityMapping() {
+	public EntityMappingType<?> findContainingEntityMapping() {
 		return idMapping.findContainingEntityMapping();
 	}
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nullable String resultVariable, @Nonnull DomainResultCreationState creationState) {
+	public DomainResult<J> createDomainResult(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nullable String resultVariable, @Nonnull DomainResultCreationState creationState) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -187,12 +198,12 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 	@Nonnull
 	@Override
-	public EmbeddableMappingType createInverseMappingType(
-			@Nonnull EmbeddedAttributeMapping valueMapping,
-			@Nonnull TableGroupProducer declaringTableGroupProducer,
+	public VirtualIdEmbeddable<J> createInverseMappingType(
+			@Nonnull EmbeddedAttributeMapping<?, ?> valueMapping,
+			@Nonnull TableGroupProducer<?, ?, ?> declaringTableGroupProducer,
 			@Nonnull SelectableMappings selectableMappings,
 			@Nonnull MappingModelCreationProcess creationProcess) {
-		return new VirtualIdEmbeddable(
+		return new VirtualIdEmbeddable<>(
 				valueMapping,
 				declaringTableGroupProducer,
 				selectableMappings,

@@ -59,7 +59,7 @@ public final class ExecuteWithTemporaryTableHelper {
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		final var mutatingTableGroup = sqmConverter.getMutatingTableGroup();
-		final var mutatingEntityDescriptor = (EntityMappingType) mutatingTableGroup.getModelPart();
+		final var mutatingEntityDescriptor = (EntityMappingType<?>) mutatingTableGroup.getModelPart();
 
 		final var idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
@@ -168,7 +168,7 @@ public final class ExecuteWithTemporaryTableHelper {
 	public static QuerySpec createIdTableSelectQuerySpec(
 			TemporaryTable idTable,
 			JdbcParameter sessionUidParameter,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			ExecutionContext executionContext) {
 		return createIdTableSelectQuerySpec(
 				idTable,
@@ -181,9 +181,9 @@ public final class ExecuteWithTemporaryTableHelper {
 
 	public static QuerySpec createIdTableSelectQuerySpec(
 			TemporaryTable idTable,
-			ModelPart fkModelPart,
+			ModelPart<?, ?, ?> fkModelPart,
 			JdbcParameter sessionUidParameter,
-			EntityMappingType entityDescriptor,
+			EntityMappingType<?> entityDescriptor,
 			ExecutionContext executionContext) {
 		final var querySpec = new QuerySpec( false );
 
@@ -214,8 +214,8 @@ public final class ExecuteWithTemporaryTableHelper {
 			QuerySpec querySpec,
 			TableReference tableReference,
 			TemporaryTable idTable,
-			ModelPart fkModelPart,
-			EntityMappingType entityDescriptor) {
+			ModelPart<?, ?, ?> fkModelPart,
+			EntityMappingType<?> entityDescriptor) {
 		if ( fkModelPart == null ) {
 			final int size = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 			for ( int i = 0; i < size; i++ ) {

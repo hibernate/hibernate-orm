@@ -57,7 +57,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 
 	@Nonnull
 	@Override
-	public EntityPersister createEntityPersister(
+	public EntityPersister<?> createEntityPersister(
 			@Nonnull PersistentClass entityBinding,
 			@Nullable EntityDataAccess entityCacheAccessStrategy,
 			@Nullable NaturalIdDataAccess naturalIdCacheAccessStrategy,
@@ -101,7 +101,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	}
 
 	@Nonnull
-	private Constructor<? extends EntityPersister> resolveEntityPersisterConstructor(@Nonnull Class<? extends EntityPersister> persisterClass) {
+	private Constructor<? extends EntityPersister<?>> resolveEntityPersisterConstructor(@Nonnull Class<? extends EntityPersister<?>> persisterClass) {
 		try {
 			return persisterClass.getConstructor( ENTITY_PERSISTER_CONSTRUCTOR_ARGS );
 		}

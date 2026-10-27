@@ -1285,7 +1285,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 						// We only care about mappedBy one-to-many associations, because for these,
 						// the elements depend on the collection owner
 						if ( pluralAttributeMapping.getCollectionDescriptor().isOneToMany()
-								&& pluralAttributeMapping.getElementDescriptor() instanceof EntityCollectionPart ) {
+								&& pluralAttributeMapping.getElementDescriptor() instanceof EntityCollectionPart<?> ) {
 							final var elementsIterator = collectionType.getElementsIterator( value );
 							while ( elementsIterator.hasNext() ) {
 								final Object element = elementsIterator.next();

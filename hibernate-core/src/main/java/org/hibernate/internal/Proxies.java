@@ -14,7 +14,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 class Proxies {
 
-	static boolean hasProxyFactory(EntityPersister persister) {
+	static boolean hasProxyFactory(EntityPersister<?> persister) {
 		return persister.getRepresentationStrategy().getProxyFactory() != null;
 	}
 
@@ -45,7 +45,7 @@ class Proxies {
 	static Object narrowProxy(
 			Object proxy,
 			PersistenceContext persistenceContext,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			EntityKey entityKey) {
 		SESSION_LOGGER.entityProxyFoundInSessionCache();
 		if ( SESSION_LOGGER.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {

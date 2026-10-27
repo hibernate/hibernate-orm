@@ -52,22 +52,22 @@ public class EmbeddableAccessTests {
 	@Test
 	public void verifyRuntimeModel(SessionFactoryScope scope) {
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
-		final EntityMappingType personDescriptor = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( Person.class );
+		final EntityMappingType<?> personDescriptor = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( Person.class );
 
 		// Both embeddables inherit Person's FIELD access despite PROPERTY overrides
 		// on the embedding attributes, so their attribute names are first and last.
-		final EmbeddableMappingType nameEmbeddable = ( (EmbeddedAttributeMapping) personDescriptor.findAttributeMapping( "name" ) ).getEmbeddableTypeDescriptor();
+		final EmbeddableMappingType<?, ?, ?> nameEmbeddable = ( (EmbeddedAttributeMapping<?, ?>) personDescriptor.findAttributeMapping( "name" ) ).getEmbeddableTypeDescriptor();
 		assertThat( nameEmbeddable.getNumberOfAttributeMappings() ).isEqualTo( 2 );
-		final AttributeMapping nameFirst = nameEmbeddable.getAttributeMapping( 0 );
-		final AttributeMapping nameLast = nameEmbeddable.getAttributeMapping( 1 );
+		final AttributeMapping<?, ?, ?> nameFirst = nameEmbeddable.getAttributeMapping( 0 );
+		final AttributeMapping<?, ?, ?> nameLast = nameEmbeddable.getAttributeMapping( 1 );
 		assertThat( nameFirst.getAttributeName() ).isEqualTo( "first" );
 		assertThat( nameLast.getAttributeName() ).isEqualTo( "last" );
 
-		final PluralAttributeMapping aliasesAttribute = (PluralAttributeMapping) personDescriptor.findAttributeMapping( "aliases" );
-		final EmbeddableMappingType aliasEmbeddable = ( (EmbeddedCollectionPart) aliasesAttribute.getElementDescriptor() ).getEmbeddableTypeDescriptor();
+		final PluralAttributeMapping<?> aliasesAttribute = (PluralAttributeMapping<?>) personDescriptor.findAttributeMapping( "aliases" );
+		final EmbeddableMappingType<?, ?, ?> aliasEmbeddable = ( (EmbeddedCollectionPart<?>) aliasesAttribute.getElementDescriptor() ).getEmbeddableTypeDescriptor();
 		assertThat( aliasEmbeddable.getNumberOfAttributeMappings() ).isEqualTo( 2 );
-		final AttributeMapping aliasFirst = aliasEmbeddable.getAttributeMapping( 0 );
-		final AttributeMapping aliasLast = aliasEmbeddable.getAttributeMapping( 1 );
+		final AttributeMapping<?, ?, ?> aliasFirst = aliasEmbeddable.getAttributeMapping( 0 );
+		final AttributeMapping<?, ?, ?> aliasLast = aliasEmbeddable.getAttributeMapping( 1 );
 		assertThat( aliasFirst.getAttributeName() ).isEqualTo( "first" );
 		assertThat( aliasLast.getAttributeName() ).isEqualTo( "last" );
 	}

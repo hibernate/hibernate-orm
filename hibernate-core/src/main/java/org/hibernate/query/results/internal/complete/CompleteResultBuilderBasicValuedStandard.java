@@ -29,12 +29,12 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 
 	private final String explicitColumnName;
 
-	private final BasicValuedMapping explicitType;
+	private final BasicValuedMapping<?> explicitType;
 	private final JavaType<?> explicitJavaType;
 
 	public CompleteResultBuilderBasicValuedStandard(
 			String explicitColumnName,
-			BasicValuedMapping explicitType,
+			BasicValuedMapping<?> explicitType,
 			JavaType<?> explicitJavaType) {
 		assert explicitType == null
 			|| explicitType.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass()
@@ -99,7 +99,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		);
 	}
 
-	private BasicValuedMapping basicType(
+	private BasicValuedMapping<?> basicType(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int jdbcPosition,
 			TypeConfiguration typeConfiguration) {

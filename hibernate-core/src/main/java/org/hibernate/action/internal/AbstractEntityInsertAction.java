@@ -47,7 +47,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			@Nullable Object id,
 			@Nonnull Object[] state,
 			@Nonnull Object instance,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EventSource session) {
 		super( session, id, instance, persister );
 		assert state != null;
@@ -204,7 +204,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	}
 
 	private void visitEmbeddedAttributeMapping(
-			@Nonnull EmbeddedAttributeMapping attributeMapping,
+			@Nonnull EmbeddedAttributeMapping<?, ?> attributeMapping,
 			@Nullable Object object,
 			@Nonnull PersistenceContext persistenceContext) {
 		if ( object != null ) {
@@ -235,7 +235,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	}
 
 	private void addCollectionKey(
-			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nonnull PluralAttributeMapping<?> pluralAttributeMapping,
 			@Nullable Object object,
 			@Nonnull PersistenceContext persistenceContext) {
 		if ( object instanceof PersistentCollection ) {

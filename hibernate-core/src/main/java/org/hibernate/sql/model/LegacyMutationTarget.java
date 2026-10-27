@@ -32,7 +32,7 @@ public interface LegacyMutationTarget<T extends TableMapping>
 	/**
 	 * The ModelPart describing the mutation target
 	 */
-	ModelPartContainer getTargetPart();
+	ModelPartContainer<?, ?, ?> getTargetPart();
 
 	/**
 	 * Visit each mutable (non-inverse) table.

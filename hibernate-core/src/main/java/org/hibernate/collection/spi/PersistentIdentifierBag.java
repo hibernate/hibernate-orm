@@ -607,7 +607,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 		//TODO: if we are using identity columns, fetch the identifier
 	}
 
-	public void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingState) {
+	public void injectLoadedState(PluralAttributeMapping<?> attributeMapping, List<?> loadingState) {
 		assert identifiers == null;
 		assert collection == null;
 

@@ -20,9 +20,9 @@ public class UnaryOperation implements Expression, DomainResultProducer {
 	private final UnaryArithmeticOperator operator;
 
 	private final Expression operand;
-	private final BasicValuedMapping type;
+	private final BasicValuedMapping<?> type;
 
-	public UnaryOperation(UnaryArithmeticOperator operator, Expression operand, BasicValuedMapping type) {
+	public UnaryOperation(UnaryArithmeticOperator operator, Expression operand, BasicValuedMapping<?> type) {
 		this.operator = operator;
 		this.operand = operand;
 		this.type = type;
@@ -37,7 +37,7 @@ public class UnaryOperation implements Expression, DomainResultProducer {
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return type;
 	}
 

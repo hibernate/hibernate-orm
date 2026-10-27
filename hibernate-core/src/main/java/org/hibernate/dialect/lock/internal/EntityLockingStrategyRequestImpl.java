@@ -18,13 +18,13 @@ import org.hibernate.persister.entity.EntityPersister;
 /// @author Steve Ebersole
 @Internal
 public final class EntityLockingStrategyRequestImpl implements EntityLockingStrategyRequest {
-	private final EntityPersister persister;
+	private final EntityPersister<?> persister;
 	private final EntityLockTarget target;
 	private final LockMode lockMode;
 	private final PessimisticLockScope lockScope;
 
 	public EntityLockingStrategyRequestImpl(
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			LockMode lockMode,
 			PessimisticLockScope lockScope) {
 		this.persister = Objects.requireNonNull( persister, "Entity locking target persister must not be null" );

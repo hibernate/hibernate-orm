@@ -18,13 +18,13 @@ public class MariaDBCastingJsonJdbcType extends JsonJdbcType {
 	 */
 	public static final JsonJdbcType INSTANCE = new MariaDBCastingJsonJdbcType( null );
 
-	public MariaDBCastingJsonJdbcType(EmbeddableMappingType embeddableMappingType) {
+	public MariaDBCastingJsonJdbcType(EmbeddableMappingType<?, ?, ?> embeddableMappingType) {
 		super( embeddableMappingType );
 	}
 
 	@Override
 	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
+			EmbeddableMappingType<?, ?, ?> mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new MariaDBCastingJsonJdbcType( mappingType );

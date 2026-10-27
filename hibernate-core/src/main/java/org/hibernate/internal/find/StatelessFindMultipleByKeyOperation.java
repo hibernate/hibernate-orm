@@ -26,7 +26,7 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 	private final StatelessLoadAccessContext loadAccessContext;
 
 	public StatelessFindMultipleByKeyOperation(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nonnull StatelessLoadAccessContext loadAccessContext,
 			@Nullable LockOptions defaultLockOptions,
 			@Nullable CacheMode defaultCacheMode,

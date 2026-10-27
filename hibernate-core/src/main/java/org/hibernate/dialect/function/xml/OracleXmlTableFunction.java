@@ -44,7 +44,7 @@ public class OracleXmlTableFunction extends XmlTableFunction {
 
 	private static class OracleXmlTableSetReturningFunctionTypeResolver extends XmlTableSetReturningFunctionTypeResolver {
 		@Override
-		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping type, SqmToSqlAstConverter converter) {
+		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping<?> type, SqmToSqlAstConverter converter) {
 			if ( isEncodedBoolean( type ) ) {
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();

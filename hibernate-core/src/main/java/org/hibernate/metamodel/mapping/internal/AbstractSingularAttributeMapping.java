@@ -16,9 +16,9 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSingularAttributeMapping
-		extends AbstractStateArrayContributorMapping
-		implements SingularAttributeMapping {
+public abstract class AbstractSingularAttributeMapping<J, M, R>
+		extends AbstractStateArrayContributorMapping<J, M, R>
+		implements SingularAttributeMapping<J, M, R> {
 
 	public AbstractSingularAttributeMapping(
 			@Nullable String name,
@@ -26,7 +26,7 @@ public abstract class AbstractSingularAttributeMapping
 			int fetchableIndex,
 			@Nullable AttributeMetadata attributeMetadata,
 			FetchOptions mappedFetchOptions,
-			@Nullable ManagedMappingType declaringType,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable PropertyAccess propertyAccess) {
 		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, fetchableIndex, declaringType, propertyAccess );
 	}
@@ -38,7 +38,7 @@ public abstract class AbstractSingularAttributeMapping
 			@Nullable AttributeMetadata attributeMetadata,
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
-			@Nullable ManagedMappingType declaringType,
+			@Nullable ManagedMappingType<?, ?, ?> declaringType,
 			@Nullable PropertyAccess propertyAccess) {
 		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType, propertyAccess );
 	}
@@ -46,7 +46,7 @@ public abstract class AbstractSingularAttributeMapping
 	/**
 	 * For Hibernate Reactive
 	 */
-	protected AbstractSingularAttributeMapping( AbstractSingularAttributeMapping original ) {
+	protected AbstractSingularAttributeMapping( AbstractSingularAttributeMapping<J, M, R> original ) {
 		super( original );
 	}
 

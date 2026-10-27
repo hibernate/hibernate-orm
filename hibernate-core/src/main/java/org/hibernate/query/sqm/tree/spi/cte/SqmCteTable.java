@@ -57,19 +57,19 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	}
 
 	@Override
-	public CteTupleTableGroupProducer resolveTableGroupProducer(
+	public CteTupleTableGroupProducer<?> resolveTableGroupProducer(
 			String aliasStem,
 			List<SqlSelection> sqlSelections,
 			FromClauseAccess fromClauseAccess) {
-		return new CteTupleTableGroupProducer( this, aliasStem, toSqlTypedMappings( this, sqlSelections ), fromClauseAccess );
+		return new CteTupleTableGroupProducer<>( this, aliasStem, toSqlTypedMappings( this, sqlSelections ), fromClauseAccess );
 	}
 
 	@Override
-	public CteTupleTableGroupProducer resolveTableGroupProducer(
+	public CteTupleTableGroupProducer<?> resolveTableGroupProducer(
 			String aliasStem,
 			SqlTypedMapping[] sqlTypedMappings,
 			FromClauseAccess fromClauseAccess) {
-		return new CteTupleTableGroupProducer( this, aliasStem, sqlTypedMappings, fromClauseAccess );
+		return new CteTupleTableGroupProducer<>( this, aliasStem, sqlTypedMappings, fromClauseAccess );
 	}
 
 	public String getCteName() {

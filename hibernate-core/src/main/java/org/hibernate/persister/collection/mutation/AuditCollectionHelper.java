@@ -151,7 +151,7 @@ public final class AuditCollectionHelper {
 		}
 
 		final var elementDescriptor = attributeMapping.getElementDescriptor();
-		if ( elementDescriptor instanceof OneToManyCollectionPart oneToMany ) {
+		if ( elementDescriptor instanceof OneToManyCollectionPart<?> oneToMany ) {
 			// For @OneToMany @JoinColumn, the middle audit table stores the child entity's ID,
 			// not the FK columns (which are the element's selectables for OneToManyCollectionPart)
 			oneToMany.getAssociatedEntityMappingType().getIdentifierMapping().forEachInsertable( insertBuilder );
@@ -200,7 +200,7 @@ public final class AuditCollectionHelper {
 		}
 
 		final var elementDescriptor = attributeMapping.getElementDescriptor();
-		if ( elementDescriptor instanceof OneToManyCollectionPart oneToMany ) {
+		if ( elementDescriptor instanceof OneToManyCollectionPart<?> oneToMany ) {
 			oneToMany.getAssociatedEntityMappingType()
 					.getIdentifierMapping()
 					.forEachSelectable( (index, selectable) -> updateBuilder.addKeyRestrictionBinding( selectable ) );

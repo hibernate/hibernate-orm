@@ -29,10 +29,10 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	private BasicFetch<?> discriminatorFetch;
 	private DomainResult<Object> rowIdResult;
 	private @Nullable DomainResult<?> auditChangesetIdResult;
-	private final EntityValuedModelPart fetchContainer;
+	private final EntityValuedModelPart<?> fetchContainer;
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
-	public AbstractEntityResultGraphNode(EntityValuedModelPart referencedModelPart, NavigablePath navigablePath) {
+	public AbstractEntityResultGraphNode(EntityValuedModelPart<?> referencedModelPart, NavigablePath navigablePath) {
 		super( navigablePath );
 		this.fetchContainer = referencedModelPart;
 	}
@@ -123,17 +123,17 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	}
 
 	@Override
-	public EntityMappingType getReferencedMappingContainer() {
+	public EntityMappingType<?> getReferencedMappingContainer() {
 		return getEntityValuedModelPart().getEntityMappingType();
 	}
 
 	@Override
-	public EntityValuedModelPart getEntityValuedModelPart() {
+	public EntityValuedModelPart<?> getEntityValuedModelPart() {
 		return this.fetchContainer;
 	}
 
 	@Override
-	public FetchableContainer getFetchContainer() {
+	public FetchableContainer<?, ?, ?> getFetchContainer() {
 		return this.fetchContainer;
 	}
 

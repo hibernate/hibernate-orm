@@ -51,9 +51,9 @@ public class FilterImplSerializationTest {
 
 	private static FilterDefinition buildDefinition() {
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
-		final JdbcMapping mapping =
+		final JdbcMapping<?> mapping =
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
-		final Map<String, JdbcMapping> paramMappings = new HashMap<>();
+		final Map<String, JdbcMapping<?>> paramMappings = new HashMap<>();
 		paramMappings.put( "param", mapping );
 		return new FilterDefinition( "testFilter", "col = :param", paramMappings );
 	}

@@ -41,7 +41,7 @@ public class EmbeddableDiscriminatorValueDetailsImpl implements DiscriminatorVal
 
 	@Nonnull
 	@Override
-	public EntityMappingType getIndicatedEntity() {
+	public EntityMappingType<?> getIndicatedEntity() {
 		throw new UnsupportedOperationException();
 	}
 }

@@ -32,8 +32,8 @@ public class SchemaSubstitutionTests {
 	@DomainModel( annotatedClasses = Thing.class )
 	void testWithSchema(DomainModelScope modelScope) {
 		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) modelScope.getDomainModel().buildSessionFactory()) {
-			final EntityPersister persister = sessionFactory.getMappingMetamodel().getEntityDescriptor( Thing.class );
-			final AttributeMapping attributeMapping = persister.findAttributeMapping( "externalName" );
+			final EntityPersister<?> persister = sessionFactory.getMappingMetamodel().getEntityDescriptor( Thing.class );
+			final AttributeMapping<?, ?, ?> attributeMapping = persister.findAttributeMapping( "externalName" );
 			verifyFormula( attributeMapping, true );
 		}
 	}
@@ -43,13 +43,13 @@ public class SchemaSubstitutionTests {
 	@DomainModel( annotatedClasses = Thing.class )
 	void testWithoutSchema(DomainModelScope modelScope) {
 		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) modelScope.getDomainModel().buildSessionFactory()) {
-			final EntityPersister persister = sessionFactory.getMappingMetamodel().getEntityDescriptor( Thing.class );
-			final AttributeMapping attributeMapping = persister.findAttributeMapping( "externalName" );
+			final EntityPersister<?> persister = sessionFactory.getMappingMetamodel().getEntityDescriptor( Thing.class );
+			final AttributeMapping<?, ?, ?> attributeMapping = persister.findAttributeMapping( "externalName" );
 			verifyFormula( attributeMapping, false );
 		}
 	}
 
-	private void verifyFormula(AttributeMapping attributeMapping, boolean expectSchema) {
+	private void verifyFormula(AttributeMapping<?, ?, ?> attributeMapping, boolean expectSchema) {
 		final SelectableMapping selectable = attributeMapping.getSelectable( 0 );
 		assertThat( selectable.isFormula() ).isTrue();
 		assertThat( selectable.getSelectionExpression() ).doesNotContain( "{h-schema}" );

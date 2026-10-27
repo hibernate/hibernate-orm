@@ -35,7 +35,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 	private final MutationOperationGroup transactionEndUpdateGroup;
 	private final EntityAuditSupport entityAuditSupport;
 
-	protected AbstractAuditCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
+	protected AbstractAuditCoordinator(@Nonnull EntityPersister<?> entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 		this.entityAuditSupport = new EntityAuditSupport( entityPersister, factory );
 		this.auditedPropertyMask = entityAuditSupport.getAuditedPropertyMask();

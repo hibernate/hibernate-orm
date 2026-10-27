@@ -449,7 +449,7 @@ public class PersistenceUnitOverridesTests {
 			assertThat( emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect() )
 					.isInstanceOf( IntegrationDialect.class );
 
-			final EntityPersister entityMapping = emf.unwrap( SessionFactoryImplementor.class )
+			final EntityPersister<?> entityMapping = emf.unwrap( SessionFactoryImplementor.class )
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( MappedEntity.class );

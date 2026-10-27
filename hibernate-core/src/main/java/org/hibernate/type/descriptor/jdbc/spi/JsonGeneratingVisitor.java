@@ -68,7 +68,7 @@ public class JsonGeneratingVisitor {
 			Object values,
 			WrapperOptions options,
 			JsonDocumentWriter writer) {
-		final EmbeddableMappingType embeddableMappingType = elementJdbcType.getEmbeddableMappingType();
+		final EmbeddableMappingType<?, ?, ?> embeddableMappingType = elementJdbcType.getEmbeddableMappingType();
 		if ( values.getClass().isArray() ) {
 			final var length = Array.getLength( values );
 			for ( int j = 0; j < length; j++ ) {
@@ -132,17 +132,17 @@ public class JsonGeneratingVisitor {
 		}
 	}
 
-	public void visit(MappingType mappedType, Object value, WrapperOptions options, JsonDocumentWriter writer)
+	public void visit(MappingType<?> mappedType, Object value, WrapperOptions options, JsonDocumentWriter writer)
 			throws IOException {
 		if ( handleNullOrLazy( value, writer ) ) {
 			// nothing left to do
 			return;
 		}
 
-		if ( mappedType instanceof EntityMappingType entityType ) {
+		if ( mappedType instanceof EntityMappingType<?> entityType ) {
 			serializeEntity( value, entityType, options, writer );
 		}
-		else if ( mappedType instanceof ManagedMappingType managedMappingType ) {
+		else if ( mappedType instanceof ManagedMappingType<?, ?, ?> managedMappingType ) {
 			serializeObject( managedMappingType, value, options, writer );
 		}
 		else if ( mappedType instanceof BasicType<?> basicType ) {
@@ -211,7 +211,7 @@ public class JsonGeneratingVisitor {
 	 * @param writer the document writer
 	 * @throws IOException if the underlying writer failed to serialize a mpped value or failed to perform need I/O.
 	 */
-	private void serializeObject(ManagedMappingType managedMappingType, Object value, WrapperOptions options, JsonDocumentWriter writer)
+	private void serializeObject(ManagedMappingType<?, ?, ?> managedMappingType, Object value, WrapperOptions options, JsonDocumentWriter writer)
 			throws IOException {
 		writer.startObject();
 		serializeObjectValues( managedMappingType, value, options, writer );
@@ -228,18 +228,18 @@ public class JsonGeneratingVisitor {
 	 * @throws IOException if an error occurred while writing to an underlying writer
 	 * @see #serializeObject(ManagedMappingType, Object, WrapperOptions, JsonDocumentWriter)
 	 */
-	protected void serializeObjectValues(ManagedMappingType managedMappingType, Object object, WrapperOptions options, JsonDocumentWriter writer)
+	protected void serializeObjectValues(ManagedMappingType<?, ?, ?> managedMappingType, Object object, WrapperOptions options, JsonDocumentWriter writer)
 			throws IOException {
 		final Object[] values = managedMappingType.getValues( object );
 		for ( int i = 0; i < values.length; i++ ) {
-			final ValuedModelPart subPart = getSubPart( managedMappingType, i );
+			final ValuedModelPart<?, ?, ?> subPart = getSubPart( managedMappingType, i );
 			final Object value = values[i];
 			serializeModelPart( subPart, value, options, writer );
 		}
 	}
 
 	protected void serializeModelPart(
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			Object value,
 			WrapperOptions options,
 			JsonDocumentWriter writer) throws IOException {
@@ -247,9 +247,9 @@ public class JsonGeneratingVisitor {
 			writer.objectKey( selectableMapping.getSelectableName() );
 			visit( modelPart.getMappedType(), value, options, writer );
 		}
-		else if ( modelPart instanceof EmbeddedAttributeMapping embeddedAttribute ) {
+		else if ( modelPart instanceof EmbeddedAttributeMapping<?, ?> embeddedAttribute ) {
 			if ( value != null ) {
-				final EmbeddableMappingType mappingType = embeddedAttribute.getMappedType();
+				final EmbeddableMappingType<?, ?, ?> mappingType = embeddedAttribute.getMappedType();
 				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
 				if ( aggregateMapping == null ) {
 					serializeObjectValues( mappingType, value, options, writer );
@@ -272,21 +272,21 @@ public class JsonGeneratingVisitor {
 
 	protected void serializeEntity(
 			Object value,
-			EntityMappingType entityType,
+			EntityMappingType<?> entityType,
 			WrapperOptions options,
 			JsonDocumentWriter writer) throws IOException {
 		// We only need the identifier here
-		final EntityIdentifierMapping identifierMapping = entityType.getIdentifierMapping();
+		final EntityIdentifierMapping<?, ?, ?> identifierMapping = entityType.getIdentifierMapping();
 		serializeEntityIdentifier( value, identifierMapping, options, writer );
 	}
 
 	protected void serializeEntityIdentifier(
 			Object value,
-			EntityIdentifierMapping identifierMapping,
+			EntityIdentifierMapping<?, ?, ?> identifierMapping,
 			WrapperOptions options,
 			JsonDocumentWriter writer) throws IOException {
 		final Object identifier = identifierMapping.getIdentifier( value );
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping singleAttribute ) {
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping<?, ?, ?> singleAttribute ) {
 			writer.serializeJsonValue(
 					identifier,
 					singleAttribute.getJavaType(),
@@ -294,7 +294,7 @@ public class JsonGeneratingVisitor {
 					options
 			);
 		}
-		else if ( identifier instanceof CompositeIdentifierMapping composite ) {
+		else if ( identifier instanceof CompositeIdentifierMapping<?, ?, ?> composite ) {
 			visit( composite.getMappedType(), identifier, options, writer );
 		}
 		else {

@@ -121,7 +121,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	}
 
 	@Nonnull
-	private MutationOperationGroup buildOperationGroup(@Nonnull EntityPersister elementPersister) {
+	private MutationOperationGroup buildOperationGroup(@Nonnull EntityPersister<?> elementPersister) {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 

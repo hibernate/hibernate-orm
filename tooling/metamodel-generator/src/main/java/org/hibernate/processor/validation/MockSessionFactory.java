@@ -157,7 +157,7 @@ public abstract class MockSessionFactory
 
 	private final TypeConfiguration typeConfiguration;
 
-	private final Map<String,MockEntityPersister> entityPersistersByName = new HashMap<>();
+	private final Map<String,MockEntityPersister<?>> entityPersistersByName = new HashMap<>();
 	private final Map<String,MockCollectionPersister> collectionPersistersByName = new HashMap<>();
 
 	private final StandardServiceRegistryImpl serviceRegistry;
@@ -311,7 +311,7 @@ public abstract class MockSessionFactory
 	/**
 	 * Lazily create a {@link MockEntityPersister}
 	 */
-	abstract MockEntityPersister createMockEntityPersister(String entityName);
+	abstract MockEntityPersister<?> createMockEntityPersister(String entityName);
 
 	/**
 	 * Lazily create a {@link MockCollectionPersister}
@@ -344,7 +344,7 @@ public abstract class MockSessionFactory
 
 	protected abstract String getSupertype(String entityName);
 
-	private EntityPersister createEntityPersister(String entityName) {
+	private EntityPersister<?> createEntityPersister(String entityName) {
 		var result = entityPersistersByName.get(entityName);
 		if (result!=null) {
 			return result;
@@ -364,7 +364,7 @@ public abstract class MockSessionFactory
 		return result;
 	}
 
-	List<MockEntityPersister> getMockEntityPersisters() {
+	List<MockEntityPersister<?>> getMockEntityPersisters() {
 		return entityPersistersByName.values()
 				.stream()
 				.filter(Objects::nonNull)
@@ -811,7 +811,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public EntityPersister getEntityDescriptor(String entityName) {
+		public EntityPersister<?> getEntityDescriptor(String entityName) {
 			return createEntityPersister(entityName);
 		}
 
@@ -831,7 +831,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public EntityPersister findEntityDescriptor(String entityName) {
+		public EntityPersister<?> findEntityDescriptor(String entityName) {
 			return createEntityPersister(entityName);
 		}
 
@@ -1100,7 +1100,7 @@ public abstract class MockSessionFactory
 			if (superattribute != null) {
 				return (SqmPathSource<?>) superattribute;
 			}
-			for (Map.Entry<String, MockEntityPersister> entry : entityPersistersByName.entrySet()) {
+			for (Map.Entry<String, MockEntityPersister<?>> entry : entityPersistersByName.entrySet()) {
 				final var entityPersister = entry.getValue();
 				if (!entityPersister.getEntityName().equals(getHibernateEntityName())
 						&& isSubtype(entityPersister.getEntityName(), getHibernateEntityName())) {
@@ -1183,7 +1183,7 @@ public abstract class MockSessionFactory
 					name,
 					AttributeClassification.BASIC,
 					(SqmDomainType<?>) type,
-					type instanceof JdbcMapping jdbcMapping
+					type instanceof JdbcMapping<?> jdbcMapping
 							? jdbcMapping.getJavaTypeDescriptor()
 							: null,
 					null,

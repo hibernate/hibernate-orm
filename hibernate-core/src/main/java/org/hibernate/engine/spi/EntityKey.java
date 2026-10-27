@@ -33,7 +33,7 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 
 	private final Object identifier;
 	private final int hashCode;
-	private final EntityPersister persister;
+	private final EntityPersister<?> persister;
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
@@ -46,14 +46,14 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 	 * @param id The entity id
 	 * @param persister The entity persister
 	 */
-	public EntityKey(@Nullable Object id, EntityPersister persister) {
+	public EntityKey(@Nullable Object id, EntityPersister<?> persister) {
 		this( id, persister, 0 );
 	}
 
 	/**
 	 * @param changesetIdHashCode hash code contribution from the changeset identifier
 	 */
-	EntityKey(@Nullable Object id, EntityPersister persister, int changesetIdHashCode) {
+	EntityKey(@Nullable Object id, EntityPersister<?> persister, int changesetIdHashCode) {
 		this.persister = persister;
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier (" + persister.getEntityName() + ")" );
@@ -62,7 +62,7 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 		this.hashCode = generateHashCode( id, persister, changesetIdHashCode );
 	}
 
-	private static int generateHashCode(Object id, EntityPersister persister, int changesetIdHashCode) {
+	private static int generateHashCode(Object id, EntityPersister<?> persister, int changesetIdHashCode) {
 		int result = 17;
 		final String rootEntityName = persister.getRootEntityName();
 		result = 37 * result + rootEntityName.hashCode();
@@ -88,7 +88,7 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 		return persister.getEntityName();
 	}
 
-	public EntityPersister getPersister() {
+	public EntityPersister<?> getPersister() {
 		return persister;
 	}
 
@@ -187,7 +187,7 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 		final Object id = ois.readObject();
 		final String entityName = (String) ois.readObject();
 		final Object changesetId = ois.readObject();
-		final EntityPersister entityPersister =
+		final EntityPersister<?> entityPersister =
 				sessionFactory.getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		return changesetId != null

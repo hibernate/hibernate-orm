@@ -18,7 +18,7 @@ import static org.hibernate.engine.internal.CacheHelper.addBasicValueToCacheKey;
  * @author Steve Ebersole
  */
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
-public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
+public interface BasicValuedMapping<J> extends ValueMapping<J>, SqlExpressible {
 
 	@Override
 	default int getJdbcTypeCount() {
@@ -27,7 +27,7 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 
 	@Nonnull
 	@Override
-	default JdbcMapping getJdbcMapping(int index) {
+	default JdbcMapping<?> getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );
 		}
@@ -36,12 +36,12 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 
 	@Nonnull
 	@Override
-	default JdbcMapping getSingleJdbcMapping() {
+	default JdbcMapping<?> getSingleJdbcMapping() {
 		return getJdbcMapping();
 	}
 
 	@Nonnull
-	JdbcMapping getJdbcMapping();
+	JdbcMapping<?> getJdbcMapping();
 
 	@Nullable
 	@Override

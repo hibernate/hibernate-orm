@@ -36,7 +36,7 @@ public class DB2JsonValueFunction extends JsonValueFunction {
 			JsonValueArguments arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		final JdbcMapping jdbcMapping = arguments.returningType() != null
+		final JdbcMapping<?> jdbcMapping = arguments.returningType() != null
 				? arguments.returningType().getJdbcMapping()
 				: null;
 		final int sqlTypeCode = jdbcMapping != null
@@ -49,7 +49,7 @@ public class DB2JsonValueFunction extends JsonValueFunction {
 				sqlAppender.append( "decode(" );
 				super.render( sqlAppender, arguments, returnType, walker );
 
-				final JdbcMapping type = arguments.returningType().getJdbcMapping();
+				final JdbcMapping<?> type = arguments.returningType().getJdbcMapping();
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();
 				final SessionFactoryImplementor sessionFactory = walker.getSessionFactory();
@@ -92,7 +92,7 @@ public class DB2JsonValueFunction extends JsonValueFunction {
 	@Override
 	protected void renderReturningClause(SqlAppender sqlAppender, JsonValueArguments arguments, SqlAstTranslator<?> walker) {
 		if ( arguments.returningType() != null ) {
-			final JdbcMapping jdbcMapping = arguments.returningType().getJdbcMapping();
+			final JdbcMapping<?> jdbcMapping = arguments.returningType().getJdbcMapping();
 			final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 			// No return type for booleans (handled via decode), UUID, binary types (handled via hextoraw),
 			// or timestamp types (handled via special casting)

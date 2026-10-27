@@ -123,7 +123,7 @@ public class TestLazyPropertyOnPreUpdate {
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) throws Exception {
 		UPDATE_IN_PRE_UPDATE = false;
-		EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( EntityWithCallback.class );
+		EntityPersister<?> ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( EntityWithCallback.class );
 		assertTrue( ep.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() );
 
 

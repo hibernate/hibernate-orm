@@ -36,7 +36,7 @@ public class GenericClassMappingTest {
 	void testImplicitMapping(SessionFactoryScope scope) {
 		final var entity = scope.getSessionFactory().getMappingMetamodel()
 				.getEntityDescriptor( GenericEntity.class );
-		final var attribute = (BasicAttributeMapping) entity.findAttributeMapping( "clazz" );
+		final var attribute = (BasicAttributeMapping<?>) entity.findAttributeMapping( "clazz" );
 		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory().getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		assertSame( Class.class, attribute.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() );

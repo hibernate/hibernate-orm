@@ -87,9 +87,9 @@ public class OptionalTableUpdate
 	}
 
 	@Override
-	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
+	public void forEachParameter(Consumer<ColumnValueParameter<?>> consumer) {
 		final BiConsumer<Integer,ColumnValueBinding> intermediateConsumer = (index, binding) -> {
-			for ( ColumnValueParameter parameter : binding.getValueExpression().getParameters() ) {
+			for ( ColumnValueParameter<?> parameter : binding.getValueExpression().getParameters() ) {
 				consumer.accept( parameter );
 			}
 		};

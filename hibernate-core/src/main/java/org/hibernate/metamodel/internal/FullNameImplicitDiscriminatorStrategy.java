@@ -15,12 +15,12 @@ public class FullNameImplicitDiscriminatorStrategy implements ImplicitDiscrimina
 	public static final FullNameImplicitDiscriminatorStrategy FULL_NAME_STRATEGY = new FullNameImplicitDiscriminatorStrategy();
 
 	@Override
-	public Object toDiscriminatorValue(EntityMappingType entityMapping, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel) {
+	public Object toDiscriminatorValue(EntityMappingType<?> entityMapping, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel) {
 		return entityMapping.getEntityName();
 	}
 
 	@Override
-	public EntityMappingType toEntityMapping(Object discriminatorValue, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel) {
+	public EntityMappingType<?> toEntityMapping(Object discriminatorValue, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel) {
 		if ( discriminatorValue instanceof String assumedEntityName ) {
 			final var persister = mappingModel.findEntityDescriptor( assumedEntityName );
 			if ( persister != null ) {

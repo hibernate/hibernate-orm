@@ -31,5 +31,5 @@ public interface LegacyFetchBuilder extends FetchBuilder {
 	@Override
 	LegacyFetchBuilder cacheKeyInstance();
 
-	Fetchable getFetchable();
+	Fetchable<?, ?, ?> getFetchable();
 }

@@ -44,7 +44,7 @@ public class OrderByFragmentTranslator {
 	 */
 	public static OrderByFragment translate(
 			String fragment,
-			PluralAttributeMapping pluralAttributeMapping,
+			PluralAttributeMapping<?> pluralAttributeMapping,
 			TranslationContext context) {
 		final var parseTree = buildParseTree( fragment );
 		final var visitor = new ParseTreeVisitor( pluralAttributeMapping, context );

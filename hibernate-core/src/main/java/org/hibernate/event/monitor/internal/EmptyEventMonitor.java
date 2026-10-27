@@ -121,7 +121,7 @@ public final class EmptyEventMonitor implements EventMonitor {
 			@Nullable DiagnosticEvent cachePutEvent,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean cacheContentChanged,
 			@Nonnull CacheActionDescription description) {
 
@@ -132,7 +132,7 @@ public final class EmptyEventMonitor implements EventMonitor {
 			@Nullable DiagnosticEvent cachePutEvent,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean cacheContentChanged,
 			boolean isNatualId,
 			@Nonnull CacheActionDescription description) {
@@ -169,7 +169,7 @@ public final class EmptyEventMonitor implements EventMonitor {
 			@Nullable DiagnosticEvent cacheGetEvent,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull Region region,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			boolean isNaturalKey,
 			boolean hit) {
 
@@ -219,7 +219,7 @@ public final class EmptyEventMonitor implements EventMonitor {
 	public void completeDirtyCalculationEvent(
 			@Nullable DiagnosticEvent dirtyCalculationEvent,
 			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull EntityPersister persister,
+			@Nonnull EntityPersister<?> persister,
 			@Nonnull EntityEntry entry,
 			@Nullable int[] dirtyProperties) {
 

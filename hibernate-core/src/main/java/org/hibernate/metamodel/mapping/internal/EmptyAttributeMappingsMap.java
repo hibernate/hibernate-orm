@@ -15,7 +15,7 @@ public final class EmptyAttributeMappingsMap implements AttributeMappingsMap {
 	public static final EmptyAttributeMappingsMap INSTANCE = new EmptyAttributeMappingsMap();
 
 	@Override
-	public void forEachValue(@Nonnull Consumer<? super AttributeMapping> action) {
+	public void forEachValue(@Nonnull Consumer<? super AttributeMapping<?, ?, ?>> action) {
 		//no-op
 	}
 
@@ -26,13 +26,13 @@ public final class EmptyAttributeMappingsMap implements AttributeMappingsMap {
 
 	@Nullable
 	@Override
-	public AttributeMapping get(@Nonnull String name) {
+	public AttributeMapping<?, ?, ?> get(@Nonnull String name) {
 		return null;
 	}
 
 	@Nonnull
 	@Override
-	public Iterable<AttributeMapping> valueIterator() {
+	public Iterable<AttributeMapping<?, ?, ?>> valueIterator() {
 		return emptyList();
 	}
 

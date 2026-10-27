@@ -25,7 +25,7 @@ public class NaturalIdCacheKeyCreationTests {
 	@Test
 	public void testSimpleKeyCreation(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final EntityPersister entityDescriptor = session
+			final EntityPersister<?> entityDescriptor = session
 					.getFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
@@ -40,7 +40,7 @@ public class NaturalIdCacheKeyCreationTests {
 	@Test
 	public void testDefaultKeyCreation(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final EntityPersister entityDescriptor = session
+			final EntityPersister<?> entityDescriptor = session
 					.getFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()

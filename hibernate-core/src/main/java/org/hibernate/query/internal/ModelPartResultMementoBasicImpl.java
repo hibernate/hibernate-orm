@@ -15,12 +15,12 @@ import java.util.function.Consumer;
  */
 public class ModelPartResultMementoBasicImpl implements ModelPartResultMementoBasic {
 	private final NavigablePath navigablePath;
-	private final BasicValuedModelPart modelPart;
+	private final BasicValuedModelPart<?, ?, ?> modelPart;
 	private final String columnName;
 
 	public ModelPartResultMementoBasicImpl(
 			NavigablePath navigablePath,
-			BasicValuedModelPart modelPart,
+			BasicValuedModelPart<?, ?, ?> modelPart,
 			String columnName) {
 		this.navigablePath = navigablePath;
 		this.modelPart = modelPart;

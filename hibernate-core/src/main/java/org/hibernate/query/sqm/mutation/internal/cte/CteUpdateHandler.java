@@ -76,11 +76,11 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 			SessionFactoryImplementor factory) {
 		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
 		final SqmUpdateStatement<?> updateStatement = (SqmUpdateStatement<?>) getSqmStatement();
-		final EntityMappingType entityDescriptor = getEntityDescriptor();
+		final EntityMappingType<?> entityDescriptor = getEntityDescriptor();
 
-		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
+		final EntityPersister<?> entityPersister = entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
-		final EntityPersister rootEntityDescriptor =
+		final EntityPersister<?> rootEntityDescriptor =
 				factory.getMappingMetamodel()
 						.getEntityDescriptor( rootEntityName );
 

@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class DetachedCollectionDomainResult<T> implements DomainResult<T>, FetchParent {
 	private final NavigablePath loadingPath;
-	private final PluralAttributeMapping loadingAttribute;
+	private final PluralAttributeMapping<?> loadingAttribute;
 	private final String resultVariable;
 	private final CollectionPart.Nature selectedPartNature;
 	private final JavaType<?> resultJavaType;
@@ -35,7 +35,7 @@ public class DetachedCollectionDomainResult<T> implements DomainResult<T>, Fetch
 
 	public DetachedCollectionDomainResult(
 			NavigablePath loadingPath,
-			PluralAttributeMapping loadingAttribute,
+			PluralAttributeMapping<?> loadingAttribute,
 			String resultVariable,
 			TableGroup ownerTableGroup,
 			CollectionPart.Nature selectedPartNature,
@@ -97,12 +97,12 @@ public class DetachedCollectionDomainResult<T> implements DomainResult<T>, Fetch
 	}
 
 	@Override
-	public FetchableContainer getReferencedMappingContainer() {
+	public FetchableContainer<?, ?, ?> getReferencedMappingContainer() {
 		return loadingAttribute;
 	}
 
 	@Override
-	public FetchableContainer getReferencedMappingType() {
+	public FetchableContainer<?, ?, ?> getReferencedMappingType() {
 		return loadingAttribute;
 	}
 
@@ -112,7 +112,7 @@ public class DetachedCollectionDomainResult<T> implements DomainResult<T>, Fetch
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(Fetchable<?, ?, ?> fetchable) {
 		return null;
 	}
 

@@ -34,7 +34,7 @@ public class SimpleConvertsAnnotationTest {
 
 	@Test
 	public void testSimpleConvertsUsage(SessionFactoryScope scope) {
-		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
+		final EntityPersister<?> ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
 		final Type websitePropertyType = ep.getPropertyType( "website" );
 		final ConvertedBasicTypeImpl type = assertTyping(
 				ConvertedBasicTypeImpl.class,

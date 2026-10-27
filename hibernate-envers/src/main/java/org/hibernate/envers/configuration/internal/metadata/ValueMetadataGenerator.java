@@ -96,7 +96,7 @@ public class ValueMetadataGenerator extends AbstractMetadataGenerator {
 		final Type type = value.getType();
 		propertyAuditingData.setPropertyAccessStrategy( propertyAccessStrategy );
 
-		if ( type instanceof BasicType ) {
+		if ( type instanceof BasicType<?> ) {
 			basicMetadataGenerator.addBasic(
 					attributeContainer,
 					propertyAuditingData,

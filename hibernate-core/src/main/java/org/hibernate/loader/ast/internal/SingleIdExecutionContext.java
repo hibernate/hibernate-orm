@@ -19,7 +19,7 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 	@Nullable
 	private final Object entityInstance;
 	private final Object entityId;
-	private final EntityMappingType rootEntityDescriptor;
+	private final EntityMappingType<?> rootEntityDescriptor;
 	@Nullable
 	private final Boolean readOnly;
 	private final LockOptions lockOptions;
@@ -28,7 +28,7 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 	public SingleIdExecutionContext(
 			@Nonnull Object entityId,
 			@Nullable Object entityInstance,
-			@Nonnull EntityMappingType rootEntityDescriptor,
+			@Nonnull EntityMappingType<?> rootEntityDescriptor,
 			@Nullable Boolean readOnly,
 			@Nonnull LockOptions lockOptions,
 			@Nonnull SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler,
@@ -56,7 +56,7 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 
 	@Nonnull
 	@Override
-	public EntityMappingType getRootEntityDescriptor() {
+	public EntityMappingType<?> getRootEntityDescriptor() {
 		return rootEntityDescriptor;
 	}
 

@@ -32,7 +32,7 @@ public final class Versioning {
 	 * @param session The originating session
 	 * @return The initial optimistic locking value
 	 */
-	public static Object seed(EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
+	public static Object seed(EntityVersionMapping<?> versionMapping, SharedSessionContractImplementor session) {
 		final Object seed = versionMapping.getJavaType().seed(
 				versionMapping.getLength(),
 				versionMapping.getTemporalPrecision() != null
@@ -61,7 +61,7 @@ public final class Versioning {
 	public static boolean seedVersion(
 			Object entity,
 			Object[] fields,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SharedSessionContractImplementor session) {
 		final int versionProperty = persister.getVersionPropertyIndex();
 		final Object initialVersion = fields[versionProperty];
@@ -105,7 +105,7 @@ public final class Versioning {
 	public static Object incrementVersion(
 			Object entity,
 			Object currentVersion,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			SharedSessionContractImplementor session) {
 		return persister.getVersionGenerator().generate( session, entity, currentVersion, UPDATE );
 	}
@@ -119,7 +119,7 @@ public final class Versioning {
 	 * @param session The originating session
 	 * @return The incremented optimistic locking value.
 	 */
-	public static Object increment(Object version, EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
+	public static Object increment(Object version, EntityVersionMapping<?> versionMapping, SharedSessionContractImplementor session) {
 		@SuppressWarnings("unchecked")
 		final var versionType =
 				(VersionJavaType<Object>) // Unsafe cast
@@ -144,7 +144,7 @@ public final class Versioning {
 	 * @param version The optimistic locking value
 	 * @param persister The entity persister
 	 */
-	public static void setVersion(Object[] fields, Object version, EntityPersister persister) {
+	public static void setVersion(Object[] fields, Object version, EntityPersister<?> persister) {
 		if ( persister.isVersioned() ) {
 			fields[ persister.getVersionPropertyIndex() ] = version;
 		}
@@ -157,7 +157,7 @@ public final class Versioning {
 	 * @param persister The entity persister
 	 * @return The extracted optimistic locking value
 	 */
-	public static Object getVersion(Object[] fields, EntityPersister persister) {
+	public static Object getVersion(Object[] fields, EntityPersister<?> persister) {
 		return persister.isVersioned() ? fields[persister.getVersionPropertyIndex()] : null;
 	}
 

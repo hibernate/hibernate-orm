@@ -43,8 +43,8 @@ public class SqlFunction
 					}
 
 					@Override
-					public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
-						final BasicValuedMapping impliedType = impliedTypeAccess.get();
+					public BasicValuedMapping<?> resolveFunctionReturnType(Supplier<BasicValuedMapping<?>> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+						final BasicValuedMapping<?> impliedType = impliedTypeAccess.get();
 						return impliedType != null ? impliedType : JavaObjectType.INSTANCE;
 					}
 				},

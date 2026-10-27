@@ -104,7 +104,7 @@ public class FlushCoordinator {
 	public FlushCoordinator(
 			ConstraintModel constraintModel,
 			PlanningOptions planningOptions,
-			Map<String, EntityPersister> entityPersistersByTable,
+			Map<String, EntityPersister<?>> entityPersistersByTable,
 			SessionImplementor session) {
 		this.constraintModel = constraintModel;
 		this.planningOptions = planningOptions;

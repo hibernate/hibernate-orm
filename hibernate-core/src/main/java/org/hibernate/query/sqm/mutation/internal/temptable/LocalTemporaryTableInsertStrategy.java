@@ -23,7 +23,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  */
 public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrategy implements SqmMultiTableInsertStrategy {
 
-	public LocalTemporaryTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+	public LocalTemporaryTableInsertStrategy(EntityMappingType<?> rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
 				rootEntityDescriptor,
 				requireLocalTemporaryTableStrategy( runtimeModelCreationContext.getDialect() ),
@@ -32,7 +32,7 @@ public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrate
 	}
 
 	private LocalTemporaryTableInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			TemporaryTableStrategy temporaryTableStrategy,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(

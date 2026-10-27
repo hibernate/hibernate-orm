@@ -29,7 +29,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  */
 public class PersistentTableMutationStrategy extends PersistentTableStrategy implements SqmMultiTableMutationStrategy {
 
-	public PersistentTableMutationStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+	public PersistentTableMutationStrategy(EntityMappingType<?> rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
 				rootEntityDescriptor,
 				runtimeModelCreationContext.getDialect().getPersistentTemporaryTableStrategy(),
@@ -38,7 +38,7 @@ public class PersistentTableMutationStrategy extends PersistentTableStrategy imp
 	}
 
 	private PersistentTableMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			TemporaryTableStrategy temporaryTableStrategy,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
@@ -91,7 +91,7 @@ public class PersistentTableMutationStrategy extends PersistentTableStrategy imp
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext context,
 			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
-		final EntityPersister rootDescriptor = context.getSession().getFactory().getMappingMetamodel()
+		final EntityPersister<?> rootDescriptor = context.getSession().getFactory().getMappingMetamodel()
 				.getEntityDescriptor( sqmDelete.getRoot().getEntityName() );
 		if ( rootDescriptor.getSoftDeleteMapping() != null ) {
 			return new TableBasedSoftDeleteHandler(

@@ -13,7 +13,7 @@ public class Star implements Expression {
 	public static final Star INSTANCE = new Star();
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return null;
 	}
 

@@ -102,7 +102,7 @@ public class XmlTableSetReturningFunctionTypeResolver implements SetReturningFun
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping type, SqmToSqlAstConverter converter) {
+	protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping<?> type, SqmToSqlAstConverter converter) {
 		selectableMappings.add( new SelectableMappingImpl(
 				"",
 				name,

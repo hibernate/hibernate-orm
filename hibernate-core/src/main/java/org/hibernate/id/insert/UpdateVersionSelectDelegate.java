@@ -36,10 +36,10 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getG
  */
 public class UpdateVersionSelectDelegate extends AbstractGeneratedValuesMutationDelegate {
 	private final EntityTableMapping tableMapping;
-	private final EntityVersionMapping versionMapping;
+	private final EntityVersionMapping<?> versionMapping;
 	private final String generatedValuesSelect;
 
-	public UpdateVersionSelectDelegate(EntityPersister persister, List<? extends ModelPart> generatedProperties) {
+	public UpdateVersionSelectDelegate(EntityPersister<?> persister, List<? extends ModelPart<?, ?, ?>> generatedProperties) {
 		super( persister, EventType.UPDATE, true, false, generatedProperties );
 		tableMapping = persister.getIdentifierTableMapping();
 		versionMapping = persister.getVersionMapping();

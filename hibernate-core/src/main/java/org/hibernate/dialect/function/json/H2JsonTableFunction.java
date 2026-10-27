@@ -811,7 +811,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 					: H2JsonValueFunction.applyJsonPath( parentReadExpression, false, true, jsonPath, null );
 		}
 
-		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, String elementReadExpression, JdbcMapping type) {
+		protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, String elementReadExpression, JdbcMapping<?> type) {
 			selectableMappings.add( new SelectableMappingImpl(
 					"",
 					name,

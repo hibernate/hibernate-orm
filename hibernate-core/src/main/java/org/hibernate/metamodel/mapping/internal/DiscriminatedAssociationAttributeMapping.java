@@ -57,17 +57,22 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  *
  * @author Steve Ebersole
  */
-public class DiscriminatedAssociationAttributeMapping
-		extends AbstractSingularAttributeMapping
-		implements DiscriminatedAssociationModelPart {
+public class DiscriminatedAssociationAttributeMapping<J>
+		extends AbstractSingularAttributeMapping<J, J, J>
+		implements DiscriminatedAssociationModelPart<J> {
+	@Override
+	public JavaType<J> getJavaType() {
+		return discriminatorMapping.getMappedJavaType();
+	}
+
 	private final NavigableRole navigableRole;
-	private final DiscriminatedAssociationMapping discriminatorMapping;
+	private final DiscriminatedAssociationMapping<J> discriminatorMapping;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public DiscriminatedAssociationAttributeMapping(
 			NavigableRole attributeRole,
-			JavaType<?> baseAssociationJtd,
-			ManagedMappingType declaringType,
+			JavaType<J> baseAssociationJtd,
+			ManagedMappingType<?, ?, ?> declaringType,
 			int stateArrayPosition,
 			int fetchableIndex,
 			AttributeMetadata attributeMetadata,
@@ -102,25 +107,25 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Nonnull
 	@Override
-	public DiscriminatorMapping getDiscriminatorMapping() {
+	public DiscriminatorMapping<?> getDiscriminatorMapping() {
 		return discriminatorMapping.getDiscriminatorMapping();
 	}
 
 	@Nonnull
 	@Override
-	public BasicValuedModelPart getKeyPart() {
+	public BasicValuedModelPart<?, ?, ?> getKeyPart() {
 		return discriminatorMapping.getKeyPart();
 	}
 
 	@Nullable
 	@Override
-	public EntityMappingType resolveDiscriminatorValue(@Nullable Object discriminatorValue) {
+	public EntityMappingType<?> resolveDiscriminatorValue(@Nullable Object discriminatorValue) {
 		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( discriminatorValue );
 	}
 
 	@Nullable
 	@Override
-	public Object resolveDiscriminatorForEntityType(@Nonnull EntityMappingType entityMappingType) {
+	public Object resolveDiscriminatorForEntityType(@Nonnull EntityMappingType<?> entityMappingType) {
 		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( entityMappingType );
 	}
 
@@ -159,7 +164,7 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Nonnull
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult<J> createDomainResult(
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull TableGroup tableGroup,
 			@Nullable String resultVariable,
@@ -179,7 +184,7 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public void applySqlSelections(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nonnull DomainResultCreationState creationState, @Nonnull BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+	public void applySqlSelections(@Nonnull NavigablePath navigablePath, @Nonnull TableGroup tableGroup, @Nonnull DomainResultCreationState creationState, @Nonnull BiConsumer<SqlSelection, JdbcMapping<?>> selectionConsumer) {
 		discriminatorMapping.getDiscriminatorMapping().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 		discriminatorMapping.getKeyPart().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
@@ -192,7 +197,7 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Nonnull
 	@Override
-	public MappingType getMappedType() {
+	public MappingType<J> getMappedType() {
 		return discriminatorMapping;
 	}
 
@@ -202,7 +207,7 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public Fetchable getFetchable(int position) {
+	public Fetchable<?, ?, ?> getFetchable(int position) {
 		return switch ( position ) {
 			case 0 -> {
 				final var discriminatorPart = getDiscriminatorMapping();
@@ -231,7 +236,7 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(final int index) {
+	public JdbcMapping<?> getJdbcMapping(final int index) {
 		return switch ( index ) {
 			case 0 -> discriminatorMapping.getDiscriminatorMapping().getJdbcMapping();
 			case 1 -> discriminatorMapping.getKeyPart().getJdbcMapping();
@@ -288,7 +293,7 @@ public class DiscriminatedAssociationAttributeMapping
 		}
 	}
 
-	private EntityMappingType determineConcreteType(Object entity, @Nullable SharedSessionContractImplementor session) {
+	private EntityMappingType<?> determineConcreteType(Object entity, @Nullable SharedSessionContractImplementor session) {
 		final String entityName =
 				session == null
 						? sessionFactory.bestGuessEntityName( entity )
@@ -306,7 +311,7 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(@Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( 0, discriminatorMapping.getDiscriminatorMapping().getJdbcMapping() );
 		action.accept( 1, discriminatorMapping.getKeyPart().getJdbcMapping() );
 		return 2;
@@ -409,37 +414,37 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		int span = getDiscriminatorMapping().forEachJdbcType( offset, action );
 		return span + getKeyPart().forEachJdbcType( offset + span, action );
 	}
 
 	@Override
-	public void visitFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	public void visitFetchables(Consumer<? super Fetchable<?, ?, ?>> fetchableConsumer, EntityMappingType<?> treatTargetType) {
 		fetchableConsumer.accept( getDiscriminatorMapping() );
 		fetchableConsumer.accept( getKeyPart() );
 	}
 
 	@Override
-	public void visitFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	public void visitFetchables(IndexedConsumer<? super Fetchable<?, ?, ?>> fetchableConsumer, EntityMappingType<?> treatTargetType) {
 		//noinspection unchecked,rawtypes
 		forEachSubPart( (IndexedConsumer) fetchableConsumer, treatTargetType );
 	}
 
 	@Nullable
 	@Override
-	public ModelPart findSubPart(@Nonnull String name, @Nullable EntityMappingType treatTargetType) {
+	public ModelPart<?, ?, ?> findSubPart(@Nonnull String name, @Nullable EntityMappingType<?> treatTargetType) {
 		return discriminatorMapping.findSubPart( name, treatTargetType );
 	}
 
 	@Override
-	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart> consumer, @Nullable EntityMappingType treatTarget) {
+	public void forEachSubPart(@Nonnull IndexedConsumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTarget) {
 		consumer.accept( 0, getDiscriminatorMapping() );
 		consumer.accept( 1, getKeyPart() );
 	}
 
 	@Override
-	public void visitSubParts(@Nonnull Consumer<ModelPart> consumer, @Nullable EntityMappingType treatTargetType) {
+	public void visitSubParts(@Nonnull Consumer<ModelPart<?, ?, ?>> consumer, @Nullable EntityMappingType<?> treatTargetType) {
 		consumer.accept( getDiscriminatorMapping() );
 		consumer.accept( getKeyPart() );
 	}

@@ -26,7 +26,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  */
 public class PersistentTableInsertStrategy extends PersistentTableStrategy implements SqmMultiTableInsertStrategy {
 
-	public PersistentTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+	public PersistentTableInsertStrategy(EntityMappingType<?> rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
 				rootEntityDescriptor,
 				runtimeModelCreationContext.getDialect().getPersistentTemporaryTableStrategy(),
@@ -35,7 +35,7 @@ public class PersistentTableInsertStrategy extends PersistentTableStrategy imple
 	}
 
 	private PersistentTableInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType<?> rootEntityDescriptor,
 			TemporaryTableStrategy temporaryTableStrategy,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(

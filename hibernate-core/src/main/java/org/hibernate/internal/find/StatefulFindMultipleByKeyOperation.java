@@ -30,7 +30,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 	private final StatefulLoadAccessContext loadAccessContext;
 
 	public StatefulFindMultipleByKeyOperation(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			@Nullable LockOptions defaultLockOptions,
 			@Nullable CacheMode defaultCacheMode,
@@ -97,7 +97,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 	/// are both also deprecated.
 	@Deprecated
 	public StatefulFindMultipleByKeyOperation(
-			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister<?> entityDescriptor,
 			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			KeyType keyType,
 			FindMultipleOption.BatchSize batchSize,

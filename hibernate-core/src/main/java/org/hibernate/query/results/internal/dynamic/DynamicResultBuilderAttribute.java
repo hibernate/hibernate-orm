@@ -25,17 +25,17 @@ import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createCol
  * @author Steve Ebersole
  */
 public class DynamicResultBuilderAttribute implements DynamicResultBuilder, NativeQuery.ReturnProperty {
-	private final BasicAttributeMapping attributeMapping;
+	private final BasicAttributeMapping<?> attributeMapping;
 	private final String columnAlias;
 	private final String entityName;
 	private final String attributePath;
 
 	public DynamicResultBuilderAttribute(
-			SingularAttributeMapping attributeMapping,
+			SingularAttributeMapping<?, ?, ?> attributeMapping,
 			String columnAlias,
 			String entityName,
 			String attributePath) {
-		final boolean allowable = attributeMapping instanceof BasicAttributeMapping;
+		final boolean allowable = attributeMapping instanceof BasicAttributeMapping<?>;
 		if ( !allowable ) {
 			throw new IllegalArgumentException(
 					String.format(
@@ -48,7 +48,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 			);
 		}
 
-		this.attributeMapping = (BasicAttributeMapping) attributeMapping;
+		this.attributeMapping = (BasicAttributeMapping<?>) attributeMapping;
 		this.columnAlias = columnAlias;
 		this.entityName = entityName;
 		this.attributePath = attributePath;

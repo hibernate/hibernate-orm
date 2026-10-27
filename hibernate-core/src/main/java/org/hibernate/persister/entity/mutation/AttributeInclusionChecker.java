@@ -10,5 +10,5 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 @FunctionalInterface
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface AttributeInclusionChecker {
-	boolean include(int position, @Nonnull SingularAttributeMapping attribute);
+	boolean include(int position, @Nonnull SingularAttributeMapping<?, ?, ?> attribute);
 }

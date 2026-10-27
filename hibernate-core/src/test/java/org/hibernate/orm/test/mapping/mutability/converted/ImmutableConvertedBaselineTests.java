@@ -49,7 +49,7 @@ public class ImmutableConvertedBaselineTests {
 	@Test
 	void verifyDomainModel(DomainModelScope domainModelScope, SessionFactoryScope sfSessionFactoryScope) {
 		final PersistentClass persistentClass = domainModelScope.getEntityBinding( TheEntity.class );
-		final EntityPersister entityDescriptor = sfSessionFactoryScope
+		final EntityPersister<?> entityDescriptor = sfSessionFactoryScope
 				.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
@@ -58,13 +58,13 @@ public class ImmutableConvertedBaselineTests {
 		// `@Immutable`
 		final Property theDateProperty = persistentClass.getProperty( "theDate" );
 		assertThat( theDateProperty.isUpdatable() ).isFalse();
-		final AttributeMapping theDateAttribute = entityDescriptor.findAttributeMapping( "theDate" );
+		final AttributeMapping<?, ?, ?> theDateAttribute = entityDescriptor.findAttributeMapping( "theDate" );
 		assertThat( theDateAttribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 
 		// `@Mutability(Immutability.class)`
 		final Property anotherDateProperty = persistentClass.getProperty( "anotherDate" );
 		assertThat( anotherDateProperty.isUpdatable() ).isTrue();
-		final AttributeMapping anotherDateAttribute = entityDescriptor.findAttributeMapping( "anotherDate" );
+		final AttributeMapping<?, ?, ?> anotherDateAttribute = entityDescriptor.findAttributeMapping( "anotherDate" );
 		assertThat( anotherDateAttribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 	}
 

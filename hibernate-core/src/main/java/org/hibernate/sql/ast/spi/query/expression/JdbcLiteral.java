@@ -35,9 +35,9 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
  */
 public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, DomainResultProducer<T>, JavaTypedExpressible<T> {
 	private final T literalValue;
-	private final JdbcMapping jdbcMapping;
+	private final JdbcMapping<?> jdbcMapping;
 
-	public JdbcLiteral(T literalValue, JdbcMapping jdbcMapping) {
+	public JdbcLiteral(T literalValue, JdbcMapping<?> jdbcMapping) {
 		this.literalValue = literalValue;
 		this.jdbcMapping = jdbcMapping;
 	}
@@ -48,7 +48,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	}
 
 	@Override
-	public JdbcMapping getJdbcMapping() {
+	public JdbcMapping<?> getJdbcMapping() {
 		return jdbcMapping;
 	}
 
@@ -89,7 +89,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 
 	@Nonnull
 	@Override
-	public JdbcMapping getJdbcMapping(int index) {
+	public JdbcMapping<?> getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );
 		}
@@ -98,12 +98,12 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 
 	@Nonnull
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping<?> getSingleJdbcMapping() {
 		return jdbcMapping;
 	}
 
 	@Override
-	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, @Nonnull IndexedConsumer<JdbcMapping<?>> action) {
 		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();
 	}

@@ -25,7 +25,7 @@ public class LazyTableGroup extends DelegatingTableGroup {
 	private final boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
 	private final boolean fetched;
-	private final TableGroupProducer producer;
+	private final TableGroupProducer<?, ?, ?> producer;
 	private final String sourceAlias;
 	private final SqlAliasBase sqlAliasBase;
 	private final Supplier<TableGroup> tableGroupSupplier;
@@ -42,7 +42,7 @@ public class LazyTableGroup extends DelegatingTableGroup {
 			boolean fetched,
 			Supplier<TableGroup> tableGroupSupplier,
 			ParentTableGroupUseChecker parentTableGroupUseChecker,
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory,
@@ -209,12 +209,12 @@ public class LazyTableGroup extends DelegatingTableGroup {
 	}
 
 	@Override
-	public TableGroupProducer getModelPart() {
+	public TableGroupProducer<?, ?, ?> getModelPart() {
 		return producer;
 	}
 
 	@Override
-	public ModelPart getExpressionType() {
+	public ModelPart<?, ?, ?> getExpressionType() {
 		return getModelPart();
 	}
 
@@ -249,13 +249,13 @@ public class LazyTableGroup extends DelegatingTableGroup {
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
-			ValuedModelPart modelPart,
+			ValuedModelPart<?, ?, ?> modelPart,
 			String tableExpression,
 			boolean resolve) {
 		if ( parentTableGroupUseChecker.canUseParentTableGroup( producer, navigablePath, modelPart ) ) {
 			final TableReference reference = parentTableGroup.getTableReference(
 					navigablePath,
-					(ValuedModelPart) producer,
+					(ValuedModelPart<?, ?, ?>) producer,
 					tableExpression,
 					resolve
 			);
@@ -267,6 +267,6 @@ public class LazyTableGroup extends DelegatingTableGroup {
 	}
 
 	public interface ParentTableGroupUseChecker {
-		boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart);
+		boolean canUseParentTableGroup(TableGroupProducer<?, ?, ?> producer, NavigablePath navigablePath, ValuedModelPart<?, ?, ?> valuedModelPart);
 	}
 }

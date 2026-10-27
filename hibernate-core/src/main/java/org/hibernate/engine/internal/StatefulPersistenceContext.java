@@ -318,7 +318,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object[] getDatabaseSnapshot(Object id, EntityPersister persister) throws HibernateException {
+	public Object[] getDatabaseSnapshot(Object id, EntityPersister<?> persister) throws HibernateException {
 		final var key = session.generateEntityKey( id, persister );
 		final Object cached = entitySnapshotsByKey == null ? null : entitySnapshotsByKey.get( key );
 		if ( cached != null ) {
@@ -332,7 +332,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object getNaturalIdSnapshot(Object id, EntityPersister persister) throws HibernateException {
+	public Object getNaturalIdSnapshot(Object id, EntityPersister<?> persister) throws HibernateException {
 		if ( !persister.hasNaturalIdentifier() ) {
 			return null;
 		}
@@ -370,7 +370,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 	}
 
-	private EntityPersister locateProperPersister(EntityPersister persister) {
+	private EntityPersister<?> locateProperPersister(EntityPersister<?> persister) {
 		return persister.getRootEntityDescriptor().getEntityPersister();
 	}
 
@@ -633,7 +633,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister) {
+			final EntityPersister<?> persister) {
 		final var entityHolder = addEntityHolder( entityKey, entity );
 		final var entityEntry = addEntry(
 				entity,
@@ -660,7 +660,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			@Nullable final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister) {
+			final EntityPersister<?> persister) {
 		assert lockMode != null;
 		final var entityEntry =
 				new EntityEntryImpl(
@@ -812,7 +812,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object)
+	public Object narrowProxy(Object proxy, EntityPersister<?> persister, EntityKey key, Object object)
 			throws HibernateException {
 
 		final var concreteProxyClass = persister.getConcreteProxyClass();
@@ -868,7 +868,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object proxyFor(EntityPersister persister, EntityKey key, Object impl) throws HibernateException {
+	public Object proxyFor(EntityPersister<?> persister, EntityKey key, Object impl) throws HibernateException {
 		if ( !persister.hasProxy() ) {
 			return impl;
 		}
@@ -885,7 +885,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object proxyFor(EntityHolder holder, EntityPersister persister) {
+	public Object proxyFor(EntityHolder holder, EntityPersister<?> persister) {
 		final Object proxy = holder.getProxy();
 		return proxy != null && persister.hasProxy()
 				? narrowProxy( proxy, persister, holder.getEntityKey(), holder.getEntity() )
@@ -1585,7 +1585,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	private boolean isFoundInParent(
 			String property,
 			Object childEntity,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			CollectionPersister collectionPersister,
 			Object potentialParent) {
 		final Object collection = persister.getPropertyValue( potentialParent, property );
@@ -1660,7 +1660,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	private Object getIndexInParent(
 			String property,
 			Object childEntity,
-			EntityPersister persister,
+			EntityPersister<?> persister,
 			CollectionPersister collectionPersister,
 			Object potentialParent){
 		final Object collection = persister.getPropertyValue( potentialParent, property );
@@ -2115,7 +2115,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	private HashMap<String,HashSet<Object>> insertedKeysMap;
 
 	@Override
-	public void registerInsertedKey(EntityPersister persister, Object id) {
+	public void registerInsertedKey(EntityPersister<?> persister, Object id) {
 		// we only are worried about registering these if the persister defines caching
 		if ( persister.canWriteToCache() ) {
 			if ( insertedKeysMap == null ) {
@@ -2129,7 +2129,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public boolean wasInsertedDuringTransaction(EntityPersister persister, Object id) {
+	public boolean wasInsertedDuringTransaction(EntityPersister<?> persister, Object id) {
 		// again, we only really care if the entity is cached
 		if ( persister.canWriteToCache() ) {
 			if ( insertedKeysMap != null ) {
@@ -2240,7 +2240,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	private static class EntityHolderImpl implements EntityHolder, Serializable {
 		private EntityKey entityKey;
-		private EntityPersister descriptor;
+		private EntityPersister<?> descriptor;
 		private Object entity;
 		private Object proxy;
 		private @Nullable EntityEntry entityEntry;
@@ -2268,7 +2268,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public EntityPersister getDescriptor() {
+		public EntityPersister<?> getDescriptor() {
 			return descriptor;
 		}
 
@@ -2318,15 +2318,15 @@ class StatefulPersistenceContext implements PersistenceContext {
 			processingState = null;
 		}
 
-		public EntityHolderImpl withEntity(EntityKey entityKey, EntityPersister descriptor, Object entity) {
+		public EntityHolderImpl withEntity(EntityKey entityKey, EntityPersister<?> descriptor, Object entity) {
 			return withData( entityKey, descriptor, entity, null );
 		}
 
-		public EntityHolderImpl withProxy(EntityKey entityKey, EntityPersister descriptor, Object proxy) {
+		public EntityHolderImpl withProxy(EntityKey entityKey, EntityPersister<?> descriptor, Object proxy) {
 			return withData( entityKey, descriptor, null, proxy );
 		}
 
-		public EntityHolderImpl withData(EntityKey entityKey, EntityPersister descriptor, Object entity, Object proxy) {
+		public EntityHolderImpl withData(EntityKey entityKey, EntityPersister<?> descriptor, Object entity, Object proxy) {
 			assert entityKey != null
 				&& descriptor != null
 				&& entityInitializer == null

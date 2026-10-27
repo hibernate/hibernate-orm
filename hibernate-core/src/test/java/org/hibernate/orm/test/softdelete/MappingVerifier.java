@@ -11,18 +11,18 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class MappingVerifier {
 	public static void verifyMapping(
-			SoftDeleteMapping mapping,
+			SoftDeleteMapping<?> mapping,
 			String expectedColumnName,
 			String expectedTableName,
 			Object expectedDeletedLiteralValue) {
 		assertThat( mapping ).isNotNull();
 		assertThat( mapping.getColumnName() ).isEqualTo( expectedColumnName );
 		assertThat( mapping.getTableName() ).isEqualTo( expectedTableName );
-		assertThat( ( (SoftDeleteMappingImpl) mapping ).getDeletionIndicator() ).isEqualTo( expectedDeletedLiteralValue );
+		assertThat( ( (SoftDeleteMappingImpl<?>) mapping ).getDeletionIndicator() ).isEqualTo( expectedDeletedLiteralValue );
 	}
 
 	public static void verifyTimestampMapping(
-			SoftDeleteMapping mapping,
+			SoftDeleteMapping<?> mapping,
 			String expectedColumnName,
 			String expectedTableName) {
 		assertThat( mapping ).isNotNull();

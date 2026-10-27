@@ -226,13 +226,13 @@ public class DB2AggregateSupport extends AggregateSupportImpl implements Aggrega
 		return extractArguments;
 	}
 
-	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping<?> jdbcMapping) {
 		final SqlAppender sqlAppender = new StringBuilderSqlAppender();
 		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.append( customWriteExpression ), jdbcMapping );
 		return sqlAppender.toString();
 	}
 
-	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable valueRenderer, JdbcMapping jdbcMapping) {
+	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable valueRenderer, JdbcMapping<?> jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
@@ -279,7 +279,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl implements Aggrega
 		}
 	}
 
-	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping<?> jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
@@ -447,7 +447,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl implements Aggrega
 	}
 	private static class AggregateStructWriteExpression implements AggregateWriteExpression {
 		private final LinkedHashMap<String, AggregateWriteExpression> subExpressions = new LinkedHashMap<>();
-		protected final EmbeddableMappingType embeddableMappingType;
+		protected final EmbeddableMappingType<?, ?, ?> embeddableMappingType;
 		protected final String structTypeName;
 		protected final boolean nullable;
 
@@ -464,7 +464,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl implements Aggrega
 				final SelectablePath[] parts = selectablePath.getParts();
 				final String typeName = getCastTypeName( column, typeConfiguration );
 				AggregateStructWriteExpression currentAggregate = this;
-				EmbeddableMappingType currentMappingType = embeddableMappingType;
+				EmbeddableMappingType<?, ?, ?> currentMappingType = embeddableMappingType;
 				for ( int i = 1; i < parts.length - 1; i++ ) {
 					final SelectableMapping selectableMapping = currentMappingType.getJdbcValueSelectable(
 							currentMappingType.getSelectableIndex( parts[i].getSelectableName() )
@@ -840,7 +840,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl implements Aggrega
 
 		protected void passThroughUnsetSubExpressions(SelectableMapping aggregateColumn) {
 			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) aggregateColumn.getJdbcMapping().getJdbcType();
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableMappingType<?, ?, ?> embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
 				final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );

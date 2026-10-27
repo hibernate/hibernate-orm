@@ -32,7 +32,7 @@ import java.util.List;
 /// @author Steve Ebersole
 @Deprecated
 public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister<?> entityDescriptor;
 	private final SharedSessionContractImplementor session;
 
 	private LockOptions lockOptions;
@@ -45,7 +45,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	private FindMultipleOption.RemovalsMode removalsMode = FindMultipleOption.RemovalsMode.REPLACE;
 	private FindMultipleOption.OrderingMode orderingMode = FindMultipleOption.OrderingMode.ORDERED;
 
-	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
+	public NaturalIdMultiLoadAccessStandard(EntityPersister<?> entityDescriptor, SharedSessionContractImplementor session) {
 		this.entityDescriptor = entityDescriptor;
 		this.session = session;
 	}

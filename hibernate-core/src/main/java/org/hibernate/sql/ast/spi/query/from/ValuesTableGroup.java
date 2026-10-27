@@ -19,7 +19,7 @@ public class ValuesTableGroup extends AbstractTableGroup {
 
 	public ValuesTableGroup(
 			NavigablePath navigablePath,
-			TableGroupProducer tableGroupProducer,
+			TableGroupProducer<?, ?, ?> tableGroupProducer,
 			List<Values> valuesList,
 			String sourceAlias,
 			List<String> columnNames,
@@ -41,7 +41,7 @@ public class ValuesTableGroup extends AbstractTableGroup {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean resolve) {
-		if ( ( (TableGroupProducer) getModelPart() ).containsTableReference( tableExpression ) ) {
+		if ( ( (TableGroupProducer<?, ?, ?>) getModelPart() ).containsTableReference( tableExpression ) ) {
 			return getPrimaryTableReference();
 		}
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {

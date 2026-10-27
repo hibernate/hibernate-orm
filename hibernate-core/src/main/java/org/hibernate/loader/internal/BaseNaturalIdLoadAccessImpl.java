@@ -37,7 +37,7 @@ import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossRefere
  */
 public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOptions {
 	private final StatefulLoadAccessContext context;
-	private final EntityMappingType entityDescriptor;
+	private final EntityMappingType<?> entityDescriptor;
 
 	@Nullable
 	private LockOptions lockOptions;
@@ -53,7 +53,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 	@Nullable
 	private GraphSemantic graphSemantic;
 
-	protected BaseNaturalIdLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityMappingType entityDescriptor) {
+	protected BaseNaturalIdLoadAccessImpl(@Nonnull StatefulLoadAccessContext context, @Nonnull EntityMappingType<?> entityDescriptor) {
 		this.context = context;
 		this.entityDescriptor = entityDescriptor;
 
@@ -248,12 +248,12 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 	}
 
 	@Nonnull
-	public EntityMappingType getEntityDescriptor() {
+	public EntityMappingType<?> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 
 	@Nonnull
-	protected EntityPersister entityPersister() {
+	protected EntityPersister<?> entityPersister() {
 		return entityDescriptor.getEntityPersister();
 	}
 }

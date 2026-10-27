@@ -27,7 +27,7 @@ public class EmbeddedColumnNamingImplicitTests {
 	void testNaming(SessionFactoryScope factoryScope) {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
-		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( Person.class );
+		final EntityPersister<?> persister = mappingMetamodel.getEntityDescriptor( Person.class );
 		verifyColumnNames( persister.findAttributeMapping( "homeAddress" ), "homeAddress_" );
 		verifyColumnNames( persister.findAttributeMapping( "workAddress" ), "workAddress_" );
 	}

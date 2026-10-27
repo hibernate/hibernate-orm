@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
@@ -22,12 +23,12 @@ public class IndexInformationImpl implements IndexInformation {
 	}
 
 	@Override
-	public Identifier getIndexIdentifier() {
+	public @Nonnull Identifier getIndexIdentifier() {
 		return indexIdentifier;
 	}
 
 	@Override
-	public List<ColumnInformation> getIndexedColumns() {
+	public @Nonnull List<ColumnInformation> getIndexedColumns() {
 		return columnList;
 	}
 

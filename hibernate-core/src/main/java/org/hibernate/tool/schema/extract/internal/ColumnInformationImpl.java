@@ -1,5 +1,7 @@
 package org.hibernate.tool.schema.extract.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -38,12 +40,12 @@ public class ColumnInformationImpl implements ColumnInformation {
 	}
 
 	@Override
-	public TableInformation getContainingTableInformation() {
+	public @Nonnull TableInformation getContainingTableInformation() {
 		return containingTableInformation;
 	}
 
 	@Override
-	public Identifier getColumnIdentifier() {
+	public @Nonnull Identifier getColumnIdentifier() {
 		return columnIdentifier;
 	}
 
@@ -53,7 +55,7 @@ public class ColumnInformationImpl implements ColumnInformation {
 	}
 
 	@Override
-	public String getTypeName() {
+	public @Nullable String getTypeName() {
 		return typeName;
 	}
 
@@ -68,7 +70,7 @@ public class ColumnInformationImpl implements ColumnInformation {
 	}
 
 	@Override
-	public Boolean getNullable() {
+	public @Nullable Boolean getNullable() {
 		return nullable;
 	}
 

@@ -42,7 +42,7 @@ public interface ExtractionContext {
 					statement.setObject( i + 1, positionalParameters[i] );
 				}
 			}
-			try (ResultSet resultSet = statement.executeQuery()) {
+			try ( var resultSet = statement.executeQuery() ) {
 				return resultSetProcessor.process( resultSet );
 			}
 		}

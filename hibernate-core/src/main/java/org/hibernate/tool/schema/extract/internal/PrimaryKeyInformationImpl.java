@@ -1,5 +1,7 @@
 package org.hibernate.tool.schema.extract.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.PrimaryKeyInformation;
@@ -17,12 +19,12 @@ public class PrimaryKeyInformationImpl implements PrimaryKeyInformation {
 	}
 
 	@Override
-	public Identifier getPrimaryKeyIdentifier() {
+	public @Nullable Identifier getPrimaryKeyIdentifier() {
 		return identifier;
 	}
 
 	@Override
-	public Iterable<ColumnInformation> getColumns() {
+	public @Nonnull Iterable<ColumnInformation> getColumns() {
 		return columns;
 	}
 }

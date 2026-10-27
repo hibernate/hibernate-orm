@@ -1,5 +1,6 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.mapping.Table;
@@ -11,18 +12,18 @@ import java.util.Map;
  * @since 7.2
  */
 public class NameSpacePrimaryKeysInformation {
-	private final IdentifierHelper identifierHelper;
-	private final Map<String, PrimaryKeyInformation> primaryKeys = new HashMap<>();
+	private final @Nonnull IdentifierHelper identifierHelper;
+	private final @Nonnull Map<String, PrimaryKeyInformation> primaryKeys = new HashMap<>();
 
-	public NameSpacePrimaryKeysInformation(IdentifierHelper identifierHelper) {
+	public NameSpacePrimaryKeysInformation(@Nonnull IdentifierHelper identifierHelper) {
 		this.identifierHelper = identifierHelper;
 	}
 
-	public void addPrimaryKeyInformation(TableInformation tableInformation, PrimaryKeyInformation primaryKeyInformation) {
+	public void addPrimaryKeyInformation(@Nonnull TableInformation tableInformation, @Nonnull PrimaryKeyInformation primaryKeyInformation) {
 		primaryKeys.put( tableInformation.getName().getTableName().getText(), primaryKeyInformation );
 	}
 
-	public @Nullable PrimaryKeyInformation getPrimaryKeyInformation(Table table) {
+	public @Nullable PrimaryKeyInformation getPrimaryKeyInformation(@Nonnull Table table) {
 		return primaryKeys.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
 	}
 
@@ -31,11 +32,11 @@ public class NameSpacePrimaryKeysInformation {
 	}
 
 	public void validate() {
-		for ( Map.Entry<String, PrimaryKeyInformation> entry : primaryKeys.entrySet() ) {
+		for ( var entry : primaryKeys.entrySet() ) {
 			final var tableName = entry.getKey();
 			final var primaryKeyInformation = entry.getValue();
 			int i = 1;
-			for ( ColumnInformation column : primaryKeyInformation.getColumns() ) {
+			for ( var column : primaryKeyInformation.getColumns() ) {
 				if ( column == null ) {
 					throw new SchemaExtractionException(
 							"Primary Key information was missing for key [" +

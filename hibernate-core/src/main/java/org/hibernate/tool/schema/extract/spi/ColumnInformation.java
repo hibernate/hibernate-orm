@@ -1,5 +1,6 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.naming.Identifier;
 
 /**
@@ -14,12 +15,12 @@ public interface ColumnInformation extends ColumnTypeInformation {
 	 *
 	 * @return The containing table information
 	 */
-	TableInformation getContainingTableInformation();
+	@Nonnull TableInformation getContainingTableInformation();
 
 	/**
 	 * The simple (not qualified) column name.
 	 *
 	 * @return The column simple identifier.
 	 */
-	Identifier getColumnIdentifier();
+	@Nonnull Identifier getColumnIdentifier();
 }

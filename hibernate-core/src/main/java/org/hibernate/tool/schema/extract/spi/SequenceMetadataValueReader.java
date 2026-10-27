@@ -3,6 +3,8 @@ package org.hibernate.tool.schema.extract.spi;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -22,5 +24,5 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 @SPI(IMPLEMENT)
 public interface SequenceMetadataValueReader<T> {
 	/// Read one value from `sequenceMetadataRow` without changing its position.
-	T read(ResultSet sequenceMetadataRow) throws SQLException;
+	@Nullable T read(@Nonnull ResultSet sequenceMetadataRow) throws SQLException;
 }

@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -397,12 +398,12 @@ public sealed class Column
 	}
 
 	@Override
-	public String getTypeName() {
+	public @Nullable String getTypeName() {
 		return sqlTypeName;
 	}
 
 	@Override
-	public Boolean getNullable() {
+	public @Nonnull Boolean getNullable() {
 		return nullable;
 	}
 

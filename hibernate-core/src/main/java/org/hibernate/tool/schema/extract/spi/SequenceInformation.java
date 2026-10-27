@@ -1,5 +1,7 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 
@@ -17,33 +19,33 @@ public interface SequenceInformation {
 	 *
 	 * @return The sequence name
 	 */
-	QualifiedSequenceName getSequenceName();
+	@Nonnull QualifiedSequenceName getSequenceName();
 
 	/**
 	 * Retrieve the extracted start value defined for the sequence.
 	 *
 	 * @return The extracted start value or null id the value could not be extracted.
 	 */
-	Number getStartValue();
+	@Nullable Number getStartValue();
 
 	/**
 	 * Retrieve the extracted minimum value defined for the sequence.
 	 *
 	 * @return The extracted minimum value or null id the value could not be extracted.
 	 */
-	Number getMinValue();
+	@Nullable Number getMinValue();
 
 	/**
 	 * Retrieve the extracted maximum value defined for the sequence.
 	 *
 	 * @return The extracted maximum value or null id the value could not be extracted.
 	 */
-	Number getMaxValue();
+	@Nullable Number getMaxValue();
 
 	/**
 	 * Retrieve the extracted increment value defined for the sequence.
 	 *
 	 * @return The extracted increment value; use a negative number to indicate the increment could not be extracted.
 	 */
-	Number getIncrementValue();
+	@Nullable Number getIncrementValue();
 }

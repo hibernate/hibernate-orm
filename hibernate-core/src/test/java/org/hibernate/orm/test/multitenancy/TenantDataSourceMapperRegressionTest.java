@@ -95,7 +95,7 @@ class TenantDataSourceMapperRegressionTest {
 				provider.closeConnection( connection );
 			}
 			assertTrue( connection.isClosed() );
-			final var tenantConnection = provider.getConnection( TENANT );
+				final var tenantConnection = provider.getConnection( TENANT );
 			try {
 				assertFalse( tenantConnection.isClosed() );
 			}
@@ -163,7 +163,7 @@ class TenantDataSourceMapperRegressionTest {
 			final var provider = registry.requireService( ConnectionProvider.class );
 			final var bootstrap = provider.getConnection();
 			provider.closeConnection( bootstrap );
-			final var tenant = provider.getConnection( TENANT );
+				final var tenant = provider.getConnection( TENANT );
 			provider.closeConnection( tenant );
 			assertTrue( bootstrap.isClosed() );
 			assertTrue( tenant.isClosed() );
@@ -196,10 +196,10 @@ class TenantDataSourceMapperRegressionTest {
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
 	void explicitlySuppliedConcreteProviderIsRetained(boolean suppliedAsService) throws Exception {
-		final var explicit = new DataSourceBasedMultiTenantConnectionProviderImpl<String>( tenant -> TENANT );
+		final var explicit = new DataSourceBasedMultiTenantConnectionProviderImpl<String>();
 		final var tenantSource = new RecordingDataSource();
 		final var builder = registry( new RecordingDataSource(), tenantSource )
-				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, (TenantDataSourceMapper<String>) tenant -> BOOTSTRAP );
+				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, (TenantDataSourceMapper<String>) tenant -> TENANT );
 		if ( suppliedAsService ) {
 			builder.addService( MultiTenantConnectionProvider.class, explicit );
 		}
@@ -233,7 +233,7 @@ class TenantDataSourceMapperRegressionTest {
 				.build() ) {
 			final var explicit = registry.requireService( MultiTenantConnectionProvider.class );
 			try ( var factory = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata()
-					.getSessionFactoryBuilder().applyTenantDataSourceMapper( tenant -> BOOTSTRAP ).build() ) {
+					.buildSessionFactory() ) {
 				assertSame( explicit, factory.getServiceRegistry().requireService( MultiTenantConnectionProvider.class ) );
 			}
 		}

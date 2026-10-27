@@ -4,13 +4,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.naming.Context;
 import javax.sql.DataSource;
 
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
-import org.hibernate.Incubating;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MultiTenancySettings;
 import org.hibernate.context.spi.MultiTenancy;
@@ -22,13 +19,10 @@ import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.service.spi.Stoppable;
 
-import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
 import static org.hibernate.cfg.JdbcSettings.PASS;
 import static org.hibernate.cfg.JdbcSettings.USER;
-import static org.hibernate.cfg.MultiTenancySettings.TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY;
 
 /**
  * A concrete implementation of the {@link MultiTenantConnectionProvider} contract based
@@ -63,28 +57,13 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 
 	private final Map<T, DataSource> dataSourceMap = new ConcurrentHashMap<>();
 	private JndiService jndiService;
-	private T tenantIdentifierForAny;
-	private String baseJndiNamespace;
 	private String jndiName;
-	private TenantDataSourceMapper<T> tenantDataSourceMapper;
-	private TenantCredentialsMapper<T> tenantCredentialsMapper;
+	private MultiTenancy multiTenancy;
 	private String user;
 	private String password;
 	private DataSource anyDataSource;
 
 	public DataSourceBasedMultiTenantConnectionProviderImpl() {
-	}
-
-	/**
-	 * Construct a provider using the given mapper for tenant data source names.
-	 * The mapper is retained for the lifetime of this provider.
-	 *
-	 * @see TenantDataSourceMapper
-	 * @since 8.0
-	 */
-	@Incubating(since = "8.0")
-	public DataSourceBasedMultiTenantConnectionProviderImpl(TenantDataSourceMapper<T> mapper) {
-		tenantDataSourceMapper = mapper;
 	}
 
 	@Override
@@ -93,8 +72,12 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Connection getConnection(T tenantIdentifier) throws SQLException {
 		final var dataSource = selectDataSource( tenantIdentifier );
+		final var tenantCredentialsMapper =
+				(TenantCredentialsMapper<T>)
+						multiTenancy.getTenantCredentialsMapper();
 		return tenantCredentialsMapper == null
 				? getConnection( dataSource )
 				: dataSource.getConnection(
@@ -110,15 +93,18 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 
 	@Override
 	protected DataSource selectAnyDataSource() {
-		return anyDataSource == null ? selectDataSource( tenantIdentifierForAny ) : anyDataSource;
+		return anyDataSource;
 	}
 
 	@Override
 	protected DataSource selectDataSource(T tenantIdentifier) {
 		DataSource dataSource = dataSourceMap().get( tenantIdentifier );
 		if ( dataSource == null ) {
-			dataSource = (DataSource)
-					jndiService.locate( tenantDataSourceMapper.dataSourceName( tenantIdentifier ) );
+			final String tenantDataSourceJndiName = multiTenancy.getDataSourceJndiName( tenantIdentifier );
+			if ( tenantDataSourceJndiName == null ) {
+				throw new HibernateException( "No tenant data source mapper was configured" );
+			}
+			dataSource = locateDataSource( tenantDataSourceJndiName );
 			dataSourceMap().put( tenantIdentifier, dataSource );
 		}
 		return dataSource;
@@ -129,84 +115,30 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final var settings = configurationService.getSettings();
+		multiTenancy = serviceRegistry.requireService( MultiTenancy.class );
 		user = (String) settings.get( USER );
 		password = (String) settings.get( PASS );
-		tenantCredentialsMapper = (TenantCredentialsMapper<T>)
-				getTenantCredentialsMapper( serviceRegistry, settings );
-		if ( tenantDataSourceMapper == null ) {
-			tenantDataSourceMapper = (TenantDataSourceMapper<T>)
-					MultiTenancy.getTenantDataSourceMapper( settings, serviceRegistry );
-		}
-		final boolean customMapper = tenantDataSourceMapper != null;
-		final Object dataSourceConfigValue = settings.get( DATASOURCE );
-		if ( customMapper && dataSourceConfigValue == null ) {
-			jndiService = serviceRegistry.requireService( JndiService.class );
-			tenantIdentifierForAny = (T) settings.get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
-			if ( tenantIdentifierForAny == null ) {
-				throw new HibernateException( "A tenant data source mapper requires '" + DATASOURCE
-						+ "' or '" + TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY + "'" );
-			}
-			return;
-		}
-		if ( !(dataSourceConfigValue instanceof String configuredJndiName) ) {
-			throw new HibernateException( "illegal value for configuration setting '" + DATASOURCE + "'" );
-		}
-		jndiName = configuredJndiName;
-
 		jndiService = serviceRegistry.getService( JndiService.class );
 		if ( jndiService == null ) {
-			throw new HibernateException( "Could not locate JndiService from DataSourceBasedMultiTenantConnectionProviderImpl" );
-		}
-
-		final Object namedObject = jndiService.locate( this.jndiName );
-		if ( namedObject == null ) {
-			throw new HibernateException( "JNDI name [" + this.jndiName + "] could not be resolved" );
-		}
-		else if ( namedObject instanceof DataSource datasource ) {
-			if ( customMapper ) {
-				// The bootstrap data source need not belong to a tenant. In particular,
-				// its JNDI suffix is not necessarily a tenant identifier.
-				anyDataSource = datasource;
-				return;
-			}
-			final int loc = jndiName.lastIndexOf( '/' );
-			baseJndiNamespace = jndiName.substring( 0, loc );
-			tenantDataSourceMapper = new DefaultTenantDataSourceMapper();
-			final String prefix = jndiName.substring( loc + 1);
-			tenantIdentifierForAny = (T) prefix;
-			dataSourceMap().put( tenantIdentifierForAny, datasource );
-		}
-		else if ( namedObject instanceof Context ) {
-			if ( !customMapper ) {
-				baseJndiNamespace = jndiName;
-				tenantDataSourceMapper = new DefaultTenantDataSourceMapper();
-			}
-			final Object configuredTenantId =
-					configurationService.getSettings()
-							.get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
-			tenantIdentifierForAny = (T) configuredTenantId;
-			if ( tenantIdentifierForAny == null ) {
-				throw new HibernateException( "JNDI name named a Context, but tenant identifier to use for ANY was not specified" );
-			}
-		}
-		else {
 			throw new HibernateException(
-					"Unknown object type [" + namedObject.getClass().getName() +
-					"] found in JNDI location [" + this.jndiName + "]"
-			);
+					"Could not locate JndiService from DataSourceBasedMultiTenantConnectionProviderImpl" );
 		}
+		jndiName = multiTenancy.getBootstrapDataSourceJndiName();
+		if ( jndiName == null ) {
+			throw new HibernateException( "Could not determine the bootstrap DataSource JNDI name" );
+		}
+		anyDataSource = locateDataSource( jndiName );
 	}
 
-	@Nullable
-	private static TenantCredentialsMapper<Object> getTenantCredentialsMapper(
-			@Nonnull ServiceRegistryImplementor serviceRegistry, Map<String, Object> settings) {
-		return serviceRegistry instanceof SessionFactoryServiceInitiatorContext context
-				? context.getSessionFactoryOptions().getTenantCredentialsMapper()
-				: MultiTenancy.getTenantCredentialsMapper( settings, serviceRegistry );
+	private DataSource locateDataSource(String jndiName) {
+		final Object namedObject = jndiService.locate( jndiName );
+		if ( namedObject instanceof DataSource dataSource ) {
+			return dataSource;
+		}
+		throw new HibernateException( "JNDI name [" + jndiName + "] does not refer to a DataSource" );
 	}
 
 	@Override
@@ -238,15 +170,5 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 				return "\tMulti-tenant datasource JNDI name [" + jndiName + ']';
 			}
 		};
-	}
-
-	/**
-	 * Selects the conventional tenant names relative to the provider's base JNDI context.
-	 */
-	private final class DefaultTenantDataSourceMapper implements TenantDataSourceMapper<T> {
-		@Override
-		public @Nonnull String dataSourceName(@Nonnull T tenantIdentifier) {
-			return baseJndiNamespace + '/' + tenantIdentifier;
-		}
 	}
 }

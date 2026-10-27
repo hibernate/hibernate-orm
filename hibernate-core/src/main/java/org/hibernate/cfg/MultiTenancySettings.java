@@ -33,7 +33,6 @@ public interface MultiTenancySettings {
 	 * </ul>
 	 *
 	 * @see CurrentTenantIdentifierResolver
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCurrentTenantIdentifierResolver
 	 *
 	 * @since 4.1
 	 */
@@ -60,7 +59,6 @@ public interface MultiTenancySettings {
 	 * By default, there is no tenant schema mapper.
 	 *
 	 * @see org.hibernate.context.spi.TenantSchemaMapper
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantSchemaMapper
 	 *
 	 * @since 7.1
 	 */
@@ -85,7 +83,6 @@ public interface MultiTenancySettings {
 	 * By default, there is no tenant credentials mapper.
 	 *
 	 * @see org.hibernate.context.spi.TenantCredentialsMapper
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantCredentialsMapper
 	 *
 	 * @since 7.3
 	 */
@@ -108,7 +105,6 @@ public interface MultiTenancySettings {
 	 * By default, there is no tenant data source mapper.
 	 *
 	 * @see org.hibernate.context.spi.TenantDataSourceMapper
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantDataSourceMapper
 	 * @see org.hibernate.cfg.Configuration#setTenantDataSourceMapper
 	 *
 	 * @since 8.0

@@ -17,7 +17,6 @@ import org.hibernate.Incubating;
  *
  * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_DATASOURCE_MAPPER
  * @see org.hibernate.cfg.Configuration#setTenantDataSourceMapper
- * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantDataSourceMapper
  * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String)
  *
  * @since 8.0

@@ -69,7 +69,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * Obtain a connection from the named data source, using the configured credentials
 	 * or the data source's defaults.
 	 *
-	 * @param dataSourceName The name supplied by a {@link org.hibernate.context.spi.TenantDataSourceMapper}
+	 * @param dataSourceName The data source JNDI name
 	 * @throws UnsupportedOperationException if named data sources are not supported
 	 * @since 8.0
 	 */
@@ -83,7 +83,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	/**
 	 * Obtain a connection from the named data source using the given credentials.
 	 *
-	 * @param dataSourceName The name supplied by a {@link org.hibernate.context.spi.TenantDataSourceMapper}
+	 * @param dataSourceName The data source JNDI name
 	 * @param user The database user
 	 * @param password The database password
 	 * @throws UnsupportedOperationException if named data sources with contextual credentials are not supported

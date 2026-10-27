@@ -2,6 +2,7 @@ package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 
 /**
@@ -33,6 +34,8 @@ public interface MultiTenancySettings {
 	 * </ul>
 	 *
 	 * @see CurrentTenantIdentifierResolver
+	 * @see MultiTenancy#getTenantIdentifierResolver()
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCurrentTenantIdentifierResolver
 	 *
 	 * @since 4.1
 	 */
@@ -59,6 +62,8 @@ public interface MultiTenancySettings {
 	 * By default, there is no tenant schema mapper.
 	 *
 	 * @see org.hibernate.context.spi.TenantSchemaMapper
+	 * @see MultiTenancy#getTenantSchemaMapper()
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantSchemaMapper
 	 *
 	 * @since 7.1
 	 */
@@ -83,6 +88,8 @@ public interface MultiTenancySettings {
 	 * By default, there is no tenant credentials mapper.
 	 *
 	 * @see org.hibernate.context.spi.TenantCredentialsMapper
+	 * @see MultiTenancy#getTenantCredentialsMapper()
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantCredentialsMapper
 	 *
 	 * @since 7.3
 	 */
@@ -105,7 +112,7 @@ public interface MultiTenancySettings {
 	 * By default, there is no tenant data source mapper.
 	 *
 	 * @see org.hibernate.context.spi.TenantDataSourceMapper
-	 * @see org.hibernate.cfg.Configuration#setTenantDataSourceMapper
+	 * @see MultiTenancy#getTenantDataSourceMapper()
 	 *
 	 * @since 8.0
 	 */

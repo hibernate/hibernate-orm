@@ -1,5 +1,6 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.mapping.Table;
@@ -13,19 +14,19 @@ import java.util.Map;
  * @since 7.2
  */
 public class NameSpaceForeignKeysInformation {
-	private final IdentifierHelper identifierHelper;
-	private final Map<String, List<ForeignKeyInformation>> foreignKeys = new HashMap<>();
+	private final @Nonnull IdentifierHelper identifierHelper;
+	private final @Nonnull Map<String, List<ForeignKeyInformation>> foreignKeys = new HashMap<>();
 
-	public NameSpaceForeignKeysInformation(IdentifierHelper identifierHelper) {
+	public NameSpaceForeignKeysInformation(@Nonnull IdentifierHelper identifierHelper) {
 		this.identifierHelper = identifierHelper;
 	}
 
-	public void addForeignKeyInformation(TableInformation tableInformation, ForeignKeyInformation foreignKeyInformation) {
+	public void addForeignKeyInformation(@Nonnull TableInformation tableInformation, @Nonnull ForeignKeyInformation foreignKeyInformation) {
 		foreignKeys.computeIfAbsent( tableInformation.getName().getTableName().getText(), k -> new ArrayList<>() )
 				.add( foreignKeyInformation );
 	}
 
-	public @Nullable List<ForeignKeyInformation> getForeignKeysInformation(Table table) {
+	public @Nullable List<ForeignKeyInformation> getForeignKeysInformation(@Nonnull Table table) {
 		return foreignKeys.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
 	}
 

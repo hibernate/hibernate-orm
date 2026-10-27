@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -244,7 +245,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	protected abstract <T> T processCatalogsResultSet(ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
 
 	@Override
-	public boolean catalogExists(Identifier catalog) {
+	public boolean catalogExists(@Nonnull Identifier catalog) {
 		try {
 			return processCatalogsResultSet( resultSet -> {
 				while ( resultSet.next() ) {
@@ -302,7 +303,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					throws SQLException;
 
 	@Override
-	public boolean schemaExists(Identifier catalog, Identifier schema) {
+	public boolean schemaExists(@Nullable Identifier catalog, @Nullable Identifier schema) {
 		final var helper = getIdentifierHelper();
 		final String catalogFilter =
 				helper.toMetaDataCatalogName( catalog == null ? extractionContext.getDefaultCatalog() : catalog );
@@ -345,7 +346,10 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	@Override
-	public TableInformation getTable(Identifier catalog, Identifier schema, Identifier tableName) {
+	public @Nullable TableInformation getTable(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema,
+			@Nonnull Identifier tableName) {
 		if ( catalog != null || schema != null ) {
 			// The table defined an explicit namespace.  In such cases we only ever want to look
 			// in the identified namespace
@@ -490,7 +494,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	@Override
-	public NameSpaceTablesInformation getTables(Identifier catalog, Identifier schema) {
+	public @Nonnull NameSpaceTablesInformation getTables(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema) {
 		final String catalogFilter = getCatalogFilter( catalog );
 		final String schemaFilter = getSchemaFilter( schema );
 		try {
@@ -905,7 +911,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			throws SQLException;
 
 	@Override
-	public @Nullable PrimaryKeyInformation getPrimaryKey(TableInformation tableInformation) {
+	public @Nullable PrimaryKeyInformation getPrimaryKey(@Nonnull TableInformation tableInformation) {
 		final var databaseObjectAccess = extractionContext.getDatabaseObjectAccess();
 		if ( databaseObjectAccess.isCaching() && supportsBulkPrimaryKeyRetrieval() ) {
 			return databaseObjectAccess.locatePrimaryKeyInformation( tableInformation.getName() );
@@ -978,7 +984,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	@Override
-	public NameSpacePrimaryKeysInformation getPrimaryKeys(Identifier catalog, Identifier schema) {
+	public @Nonnull NameSpacePrimaryKeysInformation getPrimaryKeys(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema) {
 		if ( !supportsBulkPrimaryKeyRetrieval() ) {
 			throw new UnsupportedOperationException( "Database doesn't support extracting all primary keys at once" );
 		}
@@ -1139,7 +1147,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					throws SQLException;
 
 	@Override
-	public Iterable<IndexInformation> getIndexes(TableInformation tableInformation) {
+	public @Nonnull Iterable<IndexInformation> getIndexes(@Nonnull TableInformation tableInformation) {
 		final var databaseObjectAccess = extractionContext.getDatabaseObjectAccess();
 		if ( databaseObjectAccess.isCaching() && supportsBulkIndexRetrieval() ) {
 			return databaseObjectAccess.locateIndexesInformation( tableInformation.getName() );
@@ -1212,7 +1220,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	@Override
-	public NameSpaceIndexesInformation getIndexes(Identifier catalog, Identifier schema) {
+	public @Nonnull NameSpaceIndexesInformation getIndexes(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema) {
 		if ( !supportsBulkIndexRetrieval() ) {
 			throw new UnsupportedOperationException( "Database doesn't support extracting all indexes at once" );
 		}
@@ -1444,7 +1454,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 
 	@Override
-	public Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation) {
+	public @Nonnull Iterable<ForeignKeyInformation> getForeignKeys(@Nonnull TableInformation tableInformation) {
 		final var databaseObjectAccess = extractionContext.getDatabaseObjectAccess();
 		if ( databaseObjectAccess.isCaching() && supportsBulkForeignKeyRetrieval() ) {
 			return databaseObjectAccess.locateForeignKeyInformation( tableInformation.getName() );
@@ -1493,7 +1503,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	@Override
-	public NameSpaceForeignKeysInformation getForeignKeys(Identifier catalog, Identifier schema) {
+	public @Nonnull NameSpaceForeignKeysInformation getForeignKeys(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema) {
 		if ( !supportsBulkForeignKeyRetrieval() ) {
 			throw new UnsupportedOperationException( "Database doesn't support extracting all foreign keys at once" );
 		}

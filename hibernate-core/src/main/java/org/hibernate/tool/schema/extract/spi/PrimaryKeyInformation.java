@@ -1,5 +1,7 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 
 /**
@@ -13,12 +15,12 @@ public interface PrimaryKeyInformation {
 	 *
 	 * @return The PK identifier.
 	 */
-	Identifier getPrimaryKeyIdentifier();
+	@Nullable Identifier getPrimaryKeyIdentifier();
 
 	/**
 	 * Obtain the columns making up the primary key.  Returned in sequential order.
 	 *
 	 * @return The columns
 	 */
-	Iterable<ColumnInformation> getColumns();
+	@Nonnull Iterable<ColumnInformation> getColumns();
 }

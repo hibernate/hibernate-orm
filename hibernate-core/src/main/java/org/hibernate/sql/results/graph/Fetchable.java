@@ -89,12 +89,9 @@ public interface Fetchable extends ModelPart {
 	}
 
 	default boolean isSelectable() {
-		final AttributeMapping attributeMapping = asAttributeMapping();
-		if ( attributeMapping != null && attributeMapping.getAttributeMetadata() != null ) {
-			return attributeMapping.getAttributeMetadata().isSelectable();
-		}
-		else {
-			return true;
-		}
+		final var attributeMapping = asAttributeMapping();
+		return attributeMapping == null
+			|| attributeMapping.getAttributeMetadata() == null
+			|| attributeMapping.getAttributeMetadata().isSelectable();
 	}
 }

@@ -1,5 +1,7 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 
@@ -16,7 +18,7 @@ public interface TableInformation {
 	 *
 	 * @return The qualified table name
 	 */
-	QualifiedTableName getName();
+	@Nonnull QualifiedTableName getName();
 
 	/**
 	 * Does this information describe a physical table as opposed to a view, etc?
@@ -30,7 +32,7 @@ public interface TableInformation {
 	 *
 	 * @return The table comments
 	 */
-	String getComment();
+	@Nullable String getComment();
 
 	/**
 	 * Retrieve the named ColumnInformation
@@ -39,21 +41,21 @@ public interface TableInformation {
 	 *
 	 * @return The matching column information.  May return {@code null}
 	 */
-	ColumnInformation getColumn(Identifier columnIdentifier);
+	@Nullable ColumnInformation getColumn(@Nonnull Identifier columnIdentifier);
 
 	/**
 	 * Retrieve information about the table's primary key, if one is defined (aka, may return {@code null}).
 	 *
 	 * @return The primary key information, or {@code null} if the table did not define a primary key.
 	 */
-	PrimaryKeyInformation getPrimaryKey();
+	@Nullable PrimaryKeyInformation getPrimaryKey();
 
 	/**
 	 * Obtain an iterable over all the table's defined foreign keys.
 	 *
 	 * @return The iterable.
 	 */
-	Iterable<ForeignKeyInformation> getForeignKeys();
+	@Nonnull Iterable<ForeignKeyInformation> getForeignKeys();
 
 	/**
 	 * Retrieve the named ForeignKeyInformation
@@ -62,14 +64,14 @@ public interface TableInformation {
 	 *
 	 * @return The matching foreign key information.  May return {@code null}
 	 */
-	ForeignKeyInformation getForeignKey(Identifier keyName);
+	@Nullable ForeignKeyInformation getForeignKey(@Nonnull Identifier keyName);
 
 	/**
 	 * Obtain an iterable over all the table's defined indexes.
 	 *
 	 * @return The iterable.
 	 */
-	Iterable<IndexInformation> getIndexes();
+	@Nonnull Iterable<IndexInformation> getIndexes();
 
 	/**
 	 * Retrieve the named IndexInformation
@@ -78,7 +80,7 @@ public interface TableInformation {
 	 *
 	 * @return The matching index information.  May return {@code null}
 	 */
-	IndexInformation getIndex(Identifier indexName);
+	@Nullable IndexInformation getIndex(@Nonnull Identifier indexName);
 
-	void addColumn(ColumnInformation columnIdentifier);
+	void addColumn(@Nonnull ColumnInformation columnIdentifier);
 }

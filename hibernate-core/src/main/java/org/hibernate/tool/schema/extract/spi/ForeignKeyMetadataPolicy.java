@@ -1,5 +1,6 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 
@@ -18,7 +19,7 @@ import static org.hibernate.SPI.Role.USE;
 public record ForeignKeyMetadataPolicy(
 		Mode mode,
 		@Nullable String crossReferenceParentTableFilter) {
-	private static final ForeignKeyMetadataPolicy IMPORTED_KEYS_ONLY =
+	private static final @Nonnull ForeignKeyMetadataPolicy IMPORTED_KEYS_ONLY =
 			new ForeignKeyMetadataPolicy( Mode.IMPORTED_KEYS_ONLY, null );
 
 	public ForeignKeyMetadataPolicy {
@@ -33,11 +34,13 @@ public record ForeignKeyMetadataPolicy(
 	}
 
 	/// Return the stable portable imported-keys-only policy.
+	@Nonnull
 	public static ForeignKeyMetadataPolicy importedKeysOnly() {
 		return IMPORTED_KEYS_ONLY;
 	}
 
 	/// Return a policy which supplements imported keys with cross-reference rows.
+	@Nonnull
 	public static ForeignKeyMetadataPolicy importedKeysAndCrossReference(
 			@Nullable String parentTableFilter) {
 		return new ForeignKeyMetadataPolicy( Mode.IMPORTED_KEYS_AND_CROSS_REFERENCE, parentTableFilter );

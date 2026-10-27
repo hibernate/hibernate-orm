@@ -2,6 +2,7 @@ package org.hibernate.tool.schema.extract.spi;
 
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -27,5 +28,6 @@ public interface SequenceInformationExtractor {
 	///
 	/// Propagate an [SQLException] unchanged unless the implementation can handle
 	/// it without changing the extraction contract.
-	Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException;
+	@Nonnull Iterable<SequenceInformation> extractMetadata(@Nonnull ExtractionContext extractionContext)
+			throws SQLException;
 }

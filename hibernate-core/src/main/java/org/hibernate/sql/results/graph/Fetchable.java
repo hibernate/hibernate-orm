@@ -1,14 +1,11 @@
 package org.hibernate.sql.results.graph;
 
-import jakarta.annotation.Nullable;
-
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.spi.IndexedConsumer;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -85,18 +82,10 @@ public interface Fetchable extends ModelPart {
 		return false;
 	}
 
-	@Nullable
-	default AttributeMapping asAttributeMapping() {
-		return null;
-	}
-
 	default boolean isSelectable() {
-		final AttributeMapping attributeMapping = asAttributeMapping();
-		if ( attributeMapping != null && attributeMapping.getAttributeMetadata() != null ) {
-			return attributeMapping.getAttributeMetadata().isSelectable();
-		}
-		else {
-			return true;
-		}
+		final var attributeMapping = asAttributeMapping();
+		return attributeMapping == null
+			|| attributeMapping.getAttributeMetadata() == null
+			|| attributeMapping.getAttributeMetadata().isSelectable();
 	}
 }

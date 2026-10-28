@@ -1,6 +1,7 @@
 package org.hibernate.tool.reveng.internal.core.strategy;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -30,6 +31,16 @@ class OverrideRepositoryDtdTest {
 		assertNotNull(source, "Entity resolver should resolve the DTD");
 		assertNotNull(source.getByteStream(),
 				"Resolved InputSource should have a stream");
+	}
+
+	@Test
+	void entityResolverDoesNotResolveUnknownLocations() throws Exception {
+		InputSource source = OverrideRepository.DTD_RESOLVER.resolveEntity(
+				null,
+				"http://example.com/external.dtd");
+		assertNotNull(source, "Unknown locations must not fall back to the default resolution");
+		assertEquals(-1, source.getCharacterStream().read(),
+				"Unknown locations should resolve to empty content");
 	}
 
 	@Test

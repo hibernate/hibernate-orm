@@ -1,0 +1,9 @@
+<entity class="Child">
+	<attributes>
+		<id name="id">
+			<generated-value/>
+		</id>
+		<basic name="age"/>
+		<many-to-one name="parent" target-entity="Parent"/>
+	</attributes>
+</entity>

@@ -1,6 +1,8 @@
 package org.hibernate.action.queue.internal;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.action.queue.internal.constraint.ConstraintModel;
 import org.hibernate.action.queue.spi.MutationKind;
@@ -41,8 +43,18 @@ class FlushCoordinatorCollectionGroupingTest {
 				"second"
 		);
 
+		final var constraintModel = new ConstraintModel(
+				List.of(),
+				List.of(),
+				Map.of(),
+				Map.of(),
+				Map.of(),
+				Set.of(),
+				Set.of()
+		);
+
 		final var coordinator = new FlushCoordinator(
-				mock( ConstraintModel.class ),
+				constraintModel,
 				mock( PlanningOptions.class ),
 				mock( SessionImplementor.class )
 		);

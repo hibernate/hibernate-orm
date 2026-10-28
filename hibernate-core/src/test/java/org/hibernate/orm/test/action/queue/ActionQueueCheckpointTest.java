@@ -1,6 +1,8 @@
 package org.hibernate.orm.test.action.queue;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityInsertAction;
@@ -73,7 +75,15 @@ public class ActionQueueCheckpointTest {
 		);
 		verifyOrphanCollectionRemoval(
 				new GraphBasedActionQueue(
-						mock( ConstraintModel.class ),
+						new ConstraintModel(
+								List.of(),
+								List.of(),
+								Map.of(),
+								Map.of(),
+								Map.of(),
+								Set.of(),
+								Set.of()
+						),
 						mock( PlanningOptions.class ),
 						Map.of(),
 						false,

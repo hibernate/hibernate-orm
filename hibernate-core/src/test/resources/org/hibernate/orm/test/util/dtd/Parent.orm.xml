@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE entity-mappings [
+		<!ENTITY child SYSTEM "classpath://org/hibernate/orm/test/util/dtd/child-entity.xml">
+]>
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_2.xsd"
+				 version="3.2">
+
+	<package>org.hibernate.orm.test.util.dtd</package>
+	<access>FIELD</access>
+
+	<entity class="Parent">
+		<attributes>
+			<id name="id">
+				<generated-value/>
+			</id>
+			<one-to-many name="children" target-entity="Child" mapped-by="parent"/>
+		</attributes>
+	</entity>
+
+	&child;
+</entity-mappings>

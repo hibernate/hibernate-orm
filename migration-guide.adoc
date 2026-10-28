@@ -472,6 +472,41 @@ they were through 5.x and 6.1.
 Element collections are unaffected: a null element of an `@ElementCollection` list has never been persisted,
 and such lists still load back without it.
 
+[[xml-dtd-external-entities]]
+=== DTD processing and external entities in XML documents
+
+To protect applications against XML External Entity (XXE) attacks, Hibernate no longer processes DTDs or
+resolves external entities when parsing XML. This applies to `hibernate.cfg.xml`, `orm.xml` and `hbm.xml`
+mapping documents, `persistence.xml`, values read by the JAXB-based `FormatMapper` (`JaxbXmlFormatMapper`),
+and the XML files read by the reverse engineering tooling.
+
+A document that only declares a `DOCTYPE` is still accepted, though the referenced DTD is never fetched.
+Predefined entities (such as `&amp;`) and character references keep working. However, a document now fails to
+parse if it uses internal entities, external entities, or entities declared in an external DTD, for example:
+
+[source,xml]
+----
+<!DOCTYPE entity-mappings [
+    <!ENTITY child SYSTEM "classpath://org/example/child-entity.xml">
+]>
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="3.2">
+    &child;
+</entity-mappings>
+----
+
+For mapping documents coming from a trusted source, the previous behavior can be restored by setting
+`hibernate.xml.allow_dtd_and_external_entities` to `true`:
+
+* for `orm.xml` and `hbm.xml` documents, the setting can be specified like any other configuration setting;
+* for `hibernate.cfg.xml`, the setting must be specified as a system property or in `hibernate.properties`,
+since it has to be known before the file is read.
+
+`persistence.xml` and the values handled by `JaxbXmlFormatMapper` are always parsed with DTD processing and
+external entities disabled, regardless of this setting.
+
+When the Hibernate Processor (metamodel generator) reads `orm.xml` documents, use the annotation processor
+option `-AallowDtdAndExternalEntities=true` to restore the previous behavior.
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes

@@ -110,13 +110,26 @@ publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Releasing
 
+def releaseChecksTask = tasks.register("releaseChecks") {
+    group = "release"
+    description = "Perform checks prior to starting release tasks.  Dependency of `releasePrepare`.  Apply dependencies here on sub-projects to run specific tasks prior to release preparation."
+
+    dependsOn tasks.forbiddenApis
+    dependsOn tasks.formatChecks
+    dependsOn tasks.spotlessCheck
+    dependsOn tasks.verifyModuleVersionAlignment
+}
+
 def releasePrepareTask = tasks.register("releasePrepare") {
     group = "release"
     description = "See :release:releasePrepare for details.  Here we hook in testing and checks ensure publish-ability"
 
-    dependsOn tasks.check
+    dependsOn releaseChecksTask
+
+    // NOTE : `generateMetadataFileForPublishedArtifactsPublication` triggers many of the tasks we want run here - source-generation, compile, jar
     dependsOn tasks.generateMetadataFileForPublishedArtifactsPublication
     dependsOn tasks.generatePomFileForPublishedArtifactsPublication
+
     // we depend on publishAllPublicationsToStagingRepository to make sure that the artifacts are "published" to a local staging directory
     // used by JReleaser during the release process
     dependsOn tasks.publishAllPublicationsToStagingRepository

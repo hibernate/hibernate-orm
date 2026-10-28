@@ -17,7 +17,7 @@ tasks.build.enabled = false
 //
 // This coordinates:
 //		1. assemble documentation (we want this to run here as a "check")
-//		2. generate and place all the artifacts in the staging directory (see local.publishing-java-module)
+//      2. `releasePrepare` across all java-based sub-projects (see local.publishing-java-module)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def releasePrepareTask = tasks.register("releasePrepare") {

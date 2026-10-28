@@ -55,7 +55,7 @@ class BatchingExecutionMonitorTest {
 		when( logicalConnection.getPhysicalConnection() ).thenReturn( mock( Connection.class ) );
 
 		final var tableDescriptor = mock( TableDescriptor.class );
-		final var shapeKey = mock( StatementShapeKey.class );
+		final var shapeKey = new StatementShapeKey( "collection_table", MutationKind.UPDATE, 0 );
 		final var jdbcOperation = mock( PreparableMutationOperation.class );
 		when( jdbcOperation.canBeBatched( shapeKey, 5 ) ).thenReturn( true );
 		final var bindPlan = mock( BindPlan.class );
@@ -111,7 +111,7 @@ class BatchingExecutionMonitorTest {
 		when( jdbcCoordinator.getLogicalConnection() ).thenReturn( logicalConnection );
 		when( logicalConnection.getPhysicalConnection() ).thenReturn( mock( Connection.class ) );
 
-		final var shapeKey = mock( StatementShapeKey.class );
+		final var shapeKey = new StatementShapeKey( "collection_table", MutationKind.UPDATE, 0 );
 		final var jdbcOperation = mock( PreparableMutationOperation.class );
 		when( jdbcOperation.canBeBatched( shapeKey, 5 ) ).thenReturn( true );
 		doReturn( List.of( mock( JdbcParameterBinder.class ) ) ).when( jdbcOperation ).getParameterBinders();
@@ -165,7 +165,7 @@ class BatchingExecutionMonitorTest {
 		when( logicalConnection.getPhysicalConnection() ).thenReturn( mock( Connection.class ) );
 
 		final var tableDescriptor = mock( TableDescriptor.class );
-		final var shapeKey = mock( StatementShapeKey.class );
+		final var shapeKey = new StatementShapeKey( "collection_table", MutationKind.INSERT, 0 );
 		final var jdbcOperation = mock( PreparableMutationOperation.class );
 		when( jdbcOperation.canBeBatched( shapeKey, 5 ) ).thenReturn( true );
 		doReturn( List.of( mock( JdbcParameterBinder.class ) ) ).when( jdbcOperation ).getParameterBinders();

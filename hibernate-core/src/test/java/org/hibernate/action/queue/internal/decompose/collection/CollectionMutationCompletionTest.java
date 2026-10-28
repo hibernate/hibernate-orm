@@ -1,6 +1,7 @@
 package org.hibernate.action.queue.internal.decompose.collection;
 
 import org.hibernate.action.queue.internal.PreparedCollectionMutation;
+import org.hibernate.action.queue.spi.CollectionEndpoint;
 import org.hibernate.action.queue.spi.CollectionMutationId;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
@@ -79,8 +80,16 @@ class CollectionMutationCompletionTest {
 	@Test
 	void failedPhysicalWorkSuppressesEverySuccessfulLifecycleConsumer() {
 		final var completion = completion( 8 );
-		final var mutation = mock( PreparedCollectionMutation.class );
 		final var persister = mock( CollectionPersister.class );
+		final var mutation = new PreparedCollectionMutation(
+				PreparedCollectionMutation.Kind.UPDATE,
+				null,
+				new CollectionEndpoint( persister, null ),
+				false,
+				null,
+				null,
+				null
+		);
 		final var factory = mock( SessionFactoryImplementor.class );
 		final var statistics = mock( StatisticsImplementor.class );
 		final var failureSession = mock( SessionImplementor.class );
@@ -88,8 +97,6 @@ class CollectionMutationCompletionTest {
 		final var postEvent = mock( PostExecutionCallback.class );
 		final var cacheLifecycle = mock( PostExecutionCallback.class );
 		final var queuedOperationFinalization = mock( PostExecutionCallback.class );
-		when( mutation.kind() ).thenReturn( PreparedCollectionMutation.Kind.UPDATE );
-		when( mutation.getPersister() ).thenReturn( persister );
 		when( persister.getRole() ).thenReturn( "Owner.values" );
 		when( failureSession.getFactory() ).thenReturn( factory );
 		when( factory.getStatistics() ).thenReturn( statistics );

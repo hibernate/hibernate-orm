@@ -352,6 +352,9 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 		if ( substitute ) {
 			persister.setValues( entity, values );
+			// Injected insert values may dirty properties, and setters may also change other properties.
+			// Use normal dirty checking to distinguish those changes.
+			processIfManagedEntity( entity, managedEntity -> managedEntity.$$_hibernate_setUseTracker( false ) );
 		}
 
 		TypeHelper.deepCopy(

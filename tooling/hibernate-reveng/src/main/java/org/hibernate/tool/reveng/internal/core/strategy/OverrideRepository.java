@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,7 +62,8 @@ public class OverrideRepository  {
 				return source;
 			}
 		}
-		return null;
+		// Never fetch DTDs or entities from unknown locations
+		return new InputSource( new StringReader( "" ) );
 	};
 
 	private static boolean matches(String id) {

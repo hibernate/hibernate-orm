@@ -63,6 +63,7 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.spi.expression.SqmGroupByAll;
 import org.hibernate.query.sqm.tree.spi.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteralEmbeddableType;
@@ -128,6 +129,7 @@ import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
  * Support for walking a Semantic Query Model (SQM) tree
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public interface SemanticQueryWalker<T> {
 	T visitUpdateStatement(SqmUpdateStatement<?> statement);
@@ -286,6 +288,8 @@ public interface SemanticQueryWalker<T> {
 	T visitSelection(SqmSelection<?> selection);
 
 	T visitValues(SqmValues values);
+
+	T visitGroupByAllClause(SqmGroupByAll groupByClauseExpression);
 
 	T visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions);
 

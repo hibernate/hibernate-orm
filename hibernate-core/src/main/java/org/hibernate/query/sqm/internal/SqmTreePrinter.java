@@ -51,6 +51,7 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.spi.expression.SqmGroupByAll;
 import org.hibernate.query.sqm.tree.spi.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteralEmbeddableType;
@@ -132,6 +133,7 @@ import static java.lang.System.lineSeparator;
  * these statement rules
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	private static final Logger LOG = Logger.getLogger( SqmTreePrinter.class );
@@ -472,6 +474,18 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 					visitFetchExpression( querySpec.getFetchExpression() );
 				}
 		);
+
+		return null;
+	}
+
+	@Override
+	public Object visitGroupByAllClause(SqmGroupByAll groupByClauseExpression) {
+		if ( groupByClauseExpression != null ) {
+			processStanza(
+					"group-by",
+					() -> groupByClauseExpression.accept( this )
+			);
+		}
 
 		return null;
 	}

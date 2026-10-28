@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmStatement;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.spi.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.spi.expression.SqmGroupByAll;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 
@@ -45,6 +46,7 @@ import static org.hibernate.query.sqm.tree.spi.jpa.ParameterCollector.collectPar
 
 /**
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		implements JpaCriteriaQuery<T>, SqmStatement<T>, ParameterCollector {
@@ -468,6 +470,13 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public SqmSelectStatement<T> groupBy(@Nonnull List<Expression<?>> grouping) {
 		super.groupBy( grouping );
+		return this;
+	}
+
+	@Nonnull
+	@Override
+	public SqmSelectStatement<T> groupByAll() {
+		super.groupBy( new SqmGroupByAll(nodeBuilder()) );
 		return this;
 	}
 

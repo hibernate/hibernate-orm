@@ -95,7 +95,7 @@ class CollectionMutationExecutorCompletionTest {
 				bindPlan,
 				0,
 				"collection update",
-				mock( StatementShapeKey.class )
+				new StatementShapeKey( "collection_table", MutationKind.UPDATE, 0 )
 		);
 	}
 
@@ -122,7 +122,7 @@ class CollectionMutationExecutorCompletionTest {
 					mock( BindPlan.class ),
 					0,
 					"collection update",
-					mock( StatementShapeKey.class )
+					new StatementShapeKey( "collection_table", MutationKind.UPDATE, 0 )
 			);
 			completion.registerOperation( operation );
 			completion.registerCompletionHandler( handler );

@@ -82,8 +82,20 @@ class CollectionRowCompactionTest {
 				boolean selfReferential,
 				CollectionMutationPlanContributor contributor,
 				CollectionPart elementDescriptor) {
-			final var table = mock( CollectionTableDescriptor.class );
-			when( table.isSelfReferential() ).thenReturn( selfReferential );
+			final var table = new CollectionTableDescriptor(
+					"collection_table",
+					null,
+					false,
+					false,
+					selfReferential,
+					false,
+					false,
+					null,
+					null,
+					null,
+					null,
+					null
+			);
 			when( persister.getCollectionTableDescriptor() ).thenReturn( table );
 			when( persister.getAttributeMapping() ).thenReturn( attributeMapping );
 			when( attributeMapping.getElementDescriptor() ).thenReturn( elementDescriptor );

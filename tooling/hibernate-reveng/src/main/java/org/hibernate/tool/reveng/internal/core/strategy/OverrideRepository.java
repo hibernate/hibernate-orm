@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,7 +62,8 @@ public class OverrideRepository  {
 				return source;
 			}
 		}
-		return null;
+		// Never fetch DTDs or entities from unknown locations
+		return new InputSource( new StringReader( "" ) );
 	};
 
 	private static boolean matches(String id) {
@@ -321,22 +323,27 @@ public class OverrideRepository  {
 	public RevengStrategy getReverseEngineeringStrategy(RevengStrategy delegate) {
 		return new DelegatingStrategy(delegate) {
 
+			@Override
 			public boolean excludeTable(TableIdentifier ti) {
 				return OverrideRepository.this.excludeTable(ti);
 			}
 
+			@Override
 			public Map<String,MetaAttribute> tableToMetaAttributes(TableIdentifier tableIdentifier) {
 				return OverrideRepository.this.tableToMetaAttributes(tableIdentifier);
 			}
 
+			@Override
 			public Map<String, MetaAttribute> columnToMetaAttributes(TableIdentifier tableIdentifier, String column) {
 				return OverrideRepository.this.columnToMetaAttributes(tableIdentifier, column);
 			}
 
+			@Override
 			public boolean excludeColumn(TableIdentifier identifier, String columnName) {
 				return excludedColumns.contains(new TableColumnKey(identifier, columnName));
 			}
 
+			@Override
 			public String tableToCompositeIdName(TableIdentifier identifier) {
 				String result = compositeIdNameForTable.get(identifier);
 				if(result==null) {
@@ -346,6 +353,7 @@ public class OverrideRepository  {
 					return result;
 				}
 			}
+			@Override
 			public List<SchemaSelection> getSchemaSelections() {
 				if(schemaSelections.isEmpty()) {
 					return super.getSchemaSelections();
@@ -355,6 +363,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public String columnToHibernateTypeName(TableIdentifier table, String columnName, int sqlType, int length, int precision, int scale, boolean nullable, boolean generatedIdentifier) {
 				String result;
 				String location = "";
@@ -384,6 +393,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public String tableToClassName(TableIdentifier tableIdentifier) {
 				String className = tableToClassName.get(tableIdentifier);
 
@@ -413,6 +423,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public List<ForeignKey> getForeignKeys(TableIdentifier referencedTable) {
 				List<ForeignKey> list = foreignKeys.get(referencedTable);
 				if(list==null) {
@@ -423,6 +434,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public String columnToPropertyName(TableIdentifier table, String column) {
 				String result = propertyNameForColumn.get(new TableColumnKey(table, column));
 				if(result==null) {
@@ -433,6 +445,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public String tableToIdentifierPropertyName(TableIdentifier tableIdentifier) {
 				String result = propertyNameForPrimaryKey.get(tableIdentifier);
 				if(result==null) {
@@ -443,6 +456,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public String getTableIdentifierStrategyName(TableIdentifier tableIdentifier) {
 				String result = identifierStrategyForTable.get(tableIdentifier);
 				if(result==null) {
@@ -454,6 +468,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public Properties getTableIdentifierProperties(TableIdentifier tableIdentifier) {
 				Properties result = identifierPropertiesForTable.get(tableIdentifier);
 				if(result==null) {
@@ -464,6 +479,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public List<String> getPrimaryKeyColumnNames(TableIdentifier tableIdentifier) {
 				List<String> result = primaryKeyColumnsForTable.get(tableIdentifier);
 				if(result==null) {
@@ -474,6 +490,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public String foreignKeyToEntityName(String keyname, TableIdentifier fromTable, List<?> fromColumnNames, TableIdentifier referencedTable, List<?> referencedColumnNames, boolean uniqueReference) {
 				String property = foreignKeyToOneName.get(keyname);
 				if(property==null) {
@@ -484,7 +501,7 @@ public class OverrideRepository  {
 				}
 			}
 
-
+			@Override
 			public String foreignKeyToInverseEntityName(String keyname,
 														TableIdentifier fromTable, List<?> fromColumnNames,
 														TableIdentifier referencedTable,
@@ -499,6 +516,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public String foreignKeyToCollectionName(String keyname, TableIdentifier fromTable, List<?> fromColumns, TableIdentifier referencedTable, List<?> referencedColumns, boolean uniqueReference) {
 				String property = foreignKeyToInverseName.get(keyname);
 				if(property==null) {
@@ -509,6 +527,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public boolean excludeForeignKeyAsCollection(
 					String keyname,
 					TableIdentifier fromTable,
@@ -520,6 +539,7 @@ public class OverrideRepository  {
 						referencedTable, referencedColumns));
 			}
 
+			@Override
 			public boolean excludeForeignKeyAsManytoOne(
 					String keyname,
 					TableIdentifier fromTable,
@@ -531,7 +551,7 @@ public class OverrideRepository  {
 						referencedTable, referencedColumns));
 			}
 
-
+			@Override
 			public AssociationInfo foreignKeyToInverseAssociationInfo(ForeignKey foreignKey) {
 				AssociationInfo fkei = foreignKeyToInverseEntityInfo.get(foreignKey.getName());
 				if(fkei!=null) {
@@ -542,6 +562,7 @@ public class OverrideRepository  {
 				}
 			}
 
+			@Override
 			public AssociationInfo foreignKeyToAssociationInfo(ForeignKey foreignKey) {
 				AssociationInfo fkei = foreignKeyToEntityInfo.get(foreignKey.getName());
 				if(fkei!=null) {

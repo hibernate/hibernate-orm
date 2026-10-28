@@ -1,11 +1,16 @@
 package org.hibernate.tool.reveng.internal.xml;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,6 +54,17 @@ public class AbstractXMLPrettyPrinterStrategyTest {
 		assertEquals("root", doc.getDocumentElement().getTagName());
 		NodeList children = doc.getDocumentElement().getChildNodes();
 		assertEquals(3, children.getLength());
+	}
+
+	@Test
+	public void testNewDocumentDoesNotResolveExternalEntities(@TempDir Path tempDir) throws Exception {
+		Path secret = Files.writeString(tempDir.resolve("secret.txt"), "top-secret");
+		String xml = "<?xml version=\"1.0\"?>"
+				+ "<!DOCTYPE root [ <!ENTITY xxe SYSTEM \"" + secret.toUri() + "\"> ]>"
+				+ "<root>&xxe;</root>";
+		Document doc = strategy.newDocument(xml, "UTF-8");
+
+		assertFalse(doc.getDocumentElement().getTextContent().contains("top-secret"));
 	}
 
 	@Test

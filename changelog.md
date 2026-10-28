@@ -1,5 +1,97 @@
 # Hibernate ORM Changelog
 
+## 8.0.0.Beta4 (October 28, 2026)
+
+[Full changelog](https://hibernate.atlassian.net/projects/HHH/versions/40489)
+
+
+### Bug
+* [HHH-21022](https://hibernate.atlassian.net/browse/HHH-21022) -  <exclude-from-versioning/> orm xml element is not processed by the XML mapping binder
+* [HHH-21017](https://hibernate.atlassian.net/browse/HHH-21017) - Derive embeddable access from the containing class independently of attribute access overrides
+* [HHH-21015](https://hibernate.atlassian.net/browse/HHH-21015) - StatelessSession: optional @OneToOne with a missing row throws EntityNotFoundException instead of yielding null (regression in 8.0.0.Beta3)
+* [HHH-21013](https://hibernate.atlassian.net/browse/HHH-21013) - JTA completion callbacks lose the original transaction completion status
+* [HHH-21012](https://hibernate.atlassian.net/browse/HHH-21012) - Stale updates using generated-value returning report missing generated values instead of optimistic locking failures
+* [HHH-21011](https://hibernate.atlassian.net/browse/HHH-21011) - Locking.FollowOn options are ignored by lock() and refresh()
+* [HHH-21004](https://hibernate.atlassian.net/browse/HHH-21004) - Fix Sybase locking bug
+* [HHH-21002](https://hibernate.atlassian.net/browse/HHH-21002) - JSON-B auto-discovery fails when the API is present without a provider
+* [HHH-21001](https://hibernate.atlassian.net/browse/HHH-21001) - @GenericGenerator on an attribute of a composite id fails with "Unsupported generated ModelPart"
+* [HHH-21000](https://hibernate.atlassian.net/browse/HHH-21000) - NPE in StatelessFindByKeyOperation.loadFromSecondLevelCache() when LockMode is not defined
+* [HHH-20997](https://hibernate.atlassian.net/browse/HHH-20997) - EntityAgent does not process @ElementCollection declared inside @Embeddable on insert/update/upsert
+* [HHH-20996](https://hibernate.atlassian.net/browse/HHH-20996) - Graph-based ActionQueue writes deletes to the inverse side of a many-to-many association
+* [HHH-20995](https://hibernate.atlassian.net/browse/HHH-20995) - Javadoc for JpaComplianceSettings incorrectly states default value
+* [HHH-20994](https://hibernate.atlassian.net/browse/HHH-20994) - Graph-based ActionQueue executes each entity delete in its own JDBC batch
+* [HHH-20993](https://hibernate.atlassian.net/browse/HHH-20993) - Fix cache-region enumeration and prepared-statement release statistics
+* [HHH-20992](https://hibernate.atlassian.net/browse/HHH-20992) - @ExcludeDefaultListeners incorrectly suppresses discovered @EntityListener callbacks
+* [HHH-20991](https://hibernate.atlassian.net/browse/HHH-20991) - @ExcludeDefaultListeners does not exclude package- and module-level listeners
+* [HHH-20990](https://hibernate.atlassian.net/browse/HHH-20990) - HibernatePersistenceConfiguration bootstraps the SessionFactory twice
+* [HHH-20985](https://hibernate.atlassian.net/browse/HHH-20985) - Schema tooling - targeting a URL ignores append setting
+* [HHH-20983](https://hibernate.atlassian.net/browse/HHH-20983) - Hibernate Processor generates invalid code for `KeyedResultList` and `CursoredPage` methods of reactive repositories
+* [HHH-20981](https://hibernate.atlassian.net/browse/HHH-20981) - Jakarta Data repo fails to find primary entity of reactive `@Find` method
+* [HHH-20976](https://hibernate.atlassian.net/browse/HHH-20976) - Follow-on locking doesn't work with scrollable results
+* [HHH-20972](https://hibernate.atlassian.net/browse/HHH-20972) - Processor fails on record projections of entities being compiled
+* [HHH-20970](https://hibernate.atlassian.net/browse/HHH-20970) - Named native queries fail to implicitly instantiate record result classes
+* [HHH-20951](https://hibernate.atlassian.net/browse/HHH-20951) - Inherited Quarkus Data entity metamodels generate incompatible static repository accessors
+* [HHH-20947](https://hibernate.atlassian.net/browse/HHH-20947) - HbmXmlTransformer, NPE when transforming <one-to-one/> with property-ref and no class/entity-name
+* [HHH-20935](https://hibernate.atlassian.net/browse/HHH-20935) - HbmXmlTransformer duplicates map-key join columns for element-collection maps with <map-key-many-to-many>
+* [HHH-20934](https://hibernate.atlassian.net/browse/HHH-20934) - SQL Server date_trunc() emulation for versions before 2022 (16.x) issues
+* [HHH-20931](https://hibernate.atlassian.net/browse/HHH-20931) - Unnesting array, JSON or XML with HANA in subquery fails
+* [HHH-20906](https://hibernate.atlassian.net/browse/HHH-20906) - Bug in combination of @Audited, Joined Inheritance and @SecondaryTable
+* [HHH-20901](https://hibernate.atlassian.net/browse/HHH-20901) - HbmXmlTransformer ignores batch-size attribute on collection mappings
+* [HHH-20900](https://hibernate.atlassian.net/browse/HHH-20900) - HbmXmlTransformer does not transform foreign-key attribute from many-to-many element
+* [HHH-20854](https://hibernate.atlassian.net/browse/HHH-20854) - HbmXmlTransformer does not preserve not-null="true" on collection <key> elements 
+* [HHH-20852](https://hibernate.atlassian.net/browse/HHH-20852) - HbmXmlTransformer should convert many-to-one with unique="true" and orphan-removal to one-to-one
+* [HHH-20850](https://hibernate.atlassian.net/browse/HHH-20850) - MySQL enum column gets ALTERed on every startup with hbm2ddl.auto=update, even with no schema change
+* [HHH-20823](https://hibernate.atlassian.net/browse/HHH-20823) - HbmXmlTransformer does not transform hbm entity loaders
+* [HHH-20818](https://hibernate.atlassian.net/browse/HHH-20818) - Missing join on parent class table in criteria
+* [HHH-20810](https://hibernate.atlassian.net/browse/HHH-20810) - Database snapshot of a detached entity invokes the custom `EmbeddableInstantiator` with a bogus value array (regression in 7.4.x, works in 7.3.x)
+* [HHH-20787](https://hibernate.atlassian.net/browse/HHH-20787) - NPEs in criteria multiselect when producing enum parameters
+* [HHH-20753](https://hibernate.atlassian.net/browse/HHH-20753) - LinkageError during runtime enhancement from recursive loading of Byte Buddy classes
+* [HHH-20646](https://hibernate.atlassian.net/browse/HHH-20646) - ClassCastException when selecting an entity from a lateral derived table
+* [HHH-20440](https://hibernate.atlassian.net/browse/HHH-20440) - ConcreteSqmSelectQueryPlan forces TupleTransformer to provided suiteable constructor
+* [HHH-19959](https://hibernate.atlassian.net/browse/HHH-19959) - `default-cascade` in hbm.xml is ignored in Hibernate 7
+* [HHH-18532](https://hibernate.atlassian.net/browse/HHH-18532) - Date/time related JavaType's are not always properly unwrapping into java.util.Date subclasses
+* [HHH-17354](https://hibernate.atlassian.net/browse/HHH-17354) - HQL queries do not handle quoted identifiers from sub-queries
+* [HHH-14702](https://hibernate.atlassian.net/browse/HHH-14702) - NPE in JPA Criteria when use selectCase that return an enumerated
+* [HHH-13537](https://hibernate.atlassian.net/browse/HHH-13537) - Identifier access override incorrectly determines access for embeddable collection elements and map keys
+* [HHH-12184](https://hibernate.atlassian.net/browse/HHH-12184) - NPE selectCase LiteralExpression enumerated value
+* [HHH-11977](https://hibernate.atlassian.net/browse/HHH-11977) - Wrong parameter binding when explicitly joining association targeting a non-PK
+* [HHH-10875](https://hibernate.atlassian.net/browse/HHH-10875) - Iterator.remove not calling beforeRemove on PersistentIdentifierBag
+
+### Improvement
+* [HHH-20988](https://hibernate.atlassian.net/browse/HHH-20988) - Support Formula-Based Joins for @OneToOne Associations
+* [HHH-20982](https://hibernate.atlassian.net/browse/HHH-20982) - Holistic review of the User Guide
+* [HHH-20977](https://hibernate.atlassian.net/browse/HHH-20977) - Improve handling for cases where an entity class cannot use runtime proxying 
+* [HHH-20960](https://hibernate.atlassian.net/browse/HHH-20960) - Adjust mapping.xsd based on JPA 4 correction for exclude-from-versioning
+* [HHH-20959](https://hibernate.atlassian.net/browse/HHH-20959) - Use HTTPS for mapping.xsd namespace for 8.0
+* [HHH-20954](https://hibernate.atlassian.net/browse/HHH-20954) - Remove relocation coordinates from hibernate-platform
+* [HHH-20948](https://hibernate.atlassian.net/browse/HHH-20948) - HbmXmlTransformer, transform collection foreign keys referencing an alternate key (property-ref) in hbm.xml 
+* [HHH-20946](https://hibernate.atlassian.net/browse/HHH-20946) - Update to Hibernate Accessor 0.1.0.Alpha6
+* [HHH-20937](https://hibernate.atlassian.net/browse/HHH-20937) - Remove source file headers
+* [HHH-20908](https://hibernate.atlassian.net/browse/HHH-20908) - HbmXmlTransformer should throw exception for unsupported `proxy` attribute
+* [HHH-20907](https://hibernate.atlassian.net/browse/HHH-20907) - HbmXmlTransformer should reject unsupported cascade styles
+* [HHH-20814](https://hibernate.atlassian.net/browse/HHH-20814) - HbmXmlTransformer does not transform hbm collection loaders
+* [HHH-20565](https://hibernate.atlassian.net/browse/HHH-20565) - Update to CDI 5
+* [HHH-20542](https://hibernate.atlassian.net/browse/HHH-20542) - Allow instantiation of IdClass types (and others?) even with --illegal-final-field-mutation=deny
+* [HHH-20479](https://hibernate.atlassian.net/browse/HHH-20479) - Add documentation and checks for final persistent fields
+* [HHH-19492](https://hibernate.atlassian.net/browse/HHH-19492) - Log message when scanning is triggered but only standard scanning is available
+* [HHH-13784](https://hibernate.atlassian.net/browse/HHH-13784) - PrimitiveByteArrayJavaType should not write whole data to log
+* [HHH-10607](https://hibernate.atlassian.net/browse/HHH-10607) - More visible logging for unscheduled deletions
+* [HHH-9246](https://hibernate.atlassian.net/browse/HHH-9246) - Apply BeanValidation prior to JPA generateSchema()
+
+### New Feature
+* [HHH-20950](https://hibernate.atlassian.net/browse/HHH-20950) - Introduce proper hibernate-processor SPI
+* [HHH-19821](https://hibernate.atlassian.net/browse/HHH-19821) - Add @GeneratorOptimizer
+* [HHH-19722](https://hibernate.atlassian.net/browse/HHH-19722) - "Skinny" / non-platform BOM
+
+### Sub-task
+* [HHH-12168](https://hibernate.atlassian.net/browse/HHH-12168) - Support for Interceptors as CDI beans
+
+### Task
+* [HHH-21014](https://hibernate.atlassian.net/browse/HHH-21014) - Clean up deprecation warnings
+* [HHH-20974](https://hibernate.atlassian.net/browse/HHH-20974) - Upgrade H2 to 2.5.252
+* [HHH-20957](https://hibernate.atlassian.net/browse/HHH-20957) - Upgrade ByteBuddy to 1.18.14 (latest micro update) for Java 27
+* [HHH-20858](https://hibernate.atlassian.net/browse/HHH-20858) - Upgrade H2 to 2.5.250
+
 ## 8.0.0.Beta3 (September 25, 2026)
 
 [Full changelog](https://hibernate.atlassian.net/projects/HHH/versions/40456)

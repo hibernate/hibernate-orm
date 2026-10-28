@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies that, by default, mapping documents declaring a DTD and external entities are rejected.
+ * Verifies that, by default, mapping documents declaring entities are rejected, while a plain DOCTYPE is accepted.
  *
  * @see org.hibernate.cfg.MappingSettings#XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES
  */
@@ -26,10 +26,31 @@ public class EntityResolverDisallowedTest {
 		// Parent.orm.xml declares a DTD with the following entity include:
 		//		<!ENTITY child SYSTEM "classpath://org/hibernate/orm/test/util/dtd/child-entity.xml">
 		// which must not be processed unless explicitly allowed.
+		assertRejected( registryScope, "org/hibernate/orm/test/util/dtd/Parent.orm.xml" );
+	}
+
+	@Test
+	public void testInternalEntityRejectedByDefault(ServiceRegistryScope registryScope) {
+		// InternalEntity.orm.xml declares a DTD with the following internal entity:
+		//		<!ENTITY package "org.hibernate.orm.test.util.dtd">
+		// which, not being external, is still not expanded unless explicitly allowed.
+		assertRejected( registryScope, "org/hibernate/orm/test/util/dtd/InternalEntity.orm.xml" );
+	}
+
+	@Test
+	public void testDoctypeWithoutEntitiesAcceptedByDefault(ServiceRegistryScope registryScope) {
+		// DoctypeWithoutEntities.orm.xml declares an unreachable external DTD and an internal subset
+		// with no entities: the external DTD must not be fetched, and the document must still bind.
+		new MetadataSources( registryScope.getRegistry() )
+				.addResource( "org/hibernate/orm/test/util/dtd/DoctypeWithoutEntities.orm.xml" )
+				.buildMetadata();
+	}
+
+	private static void assertRejected(ServiceRegistryScope registryScope, String resource) {
 		final var exception = assertThrows(
 				Exception.class,
 				() -> new MetadataSources( registryScope.getRegistry() )
-						.addResource( "org/hibernate/orm/test/util/dtd/Parent.orm.xml" )
+						.addResource( resource )
 						.buildMetadata()
 		);
 		final var mappingException = assertInstanceOf( MappingException.class, exception.getCause() );

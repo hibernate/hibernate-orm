@@ -15,8 +15,12 @@ import java.util.List;
 import java.util.Map;
 
 import javax.xml.namespace.QName;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import jakarta.xml.bind.annotation.XmlElement;
+import org.hibernate.boot.cfgxml.internal.XmlFactoryUtil;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.ReflectHelper;
@@ -33,6 +37,7 @@ import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.JAXBIntrospector;
 import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.UnmarshalException;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.annotation.XmlAnyElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
@@ -50,6 +55,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 	private final String collectionElementTagName;
 	private final String mapKeyTagName;
 	private final String mapValueTagName;
+	private final XMLInputFactory staxFactory;
 
 	public JaxbXmlFormatMapper() {
 		this( true );
@@ -67,6 +73,9 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			mapKeyTagName = "k";
 			mapValueTagName = "v";
 		}
+		staxFactory = XMLInputFactory.newInstance();
+		// Values parsed here are runtime data (database, parameters, cache), never resolve DTDs or external entities
+		XmlFactoryUtil.configureXmlFactory( staxFactory, false );
 	}
 
 	@Override
@@ -104,8 +113,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					}
 				}
 				final Unmarshaller unmarshaller = context.createUnmarshaller();
-				final ManagedMapWrapper mapWrapper = (ManagedMapWrapper) unmarshaller
-						.unmarshal( new StringReader( charSequence.toString() ) );
+				final ManagedMapWrapper mapWrapper = (ManagedMapWrapper) unmarshal( unmarshaller, charSequence );
 				final Map<Object, Object> map = CollectionHelper.linkedMapOfSize( mapWrapper.size() >> 1 );
 				final JAXBIntrospector jaxbIntrospector = context.createJAXBIntrospector();
 				final JAXBElementTransformer keyTransformer;
@@ -176,8 +184,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					context = JAXBContext.newInstance( CollectionWrapper.class );
 				}
 				final Unmarshaller unmarshaller = context.createUnmarshaller();
-				final CollectionWrapper collectionWrapper = (CollectionWrapper) unmarshaller
-						.unmarshal( new StringReader( charSequence.toString() ) );
+				final CollectionWrapper collectionWrapper = (CollectionWrapper) unmarshal( unmarshaller, charSequence );
 				final Collection<Object> elements = collectionWrapper.elements;
 				final Collection<Object> collection = new ArrayList<>( elements.size() );
 				final JAXBIntrospector jaxbIntrospector = context.createJAXBIntrospector();
@@ -212,8 +219,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final Class<?> valueClass = javaType.getJavaTypeClass().getComponentType();
 				final JAXBContext context = JAXBContext.newInstance( CollectionWrapper.class, valueClass );
 				final Unmarshaller unmarshaller = context.createUnmarshaller();
-				final CollectionWrapper collectionWrapper = (CollectionWrapper) unmarshaller
-						.unmarshal( new StringReader( charSequence.toString() ) );
+				final CollectionWrapper collectionWrapper = (CollectionWrapper) unmarshal( unmarshaller, charSequence );
 				final Collection<Object> elements = collectionWrapper.elements;
 				final JAXBIntrospector jaxbIntrospector = context.createJAXBIntrospector();
 				final JAXBElementTransformer valueTransformer;
@@ -264,11 +270,26 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			else {
 				final JAXBContext context = JAXBContext.newInstance( javaType.getJavaTypeClass() );
 				//noinspection unchecked
-				return (T) context.createUnmarshaller().unmarshal( new StringReader( charSequence.toString() ) );
+				return (T) unmarshal( context.createUnmarshaller(), charSequence );
 			}
 		}
 		catch (JAXBException e) {
 			throw new IllegalArgumentException( "Could not deserialize string to java type: " + javaType, e );
+		}
+	}
+
+	private Object unmarshal(Unmarshaller unmarshaller, CharSequence charSequence) throws JAXBException {
+		try {
+			final XMLStreamReader reader = staxFactory.createXMLStreamReader( new StringReader( charSequence.toString() ) );
+			try {
+				return unmarshaller.unmarshal( reader );
+			}
+			finally {
+				reader.close();
+			}
+		}
+		catch (XMLStreamException e) {
+			throw new UnmarshalException( e );
 		}
 	}
 

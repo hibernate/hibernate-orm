@@ -45,6 +45,7 @@ import static org.hibernate.query.sqm.tree.spi.jpa.ParameterCollector.collectPar
 
 /**
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		implements JpaCriteriaQuery<T>, SqmStatement<T>, ParameterCollector {
@@ -466,7 +467,21 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 
 	@Nonnull
 	@Override
+	public SqmSelectStatement<T> groupByAll(@Nonnull Expression<?>... expressions) {
+		super.groupBy( expressions );
+		return this;
+	}
+
+	@Nonnull
+	@Override
 	public SqmSelectStatement<T> groupBy(@Nonnull List<Expression<?>> grouping) {
+		super.groupBy( grouping );
+		return this;
+	}
+
+	@Nonnull
+	@Override
+	public SqmSelectStatement<T> groupByAll(@Nonnull List<Expression<?>> grouping) {
 		super.groupBy( grouping );
 		return this;
 	}

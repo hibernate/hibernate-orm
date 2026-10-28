@@ -119,6 +119,7 @@ import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
  * Base support for an SQM walker
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
 
@@ -698,6 +699,14 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		}
 
 		return expression.accept( this );
+	}
+
+	@Override
+	public Object visitGroupByAllClause(List<SqmExpression<?>> groupByClauseExpressions) {
+		if ( groupByClauseExpressions != null ) {
+			groupByClauseExpressions.forEach( e -> e.accept( this ) );
+		}
+		return groupByClauseExpressions;
 	}
 
 	@Override

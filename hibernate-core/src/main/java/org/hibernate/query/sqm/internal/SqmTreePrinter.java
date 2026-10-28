@@ -132,6 +132,7 @@ import static java.lang.System.lineSeparator;
  * these statement rules
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	private static final Logger LOG = Logger.getLogger( SqmTreePrinter.class );
@@ -472,6 +473,18 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 					visitFetchExpression( querySpec.getFetchExpression() );
 				}
 		);
+
+		return null;
+	}
+
+	@Override
+	public Object visitGroupByAllClause(List<SqmExpression<?>> groupByClauseExpressions) {
+		if ( groupByClauseExpressions != null && !groupByClauseExpressions.isEmpty() ) {
+			processStanza(
+					"group-by",
+					() -> groupByClauseExpressions.forEach( e -> e.accept( this ) )
+			);
+		}
 
 		return null;
 	}

@@ -487,7 +487,8 @@ mapKeyNavigablePath
  * The 'group by' clause of a query, controls aggregation
  */
 groupByClause
-	: GROUP BY groupByExpression (COMMA groupByExpression)*
+	: GROUP BY ALL
+	| GROUP BY groupByExpression (COMMA groupByExpression)*
 	;
 
 /**

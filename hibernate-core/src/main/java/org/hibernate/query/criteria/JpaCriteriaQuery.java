@@ -20,6 +20,7 @@ import java.util.Set;
  * Extension of the JPA {@link CriteriaQuery}
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCriteria<T>, JpaSelectCriteria<T>, JpaCriteriaSelect<T> {
 
@@ -225,7 +226,21 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 */
 	@Nonnull
 	@Override
+	JpaCriteriaQuery<T> groupByAll(@Nonnull Expression<?>... grouping);
+
+	/**
+	 * Set the grouping expressions.
+	 */
+	@Nonnull
+	@Override
 	JpaCriteriaQuery<T> groupBy(@Nonnull List<Expression<?>> grouping);
+
+	/**
+	 * Set the grouping expressions.
+	 */
+	@Nonnull
+	@Override
+	JpaCriteriaQuery<T> groupByAll(@Nonnull List<Expression<?>> grouping);
 
 	/**
 	 * Set the group restriction.

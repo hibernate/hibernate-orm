@@ -379,6 +379,7 @@ import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.collection.internal.NestedCollectionFetch;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -8955,6 +8956,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			// lastly, account for any app-defined max-fetch-depth
 			if ( maxDepth != null && fetchDepth >= maxDepth ) {
+				joined = false;
+			}
+
+			// the values of the element of a nested collection are read from the aggregated value, not from joins
+			if ( joined && NestedCollectionFetch.isNested( fetchParent ) ) {
 				joined = false;
 			}
 

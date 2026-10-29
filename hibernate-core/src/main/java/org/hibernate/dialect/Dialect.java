@@ -3534,6 +3534,21 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 		return ObjectNullBindingStrategy.SET_NULL;
 	}
 
+	/// Whether this database supports fetching a collection with
+	/// [org.hibernate.FetchMethod#NESTED], aggregating its elements into a
+	/// single value of the row of the owner using the `json_array` and
+	/// `json_arrayagg` functions.
+	///
+	/// A false result means that such collections are fetched using a
+	/// secondary select.
+	///
+	/// @since 8.1
+	@Incubating(since = "8.1")
+	@SPI({ IMPLEMENT, SUPPLY })
+	public boolean supportsNestedCollectionFetch() {
+		return false;
+	}
+
 	/// Whether schema-management DDL commands require a short delay before
 	/// execution to accommodate database-side propagation.
 	///

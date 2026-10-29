@@ -1043,6 +1043,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsNestedCollectionFetch implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsNestedCollectionFetch();
+		}
+	}
+
 	public static class SupportsJsonObjectAgg implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_objectagg" )

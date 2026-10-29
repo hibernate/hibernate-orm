@@ -1299,6 +1299,12 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public boolean supportsNestedCollectionFetch() {
+		return true;
+	}
+
+	@Override
 	@SPI({ USE, IMPLEMENT })
 	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
 		return storageEngine.supportsOnDeleteAction( action );

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.Jira;
@@ -12,6 +13,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CollectionTable;
@@ -22,6 +24,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DomainModel( annotatedClasses = {
 		SoftDeleteElementCollectionReaddTest.TimestampSoftDeleteCollectionOwner.class,
@@ -29,9 +32,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 		SoftDeleteElementCollectionReaddTest.DeletedSoftDeleteCollectionOwner.class
 } )
 @SessionFactory
-@ServiceRegistry( settings = @Setting( name = "hibernate.hbm2ddl.halt_on_error", value = "true" ) )
+@ServiceRegistry( settings = {
+		@Setting( name = "hibernate.hbm2ddl.halt_on_error", value = "true" ),
+		@Setting( name = "jakarta.persistence.schema-generation.database.action", value = "create" )
+} )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-20585" )
 public class SoftDeleteElementCollectionReaddTest {
+	@AfterAll
+	void dropSchema(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().dropMappedObjects( false );
+	}
+
 	@Test
 	void readdingPreviouslyTimestampSoftDeletedElementCollectionEntry(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -59,15 +70,45 @@ public class SoftDeleteElementCollectionReaddTest {
 	}
 
 	@Test
-	void timestampSoftDeleteCollectionKeyIncludesDeletionTime(DomainModelScope scope) {
+	void timestampSoftDeleteCollectionKeyFollowsDialectSupport(DomainModelScope scope) {
 		final var table = scope.getDomainModel()
 				.getCollectionBinding( TimestampSoftDeleteCollectionOwner.class.getName() + ".mobiles" )
 				.getCollectionTable();
-		assertThat( table.getUniqueKeys().values() )
-				.singleElement()
-				.satisfies( key -> assertThat( key.getColumns() )
-						.extracting( org.hibernate.mapping.Column::getName )
-						.containsExactlyInAnyOrder( "owner_id", "mobiles", "deleted_at" ) );
+		if ( supportsLiveRowUniqueness( scope ) ) {
+			assertThat( table.getUniqueKeys().values() )
+					.singleElement()
+					.satisfies( key -> assertThat( key.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactlyInAnyOrder( "owner_id", "mobiles", "deleted_at" ) );
+		}
+		else {
+			assertNoImplicitUniqueConstraint( scope, TimestampSoftDeleteCollectionOwner.class );
+		}
+	}
+
+	@Test
+	void timestampTableEnforcesOnlySupportedLiveRowUniqueness(SessionFactoryScope scope, DomainModelScope model) {
+		scope.inTransaction( session -> {
+			final var owner = new TimestampSoftDeleteCollectionOwner( 2L );
+			owner.getMobiles().add( "duplicate" );
+			session.persist( owner );
+		} );
+		final String insert = "insert into soft_delete_collection_owner_mobile (owner_id, mobiles, deleted_at)"
+				+ " values (2, 'duplicate', null)";
+		if ( supportsLiveRowUniqueness( model ) ) {
+			assertThrows( ConstraintViolationException.class,
+					() -> scope.inTransaction( session -> session.createNativeMutationQuery( insert ).executeUpdate() ) );
+		}
+		else {
+			scope.inTransaction( session -> session.createNativeMutationQuery( insert ).executeUpdate() );
+		}
+		scope.inTransaction( session -> assertThat( session.createNativeQuery(
+				"select count(*) from soft_delete_collection_owner_mobile where owner_id = 2", Long.class )
+				.getSingleResult() ).isEqualTo( supportsLiveRowUniqueness( model ) ? 1L : 2L ) );
+	}
+
+	private static boolean supportsLiveRowUniqueness(DomainModelScope scope) {
+		return scope.getDomainModel().getDatabase().getDialect().getUniqueDelegate().supportsNullsNotDistinct();
 	}
 
 	@Test

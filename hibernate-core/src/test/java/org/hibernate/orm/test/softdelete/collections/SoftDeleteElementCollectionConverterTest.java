@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.YesNoConverter;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CollectionTable;
@@ -30,9 +31,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 		SoftDeleteElementCollectionConverterTest.DeletedOwner.class
 } )
 @SessionFactory
-@ServiceRegistry( settings = @Setting( name = "hibernate.hbm2ddl.halt_on_error", value = "true" ) )
+@ServiceRegistry( settings = {
+		@Setting( name = "hibernate.hbm2ddl.halt_on_error", value = "true" ),
+		@Setting( name = "jakarta.persistence.schema-generation.database.action", value = "create" )
+} )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-20585" )
 class SoftDeleteElementCollectionConverterTest {
+	@AfterAll
+	void dropSchema(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().dropMappedObjects( false );
+	}
+
 	@Test
 	void activeConverterUsesTrueForLiveRows(DomainModelScope scope) {
 		assertLiveRowLiteral( scope, ActiveOwner.class, 'Y' );

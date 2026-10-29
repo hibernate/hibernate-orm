@@ -84,8 +84,10 @@ public non-sealed class Set extends Collection {
 			if ( !collectionTable.hasPrimaryKey()
 					&& collectionTable.getUniqueKeys().isEmpty() ) {
 				final var softDeleteColumn = getSoftDeleteColumn();
-				if ( softDeleteColumn != null && getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP ) {
-					// Boolean markers cannot distinguish multiple historical rows for the same element.
+				if ( softDeleteColumn != null
+						&& ( getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP
+								|| !getMetadata().getDatabase().getDialect().getUniqueDelegate().supportsNullsNotDistinct() ) ) {
+					// Historical rows need a timestamp, and live nulls must remain unique.
 					return;
 				}
 				boolean useUniqueKey = softDeleteColumn != null && softDeleteColumn.isNullable();

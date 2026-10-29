@@ -4,13 +4,12 @@ import java.io.IOException;
 import java.net.URL;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 
+import org.hibernate.boot.cfgxml.internal.XmlFactoryUtil;
 import org.hibernate.internal.util.xml.XsdException;
 
 import org.xml.sax.SAXException;
 
-import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
 /**
@@ -76,7 +75,7 @@ public class LocalXsdResolver {
 		try {
 			final var schemaStream = url.openStream();
 			try {
-				return SchemaFactory.newInstance( W3C_XML_SCHEMA_NS_URI )
+				return XmlFactoryUtil.newSchemaFactory()
 						.newSchema( new StreamSource( url.openStream() ) );
 			}
 			catch ( SAXException | IOException e ) {

@@ -3,6 +3,7 @@ package org.hibernate.metamodel.mapping.internal;
 import jakarta.annotation.Nonnull;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.FetchMethod;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
@@ -73,6 +74,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
+import org.hibernate.sql.results.graph.collection.internal.NestedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 
 import java.lang.reflect.Field;
@@ -664,6 +666,14 @@ public class PluralAttributeMappingImpl
 					);
 				}
 				else {
+					final var fetchOptions = creationState.getFetchOptions( fetchablePath );
+					if ( fetchOptions.fetchMethod() == FetchMethod.NESTED ) {
+						final var nestedFetch =
+								NestedCollectionFetch.create( fetchablePath, this, fetchParent, fetchOptions, creationState );
+						if ( nestedFetch != null ) {
+							return nestedFetch;
+						}
+					}
 					return createSelectEagerCollectionFetch(
 							fetchParent,
 							fetchablePath,

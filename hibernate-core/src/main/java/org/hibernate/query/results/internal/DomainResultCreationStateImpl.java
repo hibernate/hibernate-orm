@@ -286,7 +286,7 @@ public class DomainResultCreationStateImpl
 
 	private int valuesArrayPosition(String selectableName) {
 		return nestingFetchParent != null
-				? nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName )
+				? nestingFetchParent.getNestedSelectableIndex( selectableName )
 				: jdbcPositionToValuesArrayPosition( jdbcResultsMetadata.resolveColumnPosition( selectableName ) );
 	}
 

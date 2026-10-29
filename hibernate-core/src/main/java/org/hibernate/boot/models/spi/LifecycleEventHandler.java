@@ -44,6 +44,7 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_MERGE;
 import static org.hibernate.boot.models.JpaAnnotations.PRE_INSERT;
 import static org.hibernate.boot.models.JpaAnnotations.POST_INSERT;
 import static org.hibernate.boot.models.JpaAnnotations.PRE_UPSERT;
+import static org.hibernate.boot.models.JpaAnnotations.POST_UPSERT;
 
 /// Models a JPA-style lifecycle event handler, whether [callback][JpaEventListenerStyle#CALLBACK] or
 /// [listener][JpaEventListenerStyle#LISTENER] style.
@@ -63,6 +64,7 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_UPSERT;
 /// @see jakarta.persistence.PreInsert
 /// @see jakarta.persistence.PostInsert
 /// @see jakarta.persistence.PreUpsert
+/// @see jakarta.persistence.PostUpsert
 ///
 /// @author Steve Ebersole
 @Remove
@@ -288,6 +290,18 @@ public class LifecycleEventHandler {
 					modelsContext,
 					callbackMethods
 			);
+			applyXmlCallback(
+					jaxbMapping.getPostUpsert(),
+					methodDetails,
+					mutableMethodDetails,
+					consumerType,
+					listenerClassDetails,
+					PostUpsert.class,
+					POST_UPSERT,
+					CallbackType.POST_UPSERT,
+					modelsContext,
+					callbackMethods
+			);
 		} );
 
 		final var descriptor =
@@ -337,7 +351,8 @@ public class LifecycleEventHandler {
 			&& jaxbMapping.getPreMerge() == null
 			&& jaxbMapping.getPreInsert() == null
 			&& jaxbMapping.getPostInsert() == null
-			&& jaxbMapping.getPreUpsert() == null;
+			&& jaxbMapping.getPreUpsert() == null
+			&& jaxbMapping.getPostUpsert() == null;
 	}
 
 	private static void errorIfEmpty(LifecycleEventHandler descriptor) {

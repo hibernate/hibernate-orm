@@ -1559,6 +1559,7 @@ public class XmlAnnotationHelper {
 		applyLifecycleCallback( lifecycleCallbackContainer.getPreMerge(), callbackType, JpaAnnotations.PRE_MERGE, classDetails, xmlDocumentContext );
 		applyLifecycleCallback( lifecycleCallbackContainer.getPreInsert(), callbackType, JpaAnnotations.PRE_INSERT, classDetails, xmlDocumentContext );
 		applyLifecycleCallback( lifecycleCallbackContainer.getPostInsert(), callbackType, JpaAnnotations.POST_INSERT, classDetails, xmlDocumentContext );
+		applyLifecycleCallback( lifecycleCallbackContainer.getPreUpsert(), callbackType, JpaAnnotations.PRE_UPSERT, classDetails, xmlDocumentContext );
 	}
 
 	private static <A extends Annotation> void applyLifecycleCallback(

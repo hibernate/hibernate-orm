@@ -92,6 +92,7 @@ import org.hibernate.boot.models.annotations.internal.PostLoadJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostPersistJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostRemoveJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostUpdateJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PostUpsertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PreInsertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PreMergeJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrePersistJpaAnnotation;
@@ -191,6 +192,7 @@ import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PostUpsert;
 import jakarta.persistence.PreInsert;
 import jakarta.persistence.PreMerge;
 import jakarta.persistence.PrePersist;
@@ -834,6 +836,13 @@ public interface JpaAnnotations {
 	CompleteAnnotationDescriptor<PreUpsert,PreUpsertJpaAnnotation> PRE_UPSERT = new CompleteAnnotationDescriptor<>(
 			PreUpsert.class,
 			PreUpsertJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	CompleteAnnotationDescriptor<PostUpsert,PostUpsertJpaAnnotation> POST_UPSERT = new CompleteAnnotationDescriptor<>(
+			PostUpsert.class,
+			PostUpsertJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);

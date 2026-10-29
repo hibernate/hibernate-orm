@@ -91,7 +91,7 @@ public class ConstraintInterpretationTest {
 		} );
 	}
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTableCheck.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCheckConstraints.class)
 	void testCheck(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			try {

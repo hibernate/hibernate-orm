@@ -4978,17 +4978,36 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 	}
 
 	private static String selectionTypes(JpaSelection<?> selection) {
-		return selection.getSelectionItems().stream()
-				.map( item -> item == null ? "?" : requireNonNullElse( item.getJavaTypeName(), "?" ) )
-				.collect( joining( ", ", "(", ")" ) );
+		return diagnosticList( selection.getSelectionItems().stream()
+				.map( item -> item == null ? "?" : requireNonNullElse( item.getJavaTypeName(), "?" ) ), "(", ")" );
 	}
 
 	private static String constructorParameterLists(DeclaredType returnType) {
-		return constructorsIn( returnType.asElement().getEnclosedElements() ).stream()
+		return diagnosticList( constructorsIn( returnType.asElement().getEnclosedElements() ).stream()
 				.map( constructor -> constructor.getParameters().stream()
 						.map( parameter -> parameter.asType().toString() )
-						.collect( joining( ", ", "(", ")" ) ) )
-				.collect( joining( ", ", "[", "]" ) );
+						.collect( joining( ", ", "(", ")" ) ) ), "[", "]" );
+	}
+
+	private static String diagnosticList(Stream<String> items, String prefix, String suffix) {
+		final int maxLength = 256;
+		final var result = new StringBuilder( prefix );
+		final var iterator = items.iterator();
+		String separator = "";
+		while ( iterator.hasNext() ) {
+			final String item = iterator.next();
+			final int remaining = maxLength - result.length() - separator.length() - suffix.length();
+			// Reserve space for ", ..." if another entry follows.
+			if ( item.length() + ( iterator.hasNext() ? 5 : 0 ) > remaining ) {
+				result.append( separator )
+						.append( item, 0, Math.min( item.length(), Math.max( 0, remaining - 3 ) ) )
+						.append( "..." );
+				break;
+			}
+			result.append( separator ).append( item );
+			separator = ", ";
+		}
+		return result.append( suffix ).toString();
 	}
 
 	private static boolean checkConstructorReturn(DeclaredType returnType, JpaSelection<?> selection) {

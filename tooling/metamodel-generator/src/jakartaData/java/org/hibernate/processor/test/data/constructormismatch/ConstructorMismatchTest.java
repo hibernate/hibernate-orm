@@ -50,7 +50,7 @@ class ConstructorMismatchTest {
 	}
 
 	@Test
-	void reportsAllOverloadsForWrongArity() throws Exception {
+	void reportsConstructorTypesForWrongArity() throws Exception {
 		final var diagnostics = new DiagnosticCollector<JavaFileObject>();
 		assertFalse( compile( InvalidArityRepository.class, diagnostics, List.of() ) );
 		final String message = diagnostics.getDiagnostics().stream()
@@ -61,6 +61,26 @@ class ConstructorMismatchTest {
 		assertTrue( message.contains( "available constructor parameter lists:" ), message );
 		assertTrue( message.contains( "(java.lang.String)" ), message );
 		assertTrue( message.contains( "(java.util.List<java.lang.String>, int[])" ), message );
+		final String constructors = message.substring( message.indexOf( "available constructor parameter lists: " )
+				+ "available constructor parameter lists: ".length() );
+		assertTrue( constructors.length() <= 256, message );
+		assertTrue( constructors.endsWith( "...]" ), message );
+	}
+
+	@Test
+	void boundsLargeSelectionTypeList() throws Exception {
+		final var diagnostics = new DiagnosticCollector<JavaFileObject>();
+		assertFalse( compile( InvalidLargeSelectionRepository.class, diagnostics, List.of() ) );
+		final String message = diagnostics.getDiagnostics().stream()
+				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
+				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
+				.filter( diagnostic -> diagnostic.contains( "has no constructor matching query selection list" ) )
+				.findFirst().orElseThrow();
+		final String types = message.substring( message.indexOf( " with types " ) + " with types ".length(),
+				message.indexOf( "; available constructor parameter lists:" ) );
+		assertTrue( types.startsWith( "(java.lang.String, " ), message );
+		assertTrue( types.length() <= 256, message );
+		assertTrue( types.endsWith( "...)" ), message );
 	}
 
 	@Test

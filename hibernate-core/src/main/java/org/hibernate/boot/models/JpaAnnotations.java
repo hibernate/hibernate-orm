@@ -87,6 +87,7 @@ import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToOneJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PostInsertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostLoadJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostPersistJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostRemoveJpaAnnotation;
@@ -184,6 +185,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.PostInsert;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
@@ -816,6 +818,13 @@ public interface JpaAnnotations {
 	CompleteAnnotationDescriptor<PreInsert,PreInsertJpaAnnotation> PRE_INSERT = new CompleteAnnotationDescriptor<>(
 			PreInsert.class,
 			PreInsertJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	CompleteAnnotationDescriptor<PostInsert,PostInsertJpaAnnotation> POST_INSERT = new CompleteAnnotationDescriptor<>(
+			PostInsert.class,
+			PostInsertJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);

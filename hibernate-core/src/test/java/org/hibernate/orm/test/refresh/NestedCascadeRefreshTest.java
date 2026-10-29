@@ -184,7 +184,7 @@ class NestedCascadeRefreshTest {
 			final Child otherChild = session.find( Child.class, 30L );
 			final Root root = session.getReference( Root.class, 1L );
 			assertThat( Hibernate.isInitialized( root ) ).isFalse();
-			session.createNativeMutationQuery( "update nested_refresh_child set label = 'new'" ).executeUpdate();
+			session.createNativeMutationQuery( "update nested_refresh_child set label = 'new' where id in (3, 30)" ).executeUpdate();
 
 			session.refresh( root );
 
@@ -216,7 +216,7 @@ class NestedCascadeRefreshTest {
 			assertThat( Hibernate.isInitialized( otherParent.children ) ).isFalse();
 			session.doWork( connection -> {
 				try ( var statement = connection.createStatement() ) {
-					assertThat( statement.executeUpdate( "update nested_refresh_child set label = 'new'" ) )
+					assertThat( statement.executeUpdate( "update nested_refresh_child set label = 'new' where id in (3, 30)" ) )
 							.isEqualTo( 2 );
 				}
 			} );

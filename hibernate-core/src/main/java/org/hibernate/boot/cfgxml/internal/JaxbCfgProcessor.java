@@ -3,13 +3,11 @@ package org.hibernate.boot.cfgxml.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
-import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.xml.XsdException;
 
-import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
@@ -34,7 +32,6 @@ import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -50,7 +47,6 @@ public class JaxbCfgProcessor {
 	public static final String HIBERNATE_CONFIGURATION_URI = "http://www.hibernate.org/xsd/orm/cfg";
 
 	private final ClassLoaderService classLoaderService;
-	private final LocalXmlResourceResolver xmlResourceResolver;
 
 	/**
 	 * Settings gathered (from system properties and {@code /hibernate.properties}) before
@@ -65,7 +61,6 @@ public class JaxbCfgProcessor {
 
 	public JaxbCfgProcessor(ClassLoaderService classLoaderService, @Nullable Map<String, Object> settings) {
 		this.classLoaderService = classLoaderService;
-		this.xmlResourceResolver = new LocalXmlResourceResolver( classLoaderService );
 		this.settings = settings;
 	}
 
@@ -92,7 +87,7 @@ public class JaxbCfgProcessor {
 
 	private XMLInputFactory staxFactory() {
 		if ( staxFactory == null ) {
-			staxFactory = buildStaxFactory();
+			staxFactory = buildStaxFactory( isDtdAndExternalEntitiesAllowed() );
 		}
 		return staxFactory;
 	}
@@ -100,9 +95,9 @@ public class JaxbCfgProcessor {
 	private static final String EXTERNAL_PE = "http://xml.org/sax/features/external-parameter-entities";
 
 
-	private XMLInputFactory buildStaxFactory() {
+	private static XMLInputFactory buildStaxFactory(boolean allowDtdAndExternalEntities) {
 		final var staxFactory = XMLInputFactory.newInstance();
-		XmlFactoryUtil.configureXmlFactory( staxFactory, isDtdAndExternalEntitiesAllowed() );
+		XmlFactoryUtil.configureXmlFactory( staxFactory, allowDtdAndExternalEntities );
 
 		return staxFactory;
 	}
@@ -177,10 +172,6 @@ public class JaxbCfgProcessor {
 	}
 
 	private Schema resolveLocalSchema(String schemaName) {
-		return resolveLocalSchema( schemaName, W3C_XML_SCHEMA_NS_URI );
-	}
-
-	private Schema resolveLocalSchema(String schemaName, String schemaLanguage) {
 		final URL url = classLoaderService.locateResource( schemaName );
 		if ( url == null ) {
 			throw new XsdException( "Unable to locate schema [" + schemaName + "] via classpath", schemaName );
@@ -188,7 +179,7 @@ public class JaxbCfgProcessor {
 		try {
 			final var schemaStream = url.openStream();
 			try {
-				return SchemaFactory.newInstance( schemaLanguage )
+				return XmlFactoryUtil.newSchemaFactory()
 						.newSchema( new StreamSource( url.openStream() ) );
 			}
 			catch ( SAXException | IOException e ) {

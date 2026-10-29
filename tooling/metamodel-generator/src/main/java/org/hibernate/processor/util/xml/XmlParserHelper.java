@@ -12,8 +12,8 @@ import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 
+import org.hibernate.boot.cfgxml.internal.XmlFactoryUtil;
 import org.hibernate.boot.jaxb.cfg.spi.ObjectFactory;
 
 import org.hibernate.processor.Context;
@@ -139,6 +139,7 @@ public class XmlParserHelper {
 	}
 
 	private synchronized XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
+		XmlFactoryUtil.configureXmlFactory( XML_INPUT_FACTORY, context.allowDtdAndExternalEntities() );
 		return XML_INPUT_FACTORY.createXMLEventReader( xmlStream );
 	}
 
@@ -166,7 +167,7 @@ public class XmlParserHelper {
 			throw new IllegalArgumentException( "Couldn't find schema on classpath: " + schemaName );
 		}
 
-		var sf = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI );
+		var sf = XmlFactoryUtil.newSchemaFactory();
 		try {
 			return sf.newSchema( schemaUrl );
 		}
